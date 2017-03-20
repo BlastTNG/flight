@@ -71,6 +71,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "bi0.h"
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
@@ -327,6 +328,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    push_bi0_buffer(channel_data[RATE_100HZ]);
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -441,6 +443,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -514,8 +517,9 @@ int main(int argc, char *argv[])
   InitCommandData();
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
+
   initialize_blast_comms();
-//  initialize_sip_interface();
+// initialize_sip_interface();
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
@@ -533,7 +537,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-
+  initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -571,7 +575,7 @@ int main(int argc, char *argv[])
 //  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
 
 //  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-//  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();

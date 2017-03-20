@@ -20,21 +20,21 @@ KDIR	:= /lib/modules/$(KVER)/build
 PWD	:= $(shell pwd)
 CC 	:= gcc -O2 -g
 
-all: decom_pci.ko test_decom
+all: decom_pci.ko
 
 decom_pci.ko: decom_pci.c decom_pci.h
 # invoke kernel build system
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
-test_decom: test_decom.c
-	$(CC) -o test_decom test_decom.c -lm
-
 clean: 
-	rm -f .decom* *.ko *.o test_decom decom_pci.mod.c
+	rm -f .decom* *.ko *.o decom_pci.mod.c
 
 install: decom_pci.ko
 	install -m 644 decom_pci.h /usr/local/include/decom_pci.h
 	install -m 644 -D decom_pci.ko /lib/modules/$(KVER)/misc/decom_pci.ko
 	depmod $(KVER)
+
+#	install decom_pci.ko -m 644 /usr/local/lib/decom_pci.ko # This was the previous install
+
 
 endif

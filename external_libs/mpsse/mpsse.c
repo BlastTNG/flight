@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <libusb-1.0/libusb.h>
@@ -48,7 +49,7 @@
 			} \
 		} \
 		if (buf_string_pos > 0) \
-			blast_dbg("%s", buf_string);\
+			blast_info("%s", buf_string);\
 	} while (0)
 #else
 #define DEBUG_IO(expr...) do {} while (0)
@@ -68,29 +69,6 @@
 #define SIO_RESET_SIO 0
 #define SIO_RESET_PURGE_RX 1
 #define SIO_RESET_PURGE_TX 2
-
-struct mpsse_ctx {
-	struct libusb_context *usb_ctx;
-	struct libusb_device_handle *usb_dev;
-	unsigned int usb_write_timeout;
-	unsigned int usb_read_timeout;
-	uint8_t in_ep;
-	uint8_t out_ep;
-	uint16_t max_packet_size;
-	uint16_t index;
-	uint8_t interface;
-	enum ftdi_chip_type type;
-	uint8_t *write_buffer;
-	unsigned write_size;  // size in bytes
-	unsigned write_count; // size in bytes
-	uint8_t *read_buffer;
-	unsigned read_size;
-	unsigned read_count;
-	uint8_t *read_chunk;
-	unsigned read_chunk_size;
-	struct bit_copy_queue read_queue;
-	int retval;
-};
 
 static uint16_t bit_doubler[256] = { 0x0000, 0x0003, 0x000C, 0x000F, 0x0030,
 		0x0033, 0x003C, 0x003F, 0x00C0, 0x00C3, 0x00CC, 0x00CF, 0x00F0, 0x00F3,
@@ -342,8 +320,9 @@ struct mpsse_ctx *mpsse_open(const uint16_t *vid, const uint16_t *pid, const cha
 		goto error;
 	}
 
+    // Previous value was 255 rather than 2. This sets read timeout
 	reterr = libusb_control_transfer(ctx->usb_dev, FTDI_DEVICE_OUT_REQTYPE,
-			SIO_SET_LATENCY_TIMER_REQUEST, 255, ctx->index, NULL, 0,
+			SIO_SET_LATENCY_TIMER_REQUEST, 2, ctx->index, NULL, 0,
 			ctx->usb_write_timeout);
 	if (reterr < 0) {
 		blast_err("unable to set latency timer: %s", libusb_error_name(reterr));
@@ -371,8 +350,22 @@ error:
 	return 0;
 }
 
+void mpsse_reset_purge_close(struct mpsse_ctx *ctx)
+{
+    int reterr;
+    reterr = libusb_control_transfer(ctx->usb_dev, FTDI_DEVICE_OUT_REQTYPE, SIO_SET_BITMODE_REQUEST,
+             0x0000, ctx->index, NULL, 0, ctx->usb_write_timeout);
+    if (reterr < 0) {
+        blast_info("error trying to set bitmode to RESET");
+    }
+    mpsse_purge(ctx);
+    mpsse_close(ctx);
+}
+
+
 void mpsse_close(struct mpsse_ctx *ctx)
 {
+
 	if (ctx->usb_dev)
 		libusb_close(ctx->usb_dev);
 	if (ctx->usb_ctx)
@@ -774,8 +767,8 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 
 	res->transferred += transfer->actual_length;
 
-	DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
-	DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+	// DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
+	// DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
 
 	if (res->transferred == ctx->write_count) {
 		res->done = true;
@@ -818,6 +811,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 
 	struct transfer_result write_result = { .ctx = ctx, .done = false };
 	struct libusb_transfer *write_transfer = libusb_alloc_transfer(0);
+    DEBUG_PRINT_BUF(ctx->write_buffer, ctx->write_count);
 	libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, ctx->write_buffer,
 		ctx->write_count, write_cb, &write_result, ctx->usb_write_timeout);
 	retval = libusb_submit_transfer(write_transfer);
@@ -833,7 +827,7 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
-        blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
+        // blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
@@ -889,19 +883,33 @@ int mpsse_flush(struct mpsse_ctx *ctx)
  * @param out_offset Offset in bytes into the output data buffer to begin reading
  * @param length Number of bytes to output
  */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length)
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length)
 {
-	//uint8_t bit_doubler_buffer[4096] = {0};
-	//unsigned output_length = min(sizeof(bit_doubler_buffer), length);
-	unsigned output_length = 2*length;
+	// unsigned output_length = 2*length;
+	unsigned output_length = length;
 	uint8_t bit_doubler_buffer[output_length];
 
-	for (unsigned i = 0; i < length; i++) {
-		bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i + out_offset]] & 0xff);
-		bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i + out_offset]] >> 8) & 0xff);
+    unsigned max_i = (unsigned) floor(length/2.0);
+    uint8_t msbs, lsbs;
+
+	//for (unsigned i = 0; i < length; i++) {
+	//	bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i]] & 0xff);
+	//	bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i]] >> 8) & 0xff);
+	//}
+	for (unsigned i = 0; i < max_i; i++) {
+        msbs = (uint8_t) ((out[i] >> 8) & 0xff);
+        lsbs = (uint8_t) out[i] & 0xff;
+	    bit_doubler_buffer[i*2] = msbs;
+	    bit_doubler_buffer[i*2 + 1] = lsbs;
+	    // bit_doubler_buffer[i*4] = (uint8_t)((bit_doubler[msbs] >> 8) & 0xff);
+	    // bit_doubler_buffer[i*4 + 1] = (uint8_t)(bit_doubler[msbs] & 0xff);
+	    // bit_doubler_buffer[i*4 + 2] = (uint8_t)((bit_doubler[lsbs] >> 8) & 0xff);
+	    // bit_doubler_buffer[i*4 + 3] = (uint8_t)(bit_doubler[lsbs] & 0xff);
 	}
 
-	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
+    // This somehow seems to be the change that stopped irregular streaming of data
+	// mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
+	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, NEG_EDGE_OUT | MSB_FIRST);
 }
 
 /**
@@ -912,7 +920,10 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit)
 {
 	uint8_t buf = (bit & 0x1) << 6;
-	mpsse_set_data_bits_low_byte(ctx, buf, 0x80);
+    // CLK, data, WD are bit 0, 1 and 7
+    // 0b10000011 = 0x83 
+    // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
+	mpsse_set_data_bits_low_byte(ctx, buf, 0x83);
 }
 
 /**
