@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     
     if (i % 100000 == 0) {
       now = time(NULL);
-      printf("# errors = %3d | last error %5d second%s ago %s| "
+      printf("# errors = %3d | last error %5zd second%s ago %s| "
              "# unlocks = %3d %c\r",
              numerrs, now - lasterror, (now - lasterror) == 1 ? "" : "s", 
              (now - lasterror) == 1 ? " " : "", 
