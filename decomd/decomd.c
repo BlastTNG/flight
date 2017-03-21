@@ -64,6 +64,9 @@ pthread_t decom_thread;
 
 #define FRAME_SYNC_WORD 0xEB90146F
 
+int16_t SouthIAm = 0; // This is a hack to compile framing.c Real variable in mcp.c
+int16_t InCharge = 1; // This is a hack to compile framing.c Real variable in mcp.c
+
 uint16_t out_frame[BI0_FRAME_SIZE+3];
 uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
 int status = 0;
@@ -73,7 +76,7 @@ unsigned short polarity = 1;
 int du = 0;
 int wfifo_size = 0;
 unsigned long frame_counter = 0;
-uint16_t crc_ok = 1;
+uint16_t crc_ok = 0;
 
 void ReadDecom(void);
 

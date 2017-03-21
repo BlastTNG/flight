@@ -34,10 +34,14 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
-#include <command_struct.h>
 #include <crc.h>
 #include <derived.h>
 #include <mputs.h>
+
+#define DECOMD // TODO (Joy): figure out where to place this so it's only defined when compiling decomd
+#ifndef DECOMD
+ #include <command_struct.h>
+#endif
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
@@ -202,6 +206,7 @@ void framing_publish_244hz(void)
     }
 }
 
+#ifndef DECOMD
 /**
  * Publish updated CommandData
  */
@@ -209,6 +214,7 @@ void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
 {
     mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
 }
+#endif
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
@@ -247,6 +253,7 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
     }
 }
 
+#ifndef DECOMD
 /**
  * Received data from "other" flight computer including CommandData struct,
  * EtherCAT state, Flight computer temps, etc.
@@ -285,6 +292,7 @@ static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
         }
     }
 }
+#endif
 
 static void framing_shared_connect_callback(struct mosquitto *m_mosq, void *obj, int rc)
 {
@@ -312,7 +320,9 @@ int framing_shared_data_init(void)
         return -1;
     }
     mosquitto_log_callback_set(mosq_other, frame_log_callback);
+#ifndef DECOMD
     mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
+#endif
     mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
 
     if ((ret = mosquitto_connect_async(mosq_other, host, port, keepalive)) != MOSQ_ERR_SUCCESS) {
