@@ -23,6 +23,8 @@ quick_diagnostics/QuickDiag
 
 stars/windows/stars
 
+defricher/build
+
 decomd/build
 decom/test_decom/test_decom
 decom/test_decom/test_decom_packets
