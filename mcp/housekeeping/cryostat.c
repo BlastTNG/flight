@@ -168,6 +168,10 @@ void level_control(void) {
     }
 }
 
+void test_channel_outs(void) {
+    static int first_out = 1;
+}
+
 void test_frequencies(void) {
     static channel_t* test_Addr;
     static int first_test = 1;
