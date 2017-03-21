@@ -11,8 +11,17 @@
 **.fits
 **.suo
 **.ko
+
 moc_*
+qrc_*
+ui_*
+cow/cow
+owl/other_makefile/
+owl/owl
+quick_diagnostics/QuickDiag
+
 stars/windows/stars
+
 decomd/build
 decom/test_decom/test_decom
 decom/test_decom/test_decom_packets
