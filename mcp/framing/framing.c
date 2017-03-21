@@ -160,6 +160,17 @@ void framing_publish_100hz(void)
     }
 }
 
+void framing_publish_100hz_decom(void *m_frame)
+{
+    static char frame_name[32];
+    snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
+
+    if (frame_size[RATE_100HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[RATE_100HZ], m_frame, 0, false);
+    }
+}
+
 void framing_publish_200hz(void)
 {
     static channel_t *mcp_200hz_framenum_addr = NULL;

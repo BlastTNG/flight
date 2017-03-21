@@ -11,6 +11,7 @@
 **.fits
 **.suo
 **.ko
+moc_*
 stars/windows/stars
 decomd/build
 decom/test_decom/test_decom

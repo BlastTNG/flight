@@ -44,6 +44,7 @@
 
 #include "blast.h"
 #include "decom_pci.h"
+#include "decomd.h"
 #include "bbc_pci.h"
 #include "channels_tng.h"
 #include "framing.h"
@@ -61,14 +62,17 @@ int needs_join = 0;
 sigset_t signals;
 pthread_t framefile_thread;
 pthread_t decom_thread;
+pthread_t publish_thread;
 
-#define FRAME_SYNC_WORD 0xEB90146F
 
 int16_t SouthIAm = 0; // This is a hack to compile framing.c Real variable in mcp.c
 int16_t InCharge = 1; // This is a hack to compile framing.c Real variable in mcp.c
 
 uint16_t out_frame[BI0_FRAME_SIZE+3];
 uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
+
+frames_list_t frames;
+
 int status = 0;
 double fs_bad = 1;
 double dq_bad = 0;
@@ -77,6 +81,7 @@ int du = 0;
 int wfifo_size = 0;
 unsigned long frame_counter = 0;
 uint16_t crc_ok = 0;
+
 
 void ReadDecom(void);
 
@@ -163,6 +168,42 @@ void daemonize()
     pthread_sigmask(SIG_BLOCK, &signals, NULL);
 }
 
+
+void PublishFrames(void)
+{
+    void *channel_data_frame[RATE_END] = {0};
+    static char frame_name[32];
+    // extern struct mosquitto *mosq;
+    // uint16_t    bi0_frame[BI0_FRAME_SIZE];
+    // const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE) * 2;
+
+    uint16_t    read_frame;
+    uint16_t    write_frame;
+  
+    framing_init(channel_list, derived_list);
+
+    channel_data_frame[RATE_100HZ] = calloc(1, frame_size[RATE_100HZ]);
+    snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
+
+    while (true) {
+        write_frame = frames.i_out;
+        read_frame = frames.i_in;
+        if (read_frame == write_frame) {
+            usleep(10000);
+            continue;
+        }
+
+        // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
+        while (read_frame != write_frame) {
+            memcpy(channel_data_frame[RATE_100HZ], frames.framelist[write_frame], frame_size[RATE_100HZ]);
+            framing_publish_100hz_decom(channel_data_frame[RATE_100HZ]);
+            write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
+        }
+        frames.i_out = write_frame;
+        usleep(10000);
+    }
+}
+
 int main(void) {
     struct statvfs vfsbuf;
     unsigned long long int disk_free = 0;
@@ -181,7 +222,7 @@ int main(void) {
 
     // /* Initialise Channel Lists */
     // MakeAddressLookups("/data/etc/decomd/Nios.map");
-    framing_init(channel_list, derived_list);
+    // initialize_biphase_buffer();
 
     /* Initialise Decom */
     ioctl(decom_fp, DECOM_IOC_RESET);
@@ -197,6 +238,7 @@ int main(void) {
     }
 
     gettimeofday(&then, &tz);
+    pthread_create(&publish_thread, NULL, (void*)&PublishFrames, NULL);
     pthread_create(&decom_thread, NULL, (void*)&ReadDecom, NULL);
 
     /* unblock signals */

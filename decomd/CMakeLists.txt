@@ -170,6 +170,7 @@ add_executable (decomd
 #   $<TARGET_OBJECTS:commanding>
     ${PROJECT_SOURCE_DIR}/decomd.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
+    ${PROJECT_SOURCE_DIR}/decomd.h
     ${PROJECT_SOURCE_DIR}/readdecom_tng.c
     ) 
 
@@ -185,7 +186,7 @@ target_link_libraries(decomd
 set(check_files ${FRAME_SRCS} ${DECOM_COMMON_SRCS} 
 		decomd.c readdecom_tng.c
                 ${FRAME_HEADERS} ${DECOM_COMMON_HEADERS}
-		decom_pci.h
+		decom_pci.h decomd.h
    )
 
 
