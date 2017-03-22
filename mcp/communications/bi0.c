@@ -37,6 +37,7 @@
 #include "crc.h"
 #include "channels_tng.h"
 #include "mputs.h"
+#include "mcp.h"
 
 
 bi0_buffer_t bi0_buffer;
@@ -87,13 +88,26 @@ static void tickle(struct mpsse_ctx *ctx_passed_write) {
 
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
+    static int amisouth;
+    extern int16_t SouthIAm;
+    if (SouthIAm == 1) {
+        amisouth = 1;
+    }
+    if (SouthIAm == 0) {
+        amisouth = 0;
+    }
     static int in_charge;
     if (first_call == 1) {
         first_call = 0;
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-        // command data or wherever incharge gets set
-        // also change for fc1 vs fc2
+        if (in_charge && amisouth) {
+            int placeholder = 6;
+            // set incharge here to 1 if the && comes true
+        } else {
+            int secondplaceholder = 6;
+            // set incharge to 0 if the && is false.
+        }
     }
 }
 
@@ -121,7 +135,7 @@ void biphase_writer(void)
 
     // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
     // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
-    uint8_t direction = 0x83;  
+    uint8_t direction = 0x83;
     uint8_t initial_value = 0x00;
 
     struct timeval begin, end;

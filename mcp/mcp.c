@@ -276,7 +276,7 @@ static void close_mcp(int m_code)
 }
 
 /* Polarity crisis: am I north or south? */
-/* Right now fc1 == south */
+/* Right now fc2 == south */
 static int AmISouth(int *not_cryo_corner)
 {
     char buffer[4];
