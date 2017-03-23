@@ -104,9 +104,10 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         if (in_charge && amisouth) {
             int placeholder = 6;
             // set incharge here to 1 if the && comes true
+            InCharge = 1;
         } else {
             int secondplaceholder = 6;
-            // set incharge to 0 if the && is false.
+            InCharge = 0;
         }
     }
 }
