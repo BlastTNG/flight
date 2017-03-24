@@ -339,7 +339,7 @@ static void mcp_5hz_routines(void)
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
-    ControlBalance();
+    // ControlBalance(); // Joy uncomments this for telemtry
     StoreActBus();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
@@ -572,11 +572,12 @@ int main(int argc, char *argv[])
   }
   initialize_magnetometer();
 
-//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-//  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
   pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
-  act_thread = ph_thread_spawn(ActuatorBus, NULL);
+
+  // act_thread = ph_thread_spawn(ActuatorBus, NULL); // Commented out by Joy for telemetry
 
   initialize_data_sharing();
   initialize_watchdog(2);
