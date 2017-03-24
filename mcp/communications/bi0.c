@@ -185,14 +185,15 @@ void biphase_writer(void)
             gettimeofday(&begin, NULL);
             mpsse_biphase_write_data(ctx, bi0_frame, BI0_FRAME_SIZE*sizeof(uint16_t));
             mpsse_flush(ctx);
-            tickle(ctx);
             gettimeofday(&end, NULL);
             blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
                      BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
-
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
             }
+            // Watchdog TODO (Joy/Ian): decide if dangerous to have the watchdog routines here
+            tickle(ctx);
+            set_incharge(ctx);
         }
 
         bi0_buffer.i_out = write_frame;
