@@ -38,9 +38,9 @@
 #include <derived.h>
 #include <mputs.h>
 
-#define DECOMD // TODO (Joy): figure out where to place this so it's only defined when compiling decomd
+#define DECOMD // TODO(Joy): figure out where to place this so it's only defined when compiling decomd
 #ifndef DECOMD
- #include <command_struct.h>
+#include <command_struct.h>
 #endif
 
 static int frame_stop;

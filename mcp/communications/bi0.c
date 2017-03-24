@@ -37,9 +37,10 @@
 #include "crc.h"
 #include "channels_tng.h"
 #include "mputs.h"
-#include "mcp.h"
+// #include "mcp.h"
 
-
+extern int16_t SouthIAm;
+extern int16_t InCharge;
 bi0_buffer_t bi0_buffer;
 
 void initialize_biphase_buffer(void)
@@ -88,25 +89,15 @@ static void tickle(struct mpsse_ctx *ctx_passed_write) {
 
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
-    static int amisouth;
-    extern int16_t SouthIAm;
-    if (SouthIAm == 1) {
-        amisouth = 1;
-    }
-    if (SouthIAm == 0) {
-        amisouth = 0;
-    }
     static int in_charge;
     if (first_call == 1) {
         first_call = 0;
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-        if (in_charge && amisouth) {
-            int placeholder = 6;
+        if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
         } else {
-            int secondplaceholder = 6;
             InCharge = 0;
         }
     }
