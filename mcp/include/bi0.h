@@ -40,7 +40,7 @@ typedef struct
 
 extern bi0_buffer_t bi0_buffer;
 
-extern int16_t InCharge;
+// extern int16_t InCharge;
 extern pthread_t watchdog_id;
 
 void initialize_biphase_buffer(void);

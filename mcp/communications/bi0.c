@@ -37,8 +37,10 @@
 #include "crc.h"
 #include "channels_tng.h"
 #include "mputs.h"
+// #include "mcp.h"
 
-
+extern int16_t SouthIAm;
+extern int16_t InCharge;
 bi0_buffer_t bi0_buffer;
 
 void initialize_biphase_buffer(void)
@@ -92,8 +94,12 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         first_call = 0;
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-        // command data or wherever incharge gets set
-        // also change for fc1 vs fc2
+        if (in_charge && SouthIAm) {
+            // set incharge here to 1 if the && comes true
+            InCharge = 1;
+        } else {
+            InCharge = 0;
+        }
     }
 }
 
@@ -119,21 +125,33 @@ void biphase_writer(void)
     // int frequency = 1000000;
     int frequency = 100000;
 
+    // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
+    // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
+    uint8_t direction = 0x83;
     uint8_t initial_value = 0x00;
-    // TODO(Joy): NEED TO CHANGE "direction" to only set the biphase pins to output!!
-    uint8_t direction = 0xFF;  // 1=output, 0=input. 0xFF = output for all pins
 
     struct timeval begin, end;
 
     nameThread("Biphase");
 
+    // The first open is hack, to check chip is there + properly reset it
     ctx = mpsse_open(&vid, &pid, description, serial, channel);
     if (!ctx) {
         blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
         pthread_exit(0);
     }
+    mpsse_reset_purge_close(ctx);
+    usleep(1000);
+
+    // This is now the real open
+	ctx = mpsse_open(&vid, &pid, description, serial, channel);
+    if (!ctx) {
+        blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
+        pthread_exit(0);
+    }
+    usleep(1000);
+
     mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
-    // mpsse_set_data_bits_high_byte(ctx, initial_value, direction);
     mpsse_set_frequency(ctx, frequency);
 
     mpsse_flush(ctx);
@@ -159,6 +177,7 @@ void biphase_writer(void)
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
             bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes-2);
+            blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
 
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;

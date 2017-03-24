@@ -55,7 +55,7 @@
 #define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
 
 /*DEBUG FLAG*/
-// #define _DEBUG_JTAG_IO_ 1
+#define _DEBUG_JTAG_IO_ 1
 
 enum ftdi_chip_type {
 	TYPE_FT2232C,
@@ -93,6 +93,8 @@ struct mpsse_ctx *mpsse_open(const uint16_t *vid, const uint16_t *pid, const cha
 void mpsse_close(struct mpsse_ctx *ctx);
 bool mpsse_is_high_speed(struct mpsse_ctx *ctx);
 
+void mpsse_reset_purge_close(struct mpsse_ctx *ctx);
+
 /* Command queuing. These correspond to the MPSSE commands with the same names, but no need to care
  * about bit/byte transfer or data length limitation. Read data is guaranteed to be available only
  * after the following mpsse_flush(). */
@@ -120,8 +122,10 @@ int mpsse_set_frequency(struct mpsse_ctx *ctx, int frequency);
 int mpsse_flush(struct mpsse_ctx *ctx);
 void mpsse_purge(struct mpsse_ctx *ctx);
 
+
 /* Biphase specific routines */
 void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length);
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit);
 int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
+
 #endif /* MPSSE_H_ */

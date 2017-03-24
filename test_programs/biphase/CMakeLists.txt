@@ -106,11 +106,19 @@ add_library(blast_obj OBJECT
     ${COMMON_DIR}/include/blast.h
     )
 define_file_basename_for_sources(blast_obj)
+
+# add crc objects
+add_library(crc_obj OBJECT 
+    ${COMMON_DIR}/crc.c 
+    ${COMMON_DIR}/include/crc.h
+    )
+define_file_basename_for_sources(crc_obj)
 	
 add_executable (test_biphase 
     test_biphase.c
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:blast_obj>
+    $<TARGET_OBJECTS:crc_obj>
     ) 
 
 define_file_basename_for_sources(test_biphase)

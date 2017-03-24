@@ -44,7 +44,7 @@
 		for (int i = 0; i < len; i++) { \
 			buf_string_pos += sprintf(buf_string + buf_string_pos, " %02x", buf[i]); \
 			if (i % 32 == 32 - 1) { \
-				blast_info("%s", buf_string); \
+				blast_dbg("%s", buf_string); \
 				buf_string_pos = 0; \
 			} \
 		} \
@@ -350,8 +350,22 @@ error:
 	return 0;
 }
 
+void mpsse_reset_purge_close(struct mpsse_ctx *ctx)
+{
+    int reterr;
+    reterr = libusb_control_transfer(ctx->usb_dev, FTDI_DEVICE_OUT_REQTYPE, SIO_SET_BITMODE_REQUEST,
+             0x0000, ctx->index, NULL, 0, ctx->usb_write_timeout);
+    if (reterr < 0) {
+        blast_info("error trying to set bitmode to RESET");
+    }
+    mpsse_purge(ctx);
+    mpsse_close(ctx);
+}
+
+
 void mpsse_close(struct mpsse_ctx *ctx)
 {
+
 	if (ctx->usb_dev)
 		libusb_close(ctx->usb_dev);
 	if (ctx->usb_ctx)
@@ -906,7 +920,10 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit)
 {
 	uint8_t buf = (bit & 0x1) << 6;
-	mpsse_set_data_bits_low_byte(ctx, buf, 0x80);
+    // CLK, data, WD are bit 0, 1 and 7
+    // 0b10000011 = 0x83 
+    // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
+	mpsse_set_data_bits_low_byte(ctx, buf, 0x83);
 }
 
 /**

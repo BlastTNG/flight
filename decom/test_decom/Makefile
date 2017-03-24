@@ -11,4 +11,4 @@ test_decom: test_decom.c
 	$(CC) -o test_decom test_decom.c -lm
 
 clean: 
-	rm -f .decom* *.o test_decom 
+	rm -f .decom* *.o test_decom test_decom_packets
