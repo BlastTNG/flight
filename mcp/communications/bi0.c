@@ -90,15 +90,19 @@ static void tickle(struct mpsse_ctx *ctx_passed_write) {
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
     static int in_charge;
+    static channel_t* incharge_Addr;
     if (first_call == 1) {
         first_call = 0;
+        incharge_Addr = channels_find_by_name("incharge");
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
+            SET_SCALED_VALUE(incharge_Addr, InCharge);
         } else {
             InCharge = 0;
+            SET_SCALED_VALUE(incharge_Addr, InCharge);
         }
     }
 }
