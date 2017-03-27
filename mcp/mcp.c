@@ -360,8 +360,7 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     // rec_control();
-    // read_thermometers();
-    // test_read();
+    read_thermometers();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -369,8 +368,6 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    // query_mult(0, 48);
-    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
