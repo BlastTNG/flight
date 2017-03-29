@@ -170,243 +170,379 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case heaters_off:
+            heater_all_off();
+            break;
         case reboot_ljcryo1:
             labjack_reboot(LABJACK_CRYO_1);
             break;
         case power_box_on:
-            rec_switch(1);
+            CommandData.Relays.rec_on = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case power_box_off:
-            rec_switch(2);
+            CommandData.Relays.rec_off = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case amp_supply_on:
-            rec_switch(3);
+            CommandData.Relays.amp_supply_on = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case amp_supply_off:
-            rec_switch(4);
+            CommandData.Relays.amp_supply_off = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case therm_readout_on:
-            rec_switch(5);
+            CommandData.Relays.therm_supply_on = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case therm_readout_off:
-            rec_switch(6);
+            CommandData.Relays.therm_supply_off = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case heater_supply_on:
-            rec_switch(7);
+            CommandData.Relays.heater_supply_on = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case heater_supply_off:
-            rec_switch(8);
+            CommandData.Relays.heater_supply_off = 1;
+            CommandData.Relays.update_rec = 1;
             break;
         case heater_300mk_on:
-            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 1);
+            CommandData.Cryo.heater_300mk = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 1;
             break;
         case heater_300mk_off:
-            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, 0);
+            CommandData.Cryo.heater_300mk = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 1;
             break;
         case charcoal_hs_on:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 1);
+            CommandData.Cryo.charcoal_hs = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 64;
             break;
         case charcoal_hs_off:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
+            CommandData.Cryo.charcoal_hs = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 64;
             break;
-        case callamp_on:
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
-            break;
-        case callamp_off:
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+        case single_cal_pulse:
+            CommandData.Cryo.do_cal_pulse = 1;
             break;
         case lna350_on:
-            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 1);
+            CommandData.Cryo.lna_350 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 8;
             break;
         case lna350_off:
-            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, 0);
+            CommandData.Cryo.lna_350 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 8;
             break;
         case lna500_on:
-            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 1);
+            CommandData.Cryo.lna_500 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 16;
             break;
         case lna500_off:
-            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, 0);
+            CommandData.Cryo.lna_500 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 16;
             break;
-        case level_sensor_on:
-            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
-            // probably becomes an on pulse in the future
-            break;
-        case level_sensor_off:
-            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+        case level_sensor_pulse:
+            CommandData.Cryo.do_level_pulse = 1;
             break;
         case charcoal_on:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 1);
+            CommandData.Cryo.charcoal = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 32;
             break;
         case charcoal_off:
-            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, 0);
+            CommandData.Cryo.charcoal = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 32;
             break;
         case lna250_on:
-            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 1);
+            CommandData.Cryo.lna_250 = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 4;
             break;
         case lna250_off:
-            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, 0);
+            CommandData.Cryo.lna_250 = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 4;
             break;
         case heater_1k_on:
-            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 1);
+            CommandData.Cryo.heater_1k = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status += 2;
             break;
         case heater_1k_off:
-            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, 0);
+            CommandData.Cryo.heater_1k = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.heater_status -= 2;
             break;
         case of_relay_1_on:
-            of_1_4_switch(1);
+            CommandData.Relays.of_1_on = 1;
+            CommandData.Relays.of_status += 1;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_1_off:
-            of_1_4_switch(2);
+            CommandData.Relays.of_1_off = 1;
+            CommandData.Relays.of_status -= 1;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_2_on:
-            of_1_4_switch(3);
+            CommandData.Relays.of_2_on = 1;
+            CommandData.Relays.of_status += 2;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_2_off:
-            of_1_4_switch(4);
+            CommandData.Relays.of_2_off = 1;
+            CommandData.Relays.of_status -= 2;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_3_on:
-            of_1_4_switch(5);
+            CommandData.Relays.of_3_on = 1;
+            CommandData.Relays.of_status += 4;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_3_off:
-            of_1_4_switch(6);
+            CommandData.Relays.of_3_off = 1;
+            CommandData.Relays.of_status -= 4;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_4_on:
-            of_1_4_switch(7);
+            CommandData.Relays.of_4_on = 1;
+            CommandData.Relays.of_status += 8;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_4_off:
-            of_1_4_switch(8);
+            CommandData.Relays.of_4_off = 1;
+            CommandData.Relays.of_status -= 8;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_5_on:
-            of_5_8_switch(1);
+            CommandData.Relays.of_5_on = 1;
+            CommandData.Relays.of_status += 16;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_5_off:
-            of_5_8_switch(2);
+            CommandData.Relays.of_5_off = 1;
+            CommandData.Relays.of_status -= 16;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_6_on:
-            of_5_8_switch(3);
+            CommandData.Relays.of_6_on = 1;
+            CommandData.Relays.of_status += 32;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_6_off:
-            of_5_8_switch(4);
+            CommandData.Relays.of_6_off = 1;
+            CommandData.Relays.of_status -= 32;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_7_on:
-            of_5_8_switch(5);
+            CommandData.Relays.of_7_on = 1;
+            CommandData.Relays.of_status += 64;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_7_off:
-            of_5_8_switch(6);
+            CommandData.Relays.of_7_off = 1;
+            CommandData.Relays.of_status -= 64;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_8_on:
-            of_5_8_switch(7);
+            CommandData.Relays.of_8_on = 1;
+            CommandData.Relays.of_status += 128;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_8_off:
-            of_5_8_switch(8);
+            CommandData.Relays.of_8_off = 1;
+            CommandData.Relays.of_status -= 128;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_9_on:
-            of_9_12_switch(1);
+            CommandData.Relays.of_9_on = 1;
+            CommandData.Relays.of_status += 256;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_9_off:
-            of_9_12_switch(2);
+            CommandData.Relays.of_9_off = 1;
+            CommandData.Relays.of_status -= 256;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_10_on:
-            of_9_12_switch(3);
+            CommandData.Relays.of_10_on = 1;
+            CommandData.Relays.of_status += 512;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_10_off:
-            of_9_12_switch(4);
+            CommandData.Relays.of_10_off = 1;
+            CommandData.Relays.of_status -= 512;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_11_on:
-            of_9_12_switch(5);
+            CommandData.Relays.of_11_on = 1;
+            CommandData.Relays.of_status += 1024;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_11_off:
-            of_9_12_switch(6);
+            CommandData.Relays.of_11_off = 1;
+            CommandData.Relays.of_status -= 1024;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_12_on:
-            of_9_12_switch(7);
+            CommandData.Relays.of_12_on = 1;
+            CommandData.Relays.of_status += 2048;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_12_off:
-            of_9_12_switch(8);
+            CommandData.Relays.of_12_off = 1;
+            CommandData.Relays.of_status -= 2048;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_13_on:
-            of_13_16_switch(1);
+            CommandData.Relays.of_13_on = 1;
+            CommandData.Relays.of_status += 4096;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_13_off:
-            of_13_16_switch(2);
+            CommandData.Relays.of_13_off = 1;
+            CommandData.Relays.of_status -= 4096;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_14_on:
-            of_13_16_switch(3);
+            CommandData.Relays.of_14_on = 1;
+            CommandData.Relays.of_status += 8192;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_14_off:
-            of_13_16_switch(4);
+            CommandData.Relays.of_14_off = 1;
+            CommandData.Relays.of_status -= 8192;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_15_on:
-            of_13_16_switch(5);
+            CommandData.Relays.of_15_on = 1;
+            CommandData.Relays.of_status += 16384;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_15_off:
-            of_13_16_switch(6);
+            CommandData.Relays.of_15_off = 1;
+            CommandData.Relays.of_status -= 16384;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_16_on:
-            of_13_16_switch(7);
+            CommandData.Relays.of_16_on = 1;
+            CommandData.Relays.of_status += 32768;
+            CommandData.Relays.update_of = 1;
             break;
         case of_relay_16_off:
-            of_13_16_switch(8);
+            CommandData.Relays.of_16_off = 1;
+            CommandData.Relays.of_status -= 32768;
+            CommandData.Relays.update_of = 1;
             break;
         case if_relay_1_on:
-            if_1_5_switch(1);
+            CommandData.Relays.of_1_on = 1;
+            CommandData.Relays.if_status += 1;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_1_off:
-            if_1_5_switch(2);
+            CommandData.Relays.if_1_off = 1;
+            CommandData.Relays.if_status -= 1;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_2_on:
-            if_1_5_switch(3);
+            CommandData.Relays.if_2_on = 1;
+            CommandData.Relays.if_status += 2;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_2_off:
-            if_1_5_switch(4);
+            CommandData.Relays.if_2_off = 1;
+            CommandData.Relays.if_status -= 2;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_3_on:
-            if_1_5_switch(5);
+            CommandData.Relays.if_3_on = 1;
+            CommandData.Relays.if_status += 4;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_3_off:
-            if_1_5_switch(6);
+            CommandData.Relays.if_3_off = 1;
+            CommandData.Relays.if_status -= 4;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_4_on:
-            if_1_5_switch(7);
+            CommandData.Relays.if_4_on = 1;
+            CommandData.Relays.if_status += 8;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_4_off:
-            if_1_5_switch(8);
+            CommandData.Relays.if_4_off = 1;
+            CommandData.Relays.if_status -= 8;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_5_on:
-            if_1_5_switch(9);
+            CommandData.Relays.if_5_on = 1;
+            CommandData.Relays.if_status += 16;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_5_off:
-            if_1_5_switch(10);
+            CommandData.Relays.if_5_off = 1;
+            CommandData.Relays.if_status -= 16;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_6_on:
-            if_6_10_switch(1);
+            CommandData.Relays.if_6_on = 1;
+            CommandData.Relays.if_status += 32;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_6_off:
-            if_6_10_switch(2);
+            CommandData.Relays.if_6_off = 1;
+            CommandData.Relays.if_status -= 32;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_7_on:
-            if_6_10_switch(3);
+            CommandData.Relays.if_7_on = 1;
+            CommandData.Relays.if_status += 64;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_7_off:
-            if_6_10_switch(4);
+            CommandData.Relays.if_7_off = 1;
+            CommandData.Relays.if_status -= 64;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_8_on:
-            if_6_10_switch(5);
+            CommandData.Relays.if_8_on = 1;
+            CommandData.Relays.if_status += 128;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_8_off:
-            if_6_10_switch(6);
+            CommandData.Relays.if_8_off = 1;
+            CommandData.Relays.if_status -= 128;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_9_on:
-            if_6_10_switch(7);
+            CommandData.Relays.if_9_on = 1;
+            CommandData.Relays.if_status += 256;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_9_off:
-            if_6_10_switch(8);
+            CommandData.Relays.if_9_off = 1;
+            CommandData.Relays.if_status -= 256;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_10_on:
-            if_6_10_switch(9);
+            CommandData.Relays.if_10_on = 1;
+            CommandData.Relays.if_status += 512;
+            CommandData.Relays.update_if = 1;
             break;
         case if_relay_10_off:
-            if_6_10_switch(10);
+            CommandData.Relays.if_10_off = 1;
+            CommandData.Relays.if_status -= 512;
+            CommandData.Relays.update_if = 1;
             break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -615,18 +751,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.power.bi0.rst_count = 0;
             CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
             break;
-        case das_off:
-            CommandData.power.das.set_count = 0;
-            CommandData.power.das.rst_count = LATCH_PULSE_LEN;
-            break;
-        case das_on:
-            CommandData.power.das.rst_count = 0;
-            CommandData.power.das.set_count = LATCH_PULSE_LEN;
-            break;
-        case das_cycle:
-            CommandData.power.das.set_count = PCYCLE_HOLD_LEN + LATCH_PULSE_LEN;
-            CommandData.power.das.rst_count = LATCH_PULSE_LEN;
-            break;
         case rx_off:
             CommandData.power.rx_main.set_count = 0;
             CommandData.power.rx_main.rst_count = LATCH_PULSE_LEN;
@@ -802,67 +926,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case hwpr_enc_pulse:
             CommandData.Cryo.hwprPos = 50;
             break;
-        case auto_cycle:
-            CommandData.Cryo.fridgeCycle = 1;
-            CommandData.Cryo.force_cycle = 0;
-            break;
-        case fridge_cycle:
-            CommandData.Cryo.fridgeCycle = 1;
-            CommandData.Cryo.force_cycle = 1;
-            break;
-        case cal_on:
-            CommandData.Cryo.calibrator = on;
-            break;
-        case cal_off:
-            CommandData.Cryo.calibrator = off;
-            break;
-        case hs_pot_on:
-            CommandData.Cryo.hsPot = 1;
-            break;
-        case hs_pot_off:
-            CommandData.Cryo.hsPot = 0;
-            break;
-        case bda_on:
-            CommandData.Cryo.BDAHeat = 1;
-            break;
-        case bda_off:
-            CommandData.Cryo.BDAHeat = 0;
-            break;
-        case pot_valve_open:
-            CommandData.Cryo.potvalve_open = 100;
-            CommandData.Cryo.potvalve_close = 0;
-            break;
-        case pot_valve_close:
-            CommandData.Cryo.potvalve_close = 100;
-            CommandData.Cryo.potvalve_open = 0;
-            break;
-        case pot_valve_on:
-            CommandData.Cryo.potvalve_on = 1;
-            break;
-        case pot_valve_off:
-            CommandData.Cryo.potvalve_on = 0;
-            break;
-        case l_valve_open:
-            CommandData.Cryo.lvalve_open = 100;
-            CommandData.Cryo.lvalve_close = 0;
-            break;
-        case l_valve_close:
-            CommandData.Cryo.lvalve_close = 100;
-            CommandData.Cryo.lvalve_open = 0;
-            break;
-        case he_valve_on:
-            CommandData.Cryo.lhevalve_on = 1;
-            break;
-        case he_valve_off:
-            CommandData.Cryo.lhevalve_on = 0;
-            break;
-        case ln_valve_on:
-            CommandData.Cryo.lnvalve_on = 1;
-            break;
-        case ln_valve_off:
-            CommandData.Cryo.lnvalve_on = 0;
-            break;
-
             // Lock
         case pin_in:
             CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
@@ -1577,6 +1640,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
 // .
+    /*************************************
+    ********* Cryostat  ***********/
+    case cal_length: // specify length in ms (multiples of 5)
+      CommandData.Cryo.cal_length = (ivalues[0]/5);
+      break;
+    case level_length: // specify length in seconds
+      CommandData.Cryo.level_length = (ivalues[0]*5);
+      break;
+
 #ifndef BOLOTEST
      /*************************************
       ********* Balance System  ***********/
@@ -1669,34 +1741,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Bias.biasStep.dt = ivalues[3];
       CommandData.Bias.biasStep.pulse_len = ivalues[4];
       CommandData.Bias.biasStep.arr_ind = ivalues[5];
-      break;
-      /*************************************
-      ********** Cal Lamp  ****************/
-    case cal_pulse:
-      CommandData.Cryo.calibrator = pulse;
-      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      break;
-    case cal_repeat:
-      CommandData.Cryo.calibrator = repeat;
-      CommandData.Cryo.calib_pulse = ivalues[0] / 10;
-      CommandData.Cryo.calib_period = ivalues[1]*5;
-      CommandData.Cryo.calib_hwpr = ivalues[2];
-      break;
-
-      /*************************************
-      ******** Cryo heat   ****************/
-    case jfet_set:
-      CommandData.Cryo.JFETSetOn = rvalues[0];
-      CommandData.Cryo.JFETSetOff = rvalues[1];
-      break;
-
-    case fridge_cycle_params:
-      CommandData.Cryo.cycle_start_temp = rvalues[0];
-      CommandData.Cryo.cycle_pot_max = rvalues[1];
-      CommandData.Cryo.cycle_charcoal_max = rvalues[2];
-      CommandData.Cryo.cycle_charcoal_timeout = rvalues[3];
-      CommandData.Cryo.cycle_charcoal_settle = rvalues[4];
-      CommandData.Cryo.cycle_settle_timeout = rvalues[5];
       break;
 
 #ifndef BOLOTEST
@@ -2238,19 +2282,6 @@ void InitCommandData()
     CommandData.power.gyro_off[4] = 0;
     CommandData.power.gyro_off[5] = 0;
     CommandData.power.hub232_off = 0;
-
-    CommandData.Cryo.BDAHeat = 0;
-
-    CommandData.Cryo.potvalve_on = 0;
-    CommandData.Cryo.potvalve_open = 0;
-    CommandData.Cryo.potvalve_close = 0;
-    CommandData.Cryo.lhevalve_on = 0;
-    CommandData.Cryo.lvalve_open = 0;
-    CommandData.Cryo.lvalve_close = 0;
-    CommandData.Cryo.lnvalve_on = 0;
-    CommandData.rox_bias.amp = 26;
-    CommandData.rox_bias.status = 0;
-
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
     CommandData.fast_offset_gy = 0;
@@ -2266,6 +2297,80 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
+    CommandData.Cryo.do_cal_pulse = 0;
+    CommandData.Cryo.do_level_pulse = 0;
+
+    /* relays should always be set to zero when starting MCP */
+    /* relays */
+    CommandData.Relays.of_1_on = 0;
+    CommandData.Relays.of_2_on = 0;
+    CommandData.Relays.of_3_on = 0;
+    CommandData.Relays.of_4_on = 0;
+    CommandData.Relays.of_5_on = 0;
+    CommandData.Relays.of_6_on = 0;
+    CommandData.Relays.of_7_on = 0;
+    CommandData.Relays.of_8_on = 0;
+    CommandData.Relays.of_9_on = 0;
+    CommandData.Relays.of_10_on = 0;
+    CommandData.Relays.of_11_on = 0;
+    CommandData.Relays.of_12_on = 0;
+    CommandData.Relays.of_13_on = 0;
+    CommandData.Relays.of_14_on = 0;
+    CommandData.Relays.of_15_on = 0;
+    CommandData.Relays.of_16_on = 0;
+    CommandData.Relays.of_1_off = 0;
+    CommandData.Relays.of_2_off = 0;
+    CommandData.Relays.of_3_off = 0;
+    CommandData.Relays.of_4_off = 0;
+    CommandData.Relays.of_5_off = 0;
+    CommandData.Relays.of_6_off = 0;
+    CommandData.Relays.of_7_off = 0;
+    CommandData.Relays.of_8_off = 0;
+    CommandData.Relays.of_9_off = 0;
+    CommandData.Relays.of_10_off = 0;
+    CommandData.Relays.of_11_off = 0;
+    CommandData.Relays.of_12_off = 0;
+    CommandData.Relays.of_13_off = 0;
+    CommandData.Relays.of_14_off = 0;
+    CommandData.Relays.of_15_off = 0;
+    CommandData.Relays.of_16_off = 0;
+    CommandData.Relays.if_1_on = 0;
+    CommandData.Relays.if_2_on = 0;
+    CommandData.Relays.if_3_on = 0;
+    CommandData.Relays.if_4_on = 0;
+    CommandData.Relays.if_5_on = 0;
+    CommandData.Relays.if_6_on = 0;
+    CommandData.Relays.if_7_on = 0;
+    CommandData.Relays.if_8_on = 0;
+    CommandData.Relays.if_9_on = 0;
+    CommandData.Relays.if_10_on = 0;
+    CommandData.Relays.if_1_off = 0;
+    CommandData.Relays.if_2_off = 0;
+    CommandData.Relays.if_3_off = 0;
+    CommandData.Relays.if_4_off = 0;
+    CommandData.Relays.if_5_off = 0;
+    CommandData.Relays.if_6_off = 0;
+    CommandData.Relays.if_7_off = 0;
+    CommandData.Relays.if_8_off = 0;
+    CommandData.Relays.if_9_off = 0;
+    CommandData.Relays.if_10_off = 0;
+    CommandData.Relays.rec_on = 0;
+    CommandData.Relays.rec_off = 0;
+    CommandData.Relays.amp_supply_on = 0;
+    CommandData.Relays.amp_supply_off = 0;
+    CommandData.Relays.therm_supply_on = 0;
+    CommandData.Relays.therm_supply_off = 0;
+    CommandData.Relays.heater_supply_on = 0;
+    CommandData.Relays.heater_supply_off = 0;
+    CommandData.Relays.update_rec = 0;
+    CommandData.Relays.update_of = 0;
+    CommandData.Relays.update_if = 0;
+    CommandData.Cryo.heater_status = 0;
+    CommandData.Relays.labjack[0] = 0;
+    CommandData.Relays.labjack[1] = 0;
+    CommandData.Relays.labjack[2] = 0;
+    CommandData.Relays.labjack[3] = 0;
+    CommandData.Relays.labjack[4] = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2475,31 +2580,13 @@ void InitCommandData()
     CommandData.xystage.mode = XYSTAGE_GOTO;
     CommandData.xystage.force_repoll = 0;
 
-    CommandData.Cryo.charcoalHeater = 0;
-    CommandData.Cryo.hsCharcoal = 1;
-    CommandData.Cryo.fridgeCycle = 1;
-    CommandData.Cryo.force_cycle = 0;
-    CommandData.Cryo.hsPot = 0;
-    CommandData.Cryo.heliumLevel = 0;
-    CommandData.Cryo.he4_lev_old = 0;
     CommandData.Cryo.hwprPos = 0;
     CommandData.Cryo.hwpr_pos_old = 0;
-    CommandData.Cryo.JFETHeat = 0;
-    CommandData.Cryo.autoJFETheat = 1;
-    CommandData.Cryo.JFETSetOn = 120;
-    CommandData.Cryo.JFETSetOff = 135;
-    CommandData.Cryo.calibrator = repeat;
-    CommandData.Cryo.calib_pulse = 30; /* = 300 ms @ 100Hz */
-    CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */
+    CommandData.Cryo.cal_length = 30; /* = 150 ms @ 200Hz */
+    CommandData.Cryo.calib_period = 3000; /* = 600 s @ 5Hz */ // write into periodic version
     CommandData.Cryo.calib_repeats = -1;  // indefinitely
     CommandData.Cryo.calib_hwpr = 1;  // pulse after every hwpr step
-
-    CommandData.Cryo.cycle_start_temp = 0.375;
-    CommandData.Cryo.cycle_pot_max = 2.5;
-    CommandData.Cryo.cycle_charcoal_max = 40.0;
-    CommandData.Cryo.cycle_charcoal_timeout = 30.0;
-    CommandData.Cryo.cycle_charcoal_settle = 25.0;
-    CommandData.Cryo.cycle_settle_timeout = 40.0;
+    CommandData.Cryo.level_length = 30;
 
     CommandData.ISCControl[0].max_age = 200; /* 2000 ms*/
 

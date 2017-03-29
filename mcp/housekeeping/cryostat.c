@@ -40,60 +40,111 @@
 #include "command_struct.h"
 #include "labjack.h"
 #include "blast.h"
+<<<<<<< HEAD
 #include "multiplexed_labjack.h"
 #include "bias_tone.h"
+=======
+>>>>>>> labjack
 
-/* Heater control bits (BIAS_D G4) */
-#define HEAT_HELIUM_LEVEL    0x0001
-#define HEAT_CHARCOAL        0x0002
-#define HEAT_POT_HS          0x0004
-#define HEAT_CHARCOAL_HS     0x0008
-#define HEAT_UNDEF           0x0010
-#define HEAT_BDA             0x0020
-#define HEAT_CALIBRATOR      0x0040
-#define HEAT_HWPR_POS        0x0080
-
-static uint16_t heatctrl;
-static uint16_t dio_on = 1;
-static uint16_t dio_off = 0;
-static int cal_length = 0;
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
-void cryo_control(void)
-{
-    heatctrl = 0;
-    static int16_t last_rox_amp = 0;
-    static int16_t first_time = 1;
-    int retval = 0;
-    if (CommandData.Cryo.charcoalHeater)
-        heatctrl |= HEAT_CHARCOAL;
+// TODO(IAN): add use of InCharge global variable so only incharge comp runs
+// TODO(IAN): write cal_length to the frame, add periodic option
+// write level length, do_cal_pulse, everything!
 
-// If we have changed the requested amplitude of the rox bias, trigger a set of ALSA
-// commands to change the volume on the sound card.
-    if ((last_rox_amp != CommandData.rox_bias.amp) && (!first_time)) {
-        if (retval = set_mixer_params()) { // defined in bias_tone
-            blast_err("Could not update ROX bias amplitude!");
-        }
+typedef struct {
+    uint16_t cal_length;
+    uint16_t level_length;
+} cryo_control_t;
+
+typedef struct {
+    uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+    uint16_t heater_status;
+} heater_control_t;
+
+heater_control_t heater_state;
+cryo_control_t cryo_state;
+
+static void update_heater_values(void) {
+    heater_state.heater_300mk = CommandData.Cryo.heater_300mk;
+    heater_state.charcoal_hs = CommandData.Cryo.charcoal_hs;
+    heater_state.charcoal = CommandData.Cryo.charcoal;
+    heater_state.lna_250 = CommandData.Cryo.lna_250;
+    heater_state.lna_350 = CommandData.Cryo.lna_350;
+    heater_state.lna_500 = CommandData.Cryo.lna_500;
+    heater_state.heater_1k = CommandData.Cryo.heater_1k;
+    heater_state.heater_status = CommandData.Cryo.heater_status;
+}
+
+void heater_all_off(void) {
+    CommandData.Cryo.heater_300mk = 0;
+    CommandData.Cryo.charcoal_hs = 0;
+    CommandData.Cryo.charcoal = 0;
+    CommandData.Cryo.lna_250 = 0;
+    CommandData.Cryo.lna_350 = 0;
+    CommandData.Cryo.lna_500 = 0;
+    CommandData.Cryo.heater_1k = 0;
+    CommandData.Cryo.heater_status = 0;
+    update_heater_values();
+    heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+    heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+    heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+    heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+    heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+    heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+    heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+}
+
+void heater_control(void) {
+    static int first_heater = 1;
+    static channel_t* heater_status_Addr;
+    if (first_heater == 1) {
+        heater_status_Addr = channels_find_by_name("heater_status");
+        // read in the heater channels and update accordingly here
     }
-    last_rox_amp = CommandData.rox_bias.amp;
-    if (first_time) {
-        first_time = 0;
+    if (CommandData.Cryo.heater_update == 1) {
+        CommandData.Cryo.heater_update = 0;
+        update_heater_values();
+        heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+        heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+        heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+        heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+        heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+        heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+        heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+        SET_SCALED_VALUE(heater_status_Addr, CommandData.Cryo.heater_status);
     }
 }
-void cal_command(int length) {
-    cal_length = length;
+/*
+Heater status bits
+1 = heater 300mk
+2 = heater 1k
+4 = lna 250
+8 = lna 350
+16 = lna 500
+32 = charcoal
+64 = charcoal_hs
+*/
+
+void update_heater_status(void) {
+    int stuff;
+    // fill this with the heater status reads
+    // use this to reset CommandData.Cryo.heater_status if messed up
 }
 
 void cal_control(void) {
-    int how_long;
+    if (CommandData.Cryo.do_cal_pulse) {
+        cryo_state.cal_length = CommandData.Cryo.cal_length;
+        CommandData.Cryo.do_cal_pulse = 0;
+    }
     static int pulsed = 0;
-    if ((how_long = cal_length) > 0) {
+    if (cryo_state.cal_length > 0) {
         if (!pulsed) {
             pulsed = 1;
             heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
         }
-        cal_length--;
+        cryo_state.cal_length--;
     } else {
         if (pulsed) {
             heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
@@ -101,6 +152,47 @@ void cal_control(void) {
         }
     }
 }
+
+void level_control(void) {
+    if (CommandData.Cryo.do_level_pulse) {
+        cryo_state.level_length = CommandData.Cryo.level_length;
+        CommandData.Cryo.do_level_pulse = 0;
+    }
+    static int l_pulsed = 0;
+    if (cryo_state.level_length > 0) {
+        if (!l_pulsed) {
+            l_pulsed = 1;
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+        }
+        cryo_state.level_length--;
+    } else {
+        if (l_pulsed) {
+            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+            l_pulsed = 0;
+        }
+    }
+}
+
+void test_channel_outs(void) {
+    static int first_out = 1;
+}
+
+void test_frequencies(void) {
+    static channel_t* test_Addr;
+    static int first_test = 1;
+    if (first_test) {
+        test_Addr = channels_find_by_name("test_values");
+    }
+    SET_SCALED_VALUE(test_Addr, labjack_get_value(1, 12));
+}
+
+void tie_up(void) {
+    static int good = 1;
+    while (good) {
+        good = 1;
+    }
+}
+
 
 void test_labjacks(int m_which) {
     float test0, test1, test2, test3, test4;
@@ -135,7 +227,7 @@ void test_labjacks(int m_which) {
     blast_warn(" AIN 12 is %f", test12);
     blast_warn(" AIN 13 is %f", test13);
 }
-
+/*
 void store_100hz_cryo(void)
 {
     static int firsttime = 1;
@@ -148,6 +240,7 @@ void store_100hz_cryo(void)
     }
     SET_UINT16(heaterAddr, heatctrl);
 }
+*/
 void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
     static channel_t* reader;
     static int firsttime = 1;
@@ -253,6 +346,7 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
 }
 
+<<<<<<< HEAD
 #ifdef USE_XY_THREAD
 void read_chopper(void)
 {
@@ -272,6 +366,19 @@ void read_chopper(void)
 	SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(3, 12)); // labjack 2 channel 12 DEBUG USING LABJACK 3
 }
 #endif
+=======
+void test_cycle(void) {
+    static channel_t* test_channel;
+    static int first_test = 1;
+    float t_test;
+    if (first_test == 1) {
+        first_test = 0;
+        test_channel = channels_find_by_name("Tr_250_fpa");
+    }
+    GET_VALUE(test_channel, t_test);
+    blast_warn("channel is %f", t_test);
+}
+>>>>>>> labjack
 
 void autocycle_ian(void)
 {
@@ -287,10 +394,10 @@ void autocycle_ian(void)
     static double tcrit = 0.31;
     static int trigger = 0;
 
-    if (firsttime) {
-        tfpa250_Addr = channels_find_by_name("tr_250_fpa");  // these three are ROX
-        tfpa350_Addr = channels_find_by_name("tr_350_fpa");
-        tfpa500_Addr = channels_find_by_name("tr_500_fpa");
+    if (firsttime == 1) {
+        tfpa250_Addr = channels_find_by_name("Tr_250_fpa");  // these three are ROX
+        tfpa350_Addr = channels_find_by_name("Tr_350_fpa");
+        tfpa500_Addr = channels_find_by_name("Tr_500_fpa");
         tcharcoal_Addr = channels_find_by_name("td_charcoal"); // diodes
         tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
         firsttime = 0;
@@ -303,26 +410,22 @@ void autocycle_ian(void)
     GET_VALUE(tcharcoalhs_Addr, tcharcoalhs);
     if (t250 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
     if (t350 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
     if (t500 > tcrit) {
         if (!trigger) {
-            // HEAT_CHARCOAL_HS = 0;
+            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, 0);
             trigger = 1;
-            goto fridge_auto_cycle;
         }
     }
-fridge_auto_cycle:
     if (trigger) {
         if (!(iterator++ % 199)) { // borrowed from das.c, if this command is run at 100hz, this slows it down to 0.5 hz
             GET_VALUE(tfpa250_Addr, t250);

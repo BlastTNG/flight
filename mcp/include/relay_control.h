@@ -7,8 +7,18 @@
 //
 #ifndef INCLUDE_RELAY_CONTROL_H
 #define INCLUDE_RELAY_CONTROL_H
-void rec_switch(int which);
 void rec_control(void);
+void of_control(void);
+void if_control(void);
+// DIO addresses LJ CRYO 2
+#define POWER_BOX_ON 2001
+#define POWER_BOX_OFF 2000
+#define AMP_SUPPLY_ON 2003
+#define AMP_SUPPLY_OFF 2002
+#define THERM_READOUT_ON 2005
+#define THERM_READOUT_OFF 2004
+#define HEATER_SUPPLY_ON 2007
+#define HEATER_SUPPLY_OFF 2006
 // Outer Frame Relays
 // LABJACK 1 AND 3
 #define RELAY_1_ON 2000
@@ -49,18 +59,6 @@ void rec_control(void);
 #define IF_RELAY_9_OFF 2017
 #define IF_RELAY_10_ON 2018
 #define IF_RELAY_10_OFF 2019
-void of_1_4_switch(int which);
-void of_5_8_switch(int which);
-void of_9_12_switch(int which);
-void of_13_16_switch(int which);
-void if_1_5_switch(int which);
-void if_6_10_switch(int which);
-void of_1_4_control(void);
-void of_5_8_control(void);
-void of_9_12_control(void);
-void of_13_16_control(void);
-void if_1_5_control(void);
-void if_6_10_control(void);
 
 
 #endif /* relay_control_h */
