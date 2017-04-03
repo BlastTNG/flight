@@ -40,11 +40,8 @@
 #include "command_struct.h"
 #include "labjack.h"
 #include "blast.h"
-<<<<<<< HEAD
 #include "multiplexed_labjack.h"
 #include "bias_tone.h"
-=======
->>>>>>> labjack
 
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
@@ -345,8 +342,6 @@ void read_thermometers(void) {
     // below are the random cryo labjack channels
     SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
 }
-
-<<<<<<< HEAD
 #ifdef USE_XY_THREAD
 void read_chopper(void)
 {
@@ -366,7 +361,6 @@ void read_chopper(void)
 	SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(3, 12)); // labjack 2 channel 12 DEBUG USING LABJACK 3
 }
 #endif
-=======
 void test_cycle(void) {
     static channel_t* test_channel;
     static int first_test = 1;
@@ -378,7 +372,6 @@ void test_cycle(void) {
     GET_VALUE(test_channel, t_test);
     blast_warn("channel is %f", t_test);
 }
->>>>>>> labjack
 
 void autocycle_ian(void)
 {
