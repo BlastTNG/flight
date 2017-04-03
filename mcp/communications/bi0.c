@@ -99,10 +99,10 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
-            SET_SCALED_VALUE(incharge_Addr, InCharge);
+            SET_SCALED_VALUE(incharge_Addr, 1+SouthIAm);
         } else {
             InCharge = 0;
-            SET_SCALED_VALUE(incharge_Addr, InCharge);
+            // SET_SCALED_VALUE(incharge_Addr, InCharge);
         }
     }
 }
