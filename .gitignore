@@ -27,6 +27,7 @@ defricher/build
 
 decomd/build
 decom/test_decom/test_decom
+decom/test_decom/simple_test
 decom/test_decom/test_decom_packets
 decom/.tmp_versions
 decom/.decom_pci.ko.cmd
