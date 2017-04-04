@@ -38,13 +38,8 @@
 #include <derived.h>
 #include <mputs.h>
 
-#include <command_struct.h>
-
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
-static struct mosquitto *mosq_other = NULL;
-extern int16_t SouthIAm;
-extern int16_t InCharge;
 
 static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
@@ -97,7 +92,7 @@ void framing_publish_1hz(void)
     static char frame_name[32];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/1Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/biphase/1Hz");
     }
 
     if (frame_stop) return;
@@ -119,7 +114,7 @@ void framing_publish_5hz(void)
     static char frame_name[32];
     if (mcp_5hz_framenum_addr == NULL) {
         mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/5Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/biphase/5Hz");
     }
 
     if (frame_stop) return;
@@ -141,7 +136,7 @@ void framing_publish_100hz(void)
     static char frame_name[32];
     if (mcp_100hz_framenum_addr == NULL) {
         mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
     }
 
     if (frame_stop) return;
@@ -160,7 +155,7 @@ void framing_publish_100hz(void)
 void framing_publish_100hz_decom(void *m_frame)
 {
     static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
+    snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
 
     if (frame_size[RATE_100HZ]) {
         mosquitto_publish(mosq, NULL, frame_name,
@@ -175,7 +170,7 @@ void framing_publish_200hz(void)
 
     if (mcp_200hz_framenum_addr == NULL) {
         mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/200Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/biphase/200Hz");
     }
 
     if (frame_stop) return;
@@ -198,7 +193,7 @@ void framing_publish_244hz(void)
 
     if (mcp_244hz_framenum_addr == NULL) {
         mcp_244hz_framenum_addr = channels_find_by_name("mcp_244hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/244Hz", SouthIAm + 1);
+        snprintf(frame_name, sizeof(frame_name), "frames/biphase/244Hz");
     }
 
     if (frame_stop) return;
@@ -212,14 +207,6 @@ void framing_publish_244hz(void)
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
     }
-}
-
-/**
- * Publish updated CommandData
- */
-void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
-{
-    mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
 }
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
@@ -259,91 +246,7 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
     }
 }
 
-/**
- * Received data from "other" flight computer including CommandData struct,
- * EtherCAT state, Flight computer temps, etc.
- * @param mosq Pointer to mosq connection to other flight computer
- * @param userdata
- * @param message
- */
-static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
-                                         const struct mosquitto_message *message)
-{
-    char **topics;
-    int count;
-    static int has_warned = 0;
 
-    if (message->payloadlen > 0) {
-        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-            if (topics[0] && strcmp(topics[0], "commanddata") == 0) {
-                if (!InCharge && (sizeof(CommandData) == message->payloadlen)) {
-                    struct CommandDataStruct temp_command_data = {0};
-                    uint32_t prev_crc;
-
-                    memcpy(&temp_command_data, message->payload, message->payloadlen);
-                    prev_crc = temp_command_data.checksum;
-                    temp_command_data.checksum = 0;
-                    if (prev_crc == crc32_le(0, (uint8_t*)&temp_command_data, sizeof(temp_command_data))) {
-                        has_warned = 0;
-                        memcpy(&CommandData, &temp_command_data, sizeof(CommandData));
-                    } else if (!has_warned) {
-                        has_warned = 1;
-                        blast_err("Received invalid CommandData from in charge flight computer!"
-                                " Please check that both FCs are running the same mcp");
-                    }
-                }
-            }
-            mosquitto_sub_topic_tokens_free(&topics, count);
-        }
-    }
-}
-
-static void framing_shared_connect_callback(struct mosquitto *m_mosq, void *obj, int rc)
-{
-    if (rc == MOSQ_ERR_SUCCESS) {
-        mosquitto_subscribe(m_mosq, NULL, "commanddata", 1);
-    }
-}
-
-int framing_shared_data_init(void)
-{
-    char id[4] = "fcX";
-    char host[4] = "fcX";
-
-    int ret = 0;
-    int port = 1883;
-    int keepalive = 60;
-    bool clean_session = true;
-
-    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
-    snprintf(host, sizeof(host), "fc%d", (SouthIAm + 2) % 2 + 1);
-
-    mosq_other = mosquitto_new(id, clean_session, NULL);
-    if (!mosq_other) {
-        blast_err("mosquitto_new() failed creating other");
-        return -1;
-    }
-    mosquitto_log_callback_set(mosq_other, frame_log_callback);
-    mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
-    mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
-
-    if ((ret = mosquitto_connect_async(mosq_other, host, port, keepalive)) != MOSQ_ERR_SUCCESS) {
-        if (ret == MOSQ_ERR_INVAL) {
-        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
-        } else {
-        	if (errno == EINPROGRESS) {
-        		/* Do nothing, connection in progress */
-        	} else {
-        		blast_strerror("Unable to connect to mosquitto server!");
-        		return -1;
-        	}
-        }
-    }
-
-    mosquitto_reconnect_delay_set(mosq_other, 1, 10, 1);
-    mosquitto_loop_start(mosq_other);
-    return 0;
-}
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
@@ -362,8 +265,8 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     int keepalive = 60;
     bool clean_session = true;
 
-    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
-    snprintf(host, sizeof(host), "fc%d", SouthIAm + 1);
+    snprintf(id, sizeof(id), "biphase");
+    snprintf(host, sizeof(host), "biphase");
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {
@@ -397,7 +300,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
     mosquitto_loop_start(mosq);
 
-    snprintf(topic, sizeof(topic), "channels/fc/%d", SouthIAm + 1);
+    snprintf(topic, sizeof(topic), "channels/biphase");
     mosquitto_publish(mosq, NULL, topic,
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
     bfree(err, channels_pkg);
@@ -405,7 +308,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     if (!(derived_pkg = channels_create_derived_map(m_derived))) {
         blast_warn("Failed sending derived packages");
     } else {
-        snprintf(topic, sizeof(topic), "derived/fc/%d", SouthIAm + 1);
+        snprintf(topic, sizeof(topic), "derived/biphase");
         mosquitto_publish(mosq, NULL, topic,
                 sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
         bfree(err, derived_pkg);

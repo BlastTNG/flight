@@ -124,7 +124,7 @@ include_directories ("/usr/include/machine")
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
-set(FRAMING_DIR "${PROJECT_SOURCE_DIR}/../mcp/framing")
+# set(FRAMING_DIR "${PROJECT_SOURCE_DIR}/../mcp/framing")
 # set(HOUSEKEEPING_DIR "${PROJECT_SOURCE_DIR}/../mcp/housekeeping")
 # set(COMMANDING_DIR "${PROJECT_SOURCE_DIR}/../mcp/commanding")
 set(MCP_DIR "${PROJECT_SOURCE_DIR}/../mcp")
@@ -141,7 +141,7 @@ include_directories (
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 
 # add data frame objects
-add_subdirectory(${FRAMING_DIR} "${PROJECT_BINARY_DIR}/framing")
+# add_subdirectory(${FRAMING_DIR} "${PROJECT_BINARY_DIR}/framing")
 
 # add housekeeping objects
 # add_subdirectory(${HOUSEKEEPING_DIR} "${PROJECT_BINARY_DIR}/housekeeping")
@@ -156,8 +156,8 @@ define_file_basename_for_sources(blast_common)
 # add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 # define_file_basename_for_sources(housekeeping)
 
-add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
-define_file_basename_for_sources(framing)
+# add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
+# define_file_basename_for_sources(framing)
 
 # add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 # define_file_basename_for_sources(commanding)
@@ -166,11 +166,13 @@ define_file_basename_for_sources(framing)
 add_executable (decomd 
     $<TARGET_OBJECTS:blast_common>
 #   $<TARGET_OBJECTS:housekeeping>
-    $<TARGET_OBJECTS:framing>
+#   $<TARGET_OBJECTS:framing>
 #   $<TARGET_OBJECTS:commanding>
     ${PROJECT_SOURCE_DIR}/decomd.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
     ${PROJECT_SOURCE_DIR}/decomd.h
+    ${PROJECT_SOURCE_DIR}/decomd_framing.h
+    ${PROJECT_SOURCE_DIR}/decomd_framing.c
     ${PROJECT_SOURCE_DIR}/readdecom_tng.c
     ) 
 
