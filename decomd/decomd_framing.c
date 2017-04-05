@@ -257,7 +257,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     derived_header_t *derived_pkg = NULL;
 
     char id[4] = "fcX";
-    char host[4] = "fcX";
+    char host[9] = "blastgs01";
     char topic[64];
 
     int ret = 0;
