@@ -111,13 +111,14 @@ void ReadDecom (void)
               }
           } else {
               if ((i_word) == (BI0_FRAME_SIZE-1)) {
-		    // printf("== This is the last word: i_word=%zd, and BI0_FRAME_SIZE=%zd\n", i_word, BI0_FRAME_SIZE);
-		    // printf("The last word received (normally the CRC) is %04x\n", raw_word_in); 
+		    printf("== This is the last word: i_word=%zd, and BI0_FRAME_SIZE=%zd\n", i_word, BI0_FRAME_SIZE);
+		    printf("The last word received (normally the CRC) is %04x\n", raw_word_in); 
+		    printf("The last word received negative is (normally the CRC) is %04x\n", (~raw_word_in)&0xffff); 
                     out_frame[0] = anti_out_frame[0] = 0xEB90;
                     crc_pos = crc16(CRC16_SEED, out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
                     crc_neg = crc16(CRC16_SEED, anti_out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
-		    // printf("The CRC_POS computed is %04x\n", crc_pos);
-		    // printf("The CRC_NEG computed is %04x\n", crc_neg);
+		    printf("The CRC_POS computed is %04x\n", crc_pos);
+		    printf("The CRC_NEG computed is %04x\n", crc_neg);
                     if (raw_word_in == crc_pos) {
                         crc_ok = 1;
                         polarity = 1;

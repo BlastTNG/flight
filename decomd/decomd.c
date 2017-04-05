@@ -65,9 +65,6 @@ pthread_t decom_thread;
 pthread_t publish_thread;
 
 
-int16_t SouthIAm = 0; // This is a hack to compile framing.c Real variable in mcp.c
-int16_t InCharge = 1; // This is a hack to compile framing.c Real variable in mcp.c
-
 uint16_t out_frame[BI0_FRAME_SIZE+3];
 uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
 
@@ -183,7 +180,7 @@ void PublishFrames(void)
     framing_init(channel_list, derived_list);
 
     channel_data_frame[RATE_100HZ] = calloc(1, frame_size[RATE_100HZ]);
-    snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/100Hz", SouthIAm + 1);
+    snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
 
     while (true) {
         write_frame = frames.i_out;
