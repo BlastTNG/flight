@@ -72,16 +72,15 @@ void push_bi0_buffer(const void *m_frame)
 }
 
 static void tickle(struct mpsse_ctx *ctx_passed_write) {
+    static uint8_t low = 0;
+    static uint8_t high = 1;
     static int tickled = 0;
-    static uint8_t tickle = 0;
     if (tickled == 0) {
-        mpsse_watchdog_ping(ctx_passed_write, tickle);
-        tickle = 1;
+        mpsse_watchdog_ping_low(ctx_passed_write);
         tickled = 1;
         mpsse_flush(ctx_passed_write);
     } else {
-        mpsse_watchdog_ping(ctx_passed_write, tickle);
-        tickle = 0;
+        mpsse_watchdog_ping_high(ctx_passed_write);
         tickled = 0;
         mpsse_flush(ctx_passed_write);
     }
@@ -96,13 +95,13 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         incharge_Addr = channels_find_by_name("incharge");
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
+        blast_warn("the value is %d", in_charge);
+        SET_SCALED_VALUE(incharge_Addr, in_charge+1);
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
-            SET_SCALED_VALUE(incharge_Addr, 1+SouthIAm);
         } else {
             InCharge = 0;
-            // SET_SCALED_VALUE(incharge_Addr, InCharge);
         }
     }
 }

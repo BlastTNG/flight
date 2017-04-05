@@ -125,7 +125,8 @@ void mpsse_purge(struct mpsse_ctx *ctx);
 
 /* Biphase specific routines */
 void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length);
-void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit);
+void mpsse_watchdog_ping_low(struct mpsse_ctx *ctx);
+void mpsse_watchdog_ping_high(struct mpsse_ctx *ctx);
 int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
 
 #endif /* MPSSE_H_ */
