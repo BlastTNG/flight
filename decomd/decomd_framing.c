@@ -130,29 +130,7 @@ void framing_publish_5hz(void)
     }
 }
 
-void framing_publish_100hz(void)
-{
-    static channel_t *mcp_100hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (mcp_100hz_framenum_addr == NULL) {
-        mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
-    }
-
-    if (frame_stop) return;
-
-    mcp_100hz_framenum++;
-    SET_INT32(mcp_100hz_framenum_addr, mcp_100hz_framenum);
-    if (frame_size[RATE_100HZ]) {
-        if (mcp_100hz_framenum % 100 == 1) {
-            // blast_warn("the size of the 100hz data is %zu", frame_size[RATE_100HZ]);
-        }
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_100HZ], channel_data[RATE_100HZ], 0, false);
-    }
-}
-
-void framing_publish_100hz_decom(void *m_frame)
+void framing_publish_100hz(void *m_frame)
 {
     static char frame_name[32];
     snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
@@ -256,7 +234,8 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     channel_header_t *channels_pkg = NULL;
     derived_header_t *derived_pkg = NULL;
 
-    char id[4] = "fcX";
+    // char id[9] = "blastgs01";
+    char id[9] = "blastgs01";
     char host[9] = "blastgs01";
     char topic[64];
 
@@ -265,8 +244,6 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     int keepalive = 60;
     bool clean_session = true;
 
-    snprintf(id, sizeof(id), "biphase");
-    snprintf(host, sizeof(host), "biphase");
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {

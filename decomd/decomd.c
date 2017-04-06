@@ -47,7 +47,7 @@
 #include "decomd.h"
 #include "bbc_pci.h"
 #include "channels_tng.h"
-#include "framing.h"
+#include "decomd_framing.h"
 #include "crc.h"
 
 #define VERSION "1.1.0"
@@ -193,7 +193,7 @@ void PublishFrames(void)
         // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
             memcpy(channel_data_frame[RATE_100HZ], frames.framelist[write_frame], frame_size[RATE_100HZ]);
-            framing_publish_100hz_decom(channel_data_frame[RATE_100HZ]);
+            framing_publish_100hz(channel_data_frame[RATE_100HZ]);
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
         }
         frames.i_out = write_frame;
