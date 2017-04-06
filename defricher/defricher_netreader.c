@@ -171,7 +171,7 @@ static void *netreader_routine(void *m_arg)
                 }
                 break;
             default:
-                defricher_err("Received %d from mosquitto_loop", ret);
+                defricher_err("Received %d from mosquitto_loop, corresponding to %s", ret, mosquitto_strerror(ret));
                 sleep(1);
                 break;
         }
