@@ -83,7 +83,7 @@ int32_t get_1hz_framenum(void)
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
-        printf("%s\n", str);
+        blast_info("%s\n", str);
 }
 
 void framing_publish_1hz(void)
@@ -141,7 +141,7 @@ void framing_publish_100hz(void *m_frame)
                 frame_size[RATE_100HZ], m_frame, 0, false);
         if (ret != MOSQ_ERR_SUCCESS) {
             printf("Error publishing 100Hz: %s\n", mosquitto_strerror(ret));
-        }
+        } 
     }
 }
 
@@ -238,7 +238,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     channel_header_t *channels_pkg = NULL;
     derived_header_t *derived_pkg = NULL;
 
-    char id[9] = "blastgs01";
+    char id[15] = "decom_blastgs01";
     char host[9] = "blastgs01";
     char topic[64];
 
@@ -258,15 +258,15 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
 
     ret = mosquitto_connect_async(mosq, host, port, keepalive); 
     if (ret == MOSQ_ERR_SUCCESS) {
-   	printf("Succesfully connected to server\n");
+   	printf("Succesfully connected decomd to mosquitto server on %s\n", host);
     } else if (ret == MOSQ_ERR_INVAL) {
-        printf("Unable to connect to mosquitto server: Invalid Parameters!\n");
+        blast_info("Unable to connect to mosquitto server: Invalid Parameters!\n");
     } else {
         if (errno == EINPROGRESS) {
            /* Do nothing, connection in progress */
-           printf("Connection in progress...\n");
+           blast_info("Connection in progress...\n");
         } else {
-            printf("Unable to connect to mosquitto server: %s\n", strerror(errno));
+            blast_info("Unable to connect to mosquitto server: %s\n", strerror(errno));
 	    return -1;
         }
     }
@@ -275,32 +275,32 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
      * Set up the channels and derived packages for subscribers
      */
     if (!(channels_pkg = channels_create_map(channel_list))) {
-        printf("Exiting framing routine because we cannot get the channel list");
+        blast_info("Exiting framing routine because we cannot get the channel list");
         return -1;
     }
 
     mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
     ret = mosquitto_loop_start(mosq);
     if (ret != MOSQ_ERR_SUCCESS) {
-        printf("Error starting the mosquitto loop: %s\n", mosquitto_strerror(ret));
+        blast_info("Error starting the mosquitto loop: %s\n", mosquitto_strerror(ret));
     }
 
     snprintf(topic, sizeof(topic), "channels/biphase");
     ret = mosquitto_publish(mosq, NULL, topic,
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
     if (ret != MOSQ_ERR_SUCCESS) {
-        printf("Error publishing channels: %s\n", mosquitto_strerror(ret));
+        blast_info("Error publishing channels: %s\n", mosquitto_strerror(ret));
     }
     bfree(err, channels_pkg);
 
     if (!(derived_pkg = channels_create_derived_map(m_derived))) {
-        printf("Failed sending derived packages\n");
+        blast_info("Failed sending derived packages\n");
     } else {
         snprintf(topic, sizeof(topic), "derived/biphase");
         ret = mosquitto_publish(mosq, NULL, topic,
                 sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
 	if (ret != MOSQ_ERR_SUCCESS) {
-	    printf("Error publishing derived: %s\n", mosquitto_strerror(ret));
+	    blast_info("Error publishing derived: %s\n", mosquitto_strerror(ret));
 	}
         bfree(err, derived_pkg);
     }

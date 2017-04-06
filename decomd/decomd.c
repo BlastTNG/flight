@@ -176,7 +176,8 @@ void PublishFrames(void)
 
     uint16_t    read_frame;
     uint16_t    write_frame;
-  
+ 
+    channels_initialize(channel_list); 
     framing_init(channel_list, derived_list);
 
     channel_data_frame[RATE_100HZ] = calloc(1, frame_size[RATE_100HZ]);
@@ -227,7 +228,7 @@ int main(void) {
 
     /* set up our outputs */
     openlog("decomd", LOG_PID, LOG_DAEMON);
-    buos_use_syslog();
+    // buos_use_syslog();
 
     /* Fork to background */
     if (false) {
