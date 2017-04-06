@@ -83,7 +83,7 @@ int32_t get_1hz_framenum(void)
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     if (level & ( MOSQ_LOG_ERR | MOSQ_LOG_WARNING ))
-        blast_info("%s\n", str);
+        printf("%s\n", str);
 }
 
 void framing_publish_1hz(void)
@@ -101,7 +101,7 @@ void framing_publish_1hz(void)
     SET_INT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
     if (frame_size[RATE_1HZ]) {
         if (1) {
-            // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));
+            // printf("the size of 1hz data is %zu\n", sizeof(channel_data[RATE_1HZ]));
         }
         mosquitto_publish(mosq, NULL, frame_name,
                           frame_size[RATE_1HZ], channel_data[RATE_1HZ], 0, false);
@@ -123,7 +123,7 @@ void framing_publish_5hz(void)
     SET_INT32(mcp_5hz_framenum_addr, mcp_5hz_framenum);
     if (frame_size[RATE_5HZ]) {
         if (mcp_5hz_framenum % 5 == 1) {
-            // blast_warn("the size of the 5hz frame is %zu", frame_size[RATE_5HZ]);
+            // printf("the size of the 5hz frame is %zu", frame_size[RATE_5HZ]);
         }
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_5HZ], channel_data[RATE_5HZ], 0, false);
@@ -133,11 +133,15 @@ void framing_publish_5hz(void)
 void framing_publish_100hz(void *m_frame)
 {
     static char frame_name[32];
+    int ret = 0;
     snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
 
     if (frame_size[RATE_100HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
+        ret = mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_100HZ], m_frame, 0, false);
+        if (ret != MOSQ_ERR_SUCCESS) {
+            printf("Error publishing 100Hz: %s\n", mosquitto_strerror(ret));
+        }
     }
 }
 
@@ -157,7 +161,7 @@ void framing_publish_200hz(void)
     SET_INT32(mcp_200hz_framenum_addr, mcp_200hz_framenum);
     if (frame_size[RATE_200HZ]) {
         if (mcp_200hz_framenum % 200 == 1) {
-            // blast_warn("the size of the 200hz frame is %zu", frame_size[RATE_200HZ]);
+            // printf("the size of the 200hz frame is %zu", frame_size[RATE_200HZ]);
         }
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_200HZ], channel_data[RATE_200HZ], 0, false);
@@ -180,7 +184,7 @@ void framing_publish_244hz(void)
     SET_INT32(mcp_244hz_framenum_addr, mcp_244hz_framenum);
     if (frame_size[RATE_244HZ]) {
         if ((mcp_244hz_framenum % 244) == 1) {
-           // blast_warn("size of 244hz is %zu", frame_size[RATE_244HZ]);
+           // printf("size of 244hz is %zu", frame_size[RATE_244HZ]);
         }
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
@@ -192,11 +196,11 @@ static void framing_handle_data(const char *m_src, const char *m_rate, const voi
     RATE_LOOKUP_T *rate;
 
     if (!m_src || !m_rate) {
-        blast_err("Err in pointers");
+        printf("Err in pointers\n");
         return;
     }
     if (!m_len) {
-        blast_warn("Zero-length string for frame");
+        printf("Zero-length string for frame\n");
         return;
     }
 
@@ -204,7 +208,7 @@ static void framing_handle_data(const char *m_src, const char *m_rate, const voi
         if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
     }
     if (rate->position == RATE_END) {
-        blast_err("Did not recognize rate %s!", m_rate);
+        printf("Did not recognize rate %s!\n", m_rate);
         return;
     }
 }
@@ -234,7 +238,6 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     channel_header_t *channels_pkg = NULL;
     derived_header_t *derived_pkg = NULL;
 
-    // char id[9] = "blastgs01";
     char id[9] = "blastgs01";
     char host[9] = "blastgs01";
     char topic[64];
@@ -253,16 +256,18 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     mosquitto_log_callback_set(mosq, frame_log_callback);
     mosquitto_message_callback_set(mosq, framing_message_callback);
 
-    if (mosquitto_connect_async(mosq, host, port, keepalive)) {
-        if (ret == MOSQ_ERR_INVAL) {
-        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
+    ret = mosquitto_connect_async(mosq, host, port, keepalive); 
+    if (ret == MOSQ_ERR_SUCCESS) {
+   	printf("Succesfully connected to server\n");
+    } else if (ret == MOSQ_ERR_INVAL) {
+        printf("Unable to connect to mosquitto server: Invalid Parameters!\n");
+    } else {
+        if (errno == EINPROGRESS) {
+           /* Do nothing, connection in progress */
+           printf("Connection in progress...\n");
         } else {
-        	if (errno == EINPROGRESS) {
-        		/* Do nothing, connection in progress */
-        	} else {
-        		blast_strerror("Unable to connect to mosquitto server!");
-        		return -1;
-        	}
+            printf("Unable to connect to mosquitto server: %s\n", strerror(errno));
+	    return -1;
         }
     }
 
@@ -270,24 +275,33 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
      * Set up the channels and derived packages for subscribers
      */
     if (!(channels_pkg = channels_create_map(channel_list))) {
-        blast_err("Exiting framing routine because we cannot get the channel list");
+        printf("Exiting framing routine because we cannot get the channel list");
         return -1;
     }
 
     mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
-    mosquitto_loop_start(mosq);
+    ret = mosquitto_loop_start(mosq);
+    if (ret != MOSQ_ERR_SUCCESS) {
+        printf("Error starting the mosquitto loop: %s\n", mosquitto_strerror(ret));
+    }
 
     snprintf(topic, sizeof(topic), "channels/biphase");
-    mosquitto_publish(mosq, NULL, topic,
+    ret = mosquitto_publish(mosq, NULL, topic,
             sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
+    if (ret != MOSQ_ERR_SUCCESS) {
+        printf("Error publishing channels: %s\n", mosquitto_strerror(ret));
+    }
     bfree(err, channels_pkg);
 
     if (!(derived_pkg = channels_create_derived_map(m_derived))) {
-        blast_warn("Failed sending derived packages");
+        printf("Failed sending derived packages\n");
     } else {
         snprintf(topic, sizeof(topic), "derived/biphase");
-        mosquitto_publish(mosq, NULL, topic,
+        ret = mosquitto_publish(mosq, NULL, topic,
                 sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
+	if (ret != MOSQ_ERR_SUCCESS) {
+	    printf("Error publishing derived: %s\n", mosquitto_strerror(ret));
+	}
         bfree(err, derived_pkg);
     }
 
