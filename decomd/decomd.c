@@ -168,8 +168,8 @@ void daemonize()
 
 void PublishFrames(void)
 {
-    void *channel_data_frame[RATE_END] = {0};
-    static char frame_name[32];
+    void *decomd_channel_data[RATE_END] = {0};
+    static char frame_name[RATE_END][32];
     // extern struct mosquitto *mosq;
     // uint16_t    bi0_frame[BI0_FRAME_SIZE];
     // const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE) * 2;
@@ -180,8 +180,11 @@ void PublishFrames(void)
     channels_initialize(channel_list); 
     framing_init(channel_list, derived_list);
 
-    channel_data_frame[RATE_100HZ] = calloc(1, frame_size[RATE_100HZ]);
-    snprintf(frame_name, sizeof(frame_name), "frames/biphase/100Hz");
+    for (int rate = 0; rate < RATE_END; rate++) {
+	decomd_channel_data[rate] = calloc(1, frame_size[rate]);
+        snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/biphase/%s", RATE_LOOKUP_TABLE[rate].text);
+	blast_info("there will be a topic with name %s", frame_name[rate]);
+    }
 
     while (true) {
         write_frame = frames.i_out;
@@ -193,8 +196,8 @@ void PublishFrames(void)
 
         // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
-            memcpy(channel_data_frame[RATE_100HZ], frames.framelist[write_frame], frame_size[RATE_100HZ]);
-            framing_publish_100hz(channel_data_frame[RATE_100HZ]);
+            memcpy(decomd_channel_data[RATE_100HZ], frames.framelist[write_frame], frame_size[RATE_100HZ]);
+            framing_publish_100hz(decomd_channel_data[RATE_100HZ]);
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
         }
         frames.i_out = write_frame;

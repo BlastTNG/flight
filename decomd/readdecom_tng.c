@@ -8,6 +8,7 @@
 #include "decomd.h"
 #include "channels_tng.h"
 #include "crc.h"
+#include "blast.h"
 
 #define FRAME_SYNC_WORD 0xEB90
 #define DQ_FILTER 0.9977
@@ -130,7 +131,7 @@ void ReadDecom (void)
                     } else {
                         crc_ok = 0;
                     }
-		    // printf("Last word of frame, is crc ok? %d\n======================\n", (int) crc_ok);
+		    blast_dbg("Last word of frame, is crc ok? %d\n======================\n", (int) crc_ok);
               }
               if (++i_word >= BI0_FRAME_SIZE) {
                 i_word = 0;
