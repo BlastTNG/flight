@@ -62,7 +62,8 @@ static ph_thread_t *motor_ctl_id;
 #define RW_ADDR 0x3
 #define EL_ADDR 0x2
 #define PIV_ADDR 0x1
-
+// TODO(Peter): Add manufacturer index for Peper FUCHS
+#define FUCHS_MFG_ID 0x0000
 /**
  * Structure for storing the PDO assignments and their offsets in the
  * memory map
@@ -83,6 +84,7 @@ static GSList *pdo_list;
 static int rw_index = 0;
 static int piv_index = 0;
 static int el_index = 0;
+static int hwp_index = 0;
 
 /**
  * Ethercat driver status
@@ -96,7 +98,7 @@ static char io_map[1024];
 
 static int motors_exit = false;
 
-#define N_MCs 4
+#define N_MCs 5
 
 /**
  * The following pointers reference data points read from/written to
@@ -108,27 +110,39 @@ static int32_t dummy_var = 0;
 static int32_t dummy_write_var = 0;
 
 /// Read words
-static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var };
+static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var,
+                                            &dummy_var , &dummy_var };
+static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var,
+                                            &dummy_var , &dummy_var };
+static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var,
+                                            &dummy_var, &dummy_var };
 static int16_t *motor_current[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
-                                         (int16_t*) &dummy_var, (int16_t*) &dummy_var };
+        (int16_t*) &dummy_var, (int16_t*) &dummy_var, (int16_t*) &dummy_var };
 static uint32_t *status_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                            (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+        (uint32_t*) &dummy_var, (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static int16_t *amp_temp[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
-                                    (int16_t*) &dummy_var, (int16_t*) &dummy_var };
+        (int16_t*) &dummy_var, (int16_t*) &dummy_var, (int16_t*) &dummy_var };
 static uint16_t *status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
+        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
 
 static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                             (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+        (uint32_t*) &dummy_var, (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                              (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
+        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
-                                         (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
+        (uint16_t*) &dummy_var, (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
 static int16_t *target_current[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var,
-                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var };
+        (int16_t*) &dummy_var, (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var };
+
+/// Read word from encoder
+static uint32_t *hwp_position = (uint32_t*) &dummy_var;
+
+
+uint32_t hwp_get_position(void)
+{
+    return *hwp_position;
+}
 
 /**
  * This set of functions return the latched faults of each motor controller
@@ -522,6 +536,19 @@ static int find_controllers(void)
 
     for (int i = 1; i <= ec_slavecount; i++) {
         /**
+         * There is only one PEPER FUCHS encoder on the chain, so we test for this
+         * first.  It doesn't have a fixed index number like the motor controllers,
+         * so we can't test in the usual manner
+         */
+        if (ec_slave[i].eep_man == FUCHS_MFG_ID) {
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x650B, 0, false, &size, &serial, EC_TIMEOUTRXM);
+            blast_startup("PEPERL+FUCHS encoder %d: %s: SN: %d",
+                        ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            hwp_index = i;
+        }
+        /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
@@ -555,6 +582,46 @@ static int find_controllers(void)
 
 find_err:
     return -1;
+}
+
+/**
+ * Configure the HWP PDO assignments.
+ */
+static int hwp_pdo_init(void)
+{
+    pdo_mapping_t map;
+
+    if (ec_slave[hwp_index].state != EC_STATE_SAFE_OP
+            && ec_slave[hwp_index].state != EC_STATE_PRE_OP) {
+        blast_err("Encoder index %d (%s) is not in pre-operational state!  Cannot configure.",
+                hwp_index, ec_slave[hwp_index].name);
+        return -1;
+    }
+
+    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+            hwp_index, ec_slave[hwp_index].name);
+
+    /**
+     * To program the PDO mapping, we first must clear the old state
+     */
+
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
+    for (int i = 0; i < 4; i++) {
+        if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
+    }
+
+    /**
+     * Define the PDOs that we want to send to the flight computer from the Controllers
+     */
+    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
+        blast_err("Failed mapping!");
+    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+        blast_err("Failed mapping!");
+
+    return 0;
 }
 
 /**
@@ -732,6 +799,9 @@ static void map_motor_vars(void)
     if (el_index) map_index_vars(el_index);
     if (rw_index) map_index_vars(rw_index);
     if (piv_index) map_index_vars(piv_index);
+    if (hwp_index) {
+        hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
+    }
 }
 
 /**
@@ -900,8 +970,12 @@ static void* motor_control(void* arg)
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        motor_pdo_init(i);
-        mc_readPDOassign(i);
+        if (i == hwp_index) {
+            hwp_pdo_init();
+        } else {
+            motor_pdo_init(i);
+            mc_readPDOassign(i);
+        }
     }
     /// We re-configure the map now that we have assigned the PDOs
     ec_config_map(&io_map);
