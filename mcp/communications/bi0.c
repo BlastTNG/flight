@@ -164,43 +164,9 @@ void biphase_writer(void)
                frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
 
     while (true) {
-        write_frame = bi0_buffer.i_out;
-        read_frame = bi0_buffer.i_in;
-        if (read_frame == write_frame) {
-            usleep(10000);
-            continue;
-        }
-
-        blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
-        while (read_frame != write_frame) {
-            memcpy(bi0_frame, bi0_buffer.framelist[write_frame], frame_size[RATE_100HZ]);
-            memset(&bi0_frame[(int) (frame_size[RATE_100HZ]/2)], 0xEE, unused_frame_bytes); // Filling
-            // memset(&bi0_frame, 0xFF, BI0_FRAME_SIZE*sizeof(uint16_t)); // TEST
-            write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
-
-            bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
-            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes-2);
-            blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
-
-            bi0_frame[0] = sync_word;
-            sync_word = ~sync_word;
-
-            gettimeofday(&begin, NULL);
-            mpsse_biphase_write_data(ctx, bi0_frame, BI0_FRAME_SIZE*sizeof(uint16_t));
-            mpsse_flush(ctx);
-            gettimeofday(&end, NULL);
-            blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
-                     BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
-            if (ctx->retval != ERROR_OK) {
-                blast_err("Error writing frame to Biphase, discarding.");
-            }
-            // Watchdog TODO (Joy/Ian): decide if dangerous to have the watchdog routines here
-            tickle(ctx);
-            set_incharge(ctx);
-        }
-
-        bi0_buffer.i_out = write_frame;
-        usleep(10000);
+        tickle(ctx);
+        set_incharge(ctx);
+        usleep(100000);
     }
 
     // Currently we will never get here, but later we can implement a 'biphase is on' variable
