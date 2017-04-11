@@ -125,8 +125,8 @@ void biphase_writer(void)
     const char *serial = NULL;
     const char *description = NULL;
     int channel = 0; // IFACE_A
-    int frequency = 1000000; // 1 Mbps
-    // int frequency = 100000; // 100 kbps
+    // int frequency = 1000000; // 1 Mbps
+    int frequency = 100000; // 100 kbps
 
     // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
     // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
