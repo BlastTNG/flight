@@ -361,8 +361,9 @@ static void mcp_1hz_routines(void)
     rec_control();
     of_control();
     if_control();
-    // heater_control();
-    // test_labjacks(0);
+    heater_control();
+    // heater_read();
+    test_cycle();
     read_thermometers();
     // test_read();
     blast_store_cpu_health();
