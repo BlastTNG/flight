@@ -37,37 +37,77 @@
 #include "crc.h"
 #include "channels_tng.h"
 #include "mputs.h"
-// #include "mcp.h"
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
-bi0_buffer_t bi0_buffer;
+bi0_buffer_t bi0_buffer; // This is passed to mpsse
+const size_t biphase_frame_size_bytes = BI0_FRAME_SIZE*sizeof(uint16_t);
+uint8_t biphase_frame[biphase_frame_size_bytes]; // This is pushed to bi0_buffer
 
 void initialize_biphase_buffer(void)
 {
     int i;
     size_t max_rate_size = 0;
 
-    // for (int rate = RATE_100HZ; rate < RATE_END; rate++) {
-    //    if (max_rate_size < frame_size[rate]) max_rate_size = frame_size[rate];
-    // }
-    max_rate_size = frame_size[RATE_100HZ]; // Temporary, for now only implementing biphase on the 100 Hz framerate
     bi0_buffer.i_in = 0;
     bi0_buffer.i_out = 0;
     for (i = 0; i < BI0_FRAME_BUFLEN; i++) {
-        bi0_buffer.framelist[i] = calloc(1, max_rate_size);
-        memset(bi0_buffer.framelist[i], 0, max_rate_size);
+        bi0_buffer.framelist[i] = calloc(1, biphase_frame_size_bytes);
+        memset(bi0_buffer.framelist[i], 0, biphase_frame_size_bytes);
+    }
+    memset(biphase_frame, 0, biphase_frame_size_bytes);
+}
+
+void build_biphase_frame_200hz(const void *m_channel_data, const uint16_t counter)
+{
+    // Storing 2x200hz data in the biphase frames
+    if ((2*frame_size[RATE_200HZ]) > biphase_frame_size_bytes) {
+        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold two 200Hz frames (byte 0 to %zu). Skipping 200Hz frame.", 
+                    biphase_frame_size_bytes, (2*frame_size[RATE_200HZ]));
+        return;
+    }
+    if ((counter%2) == 0) {
+        memcpy(biphase_frame[0], m_channel_data, frame_size[RATE_200HZ]);
+    } else {
+        memcpy(biphase_frame[frame_size[RATE_200HZ]], m_channel_data, frame_size[RATE_200HZ]);
     }
 }
 
-void push_bi0_buffer(const void *m_frame)
+void build_biphase_frame_100hz(const void *m_channel_data)
+{
+    // Storing one 100hz frame in the biphase frame after 2x200 Hz data
+    size_t start = 2*frame_size[RATE_200HZ];
+    size_t end = start + frame_size[RATE_100HZ]; 
+    if (end > biphase_frame_size_bytes) {
+        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold the 100Hz frame (byte %zu to %zu). Skipping 100Hz frame.", 
+                    biphase_frame_size_bytes, start, end);
+        return;
+    }
+    memcpy(biphase_frame[start], m_channel_data, frame_size[RATE_100HZ]);
+}
+
+void build_biphase_frame_1hz(const void *m_channel_data, const size_t counter)
+{
+    // Storing 1/10th of 1hz frame in the biphase frame after 100 Hz data
+    size_t one_tenth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/10.0);
+    size_t start = 2*frame_size[RATE_200HZ] + frame_size[RATE_100HZ];
+    size_t end = start + one_tenth_1hz_frame; 
+    if (end > biphase_frame_size_bytes) {
+        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold the 1/10th of the 100Hz frame (byte %zu to %zu). Skipping 1Hz frame.", 
+                    biphase_frame_size_bytes, start, end);
+        return;
+    }
+    memcpy(biphase_frame[start], m_channel_data[counter], one_tenth_1hz_frame);
+}
+
+void push_bi0_buffer(void)
 {
     int i_in;
+    size_t biphase_frame_size_bytes = BI0_FRAME_SIZE*sizeof(uint16_t);
     i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;
-    bi0_buffer.framesize[i_in] = frame_size[RATE_100HZ];
-    // Joy added this, later will have to be modified for any rate
-    memcpy(bi0_buffer.framelist[i_in], m_frame, frame_size[RATE_100HZ]);
-    // Later will have to adapt to various sizes for various frequencies
+    bi0_buffer.framesize[i_in] = biphase_frame_size_bytes;
+    memcpy(bi0_buffer.framelist[i_in], biphase_frame, biphase_frame_size_bytes);
+    // TODO (Joy):Add a warning if m_frame larger than biphase_frame_size_bytes, but need size of m_frame for that 
     bi0_buffer.i_in = i_in;
 }
 
