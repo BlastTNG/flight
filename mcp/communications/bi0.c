@@ -26,94 +26,120 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <math.h>
 #include <sys/time.h>
 #include <pthread.h>
 
 #include <blast.h>
 
 #include "bi0.h"
-#include "bbc_pci.h"
 #include "mpsse.h"
 #include "crc.h"
 #include "channels_tng.h"
 #include "mputs.h"
+#include "bbc_pci.h"
+
+#define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
+
 bi0_buffer_t bi0_buffer; // This is passed to mpsse
-const size_t biphase_frame_size_bytes = BI0_FRAME_SIZE*sizeof(uint16_t);
-uint8_t biphase_frame[biphase_frame_size_bytes]; // This is pushed to bi0_buffer
+uint8_t *biphase_frame; // This is pushed to bi0_buffer
 
 void initialize_biphase_buffer(void)
 {
     int i;
-    size_t max_rate_size = 0;
+    // size_t max_rate_size = 0;
 
     bi0_buffer.i_in = 0;
     bi0_buffer.i_out = 0;
     for (i = 0; i < BI0_FRAME_BUFLEN; i++) {
-        bi0_buffer.framelist[i] = calloc(1, biphase_frame_size_bytes);
-        memset(bi0_buffer.framelist[i], 0, biphase_frame_size_bytes);
+        bi0_buffer.framelist[i] = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+        memset(bi0_buffer.framelist[i], 0, BIPHASE_FRAME_SIZE_BYTES);
     }
-    memset(biphase_frame, 0, biphase_frame_size_bytes);
+    biphase_frame = calloc(1,  BIPHASE_FRAME_SIZE_BYTES);
+    memset(biphase_frame, 0, BIPHASE_FRAME_SIZE_BYTES);
 }
 
-void build_biphase_frame_200hz(const void *m_channel_data, const uint16_t counter)
+void build_biphase_frame_200hz(const void *m_channel_data)
 {
+    static bool even = true;
     // Storing 2x200hz data in the biphase frames
-    if ((2*frame_size[RATE_200HZ]) > biphase_frame_size_bytes) {
-        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold two 200Hz frames (byte 0 to %zu). Skipping 200Hz frame.", 
-                    biphase_frame_size_bytes, (2*frame_size[RATE_200HZ]));
+    if ((2*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_BYTES) {
+        blast_warn("Not enough space in biphase frame (%d bytes) to hold 2x200Hz frames (byte 0 to %zu).",
+                    BIPHASE_FRAME_SIZE_BYTES, (2*frame_size[RATE_200HZ]));
         return;
     }
-    if ((counter%2) == 0) {
-        memcpy(biphase_frame[0], m_channel_data, frame_size[RATE_200HZ]);
+    if (even) {
+        memcpy(biphase_frame, m_channel_data, frame_size[RATE_200HZ]);
     } else {
-        memcpy(biphase_frame[frame_size[RATE_200HZ]], m_channel_data, frame_size[RATE_200HZ]);
+        memcpy(biphase_frame+frame_size[RATE_200HZ], m_channel_data, frame_size[RATE_200HZ]);
     }
+    even = ~even;
 }
 
 void build_biphase_frame_100hz(const void *m_channel_data)
 {
     // Storing one 100hz frame in the biphase frame after 2x200 Hz data
     size_t start = 2*frame_size[RATE_200HZ];
-    size_t end = start + frame_size[RATE_100HZ]; 
-    if (end > biphase_frame_size_bytes) {
-        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold the 100Hz frame (byte %zu to %zu). Skipping 100Hz frame.", 
-                    biphase_frame_size_bytes, start, end);
+    size_t end = start + frame_size[RATE_100HZ];
+    if (end > BIPHASE_FRAME_SIZE_BYTES) {
+        blast_warn("Not enough space in biphase frame (%d bytes) to hold the 100Hz frame (byte %zu to %zu).",
+                    BIPHASE_FRAME_SIZE_BYTES, start, end);
         return;
     }
-    memcpy(biphase_frame[start], m_channel_data, frame_size[RATE_100HZ]);
+    memcpy(biphase_frame+start, m_channel_data, frame_size[RATE_100HZ]);
 }
 
-void build_biphase_frame_1hz(const void *m_channel_data, const size_t counter)
+void build_biphase_frame_1hz(const void *m_channel_data)
 {
-    // Storing 1/10th of 1hz frame in the biphase frame after 100 Hz data
-    size_t one_tenth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/10.0);
+    // This function is called at 100 Hz
+    static bool first_time = true;
+    static uint8_t counter = 0;
+    static channel_t *subframe_Addr = NULL;
+    char *channel_ptr = NULL;
+
+    channel_ptr = (char *) m_channel_data;
+
+    // Storing 1/100th of 1hz frame in the biphase frame after 100 Hz data
+    if (first_time) {
+        subframe_Addr = channels_find_by_name("subframe_counter_1hz");
+        first_time = false;
+    }
+    SET_SCALED_VALUE(subframe_Addr, counter);
+
+    size_t one_hundredth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
     size_t start = 2*frame_size[RATE_200HZ] + frame_size[RATE_100HZ];
-    size_t end = start + one_tenth_1hz_frame; 
-    if (end > biphase_frame_size_bytes) {
-        blast_warn("There is not enough space in the biphase frame (%zu bytes) to hold the 1/10th of the 100Hz frame (byte %zu to %zu). Skipping 1Hz frame.", 
-                    biphase_frame_size_bytes, start, end);
+    size_t end = start + one_hundredth_1hz_frame;
+    if (end > BIPHASE_FRAME_SIZE_BYTES) {
+        blast_warn("Not enough space in biphase frame (%d bytes) for 1/10th of 100Hz frame (byte %zu to %zu).",
+                    BIPHASE_FRAME_SIZE_BYTES, start, end);
         return;
     }
-    memcpy(biphase_frame[start], m_channel_data[counter], one_tenth_1hz_frame);
+    if ((counter*one_hundredth_1hz_frame) < frame_size[RATE_1HZ]) {
+        channel_ptr += counter*one_hundredth_1hz_frame;
+        memcpy(biphase_frame+start, channel_ptr, one_hundredth_1hz_frame);
+    }
+    counter++;
+    if (counter >= 100) {
+        counter = 0;
+    }
 }
 
 void push_bi0_buffer(void)
 {
     int i_in;
-    size_t biphase_frame_size_bytes = BI0_FRAME_SIZE*sizeof(uint16_t);
     i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;
-    bi0_buffer.framesize[i_in] = biphase_frame_size_bytes;
-    memcpy(bi0_buffer.framelist[i_in], biphase_frame, biphase_frame_size_bytes);
-    // TODO (Joy):Add a warning if m_frame larger than biphase_frame_size_bytes, but need size of m_frame for that 
+    bi0_buffer.framesize[i_in] = BIPHASE_FRAME_SIZE_BYTES;
+    memcpy(bi0_buffer.framelist[i_in], biphase_frame, BIPHASE_FRAME_SIZE_BYTES);
     bi0_buffer.i_in = i_in;
+    blast_info("bi0_buffer.i_in = %d", i_in);
 }
 
 static void tickle(struct mpsse_ctx *ctx_passed_write) {
-    static uint8_t low = 0;
-    static uint8_t high = 1;
+    // static uint8_t low = 0;
+    // static uint8_t high = 1;
     static int tickled = 0;
     if (tickled == 0) {
         mpsse_watchdog_ping_low(ctx_passed_write);
@@ -152,12 +178,9 @@ void biphase_writer(void)
 
     uint16_t    bi0_frame[BI0_FRAME_SIZE];
     uint16_t    sync_word = 0xEB90;
-    const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE) * 2;
 
     uint16_t    read_frame;
     uint16_t    write_frame;
-
-    size_t unused_frame_bytes = (BI0_FRAME_SIZE*sizeof(uint16_t) - frame_size[RATE_100HZ]);
 
     struct mpsse_ctx *ctx;
     const uint16_t vid = 1027;
@@ -165,8 +188,8 @@ void biphase_writer(void)
     const char *serial = NULL;
     const char *description = NULL;
     int channel = 0; // IFACE_A
-    // int frequency = 1000000; // 1 Mbps
-    int frequency = 100000; // 100 kbps
+    int frequency = 1000000; // 1 Mbps
+    // int frequency = 100000; // 100 kbps
 
     // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
     // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
@@ -200,10 +223,12 @@ void biphase_writer(void)
     mpsse_flush(ctx);
     usleep(1000);
 
-    blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
-               frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
+    blast_info("used biphase frame_size is %zd, biphase frame size is %d, biphase frame size for data is %d (bytes)",
+               (size_t) (frame_size[RATE_100HZ]+2*frame_size[RATE_200HZ]+ceil(frame_size[RATE_1HZ]/100.0)),
+               BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_BYTES-4));
 
     while (true) {
+        blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         write_frame = bi0_buffer.i_out;
         read_frame = bi0_buffer.i_in;
         if (read_frame == write_frame) {
@@ -211,26 +236,23 @@ void biphase_writer(void)
             continue;
         }
 
-        blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
-            memcpy(bi0_frame, bi0_buffer.framelist[write_frame], frame_size[RATE_100HZ]);
-            memset(&bi0_frame[(int) (frame_size[RATE_100HZ]/2)], 0xEE, unused_frame_bytes); // Filling
-            // memset(&bi0_frame, 0xFF, BI0_FRAME_SIZE*sizeof(uint16_t)); // TEST
+            memcpy(bi0_frame, bi0_buffer.framelist[write_frame], BIPHASE_FRAME_SIZE_BYTES);
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
-            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, bi0_frame_bytes-2);
+            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES-2);
             blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
 
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;
 
             gettimeofday(&begin, NULL);
-            mpsse_biphase_write_data(ctx, bi0_frame, BI0_FRAME_SIZE*sizeof(uint16_t));
+            mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
             mpsse_flush(ctx);
             gettimeofday(&end, NULL);
-            blast_info("Writing and flushing %zd bytes of data to MPSSE took %f second",
-                     BI0_FRAME_SIZE*sizeof(uint16_t), (end.tv_usec - begin.tv_usec)/1000000.0);
+            blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
+                     BIPHASE_FRAME_SIZE_BYTES, (end.tv_usec - begin.tv_usec)/1000000.0);
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
             }

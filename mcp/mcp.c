@@ -301,7 +301,6 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    static uint16_t counter = 0;
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
@@ -311,12 +310,10 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
-    build_biphase_frame_200hz(channel_data[RATE_200HZ], counter);
-    counter++;
+    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
 {
-    static uint8_t counter = 0;
     read_100hz_acs();
     Pointing();
 //    DoSched();
@@ -332,14 +329,10 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
-    build_biphase_frame_1hz(channel_data[RATE_1HZ], counter);
+    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();
     // test_dio();
-    counter ++;
-    if (counter >= 100) {
-        counter = 0;
-    }
 }
 static void mcp_5hz_routines(void)
 {
