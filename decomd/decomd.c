@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <math.h>
 #include <syslog.h>
 #include <signal.h>
 #include <string.h>
@@ -92,28 +93,28 @@ void SigAction(int signo) {
         bprintf(info, "caught signal %i while system idle", signo);
     }
     else {
-      bprintf(info, "caught signal %i; going down to idle", signo);
-      // ShutdownFrameFile();
-      system_idled = 1;
-      needs_join = 1;
+        bprintf(info, "caught signal %i; going down to idle", signo);
+        // ShutdownFrameFile();
+        system_idled = 1;
+        needs_join = 1;
     }
 
     if (signo == SIGINT) { /* idle */
-      ;
+        ;
     } else if (signo == SIGHUP) { /* cycle */
-      bprintf(info, "system idle, bringing system back up");
-      // InitialiseFrameFile(FILE_SUFFIX);
-      /* block signals */
-      pthread_sigmask(SIG_BLOCK, &signals, NULL);
-      // pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
-      /* unblock signals */
-      pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
-      system_idled = 0;
+        bprintf(info, "system idle, bringing system back up");
+        // InitialiseFrameFile(FILE_SUFFIX);
+        /* block signals */
+        pthread_sigmask(SIG_BLOCK, &signals, NULL);
+        // pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
+        /* unblock signals */
+        pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
+        system_idled = 0;
     } else { /* terminate */
-      bprintf(info, "system idle, terminating");
-      CleanUp();
-      signal(signo, SIG_DFL);
-      raise(signo);
+        bprintf(info, "system idle, terminating");
+        CleanUp();
+        signal(signo, SIG_DFL);
+        raise(signo);
     }
 }
 
@@ -124,20 +125,20 @@ void daemonize()
     struct sigaction action;
 
     if ((pid = fork()) != 0) {
-	if (pid == -1) {
-	    berror(fatal, "unable to fork to background");
-	}
-	if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) {
-	    berror(err, "unable to write PID to disk");
-	}
-	else {
-	    fprintf(stream, "%i\n", pid);
-	    fflush(stream);
-	    fclose(stream);
-	}
-	closelog();
-	printf("PID = %i\n", pid);
-	exit(0);
+    if (pid == -1) {
+        berror(fatal, "unable to fork to background");
+    }
+    if ((stream = fopen("/var/run/decomd.pid", "w")) == NULL) {
+        berror(err, "unable to write PID to disk");
+    }
+    else {
+        fprintf(stream, "%i\n", pid);
+        fflush(stream);
+        fclose(stream);
+    }
+    closelog();
+    printf("PID = %i\n", pid);
+    exit(0);
     }
     atexit(CleanUp);
 
@@ -170,20 +171,24 @@ void PublishFrames(void)
 {
     void *decomd_channel_data[RATE_END] = {0};
     static char frame_name[RATE_END][32];
-    // extern struct mosquitto *mosq;
-    // uint16_t    bi0_frame[BI0_FRAME_SIZE];
-    // const size_t    bi0_frame_bytes = (BI0_FRAME_SIZE) * 2;
+    int frame_offset = 0;
+    uint16_t counter_1hz = 0;
+    size_t one_hundredth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
 
     uint16_t    read_frame;
     uint16_t    write_frame;
+    channel_t *subframe_1hz_Addr = NULL;
  
     channels_initialize(channel_list); 
     framing_init(channel_list, derived_list);
 
+    subframe_1hz_Addr = channels_find_by_name("subframe_counter_1hz");
+
+
     for (int rate = 0; rate < RATE_END; rate++) {
-	decomd_channel_data[rate] = calloc(1, frame_size[rate]);
+        decomd_channel_data[rate] = calloc(1, frame_size[rate]);
         snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/biphase/%s", RATE_LOOKUP_TABLE[rate].text);
-	blast_info("there will be a topic with name %s", frame_name[rate]);
+        blast_info("there will be a topic with name %s", frame_name[rate]);
     }
 
     while (true) {
@@ -196,8 +201,24 @@ void PublishFrames(void)
 
         // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         while (read_frame != write_frame) {
-            memcpy(decomd_channel_data[RATE_100HZ], frames.framelist[write_frame], frame_size[RATE_100HZ]);
+            // 200 Hz
+            memcpy(decomd_channel_data[RATE_200HZ], frames.framelist[write_frame], frame_size[RATE_200HZ]);
+            framing_publish_200hz(decomd_channel_data[RATE_200HZ]);
+            frame_offset = frame_size[RATE_200HZ];
+            memcpy(decomd_channel_data[RATE_200HZ], frames.framelist[write_frame]+frame_offset, frame_size[RATE_200HZ]);
+            framing_publish_200hz(decomd_channel_data[RATE_200HZ]);
+            // 100 Hz
+            frame_offset = 2*frame_size[RATE_200HZ];
+            memcpy(decomd_channel_data[RATE_100HZ], frames.framelist[write_frame]+frame_offset, frame_size[RATE_100HZ]);
             framing_publish_100hz(decomd_channel_data[RATE_100HZ]);
+            // 1 Hz
+            frame_offset = 2*frame_size[RATE_200HZ] + frame_size[RATE_100HZ];
+            counter_1hz = GET_UINT8(subframe_1hz_Addr);
+            memcpy(decomd_channel_data[RATE_1HZ]+counter_1hz*one_hundredth_1hz_frame, 
+                   frames.framelist[write_frame]+frame_offset, frame_size[RATE_100HZ]);
+            if (counter_1hz == 0) {
+                framing_publish_1hz(decomd_channel_data[RATE_1HZ]);
+            }
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
         }
         frames.i_out = write_frame;
@@ -235,7 +256,7 @@ int main(void) {
 
     /* Fork to background */
     if (false) {
-	daemonize();
+    daemonize();
     }
 
     gettimeofday(&then, &tz);
