@@ -892,7 +892,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
       {
-          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_LEVEL"}
+          {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
       }
   },
 
