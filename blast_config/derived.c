@@ -507,7 +507,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_4K_FILT_INT", "TD_4K_FILT", 0.199656, 0.000034),
     LINCOM("TD_VCS2_HX_INT", "TD_VCS2_HX", 0.199033, -0.000013),
     LINCOM("TD_VCS1_PLATE_INT", "TD_VCS1_PLATE", 0.199517, -0.000026),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.txt"),
+    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_250fpa", "TD_250FPA_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_hwp", "TD_HWP_INT", LUT_DIR "dt670_orig.text"),

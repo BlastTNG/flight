@@ -58,7 +58,30 @@ typedef struct {
     uint16_t heater_status;
 } heater_control_t;
 
+typedef struct {
+    int standby, cooling, burning_off, heating, heat_delay;
+    double t250, t350, t500, tcharcoal, tcharcoalhs;
+    double t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
+    channel_t* tfpa250_Addr; // set channel address pointers
+    channel_t* tfpa350_Addr;
+    channel_t* tfpa500_Addr;
+    channel_t* tcharcoal_Addr;
+    channel_t* tcharcoalhs_Addr;
+    int start_up_counter;
+    int burning_length;
+    int reset_cycle;
+    int burning_counter;
+    int reheating;
+    // change these to the 16bit values. (uint16_t)
+    double tcrit_fpa; // this will likely get changed in the future
+    double tcrit_charcoal; // temp of charcoal
+    double tmin_charcoal; // minimum during burnoff
+} cycle_control_t;
+
+cycle_control_t cycle_state;
+
 heater_control_t heater_state;
+
 cryo_control_t cryo_state;
 
 static void update_heater_values(void) {
@@ -366,7 +389,171 @@ void test_cycle(void) {
     blast_warn("channel is %f", t_test);
 }
 
-auto_cycle_allowed, force_cycle, auto_cycling;
+static void init_cycle_channels(void) {
+    cycle_state.tfpa250_Addr = channels_find_by_name("tr_250_fpa");
+    cycle_state.tfpa350_Addr = channels_find_by_name("tr_350_fpa");
+    cycle_state.tfpa500_Addr = channels_find_by_name("tr_500_fpa");
+    cycle_state.tcharcoal_Addr = channels_find_by_name("td_charcoal");
+    cycle_state.tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
+}
+
+static void init_cycle_values(void) {
+    cycle_state.standby = 0;
+    cycle_state.cooling = 0;
+    cycle_state.burning_off = 0;
+    cycle_state.heating = 0;
+    cycle_state.heat_delay = 0;
+    cycle_state.tcharcoal = 0;
+    cycle_state.tcharcoal_old = 0;
+    cycle_state.t250 = 0;
+    cycle_state.t350 = 0;
+    cycle_state.t500 = 0;
+}
+
+static void start_cycle(void) {
+    if (cycle_state.start_up_counter < 60) { // won't try to autocycle in the first minute
+        cycle_state.start_up_counter++;
+        GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250_old);
+        GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350_old);
+        GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500_old);
+        cycle_state.t250 += cycle_state.t250_old;
+        cycle_state.t350 += cycle_state.t350_old;
+        cycle_state.t500 += cycle_state.t500_old;
+        if (cycle_state.start_up_counter == 60) {
+            cycle_state.t250 = cycle_state.t250/60;
+            cycle_state.t350 = cycle_state.t350/60;
+            cycle_state.t500 = cycle_state.t500/60;
+            cycle_state.standby = 1;
+        }
+    }
+}
+
+static void standby_cycle(void) {
+    if (cycle_state.standby == 1) {
+        cycle_state.t250_old = cycle_state.t250;
+        cycle_state.t350_old = cycle_state.t350;
+        cycle_state.t500_old = cycle_state.t500;
+        GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
+        GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
+        GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
+        cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
+        cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
+        cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        if (cycle_state.t250 > cycle_state.tcrit_fpa) {
+            cycle_state.standby = 0;
+            cycle_state.heating = 1;
+        } else {
+            if (cycle_state.t350 > cycle_state.tcrit_fpa) {
+                cycle_state.standby = 0;
+                cycle_state.heating = 1;
+            } else {
+                if (cycle_state.t500 > cycle_state.tcrit_fpa) {
+                    cycle_state.standby = 0;
+                    cycle_state.heating = 1;
+                }
+            }
+        }
+    }
+}
+
+static void heating_cycle(void) {
+    if (cycle_state.heating == 1) {
+        if (cycle_state.heat_delay == 0) {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal_hs = 0;
+            cycle_state.heat_delay++;
+        }
+        if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
+            // we could add the open the pumped pot valve here.
+            cycle_state.heat_delay++;
+        } else {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 1;
+        }
+        GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
+        if (cycle_state.tcharcoal > cycle_state.tcrit_charcoal) {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 0;
+            cycle_state.heating = 0;
+            cycle_state.burning_off = 1;
+            cycle_state.burning_counter = 0;
+        }
+    }
+}
+
+static void burnoff_cycle(void) {
+    if (cycle_state.burning_off == 1) {
+        GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
+        if (cycle_state.burning_counter < cycle_state.burning_length && cycle_state.reheating == 0) {
+            cycle_state.burning_counter++;
+        }
+        if (cycle_state.tcharcoal < cycle_state.tmin_charcoal && cycle_state.reheating == 0) {
+            cycle_state.reheating = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 1;
+        }
+        if (cycle_state.reheating == 1 && cycle_state.tcharcoal > cycle_state.tcrit_charcoal) {
+            cycle_state.reheating = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 0;
+        }
+        if (cycle_state.burning_counter == cycle_state.burning_length) {
+            cycle_state.burning_off = 0;
+            cycle_state.cooling = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal_hs = 0;
+            GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
+            GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
+            GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
+        }
+    }
+}
+
+static void cooling_cycle(void) {
+    if ( cycle_state.cooling == 1 ) {
+        // we can close the pumped pot here
+        cycle_state.t250_old = cycle_state.t250;
+        cycle_state.t350_old = cycle_state.t350;
+        cycle_state.t500_old = cycle_state.t500;
+        GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
+        GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
+        GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
+        cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
+        cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
+        cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        if (cycle_state.t250 < cycle_state.tcrit_fpa &&
+            cycle_state.t350 < cycle_state.tcrit_fpa &&
+            cycle_state.t500 < cycle_state.tcrit_fpa) {
+            cycle_state.standby = 1;
+            cycle_state.cooling = 0;
+        }
+    }
+}
+
+static void forced(void) {
+    cycle_state.standby = 0;
+    cycle_state.cooling = 0;
+    cycle_state.burning_off = 0;
+    cycle_state.heating = 1;
+    cycle_state.heat_delay = 0;
+}
+
+void auto_cycle_mk2(void) {
+    static int first_time = 1;
+    if (first_time == 1) {
+        init_cycle_channels();
+        init_cycle_values();
+        first_time = 0;
+    }
+    if (CommandData.Cryo.forced == 1) {
+        forced();
+    }
+    start_cycle();
+    standby_cycle();
+    heating_cycle();
+    burnoff_cycle();
+    cooling_cycle();
+}
 
 void autocycle_ian(void)
 {
@@ -375,15 +562,36 @@ void autocycle_ian(void)
     static channel_t* tfpa500_Addr;
     static channel_t* tcharcoal_Addr;
     static channel_t* tcharcoalhs_Addr;
+    static int standby = 0;
+    static int heating = 0;
+    static int burning_off = 0;
+    static int cooling = 0;
+    static int heat_delay = 0;
 
     static int firsttime = 1;
-    static int cooling_counter = 0;
+    static int burning_counter = 0;
     static int start_up_counter = 0;
     double t250, t350, t500, tcharcoal, tcharcoalhs;
     double t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
     static double tcrit_fpa = 0.31; // this will likely get changed in the future
     static double tcrit_charcoal = 37.0; // temp of charcoal
-    static int cooling_length = 3600;
+    static double tmin_charcoal = 26.0; // minimum during burnoff
+    static int burning_length = 3600;
+    static int reheating = 0;
+    if (cycle_state.reset_cycle == 1) {
+        firsttime = 1;
+        burning_counter = 0;
+        start_up_counter = 0;
+        heat_delay = 0;
+        start_up_counter = 0;
+    }
+    if (CommandData.Cryo.forced == 1) {
+        standby = 0;
+        cooling = 0;
+        burning_off = 0;
+        heating = 1;
+        heat_delay = 0;
+    }
     if (firsttime == 1) {
         firsttime = 0;
         tfpa250_Addr = channels_find_by_name("tr_250_fpa");
@@ -391,15 +599,121 @@ void autocycle_ian(void)
         tfpa500_Addr = channels_find_by_name("tr_500_fpa");
         tcharcoal_Addr = channels_find_by_name("td_charcoal");
         tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
+        t250 = 0;
+        t350 = 0;
+        t500 = 0;
+        tcharcoal = 0;
+        tcharcoal_old = 0;
+        firsttime--;
+        standby = 0;
+        cooling = 0;
+        heating = 0;
+        burning_off = 0;
     }
     if (start_up_counter < 60) { // won't try to autocycle in the first minute
         start_up_counter++;
-    } else {
-        firsttime++;
+        GET_VALUE(tfpa250_Addr, t250_old);
+        GET_VALUE(tfpa350_Addr, t350_old);
+        GET_VALUE(tfpa500_Addr, t500_old);
+        t250 += t250_old;
+        t350 += t350_old;
+        t500 += t500_old;
+        if (start_up_counter == 60) {
+            t250 = t250/60;
+            t350 = t350/60;
+            t500 = t500/60;
+            standby = 1;
+        }
+    }
+    if (standby == 1) {
+        t250_old = t250;
+        t350_old = t350;
+        t500_old = t500;
+        GET_VALUE(tfpa250_Addr, t250);
+        GET_VALUE(tfpa350_Addr, t350);
+        GET_VALUE(tfpa500_Addr, t500);
+        t250 = t250_old*(59/60) + t250*(1/60);
+        t350 = t350_old*(59/60) + t350*(1/60);
+        t500 = t500_old*(59/60) + t500*(1/60);
+        if (t250 > tcrit_fpa) {
+            standby = 0;
+            heating = 1;
+        } else {
+            if (t350 > tcrit_fpa) {
+                standby = 0;
+                heating = 1;
+            } else {
+                if (t500 > tcrit_fpa) {
+                    standby = 0;
+                    heating = 1;
+                }
+            }
+        }
+    }
+    if (heating == 1) {
+        if (heat_delay == 0) {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal_hs = 0;
+            heat_delay++;
+        }
+        if (heat_delay < 180) { // give the charcoal HS time to cool off
+            // we could add the open the pumped pot valve here.
+            heat_delay++;
+        } else {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 1;
+        }
+        GET_VALUE(tcharcoal_Addr, tcharcoal);
+        if (tcharcoal > tcrit_charcoal) {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 0;
+            heating = 0;
+            burning_off = 1;
+            burning_counter = 0;
+        }
+    }
+    if (burning_off == 1) {
+        GET_VALUE(tcharcoal_Addr, tcharcoal);
+        if (burning_counter < burning_length && reheating == 0) {
+            burning_counter++;
+        }
+        if (tcharcoal < tmin_charcoal && reheating == 0) {
+            reheating = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 1;
+        }
+        if (reheating == 1 && tcharcoal > tcrit_charcoal) {
+            reheating = 0;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal = 0;
+        }
+        if (burning_counter == burning_length) {
+            burning_off = 0;
+            cooling = 1;
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal_hs = 0;
+            GET_VALUE(tfpa250_Addr, t250);
+            GET_VALUE(tfpa350_Addr, t350);
+            GET_VALUE(tfpa500_Addr, t500);
+        }
+    }
+    if ( cooling == 1 ) {
+        // we can close the pumped pot here
+        t250_old = t250;
+        t350_old = t350;
+        t500_old = t500;
+        GET_VALUE(tfpa250_Addr, t250);
+        GET_VALUE(tfpa350_Addr, t350);
+        GET_VALUE(tfpa500_Addr, t500);
+        t250 = t250_old*(59/60) + t250*(1/60);
+        t350 = t350_old*(59/60) + t350*(1/60);
+        t500 = t500_old*(59/60) + t500*(1/60);
+        if (t250 < tcrit_fpa && t350 < tcrit_fpa && t500 < tcrit_fpa) {
+            standby = 1;
+            cooling = 0;
+        }
     }
 }
-
-
 
 
 

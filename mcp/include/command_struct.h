@@ -272,6 +272,8 @@ typedef struct {
   uint16_t heater_status;
   uint16_t sync;
   uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
 } cryo_cmds_t;
 
 typedef struct {
