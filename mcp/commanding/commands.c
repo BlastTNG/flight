@@ -829,18 +829,20 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Cryo.BDAHeat = 0;
             break;
         case pot_valve_open:
-            CommandData.Cryo.potvalve_open = 100;
-            CommandData.Cryo.potvalve_close = 0;
+            CommandData.Cryo.potvalve_goal = opened;
+	    // CommandData.Cryo.potvalve_open = 100;
+            // CommandData.Cryo.potvalve_close = 0;
             break;
         case pot_valve_close:
-            CommandData.Cryo.potvalve_close = 100;
-            CommandData.Cryo.potvalve_open = 0;
+            CommandData.Cryo.potvalve_goal = closed;
+	    // CommandData.Cryo.potvalve_close = 100;
+            // CommandData.Cryo.potvalve_open = 0;
             break;
         case pot_valve_on:
-            CommandData.Cryo.potvalve_on = 1;
+            // CommandData.Cryo.potvalve_on = 1;
             break;
         case pot_valve_off:
-            CommandData.Cryo.potvalve_on = 0;
+            // CommandData.Cryo.potvalve_on = 0;
             break;
         case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
@@ -1587,7 +1589,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.bal_move_type = ((0 < ivalues[0]) - (ivalues[0] < 0) + 1); // sgn function
       CommandData.balance.mode = bal_manual;
       break;
     case balance_vel:
@@ -2238,9 +2240,10 @@ void InitCommandData()
 
     CommandData.Cryo.BDAHeat = 0;
 
-    CommandData.Cryo.potvalve_on = 0;
-    CommandData.Cryo.potvalve_open = 0;
-    CommandData.Cryo.potvalve_close = 0;
+    // CommandData.Cryo.potvalve_on = 0;
+    // CommandData.Cryo.potvalve_open = 0;
+    // CommandData.Cryo.potvalve_close = 0;
+    CommandData.Cryo.potvalve_goal = intermed;
     CommandData.Cryo.lhevalve_on = 0;
     CommandData.Cryo.lvalve_open = 0;
     CommandData.Cryo.lvalve_close = 0;

@@ -257,6 +257,8 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
+
 typedef struct {
   uint16_t charcoalHeater;
   uint16_t hsCharcoal;
@@ -287,7 +289,8 @@ typedef struct {
   int calib_repeats;
   int calib_hwpr;
 
-  uint16_t potvalve_open, potvalve_on, potvalve_close;
+  valve_state_t potvalve_goal;
+  // uint16_t potvalve_open, potvalve_on, potvalve_close;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
 } cryo_cmds_t;
 
@@ -300,7 +303,8 @@ typedef struct slinger_commanding
 
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
-    enum {pos = 0, neg} bal_move_type;
+    // enum {pos = 0, neg} bal_move_type;
+    enum {neg = 0, no_man, pos} bal_move_type;
     uint32_t pos;
     uint16_t vel;
     uint16_t hold_i;

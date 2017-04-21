@@ -27,7 +27,7 @@
 #define BALANCENUM 3
 
 // TODO(laura): Change this once we test different acceleration/velocity parameters.
-#define BALANCE_PREAMBLE "j256"
+#define BALANCE_PREAMBLE "j256n2" // set positive direction, enable limits, set microstep res.
 
 void DoBalance(struct ezbus* bus);
 void ControlBalance(void);
