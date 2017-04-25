@@ -166,7 +166,7 @@ void biphase_writer(void)
     while (true) {
         tickle(ctx);
         set_incharge(ctx);
-        usleep(100000);
+        usleep(250000);
     }
 
     // Currently we will never get here, but later we can implement a 'biphase is on' variable
