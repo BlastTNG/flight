@@ -94,9 +94,11 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
 void framing_publish_1hz(void)
 {
     static channel_t *mcp_1hz_framenum_addr = NULL;
+    static channel_t *mcp_1hz_framenum_dl_addr = NULL;
     static char frame_name[32];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+        mcp_1hz_framenum_dl_addr = channels_find_by_name("mcp_1hz_framecount_dl");
         snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/1Hz", SouthIAm + 1);
     }
 
@@ -104,6 +106,7 @@ void framing_publish_1hz(void)
 
     mcp_1hz_framenum++;
     SET_INT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
+    SET_INT32(mcp_1hz_framenum_dl_addr, mcp_1hz_framenum);
     if (frame_size[RATE_1HZ]) {
         if (1) {
             // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));

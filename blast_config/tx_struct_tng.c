@@ -944,6 +944,7 @@ channel_t channel_list[] =
 
 
     { "mcp_1hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ,   U_NONE, 0 },
+    { "mcp_1hz_framecount_dl",  SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ,   U_NONE, 0 },
     { "mcp_5hz_framecount",     SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_5HZ,   U_NONE, 0 },
     { "mcp_100hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_100HZ, U_NONE, 0 },
     { "mcp_200hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_200HZ, U_NONE, 0 },
