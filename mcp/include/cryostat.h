@@ -21,5 +21,6 @@ void test_frequencies(void);
 void tie_up(void);
 void heater_read(void);
 void test_cycle(void);
+void autocycle_ian(void);
 
 #endif /* cryostat_h */

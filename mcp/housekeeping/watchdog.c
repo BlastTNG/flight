@@ -84,7 +84,7 @@ int initialize_watchdog(int m_timeout)
 {
     if (watchdog_fd > 0) close(watchdog_fd);
 
-    if ((watchdog_fd = open("/dev/watchdog", O_WRONLY)) < 0) {
+    if ((watchdog_fd = open("/dev/watchdog1", O_WRONLY)) < 0) {
         blast_strerror("Could not open Watchdog");
         return -1;
     }

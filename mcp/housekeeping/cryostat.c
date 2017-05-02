@@ -67,15 +67,16 @@ typedef struct {
     channel_t* tfpa500_Addr;
     channel_t* tcharcoal_Addr;
     channel_t* tcharcoalhs_Addr;
+    channel_t* cycle_state_Addr;
     int start_up_counter;
     int burning_length;
     int reset_cycle;
     int burning_counter;
     int reheating;
     // change these to the 16bit values. (uint16_t)
-    double tcrit_fpa; // this will likely get changed in the future
-    double tcrit_charcoal; // temp of charcoal
-    double tmin_charcoal; // minimum during burnoff
+    uint16_t tcrit_fpa; // this will likely get changed in the future
+    uint16_t tcrit_charcoal; // temp of charcoal
+    uint16_t tmin_charcoal; // minimum during burnoff
 } cycle_control_t;
 
 cycle_control_t cycle_state;
@@ -537,6 +538,35 @@ static void forced(void) {
     cycle_state.heating = 1;
     cycle_state.heat_delay = 0;
 }
+/*
+standby = 1
+cooling = 4
+burning_off = 3
+heating = 2
+*/
+static void output_cycle(void) {
+    static int first_output = 1;
+    uint8_t state_value;
+    if (first_output == 1) {
+        cycle_state.cycle_state_Addr = channels_find_by_name("cycle_state");
+    }
+    if (cycle_state.standby == 1) {
+        state_value = 1;
+    } else {
+        if (cycle_state.heating == 1) {
+            state_value = 2;
+        } else {
+            if (cycle_state.burning_off == 1) {
+                state_value = 3;
+            } else {
+                if (cycle_state.cooling == 1) {
+                    state_value = 4;
+                }
+            }
+        }
+    }
+    SET_SCALED_VALUE(cycle_state.cycle_state_Addr, state_value);
+}
 
 void auto_cycle_mk2(void) {
     static int first_time = 1;
@@ -573,9 +603,9 @@ void autocycle_ian(void)
     static int start_up_counter = 0;
     double t250, t350, t500, tcharcoal, tcharcoalhs;
     double t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
-    static double tcrit_fpa = 0.31; // this will likely get changed in the future
-    static double tcrit_charcoal = 37.0; // temp of charcoal
-    static double tmin_charcoal = 26.0; // minimum during burnoff
+    static double tcrit_fpa = 30560; // this will likely get changed in the future
+    static double tcrit_charcoal = 37.0; // temp of charcoal, change to counts
+    static double tmin_charcoal = 26.0; // minimum during burnoff, change to counts
     static int burning_length = 3600;
     static int reheating = 0;
     if (cycle_state.reset_cycle == 1) {
