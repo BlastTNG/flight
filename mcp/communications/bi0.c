@@ -76,7 +76,7 @@ void build_biphase_frame_200hz(const void *m_channel_data)
     } else {
         memcpy(biphase_frame+frame_size[RATE_200HZ], m_channel_data, frame_size[RATE_200HZ]);
     }
-    even = ~even;
+    even = !even;
 }
 
 void build_biphase_frame_100hz(const void *m_channel_data)
@@ -134,7 +134,7 @@ void push_bi0_buffer(void)
     bi0_buffer.framesize[i_in] = BIPHASE_FRAME_SIZE_BYTES;
     memcpy(bi0_buffer.framelist[i_in], biphase_frame, BIPHASE_FRAME_SIZE_BYTES);
     bi0_buffer.i_in = i_in;
-    blast_info("bi0_buffer.i_in = %d", i_in);
+    // blast_info("bi0_buffer.i_in = %d", i_in);
 }
 
 static void tickle(struct mpsse_ctx *ctx_passed_write) {
@@ -161,7 +161,7 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         incharge_Addr = channels_find_by_name("incharge");
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-        blast_warn("the value is %d", in_charge);
+        // blast_dbg("the value is %d", in_charge);
         SET_SCALED_VALUE(incharge_Addr, in_charge+1);
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
@@ -228,7 +228,7 @@ void biphase_writer(void)
                BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_BYTES-4));
 
     while (true) {
-        blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
+        // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         write_frame = bi0_buffer.i_out;
         read_frame = bi0_buffer.i_in;
         if (read_frame == write_frame) {
@@ -242,7 +242,7 @@ void biphase_writer(void)
 
             bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
             bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES-2);
-            blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
+            // blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
 
             bi0_frame[0] = sync_word;
             sync_word = ~sync_word;
@@ -251,8 +251,8 @@ void biphase_writer(void)
             mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
             mpsse_flush(ctx);
             gettimeofday(&end, NULL);
-            blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
-                     BIPHASE_FRAME_SIZE_BYTES, (end.tv_usec - begin.tv_usec)/1000000.0);
+            // blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
+            //          BIPHASE_FRAME_SIZE_BYTES, (end.tv_usec - begin.tv_usec)/1000000.0);
             if (ctx->retval != ERROR_OK) {
                 blast_err("Error writing frame to Biphase, discarding.");
             }
