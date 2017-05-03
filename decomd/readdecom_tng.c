@@ -28,7 +28,7 @@ extern uint16_t crc_ok; // 1 if crc was ok
 extern unsigned long frame_counter;
 extern double dq_bad;  // data quality - fraction of bad crcs
 
-bool debug_rate = false;
+bool debug_rate = true;
 
 // void pushDiskFrame(unsigned short *RxFrame);
 

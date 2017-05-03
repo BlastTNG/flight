@@ -173,7 +173,7 @@ void PublishFrames(void)
     int frame_offset = 0;
     uint16_t sub_previous_counter_1hz, sub_counter_1hz = 50;
     uint32_t previous_counter_1hz, counter_1hz, counter_100hz, counter_200hz = 50;
-    size_t one_hundredth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
+    size_t one_hundredth_1hz_frame = 0; 
 
     uint16_t    read_frame;
     uint16_t    write_frame;
@@ -184,6 +184,7 @@ void PublishFrames(void)
  
     channels_initialize(channel_list); 
     framing_init(channel_list, derived_list);
+    one_hundredth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
 
     subframe_1hz_Addr = channels_find_by_name("subframe_counter_1hz");
     frame_1hz_counter_dl_Addr = channels_find_by_name("mcp_1hz_framecount_dl");
@@ -210,11 +211,11 @@ void PublishFrames(void)
             memcpy(channel_data[RATE_200HZ], frames.framelist[write_frame], frame_size[RATE_200HZ]);
             framing_publish_200hz(channel_data[RATE_200HZ]);
             counter_200hz = GET_UINT32(frame_200hz_counter_Addr);
-            blast_info("Counter 200hz is %d", counter_200hz);
+            // blast_info("Counter 200hz is %d", counter_200hz);
             frame_offset = frame_size[RATE_200HZ];
             memcpy(channel_data[RATE_200HZ], frames.framelist[write_frame]+frame_offset, frame_size[RATE_200HZ]);
             counter_200hz = GET_UINT32(frame_200hz_counter_Addr);
-            blast_info("Counter 200hz is %d", counter_200hz);
+            // blast_info("Counter 200hz is %d", counter_200hz);
             framing_publish_200hz(channel_data[RATE_200HZ]);
             // 100 Hz
             frame_offset = 2*frame_size[RATE_200HZ];
@@ -227,17 +228,18 @@ void PublishFrames(void)
             sub_counter_1hz = GET_UINT8(subframe_1hz_Addr);
             if (sub_counter_1hz < sub_previous_counter_1hz) {
                 counter_1hz = GET_UINT32(frame_1hz_counter_dl_Addr);
-                if (counter_1hz == 0) || (previous_counter_1hz == counter_1hz) {
-                    SET_INT32(frame_1hz_counter_dl_Addr, counter_100hz/100);
+                if (false) {
+                    if (previous_counter_1hz == counter_1hz) {
+                        SET_INT32(frame_1hz_counter_dl_Addr, (counter_100hz/100 - 1)); // Publishing the previous frame
+                    }
                 }
-                blast_info("Counter 1hz is %d, publishing at 1hz", sub_counter_1hz);
                 framing_publish_1hz(channel_data[RATE_1HZ]);
                 previous_counter_1hz = counter_1hz;
             }
             memcpy(channel_data[RATE_1HZ]+sub_counter_1hz*one_hundredth_1hz_frame, 
                    frames.framelist[write_frame]+frame_offset, one_hundredth_1hz_frame);
             sub_previous_counter_1hz = sub_counter_1hz;
-            //
+
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
         }
         frames.i_out = write_frame;
