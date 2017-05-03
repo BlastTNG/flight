@@ -42,7 +42,8 @@
 
 
 // Add clinometer channels and also add the derived channels when we get to testing.
-
+// this function is called to update the thermometry on the outside of the IF and OF
+// same build as the read thermometers code
 void update_thermistors(void) {
     static int first_time_therm = 1;
     static channel_t* thermistor_1_Addr;
@@ -133,7 +134,7 @@ void update_thermistors(void) {
     SET_SCALED_VALUE(thermistor_27_Addr, labjack_get_value(LABJACK_OF_3, 12));
     SET_SCALED_VALUE(thermistor_28_Addr, labjack_get_value(LABJACK_OF_3, 13));
 }
-
+// updates clinometers instead of thermometers
 void update_clinometer(void) {
     static int first_time_clin = 1;
     static channel_t* clin_1_x_Addr;
@@ -152,7 +153,7 @@ void update_clinometer(void) {
     SET_SCALED_VALUE(clin_2_x_Addr, labjack_get_value(LABJACK_OF_1, 12));
     SET_SCALED_VALUE(clin_2_y_Addr, labjack_get_value(LABJACK_OF_1, 13));
 }
-
+// same deal for current sensors
 void update_current_sensors(void) {
     static int first_time_current = 1;
     static channel_t* current_loop_1_Addr;
