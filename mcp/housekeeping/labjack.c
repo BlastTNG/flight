@@ -38,6 +38,9 @@
 #include "command_struct.h"
 #include "blast.h"
 #include "mcp.h"
+#include "tx.h"
+
+extern int16_t InCharge;
 
 // Target types for stream configuration
 #define STREAM_TARGET_ETHERNET 0x01  // Ethernet
@@ -1026,6 +1029,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 }
 
 void *labjack_cmd_thread(void *m_lj) {
+    int first_time = 1;
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
 
@@ -1035,7 +1039,13 @@ void *labjack_cmd_thread(void *m_lj) {
     nameThread(tname);
 
     blast_info("Starting Labjack%02d Commanding at IP %s", m_state->which, m_state->address);
-
+    /* while (!InCharge) {
+        if (first_time) {
+            blast_info("not in charge... waiting");
+            first_time = 0;
+        }
+        usleep(1000);
+    } */
 	m_state->req_comm_stream_state = 1;
 	m_state->comm_stream_state = 0;
 	m_state->has_comm_stream_error = 0;
