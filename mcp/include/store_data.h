@@ -22,7 +22,7 @@
  * History:
  * Created on: May 4th, 2017 by Laura Fissel
  */
- 
+
 #ifndef INCLUDE_STORE_DATA_H_
 #define INCLUDE_STORE_DATA_H_
 
