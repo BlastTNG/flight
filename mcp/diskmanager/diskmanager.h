@@ -76,16 +76,25 @@ static const char drive_uuids[2][8][32] = {{"", "UUID=ccbff6e7-8e51-49e4-a987-9e
                                            {"", "UUID=993e105e-1cbc-4913-abca-29540242c57e"},
                                            {"", "UUID=6846dffc-cf41-447a-a576-4ab34cad7974"},
                                            {"", "UUID=a52e5c25-8dbc-4e55-ae73-7c5f8b49968c"}};
+static const char drive_mnt[2][8][32] = {{"", "/mnt/sdb1"},
+                                           {"", "/mnt/sdc1"},
+                                           {"", "/mnt/sdd1"},
+                                           {"", "/mnt/sde1"},
+                                           {"", "/mnt/sdf1"},
+                                           {"", "/mnt/sdg1"},
+                                           {"", "/mnt/sdh1"},
+                                           {"", "/mnt/sdi1"}};
+
 /**
  * diskentry structure provides all information needed to utilize both local disks and AoE disks in the
  * #diskpool
  */
 typedef struct diskentry
 {
-	uint16_t		major;				/**< major Major number of the AoE disk i.e. \#.x */
-	uint8_t			minor;				/**< minor Minor number of the AoE disk i.e. x.\# */
-	uint8_t			MAC[6];				/**< MAC Media Access Control address of the AoE disk */
-	bool			isAoE;				/**< isAoE true==AoE Disk, false==Local disk */
+// 	uint16_t		major;				/**< major Major number of the AoE disk i.e. \#.x */
+// 	uint8_t			minor;				/**< minor Minor number of the AoE disk i.e. x.\# */
+// 	uint8_t			MAC[6];				/**< MAC Media Access Control address of the AoE disk */
+	bool			isUSB;				/**< isUSB true==USB Disk, false==Local disk */
 	char			*dev;				/**< dev Disk \/dev entry.  Needed for non-AoE disks */
 	char			*mnt_point;			/**< mnt_point Location where disk is mounted */
 	uint32_t		fail_count;			/**< fail_count Incremented each time disk does not respond to
