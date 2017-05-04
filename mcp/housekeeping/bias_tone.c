@@ -415,7 +415,19 @@ int initialize_bias_tone(void)
     return 0;
 
 init_err:
+    blast_warn("Initialization error!");
     shutdown_bias_tone();
     return -1;
+}
+
+int set_rox_bias() {
+    int retval;
+    if ((retval = set_mixer_params()) < 0) {
+        blast_err("Could not send mixer parameters.: %s", snd_strerror(retval));
+        return -1;
+    }
+    blast_startup("Mixer parameters re-sent!");
+
+    return 0;
 }
 

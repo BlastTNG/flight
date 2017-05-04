@@ -49,6 +49,7 @@
 #include "labjack.h"
 #include "cryostat.h"
 #include "relay_control.h"
+#include "bias_tone.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -1715,6 +1716,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //       need to multiply later instead
     case set_rox_bias_amp: // Set the amplitude of the rox bias signal
       CommandData.rox_bias.amp = ivalues[0];
+      set_rox_bias();
       break;
     case bias_level_500:     // Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
