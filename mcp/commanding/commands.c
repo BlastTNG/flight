@@ -254,6 +254,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case level_sensor_pulse:
             CommandData.Cryo.do_level_pulse = 1;
             break;
+        case heater_sync:
+            CommandData.Cryo.sync = 1;
+            break;
         case charcoal_on:
             CommandData.Cryo.charcoal = 1;
             CommandData.Cryo.heater_update = 1;
@@ -2299,6 +2302,7 @@ void InitCommandData()
     CommandData.parts_sched = 0x0;
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
+    CommandData.Cryo.sync = 0;
 
     /* relays should always be set to zero when starting MCP */
     /* relays */

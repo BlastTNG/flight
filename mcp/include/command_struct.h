@@ -270,6 +270,8 @@ typedef struct {
   uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
   uint16_t heater_update;
   uint16_t heater_status;
+  uint16_t sync;
+  uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
 } cryo_cmds_t;
 
 typedef struct {

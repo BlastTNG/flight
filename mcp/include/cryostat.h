@@ -19,6 +19,8 @@ void read_thermometers();
 void test_read(void);
 void test_frequencies(void);
 void tie_up(void);
+void heater_read(void);
+void test_cycle(void);
 
 #ifdef USE_XY_THREAD
 	void read_chopper(void);
