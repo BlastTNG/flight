@@ -359,8 +359,8 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     rec_control();
-    of_control();
-    if_control();
+    // of_control();
+    // if_control();
     heater_control();
     // heater_read();
     read_thermometers();
