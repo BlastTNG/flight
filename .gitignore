@@ -38,4 +38,3 @@ decom/.decom_pci.o.cmd
 decom/Module.symvers
 decom/decom_pci.mod.c
 decom/modules.order
-
