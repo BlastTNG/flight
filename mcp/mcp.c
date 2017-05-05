@@ -96,6 +96,7 @@ void StageBus(void);
 #endif
 
 struct chat_buf chatter_buffer;
+struct tm start_time;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -371,6 +372,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
@@ -477,7 +479,6 @@ int main(int argc, char *argv[])
    * Begin logging
    */
   {
-      struct tm start_time;
       time_t start_time_s;
       char log_file_name[PATH_MAX];
 

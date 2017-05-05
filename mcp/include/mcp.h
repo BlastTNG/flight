@@ -43,6 +43,8 @@ struct chat_buf {
   int writing; /* the buffer we're currently writing to */
 };
 
+struct tm start_time;
+
 // Max Slew Veto
 #define VETO_MAX 60000
 
