@@ -343,7 +343,7 @@ static void mcp_5hz_routines(void)
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
-    ControlBalance(); 
+    ControlBalance();
     StoreActBus();
     level_control();
     #ifdef USE_XY_THREAD
