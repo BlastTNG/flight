@@ -70,18 +70,19 @@ void ReadDecom (void)
           anti_out_frame[i_word] = ~raw_word_in;
           if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
             if (debug_rate) {
-                printf("***** This should be frame start.............******\n");
+                printf("=================i_word=%d==============================\n", i_word);
+                printf("This should be frame start: it's been BIO_FRAME_SIZE_WORDS since last sync word\n");
             }
             du = ioctl(decom_fp, DECOM_IOC_NUM_UNLOCKED);
             if ((raw_word_in != sync_word) && (raw_word_in != (uint16_t) ~sync_word)) {
                 status = 0;
                 i_word = 0;
                 if (debug_rate) {
-                    printf("***** But it's not.............******\n");
+                    printf("***** But it's not: didn't get a sync word, got %04x******\n", raw_word_in);
                 }
             } else {
                 if (debug_rate) {
-                    printf("== FRAME START! ==\n== Got sync word %04x ==\n", raw_word_in);
+                    printf("=== FRAME START! i_word=%d===\n== Got sync word %04x ==\n", i_word, raw_word_in);
                 }
                   if (status < 2) {
                       status++;
