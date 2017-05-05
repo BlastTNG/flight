@@ -342,7 +342,7 @@ static void mcp_5hz_routines(void)
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
-    // ControlBalance(); // Joy uncomments this for telemtry
+    ControlBalance(); 
     StoreActBus();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
@@ -580,7 +580,7 @@ int main(int argc, char *argv[])
 
   pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
-  // act_thread = ph_thread_spawn(ActuatorBus, NULL); // Commented out by Joy for telemetry
+  act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
   initialize_watchdog(2);
