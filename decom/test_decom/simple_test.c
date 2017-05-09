@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
   printf("Reseting board . . . \n");
   ioctl(fp, DECOM_IOC_RESET);
   usleep(100);
-  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE = %d\n", BI0_FRAME_SIZE);
-  ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", BI0_FRAME_SIZE-1);
+  ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
   usleep(100);
   printf("Force unlock:\n");
   ioctl(fp, DECOM_IOC_FORCE_UNLOCK);
@@ -84,26 +84,29 @@ int main(int argc, char *argv[]) {
 	  j += 1;
 	  bytes_read_since_last_sync += bytes_read;
 	  if ((receiveword == 0xeb90) || (receiveword == 0x146f)) {
+        // printf("\n== j=%d ==\n", j);
+        printf("\n");
 	    j = 0;
 	    bytes_read_since_last_sync = 0;
 	  }
- 	  printf("\nWord Received: 0x%04x\n", receiveword);
-	  printf("Read %zd bytes\n", bytes_read);
-	  printf("Number of reads since last sync: %d\n", j);
-	  printf("Number of bytes received since last sync: %zd\n", bytes_read_since_last_sync);
-	  printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-	  printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-	  printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-	  printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+      printf("%04x ", receiveword);
+ 	  //printf("\nWord Received: 0x%04x\n", receiveword);
+	  //printf("Read %zd bytes\n", bytes_read);
+	  //printf("Number of reads since last sync: %d\n", j);
+	  //printf("Number of bytes received since last sync: %zd\n", bytes_read_since_last_sync);
+	  // printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
+	  // printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
+	  // printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
+	  // printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
 
     } else {
 	    k += 1;
-	    printf("\nNo Word: bytes_read is %zd, error is %s.\n", bytes_read, strerror(errno));
-	    printf("Number of reads without any bytes: %d\n", k);
-	    printf("counter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-	    printf("locked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-	    printf("num unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-	    printf("FIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+	    // printf("\nNo Word: bytes_read is %zd, error is %s.\n", bytes_read, strerror(errno));
+	    // printf("Number of reads without any bytes: %d\n", k);
+	    // printf("counter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
+	    // printf("locked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
+	    // printf("num unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
+	    // printf("FIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
     }
   }
   return 0;
