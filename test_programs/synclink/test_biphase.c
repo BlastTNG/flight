@@ -65,6 +65,7 @@ int send_biphase_writes() {
     int counter = 0;
     struct timeval begin, end;
     uint16_t crc_calculated;
+    uint16_t small_counter=0;
 
     /* Open device */
     fd = open("/dev/ttyUSB0", O_RDWR | O_NONBLOCK, 0);
@@ -112,7 +113,7 @@ int send_biphase_writes() {
         return rc;
     }
     int mode = MGSL_INTERFACE_RS422;
-    mode += MGSL_INTERFACE_MSB_FIRST;
+    // mode += MGSL_INTERFACE_MSB_FIRST;
     rc = ioctl(fd, MGSL_IOCSIF, mode);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
@@ -155,8 +156,8 @@ int send_biphase_writes() {
     *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
     *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
 
-    reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
-    reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
+    // reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
+    // reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
 
     // Blocking mode for read and writes
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
@@ -171,22 +172,36 @@ int send_biphase_writes() {
     for (int j=0; j>-1; j++) {
         gettimeofday(&begin, NULL);
         if (j%2 == 0) {
-            rc = write(fd, data_to_write, bytes_to_write);
-            //rc = write(fd, lsb_data_to_write, bytes_to_write);
+        // if (0) {
+            // rc = write(fd, data_to_write, bytes_to_write);
+            data_to_write[2] = small_counter;
+            reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
+            rc = write(fd, lsb_data_to_write, bytes_to_write);
+            printf("\n");
+            for (int k=0; k<((int) bytes_to_write/2); k++) {
+                printf("%04x ", data_to_write[k]);
+            }
         } else {
-            rc = write(fd, inverse_data_to_write, bytes_to_write);
-            //rc = write(fd, lsb_inverse_data_to_write, bytes_to_write);
+            // rc = write(fd, inverse_data_to_write, bytes_to_write);
+            inverse_data_to_write[2] = small_counter;
+            reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
+            rc = write(fd, lsb_inverse_data_to_write, bytes_to_write);
+            printf("\n");
+            for (int k=0; k<((int) bytes_to_write/2); k++) {
+                printf("%04x ", inverse_data_to_write[k]);
+            }
         }
+        small_counter ++;
         if (rc < 0) {
             blast_err("write error=%d %s", errno, strerror(errno));    
             return rc;
         }
         rc = tcdrain(fd);
         gettimeofday(&end, NULL);
-        if ((counter % 10) == 0) {
-            blast_info("The CRC calculated is %04x", crc_calculated);
-            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
-        }
+        // if ((counter % 10) == 0) {
+        //     blast_info("The CRC calculated is %04x", crc_calculated);
+        //     blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
+        // }
         counter += 1;
     } 
     // Closing
