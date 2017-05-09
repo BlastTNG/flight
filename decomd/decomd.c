@@ -269,7 +269,7 @@ int main(void) {
 
     /* Initialise Decom */
     ioctl(decom_fp, DECOM_IOC_RESET);
-    ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+    ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
 
     /* set up our outputs */
     openlog("decomd", LOG_PID, LOG_DAEMON);
