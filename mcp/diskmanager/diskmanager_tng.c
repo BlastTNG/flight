@@ -70,7 +70,16 @@ static pthread_rwlock_t mutex_diskpool = PTHREAD_RWLOCK_INITIALIZER;
 /* Controls access to the filepool */
 static pthread_rwlock_t mutex_filepool = PTHREAD_RWLOCK_INITIALIZER;
 
-static pthread_t 		flash_thread;		/**< flash_thread is the thread ID for updating disk flash entries */
+static pthread_t 		diskspace_thread;		/**< flash_thread is the thread ID for updating disk flash entries */
+
+#define DISK_BUFFER_MAX_WAIT		1 	// Maximum time in seconds to wait before writing data.
+										// This is set low to facilitate testing with a low data rate.
+
+static int usb_is_disk_alive()
+{
+    blast_info("Hope so!");
+    return(1);
+}
 
 /**
  * This function exists to keep the #HOME_DIR directory clean.
@@ -112,6 +121,7 @@ static void diskmanager_clear_old_mounts()
 				/* Since we are changing mounted volumes, close and re-open to ensure we don't miss anything */
 				endmntent(mtab_fp);
 				mtab_fp = setmntent("/proc/mounts", "r");
+				blast_info("Successfully unmounted %s", mountentry_s.mnt_dir);
 			} else {
 				blast_info("Could not remove %s: %s", mountentry_s.mnt_dir, strerror(errno));
 			}
@@ -151,17 +161,6 @@ void diskpool_update_last_time(int m_pos, time_t m_time)
 		blast_info("Updated access time for diskpool disk index %i", m_pos);
     }
 }
-
-// Called after a disk has responded.  Sets disk tag to pool tag
-// @param m_pos Disk position number to update
-void diskpool_update_disk_tag(int m_pos)
-{
-	if (m_pos < DISK_MAX_NUMBER && m_pos >= 0) {
-		s_diskpool.disk[m_pos].tag = s_diskpool.tag;
-		blast_info("Updated disk tag for diskpool disk index %i to %ui", m_pos, s_diskpool.tag);
-	}
-}
-
 
 // Returns the free space in megabytes of the mounted filesystem
 //
@@ -307,25 +306,12 @@ static int diskpool_init()
 		return -1;
 	}
 
-	s_diskpool.tag = 0;
 	s_diskpool.current_disk = NULL;
 	memset(s_diskpool.disk, 0, sizeof(diskentry_t) * DISK_MAX_NUMBER);
 
 	diskpool_unlock();
 	return 0;
 }
-
-// Generates a new tag for #s_diskpool prior to an update
-static void diskpool_update_tag()
-{
-	if (s_diskpool.tag >= UINT32_MAX) {
-		s_diskpool.tag = 1;
-	} else {
-		s_diskpool.tag++;
-	}
-	blast_info("s_diskpool.tag = %ui", s_diskpool.tag);
-}
-
 
 // Checks whether a device has already been added to the diskpool
 // @param m_dev NULL-terminated string giving the device name e.g. /dev/etherd/e0.1\0
@@ -400,7 +386,6 @@ static void diskpool_update_local()
 	// the disk information
 	if (position > -1) {
 		diskpool_update_last_time(position, time(NULL));
-		diskpool_update_disk_tag(position);
 		disk.free_space = diskmanager_freespace(local_dir);
 		if (disk.free_space == -1) {
 			blast_err("Error getting free space from local disk");
@@ -429,7 +414,6 @@ static void diskpool_update_local()
 	disk.free_space = diskmanager_freespace(disk.mnt_point);
 	disk.isUSB = false;
 	disk.last_accessed = time(NULL);
-	disk.tag = s_diskpool.tag;
 	if (diskpool_add_to_pool(&disk) == -1) {
 		blast_fatal("Could not add local disk to pool");
 	}
@@ -461,7 +445,7 @@ static int diskpool_mkdir_recursive(char *m_directory)
 	    blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
 	    current_path_len = strlen(current_path);
 	    path_chunk_len = strlen(path_chunk);
-	    blast_info("current_path_len = %i, path_chunk_len = %i", current_path_len, path_chunk_len);
+	    blast_info("current_path_len = %i, path_chunk_len = %i", (int) current_path_len, (int) path_chunk_len);
 		if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
 			blast_err("Path too long");
 			return -1;
@@ -471,7 +455,7 @@ static int diskpool_mkdir_recursive(char *m_directory)
 		snprintf(path_ptr, sizeof("/"), "/");
 		path_ptr++;
 	    current_path_len = strlen(current_path);
-		blast_info("current_path = %s, length = %i", current_path, current_path_len);
+		blast_info("current_path = %s, length = %i", current_path, (int) current_path_len);
 		if (stat(current_path, &dir_stat) != 0) {
 		    blast_info("Making path %s", current_path);
 			ret = mkdir(current_path, ACCESSPERMS);
@@ -537,6 +521,7 @@ static int diskpool_mkdir_file(const char *m_filename, bool m_file_appended)
 	if (file_is_local(m_filename)) {
 		snprintf(directory_name, len, "%s", m_filename);
 	} else {
+	    blast_info("Waiting for diskpool_verify_primary_disk to return not -1.");
 		while(diskpool_verify_primary_disk() == -1) {
 			pthread_yield();
 		}
@@ -667,6 +652,7 @@ static bool diskpool_mount_disk_index(int m_disknum)
 static int diskpool_find_next_good_usb_disk()
 {
 	size_t i = 0;
+	blast_info("Starting diskpool_find_next_good_usb_disk.");
     for (i = 1; i < DISK_MAX_NUMBER; i++) {
         if ((s_diskpool.disk[i].isUSB)
             && ((s_diskpool.disk[i].free_space > DISK_MIN_FREE_SPACE) || !(s_diskpool.disk[i].initialized))
@@ -764,7 +750,7 @@ static int diskpool_mount_new()
 	int32_t count = 0;
 	bool disk_mounted = false;
 
-	// First try to mount one of our USB disks
+	blast_info("First try to mount one of our USB disks that has skip = 0");
 	while (!disk_mounted && (count++ < DISK_MAX_NUMBER)) {
 		best_disk = diskpool_find_next_good_usb_disk();
 		if (best_disk == -1) {
@@ -773,7 +759,11 @@ static int diskpool_mount_new()
 		}
 		disk_mounted = diskpool_mount_disk_index(best_disk);
 	}
-
+	if (disk_mounted) {
+	    blast_info("We have successfully mounted disk %i", best_disk);
+    } else {
+	    blast_info("2nd try: we will accept any USB disk (even if the skip keyword is set).");
+    }
     count = 0;
 	// 2nd try: we will accept any USB disk (even if the skip keyword is set)
 	while (!disk_mounted && (count++ < DISK_MAX_NUMBER)) {
@@ -786,10 +776,8 @@ static int diskpool_mount_new()
 	}
 
 	if (!disk_mounted) {
-		/**
-		 * Our final fall-back is the local disk.  First check to see if there is enough space.  If not,
-		 * return a fatal error.
-		 */
+		// Our final fall-back is the local disk.  First check to see if there is enough space.  If not,
+		// return a fatal error.
 		blast_info("No USB mounted disks are available.  Using local disk");
 		if (s_diskpool.disk[0].free_space > DISK_MIN_FREE_SPACE) {
 			disk_mounted = true;
@@ -806,7 +794,6 @@ static int diskpool_mount_new()
 		blast_info("Disk %d mounted at %s", (int)best_disk,
 				s_diskpool.disk[best_disk].mnt_point?s_diskpool.disk[best_disk].mnt_point:"unknown");
 		diskpool_update_last_time(best_disk, time(NULL));
-		diskpool_update_mounted_free_space(&s_diskpool.disk[best_disk]);
 	}
 	return best_disk;
 }
@@ -849,19 +836,22 @@ static void diskpool_mount_primary()
 	int mountpoint = -1;
 	int i = 0;
 
-	blast_info("Attempting to mount new disk");
+	blast_info("Attempting to mount primary disk.");
 
 	/** We require this function to not fail, so we will wait for the write lock */
 	while (!diskpool_writelock()) pthread_yield();
 
 	while (mountpoint == -1) {
 		mountpoint = diskpool_mount_new();
-
+        blast_info("diskpool_mount_new returned %i, i = %i", mountpoint, i);
 		if (i++ > DISK_MAX_NUMBER) {
 			blast_fatal("Could not mount primary disk");
 			return;
 		}
 	}
+	s_diskpool.current_disk = &(s_diskpool.disk[mountpoint]);
+	blast_info("Current disk is now %i.  Unlocking the diskpool and returning.", mountpoint);
+	diskpool_unlock();
 }
 
 // Move current disk to the previous slot, mount a new current disk and unmount the previous.
@@ -871,6 +861,7 @@ static void diskpool_swap_disks() {
 	diskentry_t			*previous_disk;
 
 	previous_disk = s_diskpool.current_disk;
+	blast_info("Calling diskpool_mount_primary.");
 	diskpool_mount_primary();
 
 	if (previous_disk->isUSB) {
@@ -889,19 +880,21 @@ static int diskpool_verify_primary_disk()
 	int retval = -1;
 
 	while (s_diskpool.current_disk == NULL) {
+	    blast_info("Calling diskpool_mount_primary.");
 		diskpool_mount_primary();
 	}
+	blast_info("We now have a current disk!");
 	if (s_filepool.error_disk != s_diskpool.current_disk) {
 		retval = 0;
-
+        blast_info("There might be a problem with our current disk!");
 		if (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
 		    blast_info("Current disk has only %i bytes of free space.  Triggering a disk swap.",
 		               s_diskpool.current_disk->free_space);
 			diskpool_swap_disks();
 		}
-
         // TODO(laura): Add something that checks that the disk is alive and can be written too.
 	}
+	blast_info("Exiting diskpool_verify_primary_disk.");
 	return retval;
 }
 
@@ -918,7 +911,6 @@ int drivepool_add_init_usb_info(int m_pos, int m_hdusb)
     disk.initialized = 0;
 	disk.isUSB = true;
     disk.last_accessed = time(NULL);
-	disk.tag = s_diskpool.tag;
 	if (diskpool_add_to_pool(&disk) == -1) {
         blast_err("Could not add disk index %i (%s) to the diskpool.", m_pos, disk.mnt_point);
         return -1;
@@ -947,8 +939,7 @@ static void drivepool_init_usb_info()
 //
 // @details This routine should provide the shared diskpool structure with the most
 // up-to-date information about the disks available to the system.  We enclose the routine in
-// a writelock as we don't want the pool to change while we are scanning it.  The tag is used
-// to determine which disks respond to our pings.
+// a writelock as we don't want the pool to change while we are scanning it.
 void diskpool_update_all()
 {
     static int first_time = 1;
@@ -958,81 +949,140 @@ void diskpool_update_all()
 	if (s_diskmanager_exit || !diskpool_writelock())
 		return;
 
-	diskpool_update_tag();
-
+    blast_info("Calling diskpool_update_local.");
 	diskpool_update_local();
 
     if (first_time) {
         blast_info("Initializing diskpool USB information.");
         drivepool_init_usb_info();
     }
-
+    blast_info("drivepool_init_usb_info returned. Next we call diskpool_find_next_good_usb_disk.");
 	// Find the first disk that is available to write.
     if (diskpool_find_next_good_usb_disk() == -1) {
         blast_warn("Could not find a USB disk.  Using local-only mode");
+    } else {
+         blast_info("diskpool_find_next_good_usb_disk returned without error.  Next we try to unlock.");
     }
     diskpool_unlock();
 }
+// This function provides a wrapper for the failure mutex lock and signal logic.  It called whenever a disk
+// failure is detected.  The write_err_mutex prevents the disk failure from being raised multiple times on the
+// same disk
+// @param [in] m_disk Specifies the pointer to the disk where an error was detected
+static void diskpool_raise_error(volatile diskentry_t *m_disk)
+{
+	if (m_disk == NULL) {
+		blast_err("Received a NULL pointer to disk");
+	} else {
+		if (pthread_mutex_trylock(&s_filepool.write_error_mutex) == 0) {
+			blast_dbg("Could not raise error on disk %i, currently handling disk %i (%s)",
+					m_disk->index, s_filepool.error_disk->index, s_filepool.error_disk->mnt_point);
+		} else {
+			/// If the error disk has not already been set, raise the signal
+			if (!s_filepool.error_disk) {
+				blast_warn("Sucessfully raising error on disk %i (%s)",
+						m_disk->index, m_disk->mnt_point);
+				s_filepool.error_disk = (diskentry_t*) m_disk;
+				__sync_synchronize();
+				pthread_cond_signal(&(s_filepool.write_error_signal));
+			}
 
-//
-//
-// /**
-//  * Flush all file buffers currently open in #s_filepool that have any data.
-//  *
-//  * @details  The filebuffer_writeout function, which is called below, executes a system I/O
-//  * command (fwrite).  If the AoE device is not responding, this can be extremely expensive
-//  * as fwrite is atomic and blocking.  Comparatively, our AoE ping is cheap, so we execute it
-//  * before every write.
-//  */
-// void filepool_flush_buffers()
-// {
-// 	int i = 0;
-//
-// 	/* s_ready is an initialization flag for diskmanager */
-// 	while (!s_ready) {
-// 		if (s_diskmanager_exit) return;
-// 		sched_yield();
-// 	}
-//
-// 	/* This should catch any network errors on disks before we try an expensive I/O write. */
-// 	while (diskpool_verify_disks_in_use() != 0) {
-// 		if (s_diskmanager_exit) return;
-// 		sched_yield();
-// 	}
-//
-// 	for (i=0; i<DISK_MAX_FILES; i++) {
-// 		if ((s_filepool.file[i].disk == NULL)
-// 				|| (s_filepool.file[i].fp == NULL)
-// 				|| (filebuffer_len(&(s_filepool.file[i].buffer)) <= 0)) {
-// 			continue;
-// 		}
-//
-// 		// After locking the mutex, we check again as we may have been delayed.  Locking the mutex is
-// 		// a more expensive operation than checking NULL conditions
-// 		pthread_rwlock_rdlock(&s_filepool.file[i].mutex);
-// 		if ((filebuffer_len(&(s_filepool.file[i].buffer)) <= 0)
-// 						|| (s_filepool.file[i].disk == NULL)
-// 						|| (s_filepool.file[i].fp == NULL)) {
-// 			pthread_rwlock_unlock(&s_filepool.file[i].mutex);
-// 			continue;
-// 		}
-//
-// 		if (filebuffer_writeout(&s_filepool.file[i].buffer, s_filepool.file[i].fp) == -1) {
-//
-// 			/**
-// 			 * Verify that our file has not been closed under our feet
-// 			 */
-// 			if (s_filepool.file[i].disk) {
-// 				ebex_info("Raising disk error on %u:%u",
-// 					(unsigned)s_filepool.file[i].disk->major, (unsigned)s_filepool.file[i].disk->minor);
-// 				diskpool_raise_error(s_filepool.file[i].disk);
-// 			}
-// 			break;
-// 		}
-// 		pthread_rwlock_unlock(&s_filepool.file[i].mutex);
-// 	}
-// }
-//
+			pthread_mutex_unlock(&(s_filepool.write_error_mutex));
+		}
+	}
+}
+
+// Verifies that all disks with open files are responding.
+// @return 0 on verified all disks, -1 on error being handled
+static int diskpool_verify_disks_in_use()
+{
+	int 	i = 0;
+	int		retval = 0;
+//   blast_info("Starting diskpool_verify_disks_in_use");
+
+	for (i = 0; i < DISK_MAX_FILES; i++) {
+		/**
+		 * Do not ping NULL disks, disks we have already seen or disks already being handled or
+		 * disks belonging to files that are closed
+		 */
+		if ((s_filepool.file[i].disk == NULL)
+				|| (s_filepool.file[i].fp == NULL)
+				|| (s_filepool.file[i].disk == s_filepool.error_disk)) {
+//            	blast_info("We don't ping NULL files.");
+			continue;
+        }
+		/* Local disks don't get verified, so we simply continue */
+		if (!s_filepool.file[i].disk->isUSB) {
+            blast_info("Local disk, so we won't verify.");
+			continue;
+		}
+
+		if (usb_is_disk_alive()) {
+			blast_info("The disk is alive.");
+		} else {
+			blast_info("Raising error on disk %i", s_diskpool.current_disk);
+			diskpool_raise_error(s_diskpool.current_disk);
+			retval = -1;
+		}
+	}
+
+	return retval;
+}
+
+// Flush all file buffers currently open in #s_filepool that have any data.
+// @details  The filebuffer_writeout function, which is called below, executes a system I/O
+// command (fwrite).  If the AoE device is not responding, this can be extremely expensive
+// as fwrite is atomic and blocking.  Comparatively, our AoE ping is cheap, so we execute it
+// before every write.
+void filepool_flush_buffers()
+{
+	int i = 0;
+
+	/* s_ready is an initialization flag for diskmanager */
+	while (!s_ready) {
+		if (s_diskmanager_exit) return;
+		sched_yield();
+	}
+
+	/* This should catch any network errors on disks before we try an expensive I/O write. */
+	while (diskpool_verify_disks_in_use() != 0) {
+		if (s_diskmanager_exit) return;
+		sched_yield();
+	}
+
+	for (i = 0; i < DISK_MAX_FILES; i++) {
+		if ((s_filepool.file[i].disk == NULL)
+				|| (s_filepool.file[i].fp == NULL)
+				|| (filebuffer_len(&(s_filepool.file[i].buffer)) <= 0)) {
+			continue;
+		}
+
+		// After locking the mutex, we check again as we may have been delayed.  Locking the mutex is
+		// a more expensive operation than checking NULL conditions
+		pthread_rwlock_rdlock(&s_filepool.file[i].mutex);
+		if ((filebuffer_len(&(s_filepool.file[i].buffer)) <= 0)
+						|| (s_filepool.file[i].disk == NULL)
+						|| (s_filepool.file[i].fp == NULL)) {
+			pthread_rwlock_unlock(&s_filepool.file[i].mutex);
+			continue;
+		}
+
+		if (filebuffer_writeout(&s_filepool.file[i].buffer, s_filepool.file[i].fp) == -1) {
+			/**
+			 * Verify that our file has not been closed under our feet
+			 */
+			if (s_filepool.file[i].disk) {
+				blast_info("Raising disk error on");
+//           	blast_info("Raising disk error on %s",
+//      			(unsigned)s_filepool.file[i].disk->major, (unsigned)s_filepool.file[i].disk->minor);
+          		diskpool_raise_error(s_filepool.file[i].disk);
+			}
+			break;
+		}
+		pthread_rwlock_unlock(&s_filepool.file[i].mutex);
+	}
+}
+
 // /**
 //  * Provide a method for cleanly shutting down and syncing disks with unwritten data.
 //  */
@@ -1082,6 +1132,19 @@ void diskpool_update_all()
 // 	return NULL;
 // }
 
+static void *diskpool_update_mounted_free_space_thread(void *m_arg __attribute__((unused)))
+{
+    blast_info("Starting thread to monitor harddrive free space.");
+	do {
+		if (!s_diskmanager_update_freespace_flag) continue;
+
+		diskpool_update_mounted_free_space(s_diskpool.current_disk);
+		s_diskmanager_update_freespace_flag = false;
+	} while (!usleep(50000) && !s_diskmanager_exit);
+
+	return NULL;
+}
+
 // Main disk manager thread.  Handles writing from the buffer.  Starts the error handler
 // thread to deal with disk errors.
 void *diskmanager_thread(void *m_arg)
@@ -1119,32 +1182,34 @@ void *diskmanager_thread(void *m_arg)
 
 // 	pthread_create(&error_handler_thread, &error_handler_attribute,
 // 			&diskmanager_error_handle_thread, NULL);
+    blast_info("Calling diskpool_update_all.");
     diskpool_update_all();
+    blast_info("Finished calling diskpool_update_all.");
+	blast_info("Calling diskpool_verify_primary_disk.");
     diskpool_verify_primary_disk();
+    blast_info("Finished calling diskpool_verify_primary_disk.");
     s_ready = true;
 
-//    pthread_create(&flash_thread,NULL,
-//                   &diskpool_update_mounted_free_space_thread,NULL);
-//    pthread_detach(flash_thread);
-//
-// 	pthread_mutex_lock(&(s_filepool.buffer_mutex));
-// 	while(!s_diskmanager_exit)
-// 	{
-// 		clock_gettime(CLOCK_REALTIME, &flush_wait);
-// 		flush_wait.tv_sec += DISK_BUFFER_MAX_WAIT;
-//
-// 		pthread_cond_timedwait(&(s_filepool.buffer_signal), &(s_filepool.buffer_mutex),
-// 				&flush_wait);
-// 		filepool_flush_buffers();
+    pthread_create(&diskspace_thread, NULL,
+                   &diskpool_update_mounted_free_space_thread, NULL);
+    pthread_detach(diskspace_thread);
+
+    pthread_mutex_lock(&(s_filepool.buffer_mutex));
+    while (!s_diskmanager_exit) {
+        clock_gettime(CLOCK_REALTIME, &flush_wait);
+        flush_wait.tv_sec += DISK_BUFFER_MAX_WAIT;
+
+        pthread_cond_timedwait(&(s_filepool.buffer_signal), &(s_filepool.buffer_mutex),
+             &flush_wait);
+        filepool_flush_buffers();
 //
 // 		/**
 // 		 * Signal the update thread to push new disk information out over the net
 // 		 */
-// 		s_diskmanager_update_freespace_flag = true;
-//
-// 	}
-// 	ebex_info("Caught signal to exit.  Flushing disks.");
-// 	s_ready = false;
+        s_diskmanager_update_freespace_flag = true;
+    }
+    blast_info("Caught signal to exit.  Flushing disks.");
+    s_ready = false;
 
 
 	return NULL;

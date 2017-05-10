@@ -87,17 +87,13 @@ typedef struct diskentry
 										// incrementing stops
 	time_t			last_accessed;		// last_accessed Last time the disk was read or written (mounted)
 	int32_t	 		free_space;			// free_space Free space on the device in MB;
-	uint32_t		tag;				// tag corresponds to s_diskpool::tag
-	int8_t			host;				// host 0 = FatherXMas; 1 = StNick; -1 = unclaimed
+    int16_t         index;              // disk index number in the diskpool disk array
 } diskentry_t;
 
 // diskpool structure keeps track of all available volumes and their last status.  This allows rapid
 // reaction by the disk manager to mount a new volume and continue recording data
 typedef struct diskpool
 {
-	volatile uint32_t	tag;				// < tag Unique identifier to mark update cycle
-											// Incremented at each update.  s_diskentry entries that
-											// do not match tag are blacklisted
 	diskentry_t	* volatile current_disk;	// current_disk Pointer to current primary disk
 	diskentry_t		disk[DISK_MAX_NUMBER];	// disk Struct of all disks ever seen
 } diskpool_t;
