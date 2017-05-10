@@ -75,8 +75,9 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     int reheating;
     // change these to the 16bit values. (uint16_t)
     uint16_t tcrit_fpa; // this will likely get changed in the future
-    uint16_t tcrit_charcoal; // temp of charcoal
-    uint16_t tmin_charcoal; // minimum during burnoff
+    // likely have 3 different t crit
+    uint16_t tcrit_charcoal = 49441; // temp of charcoal
+    uint16_t tmin_charcoal = 49834; // minimum during burnoff
 } cycle_control_t;
 
 cycle_control_t cycle_state;
@@ -490,7 +491,7 @@ static void heating_cycle(void) {
             CommandData.Cryo.charcoal = 1;
         }
         GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
-        if (cycle_state.tcharcoal > cycle_state.tcrit_charcoal) {
+        if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal = 0;
             cycle_state.heating = 0;
@@ -509,13 +510,13 @@ static void burnoff_cycle(void) {
         if (cycle_state.burning_counter < cycle_state.burning_length && cycle_state.reheating == 0) {
             cycle_state.burning_counter++;
         }
-        if (cycle_state.tcharcoal < cycle_state.tmin_charcoal && cycle_state.reheating == 0) {
+        if (cycle_state.tcharcoal > cycle_state.tmin_charcoal && cycle_state.reheating == 0) {
             cycle_state.reheating = 1;
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal = 1;
             blast_info("reheating, dropped below boiling temp");
         }
-        if (cycle_state.reheating == 1 && cycle_state.tcharcoal > cycle_state.tcrit_charcoal) {
+        if (cycle_state.reheating == 1 && cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
             cycle_state.reheating = 0;
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal = 0;
