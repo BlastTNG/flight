@@ -79,6 +79,7 @@
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
+#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -443,6 +444,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t biphase_writer_id;
@@ -543,7 +545,7 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-
+  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);

@@ -46,6 +46,7 @@ void get_write_file_name(char* fname, char* type, uint32_t index)
     static uint16_t extra_tag = 0;
     static int first_time = 1;
     if (first_time == 1) {
+        srand48((uint64_t)time(NULL));
         extra_tag = (uint16_t) (lrand48());
 		blast_info("Extra tag for writing to the harddrive is: %2x", extra_tag);
 		first_time = 0;
@@ -74,10 +75,10 @@ void store_data_1hz(void)
     get_write_file_name(file_name, type_1hz, mcp_1hz_framenum);
 
     if (frame_size[RATE_1HZ]) {
-//      temp_fd = file_open(filename, "w+");
+//        temp_fd = file_open(file_name, "w+");
 	    if (temp_fd >= 0) {
 	        blast_info("Opened file %s for writing.", file_name);
-//          bytes_written = file_write(temp_fd, channel_data[RATE_1HZ], frame_size[RATE_1HZ]);
+//            bytes_written = file_write(temp_fd, channel_data[RATE_1HZ], frame_size[RATE_1HZ]);
 		    if (bytes_written < frame_size[RATE_1HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_1hz, (uint16_t) frame_size[RATE_1HZ], bytes_written);
