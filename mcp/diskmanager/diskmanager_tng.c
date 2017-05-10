@@ -70,6 +70,7 @@ static pthread_rwlock_t mutex_diskpool = PTHREAD_RWLOCK_INITIALIZER;
 /* Controls access to the filepool */
 static pthread_rwlock_t mutex_filepool = PTHREAD_RWLOCK_INITIALIZER;
 
+static pthread_t 		flash_thread;		/**< flash_thread is the thread ID for updating disk flash entries */
 
 /**
  * This function exists to keep the #HOME_DIR directory clean.
@@ -442,7 +443,7 @@ static int diskpool_mkdir_recursive(char *m_directory)
 	int			ret = 0;
 	char        *path_ptr;
 	size_t      path_chunk_len = 0;
-	size_t      current_chunk_len = 0;
+	size_t      current_path_len = 0;
 
 	struct stat dir_stat;
     blast_info("Making directory %s", m_directory);
@@ -457,15 +458,20 @@ static int diskpool_mkdir_recursive(char *m_directory)
 		path_ptr++;
 	}
 	while (path_chunk != NULL) {
-	    current_chunk_len = strlen(current_path);
+	    blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
+	    current_path_len = strlen(current_path);
 	    path_chunk_len = strlen(path_chunk);
-		if (current_chunk_len + path_chunk_len + 2 > PATH_MAX) {
+	    blast_info("current_path_len = %i, path_chunk_len = %i", current_path_len, path_chunk_len);
+		if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
 			blast_err("Path too long");
 			return -1;
 		}
-		snprintf(path_ptr, path_chunk_len, path_chunk);
+		snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
 		path_ptr += path_chunk_len;
 		snprintf(path_ptr, sizeof("/"), "/");
+		path_ptr++;
+	    current_path_len = strlen(current_path);
+		blast_info("current_path = %s, length = %i", current_path, current_path_len);
 		if (stat(current_path, &dir_stat) != 0) {
 		    blast_info("Making path %s", current_path);
 			ret = mkdir(current_path, ACCESSPERMS);
@@ -473,6 +479,8 @@ static int diskpool_mkdir_recursive(char *m_directory)
 				blast_strerror("Could not make %s", current_path);
 				return ret;
 			}
+		} else {
+            blast_strerror("Error attempting to stat %s", current_path);
 		}
 		path_chunk = strtok_r(NULL, "/", &strtok_ref);
 	}
@@ -608,6 +616,9 @@ static int diskpool_mount_disk(char *m_uuid, char *m_mntpoint, char *m_sys, uint
 				 * If the device is not found, or the
 				 * superblock is invalid, try the next filesystem in #type
 				 */
+	} else {
+        blast_info("Successfully mounted uuid %s at %s",
+                   m_disk, m_mntpoint);
 	}
 
 	if (errno != 0) {
@@ -1110,11 +1121,11 @@ void *diskmanager_thread(void *m_arg)
 // 			&diskmanager_error_handle_thread, NULL);
     diskpool_update_all();
     diskpool_verify_primary_disk();
-// 	s_ready = true;
-//
-// 	pthread_create(&flash_thread,NULL,
-// 			&diskpool_update_mounted_free_space_thread,NULL);
-// 	pthread_detach(flash_thread);
+    s_ready = true;
+
+//    pthread_create(&flash_thread,NULL,
+//                   &diskpool_update_mounted_free_space_thread,NULL);
+//    pthread_detach(flash_thread);
 //
 // 	pthread_mutex_lock(&(s_filepool.buffer_mutex));
 // 	while(!s_diskmanager_exit)
