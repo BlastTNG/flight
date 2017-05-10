@@ -86,6 +86,7 @@ extern int16_t InCharge;
 #define LJ_DATA_PORT 702
 
 // TODO(laura): make this commandable from the call in mcp.c
+
 #define LJ_STREAM_RATE 200.0 // Streaming Rate (Hz)
 
 

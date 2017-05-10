@@ -313,6 +313,11 @@ typedef struct {
     double gain_bal;
 } cmd_balance_t;
 
+typedef struct {
+    uint8_t amp;
+    int8_t status;
+} cmd_rox_bias_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -332,6 +337,8 @@ struct CommandDataStruct {
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
   uei_commands_t uei_command;
+
+  cmd_rox_bias_t rox_bias;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;

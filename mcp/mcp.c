@@ -304,6 +304,9 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+    #ifdef USE_XY_THREAD
+    	read_chopper();
+    #endif
     cal_control();
 
     framing_publish_200hz();
@@ -339,7 +342,7 @@ static void mcp_5hz_routines(void)
     StoreActBus();
     level_control();
     #ifdef USE_XY_THREAD
-    StoreStageBus(1); // TODO(pca): figure out what argument does
+    StoreStageBus(0);
     #endif
     SecondaryMirror();
 //    PhaseControl();
@@ -361,8 +364,8 @@ static void mcp_1hz_routines(void)
     rec_control();
     // of_control();
     // if_control();
-    heater_control();
-    // heater_read();
+    // heater_control();
+    // test_labjacks(0);
     read_thermometers();
     // test_read();
     blast_store_cpu_health();
@@ -372,8 +375,6 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    // query_mult(0, 48);
-    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)

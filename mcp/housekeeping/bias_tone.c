@@ -33,17 +33,20 @@
 
 #include "blast.h"
 #include "blast_time.h"
-
+#include "command_struct.h"
 
 static char *device = "plughw:0,0";                     /* playback device */
+static char *card = "default";                          /* sound card for mixer */
+static char *selem_name = "Master";
 static snd_pcm_format_t format = SND_PCM_FORMAT_S16;    /* sample format */
 static unsigned int rate = 44100;                       /* stream rate */
 static unsigned int channels = 2;                       /* count of channels */
 static unsigned int buffer_time = 500000;               /* ring buffer length in us */
 static unsigned int period_time = 100000;               /* period time in us */
 static double freq = 200;                                /* sinusoidal wave frequency in Hz */
-static snd_pcm_t *handle = NULL;
 static int resample = 1;                                /* enable alsa-lib resampling */
+static snd_pcm_t *handle = NULL;
+static snd_mixer_t *handle_mx = NULL;
 
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
@@ -116,6 +119,50 @@ static void generate_sine(const snd_pcm_channel_area_t *areas,
                         phase -= max_phase;
         }
         *_phase = phase;
+}
+
+int set_mixer_params(void)
+{
+    int64_t min, max;
+    snd_mixer_selem_id_t *sid;
+    int retval = 0;
+
+    snd_mixer_selem_id_alloca(&sid);
+
+    snd_mixer_selem_id_set_index(sid, 0);
+    if (retval < 0) {
+        blast_err("Selem id set failed: %s", snd_strerror(retval));
+        return retval;
+    }
+
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    if (retval < 0) {
+        blast_err("Selem id set name failed: %s", snd_strerror(retval));
+        return retval;
+    }
+
+    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle_mx, sid);
+    if (retval < 0) {
+        blast_err("Find Selem failed: %s", snd_strerror(retval));
+        return retval;
+    }
+
+    retval = snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+    if (retval < 0) {
+        blast_err("Get playback volume failed: %s", snd_strerror(retval));
+        return retval;
+    } else {
+        blast_info("Mixer playback volume max = %li, min = %li", max, min);
+    }
+
+    retval = snd_mixer_selem_set_playback_volume_all(elem, CommandData.rox_bias.amp);
+    if (retval < 0) {
+        blast_err("Find Selem failed: %s", snd_strerror(retval));
+        return retval;
+    } else {
+        blast_info("Mixer volume set to %i", CommandData.rox_bias.amp);
+    }
+    return 0;
 }
 static int set_hwparams(snd_pcm_t *handle)
 {
@@ -333,11 +380,54 @@ int initialize_bias_tone(void)
             goto init_err;
         }
     }
+    blast_startup("Started Sine Wave");
+
+    if ((retval = snd_mixer_open(&handle_mx, 0)) < 0) {
+        blast_err("Mixer open error: %s", snd_strerror(retval));
+        goto init_err;
+    }
+    blast_startup("Opened Mixer");
+
+    if ((retval = snd_mixer_attach(handle_mx, card)) < 0) {
+        blast_err("Mixer attach error: %s", snd_strerror(retval));
+        goto init_err;
+    }
+    blast_startup("Mixer attached");
+
+    if ((retval = snd_mixer_selem_register(handle_mx, NULL, NULL)) < 0) {
+        blast_err("Mixer selem register error: %s", snd_strerror(retval));
+        goto init_err;
+    }
+    blast_startup("Mixer Selem register set");
+
+    if ((retval = snd_mixer_load(handle_mx)) < 0) {
+        blast_err("Mixer load error: %s", snd_strerror(retval));
+        goto init_err;
+    }
+    blast_startup("Mixer loaded");
+
+    if ((retval = set_mixer_params()) < 0) {
+        blast_err("Could not send mixer parameters.: %s", snd_strerror(retval));
+        goto init_err;
+    }
+    blast_startup("Mixer parameters sent!");
 
     return 0;
 
 init_err:
+    blast_warn("Initialization error!");
     shutdown_bias_tone();
     return -1;
+}
+
+int set_rox_bias() {
+    int retval;
+    if ((retval = set_mixer_params()) < 0) {
+        blast_err("Could not send mixer parameters.: %s", snd_strerror(retval));
+        return -1;
+    }
+    blast_startup("Mixer parameters re-sent!");
+
+    return 0;
 }
 

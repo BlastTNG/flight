@@ -271,7 +271,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
   {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
@@ -402,14 +402,14 @@ struct mcom mcommands[plugh + 2] = {
       {"dir (pos=1, neg=-1, off=0)",           -1, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(balance_vel), "set the waveplate rotator velocity and acceleration",
+  {COMMAND(balance_vel), "set the balance system velocity and acceleration",
     GR_BAL, 2,
     {
       {"Velocity", 5, 500000, 'l', "VEL_BAL"},
       {"Acceleration", 1, 1000, 'i', "ACC_BAL"},
     }
   },
-  {COMMAND(balance_i), "set the waveplate rotator currents", GR_BAL, 2,
+  {COMMAND(balance_i), "set the balance system currents", GR_BAL, 2,
     {
       {"Move current (%)", 0, 100, 'i', "I_MOVE_BAL"},
       {"Hold current (%)", 0,  50, 'i', "I_HOLD_BAL"},
@@ -817,6 +817,13 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  /***************************************/
+  /*************** ROX Bias  *************/
+  {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
+    {
+      {"ROX bias amplitude (0-100)", 0, 100, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,

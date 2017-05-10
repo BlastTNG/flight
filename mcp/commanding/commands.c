@@ -49,6 +49,7 @@
 #include "labjack.h"
 #include "cryostat.h"
 #include "relay_control.h"
+#include "bias_tone.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -1009,7 +1010,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.hwpr.mode = HWPR_PANIC;
             CommandData.hwpr.is_new = 1;
             break;
-
+	case balance_auto:
+	    CommandData.balance.mode = bal_auto;
+	    break;
+	case balance_off:
+	    CommandData.balance.mode = bal_rest;
+	    break;
 #ifndef BOLOTEST
         case blast_rocks:
             CommandData.sucks = 0;
@@ -1073,7 +1079,15 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case xyzzy:
             break;
-        default:
+	#ifdef USE_XY_THREAD
+	case xy_panic:
+	    CommandData.xystage.mode = XYSTAGE_PANIC;
+	    CommandData.xystage.is_new = 1;
+	    break;
+	#endif
+
+
+	default:
             bputs(warning, "Commands: ***Invalid Single Word Command***\n");
             return;  // invalid command - no write or update
     }
@@ -1700,6 +1714,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
 //       need to multiply later instead
+    case set_rox_bias_amp: // Set the amplitude of the rox bias signal
+      CommandData.rox_bias.amp = ivalues[0];
+      set_rox_bias();
+      break;
     case bias_level_500:     // Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
       CommandData.Bias.setLevel[0] = 1;
