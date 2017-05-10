@@ -68,14 +68,14 @@ int send_biphase_writes() {
     uint16_t small_counter=0;
 
     /* Open device */
-    fd = open("/dev/ttyUSB0", O_RDWR | O_NONBLOCK, 0);
+    fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
     if (fd < 0) {
         blast_err("open error=%d %s", errno, strerror(errno));
         return fd;
     }
     usleep(1000);
     close(fd);
-    fd = open("/dev/ttyUSB0", O_RDWR | O_NONBLOCK, 0);
+    fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
     usleep(1000);
     rc = ioctl(fd, MGSL_IOCGSTATS, 0);
     if (rc < 0) {
@@ -152,9 +152,6 @@ int send_biphase_writes() {
     }
 
     int last_word = ((int) bytes_to_write/2) - 1;
-    crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
-    *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
-    *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
 
     // reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
     // reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
@@ -175,6 +172,8 @@ int send_biphase_writes() {
         // if (0) {
             // rc = write(fd, data_to_write, bytes_to_write);
             data_to_write[2] = small_counter;
+            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
+            *(data_to_write+last_word) = crc_calculated;
             reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
             rc = write(fd, lsb_data_to_write, bytes_to_write);
             printf("\n");
@@ -184,6 +183,8 @@ int send_biphase_writes() {
         } else {
             // rc = write(fd, inverse_data_to_write, bytes_to_write);
             inverse_data_to_write[2] = small_counter;
+            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
+            *(inverse_data_to_write+last_word) = crc_calculated;
             reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
             rc = write(fd, lsb_inverse_data_to_write, bytes_to_write);
             printf("\n");
