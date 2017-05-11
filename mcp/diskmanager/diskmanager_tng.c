@@ -1101,44 +1101,163 @@ void diskmanager_shutdown()
 	fcloseall();
 	s_ready = false;
 }
+
+// Closes and re-opens a file that was interrupted by disk error.  File will be re-opened on
+// the primary disk.
+// @param [in] m_fileid Index of the file to be transferred
+// @return -1 on error, 0 on success
+static int file_change_disk(int m_fileid, diskentry_t *m_disk)
+{
+	int retval = -1;
+	struct timespec timeout;
+
+	if ((m_fileid >= 0)
+			&& (m_fileid < DISK_MAX_FILES)
+			&& (m_disk != NULL)
+			&& (m_disk->mounted)) {
+		set_timeout(&timeout, 0, diskman_timeout);
+		if(pthread_rwlock_timedwrlock(&(s_filepool.file[m_fileid].mutex), &timeout) != 0) {
+			blast_err("Could not acquire mutex.  File %d not moved", m_fileid);
+			return -1;
+		}
+		// We place the file pointer NULL check inside the mutex to make sure that we have
+		// sole access to the file and it hasn't been closed by an errant thread.
+		if (s_filepool.file[m_fileid].fp != NULL) {
+			file_close_internal(m_fileid, true);
+			retval = file_reopen_on_new_disk(m_fileid, m_disk);
+		}
+		pthread_rwlock_unlock(&(s_filepool.file[m_fileid].mutex));
+	}
+	return retval;
+}
+
+// Open a continuation of a file on a new disk whose writing was interrupted on the previous
+// disk by an error.  No mutexes are set as the error handler should be in control of the pool.
 //
-// /**
-//  * Error handler thread for disk manager.
-//  */
-// void *diskmanager_error_handle_thread(__attribute__ ((unused))void *m_arg)
-// {
-// 	pthread_t 			unmount_thread;
-//
-// 	pthread_mutex_lock(&(s_filepool.write_error_mutex));
-//
-// 	while(!s_diskmanager_exit)
-// 	{
-// 		pthread_cond_wait(&(s_filepool.write_error_signal),&(s_filepool.write_error_mutex));
-//
-// 		/**
-// 		 * The two cases where we don't want to do anything are:
-// 		 * - If we are shutting down, then exit
-// 		 * - If we received a spurious wakeup (they happen), then error_disk will not be set and we
-// 		 * 		should just go back to sleep
-// 		 */
-// 		if (s_diskmanager_exit) break;
-// 		if (s_filepool.error_disk == NULL) continue;
-//
-// 		blast_err("Caught disk error, attempting to handle.");
-// 		filepool_handle_disk_error(s_filepool.error_disk);
-// 		if (s_filepool.error_disk->isUSB)
-// 		{
-// 			pthread_create(&unmount_thread, NULL, diskpool_unmount, (void *) s_filepool.error_disk);
-// 			pthread_detach(unmount_thread);
-// 		}
-//
-// 		s_filepool.error_disk = NULL;
-// 	}
-//
-// 	pthread_mutex_unlock(&s_filepool.write_error_mutex);
-// 	blast_info("Exiting on shutdown");
-// 	return NULL;
-// }
+// @param [in] m_fileid File index number.  The file pointer should already be closed.
+// @param [in] m_disk Pointer to the new disk on which the file should be opened.
+// @return -1 on error, 0 on success
+static int file_reopen_on_new_disk(int m_fileid, diskentry_t *m_disk)
+{
+	FILE 	*fp 			= NULL;
+	int 	retval 			= 0;
+	char 	*filename		= NULL;
+	char	*full_filename 	= NULL;
+
+	if (s_diskmanager_exit)  {
+		blast_tfatal("MCP shutting down.  Killing thread");
+		return -1;
+	}
+
+	if ((m_fileid < 0) || (m_fileid >= DISK_MAX_FILES)) {
+		blast_err("Passed invalid file id %d", m_fileid);
+		return -1;
+	}
+
+	if (s_diskpool.current_disk == NULL) {
+		blast_err("No current disk");
+		return -1;
+	}
+
+	if (asprintf(&filename, "%s.cont", s_filepool.file[m_fileid].filename) <= 0) {
+		blast_err("Could not allocate filename memory");
+		return -1;
+	}
+
+	// We need the directory, so in case of failure, just yield processing to allow for error
+	// recovery.  diskpool_mount_primary() will take care of system failure to allow rebooting.
+	while (diskpool_mkdir_file(filename, true) != 0) {
+		sched_yield();
+	}
+
+	blast_tmp_sprintf(full_filename, "%s/%s", s_diskpool.current_disk->mnt_point, filename);
+	// Re-opening on a new disk means that we were writing when we ran out of space.  Thus we
+	// should open the new file for write access as well.
+	fp = fopen(full_filename, "w");
+
+	if (fp == NULL) {
+		// In case of an error opening the new file, we still want to update the associated
+		// #fileentry_s data. Therefore, just set #retval and continue.
+		// This will allow us to (hopefully) recover from the error by trying the next
+		// disk when we write more data.
+		// @TODO: figure out a way to gracefully die after an open attempt fails.  Perhaps we want
+		// to setup a temporary file on the local disk that is copied later?
+		blast_strerror("Could not open file %s", filename);
+		retval = -1;
+	}
+
+	s_filepool.file[m_fileid].fp = fp;
+	s_filepool.file[m_fileid].continued = true;
+	free(s_filepool.file[m_fileid].filename);
+	s_filepool.file[m_fileid].filename = filename;
+	s_filepool.file[m_fileid].disk = m_disk;
+
+	return retval;
+}
+
+/**
+ * Deal with a disk that has given an error.
+ *
+ * @details Logic is this:  If the disk with an error is the primary disk, then mount a new one
+ * and make it the primary.  Next, transfer all files open on the failed disk to the
+ * primary disk, whether we mounted a new one or not.
+ *
+ * @param m_disk Pointer to the #diskentry_t that failed
+ */
+
+static void filepool_handle_disk_error(volatile diskentry_t *m_disk)
+{
+	int i = 0;
+
+	blast_dbg("Beginning error handling");
+
+	if (m_disk == s_diskpool.current_disk) {
+		diskpool_mount_primary();
+	}
+
+	for (i = 0; i < DISK_MAX_FILES; i++) {
+		if ((s_filepool.file[i].disk == m_disk)
+				&& (file_change_disk(i, s_diskpool.current_disk) == -1)) {
+			blast_err("Could not re-open %s on %s",
+				      s_filepool.file[i].filename?s_filepool.file[i].filename:"unk",
+			          s_diskpool.current_disk->mnt_point?s_diskpool.current_disk->mnt_point:"unk");
+		}
+	}
+}
+
+// Error handler thread for disk manager.
+void *diskmanager_error_handle_thread(__attribute__((unused))void *m_arg)
+{
+	pthread_t 			unmount_thread;
+
+	pthread_mutex_lock(&(s_filepool.write_error_mutex));
+
+	while(!s_diskmanager_exit) {
+		pthread_cond_wait(&(s_filepool.write_error_signal), &(s_filepool.write_error_mutex));
+
+		/**
+		 * The two cases where we don't want to do anything are:
+		 * - If we are shutting down, then exit
+		 * - If we received a spurious wakeup (they happen), then error_disk will not be set and we
+		 * 		should just go back to sleep
+		 */
+		if (s_diskmanager_exit) break;
+		if (s_filepool.error_disk == NULL) continue;
+
+		blast_err("Caught disk error, attempting to handle.");
+		filepool_handle_disk_error(s_filepool.error_disk);
+		if (s_filepool.error_disk->isUSB) {
+			pthread_create(&unmount_thread, NULL, diskpool_unmount, (void *) s_filepool.error_disk);
+			pthread_detach(unmount_thread);
+		}
+
+		s_filepool.error_disk = NULL;
+	}
+
+	pthread_mutex_unlock(&s_filepool.write_error_mutex);
+	blast_info("Exiting on shutdown");
+	return NULL;
+}
 
 static void *diskpool_update_mounted_free_space_thread(void *m_arg __attribute__((unused)))
 {
@@ -1678,8 +1797,8 @@ void *diskmanager_thread(void *m_arg)
         pthread_exit(NULL);
     }
 
-// 	pthread_create(&error_handler_thread, &error_handler_attribute,
-// 			&diskmanager_error_handle_thread, NULL);
+    pthread_create(&error_handler_thread, &error_handler_attribute,
+        &diskmanager_error_handle_thread, NULL);
     blast_info("Calling diskpool_update_all.");
     diskpool_update_all();
     blast_info("Finished calling diskpool_update_all.");
