@@ -56,6 +56,7 @@
 #include "netc.h"
 #include "qdr.h"
 #include "remote_serial.h"
+#include "store_data.h"
 #include "valon.h"
 // #include "command_struct.h"
 #undef I
@@ -252,11 +253,7 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 
     uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
 
-// Store udp packets to the harddrive even if there were errors in the packet format.
-//    if (CommandData.udp_roach[m_roach_udp->i_which].store_udp) {
-// This is where we will write the packets to the flight harddisks.
-// TODO(laura): Write harddrive storage function.
-//    }
+    // store_roach_udp_packet(&m_packet, m_roach_udp); // Writes packet to harddrive.
 
     if (udperr > 0) return;
 
