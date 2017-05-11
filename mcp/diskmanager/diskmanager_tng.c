@@ -48,6 +48,14 @@
 #include "diskmanager_tng.h"
 static int diskpool_verify_primary_disk();
 
+static int file_change_disk(int m_fileid, diskentry_t *m_disk);
+static int file_reopen_on_new_disk(int m_fileid, diskentry_t *m_disk);
+static void filepool_handle_disk_error(volatile diskentry_t *m_disk);
+
+static int file_open_local(const char*, const char*);
+static void file_close_internal(int, bool);
+static inline bool file_is_local(const char*);
+
 static harddrive_info_t hd_info[NUM_USB_DISKS];
 static diskpool_t s_diskpool;
 static filepool_t s_filepool;
@@ -75,9 +83,11 @@ static pthread_t 		diskspace_thread;		/**< flash_thread is the thread ID for upd
 #define DISK_BUFFER_MAX_WAIT		1 	// Maximum time in seconds to wait before writing data.
 										// This is set low to facilitate testing with a low data rate.
 
+// TODO(laura): Write something that actually checks whether the disks are alive.
+// Maybe something using the equivalent of touch?
 static int usb_is_disk_alive()
 {
-    blast_info("Hope so!");
+    // blast_info("Hope so!");
     return(1);
 }
 
@@ -183,7 +193,7 @@ static int32_t diskmanager_freespace(const char *m_disk)
 		return retval;
 	}
 	retval = (statvfsbuf.f_bsize/1024) * (statvfsbuf.f_bavail/1024);
-    blast_info("Free space on disk %s is %li", m_disk, retval);
+    // blast_info("Free space on disk %s is %li", m_disk, retval);
 	return retval;
 }
 
@@ -425,12 +435,13 @@ static int diskpool_mkdir_recursive(char *m_directory)
 	char		*path_chunk = NULL;
 	char		*strtok_ref = NULL;
 	int			ret = 0;
+	int         stat_return = 0;
 	char        *path_ptr;
 	size_t      path_chunk_len = 0;
 	size_t      current_path_len = 0;
 
 	struct stat dir_stat;
-    blast_info("Making directory %s", m_directory);
+//    blast_info("Making directory %s", m_directory);
 	/** Ensure that we have a NULL delimiter in our temp string */
 	current_path[0]=0;
     path_ptr = current_path;  // We use this to keep track of where we should be writing in current_path;
@@ -442,10 +453,10 @@ static int diskpool_mkdir_recursive(char *m_directory)
 		path_ptr++;
 	}
 	while (path_chunk != NULL) {
-	    blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
+//      blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
 	    current_path_len = strlen(current_path);
 	    path_chunk_len = strlen(path_chunk);
-	    blast_info("current_path_len = %i, path_chunk_len = %i", (int) current_path_len, (int) path_chunk_len);
+//      blast_info("current_path_len = %i, path_chunk_len = %i", (int) current_path_len, (int) path_chunk_len);
 		if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
 			blast_err("Path too long");
 			return -1;
@@ -455,16 +466,15 @@ static int diskpool_mkdir_recursive(char *m_directory)
 		snprintf(path_ptr, sizeof("/"), "/");
 		path_ptr++;
 	    current_path_len = strlen(current_path);
-		blast_info("current_path = %s, length = %i", current_path, (int) current_path_len);
-		if (stat(current_path, &dir_stat) != 0) {
+//      blast_info("current_path = %s, length = %i", current_path, (int) current_path_len);
+        stat_return = stat(current_path, &dir_stat);
+		if (stat_return != 0) {
 		    blast_info("Making path %s", current_path);
 			ret = mkdir(current_path, ACCESSPERMS);
 			if (ret < 0) {
 				blast_strerror("Could not make %s", current_path);
 				return ret;
 			}
-		} else {
-            blast_strerror("Error attempting to stat %s", current_path);
 		}
 		path_chunk = strtok_r(NULL, "/", &strtok_ref);
 	}
@@ -501,7 +511,7 @@ static int diskpool_mkdir_file(const char *m_filename, bool m_file_appended)
 {
 	char	directory_name[PATH_MAX];
 	size_t	len = 0;
-    blast_info("Attempting to make mount point %s", m_filename);
+    // blast_info("Attempting to make mount files %s", m_filename);
 	if (m_filename == NULL) {
 		blast_err("Passed NULL pointer");
 		return -1;
@@ -521,7 +531,7 @@ static int diskpool_mkdir_file(const char *m_filename, bool m_file_appended)
 	if (file_is_local(m_filename)) {
 		snprintf(directory_name, len, "%s", m_filename);
 	} else {
-	    blast_info("Waiting for diskpool_verify_primary_disk to return not -1.");
+	    // blast_info("Waiting for diskpool_verify_primary_disk to return not -1.");
 		while(diskpool_verify_primary_disk() == -1) {
 			pthread_yield();
 		}
@@ -711,7 +721,7 @@ static void *diskpool_update_mounted_free_space(void *m_disk)
 	/* Don't send flash for the local disk or for AoE disks whose size has not changed by at least 1MB */
 	if (disk->isUSB && (new_freespace != disk->free_space)) {
 		disk->free_space = new_freespace;
-		blast_dbg("New freespace %ld MB on %s", (int64_t)disk->free_space, disk->mnt_point);
+		// blast_dbg("New freespace %ld MB on %s", (int64_t)disk->free_space, disk->mnt_point);
 	}
 
 	return NULL;
@@ -883,10 +893,9 @@ static int diskpool_verify_primary_disk()
 	    blast_info("Calling diskpool_mount_primary.");
 		diskpool_mount_primary();
 	}
-	blast_info("We now have a current disk!");
+	// blast_info("We now have a current disk!");
 	if (s_filepool.error_disk != s_diskpool.current_disk) {
 		retval = 0;
-        blast_info("There might be a problem with our current disk!");
 		if (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
 		    blast_info("Current disk has only %i bytes of free space.  Triggering a disk swap.",
 		               s_diskpool.current_disk->free_space);
@@ -894,7 +903,7 @@ static int diskpool_verify_primary_disk()
 		}
         // TODO(laura): Add something that checks that the disk is alive and can be written too.
 	}
-	blast_info("Exiting diskpool_verify_primary_disk.");
+	// blast_info("Exiting diskpool_verify_primary_disk.");
 	return retval;
 }
 
@@ -1018,9 +1027,9 @@ static int diskpool_verify_disks_in_use()
 		}
 
 		if (usb_is_disk_alive()) {
-			blast_info("The disk is alive.");
+			// blast_info("The disk is alive.");
 		} else {
-			blast_info("Raising error on disk %i", s_diskpool.current_disk);
+			blast_info("Raising error on disk %i", s_diskpool.current_disk->index);
 			diskpool_raise_error(s_diskpool.current_disk);
 			retval = -1;
 		}
@@ -1083,16 +1092,15 @@ void filepool_flush_buffers()
 	}
 }
 
-// /**
-//  * Provide a method for cleanly shutting down and syncing disks with unwritten data.
-//  */
-// void diskmanager_shutdown()
-// {
-// 	s_diskmanager_exit = true;
-// 	filepool_flush_buffers();
-// 	fcloseall();
-// 	s_ready = false;
-// }
+// Provide a method for cleanly shutting down and syncing disks with unwritten data.
+//
+void diskmanager_shutdown()
+{
+	s_diskmanager_exit = true;
+	filepool_flush_buffers();
+	fcloseall();
+	s_ready = false;
+}
 //
 // /**
 //  * Error handler thread for disk manager.
@@ -1143,6 +1151,496 @@ static void *diskpool_update_mounted_free_space_thread(void *m_arg __attribute__
 	} while (!usleep(50000) && !s_diskmanager_exit);
 
 	return NULL;
+}
+// Opens a new file on the current disk
+//
+// This function assumes the correct form of mnt_point (no trailing '/') and
+// m_filename (starts with an alpha-numeric, no '/')
+//
+// @param [in] m_filename Name of the file to open, justified path from mount base
+// @param [in] m_mode Access mode for the file to be opened (follows fopen(2) format)
+// @return -1 on failure, positive value indicating new file index in pool on success
+int file_open(const char *m_filename, const char *m_mode)
+{
+	FILE 	*fp = NULL;
+	int 	i = 0;
+	int 	retval = -1;
+	char 	*filename;
+
+	if (s_diskmanager_exit) {
+		blast_tfatal("Diskmanager is exiting.  Killing thread");
+		return -1;
+	}
+
+	/* Treat fully justified paths as local files */
+	if (file_is_local(m_filename)) {
+		return file_open_local(m_filename, m_mode);
+	}
+
+        /* s_ready is an initialization flag for diskmanager */
+	while (!s_ready) pthread_yield();
+
+	// Continuously try to make the directory, yielding the processor each time.  Failure will
+	// trigger the disk error recovery process, so we give it time to work.
+	while(diskpool_mkdir_file(m_filename, true) != 0) {
+		pthread_yield();
+	}
+
+	blast_tmp_sprintf(filename, "%s/%s", s_diskpool.current_disk->mnt_point, m_filename);
+	errno = 0;
+	fp = fopen(filename, m_mode);
+
+	if (fp == NULL) {
+		blast_strerror("Could not open file %s", filename);
+		blast_info("Raising disk error on disk %u (%s)",
+		        (unsigned)s_diskpool.current_disk->index, s_diskpool.current_disk->mnt_point);
+		diskpool_raise_error(s_diskpool.current_disk);
+
+		return -1;
+	}
+
+	// We have successfully opened the file.  Now a number of things need to happen.
+	// - Set the stream buffer to 0 as we do internal buffering (in addition to AoE network buffering)
+	// - Create a new #s_fileentry in the #s_filepool
+	// - Populate the #s_fileentry data with a s_diskentry, file descriptor and name
+	// - Allocate and set a write buffer
+	setvbuf(fp, NULL, _IONBF, 0);
+
+	for (i = 0; i < DISK_MAX_FILES; i++) {
+		if ((s_filepool.file[i].fp == NULL)
+				&& (pthread_rwlock_trywrlock(&s_filepool.file[i].mutex) == 0)) {
+			break;
+		}
+	}
+
+	if (i == DISK_MAX_FILES) {
+		blast_err("Could not open %s, Too many files", filename);
+		fclose(fp);
+		return -1;
+	}
+
+	retval = i;
+
+	s_filepool.file[i].fp = fp;
+	s_filepool.file[i].parent = pthread_self();
+	s_filepool.file[i].continued = false;
+	s_filepool.file[i].filename = strdup(m_filename);
+	s_filepool.file[i].disk = s_diskpool.current_disk;
+
+
+	/* @TODO: implement variable buffer size based on anticipated write activity */
+	if (filebuffer_init(&(s_filepool.file[i].buffer), (unsigned int) FILE_BUFFER_SIZE) == -1) {
+		blast_err("Could not allocate buffer space for %s", filename);
+		free(s_filepool.file[i].filename);
+		s_filepool.file[i].filename = NULL;
+		fclose(fp);
+		s_filepool.file[i].fp = NULL;
+		retval = -1;
+	}
+
+	pthread_rwlock_unlock(&s_filepool.file[i].mutex);
+	return retval;
+}
+
+// Opens a new file on the local disk
+//
+// This function assumes the correct form of m_filename
+// -- fully justified (including all paths)
+//
+// @param [in] m_filename Name of the file to open, fully justified path
+// @param [in] m_mode Access mode for the file to be opened (follows fopen(2) format)
+// @return -1 on failure, positive value indicating new file index in pool on success
+static int file_open_local(const char *m_filename, const char *m_mode)
+{
+	FILE *fp = NULL;
+	int i = 0;
+	int retval = -1;
+
+	/* We ignore the return value here.  If diskpool_mkdir fails, then
+	 * fopen will fail as well, providing the appropriate error message.
+	 */
+	diskpool_mkdir_file(m_filename, true);
+
+	errno = 0;
+	fp = fopen(m_filename, m_mode);
+
+	if (fp == NULL) {
+		blast_err("Could not open file %s, error %d", m_filename, errno);
+		return -1;
+	}
+
+	/*
+	 * We have successfully opened the file.  Now a number of things need to happen.
+	 * - Create a new #s_fileentry in the #s_filepool
+	 * - Populate the #s_fileentry data with a s_diskentry, file descriptor and name
+	 * - Allocate and set a write buffer
+	 */
+
+	setvbuf(fp, NULL, _IONBF, 0);
+
+	for (i = 0; i < DISK_MAX_FILES; i++) {
+		if ((s_filepool.file[i].fp == NULL)
+				&& (pthread_rwlock_tryrdlock(&s_filepool.file[i].mutex) == 0)) {
+			break;
+		}
+	}
+
+	if (i == DISK_MAX_FILES) {
+		blast_err("Could not open %s, Too many files", m_filename);
+		fclose(fp);
+		return -1;
+	}
+
+	retval = i;
+
+	s_filepool.file[i].fp = fp;
+	s_filepool.file[i].parent = pthread_self();
+	s_filepool.file[i].continued = false;
+	s_filepool.file[i].filename = strdup(m_filename);
+
+	s_filepool.file[i].disk = &(s_diskpool.disk[0]);
+
+	/* @TODO: implement variable buffer size based on anticipated write activity */
+	if (filebuffer_init(&(s_filepool.file[i].buffer), (unsigned int) FILE_BUFFER_SIZE) == -1) {
+		blast_err("Could not allocate buffer space for %s", m_filename);
+		fclose(fp);
+		s_filepool.file[i].fp = NULL;
+		free(s_filepool.file[i].filename);
+		s_filepool.file[i].filename = NULL;
+		retval = -1;
+	}
+
+	pthread_rwlock_unlock(&s_filepool.file[i].mutex);
+	return retval;
+}
+
+// Closes a file in the #s_filepool
+//
+// This function does not lock the file mutex.  This is purposeful as you should control a file for
+// writing before attempting to close it.  In other words
+// don't call this function unless you have locked the mutex yourself.
+//
+// @param [in] m_fileid Unique identification number to find file in the pool
+// @param [in] m_continuing Boolean to determine whether this file is being transferred to a new disk
+static void file_close_internal(int m_fileid, bool m_continuing)
+{
+	if (s_diskmanager_exit)
+	    return;
+
+	if ((m_fileid < 0) || (m_fileid >= DISK_MAX_FILES)) {
+		blast_err("Passed invalid file id %d", m_fileid);
+		return;
+	}
+
+	/**
+	 *  A file that needs to be continued on a new disk indicates that
+		write error, so don't try to flush the buffers.  This also prevents
+		a loop where the file write fails on close.
+	*/
+
+	if (!m_continuing) {
+		filebuffer_writeout(&s_filepool.file[m_fileid].buffer, s_filepool.file[m_fileid].fp);
+	}
+
+	if (fclose(s_filepool.file[m_fileid].fp) == -1) {
+		blast_err("Error closing file. Error: %d", errno);
+	}
+
+	s_filepool.file[m_fileid].fp = NULL;
+	s_filepool.file[m_fileid].disk = NULL;
+
+	if (!m_continuing) {
+		if (s_filepool.file[m_fileid].filename) free(s_filepool.file[m_fileid].filename);
+		s_filepool.file[m_fileid].filename = NULL;
+		filebuffer_free(&s_filepool.file[m_fileid].buffer);
+	}
+}
+
+// External interface to the file_close_internal procedure.  Locks the
+// file mutex and closes the file.  If we cannot acquire the mutex, return -1, otherwise
+// return 0.  On -1 return, the file remains open.
+int file_close(int m_fd)
+{
+	struct timespec timeout;
+	set_timeout(&timeout, 2, 0);
+	if ((m_fd >= 0) && (m_fd <DISK_MAX_FILES)) {
+		if (pthread_rwlock_timedwrlock(&s_filepool.file[m_fd].mutex, &timeout) != 0) {
+			blast_strerror("Could not acquire write mutex for file id %d", m_fd);
+			return -1;
+		}
+		if(s_filepool.file[m_fd].fp != NULL) {
+			file_close_internal(m_fd, false);
+		}
+		pthread_rwlock_unlock(&s_filepool.file[m_fd].mutex);
+	}
+	return 0;
+}
+
+// Returns the position in the open file specified by #m_fileid
+// @param [in] m_fileid Index of the file
+// @return integer position of the current point in the file, -1 on failure
+int64_t file_tell(int m_fileid)
+{
+	struct timespec timeout;
+	int64_t position = -1;
+
+	if (s_diskmanager_exit)
+		return -1;
+
+	while (!s_ready)
+		pthread_yield();
+
+	if ((m_fileid < 0) || (m_fileid >= DISK_MAX_FILES)) {
+		blast_err("Passed invalid file id %d", m_fileid);
+	} else {
+		set_timeout(&timeout, 0, diskman_timeout);
+		if (pthread_rwlock_timedrdlock(&s_filepool.file[m_fileid].mutex, &timeout) != 0) {
+			blast_err("Could not acquire mutex for file id %d", m_fileid);
+		} else {
+			if (s_filepool.file[m_fileid].fp != NULL) {
+				position = ftell(s_filepool.file[m_fileid].fp);
+			}
+			pthread_rwlock_unlock(&s_filepool.file[m_fileid].mutex);
+		}
+	}
+	return position;
+}
+
+// Structured data writing wrapper.  Mimics format of fwrite(2) with the
+// exception of the file index being the first parameter instead of the
+// last.  This is purposeful to ensure we are calling the appropriate
+// function
+//
+// @param [in] m_fileid File index in #s_filepool
+// @param [in] m_struct pointer to data structure to write
+// @param [in] m_size Size of a single element in structure
+// @param [in] m_num Number of elements to write
+// @return -1 on failure, positive number of elements written on success
+ssize_t file_write_struct(int m_fileid, void *m_struct, size_t m_size, size_t m_num)
+{
+	size_t length = m_size * m_num;
+	ssize_t retval;
+	retval = file_write(m_fileid, (const char*)m_struct, length);
+
+	if (retval > 0) retval /= m_size;
+
+	return retval;
+}
+
+// Writes data to a file buffer.
+//
+// @details We want to allow for writing constant strings of uncalculated length
+// to a file.  Thus we allow #m_len to be = 0.  This has two effects:
+// First, it assumes that we are writing a string
+// Second, it assumes that we don't want to write the terminating NULL character
+// Thus, use #m_len=0 only when writing constant strings.  If you want the NULL
+// character written, you must calculate the length yourself.
+//
+// @param [in] m_fileid Unique identification number to file in the pool
+// @param [in] m_data Data to be written
+// @param [in] m_len Number of characters to be written. If 0, m_data is passed
+// 					to strlen() to determine length
+// @return -1 on failure, positive number of bytes on success
+ssize_t file_write(int m_fileid, const char *m_data, size_t m_len)
+{
+	ssize_t 	retval = 0;
+
+	if (s_diskmanager_exit)
+		return -1;
+
+	while (!s_ready)
+		pthread_yield();
+
+	if (m_data == NULL) {
+		blast_err("Tried to write NULL string to file");
+		return -1;
+	}
+
+	if ((m_fileid < 0) || (m_fileid >= DISK_MAX_FILES)) {
+		blast_err("Passed invalid file id %d", m_fileid);
+		return -1;
+	}
+
+	// Allow m_len to be undefined as sometimes we might wish to write a string
+	// whose length we can't or don't want to calculate.  This only works for
+	// NULL-terminated strings.
+	if (m_len == 0) {
+		m_len = strlen(m_data);
+	}
+	/* Check again.  If there are no characters, don't write out. */
+	if (m_len == 0) {
+		return 0;
+	}
+
+	retval = filebuffer_append(&(s_filepool.file[m_fileid].buffer), m_data, m_len);
+
+	while (retval == -1) {
+		// If filebuffer_append is unable to allocate more memory to the cache, we
+		// need to write data immediately, without waiting for the thread scheduling.
+		// Thus, we lock the buffer_mutex against other writes and place the disk writing
+		// in this thread.
+		if (pthread_mutex_trylock(&(s_filepool.buffer_mutex)) == 0) {
+			filepool_flush_buffers();
+			pthread_mutex_unlock(&(s_filepool.buffer_mutex));
+			retval = filebuffer_append(&(s_filepool.file[m_fileid].buffer), m_data, m_len);
+		} else {
+			/**
+			 * We cannot append data to the buffer and cannot flush it to disk.
+			 * Without data writing, we need to quit and reboot (using watchdog)
+			 * Needless to say, this should never happen.
+			 */
+			blast_fatal("Could not reallocate memory for expanding the disk buffer");
+			return -1;
+		}
+	}
+
+	// If we have enough data in any buffer to justify a write and we can acquire the signal
+	// mutex, then send a signal to the disk writer to flush.
+	// @warning { The order of evaluation is important here.  pthread_mutex_trylock will not
+	// be executed unless the first condition evaluates to true.  Do not change the statement
+	// order!}
+	//
+	// If #s_filepool.buffer_mutex is already locked, that indicates that a write signal has
+	// already been sent and the file writer is busy outputting data to disk.  The signal will
+	// not be sent until the file writer unlocks the mutex indicating it is ready to write again.
+	//
+	// We don't need to lock the #mutex_filepool for writing here as we have #buffer_mutex
+	if ((filebuffer_fraction_full(&(s_filepool.file[m_fileid].buffer)) > BUFFER_WRITE_PERCENTAGE)
+			&& (pthread_mutex_trylock(&(s_filepool.buffer_mutex)) == 0)) {
+		pthread_cond_signal(&(s_filepool.buffer_signal));
+		pthread_mutex_unlock(&(s_filepool.buffer_mutex));
+	}
+
+	return retval;
+}
+
+// Writes formatted output to a file
+// @param m_fileid File in pool to which we we want to write
+// @param m_fmt printf-style string of const chars and formatting strings
+// @param ... Additional paramaters as needed for the formatting string
+// @return -1 on failure, 0 on success
+int file_printf(int m_fileid, const char* m_fmt, ...)
+{
+	char *string;
+	va_list argptr;
+
+	while (!s_ready) {
+		if (s_diskmanager_exit) return -1;
+		pthread_yield();
+	}
+
+	va_start(argptr, m_fmt);
+	blast_tmp_vsprintf(string, m_fmt, argptr);
+	va_end(argptr);
+
+	return file_write(m_fileid, string, 0);
+}
+
+
+// Read data from a file on disk
+//
+// @param [in] m_fileid Unique identification number to file in pool
+// @param [out] m_data buffer in which to store output
+// @param [in] m_len size in bytes of 1 element
+// @param [in] m_num number of elements to read
+// @return -1 on failure, positive number of elements read on success
+ssize_t file_read(int m_fileid, void *m_data, size_t m_len, size_t m_num)
+{
+	ssize_t retval = -1;
+	struct timespec timeout;
+
+	if (s_diskmanager_exit)
+		return -1;
+
+	if ((m_data != NULL) && (m_fileid >= 0) && (m_fileid < DISK_MAX_FILES)) {
+		set_timeout(&timeout, 0, diskman_timeout);
+		if(pthread_rwlock_timedrdlock(&(s_filepool.file[m_fileid].mutex), &timeout) != 0) {
+			blast_err("Could not acquire mutex for %d", m_fileid);
+		} else {
+			if (s_filepool.file[m_fileid].fp != NULL) {
+				retval = (ssize_t) fread(m_data, m_len, m_num, s_filepool.file[m_fileid].fp);
+			}
+			pthread_rwlock_unlock(&(s_filepool.file[m_fileid].mutex));
+		}
+	}
+
+	return retval;
+}
+
+// Returns the error indicator for the specified file
+// @param [in] m_fileid File index in the pool
+// @return 0 if no error, -1 if called on NULL descriptor, the standard error indicator otherwise
+int file_error(int m_fileid) {
+	struct timespec timeout;
+	int retval = -1;
+
+	if (s_diskmanager_exit)
+		return -1;
+
+	if (m_fileid >= 0 && m_fileid < DISK_MAX_FILES) {
+		set_timeout(&timeout, 0, diskman_timeout);
+		if (pthread_rwlock_timedrdlock(&s_filepool.file[m_fileid].mutex, &timeout) != 0) {
+			blast_err("Could not acquire read mutex on %d", m_fileid);
+		} else {
+			if (s_filepool.file[m_fileid].fp != NULL) {
+				retval = ferror(s_filepool.file[m_fileid].fp);
+			}
+			pthread_rwlock_unlock(&s_filepool.file[m_fileid].mutex);
+		}
+	}
+	return retval;
+}
+
+// TODO(laura): Is this function even used?
+// Returns the fully-justified path of a file in the file pool.  N.B. Using this function is BAD.
+// Accessing the AoE disks directly using the kernel system may cause your program to hang for
+// extended periods of time while the kernel module stares at its navel and tries to determine
+// whether a subnet protocol should take minutes to respond.  Use the built-in file access routines.
+//
+// @param [in] m_fd The index of the file in the pool
+// @param [out] m_path Pointer to a char array of minimum size #PATH_MAX
+// @return -1 on failure, 0 on success
+int file_get_path(int m_fd, char *m_path)
+{
+	if (s_diskmanager_exit)
+		return -1;
+
+	/* s_ready is an initialization flag for diskmanager */
+	while (!s_ready)
+		pthread_yield();
+
+	if (m_path == NULL
+			|| m_fd < 0
+			|| m_fd >= DISK_MAX_FILES
+			|| s_filepool.file[m_fd].fp == NULL
+			|| s_filepool.file[m_fd].disk == NULL
+			|| s_filepool.file[m_fd].filename == NULL
+			|| s_filepool.file[m_fd].disk->mnt_point == NULL
+			|| s_filepool.error_disk == s_filepool.file[m_fd].disk) {
+		blast_err("Could not acquire pathname for specified file");
+		return -1;
+	}
+
+	if (file_is_local(s_filepool.file[m_fd].filename)) {
+		if (strlen(s_filepool.file[m_fd].filename) > PATH_MAX) {
+			blast_err("Local path name too long");
+			return -1;
+		}
+		strncpy(m_path, s_filepool.file[m_fd].filename, PATH_MAX);
+		blast_dbg("Got local path %s", m_path);
+		return 0;
+	}
+
+	if ((strlen(s_filepool.file[m_fd].disk->mnt_point) + strlen(s_filepool.file[m_fd].filename)) + 2 > PATH_MAX) {
+		blast_err("Path name too long");
+		return -1;
+	}
+
+	strncpy(m_path, s_filepool.file[m_fd].disk->mnt_point, PATH_MAX);
+	strncat(m_path, "/", 1);
+	strncat(m_path, s_filepool.file[m_fd].filename, PATH_MAX - strlen(m_path));
+	blast_dbg("Got relative path %s", m_path);
+	return 0;
 }
 
 // Main disk manager thread.  Handles writing from the buffer.  Starts the error handler

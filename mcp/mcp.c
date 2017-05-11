@@ -274,6 +274,7 @@ static void close_mcp(int m_code)
     shutdown_mcp = true;
     watchdog_close();
     shutdown_bias_tone();
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -312,6 +313,7 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
+    store_data_200hz();
 }
 static void mcp_100hz_routines(void)
 {
@@ -330,6 +332,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    store_data_100hz();
     push_bi0_buffer(channel_data[RATE_100HZ]);
     // test_dio();
 }
@@ -355,7 +358,9 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
-    framing_publish_5hz();}
+    framing_publish_5hz();
+    store_data_5hz();
+}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);

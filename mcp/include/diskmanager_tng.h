@@ -42,6 +42,8 @@
 #define DISK_MIN_FREE_SPACE			50  /** Minimum amount of free space in MB for a disk to be used */
 #define DEFAULT_SYS_TYPE            "xfs"
 
+#define FILE_BUFFER_SIZE			2*1024*1024 /*2 MB*/
+
 extern int16_t SouthIAm; // Needed to determine which drives to mount.
 
 typedef struct harddrive_info {
@@ -148,8 +150,22 @@ void diskpool_update_free_space(int m_pos, int32_t m_space);
 int drivepool_add_init_usb_info(int m_pos, int m_hdusb);
 void diskpool_update_all(void);
 
+int file_open(const char *m_filename, const char *m_mode);
+int file_close(int m_fileid);
+ssize_t file_write(int m_fileid, const char *m_data, size_t m_len);
+ssize_t file_read(int m_fileid, void *m_data, size_t m_len, size_t m_num);
+int64_t file_tell(int m_fileid);
+int file_error(int m_fileid);
+int file_get_path(int m_fd, char *m_path);
+int file_printf(int m_fileid, const char* m_fmt, ...);
+ssize_t file_write_struct(int m_fileid, void *m_struct, size_t m_size, size_t m_num);
+int file_access(const char *m_filename, int m_permission);
+int file_tail(int m_fileid, char **m_dest, size_t m_len);
+int file_stat(const char *m_filename, struct stat *m_statbuf);
+int file_copy(const char *m_src, const char *m_dest);
 
 void *diskmanager_thread(void *m_arg);
+void diskmanager_shutdown();
 
 
 #endif /* INCLUDE_DISKMANAGER_TNG_H */
