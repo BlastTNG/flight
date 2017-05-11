@@ -55,7 +55,7 @@
 #define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
 
 /*DEBUG FLAG*/
-#define _DEBUG_JTAG_IO_ 1
+// #define _DEBUG_JTAG_IO_ 1
 
 enum ftdi_chip_type {
 	TYPE_FT2232C,

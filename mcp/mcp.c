@@ -57,6 +57,7 @@
 #include "lut.h"
 #include "labjack.h"
 #include "multiplexed_labjack.h"
+#include "sensor_updates.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -314,6 +315,7 @@ static void mcp_200hz_routines(void)
 
     framing_publish_200hz();
     store_data_200hz();
+    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
 {
@@ -322,7 +324,6 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-    cryo_control();
 //    BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
@@ -333,19 +334,23 @@ static void mcp_100hz_routines(void)
 
     framing_publish_100hz();
     store_data_100hz();
-    push_bi0_buffer(channel_data[RATE_100HZ]);
+    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
+    build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+    push_bi0_buffer();
     // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
     watchdog_ping();
+    // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
     store_axes_mode_data();
     WriteAux();
-    // ControlBalance(); // Joy uncomments this for telemtry
+    ControlBalance();
     StoreActBus();
+    level_control();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
     #endif
@@ -368,7 +373,11 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    // rec_control();
+    rec_control();
+    // of_control();
+    // if_control();
+    // heater_control();
+    // test_labjacks(0);
     read_thermometers();
     // test_read();
     blast_store_cpu_health();
@@ -560,16 +569,16 @@ int main(int argc, char *argv[])
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(0, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
-  initialize_labjack_commands(LABJACK_OF_1);
-  initialize_labjack_commands(LABJACK_OF_2);
-  initialize_labjack_commands(LABJACK_OF_3);
+  // initialize_labjack_commands(LABJACK_OF_1);
+  // initialize_labjack_commands(LABJACK_OF_2);
+  // initialize_labjack_commands(LABJACK_OF_3);
   // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
@@ -585,7 +594,7 @@ int main(int argc, char *argv[])
 
   pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
-  // act_thread = ph_thread_spawn(ActuatorBus, NULL); // Commented out by Joy for telemetry
+  act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
   initialize_watchdog(2);

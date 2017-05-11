@@ -34,7 +34,7 @@
 #include <ctype.h>
 #include <pthread.h>
 
-// Include gsl package for the old sun sensor
+// Include gsl package for PSS array
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
@@ -307,21 +307,13 @@ static int MagConvert(double *mag_az, double *m_el) {
 // PSSConvert versions added 12 June 2010 -GST
 // PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
 #define  PSS_L  10.     // 10 mm = effective length of active area
-#define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS2_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS3_D 10.5
-#define  PSS4_D 10.34
+#define  PSS_D  {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}     // 10 mm = Distance between pinhole and sensor
 #define  PSS_IMAX  8192.  // Maximum current (place holder for now)
 #define  PSS_XSTRETCH  1.  // 0.995
 #define  PSS_YSTRETCH  1.  // 1.008
-#define  PSS1_BETA  (-PSS1_ALIGNMENT)
-#define  PSS2_BETA  (-PSS2_ALIGNMENT)
-#define  PSS3_BETA  (-PSS3_ALIGNMENT)
-#define  PSS4_BETA  (-PSS4_ALIGNMENT)
-#define  PSS1_ALPHA   25.
-#define  PSS2_ALPHA 24.3  // This angle should be 25 degrees.  Boom bent?
-#define  PSS3_ALPHA   25.
-#define  PSS4_ALPHA   25.
+#define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
+PSS6_ALIGNMENT, PSS7_ALIGNMENT, PSS8_ALIGNMENT}
+#define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
 #define  PSS1_PSI    -15.5
 #define  PSS2_PSI   11.
 #define  PSS3_PSI   0

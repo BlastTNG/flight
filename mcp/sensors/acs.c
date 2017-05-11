@@ -374,39 +374,29 @@ struct ACSDataStruct ACSData;
  */
 void read_5hz_acs(void)
 {
+  static channel_t* vPssAddr[NUM_PSS][NUM_PSS_V];
   static channel_t* elRawIfClinAddr;
-  static channel_t* v11PssAddr;
-  static channel_t* v21PssAddr;
-  static channel_t* v31PssAddr;
-  static channel_t* v41PssAddr;
-  static channel_t* v12PssAddr;
-  static channel_t* v22PssAddr;
-  static channel_t* v32PssAddr;
-  static channel_t* v42PssAddr;
+  char channel_name[128] = {0};
+
+  int i, j;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
+    for (i = 1; i <= NUM_PSS; i++) {
+      for (j = 1; j <= NUM_PSS_V; j++) {
+	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j, i);
+	vPssAddr[i][j] = channels_find_by_name(channel_name);
+	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
+      }
+    }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
-    v11PssAddr = channels_find_by_name("v1_1_pss");
-    v21PssAddr = channels_find_by_name("v2_1_pss");
-    v31PssAddr = channels_find_by_name("v3_1_pss");
-    v41PssAddr = channels_find_by_name("v4_1_pss");
-    v12PssAddr = channels_find_by_name("v1_2_pss");
-    v22PssAddr = channels_find_by_name("v2_2_pss");
-    v32PssAddr = channels_find_by_name("v3_2_pss");
-    v42PssAddr = channels_find_by_name("v4_2_pss");
   }
-
-  ACSData.pss1_i1 = GET_UINT16(v11PssAddr);
-  ACSData.pss1_i2 = GET_UINT16(v21PssAddr);
-  ACSData.pss1_i3 = GET_UINT16(v31PssAddr);
-  ACSData.pss1_i4 = GET_UINT16(v41PssAddr);
-
-  ACSData.pss2_i1 = GET_UINT16(v12PssAddr);
-  ACSData.pss2_i2 = GET_UINT16(v22PssAddr);
-  ACSData.pss2_i3 = GET_UINT16(v32PssAddr);
-  ACSData.pss2_i4 = GET_UINT16(v42PssAddr);
+  for (i = 1; i <= NUM_PSS; i++) {
+    for (j = 1; j <= NUM_PSS_V; j++) {
+      ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
+    }
+  }
 
   /// TODO(seth): Add PSS3-8 read functions
 
@@ -1208,9 +1198,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
-    SET_SCALED_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
-    SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
     SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
     SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);

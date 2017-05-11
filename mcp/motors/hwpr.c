@@ -266,7 +266,7 @@ void ControlHWPR(struct ezbus *bus)
             hwpr_control.read_before = yes;
             hwpr_control.read_after = yes;
             hwpr_control.reset_enc = 1;
-            if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
+            // if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
         } else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
             blast_info("ControlHWPR: Attempting to go to HWPR potentiometer position %f", CommandData.hwpr.pot_targ);
             ResetControlHWPR();
@@ -275,7 +275,7 @@ void ControlHWPR(struct ezbus *bus)
             hwpr_control.read_before = yes;
             hwpr_control.read_after = yes;
             hwpr_control.reset_enc = 1;
-            if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
+            // if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
         } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
             if (!CommandData.hwpr.no_step) {
                 ResetControlHWPR();
@@ -302,7 +302,7 @@ void ControlHWPR(struct ezbus *bus)
     if (CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
         if (hwpr_control.do_calpulse && cal_wait_cnt <= 0) {
             hwpr_calpulse_flag = 1;
-            cal_wait_cnt = CommandData.Cryo.calib_pulse / 20;
+            // cal_wait_cnt = CommandData.Cryo.calib_pulse / 20;
 #ifdef DEBUG_HWPR
             blast_info("Setting calpulse flag...cal_wait_cnt=%i", cal_wait_cnt);
 #endif

@@ -181,10 +181,6 @@ void WriteAux(void)
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
     }
 
-    if (CommandData.Cryo.heliumLevel)
-        GET_VALUE(he4LevReadAddr, CommandData.Cryo.heliumLevel);
-
-    SET_VALUE(he4LevOldAddr, CommandData.Cryo.he4_lev_old);
 
     incharge = InCharge;
 
