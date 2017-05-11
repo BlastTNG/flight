@@ -172,7 +172,7 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
 
-    InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
+    // InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
 
     if (InCharge != incharge && InCharge) {
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
@@ -181,10 +181,6 @@ void WriteAux(void)
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
     }
 
-    if (CommandData.Cryo.heliumLevel)
-        GET_VALUE(he4LevReadAddr, CommandData.Cryo.heliumLevel);
-
-    SET_VALUE(he4LevOldAddr, CommandData.Cryo.he4_lev_old);
 
     incharge = InCharge;
 

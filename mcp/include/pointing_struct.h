@@ -44,6 +44,9 @@
 #include <time.h>
 #include <stdbool.h>
 
+#define NUM_PSS 8
+#define NUM_PSS_V 4
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -54,14 +57,7 @@ struct ACSDataStruct {
   double mag_x;     // counts;
   double mag_y;     // counts;
   double mag_z;     // counts;
-  double pss1_i1;   // counts
-  double pss1_i2;   // counts
-  double pss1_i3;   // counts
-  double pss1_i4;   // counts
-  double pss2_i1;   // counts
-  double pss2_i2;   // counts
-  double pss2_i3;   // counts
-  double pss2_i4;   // counts
+  double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts

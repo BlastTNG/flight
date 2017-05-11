@@ -35,6 +35,7 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
+#include "command_struct.h"
 #include "blast.h"
 #include "mcp.h"
 
@@ -82,7 +83,8 @@
 #define LJ_DATA_PORT 702
 
 // TODO(laura): make this commandable from the call in mcp.c
-#define LJ_STREAM_RATE 200.0 // Streaming Rate (Hz) //DEBUG PCA
+
+#define LJ_STREAM_RATE 200.0 // Streaming Rate (Hz)
 
 
 // Maximum number of addresses that can be targeted in stream mode.
@@ -238,7 +240,8 @@ static labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_of_labjack2",
         .have_warned_write_reg = 0
-    },
+    }
+    /* ,
     {
         .which = 4,
         .address = "labjack5",
@@ -246,7 +249,7 @@ static labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_of_labjack3",
         .have_warned_write_reg = 0
-    }
+    } */
 };
 
 // Used to correct for word swap between the mcp convention and the Labjack.
@@ -908,6 +911,7 @@ static void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m
       ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
       ph_sock_enable(m_sock, 0);
       state->connected = false;
+      CommandData.Relays.labjack[state->which] = 0;
       ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
       return;
     }
@@ -995,6 +999,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 
     state->sock = m_sock;
     state->connected = true;
+    CommandData.Relays.labjack[state->which] = 1;
     state->backoff_sec = min_backoff_sec;
     m_sock->callback = labjack_process_stream;
     m_sock->job.data = state;
@@ -1119,6 +1124,7 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
 
 
     state[m_which].connected = false;
+    CommandData.Relays.labjack[m_which] = 0;
     state[m_which].have_warned_version = false;
     state[m_which].backoff_sec = min_backoff_sec;
     state[m_which].timeout.tv_sec = 5;

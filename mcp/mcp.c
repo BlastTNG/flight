@@ -57,6 +57,7 @@
 #include "lut.h"
 #include "labjack.h"
 #include "multiplexed_labjack.h"
+#include "sensor_updates.h"
 
 #include "acs.h"
 #include "actuators.h"
@@ -71,6 +72,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "bi0.h"
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
@@ -78,6 +80,7 @@
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
+#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -95,6 +98,7 @@ void StageBus(void);
 #endif
 
 struct chat_buf chatter_buffer;
+struct tm start_time;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -274,11 +278,12 @@ static void close_mcp(int m_code)
 #ifndef NO_KIDS_ROACH
     shutdown_roaches();
 #endif
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
 /* Polarity crisis: am I north or south? */
-/* Right now fc1 == south */
+/* Right now fc2 == south */
 static int AmISouth(int *not_cryo_corner)
 {
     char buffer[4];
@@ -320,6 +325,8 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
+    store_data_200hz();
+    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
 {
@@ -328,7 +335,6 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-    cryo_control();
 //    BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
@@ -338,11 +344,16 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    store_data_100hz();
+    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
+    build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+    push_bi0_buffer();
     // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
     watchdog_ping();
+    // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
@@ -350,6 +361,7 @@ static void mcp_5hz_routines(void)
     WriteAux();
     ControlBalance();
     StoreActBus();
+    level_control();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
     #endif
@@ -365,7 +377,9 @@ static void mcp_5hz_routines(void)
     write_roach_channels_5hz();
 #endif
 
-    framing_publish_5hz();}
+    framing_publish_5hz();
+    store_data_5hz();
+}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -374,8 +388,12 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     rec_control();
+    // of_control();
+    // if_control();
+    // heater_control();
+    // test_labjacks(0);
     read_thermometers();
-    test_read();
+    // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -383,6 +401,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
@@ -458,8 +477,10 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -493,7 +514,6 @@ int main(int argc, char *argv[])
    * Begin logging
    */
   {
-      struct tm start_time;
       time_t start_time_s;
       char log_file_name[PATH_MAX];
 
@@ -537,8 +557,9 @@ int main(int argc, char *argv[])
   InitCommandData();
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
+
   initialize_blast_comms();
-//  initialize_sip_interface();
+// initialize_sip_interface();
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
@@ -556,7 +577,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-
+  initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -571,7 +592,7 @@ init_beaglebone();
 blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-
+  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -581,16 +602,16 @@ blast_info("Finished initializing Beaglebones..."); */
   initialize_motors();
   labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(0, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
-  initialize_labjack_commands(LABJACK_OF_1);
-  initialize_labjack_commands(LABJACK_OF_2);
-  initialize_labjack_commands(LABJACK_OF_3);
+  // initialize_labjack_commands(LABJACK_OF_1);
+  // initialize_labjack_commands(LABJACK_OF_2);
+  // initialize_labjack_commands(LABJACK_OF_3);
   // mult_initialize_labjack_commands(0);
 
   initialize_CPU_sensors();
@@ -601,10 +622,11 @@ blast_info("Finished initializing Beaglebones..."); */
   }
   initialize_magnetometer();
 
-//  pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
+  // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-//  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-//  pthread_create(&bi0_id, NULL, (void*)&BiPhaseWriter, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();

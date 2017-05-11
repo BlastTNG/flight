@@ -54,8 +54,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
   {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
   {COMMAND(charcoal_hs_off), "turning off charcoal hs", GR_CRYO},
-  {COMMAND(callamp_on), "turning on cal lamp", GR_CRYO},
-  {COMMAND(callamp_off), "turning off cal lamp", GR_CRYO},
+  {COMMAND(single_cal_pulse), "pulsing the cal lamp", GR_CRYO},
   {COMMAND(lna250_on), "turning on 250 lna", GR_CRYO},
   {COMMAND(lna250_off), "turning off 250 lna", GR_CRYO},
   {COMMAND(lna350_on), "turning on 350 lna", GR_CRYO},
@@ -64,8 +63,10 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
   {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
+  {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
   {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
   {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
+  {COMMAND(heaters_off), "turning off the heater card channels", GR_CRYO},
   {COMMAND(heater_1k_on), "turning on 1K heater", GR_CRYO},
   {COMMAND(heater_1k_off), "turning off 1K heater", GR_CRYO},
   {COMMAND(power_box_on), "turning on the power box", GR_CRYO},
@@ -178,9 +179,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
-  {COMMAND(das_off), "turn off the DAS", GR_POWER},
-  {COMMAND(das_on), "turn on the DAS", GR_POWER},
-  {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
   {COMMAND(rx_off), "receiver/preamp crate Make it Not-So!", GR_POWER},
   {COMMAND(rx_on), "receiver/preamp crate Make it So!", GR_POWER},
   {COMMAND(rx_hk_off), "cryostat housekeepng Make it Not-So!", GR_POWER},
@@ -239,9 +237,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
-  {COMMAND(auto_cycle), "activate helium fridge autocycle system", GR_CRYO},
-  {COMMAND(fridge_cycle),
-    "manually cycle helium fridge now, fridge autocycle on", GR_CRYO},
   {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
   {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
   {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
@@ -258,15 +253,6 @@ struct scom scommands[xyzzy + 1] = {
     GR_CRYO},
   {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
     GR_CRYO},
-  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
-  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
-  {COMMAND(pot_valve_open), "set He4 pot valve direction open",
-    GR_CRYO},
-  {COMMAND(pot_valve_close), "set He4 pot valve direction close",
-    GR_CRYO},
-
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
@@ -899,6 +885,13 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   /***************************************/
+  /*************** ROX Bias  *************/
+  {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
+    {
+      {"ROX bias amplitude (0-100)", 0, 100, 'i', "NONE"}
+    }
+  },
+  /***************************************/
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
     {
@@ -952,11 +945,6 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO, 1,
-    {
-      {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
-    }
-  },
   {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
@@ -964,6 +952,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
     }
   },
+  {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_LEVEL"}
+      }
+  },
+
 
   /***************************************/
   /********* Cryo heat   *****************/

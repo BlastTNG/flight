@@ -45,3 +45,22 @@
 #define DECOM_COMREG_FORCE_UNLOCK 0x00000002
 
 #define DECOM_SYNC                0xeb90
+
+#ifdef __KERNEL__
+#	if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24)
+#		if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,26)
+#			define BBC_DEVICE_CREATE(_cls, _parent, _devt, _drvdata, _fmt, ...) \
+				device_create((_cls), (_parent), (_devt), (_drvdata), (_fmt), ##__VA_ARGS__)
+#		else
+#			define BBC_DEVICE_CREATE(_cls, _parent, _devt, _drvdata, _fmt,  ...) \
+				device_create((_cls), (_parent), (_devt), (_fmt), ##__VA_ARGS__)
+#		endif
+#		define BBC_DEVICE_DESTROY			device_destroy
+#		define BBC_DEVICE					struct device
+#	else
+#		define BBC_DEVICE_CREATE(_cls, _parent, _devt, _drvdata, _fmt, ...) \
+			class_device_create((_cls), (_parent), (_devt), (_drvdata), (_fmt), ##__VA_ARGS__)
+#		define BBC_DEVICE					struct class_device
+#		define BBC_DEVICE_DESTROY			class_device_destroy
+#	endif
+#endif

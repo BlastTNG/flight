@@ -85,20 +85,14 @@ configure_file (
 include_directories ("${PROJECT_BINARY_DIR}")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../../common")
-set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../../external_libs/mpsse")
+set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../../external_libs/synclink")
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${COMMON_DIR}/include"
-    "${MPSSE_DIR}"
+    "${SYNCLINK_DIR}"
     )
 
-
-# add MPSSE Files
-add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
-
-add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
-define_file_basename_for_sources(mpsse)
 
 # add blast objects
 add_library(blast_obj OBJECT 
@@ -106,11 +100,18 @@ add_library(blast_obj OBJECT
     ${COMMON_DIR}/include/blast.h
     )
 define_file_basename_for_sources(blast_obj)
+
+# add crc objects
+add_library(crc_obj OBJECT 
+    ${COMMON_DIR}/crc.c 
+    ${COMMON_DIR}/include/crc.h
+    )
+define_file_basename_for_sources(crc_obj)
 	
 add_executable (test_biphase 
     test_biphase.c
-    $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:blast_obj>
+    $<TARGET_OBJECTS:crc_obj>
     ) 
 
 define_file_basename_for_sources(test_biphase)
@@ -119,24 +120,3 @@ target_link_libraries(test_biphase
     ${USB_LIBRARY}
     ssl crypto 
     m)
-
-#set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
-#		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
-#		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} 
-#		mcp.c tx.c
-#		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
-#		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS}
-#		${ROACH_HEADERS}
-#	    ${PROJECT_SOURCE_DIR}/include/mcp.h
-#	    ${PROJECT_SOURCE_DIR}/include/tx.h
-#	)
-#list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)
-#string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_files}")
-
-#add_custom_command(TARGET test_biphase PRE_BUILD
-#	COMMAND /bin/echo ${check_files}
-#	#WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-#	COMMENT "Checking Code Style"
-#	VERBATIM
-#	)
-
