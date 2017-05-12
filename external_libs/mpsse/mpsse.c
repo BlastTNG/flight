@@ -920,6 +920,7 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32
 void mpsse_watchdog_ping_low(struct mpsse_ctx *ctx)
 {
 	static uint8_t buf_l = (0x0) << 7;
+    blast_info("sent: %02x for low", buf_l);
     // CLK, data, WD are bit 0, 1 and 7
     // 0b10000011 = 0x83 
     // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
@@ -929,6 +930,7 @@ void mpsse_watchdog_ping_low(struct mpsse_ctx *ctx)
 void mpsse_watchdog_ping_high(struct mpsse_ctx *ctx)
 {
     static uint8_t buf_h = (0x1) << 7;
+    blast_info("sent: %02x for high", buf_h);
     // CLK, data, WD are bit 0, 1 and 7
     // 0b10000011 = 0x83
     // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong

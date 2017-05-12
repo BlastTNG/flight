@@ -80,6 +80,7 @@
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
+#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -97,6 +98,7 @@ void StageBus(void);
 #endif
 
 struct chat_buf chatter_buffer;
+struct tm start_time;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -273,6 +275,7 @@ static void close_mcp(int m_code)
     shutdown_mcp = true;
     watchdog_close();
     shutdown_bias_tone();
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -311,6 +314,7 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
+    store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -329,6 +333,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
 
     framing_publish_100hz();
+    store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();
@@ -358,7 +363,9 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
-    framing_publish_5hz();}
+    framing_publish_5hz();
+    store_data_5hz();
+}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -380,6 +387,9 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    store_data_1hz();
+    // query_mult(0, 48);
+    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -448,6 +458,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t biphase_writer_id;
@@ -484,7 +495,6 @@ int main(int argc, char *argv[])
    * Begin logging
    */
   {
-      struct tm start_time;
       time_t start_time_s;
       char log_file_name[PATH_MAX];
 
@@ -549,7 +559,7 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-
+  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
