@@ -258,7 +258,7 @@ void biphase_writer(void)
             }
             // Watchdog TODO (Joy/Ian): decide if dangerous to have the watchdog routines here
             tickle(ctx);
-            set_incharge(ctx);
+            // set_incharge(ctx);
         }
 
         bi0_buffer.i_out = write_frame;

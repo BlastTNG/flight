@@ -419,3 +419,10 @@ init_err:
     return -1;
 }
 
+/* 
+Bias signal monitoring thread.
+void *bias_monitor_thread(void *m_arg)
+{
+    
+}
+ */
