@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <math.h>
 #include "bbc_pci.h"
 #include "decom_pci.h"
 #include "decomd.h"
@@ -28,7 +29,11 @@ extern uint16_t crc_ok; // 1 if crc was ok
 extern unsigned long frame_counter;
 extern double dq_bad;  // data quality - fraction of bad crcs
 
-bool debug_rate = true;
+
+bool debug_rate = false;
+uint16_t debug_counter = 0;
+uint16_t received_counter_offset = 0;
+bool first = true;
 
 // void pushDiskFrame(unsigned short *RxFrame);
 
@@ -71,6 +76,25 @@ void ReadDecom (void)
           if (debug_rate) {
             printf("i_word=%d, raw_word_in = %04x\n", i_word, raw_word_in);
           }
+          if (i_word == 2) {
+            if (first) {
+                if (polarity) {
+                    received_counter_offset = raw_word_in;
+                } else {
+                    received_counter_offset = (uint16_t) (~raw_word_in);
+                }
+                first = false;
+            }
+            if (polarity) {
+                printf("true frame counter = %d\n", raw_word_in-received_counter_offset); 
+                printf("received frame counter = %d\n", debug_counter);
+                printf("sent/received = %d/%d\n", raw_word_in-received_counter_offset, debug_counter);
+            } else {
+                printf("true frame counter = %d (started at %d)\n", ((uint16_t) (~raw_word_in)), received_counter_offset);
+                printf("received frame counter = %d\n", debug_counter);
+                printf("sent/received = %d/%d\n", ((uint16_t) (~raw_word_in)), debug_counter);
+            }
+          }
           if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
             if (debug_rate) {
                 printf("=================i_word=%d==============================\n", i_word);
@@ -84,6 +108,7 @@ void ReadDecom (void)
                 if (debug_rate) {
                     printf("=== FRAME START! i_word=%d===\n== Got sync word %04x ==\n", i_word, raw_word_in);
                 }
+                debug_counter += 1;
                   if (status < 2) {
                       status++;
                   } else {
