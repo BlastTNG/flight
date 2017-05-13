@@ -86,13 +86,13 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
 
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-            if ( count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
+            if ( (count == 4 || count == 3) && topics[0] && strcmp(topics[0], "frames") == 0) {
                 if (ri.channels_ready) {
-                    if (!strcasecmp(topics[3], "200HZ")) ri.read ++;
-                    frame_handle_data(topics[3], message->payload, message->payloadlen);
+                    if (!strcasecmp(topics[count-1], "200HZ")) ri.read ++;
+                    frame_handle_data(topics[count-1], message->payload, message->payloadlen);
                 }
             }
-            if ( count == 3 && topics[0] && strcmp(topics[0], "channels") == 0) {
+            if ( (count == 3 || count == 2) && topics[0] && strcmp(topics[0], "channels") == 0) {
                 if (((channel_header_t*)message->payload)->crc != last_crc && !ri.new_channels) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
                     if (channels_read_map(message->payload, message->payloadlen, &new_channels) > 0 ) {
@@ -102,7 +102,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     }
                 }
             }
-            if ( count == 3 && topics[0] && strcmp(topics[0], "derived") == 0) {
+            if ( (count == 3 || count == 2) && topics[0] && strcmp(topics[0], "derived") == 0) {
                 if (((derived_header_t*)message->payload)->crc != last_derived_crc) {
                     defricher_info( "Received updated Derived Channels.");
                     if (channels_read_derived_map(message->payload, message->payloadlen, &derived_channels) > 0 ) {
@@ -171,7 +171,7 @@ static void *netreader_routine(void *m_arg)
                 }
                 break;
             default:
-                defricher_err("Received %d from mosquitto_loop", ret);
+                defricher_err("Received %d from mosquitto_loop, corresponding to %s", ret, mosquitto_strerror(ret));
                 sleep(1);
                 break;
         }

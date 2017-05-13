@@ -27,8 +27,9 @@
 #include <stdint.h>
 
 #define BI0_FRAME_BUFBITS (4)
-#define BI0_FRAME_BUFLEN (1<<BI0_FRAME_BUFBITS)
+#define BI0_FRAME_BUFLEN (1 << BI0_FRAME_BUFBITS)
 #define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
+
 
 typedef struct
 {
@@ -39,11 +40,16 @@ typedef struct
 } bi0_buffer_t;
 
 extern bi0_buffer_t bi0_buffer;
+extern uint8_t *biphase_frame; // This is pushed to bi0_buffer
 
-extern short InCharge;
 extern pthread_t watchdog_id;
 
-void initialize_bi0_writer(void);
-void push_bi0_buffer(uint16_t *m_buffer);
+void initialize_biphase_buffer(void);
+void push_bi0_buffer(void);
+void biphase_writer(void);
+
+void build_biphase_frame_200hz(const void *m_channel_data);
+void build_biphase_frame_100hz(const void *m_channel_data);
+void build_biphase_frame_1hz(const void *m_channel_data);
 
 #endif /* INCLUDE_BI0_H_ */
