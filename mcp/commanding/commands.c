@@ -1689,9 +1689,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] < 30)) {
-          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[1];
-          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
 	  CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
@@ -2473,11 +2473,11 @@ void InitCommandData()
         CommandData.udp_roach[i].publish_udp = 1;
         // find_kids
         CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
-        CommandData.roach_params[i].peak_threshold = 3; // dB
-        CommandData.roach_params[i].spacing_threshold = 1.0e3; // kHz
+        CommandData.roach_params[i].peak_threshold = 1; // dB
+        CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].in_atten = 1;
-        CommandData.roach_params[i].out_atten = 1;
+        CommandData.roach_params[i].out_atten = 16;
+        CommandData.roach_params[i].in_atten = 3;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

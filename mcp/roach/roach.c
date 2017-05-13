@@ -49,6 +49,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fftw3.h>
+#include <errno.h>
 // include "portable_endian.h"
 #include "mcp.h"
 #include "katcp.h"
@@ -68,7 +69,7 @@
 
 #define DDS_SHIFT 305 /* Firmware version dependent */
 #define VNA_FFT_SHIFT 15 /* Controls FFT overflow behavior, for VNA SWEEP */
-#define TARG_FFT_SHIFT 31
+#define TARG_FFT_SHIFT 127
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -77,10 +78,11 @@
 #define DAC_SAMP_FREQ 512.0e6 /* MUSIC board DAC/ADC clock rate */
 /* Frequency resolution of DAC tones */
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
-#define LO_STEP 2.5e3 /* Freq step size for sweeps */
+#define LO_STEP 1.0e3 /* Freq step size for sweeps */
 #define TARG_SWEEP_SPAN 300.0e3 /* Target sweep span */
 #define NGRAD_POINTS 3 /* Number of points to use for gradient sweep */
 #define NZEROS 14 /* Half the number of filter coefficients */
+#define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Beaglebone com port for FC1 */
 #define NC2_PORT 12346 /* Beaglebone com port for FC2 */
 #define SWEEP_INTERRUPT (-1)
@@ -100,8 +102,8 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 		0.04366146, 0.05121013, 0.05798178, 0.06363685, 0.06789176, 0.07053316, 0.07142859};
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
-const char roach_fpg[5][40] = {"/data/etc/blast/roach1.fpg", "/data/etc/blast/roach1.fpg",
-		"roach3.fpg", "roach4.fpg", "roach5.fpg"};
+const char roach_fpg[5][40] = {"/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg",
+		"/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg"};
 // const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Nov_09_2042.fpg";
@@ -626,7 +628,7 @@ void roach_vna_comb(roach_state_t *m_roach)
 		m_roach->vna_comb[i + m_roach->vna_comb_len/2] = m_roach->n_min_freq + i*n_delta_f;
 	}
 	for (size_t i = 0; i < m_roach->vna_comb_len; i++) {
-		blast_info("ROACH%d vna freq = %g", m_roach->which, m_roach->vna_comb[i]);
+		// blast_info("ROACH%d vna freq = %g", m_roach->which, m_roach->vna_comb[i]);
 	}
 }
 
@@ -650,7 +652,6 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	/* Grab a set number of packets, average I and Q for each chan,
 	and save the result to file:fname in the sweep dir (/data/etc/blast/sweeps/) */
 	/* Save I_avg, Q_avg, to sweep dir */
-	int m_num_to_avg = 50;
 	int m_num_received = 0;
 	int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
 	uint8_t i_udp_read;
@@ -665,7 +666,7 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	float *Q_sum = calloc(m_Nfreqs, sizeof(float)); // Array to store Q values to be summed
 	float *I_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged I values
 	float *Q_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged Q values
-	while (m_num_received < m_num_to_avg) {
+	while (m_num_received < N_AVG) {
 		usleep(3000);
 		if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
 		   m_num_received++;
@@ -679,8 +680,8 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 		m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
 	}
 	for (size_t chan = 0; chan < m_Nfreqs; chan++) {
-		I_avg[chan] = (I_sum[chan] / m_num_to_avg);
-		Q_avg[chan] = (Q_sum[chan] / m_num_to_avg);
+		I_avg[chan] = (I_sum[chan] / N_AVG);
+		Q_avg[chan] = (Q_sum[chan] / N_AVG);
 		/* Save I_avg, Q_avg, to sweep dir */
 		fprintf(m_fd, "%zd\t %f\t %f\n", chan, I_avg[chan], Q_avg[chan]);
 		// blast_info("%zd\t %f\t %f\n", chan, I_avg[chan], Q_avg[chan]);
@@ -709,6 +710,7 @@ void get_time(char *time_buffer)
 
 char* make_dir(roach_state_t *m_roach, char *m_dir_root)
 {
+	// int retval;
 	char *mkdir_command;
 	char *perm_path;
 	char time_buffer[FILENAME_MAX];
@@ -716,6 +718,11 @@ char* make_dir(roach_state_t *m_roach, char *m_dir_root)
 	get_time(time_buffer);
 	asprintf(&return_path, "%s/%s", m_dir_root, time_buffer);
 	blast_tmp_sprintf(mkdir_command, "mkdir -p %s", return_path);
+	/* retval = mkdir(mkdir_command, 0777, true);
+	if (retval < 0) {
+        	blast_info("mkdir retval = %d", retval);
+		blast_strerror("Could not make dir %s, %s", return_path, strerror(errno));
+	} */
 	system(mkdir_command);
 	blast_tmp_sprintf(perm_path, "sudo chown -R fc1user:blast %s", return_path);
 	system(perm_path);
@@ -853,6 +860,9 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 		save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len);
 	} else {
 		m_span = TARG_SWEEP_SPAN;
+		if (!m_roach->last_targ_path) {
+			m_roach->last_targ_path = make_dir(m_roach, m_roach->targ_path_root);
+		}
 		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
 		blast_info("Sweep freq fname = %s", sweep_freq_fname);
 		blast_info("ROACH%d, TARGET sweep will be saved in %s", m_roach->which, m_roach->last_targ_path);
@@ -1228,7 +1238,7 @@ void *roach_cmd_loop(void)
 	ph_thread_set_name(tname);
 	nameThread(tname);
 	blast_info("Starting Roach Commanding Thread");
-	for (int i = 0; i < NUM_ROACHES; i++) {
+	for (int i = 2; i <= 2; i++) {
 		bb_state_table[i].status = BB_STATUS_BOOT;
 		bb_state_table[i].desired_status = BB_STATUS_INIT;
 		rudat_state_table[i].status = RUDAT_STATUS_BOOT;
@@ -1240,7 +1250,7 @@ void *roach_cmd_loop(void)
 	}
 	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
-		for (int i = 0; i < 1; i++) {
+		for (int i = 2; i <= 2; i++) {
 		// Check for new roach status commands
 			if (CommandData.roach[i].change_state) {
                 		roach_state_table[i].status = CommandData.roach[i].new_state;
@@ -1291,6 +1301,7 @@ void *roach_cmd_loop(void)
 				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC2_PORT);
 				while (!bb_state_table[i].bb_comm->connected || !InCharge) {
+					blast_info("Not Incharge");
 					usleep(2000);
 				}
 				bb_state_table[i].status = BB_STATUS_INIT;
@@ -1418,6 +1429,12 @@ void *roach_cmd_loop(void)
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_TARG) {
+				if (!roach_state_table[i].targ_tones) {
+					blast_info("ROACH%d, Targ comb not found, ending sweep", i + 1);
+					roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
+					roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+					break;
+				}
 				roach_write_int(&roach_state_table[i], "fft_shift", TARG_FFT_SHIFT, 0);/* FFT shift schedule */
 				roach_read_int(&roach_state_table[i], "fft_shift");
 				usleep(3000);
