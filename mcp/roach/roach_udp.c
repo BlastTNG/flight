@@ -365,7 +365,7 @@ void write_roach_channels_488hz(void)
     if (firsttime) {
         blast_info("Starting write_roach_channels_488hz");
         firsttime = 0;
-        for (i = 0; i <2 ; i++) { // Write ROACH 1, 2 and 3 channels for now.
+        for (i = 0; i <3 ; i++) { // Write ROACH 1, 2 and 3 channels for now.
 //        for (i = 0; i < NUM_ROACHES; i++) {
             for (j = 0; j < n_publish_roaches[i]; j++) {
                 snprintf(channel_name_i, sizeof(channel_name_i), "i_kid%04d_roach%d", j, i+1);
@@ -376,7 +376,7 @@ void write_roach_channels_488hz(void)
         }
     }
 //    for (i = 0; i < NUM_ROACHES; i++) {
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 3; i++) {
         i_udp_read = GETREADINDEX(roach_udp[i].index);
         data_udp_packet_t* m_packet = &(roach_udp[i].last_pkts[i_udp_read]);
         for (j = 0; j < n_publish_roaches[i]; j++) {
