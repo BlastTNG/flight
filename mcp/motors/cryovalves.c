@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "mcp.h"
 #include "ezstep.h"
@@ -32,6 +33,7 @@
 #include "tx.h"
 #include "actuators.h"
 #include "cryovalves.h"
+
 
 #define POTVALVE_OPEN 8000
 #define POTVALVE_CLOSED 2000
@@ -57,6 +59,7 @@ void DoCryovalves(struct ezbus* bus)
 {
 	static int firsttime = 1;
 	static int pot_init = 0;
+	int newstate;
 
 	if (CommandData.Cryo.potvalve_goal == opened) {
 		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
@@ -91,7 +94,7 @@ void DoCryovalves(struct ezbus* bus)
 	// TODO(PCA): Add velocity/current settings
 
 	GetPotValvePos(*bus);
-	SetValveState();
+	newstate = SetValveState();
 
 	if (potvalve_data.current == potvalve_data.goal) {
 		potvalve_data.potvalve_move = no_move;
@@ -105,12 +108,13 @@ void DoCryovalves(struct ezbus* bus)
 		if (potvalve_data.moving != 1) {
 			if (potvalve_data.current != opened && potvalve_data.goal == opened) {
 				potvalve_data.potvalve_move = opening;
-			} else if (potvalve_data.current != closed && potvalve_data.goal == closed) {
+			} else if (potvalve_data.current != closed && (potvalve_data.goal == closed || potvalve_data.goal == loose_closed)) {
 				potvalve_data.potvalve_move = closing;
 			}
 		}
 	}
 
+	if (newstate == 1) {
 	switch(potvalve_data.potvalve_move) {
 		case(no_move):
 			EZBus_Stop(bus, potvalve_data.addr);
@@ -119,7 +123,7 @@ void DoCryovalves(struct ezbus* bus)
 		case(opening):
 			if(EZBus_Comm(bus, potvalve_data.addr, "m50P0R") != EZ_ERR_OK)
                         	bputs(info, "Error opening pot valve");
-				potvalve_data.moving = 1;
+			potvalve_data.moving = 1;
 			break;
 		case(closing):
 			if(EZBus_Comm(bus, potvalve_data.addr, "m25D0R") != EZ_ERR_OK)
@@ -135,10 +139,13 @@ void DoCryovalves(struct ezbus* bus)
 			}
 			break;
 	}
+	}
+
 	blast_info("pos: %d, current: %d, goal: %d, moving: %d",
 		potvalve_data.adc[0], potvalve_data.current, potvalve_data.goal, potvalve_data.moving); // DEBUG PCA
 
 	WriteValves();
+	usleep(100000);
 }
 void GetPotValvePos(struct ezbus bus)
 {
@@ -149,8 +156,10 @@ void GetPotValvePos(struct ezbus bus)
 }
 
 
-void SetValveState(void)
+int SetValveState(void)
 {
+	valve_state_t prev = potvalve_data.current;
+
 	if (potvalve_data.adc[0] >= POTVALVE_OPEN) {
 		potvalve_data.current = opened;
 	} else if (potvalve_data.adc[0] <= POTVALVE_LOOSE_CLOSED && potvalve_data.adc[0] > POTVALVE_CLOSED) {
@@ -161,6 +170,8 @@ void SetValveState(void)
 	} else {
 		potvalve_data.current = intermed;
 	}
+
+	return (potvalve_data.current != prev);
 }
 
 void WriteValves(void)

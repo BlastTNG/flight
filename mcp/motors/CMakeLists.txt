@@ -1,6 +1,5 @@
 set(MOTOR_SRCS
     ${MOTOR_SRCS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/ec_encoder.c 
     ${CMAKE_CURRENT_SOURCE_DIR}/ec_motors.c
     ${CMAKE_CURRENT_SOURCE_DIR}/motors.c
     ${CMAKE_CURRENT_SOURCE_DIR}/actuators.c
@@ -13,7 +12,6 @@ set(MOTOR_SRCS
 )
 set(MOTOR_HEADERS
    ${MOTOR_HEADERS}
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/ec_encoder.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ec_motors.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/motors.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/hwpr.h

@@ -408,6 +408,9 @@ channel_t channel_list[] =
     { "pos_bal",             SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0 },
     { "lim_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
+    {"potvalve_pos",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_state",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+
     { "alt_sip",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "lat_sip",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_LA_DEG, 0 },

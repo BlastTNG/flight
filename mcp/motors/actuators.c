@@ -897,7 +897,7 @@ static void SetLockState(int nic)
 }
 
 #define SEND_SLEEP 100000 /* 100 milliseconds */
-#define WAIT_SLEEP 50000 /* 50 milliseconds */
+#define WAIT_SLEEP 100000 /* 100 millisecond */
 #define LA_EXIT    0
 #define LA_STOP    1
 #define LA_WAIT    2
@@ -1538,7 +1538,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << SHUTTERNUM);
         }
-
+/*
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
             if (EZBus_IsUsable(&bus, id[i])) {
@@ -1560,7 +1560,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
         }
-
+*/
 // Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
             DoBalance(&bus);

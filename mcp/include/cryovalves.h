@@ -35,7 +35,7 @@
 
 void DoCryovalves(struct ezbus* bus);
 void GetPotValvePos(struct ezbus bus);
-void SetValveState(void);
+int SetValveState(void);
 void WriteValves(void);
 
 // void ControlBalance(void);
