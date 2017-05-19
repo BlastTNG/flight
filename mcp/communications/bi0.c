@@ -96,7 +96,7 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
         blast_warn("the value is %d", in_charge);
-        SET_SCALED_VALUE(incharge_Addr, in_charge+1);
+        SET_SCALED_VALUE(incharge_Addr, in_charge);
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
@@ -160,17 +160,16 @@ void biphase_writer(void)
     mpsse_flush(ctx);
     usleep(1000);
 
-    blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
+    // blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
                frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
 
     while (true) {
         tickle(ctx);
         set_incharge(ctx);
-        usleep(25
-               0000);
+        usleep(250000);
     }
 
     // Currently we will never get here, but later we can implement a 'biphase is on' variable
     mpsse_close(ctx);
-    blast_info("Stopped Biphase Downlink Thread");
+    // blast_info("Stopped Biphase Downlink Thread");
 }
