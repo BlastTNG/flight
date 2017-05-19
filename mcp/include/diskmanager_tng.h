@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <ck_ht.h>
 
 #include "file_buffer_tng.h"
 #define HOME_DIR					"/data"
@@ -54,23 +55,6 @@ typedef struct harddrive_info {
     bool is_writing;
 } harddrive_info_t;
 
-// Hardware IDs for the drives connected by USB
-static const char drive_uuids_fc2[NUM_USB_DISKS][64] = {"ccbff6e7-8e51-49e4-a987-9ebf5644813e",
-                                                     "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
-                                                     "67e991c8-1e1e-4f77-84f1-9273c050e385",
-                                                     "22804e9d-a3e1-4cf8-a5b2-ff2fcf22bc5e",
-                                                     "94ac1984-a52b-4be6-afb7-cb8302d249e0",
-                                                     "993e105e-1cbc-4913-abca-29540242c57e",
-                                                     "6846dffc-cf41-447a-a576-4ab34cad7974",
-                                                     "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c"};
-static const char drive_uuids_fc1[NUM_USB_DISKS][64] = {"",
-                                                     "",
-                                                     "",
-                                                     "",
-                                                     "",
-                                                     "",
-                                                     "",
-                                                     ""};
 //
 // diskentry structure provides all information needed to utilize both local disks and AoE disks in the
 // #diskpool
@@ -96,8 +80,9 @@ typedef struct diskentry
 // reaction by the disk manager to mount a new volume and continue recording data
 typedef struct diskpool
 {
-	diskentry_t	* volatile current_disk;	// current_disk Pointer to current primary disk
-	diskentry_t		disk[DISK_MAX_NUMBER];	// disk Struct of all disks ever seen
+	diskentry_t	    *current_disk;	// current_disk Pointer to current primary disk
+	diskentry_t	    local_disk;    // Pointer to the local disk
+	diskentry_t     disk[NUM_USB_DISKS];
 } diskpool_t;
 
 //
@@ -106,65 +91,37 @@ typedef struct diskpool
 //
 typedef struct fileentry
 {
-	FILE				*fp;				// fp File pointer used to write data to the file
-	pthread_t			parent;				// parent pthread ID of the creating thread
-	pthread_rwlock_t	mutex;				// mutex Read/Write access control for file
-	char				*filename;			// filename Filename without the mount point string
-	bool				continued;			// continued Boolean. true indicates that the file continues one
-											// that began on a different disk.  Filename is
-											// suffixed with '.cont'
-	diskentry_t * volatile disk;			// disk Pointer to an entry in the #diskpool where the file is
-											// currently being written
-	filebuffer_t		buffer;				// buffer The filebuffer structure provides a means of buffering
-	 	 	 	 	 	 	 	 	 	 	// file writes to optimize the network throughput and ensure data
-	 	 	 	 	 	 	 	 	 	 	// connectivity before writing
+    FILE                *fp;                /**< fp File pointer used to write data to the file */
+    pthread_t           parent;             /**< parent pthread ID of the creating thread */
+    char                *filename;          /**< filename base file name of the file being written/read */
+    char                mode[4];            /**< mode One of "r", "w", "a" or with "+" appended */
+    diskentry_t         *disk;              /**< disk Pointer to an entry in the #diskpool where the file is
+                                                currently being written */
+    filebuffer_t        buffer;             /**< buffer The filebuffer structure provides a means of buffering
+                                                 file writes to optimize the network throughput and ensure data
+                                                 connectivity before writing */
+    uint32_t            filehash;           /**< filehash Hash of filename, used for sl */
+    uint32_t            is_closed;          /**< is_closed Set by the calling routine to make the entry for cleanup */
+    int32_t             last_error;         /**< last_error In the event of disk error, this is set to errno */
 } fileentry_t;
 
-//
-// The filepool contains a pool of all open files in the diskmanager system.  The index assigned to a file will
-// remain fixed over the lifetime of the file.
-//
-typedef struct filepool
-{
-//
-// N.B. The disk error flags are held in the filepool because their effect is to halt disk writing for the
-// entire pool.  It is highly conceivable that many files will attempt to signal an error at the same time, so
-// keeping the mutex and signal with the file pool is logical.  This allows for expansion to multiple
-// pools in a future experiment (possibly in a segregated network?).  There you would not want a single lock
-// in the disk pool, but you would want the file pool that has an error to respond to a single signal
-// (say that 10 times fast).
-//
-	pthread_mutex_t	write_error_mutex;		// write_error_mutex Mutex for disk error handling
-	pthread_cond_t	write_error_signal;		// write_error_signal Signal to trigger disk fail-over handling
-	volatile diskentry_t	*error_disk;	// error_disk Pointer to disk on which a write error occurred
 
-	pthread_mutex_t	buffer_mutex;			// buffer_mutex Mutex for signaling that buffers should be flushed
-	pthread_cond_t	buffer_signal;			// buffer_signal Write signal to flush buffers
-	fileentry_t		file[DISK_MAX_FILES];	// file Array of files being used
-} filepool_t;
-void diskpool_update_last_time(int m_pos, time_t m_time);
-void diskpool_update_disk_tag(int m_pos);
-int diskpool_is_in_pool(const char *m_mnt_point);
 int diskpool_add_to_pool(diskentry_t *m_disk);
-void diskpool_update_free_space(int m_pos, int32_t m_space);
-int drivepool_add_init_usb_info(int m_pos, int m_hdusb);
-void diskpool_update_all(void);
+diskentry_t *diskpool_is_in_pool(const char *m_dev);
 
-int file_open(const char *m_filename, const char *m_mode);
-int file_close(int m_fileid);
-ssize_t file_write(int m_fileid, const char *m_data, size_t m_len);
-ssize_t file_read(int m_fileid, void *m_data, size_t m_len, size_t m_num);
-int64_t file_tell(int m_fileid);
-int file_error(int m_fileid);
-int file_get_path(int m_fd, char *m_path);
-int file_printf(int m_fileid, const char* m_fmt, ...);
-ssize_t file_write_struct(int m_fileid, void *m_struct, size_t m_size, size_t m_num);
+fileentry_t *file_open (const char *m_filename, const char *m_mode);
+int file_close(fileentry_t *m_file);
+ssize_t file_write (volatile fileentry_t *m_file, const char *m_data, size_t m_len);
+ssize_t file_read (fileentry_t *m_file, void *m_data, size_t m_len, size_t m_num);
+long int file_tell (fileentry_t *m_file);
+int file_printf(fileentry_t *m_file, const char* m_fmt, ...);
+ssize_t file_write_struct (volatile fileentry_t *m_file, void *m_struct, size_t m_size, size_t m_num);
 int file_access(const char *m_filename, int m_permission);
-int file_tail(int m_fileid, char **m_dest, size_t m_len);
 int file_stat(const char *m_filename, struct stat *m_statbuf);
 int file_copy(const char *m_src, const char *m_dest);
+int file_get_path (fileentry_t *m_file, char *m_path);
 
-void *diskmanager_thread(void *m_arg);
+bool initialize_diskmanager(int m_preferred_disk);
 void diskmanager_shutdown();
 
 
