@@ -404,8 +404,7 @@ void read_chopper(void)
 		firsttime = 0;
 		stage_chopper_Addr = channels_find_by_name("stage_chopper");
 	}
-
-//  SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(3, 12)); // labjack 2 channel 12 DEBUG USING LABJACK 3
+    SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(3, 12));
 }
 #endif
 // test read for a channel written from the thermometry function
