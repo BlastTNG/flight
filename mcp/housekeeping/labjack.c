@@ -173,6 +173,7 @@ typedef struct {
     bool connected;
     bool have_warned_version;
     bool shutdown;
+    bool initialized;
 
 // Used for setting up the streaming in the command thread
     uint16_t comm_stream_state;
@@ -215,7 +216,9 @@ static labjack_state_t state[NUM_LABJACKS] = {
           .port = LJ_DATA_PORT,
           .DAC = {0, 0},
           .channel_postfix = "_cryo_labjack1",
-          .have_warned_write_reg = 0
+          .have_warned_write_reg = 0,
+          .initialized = 0,
+          .connected = 0
     },
     {
           .which = 1,
@@ -223,23 +226,29 @@ static labjack_state_t state[NUM_LABJACKS] = {
           .port = LJ_DATA_PORT,
           .DAC = {0, 0},
           .channel_postfix = "_cryo_labjack2",
-          .have_warned_write_reg = 0
+          .have_warned_write_reg = 0,
+          .initialized = 0,
+          .connected = 0
     },
     {
-        .which = 2,
-        .address = "labjack3",
-        .port = LJ_DATA_PORT,
-        .DAC = {0, 0},
-        .channel_postfix = "_of_labjack1",
-        .have_warned_write_reg = 0
+          .which = 2,
+          .address = "labjack3",
+          .port = LJ_DATA_PORT,
+          .DAC = {0, 0},
+          .channel_postfix = "_of_labjack1",
+          .have_warned_write_reg = 0,
+          .initialized = 0,
+          .connected = 0
     },
     {
-        .which = 3,
-        .address = "labjack4",
-        .port = LJ_DATA_PORT,
-        .DAC = {0, 0},
-        .channel_postfix = "_of_labjack2",
-        .have_warned_write_reg = 0
+          .which = 3,
+          .address = "labjack4",
+          .port = LJ_DATA_PORT,
+          .DAC = {0, 0},
+          .channel_postfix = "_of_labjack2",
+          .have_warned_write_reg = 0,
+          .initialized = 0,
+          .connected = 0
     }
     /* ,
     {
@@ -248,7 +257,9 @@ static labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_of_labjack3",
-        .have_warned_write_reg = 0
+        .have_warned_write_reg = 0,
+        .initialized = 0,
+        .connected = 0
     } */
 };
 
@@ -284,6 +295,19 @@ void labjack_set_short(uint32_t short_in, uint16_t* data)
 
 float labjack_get_value(int m_labjack, int m_channel)
 {
+    static int first_time = 1;
+    // Make sure the labjack number is sensible and the labjack in question has had its
+    // state structure initialized.
+    if ((m_labjack < 0) || (m_labjack >= NUM_LABJACKS)) {
+        if (first_time) {
+            blast_err("No such labjack %i!", m_labjack);
+            first_time = 0;
+        }
+        return 0;
+    }
+    if (!(state[m_labjack].initialized)) return 0; // We haven't yet started the command thread
+                                                   // so conn_data is not allocated.
+
     labjack_data_t *state_data = (labjack_data_t*)state[m_labjack].conn_data;
     if (m_channel > state_data->num_channels) {
         blast_err("Invalid channel %d requested from '%s'", m_channel, state[m_labjack].address);
@@ -1137,7 +1161,7 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
     data_state->num_channels = m_numchannels;
     data_state->scans_per_packet = m_scans_per_packet;
     state[m_which].conn_data = data_state;
-
+    state[m_which].initialized = true;
     ph_job_dispatch_now(&(state[m_which].connect_job));
 }
 
