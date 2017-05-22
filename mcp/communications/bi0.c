@@ -155,19 +155,53 @@ static void tickle(struct mpsse_ctx *ctx_passed_write) {
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
     static int in_charge;
+    static int incharge_old;
     static channel_t* incharge_Addr;
     if (first_call == 1) {
-        first_call = 0;
         incharge_Addr = channels_find_by_name("incharge");
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-        // blast_dbg("the value is %d", in_charge);
-        SET_SCALED_VALUE(incharge_Addr, in_charge+1);
+        blast_warn("the value is %d", in_charge);
+        SET_SCALED_VALUE(incharge_Addr, in_charge);
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
+            if (first_call == 1) {
+                first_call = 0;
+                if (SouthIAm == 1) {
+                    blast_info("I, South, am in Control");
+                } else {
+                    blast_info("I, North, am in Control");
+                }
+            } else {
+                if (incharge_old != in_charge) {
+                    if (SouthIAm == 1) {
+                        blast_info("I, South, am in Control");
+                    } else {
+                        blast_info("I, North, am in Control");
+                    }
+                }
+            }
+            incharge_old = in_charge;
         } else {
             InCharge = 0;
+            if (first_call == 1) {
+                first_call = 0;
+                if (SouthIAm == 1) {
+                    blast_info("I, South, am not in Control");
+                } else {
+                    blast_info("I, North, am not in Control");
+                }
+            } else {
+                if (incharge_old != in_charge) {
+                    if (SouthIAm == 1) {
+                        blast_info("I, South, am not in Control");
+                    } else {
+                        blast_info("I, North, am not in Control");
+                    }
+                }
+            }
+            incharge_old = in_charge;
         }
     }
 }
@@ -223,49 +257,16 @@ void biphase_writer(void)
     mpsse_flush(ctx);
     usleep(1000);
 
-    blast_info("used biphase frame_size is %zd, biphase frame size is %d, biphase frame size for data is %d (bytes)",
-               (size_t) (frame_size[RATE_100HZ]+2*frame_size[RATE_200HZ]+ceil(frame_size[RATE_1HZ]/100.0)),
-               BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_BYTES-4));
+    // blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
+               // frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
 
     while (true) {
-        // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
-        write_frame = bi0_buffer.i_out;
-        read_frame = bi0_buffer.i_in;
-        if (read_frame == write_frame) {
-            usleep(10000);
-            continue;
-        }
-
-        while (read_frame != write_frame) {
-            memcpy(bi0_frame, bi0_buffer.framelist[write_frame], BIPHASE_FRAME_SIZE_BYTES);
-            write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
-
-            bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
-            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES-2);
-            // blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
-
-            bi0_frame[0] = sync_word;
-            sync_word = ~sync_word;
-
-            gettimeofday(&begin, NULL);
-            mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
-            mpsse_flush(ctx);
-            gettimeofday(&end, NULL);
-            // blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
-            //          BIPHASE_FRAME_SIZE_BYTES, (end.tv_usec - begin.tv_usec)/1000000.0);
-            if (ctx->retval != ERROR_OK) {
-                blast_err("Error writing frame to Biphase, discarding.");
-            }
-            // Watchdog TODO (Joy/Ian): decide if dangerous to have the watchdog routines here
-            tickle(ctx);
-            set_incharge(ctx);
-        }
-
-        bi0_buffer.i_out = write_frame;
-        usleep(10000);
+        tickle(ctx);
+        set_incharge(ctx);
+        usleep(250000);
     }
 
     // Currently we will never get here, but later we can implement a 'biphase is on' variable
     mpsse_close(ctx);
-    blast_info("Stopped Biphase Downlink Thread");
+    // blast_info("Stopped Biphase Downlink Thread");
 }
