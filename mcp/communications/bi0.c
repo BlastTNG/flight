@@ -100,8 +100,18 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
+            if (SouthIAm == 1) {
+                blast_info("I, South, am in Control");
+            } else {
+                blast_info("I, North, am in Control");
+            }
         } else {
             InCharge = 0;
+            if (SouthIAm == 1) {
+                blast_info("I, South, am not in Control");
+            } else {
+                blast_info("I, North, am not in Control");
+            }
         }
     }
 }
@@ -161,7 +171,7 @@ void biphase_writer(void)
     usleep(1000);
 
     // blast_info("frame_size[100Hz] is %zd, biphase frame size is %zd, biphase frame size for data is %zd (bytes)",
-               frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
+               // frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
 
     while (true) {
         tickle(ctx);
