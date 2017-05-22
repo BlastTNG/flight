@@ -38,6 +38,9 @@
 #include "command_struct.h"
 #include "blast.h"
 #include "mcp.h"
+#include "tx.h"
+
+extern int16_t InCharge;
 
 // Target types for stream configuration
 #define STREAM_TARGET_ETHERNET 0x01  // Ethernet
@@ -289,8 +292,8 @@ float labjack_get_float(uint16_t* data_in)
 // Used to package a 32 bit integer into a two element array in modbus format.
 void labjack_set_short(uint32_t short_in, uint16_t* data)
 {
-	data[1] = short_in & 0xff;
-	data[0] = (short_in & 0xff00) >> 16;
+	data[1] = short_in & 0xffff;
+	data[0] = (short_in & 0xffff0000) >> 16;
 }
 
 float labjack_get_value(int m_labjack, int m_channel)
@@ -515,6 +518,27 @@ void labjack_reboot(int m_labjack) {
             tries++;
             usleep(100);
             ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
+            if (ret > 0) {
+                break;
+            }
+        }
+    }
+}
+
+void labjack_test_dac(float v_value, int m_labjack) {
+    uint16_t data[2];
+    int ret;
+    static int max_tries = 10;
+    labjack_set_float(v_value, data);
+    // data[1] = 0xffff;
+    // data[0] = 0x0000;
+    ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
             if (ret > 0) {
                 break;
             }
@@ -1050,6 +1074,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 }
 
 void *labjack_cmd_thread(void *m_lj) {
+    int first_time = 1;
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
 
@@ -1059,7 +1084,13 @@ void *labjack_cmd_thread(void *m_lj) {
     nameThread(tname);
 
     blast_info("Starting Labjack%02d Commanding at IP %s", m_state->which, m_state->address);
-
+    /* while (!InCharge) {
+        if (first_time) {
+            blast_info("not in charge... waiting");
+            first_time = 0;
+        }
+        usleep(1000);
+    } */
 	m_state->req_comm_stream_state = 1;
 	m_state->comm_stream_state = 0;
 	m_state->has_comm_stream_error = 0;
@@ -1109,7 +1140,8 @@ void *labjack_cmd_thread(void *m_lj) {
     if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
         init_labjack_stream_commands(m_state);
     }
-	/*  Set DAC level */
+	/*
+      // Set DAC level
         modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
         modbus_set_float(m_state->DAC[1], &dac_buffer[2]);
         if (modbus_write_registers(m_state->cmd_mb, 1000, 4, dac_buffer) < 0) {
@@ -1118,7 +1150,7 @@ void *labjack_cmd_thread(void *m_lj) {
             }
             m_state->have_warned_write_reg = 1;
             continue;
-        }
+        } */
     }
     return NULL;
 }

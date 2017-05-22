@@ -67,8 +67,10 @@
 channel_t channel_list[] =
 {
     { "test_values",      SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "heater_status",    1,          0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
-    { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "heater_status_write",    1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -100,6 +102,8 @@ channel_t channel_list[] =
     { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     // random cryo labjack AINs
     { "level_sensor_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "cal_lamp_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "heater_300mk_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     // below are the thermistor channels as well as the current loop channels
     { "thermistor_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "thermistor_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -139,6 +143,8 @@ channel_t channel_list[] =
     { "current_loop_8",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_9",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_10",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+
+    // ADD CLINOMETER CHANNELS
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },

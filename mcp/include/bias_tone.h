@@ -42,5 +42,6 @@
 int initialize_bias_tone(void);
 void shutdown_bias_tone(void);
 int set_mixer_params(void);
+int set_rox_bias(void);
 
 #endif /* INCLUDE_BIAS_TONE_H_ */

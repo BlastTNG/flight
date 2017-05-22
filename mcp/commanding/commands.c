@@ -49,6 +49,7 @@
 #include "labjack.h"
 #include "cryostat.h"
 #include "relay_control.h"
+#include "bias_tone.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -253,6 +254,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case level_sensor_pulse:
             CommandData.Cryo.do_level_pulse = 1;
+            break;
+        case heater_sync:
+            CommandData.Cryo.sync = 1;
             break;
         case charcoal_on:
             CommandData.Cryo.charcoal = 1;
@@ -1712,6 +1716,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //       need to multiply later instead
     case set_rox_bias_amp: // Set the amplitude of the rox bias signal
       CommandData.rox_bias.amp = ivalues[0];
+      set_rox_bias();
       break;
     case bias_level_500:     // Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
@@ -2299,6 +2304,7 @@ void InitCommandData()
     CommandData.parts_sched = 0x0;
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
+    CommandData.Cryo.sync = 0;
 
     /* relays should always be set to zero when starting MCP */
     /* relays */
