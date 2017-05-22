@@ -78,8 +78,8 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     // change these to the 16bit values. (uint16_t)
     uint16_t tcrit_fpa; // this will likely get changed in the future
     // likely have 3 different t crit
-    uint16_t tcrit_charcoal = 49441; // temp of charcoal
-    uint16_t tmin_charcoal = 49834; // minimum during burnoff
+    uint16_t tcrit_charcoal; // temp of charcoal
+    uint16_t tmin_charcoal; // minimum during burnoff
 } cycle_control_t;
 
 cycle_control_t cycle_state;
@@ -428,7 +428,7 @@ static void init_cycle_channels(void) {
     cycle_state.tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
     blast_info("on to startup phase");
 }
-// initializes all of the cycle structure values to zero
+
 static void init_cycle_values(void) {
     cycle_state.standby = 0;
     cycle_state.cooling = 0;
@@ -440,6 +440,18 @@ static void init_cycle_values(void) {
     cycle_state.t250 = 0;
     cycle_state.t350 = 0;
     cycle_state.t500 = 0;
+    cycle_state.tcharcoalhs = 0;
+    cycle_state.tcharcoalhs_old = 0;
+    cycle_state.t250_old = 0;
+    cycle_state.t350_old = 0;
+    cycle_state.t500_old = 0;
+    cycle_state.start_up_counter = 0;
+    cycle_state.burning_length = 3600;
+    cycle_state.burning_counter = 0;
+    cycle_state.reheating = 0;
+    blast_info("values written");
+    cycle_state.tcrit_charcoal = 49441; // temp of charcoal
+    cycle_state.tmin_charcoal = 49834;
 }
 // performs the startup operations of the cycle,
 // averaging the temperatures for 60 seconds before any other actions
@@ -449,9 +461,11 @@ static void start_cycle(void) {
         GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250_old);
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350_old);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500_old);
+        blast_info("got values");
         cycle_state.t250 += cycle_state.t250_old;
         cycle_state.t350 += cycle_state.t350_old;
         cycle_state.t500 += cycle_state.t500_old;
+        blast_info("added values...");
         if (cycle_state.start_up_counter == 60) {
             cycle_state.t250 = cycle_state.t250/60;
             cycle_state.t350 = cycle_state.t350/60;
@@ -619,11 +633,13 @@ static void output_cycle(void) {
 }
 // structure based cycle code
 void auto_cycle_mk2(void) {
+    blast_info("initalizing");
     static int first_time = 1;
     if (first_time == 1) {
         init_cycle_channels();
         init_cycle_values();
         first_time = 0;
+        blast_info("first time done");
     }
     if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
         forced();
@@ -634,168 +650,8 @@ void auto_cycle_mk2(void) {
     heating_cycle();
     burnoff_cycle();
     cooling_cycle();
+    output_cycle();
 }
-// for how this works see the extensive comments above
-void autocycle_ian(void)
-{
-    static channel_t* tfpa250_Addr; // set channel address pointers
-    static channel_t* tfpa350_Addr;
-    static channel_t* tfpa500_Addr;
-    static channel_t* tcharcoal_Addr;
-    static channel_t* tcharcoalhs_Addr;
-    static int standby = 0;
-    static int heating = 0;
-    static int burning_off = 0;
-    static int cooling = 0;
-    static int heat_delay = 0;
-
-    static int firsttime = 1;
-    static int burning_counter = 0;
-    static int start_up_counter = 0;
-    double t250, t350, t500, tcharcoal, tcharcoalhs;
-    double t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
-    static double tcrit_fpa = 30560; // this will likely get changed in the future
-    static double tcrit_charcoal = 37.0; // temp of charcoal, change to counts
-    static double tmin_charcoal = 26.0; // minimum during burnoff, change to counts
-    static int burning_length = 3600;
-    static int reheating = 0;
-    if (cycle_state.reset_cycle == 1) {
-        firsttime = 1;
-        burning_counter = 0;
-        start_up_counter = 0;
-        heat_delay = 0;
-        start_up_counter = 0;
-    }
-    if (CommandData.Cryo.forced == 1) {
-        standby = 0;
-        cooling = 0;
-        burning_off = 0;
-        heating = 1;
-        heat_delay = 0;
-    }
-    if (firsttime == 1) {
-        firsttime = 0;
-        tfpa250_Addr = channels_find_by_name("tr_250_fpa");
-        tfpa350_Addr = channels_find_by_name("tr_350_fpa");
-        tfpa500_Addr = channels_find_by_name("tr_500_fpa");
-        tcharcoal_Addr = channels_find_by_name("td_charcoal");
-        tcharcoalhs_Addr = channels_find_by_name("td_charcoal_hs");
-        t250 = 0;
-        t350 = 0;
-        t500 = 0;
-        tcharcoal = 0;
-        tcharcoal_old = 0;
-        firsttime--;
-        standby = 0;
-        cooling = 0;
-        heating = 0;
-        burning_off = 0;
-    }
-    if (start_up_counter < 60) { // won't try to autocycle in the first minute
-        start_up_counter++;
-        GET_VALUE(tfpa250_Addr, t250_old);
-        GET_VALUE(tfpa350_Addr, t350_old);
-        GET_VALUE(tfpa500_Addr, t500_old);
-        t250 += t250_old;
-        t350 += t350_old;
-        t500 += t500_old;
-        if (start_up_counter == 60) {
-            t250 = t250/60;
-            t350 = t350/60;
-            t500 = t500/60;
-            standby = 1;
-        }
-    }
-    if (standby == 1) {
-        t250_old = t250;
-        t350_old = t350;
-        t500_old = t500;
-        GET_VALUE(tfpa250_Addr, t250);
-        GET_VALUE(tfpa350_Addr, t350);
-        GET_VALUE(tfpa500_Addr, t500);
-        t250 = t250_old*(59/60) + t250*(1/60);
-        t350 = t350_old*(59/60) + t350*(1/60);
-        t500 = t500_old*(59/60) + t500*(1/60);
-        if (t250 > tcrit_fpa) {
-            standby = 0;
-            heating = 1;
-        } else {
-            if (t350 > tcrit_fpa) {
-                standby = 0;
-                heating = 1;
-            } else {
-                if (t500 > tcrit_fpa) {
-                    standby = 0;
-                    heating = 1;
-                }
-            }
-        }
-    }
-    if (heating == 1) {
-        if (heat_delay == 0) {
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal_hs = 0;
-            heat_delay++;
-        }
-        if (heat_delay < 180) { // give the charcoal HS time to cool off
-            // we could add the open the pumped pot valve here.
-            heat_delay++;
-        } else {
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 1;
-        }
-        GET_VALUE(tcharcoal_Addr, tcharcoal);
-        if (tcharcoal > tcrit_charcoal) {
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 0;
-            heating = 0;
-            burning_off = 1;
-            burning_counter = 0;
-        }
-    }
-    if (burning_off == 1) {
-        GET_VALUE(tcharcoal_Addr, tcharcoal);
-        if (burning_counter < burning_length && reheating == 0) {
-            burning_counter++;
-        }
-        if (tcharcoal < tmin_charcoal && reheating == 0) {
-            reheating = 1;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 1;
-        }
-        if (reheating == 1 && tcharcoal > tcrit_charcoal) {
-            reheating = 0;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 0;
-        }
-        if (burning_counter == burning_length) {
-            burning_off = 0;
-            cooling = 1;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal_hs = 0;
-            GET_VALUE(tfpa250_Addr, t250);
-            GET_VALUE(tfpa350_Addr, t350);
-            GET_VALUE(tfpa500_Addr, t500);
-        }
-    }
-    if ( cooling == 1 ) {
-        // we can close the pumped pot here
-        t250_old = t250;
-        t350_old = t350;
-        t500_old = t500;
-        GET_VALUE(tfpa250_Addr, t250);
-        GET_VALUE(tfpa350_Addr, t350);
-        GET_VALUE(tfpa500_Addr, t500);
-        t250 = t250_old*(59/60) + t250*(1/60);
-        t350 = t350_old*(59/60) + t350*(1/60);
-        t500 = t500_old*(59/60) + t500*(1/60);
-        if (t250 < tcrit_fpa && t350 < tcrit_fpa && t500 < tcrit_fpa) {
-            standby = 1;
-            cooling = 0;
-        }
-    }
-}
-
 
 
 

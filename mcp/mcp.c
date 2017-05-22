@@ -75,6 +75,8 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
+#include "relay_control.h"
+#include "outer_frame.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
@@ -318,14 +320,13 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    BiasControl();
+//   BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
-
     framing_publish_100hz();
     // test_dio();
 }
@@ -364,9 +365,10 @@ static void mcp_1hz_routines(void)
     rec_control();
     // of_control();
     // if_control();
-    // heater_control();
+    heater_control();
     // test_labjacks(0);
     read_thermometers();
+    // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();

@@ -21,10 +21,6 @@ void test_frequencies(void);
 void tie_up(void);
 void heater_read(void);
 void test_cycle(void);
-void autocycle_ian(void);
 void auto_cycle_mk2(void);
-
-#ifdef USE_XY_THREAD
-	void read_chopper(void);
-#endif
+void read_chopper(void);
 #endif /* cryostat_h */

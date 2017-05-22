@@ -567,7 +567,7 @@ derived_tng_t derived_list[] = {
     UNITS("Tr_he4_pot", "Temperature", "K"),
     LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he3_fridge", "Temperature", "K"),
-    LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-raw.txt"),
+    LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-500.txt"),
     UNITS("Tr_500_fpa", "Temperature", "K"),
     // cryo labjack stuff below
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
