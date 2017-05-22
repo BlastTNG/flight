@@ -389,7 +389,7 @@ void read_thermometers(void) {
     SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ));
     SET_SCALED_VALUE(heater_300mk_Addr, labjack_get_value(LABJACK_CRYO_2, HEATER_300MK_READ));
 }
-#ifdef USE_XY_THREAD
+
 void read_chopper(void)
 {
 	/*
@@ -404,9 +404,9 @@ void read_chopper(void)
 		firsttime = 0;
 		stage_chopper_Addr = channels_find_by_name("stage_chopper");
 	}
-    SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(3, 12));
+    SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(1, 12));
 }
-#endif
+
 // test read for a channel written from the thermometry function
 void test_cycle(void) {
     static channel_t* test_channel;
@@ -633,9 +633,9 @@ static void output_cycle(void) {
 }
 // structure based cycle code
 void auto_cycle_mk2(void) {
-    blast_info("initalizing");
     static int first_time = 1;
     if (first_time == 1) {
+        blast_info("initalizing");
         init_cycle_channels();
         init_cycle_values();
         first_time = 0;

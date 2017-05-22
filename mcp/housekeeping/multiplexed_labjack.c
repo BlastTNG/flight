@@ -239,8 +239,8 @@ float mult_labjack_get_float(uint16_t* data_in)
 // Used to package a 32 bit integer into a two element array in modbus format.
 void mult_labjack_set_short(uint32_t short_in, uint16_t* data)
 {
-    data[1] = short_in & 0xff;
-    data[0] = (short_in & 0xff00) >> 16;
+    data[1] = short_in & 0xffff;
+    data[0] = (short_in & 0xffff0000) >> 16;
 }
 
 float mult_labjack_get_value(int m_labjack, int m_channel)
