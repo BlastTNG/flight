@@ -89,9 +89,9 @@ static void tickle(struct mpsse_ctx *ctx_passed_write) {
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
     static int in_charge;
+    static int incharge_old;
     static channel_t* incharge_Addr;
     if (first_call == 1) {
-        first_call = 0;
         incharge_Addr = channels_find_by_name("incharge");
     } else {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
@@ -100,18 +100,42 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         if (in_charge && SouthIAm) {
             // set incharge here to 1 if the && comes true
             InCharge = 1;
-            if (SouthIAm == 1) {
-                blast_info("I, South, am in Control");
+            if (first_call == 1) {
+                first_call = 0;
+                if (SouthIAm == 1) {
+                    blast_info("I, South, am in Control");
+                } else {
+                    blast_info("I, North, am in Control");
+                }
             } else {
-                blast_info("I, North, am in Control");
+                if (incharge_old != in_charge) {
+                    if (SouthIAm == 1) {
+                        blast_info("I, South, am in Control");
+                    } else {
+                        blast_info("I, North, am in Control");
+                    }
+                }
             }
+            incharge_old = in_charge;
         } else {
             InCharge = 0;
-            if (SouthIAm == 1) {
-                blast_info("I, South, am not in Control");
+            if (first_call == 1) {
+                first_call = 0;
+                if (SouthIAm == 1) {
+                    blast_info("I, South, am not in Control");
+                } else {
+                    blast_info("I, North, am not in Control");
+                }
             } else {
-                blast_info("I, North, am not in Control");
+                if (incharge_old != in_charge) {
+                    if (SouthIAm == 1) {
+                        blast_info("I, South, am not in Control");
+                    } else {
+                        blast_info("I, North, am not in Control");
+                    }
+                }
             }
+            incharge_old = in_charge;
         }
     }
 }
