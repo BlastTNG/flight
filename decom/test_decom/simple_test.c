@@ -45,7 +45,7 @@
 const unsigned short syncwords[SYNC_LEN] = {0xeb90};
 
 int main(int argc, char *argv[]) {
-  int i = 0;
+  int i, j, k = 0;
   int fp;
   unsigned short receiveword;
   int syncstate = 0, sync_pol;
@@ -76,72 +76,35 @@ int main(int argc, char *argv[]) {
   printf("\tNum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
   printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
 
-  printf("Press any key to continue\n");
-  getchar();		//wait
 
   for (i = 0; ; i++) {
     bytes_read = read(fp, (void *)(&receiveword), sizeof(unsigned short));
     if (bytes_read > 0) {
-      first_time_error = true;
-      bytes_read_since_last_sync += bytes_read;
-      if (polarity) receiveword = ~receiveword; //flip if inverse polarity
-
-      //don't print zeros
-      if (false) {
-	if (receiveword != 0x0000) {
-	  printf("Word Received: 0x%04x\n", receiveword);
-	  if (false) {
-	    printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-	    printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-	    printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-	    printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+	  k = 0;
+	  j += 1;
+	  bytes_read_since_last_sync += bytes_read;
+	  if ((receiveword == 0xeb90) || (receiveword == 0x146f)) {
+	    j = 0;
+	    bytes_read_since_last_sync = 0;
 	  }
-	}
-      }
+ 	  printf("\nWord Received: 0x%04x\n", receiveword);
+	  printf("Read %zd bytes\n", bytes_read);
+	  printf("Number of reads since last sync: %d\n", j);
+	  printf("Number of bytes received since last sync: %zd\n", bytes_read_since_last_sync);
+	  printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
+	  printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
+	  printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
+	  printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
 
-      //detect sync words
-      if (syncstate == 0) {
-        if (receiveword == syncwords[0]) {
-          syncstate = 1;
-          sync_pol = 0;
-        } else if (receiveword == (unsigned short)~syncwords[0]) {
-          syncstate = 1;
-          sync_pol = 1;
-        }
-      } 
-      if (syncstate == SYNC_LEN) {  //full sync word detected
-        printf("** %zd bytes read since last sync word (expected %d) **\n", bytes_read_since_last_sync, BI0_FRAME_SIZE*2);
-        printf("** %s%s **\n", sync_pol ? "Inverted " : "", "Sync Word");
-	printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-	printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-	printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-	printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
-        if (sync_pol) polarity = !polarity;
-	bytes_read_since_last_sync = 0;
-      }
-      syncstate = 0;
     } else {
-	if (false) { // Turn this one when trying to understand why no data is coming in
-	  if (first_time_error) {
-	    printf("Error reading from /dev/decom_pci: bytes_read is %zd, error is %s. Will sleep a bit\n", bytes_read, strerror(errno));
-	    printf("\n\n\n0x%04x\n", receiveword);
+	    k += 1;
+	    printf("\nNo Word: bytes_read is %zd, error is %s.\n", bytes_read, strerror(errno));
+	    printf("Number of reads without any bytes: %d\n", k);
 	    printf("counter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
 	    printf("locked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
 	    printf("num unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
 	    printf("FIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
-	    first_time_error = false;
-	  }
-	  usleep(10000);
-	  if (false) {
-	    printf("After sleeping:\n");
-	    printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-	    printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-	    printf("\tnum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-	    printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
-	  }
-	}
     }
   }
-   
   return 0;
 }

@@ -280,6 +280,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/sensors")
 # add housekeeping objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/housekeeping")
 
+# add diskmanager objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/diskmanager")
+
 # add data frame objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
 
@@ -307,6 +310,8 @@ add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
 define_file_basename_for_sources(mcp_comms)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 define_file_basename_for_sources(housekeeping)
+add_library (diskmanager OBJECT ${DISKMANAGER_SRCS} ${DISKMANAGER_HEADERS})
+define_file_basename_for_sources(diskmanager)
 add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 define_file_basename_for_sources(framing)
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
@@ -331,6 +336,7 @@ define_file_basename_for_sources(mcp_obj)
 	
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
+    $<TARGET_OBJECTS:diskmanager>
     $<TARGET_OBJECTS:commanding>
     $<TARGET_OBJECTS:mcp_comms>
     $<TARGET_OBJECTS:pointing>
@@ -365,10 +371,10 @@ target_link_libraries(mcp
 
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
-		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} 
+		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
 		mcp.c tx.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
-		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS}
+		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
 		${ROACH_HEADERS}
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h

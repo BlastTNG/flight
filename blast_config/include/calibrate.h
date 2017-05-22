@@ -62,7 +62,7 @@ extern "C" {
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (112.2) //PCA 30-Nov-2016
+#define ENC_RAW_EL_OFFSET (291.84) //PCA 11-May-2017
                                    /* Note this is referenced relative to lock pin hole 0*/
 
 /* to get proper wrapping in KST, the encoder elevation type should be

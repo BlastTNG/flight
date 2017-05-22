@@ -172,7 +172,7 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
 
-    InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
+    // InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
 
     if (InCharge != incharge && InCharge) {
         blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
