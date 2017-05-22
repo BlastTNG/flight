@@ -62,7 +62,8 @@ void store_data_1hz(void)
     static channel_t *mcp_1hz_framenum_addr = NULL;
     uint32_t mcp_1hz_framenum = 0;
 	char type_1hz[12] = "1hz";
-	int temp_fd = -1;
+
+	fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
 
     char file_name[MAX_NUM_FILENAME_CHARS];
@@ -75,15 +76,15 @@ void store_data_1hz(void)
     get_write_file_name(file_name, type_1hz, mcp_1hz_framenum);
 
     if (frame_size[RATE_1HZ]) {
-        temp_fd = file_open(file_name, "w+");
-	    if (temp_fd >= 0) {
+        temp_fp = file_open(file_name, "w+");
+	    if (temp_fp) {
 	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fd, channel_data[RATE_1HZ], frame_size[RATE_1HZ]);
+            bytes_written = file_write(temp_fp, channel_data[RATE_1HZ], frame_size[RATE_1HZ]);
 		    if (bytes_written < frame_size[RATE_1HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_1hz, (uint16_t) frame_size[RATE_1HZ], bytes_written);
 		    }
-            file_close(temp_fd);
+            file_close(temp_fp);
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
@@ -95,7 +96,8 @@ void store_data_5hz(void)
     static channel_t *mcp_5hz_framenum_addr = NULL;
     uint32_t mcp_5hz_framenum = 0;
 	char type_5hz[12] = "5hz";
-	int temp_fd = -1;
+
+	fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
 
     char file_name[MAX_NUM_FILENAME_CHARS];
@@ -108,15 +110,15 @@ void store_data_5hz(void)
     get_write_file_name(file_name, type_5hz, mcp_5hz_framenum);
 
     if (frame_size[RATE_5HZ]) {
-        temp_fd = file_open(file_name, "w+");
-	    if (temp_fd >= 0) {
+        temp_fp = file_open(file_name, "w+");
+	    if (temp_fp) {
 	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fd, channel_data[RATE_5HZ], frame_size[RATE_5HZ]);
+            bytes_written = file_write(temp_fp, channel_data[RATE_5HZ], frame_size[RATE_5HZ]);
 		    if (bytes_written < frame_size[RATE_5HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_5hz, (uint16_t) frame_size[RATE_5HZ], bytes_written);
 		    }
-            file_close(temp_fd);
+            file_close(temp_fp);
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
@@ -128,7 +130,8 @@ void store_data_100hz(void)
     static channel_t *mcp_100hz_framenum_addr = NULL;
     uint32_t mcp_100hz_framenum = 0;
 	char type_100hz[12] = "100hz";
-	int temp_fd = -1;
+
+	fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
 
     char file_name[MAX_NUM_FILENAME_CHARS];
@@ -141,15 +144,15 @@ void store_data_100hz(void)
     get_write_file_name(file_name, type_100hz, mcp_100hz_framenum);
 
     if (frame_size[RATE_100HZ]) {
-        temp_fd = file_open(file_name, "w+");
-	    if (temp_fd >= 0) {
+        temp_fp = file_open(file_name, "w+");
+	    if (temp_fp) {
 	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fd, channel_data[RATE_100HZ], frame_size[RATE_100HZ]);
+            bytes_written = file_write(temp_fp, channel_data[RATE_100HZ], frame_size[RATE_100HZ]);
 		    if (bytes_written < frame_size[RATE_100HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_100hz, (uint16_t) frame_size[RATE_100HZ], bytes_written);
 		    }
-            file_close(temp_fd);
+            file_close(temp_fp);
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
@@ -161,7 +164,8 @@ void store_data_200hz(void)
     static channel_t *mcp_200hz_framenum_addr = NULL;
     uint32_t mcp_200hz_framenum = 0;
 	char type_200hz[12] = "200hz";
-	int temp_fd = -1;
+
+	fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
 
     char file_name[MAX_NUM_FILENAME_CHARS];
@@ -174,15 +178,15 @@ void store_data_200hz(void)
     get_write_file_name(file_name, type_200hz, mcp_200hz_framenum);
 
     if (frame_size[RATE_200HZ]) {
-        temp_fd = file_open(file_name, "w+");
-	    if (temp_fd >= 0) {
+        temp_fp = file_open(file_name, "w+");
+	    if (temp_fp) {
 	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fd, channel_data[RATE_200HZ], frame_size[RATE_200HZ]);
+            bytes_written = file_write(temp_fp, channel_data[RATE_200HZ], frame_size[RATE_200HZ]);
 		    if (bytes_written < frame_size[RATE_200HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_200hz, (uint16_t) frame_size[RATE_200HZ], bytes_written);
 		    }
-            file_close(temp_fd);
+            file_close(temp_fp);
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
