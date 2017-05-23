@@ -49,6 +49,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <pthread.h>
 // include "portable_endian.h"
 #include "mcp.h"
 #include "katcp.h"
@@ -115,6 +116,9 @@ char valon_init[] = "python /root/device_control/init_valon.py";
 char read_valon[] = "python /root/device_control/read_valon.py";
 char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Sun_Feb_19_19_20_00_2017";
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Sun_Feb_19_19_20_00_2017";
+
+/* Controls access to the fftw3 */
+static pthread_mutex_t fft_mutex = PTHREAD_RWLOCK_INITIALIZER;
 
 static uint32_t dest_ip = IPv4(192, 168, 40, 4);
 
@@ -283,10 +287,12 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
      }
      fclose(f1);
      FILE *f2 = fopen("./dac_wave.txt", "w");*/
+    pthread_mutex_lock(&fft_mutex);
     m_roach->comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD,
     FFTW_ESTIMATE);
     fftw_execute(m_roach->comb_plan);
     fftw_destroy_plan(m_roach->comb_plan);
+    pthread_mutex_unlock(&fft_mutex);
     for (size_t i = 0; i < comb_fft_len; i++) {
     	wave[i] /= comb_fft_len;
     	// fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
@@ -323,9 +329,11 @@ static int roach_dds_comb(roach_state_t *m_roach, double m_freqs, size_t m_freql
 	fclose(f3); 
 
     	FILE *f4 = fopen("./dds_wave.txt", "w");*/
-    	comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
-    	fftw_execute(comb_plan);
-    	fftw_destroy_plan(comb_plan);
+    pthread_mutex_lock(&fft_mutex);
+    comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(comb_plan);
+    fftw_destroy_plan(comb_plan);
+    pthread_mutex_unlock(&fft_mutex);
 	for (size_t i = 0; i < comb_fft_len; i++) {
 		// fprintf(f4,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
         	if (cabs(wave[i]) > max_val) max_val = cabs(wave[i]);
@@ -1235,6 +1243,14 @@ void *roach_cmd_loop(void)
 	int status;
 	ph_thread_set_name(tname);
 	nameThread(tname);
+	static int first_time = 1;
+	while (!InCharge) {
+	    if (first_time) {
+	        blast_info("Waiting until we get control...");
+	        first_time = 0;
+	    }
+	    usleep(2000);
+	}
 	blast_info("Starting Roach Commanding Thread");
 	for (int i = 0; i <= 2; i++) {
 		bb_state_table[i].status = BB_STATUS_BOOT;
@@ -1298,8 +1314,8 @@ void *roach_cmd_loop(void)
 				blast_info("Initializing BB%d ...", i + 1);
 				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC2_PORT);
-				while (!bb_state_table[i].bb_comm->connected || !InCharge) {
-					blast_info("Not Incharge");
+				while (!bb_state_table[i].bb_comm->connected) {
+					blast_info("We can't connect to the bb.");
 					usleep(2000);
 				}
 				bb_state_table[i].status = BB_STATUS_INIT;
