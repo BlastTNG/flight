@@ -19,13 +19,8 @@ void send_bitbang_value();
 
 struct mpsse_ctx *ctx; 
 
-int main() 
-{
-    send_biphase_writes();
-}
 
-
-void send_biphase_writes() {
+int main(int argc, char *argv[]) {
 
 	const uint16_t vid = 1027;
 	const uint16_t pid = 24593;
@@ -33,7 +28,9 @@ void send_biphase_writes() {
 	const char *description = NULL;
 	int channel = IFACE_A;
     int counter = 0;
+    int frequency = 0;
     uint16_t frame_counter = 0;
+
 
     // The first open is a hack to make sure the chip is properly closed and reset
 	ctx = mpsse_open(&vid, &pid, description, serial, channel);
@@ -50,8 +47,14 @@ void send_biphase_writes() {
     uint16_t *data_to_write = NULL;
     uint16_t *inverse_data_to_write = NULL;
     size_t bytes_to_write = 1248; 
-    int frequency = 100000;
+    if (argc == 2) {
+        frequency = atoi(argv[1]);
+    } else {
+        frequency = 1000000;
+    }
     struct timeval begin, end;
+
+    printf("The clock is set at %d bps\n", frequency);
 
 
     uint8_t data = 0x00;
@@ -76,7 +79,7 @@ void send_biphase_writes() {
         }
     } else {
        mpsse_close(ctx); 
-       return;
+       return 0;
     }
     inverse_data_to_write = malloc(bytes_to_write); 
     if (inverse_data_to_write) {
@@ -87,7 +90,7 @@ void send_biphase_writes() {
         }
     } else {
        mpsse_close(ctx); 
-       return;
+       return 0;
     }
 
     int last_word = ((int) bytes_to_write/2) - 1;
