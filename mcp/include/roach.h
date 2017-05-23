@@ -31,6 +31,7 @@
 #include <glib.h>
 #include <math.h>
 #include <netinet/in.h>
+#include <fftw3.h>
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 #include "remote_serial.h"
@@ -158,6 +159,7 @@ typedef struct roach_state {
     uint16_t dest_port;
     // Path to tone amplitudes file
     char *amps_path[2];
+    fftw_plan comb_plan;
 
     // PPC link
     struct katcl_line *rpc_conn;

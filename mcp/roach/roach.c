@@ -48,7 +48,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <fftw3.h>
 #include <errno.h>
 // include "portable_endian.h"
 #include "mcp.h"
@@ -240,7 +239,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     // double m_attens[m_freqlen];
     // FILE *m_atten_file;
     size_t comb_fft_len;
-    fftw_plan comb_plan;
     /*
     if (CommandData.roach[m_roach->which - 1].load_amps) {
         char *amps_file = m_roach->amps_path[CommandData.roach[m_roach->which - 1].load_amps - 1];
@@ -285,10 +283,10 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
      }
      fclose(f1);
      FILE *f2 = fopen("./dac_wave.txt", "w");*/
-    comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD,
+    m_roach->comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD,
     FFTW_ESTIMATE);
-    fftw_execute(comb_plan);
-    fftw_destroy_plan(comb_plan);
+    fftw_execute(m_roach->comb_plan);
+    fftw_destroy_plan(m_roach->comb_plan);
     for (size_t i = 0; i < comb_fft_len; i++) {
     	wave[i] /= comb_fft_len;
     	// fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
@@ -1238,7 +1236,7 @@ void *roach_cmd_loop(void)
 	ph_thread_set_name(tname);
 	nameThread(tname);
 	blast_info("Starting Roach Commanding Thread");
-	for (int i = 2; i <= 2; i++) {
+	for (int i = 0; i <= 2; i++) {
 		bb_state_table[i].status = BB_STATUS_BOOT;
 		bb_state_table[i].desired_status = BB_STATUS_INIT;
 		rudat_state_table[i].status = RUDAT_STATUS_BOOT;
@@ -1250,7 +1248,7 @@ void *roach_cmd_loop(void)
 	}
 	while (!shutdown_mcp) {
 		// TODO(SAM/LAURA): Fix Roach 1/Add error handling
-		for (int i = 2; i <= 2; i++) {
+		for (int i = 0; i <= 2; i++) {
 		// Check for new roach status commands
 			if (CommandData.roach[i].change_state) {
                 		roach_state_table[i].status = CommandData.roach[i].new_state;
