@@ -141,24 +141,9 @@ void push_bi0_buffer(void)
     // blast_info("bi0_buffer.i_in = %d", i_in);
 }
 
-static void tickle(struct mpsse_ctx *ctx_passed_write) {
-    // static uint8_t low = 0;
-    // static uint8_t high = 1;
-    static int tickled = 0;
-    if (tickled == 0) {
-        mpsse_watchdog_ping_low(ctx_passed_write);
-        tickled = 1;
-        mpsse_flush(ctx_passed_write);
-    } else {
-        mpsse_watchdog_ping_high(ctx_passed_write);
-        tickled = 0;
-        mpsse_flush(ctx_passed_write);
-    }
-}
-
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
-    static int in_charge=-1;
+    int in_charge=-1;
     static int incharge_old=-1;
     static channel_t* incharge_Addr;
     static int init_timeout = WATCHDOG_CTRL_INIT_TIMEOUT;
@@ -201,12 +186,6 @@ void biphase_writer(void)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
 
-    uint16_t    bi0_frame[BI0_FRAME_SIZE];
-    uint16_t    sync_word = 0xEB90;
-
-    uint16_t    read_frame;
-    uint16_t    write_frame;
-
     struct mpsse_ctx *ctx;
     const uint16_t vid = 1027;
     const uint16_t pid = 24593;
@@ -220,8 +199,6 @@ void biphase_writer(void)
     // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
     uint8_t direction = 0x83;
     uint8_t initial_value = 0x00;
-
-    struct timeval begin, end;
 
     nameThread("Biphase");
 
@@ -253,7 +230,7 @@ void biphase_writer(void)
                // frame_size[RATE_100HZ], BI0_FRAME_SIZE*sizeof(uint16_t), (bi0_frame_bytes-4));
 
     while (true) {
-        tickle(ctx);
+        mpsse_watchdog_ping(ctx);
         set_incharge(ctx);
         usleep(250000);
     }
