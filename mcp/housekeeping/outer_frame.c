@@ -37,6 +37,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
 

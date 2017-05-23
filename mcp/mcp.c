@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
 
@@ -363,7 +364,7 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
-    store_data_5hz();
+//    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -388,7 +389,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    store_data_1hz();
+//    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
@@ -573,14 +574,14 @@ int main(int argc, char *argv[])
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(0, 84, 1);
+  // mult_labjack_networking_init(5, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(0);
+  // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();
 
@@ -593,7 +594,7 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 

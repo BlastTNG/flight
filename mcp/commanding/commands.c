@@ -47,6 +47,7 @@
 #include "pointing_struct.h"
 #include "channels_tng.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
