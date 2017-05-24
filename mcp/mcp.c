@@ -337,7 +337,6 @@ static void mcp_100hz_routines(void)
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();
-    // test_dio();
 }
 static void mcp_5hz_routines(void)
 {
@@ -376,7 +375,6 @@ static void mcp_1hz_routines(void)
     rec_control();
     // of_control();
     // if_control();
-    // labjack_test_dac(3.3, 0);
     heater_control();
     // test_labjacks(0);
     // read_thermometers();
@@ -390,8 +388,6 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
 //    store_data_1hz();
-    // query_mult(0, 48);
-    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -594,12 +590,12 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  initialize_watchdog(2);
+  // initialize_watchdog(2);
   initialize_bias_tone();
   startChrgCtrl(0);
 
