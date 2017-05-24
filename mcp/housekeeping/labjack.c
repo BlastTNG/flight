@@ -57,8 +57,9 @@ typedef struct labjack_command {
     int command;
 } labjack_command_t;
 
-PH_STAILQ_HEAD(labjack_command_q, labjack_command)
-    s_labjack_command = PH_STAILQ_HEAD_INITIALIZER(s_labjack_command);
+typedef PH_STAILQ_HEAD(labjack_command_q, labjack_command) labjack_commandq_t;
+
+labjack_commandq_t s_labjack_command;
 
 static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
@@ -66,7 +67,8 @@ static void labjack_execute_command_queue(void) {
         if (InCharge) {
             heater_write(cmd->labjack, cmd->address, cmd->command);
         }
-        PH_STAILQ_REMOVE(&s_labjack_command, cmd, labjack_command, q);
+        PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
+
         free(cmd);
     }
 }
@@ -516,7 +518,8 @@ void *labjack_cmd_thread(void *m_lj) {
             init_labjack_stream_commands(m_state);
         }
 
-        labjack_execute_command_queue();
+        if (!m_state->which)
+            labjack_execute_command_queue();
 
         /*
           // Set DAC level
@@ -540,7 +543,7 @@ void *labjack_cmd_thread(void *m_lj) {
 void initialize_labjack_commands(int m_which)
 {
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-
+    if (!m_which) PH_STAILQ_INIT(&s_labjack_command);
     ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
