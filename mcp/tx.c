@@ -172,7 +172,8 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
 
-//    blast_info("InCharge = %i", InCharge);
+//    blast_info("InCharge = %i, SouthIAm = %i, statusMCCAddr = %i",
+//                InCharge, SouthIAm, GET_UINT16(statusMCCAddr));
     InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
 
     if (InCharge != incharge && InCharge) {
