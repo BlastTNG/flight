@@ -86,11 +86,10 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     uint16_t tmin_charcoal; // minimum during burnoff
 } cycle_control_t;
 
+heater_control_t heater_state;
+cryo_control_t cryo_state;
 cycle_control_t cycle_state;
 
-heater_control_t heater_state;
-
-cryo_control_t cryo_state;
 // pulls data for heater state writing
 static void update_heater_values(void) {
     heater_state.heater_300mk = CommandData.Cryo.heater_300mk;
@@ -113,13 +112,13 @@ void heater_all_off(void) {
     CommandData.Cryo.heater_1k = 0;
     CommandData.Cryo.heater_status = 0;
     update_heater_values();
-    heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
-    heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
-    heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
-    heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
-    heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
-    heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
-    heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+    labjack_queue_command(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+    labjack_queue_command(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+    labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+    labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
 }
 // function that runs in the MCP loop to control heaters
 void heater_control(void) {
@@ -133,13 +132,13 @@ void heater_control(void) {
         if (CommandData.Cryo.heater_update == 1) {
             CommandData.Cryo.heater_update = 0;
             update_heater_values();
-            heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
-            heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
-            heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
-            heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
-            heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
-            heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
-            heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+            labjack_queue_command(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+            labjack_queue_command(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+            labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+            labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
             SET_SCALED_VALUE(heater_status_Addr, CommandData.Cryo.heater_status);
         }
     }
@@ -191,21 +190,30 @@ Heater status bits
 // function that creates cal lamp pulses via the mcp loop
 // utilizes the cryo control structure
 void cal_control(void) {
-    if (InCharge == 1) {
-        if (CommandData.Cryo.do_cal_pulse) {
-            cryo_state.cal_length = CommandData.Cryo.cal_length;
-            CommandData.Cryo.do_cal_pulse = 0;
+    if (CommandData.Cryo.do_cal_pulse) {
+        cryo_state.cal_length = CommandData.Cryo.cal_length;
+        CommandData.Cryo.do_cal_pulse = 0;
+    }
+    if (CommandData.Cryo.do_cal_pulse) {
+        cryo_state.cal_length = CommandData.Cryo.cal_length;
+        CommandData.Cryo.do_cal_pulse = 0;
+    }
+    static int pulsed = 0;
+    if (cryo_state.cal_length > 0) {
+        if (!pulsed) {
+            pulsed = 1;
+            labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
         }
         static int pulsed = 0;
         if (cryo_state.cal_length > 0) {
             if (!pulsed) {
                 pulsed = 1;
-                heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
             }
             cryo_state.cal_length--;
         } else {
             if (pulsed) {
-                heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
                 pulsed = 0;
             }
         }
@@ -224,12 +232,12 @@ void level_control(void) {
         if (cryo_state.level_length > 0) {
             if (!l_pulsed) {
                 l_pulsed = 1;
-                heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+                labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
             }
             cryo_state.level_length--;
         } else {
             if (l_pulsed) {
-                heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+                labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
                 l_pulsed = 0;
             }
         }

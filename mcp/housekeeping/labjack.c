@@ -34,10 +34,12 @@
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
+#include "phenom/queue.h"
 
 #include "command_struct.h"
 #include "blast.h"
 #include "mcp.h"
+#include "mputs.h"
 #include "tx.h"
 #include "labjack_functions.h"
 
@@ -48,7 +50,35 @@ extern int16_t InCharge;
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 
+typedef struct labjack_command {
+    PH_STAILQ_ENTRY(labjack_command) q;
+    int labjack;
+    int address;
+    int command;
+} labjack_command_t;
 
+PH_STAILQ_HEAD(labjack_command_q, labjack_command) s_labjack_command;
+
+static void labjack_execute_command_queue(void) {
+    labjack_command_t *cmd, *tcmd;
+    PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
+        if (InCharge) {
+            heater_write(cmd->labjack, cmd->address, cmd->command);
+        }
+        PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
+        free(cmd);
+    }
+}
+
+void labjack_queue_command(int m_labjack, int m_address, int m_command) {
+    labjack_command_t *cmd;
+
+    cmd = balloc(err, sizeof(labjack_command_t));
+    cmd->labjack = m_labjack;
+    cmd->address = m_address;
+    cmd->command = m_command;
+    PH_STAILQ_INSERT_TAIL(&s_labjack_command, cmd, q);
+}
 
 
 // This isn't working now.  TODO(laura): Fix read from internal FLASH memory.
@@ -420,7 +450,6 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 }
 
 void *labjack_cmd_thread(void *m_lj) {
-    int first_time = 1;
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
 
@@ -456,7 +485,6 @@ void *labjack_cmd_thread(void *m_lj) {
         blast_info("Labjack%02d address %s corresponds to IP %s", m_state->which, m_state->address, m_state->ip);
     }
     while (!m_state->shutdown) {
-        uint16_t dac_buffer[4];
         usleep(10000);
         if (!m_state->cmd_mb) {
             m_state->cmd_mb = modbus_new_tcp(m_state->ip, 502);
@@ -482,21 +510,24 @@ void *labjack_cmd_thread(void *m_lj) {
             have_warned_connect = 0;
         }
 
-    /*  Start streaming */
-    if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
-        init_labjack_stream_commands(m_state);
-    }
-	/*
-      // Set DAC level
-        modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
-        modbus_set_float(m_state->DAC[1], &dac_buffer[2]);
-        if (modbus_write_registers(m_state->cmd_mb, 1000, 4, dac_buffer) < 0) {
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
-            }
-            m_state->have_warned_write_reg = 1;
-            continue;
-        } */
+        /*  Start streaming */
+        if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
+            init_labjack_stream_commands(m_state);
+        }
+
+        labjack_execute_command_queue();
+
+        /*
+          // Set DAC level
+            modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
+            modbus_set_float(m_state->DAC[1], &dac_buffer[2]);
+            if (modbus_write_registers(m_state->cmd_mb, 1000, 4, dac_buffer) < 0) {
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
+                }
+                m_state->have_warned_write_reg = 1;
+                continue;
+            } */
     }
     return NULL;
 }
@@ -507,11 +538,9 @@ void *labjack_cmd_thread(void *m_lj) {
 
 void initialize_labjack_commands(int m_which)
 {
-    ph_thread_t *ljcomm_thread = NULL;
-
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
 
-    ljcomm_thread = ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+    ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
 /**
