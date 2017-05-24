@@ -76,6 +76,8 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
+#include "relay_control.h"
+#include "outer_frame.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
@@ -308,13 +310,11 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    #ifdef USE_XY_THREAD
-    	read_chopper();
-    #endif
+    read_chopper();
     cal_control();
 
     framing_publish_200hz();
-    store_data_200hz();
+    // store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -324,16 +324,15 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    BiasControl();
+//   BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
-
     framing_publish_100hz();
-    store_data_100hz();
+    // store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();
@@ -376,9 +375,11 @@ static void mcp_1hz_routines(void)
     rec_control();
     // of_control();
     // if_control();
-    // heater_control();
+    // labjack_test_dac(3.3, 0);
+    heater_control();
     // test_labjacks(0);
-    read_thermometers();
+    // read_thermometers();
+    // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
@@ -458,7 +459,6 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
-  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t biphase_writer_id;
@@ -559,7 +559,7 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
+  initialize_diskmanager();
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
