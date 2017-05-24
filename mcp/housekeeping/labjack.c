@@ -57,7 +57,8 @@ typedef struct labjack_command {
     int command;
 } labjack_command_t;
 
-PH_STAILQ_HEAD(labjack_command_q, labjack_command) s_labjack_command;
+PH_STAILQ_HEAD(labjack_command_q, labjack_command)
+    s_labjack_command = PH_STAILQ_HEAD_INITIALIZER(s_labjack_command);
 
 static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
