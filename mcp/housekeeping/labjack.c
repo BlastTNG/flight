@@ -66,7 +66,7 @@ static void labjack_execute_command_queue(void) {
         if (InCharge) {
             heater_write(cmd->labjack, cmd->address, cmd->command);
         }
-        PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
+        PH_STAILQ_REMOVE(&s_labjack_command, cmd, labjack_command, q);
         free(cmd);
     }
 }
