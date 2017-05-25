@@ -204,7 +204,7 @@ void setup_mpsse(struct mpsse_ctx *ctx)
     // The first open is hack, to check chip is there + properly reset it
     ctx = mpsse_open(&vid, &pid, description, serial, channel);
     if (!ctx) {
-        blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
+        blast_warn("Error Opening mpsse. Stopped Biphase & Watchdog Downlink Thread");
         pthread_exit(0);
     }
     mpsse_reset_purge_close(ctx);
@@ -232,7 +232,11 @@ int setup_synclink(int *fd)
     int sigs;
     MGSL_PARAMS params;
 
-    *fd = open("/dev/ttyUSB0", O_RDWR | O_NONBLOCK, 0);
+    *fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    if (*fd < 0) {
+        blast_warn("Error Opening synclink. Stopped Biphase Downlink Thread");
+        pthread_exit(0);
+    }
     usleep(1000);
     rc = ioctl(*fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
@@ -249,8 +253,9 @@ int setup_synclink(int *fd)
     params.mode = MGSL_MODE_RAW;
     params.loopback = 0;
     params.flags = HDLC_FLAG_RXC_BRG + HDLC_FLAG_TXC_BRG;
-    params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
-    params.clock_speed = 100000;
+    // params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
+    params.encoding = HDLC_ENCODING_NRZ;
+    params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
     rc = ioctl(*fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
@@ -311,7 +316,7 @@ void biphase_writer(void)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
 
-    uint16_t    bi0_frame[BI0_FRAME_SIZE];
+    uint16_t    bi0_frame[BI0_FRAME_SIZE+1];
     uint16_t    sync_word = 0xEB90;
 
     uint16_t    read_frame;
@@ -319,12 +324,12 @@ void biphase_writer(void)
 
     struct timeval begin, end;
 
-    struct mpsse_ctx *ctx;
-    bool mpsse_hardware = true;
+    struct mpsse_ctx *ctx = NULL;
+    bool mpsse_hardware = false;
     // For synclink
     int fd;
     int rc;
-    uint16_t lsb_bi0_frame[BI0_FRAME_SIZE];
+    uint16_t lsb_bi0_frame[BI0_FRAME_SIZE+1];
 
     nameThread("Biphase");
 
@@ -347,27 +352,26 @@ void biphase_writer(void)
         }
 
         while (read_frame != write_frame) {
-            memcpy(bi0_frame, bi0_buffer.framelist[write_frame], BIPHASE_FRAME_SIZE_BYTES);
+            memcpy(bi0_frame+1, bi0_buffer.framelist[write_frame], BIPHASE_FRAME_SIZE_BYTES);
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
 
-            bi0_frame[0] = 0xEB90; // Isn't that going to overwrite the beginning of the frame??
-            bi0_frame[BI0_FRAME_SIZE - 1] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES-2);
+            bi0_frame[0] = 0xEB90;
+            bi0_frame[BI0_FRAME_SIZE] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
             // blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
 
             bi0_frame[0] = sync_word;
-            // Joy: until we figure out why decom card fails to read frames with alternate words
-            // sync_word = ~sync_word;
+            sync_word = ~sync_word;
 
             gettimeofday(&begin, NULL);
             if (mpsse_hardware) {
-                mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
+                mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES+2);
                 mpsse_flush(ctx);
                 if (ctx->retval != ERROR_OK) {
                     blast_err("Error writing frame to Biphase, discarding.");
                 }
             } else {
-                reverse_bits(BIPHASE_FRAME_SIZE_BYTES, bi0_frame, lsb_bi0_frame);
-                rc = write(fd, lsb_bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
+                reverse_bits(BIPHASE_FRAME_SIZE_BYTES+2, bi0_frame, lsb_bi0_frame);
+                rc = write(fd, lsb_bi0_frame, BIPHASE_FRAME_SIZE_BYTES+2);
                 if (rc < 0) {
                     blast_err("Synclink write error=%d %s", errno, strerror(errno));
                 }

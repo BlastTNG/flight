@@ -231,42 +231,6 @@ time_t mcp_systime(time_t *t) {
 //
 // #endif
 
-// #ifndef BOLOTEST
-// static void BiPhaseWriter(void)
-// {
-//  uint16_t  *frame;
-//
-//  nameThread("Bi0");
-//  bputs(startup, "Startup\n");
-//
-//  while (!biphase_is_on)
-//    usleep(10000);
-//
-//  bputs(info, "Veto has ended.  Here we go.\n");
-//
-//  while (1) {
-//    frame = PopFrameBuffer(&bi0_buffer);
-//
-//    if (!frame) {
-//      /* Death meausres how long the BiPhaseWriter has gone without receiving
-//       * any data -- an indication that we aren't receiving FSYNCs from the
-//       * BLASTBus anymore */
-//      if (InCharge && (++Death > 25)) {
-//        blast_err("Death is reaping the watchdog tickle.");
-//        pthread_cancel(watchdog_id);
-//      }
-//      usleep(10000); // 100 Hz
-//    } else {
-//      write_to_biphase(frame);
-//      if (Death > 0) {
-//        Death = 0;
-//      }
-//    }
-//  }
-// }
-//
-// #endif
-
 static void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
