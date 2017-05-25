@@ -82,12 +82,14 @@ int send_biphase_writes() {
         blast_err("ioctl(MGSL_IOCGSTATS) error=%d %s", errno, strerror(errno));
         return rc;
     }
+    // Disable transmitter
     int enable = 0;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
+    // Enable transmitter
     enable = 1;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
@@ -121,6 +123,13 @@ int send_biphase_writes() {
         return rc;
     }
 
+    int idlemode;
+    rc = ioctl(fd, MGSL_IOCGTXIDLE, &idlemode);
+    blast_info("The current idlemode is %04x", idlemode);
+    idlemode = HDLC_TXIDLE_CUSTOM_16 + 0xAA;
+    rc = ioctl(fd, MGSL_IOCGTXIDLE, idlemode);
+    blast_info("The current idlemode is %04x", idlemode);
+
     // Making an array of data (0xFFFFFFFF...) with sync word and CRC
     uint16_t *data_to_write = NULL;
     uint16_t *lsb_data_to_write = NULL;
@@ -145,6 +154,7 @@ int send_biphase_writes() {
 
     // Blocking mode for read and writes
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
+    // fcntl(fd, F_SETFL, fcntl(fd, F_GETFL));
     // Request to Send and Data Terminal Ready
     sigs = TIOCM_RTS + TIOCM_DTR;
     rc = ioctl(fd, TIOCMBIS, &sigs);
@@ -154,46 +164,40 @@ int send_biphase_writes() {
     }
 
     for (int j=0; j>-1; j++) {
-        gettimeofday(&begin, NULL);
         data_to_write[2] = small_counter;
         if (j%2 == 0) {
             data_to_write[0] = 0xEB90;
             data_to_write[1] = 0xFFFF;
-            // rc = write(fd, data_to_write, bytes_to_write);
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
-            *(data_to_write+last_word) = crc_calculated;
-            reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
-            rc = write(fd, lsb_data_to_write, bytes_to_write);
-            printf("\n");
-            for (int k=0; k<((int) bytes_to_write/2); k++) {
-                printf("%04x ", data_to_write[k]);
-            }
-            printf("\nWrote %d bytes", rc);
         } else {
             data_to_write[1] = 0xF1FF;
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
             data_to_write[0] = 0x146F;
-            *(data_to_write+last_word) = crc_calculated;
-            reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
-            rc = write(fd, lsb_data_to_write, bytes_to_write);
+        }
+        *(data_to_write+last_word) = crc_calculated;
+        reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
+        gettimeofday(&begin, NULL);
+        rc = write(fd, lsb_data_to_write, bytes_to_write);
+        if (rc < 0) {
+            blast_err("write error=%d %s. rc=%d. Sleeping 0.05s", errno, strerror(errno), rc);    
+            usleep(50000);
+            // return rc;
+        } else {
             printf("\n");
             for (int k=0; k<((int) bytes_to_write/2); k++) {
                 printf("%04x ", data_to_write[k]);
             }
-            printf("\nWrote %d bytes", rc);
         }
+        printf("\nWrote %d bytes", rc);
         small_counter ++;
-        if (rc < 0) {
-            blast_err("write error=%d %s", errno, strerror(errno));    
-            return rc;
-        }
         rc = tcdrain(fd);
         gettimeofday(&end, NULL);
-        // if ((counter % 10) == 0) {
-        //     blast_info("The CRC calculated is %04x", crc_calculated);
-        //     blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
-        // }
+        if ((counter % 10) == 0) {
+            blast_info("The CRC calculated is %04x", crc_calculated);
+            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
+        }
         counter += 1;
+        // usleep(10000);
     } 
     // Closing
     // sigs = TIOCM_RTS + TIOCM_DTR;
