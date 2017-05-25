@@ -510,12 +510,7 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
         break;
     } while (type[++i][0] != '\0');
 
-    if (errno != 0) {
-        blast_err("Could not mount %s at %s, error:%d", m_disk->dev,
-                m_disk->mnt_point, errno);
-        return -1;
-    }
-
+    if (errno != 0) return -1;
     return 0;
 }
 
@@ -547,7 +542,6 @@ static bool diskpool_mount_diskentry(diskentry_t *m_disk) {
          * for some time.  We achieve this by incrementing the local fail_count.  This will de-favor
          * the disk during the current mount cycle but will be reset once the disk responds to pings
          */
-        blast_strerror("Couldn't mount %s", m_disk->dev);
         m_disk->last_accessed = time(NULL);
         m_disk->fail_count++;
     }
@@ -636,6 +630,7 @@ static int diskpool_make_mount_point(char *m_mntpoint) {
  */
 static int diskpool_mkdir_recursive(char *m_directory) {
     char current_path[PATH_MAX];
+    int offset = 0;
     char *path_chunk = NULL;
     char *strtok_ref = NULL;
     int ret = 0;
@@ -649,15 +644,15 @@ static int diskpool_mkdir_recursive(char *m_directory) {
      */
     path_chunk = strtok_r(m_directory, "/", &strtok_ref);
     if (m_directory[0] == '/') {
-        snprintf(current_path, PATH_MAX, "%s/", current_path);
+        offset = snprintf(current_path, PATH_MAX, "%s/", current_path);
     }
     while (path_chunk != NULL) {
-        if (strlen(current_path) + strlen(path_chunk) + 2 > PATH_MAX) {
+        if (offset + strlen(path_chunk) + 2 > PATH_MAX) {
             blast_err("Path too long");
             return -1;
         }
-        snprintf(current_path, PATH_MAX, "%s%s/", current_path, path_chunk);
-        if (stat(current_path, &dir_stat) != 0) {
+        offset += snprintf(current_path + offset, PATH_MAX - offset, "%s/", path_chunk);
+        if ((ret = stat(current_path, &dir_stat)) != 0) {
             ret = mkdir(current_path, ACCESSPERMS);
             if (ret < 0) {
                 blast_strerror("Could not make %s", current_path);
@@ -719,6 +714,47 @@ static int diskpool_mkdir_file(const char *m_filename, bool m_file_appended) {
     }
     blast_dbg("Making %s", directory_name);
     return diskpool_mkdir_recursive(directory_name);
+}
+
+
+/**
+ * This function ensures that all disks are unmounted before disk manager starts.
+ */
+static void diskmanager_clear_old_mounts()
+{
+    char mount_line[PATH_MAX] = { 0 };
+
+    struct mntent mountentry_s;
+    FILE *mtab_fp = NULL;
+
+    mtab_fp = setmntent("/proc/mounts", "r");
+    if (mtab_fp == NULL) {
+        blast_strerror("Could not open /proc/mounts");
+        return;
+    }
+
+    while (getmntent_r(mtab_fp, &mountentry_s, mount_line, PATH_MAX - 1) != NULL) {
+        /**
+         * We check that this is a directory we would like to unmount in two ways:
+         * - It must contain the prefix we use to identify the mounts we create
+         * - It must start with the HOME_DIR directory
+         */
+        if ((strstr(mountentry_s.mnt_dir, MNT_DIR_PREFIX) != NULL)
+                && (strstr(mountentry_s.mnt_dir, HOME_DIR)
+                        == mountentry_s.mnt_dir)) {
+            blast_startup("Unmounting %s", mountentry_s.mnt_dir);
+            if ((umount2(mountentry_s.mnt_dir, 0) == 0)
+                    && (rmdir(mountentry_s.mnt_dir) == 0)) {
+                /* Since we are changing mounted volumes, close and re-open to ensure we don't miss anything */
+                endmntent(mtab_fp);
+                mtab_fp = setmntent("/proc/mounts", "r");
+            } else {
+                blast_info("Could not remove %s: %s", mountentry_s.mnt_dir,
+                        strerror(errno));
+            }
+        }
+    }
+    endmntent(mtab_fp);
 }
 
 static void file_free_fileentry(fileentry_t *m_file) {
@@ -1455,79 +1491,6 @@ int file_get_path(fileentry_t *m_file, char *m_path) {
 
 
 /**
- * This function exists to keep the #HOME_DIR directory clean.
- *
- * @details When MCP quits, it will leave a unique directory in #HOME_DIR.  It may also leave
- * a filesystem mounted there.  This function ensures that the crufty directories do not pile
- * up and that we don't have bunches of spurious mounts running around.  This function should
- * only be called once, on startup.
- */
-static void diskmanager_clear_old_mounts() {
-    char mount_line[PATH_MAX] = { 0 };
-
-    struct mntent mountentry_s = { 0 };
-    FILE *mtab_fp = NULL;
-    struct dirent *dir_entry_p = NULL;
-    DIR *data_dirp = NULL;
-    union {
-        struct dirent d;
-        char b[offsetof(struct dirent, d_name) + NAME_MAX + 1];
-    } u;
-
-    mtab_fp = setmntent("/proc/mounts", "r");
-    if (mtab_fp == NULL) {
-        blast_strerror("Could not open /proc/mounts");
-        return;
-    }
-
-    while (getmntent_r(mtab_fp, &mountentry_s, mount_line, PATH_MAX - 1) != NULL) {
-        /**
-         * We check that this is a directory we would like to unmount in two ways:
-         * - It must contain the prefix we use to identify the mounts we create
-         * - It must start with the HOME_DIR directory
-         */
-        if ((strstr(mountentry_s.mnt_dir, MNT_DIR_PREFIX) != NULL)
-                && (strstr(mountentry_s.mnt_dir, HOME_DIR)
-                        == mountentry_s.mnt_dir)) {
-            blast_dbg("Unmounting/Removing %s", mountentry_s.mnt_dir);
-            if ((umount2(mountentry_s.mnt_dir, 0) == 0)
-                    && (rmdir(mountentry_s.mnt_dir) == 0)) {
-                /* Since we are changing mounted volumes, close and re-open to ensure we don't miss anything */
-                endmntent(mtab_fp);
-                mtab_fp = setmntent("/proc/mounts", "r");
-            } else {
-                blast_strerror("Could not remove %s", mountentry_s.mnt_dir);
-            }
-        } else {
-            blast_dbg("Keeping %s", mountentry_s.mnt_dir);
-        }
-    }
-
-    endmntent(mtab_fp);
-
-    data_dirp = opendir(HOME_DIR);
-    if (data_dirp == NULL) {
-        blast_fatal("Could not open HOME_DIR %s:%s", HOME_DIR, strerror(errno));
-        return;
-    }
-
-    while (!readdir_r(data_dirp, &u.d, &dir_entry_p) && dir_entry_p) {
-        if ((strstr(dir_entry_p->d_name, MNT_DIR_PREFIX) != NULL)) {
-            snprintf(mount_line, PATH_MAX, "%s/%s", HOME_DIR,
-                    dir_entry_p->d_name);
-            blast_dbg("Deleting %s", mount_line);
-            if (rmdir(mount_line) == -1) {
-                blast_strerror("Could not delete %s", mount_line);
-            }
-        } else {
-            blast_dbg("clear_old_mounts : Not Deleting %s/%s", HOME_DIR,
-                    dir_entry_p->d_name);
-        }
-    }
-    closedir(data_dirp);
-}
-
-/**
  * Main disk manager thread.  Handles writing from the buffer.  Starts the error handler
  * thread to deal with disk errors.
  */
@@ -1560,7 +1523,6 @@ bool initialize_diskmanager(void) {
             BLAST_MAGIC32);
 
     diskmanager_clear_old_mounts();
-
     drivepool_init_usb_info();
     diskpool_mount_primary();
     initialize_total_bytes();
