@@ -104,8 +104,9 @@ int send_biphase_writes() {
     params.mode = MGSL_MODE_RAW;
     params.loopback = 0;
     params.flags = HDLC_FLAG_RXC_BRG + HDLC_FLAG_TXC_BRG;
-    params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
-    params.clock_speed = 100000;
+    //params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
+    params.encoding = HDLC_ENCODING_NRZ;
+    params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
@@ -122,9 +123,7 @@ int send_biphase_writes() {
 
     // Making an array of data (0xFFFFFFFF...) with sync word and CRC
     uint16_t *data_to_write = NULL;
-    uint16_t *inverse_data_to_write = NULL;
     uint16_t *lsb_data_to_write = NULL;
-    uint16_t *lsb_inverse_data_to_write = NULL;
     size_t bytes_to_write = 1248; 
 
 
@@ -139,22 +138,10 @@ int send_biphase_writes() {
        close(fd); 
        return 0;
     }
-    inverse_data_to_write = malloc(bytes_to_write); 
-    lsb_inverse_data_to_write = malloc(bytes_to_write); 
-    if (inverse_data_to_write) {
-        *inverse_data_to_write = 0x146F;
-        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
-            *(inverse_data_to_write+i) = 0xFFFF;
-        }
-    } else {
-       close(fd); 
-       return 0;
-    }
 
     int last_word = ((int) bytes_to_write/2) - 1;
 
     // reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
-    // reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
 
     // Blocking mode for read and writes
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
@@ -168,10 +155,11 @@ int send_biphase_writes() {
 
     for (int j=0; j>-1; j++) {
         gettimeofday(&begin, NULL);
+        data_to_write[2] = small_counter;
         if (j%2 == 0) {
-        // if (0) {
+            data_to_write[0] = 0xEB90;
+            data_to_write[1] = 0xFFFF;
             // rc = write(fd, data_to_write, bytes_to_write);
-            data_to_write[2] = small_counter;
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
             *(data_to_write+last_word) = crc_calculated;
             reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
@@ -180,17 +168,19 @@ int send_biphase_writes() {
             for (int k=0; k<((int) bytes_to_write/2); k++) {
                 printf("%04x ", data_to_write[k]);
             }
+            printf("\nWrote %d bytes", rc);
         } else {
-            // rc = write(fd, inverse_data_to_write, bytes_to_write);
-            inverse_data_to_write[2] = small_counter;
+            data_to_write[1] = 0xF1FF;
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
-            *(inverse_data_to_write+last_word) = crc_calculated;
-            reverse_bits(bytes_to_write, inverse_data_to_write, lsb_inverse_data_to_write);
-            rc = write(fd, lsb_inverse_data_to_write, bytes_to_write);
+            data_to_write[0] = 0x146F;
+            *(data_to_write+last_word) = crc_calculated;
+            reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
+            rc = write(fd, lsb_data_to_write, bytes_to_write);
             printf("\n");
             for (int k=0; k<((int) bytes_to_write/2); k++) {
-                printf("%04x ", inverse_data_to_write[k]);
+                printf("%04x ", data_to_write[k]);
             }
+            printf("\nWrote %d bytes", rc);
         }
         small_counter ++;
         if (rc < 0) {
