@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
 
@@ -76,10 +77,13 @@
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
+#include "relay_control.h"
+#include "outer_frame.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
+#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -97,6 +101,7 @@ void StageBus(void);
 #endif
 
 struct chat_buf chatter_buffer;
+struct tm start_time;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -238,6 +243,7 @@ static void close_mcp(int m_code)
     synclink_close();
     watchdog_close();
     shutdown_bias_tone();
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -270,12 +276,11 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    #ifdef USE_XY_THREAD
-    	read_chopper();
-    #endif
+    read_chopper();
     cal_control();
 
     framing_publish_200hz();
+    // store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -285,15 +290,15 @@ static void mcp_100hz_routines(void)
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
-//    BiasControl();
+//   BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
-
     framing_publish_100hz();
+    // store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_biphase_frames();
@@ -323,7 +328,9 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
-    framing_publish_5hz();}
+    framing_publish_5hz();
+//    store_data_5hz();
+}
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
@@ -334,9 +341,11 @@ static void mcp_1hz_routines(void)
     rec_control();
     // of_control();
     // if_control();
-    // heater_control();
+    // labjack_test_dac(3.3, 0);
+    heater_control();
     // test_labjacks(0);
-    read_thermometers();
+    // read_thermometers();
+    // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
@@ -345,6 +354,9 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+//    store_data_1hz();
+    // query_mult(0, 48);
+    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -413,6 +425,7 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t biphase_writer_id;
@@ -449,7 +462,6 @@ int main(int argc, char *argv[])
    * Begin logging
    */
   {
-      struct tm start_time;
       time_t start_time_s;
       char log_file_name[PATH_MAX];
 
@@ -514,7 +526,7 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-
+  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -527,14 +539,14 @@ int main(int argc, char *argv[])
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(0, 84, 1);
+  // mult_labjack_networking_init(5, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(0);
+  // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();
 

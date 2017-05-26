@@ -28,6 +28,7 @@
 #include "channels_tng.h"
 #include "calibrate.h"
 #include "blast.h"
+#include "mcp.h"
 
 extern time_t mcp_systime(time_t *t);
 extern struct frameBuffer hiGain_buffer;
@@ -42,6 +43,8 @@ struct chat_buf {
   int reading; /* the buffer we're currently reading from */
   int writing; /* the buffer we're currently writing to */
 };
+
+extern struct tm start_time;
 
 // Max Slew Veto
 #define VETO_MAX 60000
