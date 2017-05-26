@@ -48,47 +48,46 @@
 #include "channels_tng.h"
 #include "mputs.h"
 #include "bbc_pci.h"
-// Joy: all below is for synclink hardware
 #include "synclink.h"
 
-
-
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
+#define BIPHASE_FRAME_SIZE_NOCRC_BYTES (BI0_FRAME_SIZE*2 - 2)
+#define BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES (BI0_FRAME_SIZE*2 - 4)
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
 
-bi0_buffer_t bi0_buffer; // This is passed to mpsse
-uint8_t *biphase_frame; // This is pushed to bi0_buffer
+biphase_frames_t biphase_frames; // This is passed to mpsse
+uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
 void initialize_biphase_buffer(void)
 {
     int i;
     // size_t max_rate_size = 0;
 
-    bi0_buffer.i_in = 0;
-    bi0_buffer.i_out = 0;
+    biphase_frames.i_in = 0;
+    biphase_frames.i_out = 0;
     for (i = 0; i < BI0_FRAME_BUFLEN; i++) {
-        bi0_buffer.framelist[i] = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
-        memset(bi0_buffer.framelist[i], 0, BIPHASE_FRAME_SIZE_BYTES);
+        biphase_frames.framelist[i] = calloc(1, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
+        memset(biphase_frames.framelist[i], 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
     }
-    biphase_frame = calloc(1,  BIPHASE_FRAME_SIZE_BYTES);
-    memset(biphase_frame, 0, BIPHASE_FRAME_SIZE_BYTES);
+    biphase_superframe_in = calloc(1,  BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
+    memset(biphase_superframe_in, 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
 }
 
 void build_biphase_frame_200hz(const void *m_channel_data)
 {
     static bool even = true;
     // Storing 2x200hz data in the biphase frames
-    if ((2*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_BYTES) {
+    if ((2*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) to hold 2x200Hz frames (byte 0 to %zu).",
-                    BIPHASE_FRAME_SIZE_BYTES, (2*frame_size[RATE_200HZ]));
+                    BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, (2*frame_size[RATE_200HZ]));
         return;
     }
     if (even) {
-        memcpy(biphase_frame, m_channel_data, frame_size[RATE_200HZ]);
+        memcpy(biphase_superframe_in, m_channel_data, frame_size[RATE_200HZ]);
     } else {
-        memcpy(biphase_frame+frame_size[RATE_200HZ], m_channel_data, frame_size[RATE_200HZ]);
+        memcpy(biphase_superframe_in+frame_size[RATE_200HZ], m_channel_data, frame_size[RATE_200HZ]);
     }
     even = !even;
 }
@@ -98,12 +97,12 @@ void build_biphase_frame_100hz(const void *m_channel_data)
     // Storing one 100hz frame in the biphase frame after 2x200 Hz data
     size_t start = 2*frame_size[RATE_200HZ];
     size_t end = start + frame_size[RATE_100HZ];
-    if (end > BIPHASE_FRAME_SIZE_BYTES) {
+    if (end > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) to hold the 100Hz frame (byte %zu to %zu).",
-                    BIPHASE_FRAME_SIZE_BYTES, start, end);
+                    BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, start, end);
         return;
     }
-    memcpy(biphase_frame+start, m_channel_data, frame_size[RATE_100HZ]);
+    memcpy(biphase_superframe_in+start, m_channel_data, frame_size[RATE_100HZ]);
 }
 
 void build_biphase_frame_1hz(const void *m_channel_data)
@@ -126,14 +125,14 @@ void build_biphase_frame_1hz(const void *m_channel_data)
     size_t one_hundredth_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
     size_t start = 2*frame_size[RATE_200HZ] + frame_size[RATE_100HZ];
     size_t end = start + one_hundredth_1hz_frame;
-    if (end > BIPHASE_FRAME_SIZE_BYTES) {
+    if (end > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) for 1/10th of 100Hz frame (byte %zu to %zu).",
-                    BIPHASE_FRAME_SIZE_BYTES, start, end);
+                    BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, start, end);
         return;
     }
     if ((counter*one_hundredth_1hz_frame) < frame_size[RATE_1HZ]) {
         channel_ptr += counter*one_hundredth_1hz_frame;
-        memcpy(biphase_frame+start, channel_ptr, one_hundredth_1hz_frame);
+        memcpy(biphase_superframe_in+start, channel_ptr, one_hundredth_1hz_frame);
     }
     counter++;
     if (counter >= 100) {
@@ -141,20 +140,21 @@ void build_biphase_frame_1hz(const void *m_channel_data)
     }
 }
 
-void push_bi0_buffer(void)
+void push_biphase_frames(void)
 {
     int i_in;
-    i_in = (bi0_buffer.i_in + 1) & BI0_FRAME_BUFMASK;
-    bi0_buffer.framesize[i_in] = BIPHASE_FRAME_SIZE_BYTES;
-    memcpy(bi0_buffer.framelist[i_in], biphase_frame, BIPHASE_FRAME_SIZE_BYTES);
-    bi0_buffer.i_in = i_in;
-    // blast_info("bi0_buffer.i_in = %d", i_in);
+    i_in = (biphase_frames.i_in + 1) & BI0_FRAME_BUFMASK;
+    biphase_frames.framesize[i_in] = BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES;
+    memcpy(biphase_frames.framelist[i_in], biphase_superframe_in, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
+    biphase_frames.i_in = i_in;
+    // blast_info("biphase_frames.i_in = %d", i_in);
 }
 
 static void tickle(struct mpsse_ctx *ctx_passed_write) {
     // static uint8_t low = 0;
     // static uint8_t high = 1;
     static int tickled = 0;
+    mpsse_is_high_speed(ctx_passed_write);
     if (tickled == 0) {
         mpsse_watchdog_ping_low(ctx_passed_write);
         tickled = 1;
@@ -186,8 +186,9 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     }
 }
 
-void setup_mpsse(struct mpsse_ctx *ctx)
+void setup_mpsse(struct mpsse_ctx **ctx_ptr)
 {
+    // struct mpsse_ctx *ctx = *ctx_ptr;
     const uint16_t vid = 1027;
     const uint16_t pid = 24593;
     const char *serial = NULL;
@@ -202,50 +203,50 @@ void setup_mpsse(struct mpsse_ctx *ctx)
     uint8_t initial_value = 0x00;
 
     // The first open is hack, to check chip is there + properly reset it
-    ctx = mpsse_open(&vid, &pid, description, serial, channel);
-    if (!ctx) {
+    *ctx_ptr = mpsse_open(&vid, &pid, description, serial, channel);
+    if (!*ctx_ptr) {
         blast_warn("Error Opening mpsse. Stopped Biphase & Watchdog Downlink Thread");
         pthread_exit(0);
     }
-    mpsse_reset_purge_close(ctx);
+    mpsse_reset_purge_close(*ctx_ptr);
     usleep(1000);
 
     // This is now the real open
-	ctx = mpsse_open(&vid, &pid, description, serial, channel);
-    if (!ctx) {
+	*ctx_ptr = mpsse_open(&vid, &pid, description, serial, channel);
+    if (!*ctx_ptr) {
         blast_warn("Error Opening mpsse. Stopped Biphase Downlink Thread");
         pthread_exit(0);
     }
     usleep(1000);
 
-    mpsse_set_data_bits_low_byte(ctx, initial_value, direction);
-    mpsse_set_frequency(ctx, frequency);
+    mpsse_set_data_bits_low_byte(*ctx_ptr, initial_value, direction);
+    mpsse_set_frequency(*ctx_ptr, frequency);
 
-    mpsse_flush(ctx);
+    mpsse_flush(*ctx_ptr);
     usleep(1000);
 }
 
-int setup_synclink(int *fd)
+int setup_synclink(int *fd_ptr)
 {
     int rc;
     int enable = 1;
     int sigs;
     MGSL_PARAMS params;
 
-    *fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
-    if (*fd < 0) {
+    *fd_ptr = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    if (*fd_ptr < 0) {
         blast_warn("Error Opening synclink. Stopped Biphase Downlink Thread");
         pthread_exit(0);
     }
     usleep(1000);
-    rc = ioctl(*fd, MGSL_IOCRXENABLE, enable);
+    rc = ioctl(*fd_ptr, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
 
     /* Set parameters */
-    rc = ioctl(*fd, MGSL_IOCGPARAMS, &params);
+    rc = ioctl(*fd_ptr, MGSL_IOCGPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
@@ -257,23 +258,23 @@ int setup_synclink(int *fd)
     params.encoding = HDLC_ENCODING_NRZ;
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
-    rc = ioctl(*fd, MGSL_IOCSPARAMS, &params);
+    rc = ioctl(*fd_ptr, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
     }
     int mode = MGSL_INTERFACE_RS422;
     // mode += MGSL_INTERFACE_MSB_FIRST;
-    rc = ioctl(*fd, MGSL_IOCSIF, mode);
+    rc = ioctl(*fd_ptr, MGSL_IOCSIF, mode);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
         return rc;
     }
     // Blocking mode for read and writes
-    fcntl(*fd, F_SETFL, fcntl(*fd, F_GETFL) & ~O_NONBLOCK);
+    fcntl(*fd_ptr, F_SETFL, fcntl(*fd_ptr, F_GETFL) & ~O_NONBLOCK);
     // Request to Send and Data Terminal Ready
     sigs = TIOCM_RTS + TIOCM_DTR;
-    rc = ioctl(*fd, TIOCMBIS, &sigs);
+    rc = ioctl(*fd_ptr, TIOCMBIS, &sigs);
     if (rc < 0) {
         blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
         return rc;
@@ -316,7 +317,7 @@ void biphase_writer(void)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
 
-    uint16_t    bi0_frame[BI0_FRAME_SIZE+1];
+    uint16_t    biphase_out[BI0_FRAME_SIZE];
     uint16_t    sync_word = 0xEB90;
 
     uint16_t    read_frame;
@@ -329,61 +330,69 @@ void biphase_writer(void)
     // For synclink
     int fd;
     int rc;
-    uint16_t lsb_bi0_frame[BI0_FRAME_SIZE+1];
+    uint16_t lsb_biphase_out[BI0_FRAME_SIZE];
 
     nameThread("Biphase");
 
-    setup_mpsse(ctx);
+    // Ignoring mpsse for now as it's broken
+    if (false) {
+        setup_mpsse(&ctx);
+    }
     if (!mpsse_hardware) {
         rc = setup_synclink(&fd);
     }
 
     blast_info("used biphase frame_size is %zd, biphase frame size is %d, biphase frame size for data is %d (bytes)",
                (size_t) (frame_size[RATE_100HZ]+2*frame_size[RATE_200HZ]+ceil(frame_size[RATE_1HZ]/100.0)),
-               BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_BYTES-4));
+               BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES));
 
     while (true) {
         // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
-        write_frame = bi0_buffer.i_out;
-        read_frame = bi0_buffer.i_in;
+        write_frame = biphase_frames.i_out;
+        read_frame = biphase_frames.i_in;
         if (read_frame == write_frame) {
             usleep(10000);
             continue;
         }
 
         while (read_frame != write_frame) {
-            memcpy(bi0_frame+1, bi0_buffer.framelist[write_frame], BIPHASE_FRAME_SIZE_BYTES);
+            memcpy(&(biphase_out[1]), biphase_frames.framelist[write_frame], BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
             write_frame = (write_frame + 1) & BI0_FRAME_BUFMASK;
 
-            bi0_frame[0] = 0xEB90;
-            bi0_frame[BI0_FRAME_SIZE] = crc16(CRC16_SEED, bi0_frame, BIPHASE_FRAME_SIZE_BYTES);
-            // blast_info("The computed CRC is %04x\n", bi0_frame[BI0_FRAME_SIZE - 1]);
+            biphase_out[0] = 0xEB90;
+            biphase_out[BI0_FRAME_SIZE-1] = crc16(CRC16_SEED, biphase_out, BIPHASE_FRAME_SIZE_NOCRC_BYTES);
+            // blast_info("The computed CRC is %04x\n", biphase_out[BI0_FRAME_SIZE - 1]);
 
-            bi0_frame[0] = sync_word;
+            biphase_out[0] = sync_word;
             sync_word = ~sync_word;
 
             gettimeofday(&begin, NULL);
             if (mpsse_hardware) {
-                mpsse_biphase_write_data(ctx, bi0_frame, BIPHASE_FRAME_SIZE_BYTES+2);
+                mpsse_biphase_write_data(ctx, biphase_out, BIPHASE_FRAME_SIZE_BYTES);
                 mpsse_flush(ctx);
                 if (ctx->retval != ERROR_OK) {
                     blast_err("Error writing frame to Biphase, discarding.");
                 }
             } else {
-                reverse_bits(BIPHASE_FRAME_SIZE_BYTES+2, bi0_frame, lsb_bi0_frame);
-                rc = write(fd, lsb_bi0_frame, BIPHASE_FRAME_SIZE_BYTES+2);
+                reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_out, lsb_biphase_out);
+                rc = write(fd, lsb_biphase_out, BIPHASE_FRAME_SIZE_BYTES);
                 if (rc < 0) {
                     blast_err("Synclink write error=%d %s", errno, strerror(errno));
+                } else {
+                    blast_dbg("Wrote %d bytes through synclink", rc);
                 }
             }
             gettimeofday(&end, NULL);
             // blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
             //          BIPHASE_FRAME_SIZE_BYTES, (end.tv_usec - begin.tv_usec)/1000000.0);
             // Watchdog TODO (Joy/Ian): decide if dangerous to have the watchdog routines here
-            tickle(ctx);
-            set_incharge(ctx);
+            // Ignoring mpsse for now as it's broken
+            if (false) {
+                tickle(ctx);
+                set_incharge(ctx);
+            }
         }
-        bi0_buffer.i_out = write_frame;
+        biphase_frames.i_out = write_frame;
         usleep(10000);
     }
 

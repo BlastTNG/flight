@@ -295,7 +295,7 @@ static void mcp_100hz_routines(void)
     framing_publish_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
-    push_bi0_buffer();
+    push_biphase_frames();
     // test_dio();
 }
 static void mcp_5hz_routines(void)
