@@ -42,6 +42,7 @@ typedef struct
 extern biphase_frames_t biphase_frames;
 extern uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
+extern void synclink_close();
 extern pthread_t watchdog_id;
 
 void initialize_biphase_buffer(void);

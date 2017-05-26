@@ -57,6 +57,8 @@
 extern int16_t SouthIAm;
 extern int16_t InCharge;
 
+static int synclink_fd = -1;
+
 biphase_frames_t biphase_frames; // This is passed to mpsse
 uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
@@ -226,27 +228,42 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr)
     usleep(1000);
 }
 
-int setup_synclink(int *fd_ptr)
+/**
+ * Close the synclink device before exiting mcp.
+ */
+void synclink_close(void)
+{
+    int rc = -1;
+    if (synclink_fd != -1) {
+        rc = close(synclink_fd);
+        blast_debug("Closed synclink with return value %d", rc);
+    }
+    synclink_fd = -1;
+}
+
+
+int setup_synclink()
 {
     int rc;
     int enable = 1;
     int sigs;
     MGSL_PARAMS params;
 
-    *fd_ptr = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
-    if (*fd_ptr < 0) {
+    if (synclink_fd > 0) close(synclink_fd);
+    synclink_fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    if (synclink_fd < 0) {
         blast_warn("Error Opening synclink. Stopped Biphase Downlink Thread");
         pthread_exit(0);
     }
     usleep(1000);
-    rc = ioctl(*fd_ptr, MGSL_IOCRXENABLE, enable);
+    rc = ioctl(synclink_fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
 
     /* Set parameters */
-    rc = ioctl(*fd_ptr, MGSL_IOCGPARAMS, &params);
+    rc = ioctl(synclink_fd, MGSL_IOCGPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
@@ -258,23 +275,23 @@ int setup_synclink(int *fd_ptr)
     params.encoding = HDLC_ENCODING_NRZ;
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
-    rc = ioctl(*fd_ptr, MGSL_IOCSPARAMS, &params);
+    rc = ioctl(synclink_fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
     }
     int mode = MGSL_INTERFACE_RS422;
     // mode += MGSL_INTERFACE_MSB_FIRST;
-    rc = ioctl(*fd_ptr, MGSL_IOCSIF, mode);
+    rc = ioctl(synclink_fd, MGSL_IOCSIF, mode);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
         return rc;
     }
     // Blocking mode for read and writes
-    fcntl(*fd_ptr, F_SETFL, fcntl(*fd_ptr, F_GETFL) & ~O_NONBLOCK);
+    fcntl(synclink_fd, F_SETFL, fcntl(synclink_fd, F_GETFL) & ~O_NONBLOCK);
     // Request to Send and Data Terminal Ready
     sigs = TIOCM_RTS + TIOCM_DTR;
-    rc = ioctl(*fd_ptr, TIOCMBIS, &sigs);
+    rc = ioctl(synclink_fd, TIOCMBIS, &sigs);
     if (rc < 0) {
         blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
         return rc;
@@ -328,7 +345,6 @@ void biphase_writer(void)
     struct mpsse_ctx *ctx = NULL;
     bool mpsse_hardware = false;
     // For synclink
-    int fd;
     int rc;
     uint16_t lsb_biphase_out[BI0_FRAME_SIZE];
 
@@ -339,7 +355,7 @@ void biphase_writer(void)
         setup_mpsse(&ctx);
     }
     if (!mpsse_hardware) {
-        rc = setup_synclink(&fd);
+        rc = setup_synclink();
     }
 
     blast_info("used biphase frame_size is %zd, biphase frame size is %d, biphase frame size for data is %d (bytes)",
@@ -375,12 +391,12 @@ void biphase_writer(void)
                 }
             } else {
                 reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_out, lsb_biphase_out);
-                rc = write(fd, lsb_biphase_out, BIPHASE_FRAME_SIZE_BYTES);
-                if (rc < 0) {
-                    blast_err("Synclink write error=%d %s", errno, strerror(errno));
-                } else {
-                    blast_dbg("Wrote %d bytes through synclink", rc);
-                }
+                // rc = write(synclink_fd, lsb_biphase_out, BIPHASE_FRAME_SIZE_BYTES);
+                // if (rc < 0) {
+                //     blast_err("Synclink write error=%d %s", errno, strerror(errno));
+                // } else {
+                //     blast_dbg("Wrote %d bytes through synclink", rc);
+                // }
             }
             gettimeofday(&end, NULL);
             // blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
@@ -398,8 +414,5 @@ void biphase_writer(void)
 
     // Currently we will never get here, but later we can implement a 'biphase is on' variable
     mpsse_close(ctx);
-    if (!mpsse_hardware) {
-        close(fd);
-    }
     blast_info("Stopped Biphase Downlink Thread");
 }
