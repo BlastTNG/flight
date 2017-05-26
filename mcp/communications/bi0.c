@@ -236,7 +236,7 @@ void synclink_close(void)
     int rc = -1;
     if (synclink_fd != -1) {
         rc = close(synclink_fd);
-        blast_debug("Closed synclink with return value %d", rc);
+        blast_dbg("Closed synclink with return value %d", rc);
     }
     synclink_fd = -1;
 }
