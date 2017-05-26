@@ -234,7 +234,10 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr)
 void synclink_close(void)
 {
     int rc = -1;
+    int sigs = TIOCM_RTS + TIOCM_DTR;
     if (synclink_fd != -1) {
+        rc = ioctl(synclink_fd, TIOCMBIC, &sigs);
+        usleep(10000);
         rc = close(synclink_fd);
         blast_dbg("Closed synclink with return value %d", rc);
     }
@@ -391,12 +394,14 @@ void biphase_writer(void)
                 }
             } else {
                 reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_out, lsb_biphase_out);
-                // rc = write(synclink_fd, lsb_biphase_out, BIPHASE_FRAME_SIZE_BYTES);
-                // if (rc < 0) {
-                //     blast_err("Synclink write error=%d %s", errno, strerror(errno));
-                // } else {
-                //     blast_dbg("Wrote %d bytes through synclink", rc);
-                // }
+                rc = write(synclink_fd, lsb_biphase_out, BIPHASE_FRAME_SIZE_BYTES);
+                if (rc < 0) {
+                    blast_err("Synclink write error=%d %s", errno, strerror(errno));
+                    usleep(5000);
+                } else {
+                    blast_info("Wrote %d bytes through synclink", rc);
+                }
+                rc = tcdrain(synclink_fd);
             }
             gettimeofday(&end, NULL);
             // blast_info("Writing and flushing %d bytes of data to MPSSE took %f second",
