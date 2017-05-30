@@ -46,6 +46,7 @@
 #define NUM_LABJACK_AIN 14
 extern labjack_state_t state[NUM_LABJACKS];
 extern int16_t InCharge;
+extern labjack_digital_in_t labjack_digital;
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
@@ -56,6 +57,7 @@ typedef struct labjack_command {
     int address;
     int command;
 } labjack_command_t;
+
 
 typedef PH_STAILQ_HEAD(labjack_command_q, labjack_command) labjack_commandq_t;
 
@@ -71,6 +73,15 @@ static void labjack_execute_command_queue(void) {
 
         free(cmd);
     }
+}
+
+void init_labjack_digital(void) {
+    labjack_digital.status_charcoal_heater_Addr = channels_find_by_name("status_charcoal_heater");
+    labjack_digital.status_250_LNA_Addr = channels_find_by_name("status_250_LNA");
+    labjack_digital.status_1K_heater_Addr = channels_find_by_name("status_1K_heater");
+    labjack_digital.status_charcoal_hs_Addr = channels_find_by_name("status_charcoal_hs");
+    labjack_digital.status_500_LNA_Addr = channels_find_by_name("status_500_LNA");
+    labjack_digital.status_350_LNA_Addr = channels_find_by_name("status_350_LNA");
 }
 
 void labjack_queue_command(int m_labjack, int m_address, int m_command) {
@@ -455,6 +466,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 void *labjack_cmd_thread(void *m_lj) {
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
+    int labjack = m_state->which;
 
     char tname[10];
     snprintf(tname, sizeof(tname), "LJCMD%1d", m_state->which);
@@ -517,9 +529,32 @@ void *labjack_cmd_thread(void *m_lj) {
         if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
             init_labjack_stream_commands(m_state);
         }
-
-        if (!m_state->which)
+        if (m_state->which == 0) {
+            if (CommandData.Labjack_Queue.lj_q0_on == 0) {
+                blast_info("queue set by LJ 0");
+            }
             labjack_execute_command_queue();
+            CommandData.Labjack_Queue.lj_q0_on = 1;
+        }
+        if (m_state->which == 1 && CommandData.Labjack_Queue.lj_q0_on == 0) {
+            labjack_execute_command_queue();
+            CommandData.Labjack_Queue.lj_q1_on = 1;
+            blast_info("queue set by LJ 1");
+        }
+        if (m_state->which == 2 && CommandData.Labjack_Queue.lj_q1_on == 0) {
+            labjack_execute_command_queue();
+            CommandData.Labjack_Queue.lj_q2_on = 1;
+            blast_info("queue set by LJ 2");
+        }
+        if (m_state->which == 3 && CommandData.Labjack_Queue.lj_q2_on == 0) {
+            labjack_execute_command_queue();
+            CommandData.Labjack_Queue.lj_q3_on = 1;
+            blast_info("queue set by LJ 3");
+        }
+        if (m_state->which == 4 && CommandData.Labjack_Queue.lj_q3_on == 0) {
+            labjack_execute_command_queue();
+            blast_info("queue set by LJ 4");
+        }
 
         /*
           // Set DAC level

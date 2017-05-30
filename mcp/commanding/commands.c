@@ -2378,6 +2378,10 @@ void InitCommandData()
     CommandData.Relays.labjack[2] = 0;
     CommandData.Relays.labjack[3] = 0;
     CommandData.Relays.labjack[4] = 0;
+    CommandData.Labjack_Queue.lj_q0_on = 0;
+    CommandData.Labjack_Queue.lj_q1_on = 0;
+    CommandData.Labjack_Queue.lj_q2_on = 0;
+    CommandData.Labjack_Queue.lj_q3_on = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

@@ -377,7 +377,7 @@ static void mcp_1hz_routines(void)
     // if_control();
     heater_control();
     // test_labjacks(0);
-    // read_thermometers();
+    read_thermometers();
     // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
@@ -571,6 +571,7 @@ int main(int argc, char *argv[])
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(5, 84, 1);
+  init_labjack_digital();
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);

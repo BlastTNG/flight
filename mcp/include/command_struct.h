@@ -291,6 +291,10 @@ typedef struct {
   uint16_t labjack[5];
 } relay_cmds_t;
 
+typedef struct {
+    uint16_t lj_q0_on, lj_q1_on, lj_q2_on, lj_q3_on;
+} labjack_queue_t;
+
 typedef struct slinger_commanding
 {
     unsigned int downlink_rate_bps;
@@ -433,6 +437,8 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+
+  labjack_queue_t Labjack_Queue;
 
   relay_cmds_t Relays;
 

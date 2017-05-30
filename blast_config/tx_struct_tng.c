@@ -146,6 +146,14 @@ channel_t channel_list[] =
 
     // ADD CLINOMETER CHANNELS
 
+    // below are the status channels
+    { "status_charcoal_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_250_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_1K_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_charcoal_hs", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_500_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_350_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_el_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },

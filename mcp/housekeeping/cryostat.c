@@ -143,38 +143,16 @@ void heater_control(void) {
         }
     }
 }
+
 // function that runs in MCP loop to read in the heater status bits
 void heater_read(void) {
-    static int first_time_read = 1;
-    static channel_t* heater_read_Addr;
-    static channel_t* h300mk_Addr;
-    static channel_t* heaterstatus_Addr;
-    double h300mk = 0;
-    uint16_t read_field;
-    if (first_time_read == 1) {
-        heater_read_Addr = channels_find_by_name("heater_status_read");
-        h300mk_Addr = channels_find_by_name("HEATER_300MK_READ");
-        heaterstatus_Addr = channels_find_by_name("heater_status_write");
-    }
-    // below resets the read field and gets all information from the inputs
-    if (InCharge == 1) {
-        read_field = 0;
-        GET_VALUE(h300mk_Addr, h300mk);
-        if (h300mk < -0.1) { // may need to be changed in the future
-            read_field += 1;
-        }
-        read_field += 2*labjack_get_value(LABJACK_CRYO_2, READ_1K_HEATER);
-        read_field += 4*labjack_get_value(LABJACK_CRYO_2, READ_250LNA);
-        read_field += 8*labjack_get_value(LABJACK_CRYO_2, READ_350LNA);
-        read_field += 16*labjack_get_value(LABJACK_CRYO_2, READ_500LNA);
-        read_field += 32*labjack_get_value(LABJACK_CRYO_2, READ_CHARCOAL);
-        read_field += 64*labjack_get_value(LABJACK_CRYO_2, READ_CHARCOAL_HS);
-        SET_SCALED_VALUE(heater_read_Addr, read_field);
-        if (CommandData.Cryo.sync == 1) {
-            CommandData.Cryo.sync = 0;
-            SET_SCALED_VALUE(heaterstatus_Addr, read_field);
-        }
-    }
+    // queues up all the reads from labjack cryo 2
+    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
 }
 /*
 Heater status bits

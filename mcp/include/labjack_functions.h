@@ -31,6 +31,10 @@
 #include <glib.h>
 #include <modbus/modbus.h>
 #include <errno.h>
+#include "mcp.h"
+#include "channels_tng.h"
+#include "lut.h"
+#include "tx.h"
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -39,8 +43,6 @@
 
 #include "command_struct.h"
 #include "blast.h"
-#include "mcp.h"
-#include "tx.h"
 // Target types for stream configuration
 #define STREAM_TARGET_ETHERNET 0x01  // Ethernet
 #define STREAM_TARGET_USB 0x02  // USB
@@ -94,6 +96,15 @@
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
 #define NUM_LABJACKS 6
+
+typedef struct { // temp names
+    channel_t* status_charcoal_heater_Addr;
+    channel_t* status_250_LNA_Addr;
+    channel_t* status_1K_heater_Addr;
+    channel_t* status_charcoal_hs_Addr;
+    channel_t* status_500_LNA_Addr;
+    channel_t* status_350_LNA_Addr;
+} labjack_digital_in_t;
 
 typedef struct {
     uint16_t trans_id;

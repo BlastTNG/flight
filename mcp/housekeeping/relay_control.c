@@ -189,14 +189,14 @@ static void rec_update_values(void) {
 }
 // function called to send the values to the labjack registers
 static void rec_send_values(void) {
-    heater_write(LABJACK_CRYO_2, POWER_BOX_ON, rec_state.rec_on);
-    heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
-    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_ON, rec_state.amp_supply_on);
-    heater_write(LABJACK_CRYO_2, AMP_SUPPLY_OFF, rec_state.amp_supply_off);
-    heater_write(LABJACK_CRYO_2, THERM_READOUT_ON, rec_state.therm_supply_on);
-    heater_write(LABJACK_CRYO_2, THERM_READOUT_OFF, rec_state.therm_supply_off);
-    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
-    heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, rec_state.heater_supply_off);
+    labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, rec_state.rec_on);
+    labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
+    labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_ON, rec_state.amp_supply_on);
+    labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_OFF, rec_state.amp_supply_off);
+    labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_ON, rec_state.therm_supply_on);
+    labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_OFF, rec_state.therm_supply_off);
+    labjack_queue_command(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
+    labjack_queue_command(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, rec_state.heater_supply_off);
 }
 // function called in the main loop of MCP
 void rec_control(void) {
@@ -216,8 +216,8 @@ void rec_control(void) {
         }
         if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
             rec_startup = 0;
-            heater_write(LABJACK_CRYO_2, POWER_BOX_ON, 1);
-            heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, 1);
+            labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
             rec_init();
             rec_trigger = 1;
         }
@@ -295,38 +295,38 @@ static void of_update_values(void) {
 }
 // sends all of the new values to the labjacks for the OF
 static void of_send_values(void) {
-    heater_write(LABJACK_OF_1, RELAY_1_ON, of_state.of_1_on);
-    heater_write(LABJACK_OF_1, RELAY_1_OFF, of_state.of_1_off);
-    heater_write(LABJACK_OF_1, RELAY_2_ON, of_state.of_2_on);
-    heater_write(LABJACK_OF_1, RELAY_2_OFF, of_state.of_2_off);
-    heater_write(LABJACK_OF_1, RELAY_3_ON, of_state.of_3_on);
-    heater_write(LABJACK_OF_1, RELAY_3_OFF, of_state.of_3_off);
-    heater_write(LABJACK_OF_1, RELAY_4_ON, of_state.of_4_on);
-    heater_write(LABJACK_OF_1, RELAY_4_OFF, of_state.of_4_off);
-    heater_write(LABJACK_OF_1, RELAY_5_ON, of_state.of_5_on);
-    heater_write(LABJACK_OF_1, RELAY_5_OFF, of_state.of_5_off);
-    heater_write(LABJACK_OF_1, RELAY_6_ON, of_state.of_6_on);
-    heater_write(LABJACK_OF_1, RELAY_6_OFF, of_state.of_6_off);
-    heater_write(LABJACK_OF_1, RELAY_7_ON, of_state.of_7_on);
-    heater_write(LABJACK_OF_1, RELAY_7_OFF, of_state.of_7_off);
-    heater_write(LABJACK_OF_2, RELAY_8_ON, of_state.of_8_on);
-    heater_write(LABJACK_OF_2, RELAY_8_OFF, of_state.of_8_off);
-    heater_write(LABJACK_OF_2, RELAY_9_ON, of_state.of_9_on);
-    heater_write(LABJACK_OF_2, RELAY_9_OFF, of_state.of_9_off);
-    heater_write(LABJACK_OF_2, RELAY_10_ON, of_state.of_10_on);
-    heater_write(LABJACK_OF_2, RELAY_10_OFF, of_state.of_10_off);
-    heater_write(LABJACK_OF_2, RELAY_11_ON, of_state.of_11_on);
-    heater_write(LABJACK_OF_2, RELAY_11_OFF, of_state.of_11_off);
-    heater_write(LABJACK_OF_2, RELAY_12_ON, of_state.of_12_on);
-    heater_write(LABJACK_OF_2, RELAY_12_OFF, of_state.of_12_off);
-    heater_write(LABJACK_OF_2, RELAY_13_ON, of_state.of_13_on);
-    heater_write(LABJACK_OF_2, RELAY_13_OFF, of_state.of_13_off);
-    heater_write(LABJACK_OF_2, RELAY_14_ON, of_state.of_14_on);
-    heater_write(LABJACK_OF_2, RELAY_14_OFF, of_state.of_14_off);
-    heater_write(LABJACK_OF_2, RELAY_15_ON, of_state.of_15_on);
-    heater_write(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
-    heater_write(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
-    heater_write(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_1_ON, of_state.of_1_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_1_OFF, of_state.of_1_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_2_ON, of_state.of_2_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_2_OFF, of_state.of_2_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_3_ON, of_state.of_3_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_3_OFF, of_state.of_3_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_4_ON, of_state.of_4_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_4_OFF, of_state.of_4_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_5_ON, of_state.of_5_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_5_OFF, of_state.of_5_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_6_ON, of_state.of_6_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_6_OFF, of_state.of_6_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_7_ON, of_state.of_7_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_7_OFF, of_state.of_7_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_8_ON, of_state.of_8_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_8_OFF, of_state.of_8_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_9_ON, of_state.of_9_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_9_OFF, of_state.of_9_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_10_ON, of_state.of_10_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_10_OFF, of_state.of_10_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_11_ON, of_state.of_11_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_11_OFF, of_state.of_11_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_12_ON, of_state.of_12_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_12_OFF, of_state.of_12_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_13_ON, of_state.of_13_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_13_OFF, of_state.of_13_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_14_ON, of_state.of_14_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_14_OFF, of_state.of_14_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_15_ON, of_state.of_15_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
 }
 //
 void of_control(void) {
@@ -395,26 +395,26 @@ static void if_update_values(void) {
 }
 // sends the inner frame relay values to the labjack
 static void if_send_values(void) {
-    heater_write(LABJACK_OF_3, RELAY_1_ON, if_state.if_1_on);
-    heater_write(LABJACK_OF_3, RELAY_1_OFF, if_state.if_1_off);
-    heater_write(LABJACK_OF_3, RELAY_2_ON, if_state.if_2_on);
-    heater_write(LABJACK_OF_3, RELAY_2_OFF, if_state.if_2_off);
-    heater_write(LABJACK_OF_3, RELAY_3_ON, if_state.if_3_on);
-    heater_write(LABJACK_OF_3, RELAY_3_OFF, if_state.if_3_off);
-    heater_write(LABJACK_OF_3, RELAY_4_ON, if_state.if_4_on);
-    heater_write(LABJACK_OF_3, RELAY_4_OFF, if_state.if_4_off);
-    heater_write(LABJACK_OF_3, RELAY_5_ON, if_state.if_5_on);
-    heater_write(LABJACK_OF_3, RELAY_5_OFF, if_state.if_5_off);
-    heater_write(LABJACK_OF_3, RELAY_6_ON, if_state.if_6_on);
-    heater_write(LABJACK_OF_3, RELAY_6_OFF, if_state.if_6_off);
-    heater_write(LABJACK_OF_3, RELAY_7_ON, if_state.if_7_on);
-    heater_write(LABJACK_OF_3, RELAY_7_OFF, if_state.if_7_off);
-    heater_write(LABJACK_OF_3, RELAY_8_ON, if_state.if_8_on);
-    heater_write(LABJACK_OF_3, RELAY_8_OFF, if_state.if_8_off);
-    heater_write(LABJACK_OF_3, IF_RELAY_9_ON, if_state.if_9_on);
-    heater_write(LABJACK_OF_3, IF_RELAY_9_OFF, if_state.if_9_off);
-    heater_write(LABJACK_OF_3, IF_RELAY_10_ON, if_state.if_10_on);
-    heater_write(LABJACK_OF_3, IF_RELAY_10_OFF, if_state.if_10_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_1_ON, if_state.if_1_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_1_OFF, if_state.if_1_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_2_ON, if_state.if_2_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_2_OFF, if_state.if_2_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_3_ON, if_state.if_3_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_3_OFF, if_state.if_3_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_4_ON, if_state.if_4_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_4_OFF, if_state.if_4_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_5_ON, if_state.if_5_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_5_OFF, if_state.if_5_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_6_ON, if_state.if_6_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_6_OFF, if_state.if_6_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_7_ON, if_state.if_7_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_7_OFF, if_state.if_7_off);
+    labjack_queue_command(LABJACK_OF_3, RELAY_8_ON, if_state.if_8_on);
+    labjack_queue_command(LABJACK_OF_3, RELAY_8_OFF, if_state.if_8_off);
+    labjack_queue_command(LABJACK_OF_3, IF_RELAY_9_ON, if_state.if_9_on);
+    labjack_queue_command(LABJACK_OF_3, IF_RELAY_9_OFF, if_state.if_9_off);
+    labjack_queue_command(LABJACK_OF_3, IF_RELAY_10_ON, if_state.if_10_on);
+    labjack_queue_command(LABJACK_OF_3, IF_RELAY_10_OFF, if_state.if_10_off);
 }
 // function that calls all of the sub functions ffor controlling the IF relays
 void if_control(void) {
