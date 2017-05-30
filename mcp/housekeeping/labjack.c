@@ -538,18 +538,25 @@ void *labjack_cmd_thread(void *m_lj) {
         }
         if (m_state->which == 1 && CommandData.Labjack_Queue.lj_q0_on == 0) {
             labjack_execute_command_queue();
+            if (CommandData.Labjack_Queue.lj_q1_on == 0) {
+                blast_info("queue set by LJ 1");
+            }
             CommandData.Labjack_Queue.lj_q1_on = 1;
-            blast_info("queue set by LJ 1");
         }
         if (m_state->which == 2 && CommandData.Labjack_Queue.lj_q1_on == 0) {
             labjack_execute_command_queue();
+            if (CommandData.Labjack_Queue.lj_q2_on == 0) {
+                blast_info("queue set by LJ 2");
+            }
             CommandData.Labjack_Queue.lj_q2_on = 1;
-            blast_info("queue set by LJ 2");
+
         }
         if (m_state->which == 3 && CommandData.Labjack_Queue.lj_q2_on == 0) {
             labjack_execute_command_queue();
+            if (CommandData.Labjack_Queue.lj_q3_on == 0) {
+                blast_info("queue set by LJ 3");
+            }
             CommandData.Labjack_Queue.lj_q3_on = 1;
-            blast_info("queue set by LJ 3");
         }
         if (m_state->which == 4 && CommandData.Labjack_Queue.lj_q3_on == 0) {
             labjack_execute_command_queue();
