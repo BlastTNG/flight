@@ -23,4 +23,5 @@ void heater_read(void);
 void test_cycle(void);
 void auto_cycle_mk2(void);
 void read_chopper(void);
+void set_dac(void);
 #endif /* cryostat_h */

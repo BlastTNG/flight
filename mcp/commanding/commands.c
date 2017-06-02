@@ -1653,6 +1653,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    case send_dac:
+      CommandData.Cryo.dac_value = (rvalues[0]);
+      CommandData.Cryo.labjack = ivalues[0];
+      CommandData.Cryo.send_dac = 1;
+      break;
 
 #ifndef BOLOTEST
      /*************************************
@@ -2382,6 +2387,10 @@ void InitCommandData()
     CommandData.Labjack_Queue.lj_q1_on = 0;
     CommandData.Labjack_Queue.lj_q2_on = 0;
     CommandData.Labjack_Queue.lj_q3_on = 0;
+    CommandData.Cryo.load_curve = 0;
+    CommandData.Cryo.dac_value = 0;
+    CommandData.Cryo.labjack = 0;
+    CommandData.Cryo.send_dac = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

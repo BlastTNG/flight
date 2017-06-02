@@ -274,6 +274,9 @@ typedef struct {
   uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
+  uint16_t load_curve;
+  int labjack, send_dac;
+  float dac_value;
 } cryo_cmds_t;
 
 typedef struct {

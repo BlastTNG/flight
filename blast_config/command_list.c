@@ -899,6 +899,12 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
+  {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",
+      GR_CRYO, 2, {
+      {"Voltage", 0., 5., 'f', "VOLTS_TO_DAC"},
+      {"Labjack - not 1", 0, 4, 'i', "LABJACK"}
+      }
+  },
   {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
     {
       {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},

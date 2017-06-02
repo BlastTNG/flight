@@ -99,6 +99,10 @@
 #define READ_350LNA 2015
 #define READ_500LNA 2016
 
+// DACS
+#define DAC0 1000
+#define DAC1 1002
+
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
@@ -107,10 +111,10 @@ void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
 void labjack_test_dac(float v_value, int m_labjack);
 int labjack_dio(int m_labjack, int address, int command);
-void heater_write(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, float command);
 uint16_t labjack_read_dio(int m_labjack, int address);
 void labjack_reboot(int m_labjack);
-void labjack_queue_command(int, int, int);
+void labjack_queue_command(int, int, float);
 void query_time(int m_labjack);
 void init_labjack_digital(void);
 #endif /* LABJACK_H_ */

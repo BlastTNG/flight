@@ -55,7 +55,7 @@ typedef struct labjack_command {
     PH_STAILQ_ENTRY(labjack_command) q;
     int labjack;
     int address;
-    int command;
+    float command;
 } labjack_command_t;
 
 
@@ -82,9 +82,10 @@ void init_labjack_digital(void) {
     labjack_digital.status_charcoal_hs_Addr = channels_find_by_name("status_charcoal_hs");
     labjack_digital.status_500_LNA_Addr = channels_find_by_name("status_500_LNA");
     labjack_digital.status_350_LNA_Addr = channels_find_by_name("status_350_LNA");
+    blast_info("init channels for labjack digital");
 }
 
-void labjack_queue_command(int m_labjack, int m_address, int m_command) {
+void labjack_queue_command(int m_labjack, int m_address, float m_command) {
     labjack_command_t *cmd;
 
     cmd = balloc(err, sizeof(labjack_command_t));
@@ -466,8 +467,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 void *labjack_cmd_thread(void *m_lj) {
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
-    int labjack = m_state->which;
-
+    // int labjack = m_state->which;
     char tname[10];
     snprintf(tname, sizeof(tname), "LJCMD%1d", m_state->which);
     ph_thread_set_name(tname);
@@ -549,7 +549,6 @@ void *labjack_cmd_thread(void *m_lj) {
                 blast_info("queue set by LJ 2");
             }
             CommandData.Labjack_Queue.lj_q2_on = 1;
-
         }
         if (m_state->which == 3 && CommandData.Labjack_Queue.lj_q2_on == 0) {
             labjack_execute_command_queue();

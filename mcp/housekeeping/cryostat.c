@@ -144,6 +144,22 @@ void heater_control(void) {
     }
 }
 
+void load_curve_300mk(void) {
+    int holder;
+}
+
+void set_dac(void) {
+    int labjack;
+    float value;
+    if (CommandData.Cryo.send_dac == 1) {
+        labjack = CommandData.Cryo.labjack;
+        value = CommandData.Cryo.dac_value;
+        blast_info("voltage = %f, labjack = %d", value, labjack);
+        CommandData.Cryo.send_dac = 0;
+        labjack_queue_command(labjack, 1000, value);
+    }
+}
+
 // function that runs in MCP loop to read in the heater status bits
 void heater_read(void) {
     // queues up all the reads from labjack cryo 2

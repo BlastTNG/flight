@@ -227,7 +227,7 @@ void labjack_test_dac(float v_value, int m_labjack);
 void query_time(int m_labjack);
 int labjack_dio(int m_labjack, int address, int command);
 uint16_t labjack_read_dio(int m_labjack, int address);
-void heater_write(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, float command);
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 

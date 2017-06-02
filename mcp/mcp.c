@@ -372,14 +372,14 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    rec_control();
+    // rec_control();
     // of_control();
     // if_control();
     heater_control();
-    // test_labjacks(0);
+    /heater_read();
+    set_dac();
     read_thermometers();
     // auto_cycle_mk2();
-    // test_read();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
