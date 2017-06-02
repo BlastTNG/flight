@@ -809,7 +809,9 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     int retval = 0;
     char *filename = NULL;
     char *full_filename = NULL;
-
+    char *substr = NULL;
+    int name_len;
+    int val = 1;
     if (s_diskmanager_exit) {
         return -1;
     }
@@ -819,7 +821,13 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
         return -1;
     }
 
-    if (asprintf(&filename, "%s.cont", m_file->filename) <= 0) {
+    name_len = strlen(m_file->filename);
+    if ((substr = strstr(m_file->filename, "_cont_"))) {
+        // If we've already continued, increment the counter and trim the basename
+        val = (int)strtol(substr + 6, NULL, 10) + 1;
+        name_len = substr - m_file->filename;
+    }
+    if (asprintf(&filename, "%.*s_cont_%04d", name_len, m_file->filename, val)<= 0) {
         blast_fatal("Could not allocate filename memory");
         return -1;
     }
@@ -966,7 +974,9 @@ static void filepool_close_file(fileentry_t *m_file) {
 
     ck_ht_entry_set(&ent, m_file->filehash, m_file->filename,
             strlen(m_file->filename), m_file);
-    ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent);
+    if (!ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent)) {
+        blast_err("Could not remove %s from file hash table", m_file->filename);
+    }
     file_close_internal(m_file, false);
     file_free_fileentry(m_file);
 }
