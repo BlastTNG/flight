@@ -63,7 +63,7 @@ void store_data_1hz(void)
     uint32_t mcp_1hz_framenum = 0;
 	char type_1hz[12] = "1hz";
 
-	fileentry_t *temp_fp = NULL;
+	static fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
 
     char file_name[MAX_NUM_FILENAME_CHARS];
@@ -91,34 +91,81 @@ void store_data_1hz(void)
     }
 }
 
+int store_data(fileentry_t *m_fp, char *m_file, char *m_type, uint16_t m_rate,
+                int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
+{
+    uint16_t bytes_written = 0;
+    if ((*m_counter) >= STORE_DATA_FRAMES_PER_FILE * m_freq) {
+    	blast_info("Closing %s", m_file);
+        file_close(m_fp);
+        get_write_file_name(m_file, m_type, m_frame_number);
+		blast_info("Opening %s", m_file);
+        m_fp = file_open(m_file, "w+");
+        (*m_counter) = 0;
+    }
+    if (m_fp) {
+	    blast_info("writing to %s", m_file);
+        bytes_written = file_write(m_fp, channel_data[m_rate], frame_size[m_rate]);
+		if (bytes_written < frame_size[m_rate]) {
+            blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
+                        m_type, (uint16_t) frame_size[m_rate], bytes_written);
+		} else {
+		    // We wrote the frame successfully.
+            (*m_counter)++;
+		}
+		blast_info("frames_written = %u", (*m_counter));
+		return bytes_written;
+    } else {
+	    blast_err("Failed to open file %s for writing.", m_file);
+	    return 0;
+    }
+}
 void store_data_5hz(void)
 {
     static channel_t *mcp_5hz_framenum_addr = NULL;
     uint32_t mcp_5hz_framenum = 0;
 	char type_5hz[12] = "5hz";
 
-	fileentry_t *temp_fp = NULL;
+	static fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
+	static uint32_t frames_stored_to_5hz = 0;
+    static char file_name[MAX_NUM_FILENAME_CHARS];
 
-    char file_name[MAX_NUM_FILENAME_CHARS];
     if (mcp_5hz_framenum_addr == NULL) {
         mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
     }
 
     mcp_5hz_framenum = GET_INT32(mcp_5hz_framenum_addr);
 
-    get_write_file_name(file_name, type_5hz, mcp_5hz_framenum);
-
     if (frame_size[RATE_5HZ]) {
-        temp_fp = file_open(file_name, "w+");
+        if (!temp_fp) {
+            get_write_file_name(file_name, type_5hz, mcp_5hz_framenum);
+		    blast_info("Opening %s", file_name);
+            temp_fp = file_open(file_name, "w+");
+        }
+//        if (temp_fp) {
+//            bytes_written = store_data(temp_fp, file_name, type_5hz, RATE_5HZ,
+//                                   mcp_5hz_framenum, &frames_stored_to_5hz, 5);
+//        }
+        if (frames_stored_to_5hz >= STORE_DATA_FRAMES_PER_FILE*5) {
+		        blast_info("Closing %s", file_name);
+                file_close(temp_fp);
+                get_write_file_name(file_name, type_5hz, mcp_5hz_framenum);
+		        blast_info("Opening %s", file_name);
+                temp_fp = file_open(file_name, "w+");
+                frames_stored_to_5hz = 0;
+        }
 	    if (temp_fp) {
-	        // blast_info("Opened file %s for writing.", file_name);
+	        blast_info("Opened file %s for writing.", file_name);
             bytes_written = file_write(temp_fp, channel_data[RATE_5HZ], frame_size[RATE_5HZ]);
 		    if (bytes_written < frame_size[RATE_5HZ]) {
                 blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
                             type_5hz, (uint16_t) frame_size[RATE_5HZ], bytes_written);
+		    } else {
+		        // We wrote the frame successfully.
+                frames_stored_to_5hz++;
 		    }
-            file_close(temp_fp);
+		    blast_info("frames_written = %u", frames_stored_to_5hz);
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
