@@ -163,12 +163,12 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
         // blast_dbg("the value is %d", in_charge);
         SET_SCALED_VALUE(incharge_Addr, in_charge+1);
-        if (in_charge && SouthIAm) {
-            // set incharge here to 1 if the && comes true
-            InCharge = 1;
-        } else {
-            InCharge = 0;
-        }
+//         if (in_charge && SouthIAm) {
+//             // set incharge here to 1 if the && comes true
+//            InCharge = 1;
+//         } else {
+//             InCharge = 0;
+//         }
     }
 }
 

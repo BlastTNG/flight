@@ -712,7 +712,7 @@ static int diskpool_mkdir_file(const char *m_filename, bool m_file_appended) {
         snprintf(directory_name, len + 1, "%s/%s",
                 s_diskpool.current_disk->mnt_point, m_filename);
     }
-    blast_dbg("Making %s", directory_name);
+    // blast_dbg("Making %s", directory_name);
     return diskpool_mkdir_recursive(directory_name);
 }
 
