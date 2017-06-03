@@ -314,7 +314,7 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
-    // store_data_200hz();
+    store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -332,7 +332,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
-    // store_data_100hz();
+    store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();

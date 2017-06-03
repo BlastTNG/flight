@@ -57,40 +57,7 @@ void get_write_file_name(char* fname, char* type, uint32_t index)
 //    blast_info("Will store next %s frame to %s", type, fname);
 }
 
-void store_data_1hz(void)
-{
-    static channel_t *mcp_1hz_framenum_addr = NULL;
-    uint32_t mcp_1hz_framenum = 0;
-	char type_1hz[12] = "1hz";
-
-	static fileentry_t *temp_fp = NULL;
-	uint16_t bytes_written = 0;
-
-    char file_name[MAX_NUM_FILENAME_CHARS];
-    if (mcp_1hz_framenum_addr == NULL) {
-        mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
-    }
-
-    mcp_1hz_framenum = GET_INT32(mcp_1hz_framenum_addr);
-
-    get_write_file_name(file_name, type_1hz, mcp_1hz_framenum);
-
-    if (frame_size[RATE_1HZ]) {
-        temp_fp = file_open(file_name, "w+");
-	    if (temp_fp) {
-	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fp, channel_data[RATE_1HZ], frame_size[RATE_1HZ]);
-		    if (bytes_written < frame_size[RATE_1HZ]) {
-                blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
-                            type_1hz, (uint16_t) frame_size[RATE_1HZ], bytes_written);
-		    }
-            file_close(temp_fp);
-        } else {
-	        blast_err("Failed to open file %s for writing.", file_name);
-        }
-    }
-}
-
+// Handles the file_open, file_write, and file_close calls.
 int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
                 int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
 {
@@ -104,7 +71,7 @@ int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
         (*m_counter) = 0;
     }
     if (*m_fp) {
-	    blast_info("writing to %s", m_file);
+	    // blast_info("writing to %s", m_file);
         bytes_written = file_write(*m_fp, channel_data[m_rate], frame_size[m_rate]);
 		if (bytes_written < frame_size[m_rate]) {
             blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
@@ -113,13 +80,46 @@ int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
 		    // We wrote the frame successfully.
             (*m_counter)++;
 		}
-		blast_info("frames_written = %u", (*m_counter));
+		// blast_info("frames_written = %u", (*m_counter));
 		return bytes_written;
     } else {
 	    blast_err("Failed to open file %s for writing.", m_file);
 	    return 0;
     }
 }
+
+void store_data_1hz(void)
+{
+    static channel_t *mcp_1hz_framenum_addr = NULL;
+    uint32_t mcp_1hz_framenum = 0;
+	char type_1hz[12] = "1hz";
+
+	static fileentry_t *temp_fp = NULL;
+	static uint32_t frames_stored_to_1hz = 0;
+	uint16_t bytes_written = 0;
+
+    char file_name[MAX_NUM_FILENAME_CHARS];
+    if (mcp_1hz_framenum_addr == NULL) {
+        mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+    }
+
+    mcp_1hz_framenum = GET_INT32(mcp_1hz_framenum_addr);
+
+    if (frame_size[RATE_1HZ]) {
+        if (!temp_fp) {
+            get_write_file_name(file_name, type_1hz, mcp_1hz_framenum);
+		    blast_info("Opening %s", file_name);
+            temp_fp = file_open(file_name, "w+");
+        }
+	    if (temp_fp) {
+            bytes_written = store_data(&temp_fp, file_name, type_1hz, RATE_1HZ,
+                                   mcp_1hz_framenum, &frames_stored_to_1hz, 1);
+        } else {
+	        blast_err("Failed to open file %s for writing.", file_name);
+        }
+    }
+}
+
 void store_data_5hz(void)
 {
     static channel_t *mcp_5hz_framenum_addr = NULL;
@@ -156,30 +156,26 @@ void store_data_100hz(void)
     uint32_t mcp_100hz_framenum = 0;
 	char type_100hz[12] = "100hz";
 
-	fileentry_t *temp_fp = NULL;
+	static fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
+	static uint32_t frames_stored_to_100hz = 0;
+    static char file_name[MAX_NUM_FILENAME_CHARS];
 
-    char file_name[MAX_NUM_FILENAME_CHARS];
     if (mcp_100hz_framenum_addr == NULL) {
         mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
     }
 
     mcp_100hz_framenum = GET_INT32(mcp_100hz_framenum_addr);
 
-    get_write_file_name(file_name, type_100hz, mcp_100hz_framenum);
-
     if (frame_size[RATE_100HZ]) {
-        temp_fp = file_open(file_name, "w+");
-	    if (temp_fp) {
-	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fp, channel_data[RATE_100HZ], frame_size[RATE_100HZ]);
-		    if (bytes_written < frame_size[RATE_100HZ]) {
-                blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
-                            type_100hz, (uint16_t) frame_size[RATE_100HZ], bytes_written);
-		    }
-            file_close(temp_fp);
-        } else {
-	        blast_err("Failed to open file %s for writing.", file_name);
+        if (!temp_fp) {
+            get_write_file_name(file_name, type_100hz, mcp_100hz_framenum);
+		    blast_info("Opening %s", file_name);
+            temp_fp = file_open(file_name, "w+");
+        }
+        if (temp_fp) {
+            bytes_written = store_data(&temp_fp, file_name, type_100hz, RATE_100HZ,
+                                   mcp_100hz_framenum, &frames_stored_to_100hz, 100);
         }
     }
 }
@@ -190,30 +186,26 @@ void store_data_200hz(void)
     uint32_t mcp_200hz_framenum = 0;
 	char type_200hz[12] = "200hz";
 
-	fileentry_t *temp_fp = NULL;
+	static fileentry_t *temp_fp = NULL;
 	uint16_t bytes_written = 0;
+	static uint32_t frames_stored_to_200hz = 0;
+    static char file_name[MAX_NUM_FILENAME_CHARS];
 
-    char file_name[MAX_NUM_FILENAME_CHARS];
     if (mcp_200hz_framenum_addr == NULL) {
         mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
     }
 
     mcp_200hz_framenum = GET_INT32(mcp_200hz_framenum_addr);
 
-    get_write_file_name(file_name, type_200hz, mcp_200hz_framenum);
-
     if (frame_size[RATE_200HZ]) {
-        temp_fp = file_open(file_name, "w+");
-	    if (temp_fp) {
-	        // blast_info("Opened file %s for writing.", file_name);
-            bytes_written = file_write(temp_fp, channel_data[RATE_200HZ], frame_size[RATE_200HZ]);
-		    if (bytes_written < frame_size[RATE_200HZ]) {
-                blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
-                            type_200hz, (uint16_t) frame_size[RATE_200HZ], bytes_written);
-		    }
-            file_close(temp_fp);
-        } else {
-	        blast_err("Failed to open file %s for writing.", file_name);
+        if (!temp_fp) {
+            get_write_file_name(file_name, type_200hz, mcp_200hz_framenum);
+		    blast_info("Opening %s", file_name);
+            temp_fp = file_open(file_name, "w+");
+        }
+        if (temp_fp) {
+            bytes_written = store_data(&temp_fp, file_name, type_200hz, RATE_200HZ,
+                                   mcp_200hz_framenum, &frames_stored_to_200hz, 200);
         }
     }
 }
