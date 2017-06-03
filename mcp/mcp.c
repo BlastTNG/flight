@@ -584,8 +584,8 @@ int main(int argc, char *argv[])
 #ifndef NO_KIDS_TEST
 blast_info("Initializing ROACHes from MCP...");
 init_roach(0);
-//  init_roach(1);
-//  init_roach(2);
+init_roach(1);
+init_roach(2);
 blast_info("Finished initializing ROACHes...");
 #endif
 

@@ -103,8 +103,8 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 		0.04366146, 0.05121013, 0.05798178, 0.06363685, 0.06789176, 0.07053316, 0.07142859};
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
-const char roach_fpg[5][40] = {"/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg",
-		"/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg", "/data/etc/blast/blast_042017.fpg"};
+const char roach_fpg[5][40] = {"/data/etc/blast/blast_r1.fpg", "/data/etc/blast/blast_r2.fpg",
+		"/data/etc/blast/blast_r1.fpg", "/data/etc/blast/blast_r4.fpg", "/data/etc/blast/blast_042017.fpg"};
 // const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Nov_09_2042.fpg";
@@ -1244,7 +1244,7 @@ void *roach_cmd_loop(void* ind)
 	int status;
     int i = *((uint16_t*) ind);
 	char tname[10];
-	if (snprintf(tname, sizeof(tname), "rchcmd%i", i) < 7) {
+	if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
         blast_tfatal("Could not name thread for roach%i", i);
 	}
 	ph_thread_set_name(tname);
@@ -1252,7 +1252,7 @@ void *roach_cmd_loop(void* ind)
 	static int first_time = 1;
 	while (!InCharge) {
 	    if (first_time) {
-	        blast_info("Waiting until we get control...");
+	        blast_info("roach%i: Waiting until we get control...", i+1);
 	        first_time = 0;
 	    }
 	    usleep(2000);
@@ -1318,7 +1318,7 @@ void *roach_cmd_loop(void* ind)
 				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC2_PORT);
 				while (!bb_state_table[i].bb_comm->connected) {
-					blast_info("We can't connect to the bb.");
+					blast_info("We can't connect to bb%d.", i+1);
 					usleep(2000);
 				}
 				bb_state_table[i].status = BB_STATUS_INIT;
@@ -1332,7 +1332,7 @@ void *roach_cmd_loop(void* ind)
 				} else {
 					blast_info("RUDAT%d Initialized", i + 1);
 					rudat_state_table[i].status = RUDAT_STATUS_HAS_ATTENS;
-					}
+				}
 			}
 			if ((bb_state_table[i].status == BB_STATUS_INIT) && (valon_state_table[i].status == VALON_STATUS_BOOT)) {
 				blast_info("Initializing Valon%d...", i + 1);
@@ -1343,6 +1343,7 @@ void *roach_cmd_loop(void* ind)
 					sleep(1);
 				}
 				valon_state_table[i].status = VALON_STATUS_HAS_FREQS;
+				blast_info("Finished initializing Valon%d...", i + 1);
 			}
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
@@ -1539,7 +1540,7 @@ int init_roach(uint16_t ind)
 	 roach_state_table[ind].is_streaming = 0;
 	 roach_udp_networking_init(roach_state_table[ind].which, &roach_state_table[ind], NUM_ROACH_UDP_CHANNELS);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
-    blast_info("Spawned command thread for roach%i", ind);
+    blast_info("Spawned command thread for roach%i", ind + 1);
     return 0;
 }
 
