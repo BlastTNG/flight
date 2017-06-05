@@ -74,7 +74,7 @@ typedef void (*roach_callback_t)(uint8_t*, size_t);
 #define ROACH_CHECKSUM 42
 
 // number of roach channels that will be published to the server
-const uint16_t n_publish_roaches[5] = {1016, 64, 0, 0, 0};
+const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 0};
 
 uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
 {

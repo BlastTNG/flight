@@ -69,7 +69,7 @@
 #include "phenom/memory.h"
 
 #define DDS_SHIFT 305 /* Firmware version dependent */
-#define VNA_FFT_SHIFT 15 /* Controls FFT overflow behavior, for VNA SWEEP */
+#define VNA_FFT_SHIFT 31 /* Controls FFT overflow behavior, for VNA SWEEP */
 #define TARG_FFT_SHIFT 127
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
@@ -79,9 +79,9 @@
 #define DAC_SAMP_FREQ 512.0e6 /* MUSIC board DAC/ADC clock rate */
 /* Frequency resolution of DAC tones */
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
-#define LO_STEP 1.0e3 /* Freq step size for sweeps */
-#define TARG_SWEEP_SPAN 300.0e3 /* Target sweep span */
-#define NGRAD_POINTS 3 /* Number of points to use for gradient sweep */
+#define LO_STEP 1000 /* Freq step size for sweeps */
+#define TARG_SWEEP_SPAN 200.0e3 /* Target sweep span */
+#define NGRAD_POINTS 6 /* Number of points to use for gradient sweep */
 #define NZEROS 14 /* Half the number of filter coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Beaglebone com port for FC1 */
@@ -89,8 +89,10 @@
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (1)
 #define SWEEP_FAIL (0)
-#define RUDAT_TIMEOUT_MS 5000
-#define VALON_TIMEOUT_MS 5000
+#define BB_READ_NTRIES 10 /* Number of times to attempt BB buffer read */
+#define BB_READ_TIMEOUT (2000000) /* BB read timeout, usec */
+#define LO_READ_TIMEOUT (50000) /* BB read timeout, usec */
+#define INIT_VALON_TIMEOUT (1000000) /* BB read timeout, usec */
 
 extern int16_t InCharge;
 static int fft_len = 1024;
@@ -104,7 +106,7 @@ double zeros[14] = {0.00089543, 0.00353682, 0.00779173, 0.01344678, 0.02021843, 
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
 const char roach_fpg[5][40] = {"/data/etc/blast/blast_r1.fpg", "/data/etc/blast/blast_r2.fpg",
-		"/data/etc/blast/blast_r1.fpg", "/data/etc/blast/blast_r4.fpg", "/data/etc/blast/blast_042017.fpg"};
+		"/data/etc/blast/blast_r3.fpg", "/data/etc/blast/blast_r4.fpg", "/data/etc/blast/blast_042017.fpg"};
 // const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
 // const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Nov_09_2042.fpg";
@@ -113,8 +115,10 @@ static bb_state_t bb_state_table[NUM_ROACHES];
 static rudat_state_t rudat_state_table[NUM_ROACHES];
 static valon_state_t valon_state_table[NUM_ROACHES];
 // static ph_thread_t *roach_state = NULL;
-char valon_init[] = "python /root/device_control/init_valon.py";
-char read_valon[] = "python /root/device_control/read_valon.py";
+char valon_init_command[] = "python /root/device_control/init_valon.py";
+char read_valon_command[] = "python /root/device_control/read_valon.py";
+char valon_init_4[] = "python /home/pi/device_control/init_valon.py";
+char read_valon_4[] = "python /home/pi/device_control/read_valon.py";
 char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Sun_Feb_19_19_20_00_2017";
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Sun_Feb_19_19_20_00_2017";
 
@@ -129,17 +133,28 @@ int roach_qdr_cal(roach_state_t *m_roach)
 {
 	char *m_cal_command;
 	char m_line[256];
-	blast_tmp_sprintf(m_cal_command, "python /data/etc/blast/cal_roach_qdr.py %s > %s",
+    char *freq;
+    blast_tmp_sprintf(m_cal_command, "python /data/etc/blast/cal_roach_qdr.py %s > %s",
 					m_roach->address, m_roach->qdr_log);
 	system(m_cal_command);
 	sleep(5);
 	FILE *fd = fopen(m_roach->qdr_log, "r");
 	if (!fd) return 0;
-	while (fgets(m_line, sizeof(m_line), fd)) {
-		blast_info("%s", m_line);
-	}
-	fclose(fd);
-	return 1;
+	// while (fgets(m_line, sizeof(m_line), fd)) {
+	// blast_info("%s", m_line);
+	// }
+	if (fgets(m_line, sizeof(m_line), fd)) {
+	    blast_info("%s", m_line);
+       freq = strchr(m_line, '=');
+       freq += 2; // Remove equals sign and space from string
+    }
+    fclose(fd);
+    double clock_freq = atof(freq);
+    if ((clock_freq < 254.0) || (clock_freq > 258.0)) {
+        blast_info("ROACH%d FPGA CLOCK NOT SET: Reinitialize Valon%d ?", m_roach->which, m_roach->which);
+    }
+    // blast_info("Freq = %f", clock_freq);
+    return 1;
 }
 
 static void roach_buffer_ntohs(uint16_t *m_buffer, size_t m_len)
@@ -261,11 +276,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
     CommandData.roach[m_roach->which - 1].load_amps = 0;
     */
-    for (size_t i = 0; i < m_freqlen; i++) {
-        m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
-	// blast_info("m_freq = %g", m_freqs[i]);
-    }
-
     comb_fft_len = LUT_BUFFER_LEN;
     fftw_complex *spec = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
     fftw_complex *wave = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
@@ -485,17 +495,42 @@ void load_fir(roach_state_t *m_roach, double *m_zeros)
 	blast_info("ROACH%d, Uploaded FIR coefficients", m_roach->which);
 }
 
-int bb_read_string(bb_state_t *m_bb)
+int bb_read_string(bb_state_t *m_bb, int ntries, int timeout)
 {
+    int retval = -1;
+    unsigned char m_read_buffer[4096];
+    int bytes_read;
+	int count = 0;
+    while ((count < ntries)) {
+	    if (!ph_bufq_len(m_bb->bb_comm->input_buffer)) {
+            usleep(BB_READ_TIMEOUT);
+            count += 1;
+        } else {
+            while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
+                size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
+                bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, m_size);
+                m_read_buffer[bytes_read++] = '\0';
+                blast_info("BB%d: %s", m_bb->which, m_read_buffer);
+	        }
+            retval = 1;
+            break;
+        }
+    }
+    return retval;
+}
+
+// returns either 0 (fail) or 1 (success) as an integer, from Python on BB or Pi
+int bb_response(bb_state_t *m_bb)
+{
+	int retval = -1;
 	unsigned char m_read_buffer[4096];
 	int bytes_read;
-	int retval = -1;
 	while (ph_bufq_len(m_bb->bb_comm->input_buffer)) {
 		size_t m_size = (size_t)ph_bufq_len(m_bb->bb_comm->input_buffer);
 		bytes_read = remote_serial_read_data(m_bb->bb_comm, m_read_buffer, m_size);
 		m_read_buffer[bytes_read++] = '\0';
-		blast_info("BB%d: %s", m_bb->which, m_read_buffer);
-		retval = bytes_read;
+		// blast_info("BB%d: %s", m_bb->which, m_read_buffer);
+		retval = atoi((const char*)m_read_buffer);
 	}
 	return retval;
 }
@@ -546,7 +581,7 @@ double roach_read_adc(roach_state_t *m_roach)
 }
 
 /* Adjust attenuators based on ADC rms voltage */
-int cal_atten(roach_state_t *m_roach)
+/* int cal_atten(roach_state_t *m_roach)
 {
 	int pre_amp = 20;
 	// int pre_adc = 20;
@@ -557,7 +592,7 @@ int cal_atten(roach_state_t *m_roach)
 	    char *atten_command;
 		pre_amp += 0.5;
 		// TODO(Sam) Make sure the order of attenuators is correct here
-		blast_tmp_sprintf(atten_command, "python ~/init_attenuators.py %d %d \n", pre_amp, 30);
+		blast_tmp_sprintf(atten_command, "python ~/init_attenuators.py %d %d", pre_amp, 30);
 		blast_info("Setting BB%d pre-amp attenuation: %d dB", m_roach->which - 1, pre_amp);
 		bb_write_string(&bb_state_table[m_roach->which - 1], (unsigned char*)atten_command, strlen(atten_command));
 		while (bb_read_string(&bb_state_table[m_roach->which - 1]) <= 0) {
@@ -566,34 +601,113 @@ int cal_atten(roach_state_t *m_roach)
 		rms_voltage = roach_read_adc(m_roach);
 	}
 	return 0;
-}
+} */
 
 int set_atten(rudat_state_t *m_rudat)
 {
 	// TODO(Sam) Put in error handling
-    	/*int state;
-	struct timespec current;
-    	struct timespec end;
-	clock_gettime(CLOCK_MONOTONIC, &current);
-	clock_gettime(CLOCK_MONOTONIC, &end);
-	timespec_add_ns(&end, NSEC_PER_MSEC * RUDAT_TIMEOUT_MS);*/
-	char *m_command;
-	blast_tmp_sprintf(m_command, "python /root/device_control/init_attenuators.py %g %g \n",
-			CommandData.roach_params[m_rudat->which - 1].in_atten,
-			CommandData.roach_params[m_rudat->which - 1].out_atten);
-	bb_write_string(&bb_state_table[m_rudat->which - 1], (unsigned char*)m_command, strlen(m_command));
-    	while ((bb_read_string(&bb_state_table[m_rudat->which - 1]) <= 0)) {
-		sleep(1);
-	}
-	/*while ((timespec_compare(&current, &end) < 0) && !state) {
-        	clock_gettime(CLOCK_MONOTONIC, &current);
-    		if (bb_read_string(&bb_state_table[m_rudat->which - 1]) <= 0) { // We haven't read anything so wait a bit
-    	    		sleep(1);
-    	    		continue;
-    		} else { state = 1; }
-     	}
-	return state;*/
-	return 1;
+	int retval = -1;
+    char *m_command;
+	char *m_command2;
+	int ind = m_rudat->which - 1;
+    if ((ind == 3)) {
+	    blast_info("BB%d, attempting to set RUDATs...", ind + 1);
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+		CommandData.roach_params[m_rudat->which - 1].in_atten,
+		CommandData.roach_params[m_rudat->which - 1].out_atten);
+        blast_tmp_sprintf(m_command2, "cat rudat.log");
+        bb_write_string(&bb_state_table[ind], (unsigned char*)m_command, strlen(m_command));
+        bb_write_string(&bb_state_table[ind], (unsigned char*)m_command2, strlen(m_command2));
+    	if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+		    blast_info("Error setting Atten... reboot BB%d?", ind + 1);
+        } else {
+            retval = 1;
+        }
+    } else {
+			blast_info("BB%d, attempting to set RUDATs...", ind + 1);
+            blast_tmp_sprintf(m_command, "python /root/device_control/init_attenuators.py %g %g",
+			CommandData.roach_params[ind].in_atten,
+			CommandData.roach_params[ind].out_atten);
+            bb_write_string(&bb_state_table[ind], (unsigned char*)m_command, strlen(m_command));
+    	if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+		    blast_info("Error setting Atten... reboot BB%d?", ind + 1);
+        } else {
+            retval = 1;
+	    }
+    }
+	return retval;
+}
+
+int init_valon(roach_state_t *m_roach, int ntries)
+{
+	int retval = -1;
+    char *m_command;
+	int count = 0;
+    int success = 0; // read from nc service (equals 0 or 1)
+    int ind = m_roach->which - 1;
+    if (ind == 3) {
+        blast_info("Initializing Valon%d...", ind + 1);
+        // try to initialize the Valon: Python returns 0 on fail, 1 on success, read value from log
+        while ((count < ntries)) {
+            bb_write_string(&bb_state_table[ind], (unsigned char*)valon_init_4, strlen(valon_init_4));
+            blast_tmp_sprintf(m_command, "cat /home/pi/device_control/init_valon.log");
+            bb_write_string(&bb_state_table[ind], (unsigned char*)m_command, strlen(m_command));
+	        success = bb_response(&bb_state_table[ind]);
+            if (success < 1) {
+                usleep(INIT_VALON_TIMEOUT);
+                count += 1;
+            } else {
+                retval = 1;
+                break;
+            }
+        }
+    } else {
+        blast_info("Initializing Valon%d...", ind + 1);
+        bb_write_string(&bb_state_table[ind], (unsigned char*)valon_init_command, strlen(valon_init_command));
+        retval = 1;
+        }
+    return retval;
+}
+
+int read_valon(roach_state_t *m_roach, int ntries)
+{
+	int retval = -1;
+    char *m_command;
+	char *m_command2;
+	int count = 0;
+    int success = 0; // read from nc service (equals 0 or 1)
+    int ind = m_roach->which - 1;
+    if (ind == 3) {
+        // try to initialize the Valon: Python returns 0 on fail, 1 on success, read value from log
+        while ((count < ntries)) {
+            bb_write_string(&bb_state_table[ind], (unsigned char*)read_valon_4, strlen(read_valon_4));
+            usleep(1000);
+            blast_tmp_sprintf(m_command, "cat /home/pi/device_control/read_valon.log");
+            bb_write_string(&bb_state_table[ind], (unsigned char*)m_command, strlen(m_command));
+	        success = bb_response(&bb_state_table[ind]);
+            if (success < 1) {
+                count += 1;
+                sleep(2);
+            } else {
+                blast_tmp_sprintf(m_command2, "cat /home/pi/device_control/valon_response.log");
+                bb_write_string(&bb_state_table[ind], (unsigned char*)m_command2, strlen(m_command2));
+                if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+                    blast_info("Error reading Valon... reboot BB%d?", ind + 1);
+                } else {
+                    retval = 1;
+                    break;
+                }
+            }
+        }
+     } else {
+        bb_write_string(&bb_state_table[ind], (unsigned char*)read_valon_command, strlen(read_valon_command));
+        if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+		    blast_info("Error reading Valon... reboot BB%d?", ind + 1);
+        } else {
+            retval = 1;
+            }
+        }
+    return retval;
 }
 
 /* Check if UDP streaming is successful */
@@ -621,23 +735,27 @@ void roach_vna_comb(roach_state_t *m_roach)
 	double n_delta_f;
 	m_roach->vna_comb = calloc(m_roach->vna_comb_len, sizeof(double));
 	/* positive freqs */
-	p_delta_f = (m_roach->p_max_freq - m_roach->p_min_freq) / ((m_roach->vna_comb_len/2) - 1);
+	p_delta_f = (m_roach->p_max_freq - m_roach->p_min_freq) / ((m_roach->vna_comb_len/2.) - 1);
 	/* Store delta f, to be used as 'span' in roach_do_sweep */
 	m_roach->vna_sweep_span = p_delta_f;
-	blast_info("p_max = %g, p_min = %g, n_max = %g, n_min = %g",
-			m_roach->p_max_freq, m_roach->p_min_freq, m_roach->n_max_freq, m_roach->n_min_freq);
-	blast_info("Sweep p_delta_f = %g, delta f = %g", p_delta_f, m_roach->vna_sweep_span);
+	// blast_info("p_max = %g, p_min = %g, n_max = %g, n_min = %g",
+			// m_roach->p_max_freq, m_roach->p_min_freq, m_roach->n_max_freq, m_roach->n_min_freq);
+	// blast_info("Sweep p_delta_f = %g, delta f = %g", p_delta_f, m_roach->vna_sweep_span);
 	for (size_t i = m_roach->vna_comb_len/2; i-- > 0;) {
 		m_roach->vna_comb[m_roach->vna_comb_len/2 - (i + 1)] = m_roach->p_max_freq - i*p_delta_f;
 	}
 	/* negative freqs */
-	n_delta_f = (m_roach->n_max_freq - m_roach->n_min_freq) / ((m_roach->vna_comb_len/2) - 1);
+	n_delta_f = (m_roach->n_max_freq - m_roach->n_min_freq) / ((m_roach->vna_comb_len/2.) - 1);
 	for (size_t i = 0; i < m_roach->vna_comb_len/2; i++) {
 		m_roach->vna_comb[i + m_roach->vna_comb_len/2] = m_roach->n_min_freq + i*n_delta_f;
 	}
 	for (size_t i = 0; i < m_roach->vna_comb_len; i++) {
 		// blast_info("ROACH%d vna freq = %g", m_roach->which, m_roach->vna_comb[i]);
 	}
+    /* for (size_t i = 0; i < m_roach->vna_comb_len; i++) {
+        m_roach->vna_comb[i] = round(m_roach->vna_comb[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
+	    blast_info("VNA freq = %g", m_roach->vna_comb[i]/DAC_FREQ_RES);
+    }*/
 }
 
 /* Save list of either VNA or TARG frequencies */
@@ -649,13 +767,13 @@ void save_freqs(roach_state_t *m_roach, char *m_save_path, double *m_freqs, size
 	    return;
 	}
 	for (size_t i = 0; i < m_Nfreqs; i++) {
-		fprintf(fd, "%.10f\n", (float)m_freqs[i]);
+        fprintf(fd, "%.10f\n", (float)m_freqs[i]);
 	}
 	fclose(fd);
 	blast_info("ROACH%d Freqs written to %s", m_roach->which, m_save_path);
 }
 
-void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m_sweep_save_path, size_t m_Nfreqs)
+void roach_save_sweep_packet(roach_state_t *m_roach, uint32_t m_sweep_freq, char *m_sweep_save_path, size_t m_Nfreqs)
 {
 	/* Grab a set number of packets, average I and Q for each chan,
 	and save the result to file:fname in the sweep dir (/data/etc/blast/sweeps/) */
@@ -664,16 +782,16 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 	int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
 	uint8_t i_udp_read;
 	char *fname;
-	blast_tmp_sprintf(fname, "%s/%f.dat", m_sweep_save_path, m_sweep_freq);
+	blast_tmp_sprintf(fname, "%s/%d.dat", m_sweep_save_path, m_sweep_freq);
 	FILE *m_fd = fopen(fname, "w");
 	if (!m_fd) {
         blast_strerror("Could not open %s for writing", fname);
         return;
 	}
-	float *I_sum = calloc(m_Nfreqs, sizeof(float)); // Array to store I values to be summed
-	float *Q_sum = calloc(m_Nfreqs, sizeof(float)); // Array to store Q values to be summed
-	float *I_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged I values
-	float *Q_avg = calloc(m_Nfreqs, sizeof(float)); // Array to store averaged Q values
+	double *I_sum = calloc(m_Nfreqs, sizeof(double)); // Array to store I values to be summed
+	double *Q_sum = calloc(m_Nfreqs, sizeof(double)); // Array to store Q values to be summed
+	double *I_avg = calloc(m_Nfreqs, sizeof(double)); // Array to store averaged I values
+	double *Q_avg = calloc(m_Nfreqs, sizeof(double)); // Array to store averaged Q values
 	while (m_num_received < N_AVG) {
 		usleep(3000);
 		if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
@@ -691,7 +809,7 @@ void roach_save_sweep_packet(roach_state_t *m_roach, float m_sweep_freq, char *m
 		I_avg[chan] = (I_sum[chan] / N_AVG);
 		Q_avg[chan] = (Q_sum[chan] / N_AVG);
 		/* Save I_avg, Q_avg, to sweep dir */
-		fprintf(m_fd, "%zd\t %f\t %f\n", chan, I_avg[chan], Q_avg[chan]);
+		fprintf(m_fd, "%zd\t %g\t %g\n", chan, I_avg[chan], Q_avg[chan]);
 		// blast_info("%zd\t %f\t %f\n", chan, I_avg[chan], Q_avg[chan]);
 	}
 	free(I_sum);
@@ -718,23 +836,81 @@ void get_time(char *time_buffer)
 
 char* make_dir(roach_state_t *m_roach, char *m_dir_root)
 {
-	// int retval;
-	char *mkdir_command;
+    char *mkdir_command;
 	char *perm_path;
 	char time_buffer[FILENAME_MAX];
 	char *return_path;
 	get_time(time_buffer);
 	asprintf(&return_path, "%s/%s", m_dir_root, time_buffer);
 	blast_tmp_sprintf(mkdir_command, "mkdir -p %s", return_path);
-	/* retval = mkdir(mkdir_command, 0777, true);
-	if (retval < 0) {
-        	blast_info("mkdir retval = %d", retval);
-		blast_strerror("Could not make dir %s, %s", return_path, strerror(errno));
-	} */
 	system(mkdir_command);
 	blast_tmp_sprintf(perm_path, "sudo chown -R fc1user:blast %s", return_path);
 	system(perm_path);
 	return return_path;
+}
+
+char* get_path(roach_state_t *m_roach, char *m_dir_root)
+{
+	char time_buffer[FILENAME_MAX];
+	char *save_path;
+	get_time(time_buffer);
+	asprintf(&save_path, "%s/%s", m_dir_root, time_buffer);
+    return save_path;
+}
+
+static int mkdir_recursive(char *m_directory)
+{
+	// char*       change_perm;
+    char		current_path[PATH_MAX];
+	char		*path_chunk = NULL;
+	char		*strtok_ref = NULL;
+	int			ret = 0;
+	int         stat_return = 0;
+	char        *path_ptr;
+	size_t      path_chunk_len = 0;
+	size_t      current_path_len = 0;
+
+	struct stat dir_stat;
+//    blast_info("Making directory %s", m_directory);
+	/** Ensure that we have a NULL delimiter in our temp string */
+	current_path[0]=0;
+    path_ptr = current_path;  // We use this to keep track of where we should be writing in current_path;
+
+	// Takes a chunk of the directory path at a time
+	path_chunk = strtok_r(m_directory, "/", &strtok_ref);
+	if (m_directory[0] == '/') {
+		snprintf(path_ptr, sizeof("/"), "/");
+		path_ptr++;
+	}
+	while (path_chunk != NULL) {
+//      blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
+	    current_path_len = strlen(current_path);
+	    path_chunk_len = strlen(path_chunk);
+//      blast_info("current_path_len = %i, path_chunk_len = %i", (int) current_path_len, (int) path_chunk_len);
+		if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
+			blast_err("Path too long");
+			return -1;
+		}
+		snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
+		path_ptr += path_chunk_len;
+		snprintf(path_ptr, sizeof("/"), "/");
+		path_ptr++;
+	    current_path_len = strlen(current_path);
+//      blast_info("current_path = %s, length = %i", current_path, (int) current_path_len);
+        stat_return = stat(current_path, &dir_stat);
+		if (stat_return != 0) {
+		    blast_info("Making path %s", current_path);
+			ret = mkdir(current_path, ACCESSPERMS);
+			if (ret < 0) {
+				blast_strerror("Could not make %s", current_path);
+				return ret;
+			}
+		}
+		path_chunk = strtok_r(NULL, "/", &strtok_ref);
+	}
+    // blast_tmp_sprintf(change_perm, "sudo chown -R fc1user:blast %s", current_path);
+    // system(change_perm);
+	return 1;
 }
 
 int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_targ_path)
@@ -847,33 +1023,49 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     return 1;
 }
 
+/* int type: 0 for VNA sweep, 1 for TARG sweep */
 int roach_do_sweep(roach_state_t *m_roach, int type)
 {
-	int retval = SWEEP_SUCCESS;
-	bb_state_t *m_bb = &bb_state_table[m_roach->which - 1];
+    char* new_path;
+    int retval = SWEEP_SUCCESS;
+	int ind = m_roach->which - 1;
+    bb_state_t *m_bb = &bb_state_table[ind];
 	/*type = {0:VNA, 1:TARG} */
 	double m_span;
 	/* Create VNA and TARG directories on FC1 */
 	char *sweep_freq_fname;
 	if ((type == 0)) {
 		char *vna_freq_fname;
-		/* Get current time to append to sweep directory root */
-		m_roach->last_vna_path = make_dir(m_roach, m_roach->vna_path_root);
-		m_roach->last_targ_path = make_dir(m_roach, m_roach->targ_path_root);
+        new_path = get_path(m_roach, m_roach->vna_path_root);
+        asprintf(&m_roach->last_vna_path, new_path);
+        if (mkdir_recursive(new_path)) {
+            free(new_path);
+            blast_info("ROACH%d, VNA sweep will be saved in %s", ind + 1, m_roach->last_vna_path);
+        } else {
+            blast_strerror("Could not create new directory: %s", m_roach->last_vna_path);
+            free(m_roach->last_vna_path);
+        }
 		m_span = m_roach->vna_sweep_span;
-		// m_span = 1.0e4;
-		blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_roach->last_vna_path);
+		// blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_roach->last_vna_path);
 		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
 		blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
 		save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len);
 	} else {
 		m_span = TARG_SWEEP_SPAN;
-		if (!m_roach->last_targ_path) {
-			m_roach->last_targ_path = make_dir(m_roach, m_roach->targ_path_root);
-		}
+		if (m_roach->last_targ_path) {
+            free(m_roach->last_targ_path);
+        }
+        new_path = get_path(m_roach, m_roach->targ_path_root);
+        asprintf(&m_roach->last_targ_path, new_path);
+        if (mkdir_recursive(new_path)) {
+            free(new_path);
+		blast_info("ROACH%d, TARGET sweep will be saved in %s", m_roach->which, m_roach->last_targ_path);
+        } else {
+            blast_strerror("Could not create new directory: %s", m_roach->last_targ_path);
+            free(m_roach->last_targ_path);
+        }
 		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
 		blast_info("Sweep freq fname = %s", sweep_freq_fname);
-		blast_info("ROACH%d, TARGET sweep will be saved in %s", m_roach->which, m_roach->last_targ_path);
 		// save_freqs(m_roach, targ_freq_fname, m_roach->targ_tones, m_roach->num_kids);
 		blast_info("Uploading TARGET comb...");
 		roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
@@ -885,8 +1077,8 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
         	blast_strerror("Could not open %s for writing", sweep_freq_fname);
         	return SWEEP_FAIL;
 	}
-	double m_min_freq = m_roach->lo_centerfreq - (m_span/2);
-	double m_max_freq = m_roach->lo_centerfreq + (m_span/2);
+	double m_min_freq = m_roach->lo_centerfreq - (m_span/2.);
+	double m_max_freq = m_roach->lo_centerfreq + (m_span/2.);
 	size_t m_num_sweep_freqs = (m_max_freq - m_min_freq) / LO_STEP;
 	char *lo_command; /* BB command */
 	double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
@@ -896,26 +1088,30 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 	}
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
 		m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
-		fprintf(m_sweep_fd, "%.6f\n", (float)m_sweep_freqs[i]);
+		fprintf(m_sweep_fd, "%d\n", (uint32_t)m_sweep_freqs[i]);
 	}
 	fclose(m_sweep_fd);
 	blast_info("ROACH%d, Sweep freqs written to %s", m_roach->which, sweep_freq_fname);
 	blast_info("ROACH%d Starting new sweep...", m_roach->which);
 	/* Sweep and save data */
 	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-		if (CommandData.roach[m_roach->which - 1].do_sweeps) {
+		if (CommandData.roach[ind].do_sweeps) {
 			// TODO(Sam) Make sure stopping sweep doesn't crash Valon
-			blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
-			m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-			bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-			while (bb_read_string(m_bb) <= 0) {
-				usleep(1000);
+			if ((m_roach->which - 1 == 3)) {
+                blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
+            } else {
+                blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
 			}
+            m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
+			bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
+    	    if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, LO_READ_TIMEOUT) < 1) {
+		        blast_info("Error setting LO... reboot BB%d?", ind + 1);
+            }
 			if ((type == 0)) {
 				usleep(10000);
-				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_vna_path, m_roach->vna_comb_len);
+				roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], m_roach->last_vna_path, m_roach->vna_comb_len);
 			} else {
-				roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_targ_path, m_roach->num_kids);
+				roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], m_roach->last_targ_path, m_roach->num_kids);
 			}
 		} else {
 			blast_info("Sweep interrupted by command");
@@ -924,12 +1120,16 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 		}
 	}
 	usleep(3000);
-	blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    if ((ind == 3)) {
+        blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    } else {
+        blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    }
 	bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
 	// TODO(Sam) Put in error handling
-	while (bb_read_string(m_bb) <= 0) {
-		usleep(1000);
-	}
+    if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, LO_READ_TIMEOUT) < 1) {
+        blast_info("Error setting LO... reboot BB%d?", ind + 1);
+    }
 	free(m_sweep_freqs);
 	return retval;
 }
@@ -937,8 +1137,17 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 /* Small sweep to calculate I/Q gradient */
 void cal_sweep(roach_state_t *m_roach)
 {
-	bb_state_t *m_bb = &bb_state_table[m_roach-> which - 1];
-	m_roach->last_cal_path = make_dir(m_roach, m_roach->cal_path_root);
+	char* new_path;
+    int ind = m_roach->which - 1;
+    bb_state_t *m_bb = &bb_state_table[ind];
+    new_path = get_path(m_roach, m_roach->cal_path_root);
+    asprintf(&m_roach->last_cal_path, new_path);
+    if (mkdir_recursive(new_path)) {
+        free(new_path);
+    } else {
+        blast_strerror("Could not create new directory: %s", m_roach->last_cal_path);
+        free(m_roach->last_cal_path);
+    }
 	char *lo_command; /* BB command */
 	double m_sweep_freqs[NGRAD_POINTS];
 	m_sweep_freqs[0] = m_roach->lo_centerfreq - LO_STEP;
@@ -946,26 +1155,34 @@ void cal_sweep(roach_state_t *m_roach)
 		m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
 	}
 	for (size_t i = 0; i < NGRAD_POINTS; i++) {
-		if (CommandData.roach[m_roach->which - 1].do_sweeps) {
+		if (CommandData.roach[ind].do_sweeps) {
 			// Todo(Sam) Make sure this doesn't crash sweep
 			blast_info("Sweep freq = %.7g", m_sweep_freqs[i]/1.0e6);
 			m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-			blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %.7g\n", m_sweep_freqs[i]/1.0e6);
-			bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-			while (bb_read_string(m_bb) <= 0) {
-				usleep(1000);
-			roach_save_sweep_packet(m_roach, m_sweep_freqs[i]/1.0e6, m_roach->last_cal_path, m_roach->num_kids);
-				usleep(1000);
+			if ((ind == 3)) {
+                blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
+            } else {
+                blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
 			}
+			bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
+            if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+                blast_info("Error setting LO... reboot BB%d?", ind + 1);
+            }
+			roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], m_roach->last_cal_path, m_roach->num_kids);
+				usleep(1000);
 		} else {
 			break;
 			blast_info("Sweep interrupted by command");
 		}
-	blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    if ((ind == 3)) {
+        blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    } else {
+        blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
+    }
 	bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-	while (bb_read_string(m_bb) <= 0) {
-		usleep(1000);
-	}
+    if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, BB_READ_TIMEOUT) < 1) {
+        blast_info("Error setting LO... reboot BB%d?", ind + 1);
+    }
 	}
 }
 
@@ -997,7 +1214,7 @@ int grad_calc(roach_state_t *m_roach)
          			free(file_list[i]);
 				FILE* fd = fopen(in_file, "r");
 				for(int kid = 0; kid < m_roach->num_kids; ++kid) {
-					fscanf(fd, "%d\t%f\t%f\n", &kid, &Ival[kid][freq_idx], &Qval[kid][freq_idx]);
+					fscanf(fd, "%d\t%g\t%g\n", &kid, &Ival[kid][freq_idx], &Qval[kid][freq_idx]);
 				}
 				++freq_idx;
 				printf("Read: %s\n", in_file);
@@ -1148,8 +1365,8 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status,
             ph_sock_free(state->sock);
             state->result = ROACH_UPLOAD_RESULT_ERROR;
         } else {
-            blast_info("Loading %s with %zu bytes", state->firmware_file,
-                    number_bytes);
+            // blast_info("Loading %s with %zu bytes", state->firmware_file,
+            //        number_bytes);
             ph_sock_enable(state->sock, true);
         }
         ph_stm_close(firmware_stm);
@@ -1241,7 +1458,7 @@ void shutdown_roaches(void)
 
 void *roach_cmd_loop(void* ind)
 {
-	int status;
+    int status;
     int i = *((uint16_t*) ind);
 	char tname[10];
 	if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
@@ -1290,13 +1507,14 @@ void *roach_cmd_loop(void* ind)
 				}
 				roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
 			}
-			if (CommandData.roach[i].find_kids) {
+			/*
+            if (CommandData.roach[i].find_kids) {
 				roach_state_table[i].last_targ_path = make_dir(&roach_state_table[i], roach_state_table[i].targ_path_root);
 				if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
 										roach_state_table[i].last_targ_path)) > 0) {
 				CommandData.roach[i].find_kids = 0;
 				} else { blast_info("ROACH%d: Failed to find kids", i + 1); }
-			}
+			}*/
 			if (CommandData.roach[i].set_attens) {
 				if (!set_atten(&rudat_state_table[i])) {
 					blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
@@ -1314,11 +1532,11 @@ void *roach_cmd_loop(void* ind)
 			}
 			// The following is initialization
 			if (bb_state_table[i].status == BB_STATUS_BOOT && bb_state_table[i].desired_status > BB_STATUS_BOOT) {
-				blast_info("Initializing BB%d ...", i + 1);
+                blast_info("Initializing BB%d ...", i + 1);
 				bb_state_table[i].which = i + 1;
 				bb_state_table[i].bb_comm = remote_serial_init(i, NC2_PORT);
 				while (!bb_state_table[i].bb_comm->connected) {
-					blast_info("We can't connect to bb%d.", i+1);
+					// blast_info("We can't connect to bb%d.", i+1);
 					usleep(2000);
 				}
 				bb_state_table[i].status = BB_STATUS_INIT;
@@ -1335,16 +1553,16 @@ void *roach_cmd_loop(void* ind)
 				}
 			}
 			if ((bb_state_table[i].status == BB_STATUS_INIT) && (valon_state_table[i].status == VALON_STATUS_BOOT)) {
-				blast_info("Initializing Valon%d...", i + 1);
-				bb_write_string(&bb_state_table[i], (unsigned char*)valon_init, strlen(valon_init));
-				bb_write_string(&bb_state_table[i], (unsigned char*)read_valon, strlen(read_valon));
-				// TODO(Sam) Put in error handling
-				while (bb_read_string(&bb_state_table[i]) <= 0) {
-					sleep(1);
-				}
-				valon_state_table[i].status = VALON_STATUS_HAS_FREQS;
-				blast_info("Finished initializing Valon%d...", i + 1);
-			}
+                if (init_valon(&roach_state_table[i], BB_READ_NTRIES) < 1) {
+					blast_info("ROACH%d: Failed to set Valon...", i + 1);
+                }
+                if (read_valon(&roach_state_table[i], BB_READ_NTRIES) < 1) {
+					blast_info("ROACH%d: Failed to read Valon...", i + 1);
+                } else {
+                    valon_state_table[i].status = VALON_STATUS_HAS_FREQS;
+				    blast_info("Finished initializing Valon%d...", i + 1);
+			    }
+            }
 			if (roach_state_table[i].status == ROACH_STATUS_BOOT && roach_state_table[i].desired_status > ROACH_STATUS_BOOT) {
 				blast_info("Attempting to connect to %s", roach_state_table[i].address);
 				roach_state_table[i].katcp_fd = net_connect(roach_state_table[i].address,
@@ -1353,15 +1571,17 @@ void *roach_cmd_loop(void* ind)
 				roach_state_table[i].rpc_conn = create_katcl(roach_state_table[i].katcp_fd);
 				if (roach_state_table[i].katcp_fd > 0) {
 					blast_info("ROACH%d, KATCP up", i + 1);
-					blast_info("ROACH%d, Checking firmware status...", i + 1);
+				/*	blast_info("ROACH%d, Checking firmware status...", i + 1);
 					if (roach_upload_status(&roach_state_table[i])) {
 						roach_state_table[i].status = ROACH_STATUS_CALIBRATED;
 						roach_state_table[i].desired_status = ROACH_STATUS_TONE;
 				} else { roach_state_table[i].status = ROACH_STATUS_CONNECTED;
 					}
-				}
+				}*/
+			    roach_state_table[i].status = ROACH_STATUS_CONNECTED;
+                }
 			}
-			if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
+            if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
 				if (roach_upload_fpg(&roach_state_table[i], roach_fpg[i]) == 0) {
 					blast_info("ROACH%d, Firmware uploaded", i + 1);
@@ -1373,11 +1593,11 @@ void *roach_cmd_loop(void* ind)
 				roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
 				blast_info("ROACH%d, Configuring software registers...", i + 1);
 				roach_write_int(&roach_state_table[i], "dds_shift", DDS_SHIFT, 0);/* DDS LUT shift, in clock cycles */
-				roach_read_int(&roach_state_table[i], "dds_shift");
+				// roach_read_int(&roach_state_table[i], "dds_shift");
 				roach_write_int(&roach_state_table[i], "fft_shift", VNA_FFT_SHIFT, 0);/* FFT shift schedule */
-				roach_read_int(&roach_state_table[i], "fft_shift");
+				// roach_read_int(&roach_state_table[i], "fft_shift");
 				roach_write_int(&roach_state_table[i], "sync_accum_len", accum_len, 0);/* Number of accumulations */
-				roach_read_int(&roach_state_table[i], "sync_accum_len");
+				// roach_read_int(&roach_state_table[i], "sync_accum_len");
 				roach_write_int(&roach_state_table[i], "tx_destip", dest_ip, 0);/* UDP destination IP */
 				roach_write_int(&roach_state_table[i], "tx_destport", roach_state_table[i].dest_port, 0); /* UDP port */
 				// load_fir(&roach_state_table[i], zeros);
@@ -1422,7 +1642,6 @@ void *roach_cmd_loop(void* ind)
 			if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
 				roach_state_table[i].desired_status >= ROACH_STATUS_VNA) {
 				roach_write_int(&roach_state_table[i], "fft_shift", VNA_FFT_SHIFT, 0);/* FFT shift schedule */
-				roach_read_int(&roach_state_table[i], "fft_shift");
 				usleep(3000);
 				blast_info("ROACH%d, Initializing VNA sweep", i + 1);
 				blast_info("ROACH%d, Starting VNA sweep...", i + 1);
@@ -1485,7 +1704,7 @@ void *roach_cmd_loop(void* ind)
 int init_roach(uint16_t ind)
 {
 	if (ind >= NUM_ROACHES) {
-	    blast_err("Attempted to intialize a non-existant roach #%u", ind + 1);
+	    blast_err("Attempted to intialize a non-existent roach #%u", ind + 1);
 	    return -1;
 	}
     memset(&roach_state_table[ind], 0, sizeof(roach_state_t));
@@ -1530,13 +1749,13 @@ int init_roach(uint16_t ind)
 	 	roach_state_table[ind].p_max_freq = 246.001234e6;
 	 	roach_state_table[ind].p_min_freq = 1.02342e6;
 	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	 roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+	    roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
 	 }
 	 roach_state_table[ind].which = ind + 1;
 	 bb_state_table[ind].which = ind + 1;
 	 rudat_state_table[ind].which = ind + 1;
 	 valon_state_table[ind].which = ind + 1;
-    	 roach_state_table[ind].dest_port = 64000 + ind;
+     roach_state_table[ind].dest_port = 64000 + ind;
 	 roach_state_table[ind].is_streaming = 0;
 	 roach_udp_networking_init(roach_state_table[ind].which, &roach_state_table[ind], NUM_ROACH_UDP_CHANNELS);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
