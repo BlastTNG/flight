@@ -166,6 +166,8 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
         //  m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+        // TODO(laura): Check to make sure that this syntax is OK.  It seems to work but would
+        // local packet not be deleted at the end of the call?
     	for (int i = 0; i < 3; i++) {
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + m_packet->buffer_len);
@@ -253,7 +255,7 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 
     uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
 
-    // store_roach_udp_packet(&m_packet, m_roach_udp); // Writes packet to harddrive.
+    store_roach_udp_packet(&m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
 
     if (udperr > 0) return;
 
@@ -274,7 +276,6 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     uint32_t origaddr;
 	ph_result_t test = 0; // Used to test the status of some phenom calls. 0 = OK
     ph_string_t sockaddr_str;
-
     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_which-1];
 
     // Initialize counts
@@ -339,7 +340,7 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     ph_socket_t sock = ph_socket_for_addr(&addr, SOCK_DGRAM, PH_SOCK_NONBLOCK);
     m_roach_udp->udp_socket_fd = sock;
     blast_info("roach%d: Socket file descriptor is %i", m_which, (int) sock);
-    if (!sock) blast_err("roach%d: Failed to open Socket. %s", errno);
+    if (!sock) blast_err("roach%d: Failed to open Socket. %s", m_which, errno);
 
     // Allocate a phenom socket pointer
 	m_roach_udp->udp_socket = ph_sock_new_from_socket(sock, &addr, NULL);
