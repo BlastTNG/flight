@@ -80,75 +80,75 @@ relay_10 = 512
 */
 // structure to control the heater and amp power box
 typedef struct {
-    uint16_t rec_on;
-    uint16_t rec_off;
-    uint16_t amp_supply_on;
-    uint16_t amp_supply_off;
-    uint16_t therm_supply_on;
-    uint16_t therm_supply_off;
-    uint16_t heater_supply_on;
-    uint16_t heater_supply_off;
-    uint16_t update_rec;
+    float rec_on;
+    float rec_off;
+    float amp_supply_on;
+    float amp_supply_off;
+    float therm_supply_on;
+    float therm_supply_off;
+    float heater_supply_on;
+    float heater_supply_off;
+    float update_rec;
 } rec_control_t;
 // structure that contains information about the OF relays state
 typedef struct {
-    uint16_t of_1_on;
-    uint16_t of_2_on;
-    uint16_t of_3_on;
-    uint16_t of_4_on;
-    uint16_t of_5_on;
-    uint16_t of_6_on;
-    uint16_t of_7_on;
-    uint16_t of_8_on;
-    uint16_t of_9_on;
-    uint16_t of_10_on;
-    uint16_t of_11_on;
-    uint16_t of_12_on;
-    uint16_t of_13_on;
-    uint16_t of_14_on;
-    uint16_t of_15_on;
-    uint16_t of_16_on;
-    uint16_t of_1_off;
-    uint16_t of_2_off;
-    uint16_t of_3_off;
-    uint16_t of_4_off;
-    uint16_t of_5_off;
-    uint16_t of_6_off;
-    uint16_t of_7_off;
-    uint16_t of_8_off;
-    uint16_t of_9_off;
-    uint16_t of_10_off;
-    uint16_t of_11_off;
-    uint16_t of_12_off;
-    uint16_t of_13_off;
-    uint16_t of_14_off;
-    uint16_t of_15_off;
-    uint16_t of_16_off;
-    uint16_t update_of;
+    float of_1_on;
+    float of_2_on;
+    float of_3_on;
+    float of_4_on;
+    float of_5_on;
+    float of_6_on;
+    float of_7_on;
+    float of_8_on;
+    float of_9_on;
+    float of_10_on;
+    float of_11_on;
+    float of_12_on;
+    float of_13_on;
+    float of_14_on;
+    float of_15_on;
+    float of_16_on;
+    float of_1_off;
+    float of_2_off;
+    float of_3_off;
+    float of_4_off;
+    float of_5_off;
+    float of_6_off;
+    float of_7_off;
+    float of_8_off;
+    float of_9_off;
+    float of_10_off;
+    float of_11_off;
+    float of_12_off;
+    float of_13_off;
+    float of_14_off;
+    float of_15_off;
+    float of_16_off;
+    float update_of;
 } of_control_t;
 // structure that contains information about the IF relay state
 typedef struct {
-    uint16_t if_1_on;
-    uint16_t if_2_on;
-    uint16_t if_3_on;
-    uint16_t if_4_on;
-    uint16_t if_5_on;
-    uint16_t if_6_on;
-    uint16_t if_7_on;
-    uint16_t if_8_on;
-    uint16_t if_9_on;
-    uint16_t if_10_on;
-    uint16_t if_1_off;
-    uint16_t if_2_off;
-    uint16_t if_3_off;
-    uint16_t if_4_off;
-    uint16_t if_5_off;
-    uint16_t if_6_off;
-    uint16_t if_7_off;
-    uint16_t if_8_off;
-    uint16_t if_9_off;
-    uint16_t if_10_off;
-    uint16_t update_if;
+    float if_1_on;
+    float if_2_on;
+    float if_3_on;
+    float if_4_on;
+    float if_5_on;
+    float if_6_on;
+    float if_7_on;
+    float if_8_on;
+    float if_9_on;
+    float if_10_on;
+    float if_1_off;
+    float if_2_off;
+    float if_3_off;
+    float if_4_off;
+    float if_5_off;
+    float if_6_off;
+    float if_7_off;
+    float if_8_off;
+    float if_9_off;
+    float if_10_off;
+    float update_if;
 } if_control_t;
 
 rec_control_t rec_state;
@@ -260,10 +260,13 @@ static void of_init(void) {
 }
 // pulls data from the command data struct
 static void of_update_values(void) {
+    /*
     of_state.of_1_on = CommandData.Relays.of_1_on;
     of_state.of_1_off = CommandData.Relays.of_1_off;
+     */
     of_state.of_2_on = CommandData.Relays.of_2_on;
     of_state.of_2_off = CommandData.Relays.of_2_off;
+    /*
     of_state.of_3_on = CommandData.Relays.of_3_on;
     of_state.of_3_off = CommandData.Relays.of_3_off;
     of_state.of_4_on = CommandData.Relays.of_4_on;
@@ -292,13 +295,17 @@ static void of_update_values(void) {
     of_state.of_15_off = CommandData.Relays.of_15_off;
     of_state.of_16_on = CommandData.Relays.of_16_on;
     of_state.of_16_off = CommandData.Relays.of_16_off;
+     */
 }
 // sends all of the new values to the labjacks for the OF
 static void of_send_values(void) {
+    /*
     labjack_queue_command(LABJACK_OF_1, RELAY_1_ON, of_state.of_1_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_1_OFF, of_state.of_1_off);
+     */
     labjack_queue_command(LABJACK_OF_1, RELAY_2_ON, of_state.of_2_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_2_OFF, of_state.of_2_off);
+    /*
     labjack_queue_command(LABJACK_OF_1, RELAY_3_ON, of_state.of_3_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_3_OFF, of_state.of_3_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_4_ON, of_state.of_4_on);
@@ -327,6 +334,7 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
+     */
 }
 //
 void of_control(void) {
@@ -342,7 +350,9 @@ void of_control(void) {
         if ((of_state.update_of = CommandData.Relays.update_of) == 1) {
             of_update_values();
             of_trigger = 1;
+            blast_info("preparing to send values");
             of_send_values();
+            blast_info("values queued");
             CommandData.Relays.update_of = 0;
         }
     }

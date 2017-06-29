@@ -172,6 +172,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case load_curve:
+            CommandData.Cryo.load_curve = 1;
+            break;
         case heaters_off:
             heater_all_off();
             break;
@@ -301,12 +304,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case of_relay_2_on:
             CommandData.Relays.of_2_on = 1;
-            CommandData.Relays.of_status += 2;
+            // CommandData.Relays.of_status += 2;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_2_off:
             CommandData.Relays.of_2_off = 1;
-            CommandData.Relays.of_status -= 2;
+            // CommandData.Relays.of_status -= 2;
             CommandData.Relays.update_of = 1;
             break;
         case of_relay_3_on:

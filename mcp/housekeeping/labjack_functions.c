@@ -415,7 +415,7 @@ void heater_write(int m_labjack, int address, float command) {
                 }
             }
         } else {
-            blast_info("writing to a DAC");
+            // blast_info("writing to a DAC");
             ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
             if (ret < 0) {
                 int tries = 1;

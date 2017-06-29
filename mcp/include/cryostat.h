@@ -24,4 +24,6 @@ void test_cycle(void);
 void auto_cycle_mk2(void);
 void read_chopper(void);
 void set_dac(void);
+void init_array();
+void load_curve_300mk(void);
 #endif /* cryostat_h */

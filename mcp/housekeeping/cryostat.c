@@ -54,6 +54,25 @@
 
 extern int16_t InCharge;
 
+
+float voltage_array[13];
+
+void init_array() {
+    voltage_array[0] = 0;
+    voltage_array[1] = 1.0607;
+    voltage_array[2] = 1.5001;
+    voltage_array[3] = 1.8373;
+    voltage_array[4] = 2.1215;
+    voltage_array[5] = 2.5983;
+    voltage_array[6] = 3.0003;
+    voltage_array[7] = 3.3544;
+    voltage_array[8] = 3.6746;
+    voltage_array[9] = 3.9690;
+    voltage_array[10] = 4.2431;
+    voltage_array[11] = 4.5005;
+    voltage_array[12] = 4.7439;
+}
+
 typedef struct { // structure to read commands for level and cal pulses
     uint16_t cal_length;
     uint16_t level_length;
@@ -145,7 +164,24 @@ void heater_control(void) {
 }
 
 void load_curve_300mk(void) {
-    int holder;
+    static int i = 0;
+    static int counter = 0;
+    if (CommandData.Cryo.load_curve == 1) {
+        labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
+        counter++;
+        if (counter == 600) {
+            i++;
+            blast_info("voltage set to %f", voltage_array[i]);
+            blast_info("voltage set to %f", voltage_array[i]);
+            blast_info("voltage set to %f", voltage_array[i]);
+            if (i == 13) {
+                i = 0;
+                CommandData.Cryo.load_curve = 0;
+                blast_info("Stopping Load Curve NOW");
+            }
+            counter = 0;
+        }
+    }
 }
 
 void set_dac(void) {
@@ -162,6 +198,9 @@ void set_dac(void) {
 
 // function that runs in MCP loop to read in the heater status bits
 void heater_read(void) {
+    static int first_time_read = 1;
+    static channel_t* heater_300mk_status_Addr;
+    static channel_t* cal_lamp_status_Addr;
     // queues up all the reads from labjack cryo 2
     labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
     labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
@@ -169,6 +208,11 @@ void heater_read(void) {
     labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
     labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
     labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    if (first_time_read == 1) {
+        first_time_read == 0;
+        heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
+        cal_lamp_status_Addr = channels_find_by_name("status_cal_lamp");
+    }
 }
 /*
 Heater status bits
@@ -301,7 +345,6 @@ void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
     SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
 }
 
-
 // this function sets all the addresses for the thermometry on the cryostat
 // then runs in the MCP main loop updating the temperatures at 1hz
 void read_thermometers(void) {
@@ -371,7 +414,6 @@ void read_thermometers(void) {
         heater_300mk_Addr = channels_find_by_name("heater_300mk_read");
         firsttime_therm = 0;
     }
-
     if (InCharge == 1) {
         SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS));
         SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_FILT));
