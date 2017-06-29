@@ -63,7 +63,7 @@ static ph_thread_t *motor_ctl_id;
 #define EL_ADDR 0x2
 #define PIV_ADDR 0x1
 // TODO(Peter): Add manufacturer index for Peper FUCHS
-#define FUCHS_MFG_ID 0x0000
+#define FUCHS_MFG_ID 0x00ad
 /**
  * Structure for storing the PDO assignments and their offsets in the
  * memory map
@@ -94,7 +94,8 @@ static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
 /**
  * Memory mapping for the PDO variables
  */
-static char io_map[1024];
+// static char io_map[1024];
+static char io_map[4096]; // DEBUG PCA
 
 static int motors_exit = false;
 
@@ -544,7 +545,7 @@ static int find_controllers(void)
             int32_t serial = 0;
             int size = 4;
             ec_SDOread(i, 0x650B, 0, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("PEPERL+FUCHS encoder %d: %s: SN: %d",
+            blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
                         ec_slave[i].aliasadr, ec_slave[i].name, serial);
             hwp_index = i;
         }
@@ -604,23 +605,24 @@ static int hwp_pdo_init(void)
     /**
      * To program the PDO mapping, we first must clear the old state
      */
-
+/*
     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
     for (int i = 0; i < 4; i++) {
         if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
     }
-
+*/
     /**
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
+
     map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
     if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
-
+/*
     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
         blast_err("Failed mapping!");
-
+*/
     return 0;
 }
 
@@ -971,7 +973,7 @@ static void* motor_control(void* arg)
 
     for (int i = 1; i <= ec_slavecount; i++) {
         if (i == hwp_index) {
-            hwp_pdo_init();
+            // hwp_pdo_init();
         } else {
             motor_pdo_init(i);
             mc_readPDOassign(i);
@@ -1024,7 +1026,8 @@ static void* motor_control(void* arg)
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        if (i != hwp_index)
+		ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.

@@ -42,6 +42,8 @@
 #include "tx.h"
 #include "hwpr.h"
 
+#include "ec_motors.h"
+
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
@@ -1431,6 +1433,8 @@ void *ActuatorBus(void *param)
     int first_time = 1;
     int sf_ok;
 
+	int hwp_pos; // DEBUG PCA
+
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
 
@@ -1568,6 +1572,9 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << BALANCENUM);
         }
 
-        usleep(10000);
+	hwp_pos = hwp_get_position();
+	blast_info("HWP POS = %f", (hwp_pos/8192.));
+
+	usleep(10000);
     }
 }
