@@ -2587,8 +2587,8 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].out_atten = 16;
-        CommandData.roach_params[i].in_atten = 3;
+        CommandData.roach_params[i].out_atten = 30;
+        CommandData.roach_params[i].in_atten = 16;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

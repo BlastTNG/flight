@@ -74,7 +74,7 @@ typedef void (*roach_callback_t)(uint8_t*, size_t);
 #define ROACH_CHECKSUM 42
 
 // number of roach channels that will be published to the server
-const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 0};
+const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
 
 uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
 {
@@ -166,7 +166,7 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
         //  m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-    	for (int i = 0; i < 3; i++) {
+    	for (int i = 0; i < NUM_ROACHES; i++) {
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + m_packet->buffer_len);
         }
@@ -365,8 +365,7 @@ void write_roach_channels_488hz(void)
     if (firsttime) {
         blast_info("Starting write_roach_channels_488hz");
         firsttime = 0;
-        for (i = 0; i <3 ; i++) { // Write ROACH 1, 2 and 3 channels for now.
-//        for (i = 0; i < NUM_ROACHES; i++) {
+	for (i = 0; i < NUM_ROACHES; i++) {
             for (j = 0; j < n_publish_roaches[i]; j++) {
                 snprintf(channel_name_i, sizeof(channel_name_i), "i_kid%04d_roach%d", j, i+1);
                 RoachIAddr[i][j] = channels_find_by_name(channel_name_i);
@@ -375,8 +374,7 @@ void write_roach_channels_488hz(void)
             }
         }
     }
-//    for (i = 0; i < NUM_ROACHES; i++) {
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < NUM_ROACHES; i++) {
         i_udp_read = GETREADINDEX(roach_udp[i].index);
         data_udp_packet_t* m_packet = &(roach_udp[i].last_pkts[i_udp_read]);
         for (j = 0; j < n_publish_roaches[i]; j++) {

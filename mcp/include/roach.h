@@ -209,7 +209,7 @@ typedef struct data_udp_packet {
 	ph_buf_t *rcv_buffer;
 } data_udp_packet_t;
 
-#define NUM_ROACHES 4
+#define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 
 #define ROACH_UDP_LEN 8234
@@ -218,7 +218,7 @@ typedef struct data_udp_packet {
                                             (((b) & 0xff) << 16) | \
                                             (((c) & 0xff) << 8)  | \
                                             ((d) & 0xff))
-static const char roach_name[4][32] = {"roach1", "roach2", "roach3", "roach4"};
+static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 
 // Destination IP for fc2
 static const char udp_dest[32] = "192.168.40.4";
