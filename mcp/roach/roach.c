@@ -38,6 +38,7 @@
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <netpacket/packet.h>
+#include <linux/filter.h>
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <string.h>
@@ -256,9 +257,6 @@ static inline int roach_fft_bin_index(double *m_freqs, size_t m_index, size_t m_
 static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         size_t m_freqlen, int m_samp_freq, double *m_I, double *m_Q)
 {
-    // Unless told otherwise, default attens are loaded
-    // double m_attens[m_freqlen];
-    // FILE *m_atten_file;
     size_t comb_fft_len;
     /*
     if (CommandData.roach[m_roach->which - 1].load_amps) {
@@ -277,6 +275,48 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
     CommandData.roach[m_roach->which - 1].load_amps = 0;
     */
+    for (size_t i = 0; i < m_freqlen; i++) {
+        m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
+	// blast_info("m_freq = %g", m_freqs[i]);
+    }
+
+    comb_fft_len = LUT_BUFFER_LEN;
+    complex double *spec = calloc(comb_fft_len, sizeof(complex double));
+    complex double *wave = calloc(comb_fft_len, sizeof(complex double));
+    double alpha;
+    double max_val = 0.0;
+    srand48(time(NULL));
+    for (size_t i = 0; i < m_freqlen; i++) {
+        int bin = roach_fft_bin_index(m_freqs, i, comb_fft_len, m_samp_freq);
+        if (bin < 0) {
+            bin += comb_fft_len;
+	}
+	alpha = drand48() * 2.0 * M_PI;
+        spec[bin] = cexp(_Complex_I * alpha);
+	// blast_info("bin = %d, r(spec[bin]) = %f, im(spec[bin]) = %f",
+						// bin, creal(spec[bin]), cimag(spec[bin]));
+    }
+    pthread_mutex_lock(&fft_mutex);
+    m_roach->comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD,
+    FFTW_ESTIMATE);
+    fftw_execute(m_roach->comb_plan);
+    fftw_destroy_plan(m_roach->comb_plan);
+    pthread_mutex_unlock(&fft_mutex);
+    for (size_t i = 0; i < comb_fft_len; i++) {
+    	wave[i] /= comb_fft_len;
+    	// fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
+	if (cabs(wave[i]) > max_val) max_val = cabs(wave[i]);
+     }
+    // fclose(f2);
+    for (size_t i = 0; i < comb_fft_len; i++) {
+        m_I[i] = creal(wave[i]) / max_val * ((1 << 15) - 1);
+        m_Q[i] = cimag(wave[i]) / max_val * ((1 << 15) - 1);
+    }
+    free(spec);
+    free(wave);
+    return 0;
+    // TODO(Sam/Laura) This is the newer FFTW3 implementation - the dds_comb() function returns NAN
+    /* size_t comb_fft_len;
     comb_fft_len = LUT_BUFFER_LEN;
     fftw_complex *spec = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
     fftw_complex *wave = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
@@ -294,12 +334,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
 	// blast_info("bin = %d, r(spec[bin]) = %f, im(spec[bin]) = %f",
 						// bin, creal(spec[bin]), cimag(spec[bin]));
     }
-    /*FILE *f1 = fopen("./dac_spec.txt", "w");
-     for (size_t i = 0; i < comb_fft_len; i++){
-     fprintf(f1,"%f, %f\n", creal(spec[i]), cimag(spec[i]));
-     }
-     fclose(f1);
-     FILE *f2 = fopen("./dac_wave.txt", "w");*/
     pthread_mutex_lock(&fft_mutex);
     m_roach->comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
     fftw_execute(m_roach->comb_plan);
@@ -308,16 +342,15 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     for (size_t i = 0; i < comb_fft_len; i++) {
     	wave[i][0] /= comb_fft_len;
     	wave[i][1] /= comb_fft_len;
-	    if (cabs(wave[i][0] + wave[i][1]* _Complex_I) > max_val) max_val = cabs(wave[i][0] + wave[i][1] * _Complex_I);
+	if (cabs(wave[i][0] + wave[i][1]* _Complex_I) > max_val) max_val = cabs(wave[i][0] + wave[i][1] * _Complex_I);
     }
-    // fclose(f2);
     for (size_t i = 0; i < comb_fft_len; i++) {
         m_I[i] = wave[i][0] / max_val * ((1 << 15) - 1);
         m_Q[i] = wave[i][1] / max_val * ((1 << 15) - 1);
     }
     fftw_free(spec);
     fftw_free(wave);
-    return 0;
+    return 0; */
 }
 
 // Build DDS LUT
@@ -325,40 +358,60 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
 static int roach_dds_comb(roach_state_t *m_roach, double m_freqs, size_t m_freqlen,
                             int m_samp_freq, int m_bin, double *m_I, double *m_Q)
 {
-	size_t comb_fft_len;
-    	fftw_plan comb_plan;
-
-	comb_fft_len = LUT_BUFFER_LEN / fft_len;
-    	fftw_complex *spec = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
-    	fftw_complex *wave = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
-    	double max_val = 0.0;
-	spec[m_bin][0] = 0;
-	spec[m_bin][1] = 0;
+    size_t comb_fft_len;
+    fftw_plan comb_plan;
+    comb_fft_len = LUT_BUFFER_LEN / fft_len;
+    complex double *spec = calloc(comb_fft_len,  sizeof(complex double));
+    complex double *wave = calloc(comb_fft_len,  sizeof(complex double));
+    double max_val = 0.0;
+    spec[m_bin] = cexp(_Complex_I * 0.);
 	// blast_info("DDS spec = %f, %f", creal(spec[m_bin]), cimag(spec[m_bin]));
-/*	FILE *f3 = fopen("./dds_spec.txt", "w");
-	for (size_t i = 0; i < comb_fft_len; i++){
-	fprintf(f3,"%f, %f\n", creal(spec[i]), cimag(spec[i]));
-     	 }	
-	fclose(f3); 
-
-    	FILE *f4 = fopen("./dds_wave.txt", "w");*/
     pthread_mutex_lock(&fft_mutex);
     comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
     fftw_execute(comb_plan);
     fftw_destroy_plan(comb_plan);
     pthread_mutex_unlock(&fft_mutex);
-	for (size_t i = 0; i < comb_fft_len; i++) {
-		// fprintf(f4,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
-        	if (cabs(wave[i][0] + wave[i][1]* _Complex_I) > max_val) max_val = cabs(wave[i][0] + wave[i][1]* _Complex_I);
+    for (size_t i = 0; i < comb_fft_len; i++) {
+	// blast_info("%f, %f\n", creal(wave[i]), cimag(wave[i]));
+       	if (cabs(wave[i]) > max_val) max_val = cabs(wave[i]);
+    }
+    for (size_t i = 0; i < comb_fft_len; i++) {
+	m_I[i] = creal(wave[i]) / max_val * ((1<<15)-1);
+       	m_Q[i] = cimag(wave[i]) / max_val * ((1<<15)-1);
+    }
+    free(spec);
+    free(wave);
+    return 0;
+    // TODO(Sam/Laura) This is the newer FFTW3 implementation - wave[i] is all NANs?
+    /* size_t comb_fft_len;
+    comb_fft_len = LUT_BUFFER_LEN / fft_len;
+    fftw_complex *spec = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
+    fftw_complex *wave = (fftw_complex*) fftw_malloc(comb_fft_len * sizeof(fftw_complex));
+    double alpha = 0.0;
+    double max_val = 0.0;
+    spec[m_bin][0] = creal(cexp(_Complex_I * alpha));
+    spec[m_bin][1] = cimag(cexp(_Complex_I * alpha));
+	// blast_info("DDS spec = %f, %f", creal(spec[m_bin]), cimag(spec[m_bin]));
+    pthread_mutex_lock(&fft_mutex);
+    fftw_plan comb_plan;
+    comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_execute(comb_plan);
+    fftw_destroy_plan(comb_plan);
+    pthread_mutex_unlock(&fft_mutex);
+    for (size_t i = 0; i < comb_fft_len; i++) {
+        blast_info("%f, %f\n", wave[i][0], wave[i][1]);
+        if (cabs(wave[i][0] + wave[i][1]* _Complex_I) > max_val) max_val = cabs(wave[i][0] + wave[i][1]* _Complex_I);
 	}
 	// fclose(f4);
-    	for (size_t i = 0; i < comb_fft_len; i++) {
-		    m_I[i] = wave[i][0] / max_val * ((1<<15)-1);
-        	m_Q[i] = wave[i][1] / max_val * ((1<<15)-1);
-    	}
+    for (size_t i = 0; i < comb_fft_len; i++) {
+	m_I[i] = wave[i][0] / max_val * ((1<<15)-1);
+	// blast_info("I = %g", m_I[i]);
+        m_Q[i] = wave[i][1] / max_val * ((1<<15)-1);
+	// blast_info("Q = %g", m_Q[i]);
+    }
     fftw_free(spec);
     fftw_free(wave);
-    	return 0;
+    return 0; */
 }
 
 static void roach_define_DAC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
@@ -863,21 +916,6 @@ void get_time(char *time_buffer)
 	time_buffer[strlen(time_buffer) - 1] = 0;
 }
 
-char* make_dir(roach_state_t *m_roach, char *m_dir_root)
-{
-    char *mkdir_command;
-	char *perm_path;
-	char time_buffer[FILENAME_MAX];
-	char *return_path;
-	get_time(time_buffer);
-	asprintf(&return_path, "%s/%s", m_dir_root, time_buffer);
-	blast_tmp_sprintf(mkdir_command, "mkdir -p %s", return_path);
-	system(mkdir_command);
-	blast_tmp_sprintf(perm_path, "sudo chown -R fc1user:blast %s", return_path);
-	system(perm_path);
-	return return_path;
-}
-
 char* get_path(roach_state_t *m_roach, char *m_dir_root)
 {
 	char time_buffer[FILENAME_MAX];
@@ -1135,7 +1173,6 @@ int roach_do_sweep(roach_state_t *m_roach, int type)
 		    }
                     m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
 		    bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-		    blast_info("%f\n", m_sweep_freqs[i]);
     	            if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, LO_READ_TIMEOUT) < 1) {
 		    blast_info("Error setting LO... reboot BB%d?", ind + 1);
                     }
@@ -1629,7 +1666,7 @@ void *roach_cmd_loop(void* ind)
 				// roach_read_int(&roach_state_table[i], "sync_accum_len");
 				roach_write_int(&roach_state_table[i], "GbE_tx_destip", dest_ip, 0);/* UDP destination IP */
 				roach_write_int(&roach_state_table[i], "GbE_tx_destport", roach_state_table[i].dest_port, 0); /* UDP port */
-				// load_fir(&roach_state_table[i], zeros);
+				load_fir(&roach_state_table[i], zeros);
 				roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
 				roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
 			}
@@ -1909,9 +1946,9 @@ void write_roach_channels_5hz(void)
     for (i = 0; i < NUM_ROACHES; i++) {
         SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
         SET_UINT32(RoachValidPktCtAddr[i],
-                roach_udp[i].roach_valid_packet_count);
+        roach_udp[i].roach_valid_packet_count);
         SET_UINT32(RoachInvalidPktCtAddr[i],
-                roach_udp[i].roach_invalid_packet_count);
+        roach_udp[i].roach_invalid_packet_count);
         SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
         SET_UINT16(ValonStatusAddr[i], valon_state_table[i].status);
         SET_UINT16(RudatStatusAddr[i], rudat_state_table[i].status);

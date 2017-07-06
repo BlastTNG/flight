@@ -194,19 +194,16 @@ typedef struct {
 } firmware_state_t;
 
 // Called each time a packet is received
-// TODO(laura): This should really be merged with the previous data_packet_t structure
-// definition once we get the packet writing to use the phenom library.
 typedef struct data_udp_packet {
-//  struct ethhdr *eth;
-//  struct iphdr *ip;
-	float Ival[MAX_CHANNELS_PER_ROACH];
-	float Qval[MAX_CHANNELS_PER_ROACH];
+    struct udphdr *udp; // will filter on udp dest port
+    float Ival[MAX_CHANNELS_PER_ROACH];
+    float Qval[MAX_CHANNELS_PER_ROACH];
     uint32_t buffer_len;
-	uint32_t checksum;
-	uint32_t pps_count;
-	uint32_t clock_count;
-	uint32_t packet_count;
-	ph_buf_t *rcv_buffer;
+    uint32_t checksum;
+    uint32_t pps_count;
+    uint32_t clock_count;
+    uint32_t packet_count;
+    unsigned char *rcv_buffer;
 } data_udp_packet_t;
 
 #define NUM_ROACHES 5
@@ -245,8 +242,7 @@ typedef struct {
     char            ip[16];
     bool            first_packet;
     data_udp_packet_t last_pkts[3];
-    ph_sock_t *udp_socket;
-    ph_socket_t udp_socket_fd;
+    int sock; // the socket file descriptor
     struct timeval  timeout;
 } roach_handle_data_t;
 
@@ -277,7 +273,6 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels);
-
 void write_roach_channels_244hz(void);
 void shutdown_roaches(void);
 
