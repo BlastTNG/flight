@@ -72,6 +72,8 @@
 #define DDS_SHIFT 330 /* Firmware version dependent */
 #define VNA_FFT_SHIFT 31 /* Controls FFT overflow behavior, for VNA SWEEP */
 #define TARG_FFT_SHIFT 127
+#define VNA 0 /* Sweep type */
+#define TARG 1 /*Sweep type */
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -106,12 +108,9 @@ double zeros[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512, 0.036885
 		0.07654357, 0.08630093, 0.09257286, 0.09473569};
 // double zeros[14] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.};
 // Firmware image files
-const char roach_fpg[5][50] = {"/data/etc/blast/blast_r1.fpg", "/data/etc/blast/blast_r2.fpg",
-		"/data/etc/blast/blast_r3.fpg", "/data/etc/blast/blast_r4.fpg",
-					"/data/etc/blast/blastfir23_r5_2017_Jul_03_1141.fpg"};
-// const char test_fpg[] = "/data/etc/blast/blast_filt_fix_2017_Feb_16_0851.fpg";
-// const char test_fpg[] = "/data/etc/blast/blast_0209_dds305_2017_Feb_15_1922.fpg";
-// const char test_fpg[] = "/data/etc/blast/blast_varlpf_2016_Nov_09_2042.fpg";
+const char roach_fpg[5][50] = {"/data/etc/blast/r1_fir_dds330.fpg", "/data/etc/blast/r2_fir_dds330.fpg",
+		"/data/etc/blast/r3_fir_dds330.fpg", "/data/etc/blast/r4_fir_dds330.fpg",
+					"/data/etc/blast/r5_fir_dds330.fpg"};
 static roach_state_t roach_state_table[NUM_ROACHES];
 static bb_state_t bb_state_table[NUM_ROACHES];
 static rudat_state_t rudat_state_table[NUM_ROACHES];
@@ -918,66 +917,85 @@ void get_time(char *time_buffer)
 
 char* get_path(roach_state_t *m_roach, char *m_dir_root)
 {
-	char time_buffer[FILENAME_MAX];
-	char *save_path;
-	get_time(time_buffer);
-	asprintf(&save_path, "%s/%s", m_dir_root, time_buffer);
+    char time_buffer[FILENAME_MAX];
+    char *save_path;
+    get_time(time_buffer);
+    asprintf(&save_path, "%s/%s", m_dir_root, time_buffer);
     return save_path;
 }
 
 static int mkdir_recursive(char *m_directory)
 {
-	// char*       change_perm;
-    char		current_path[PATH_MAX];
-	char		*path_chunk = NULL;
-	char		*strtok_ref = NULL;
-	int			ret = 0;
-	int         stat_return = 0;
-	char        *path_ptr;
-	size_t      path_chunk_len = 0;
-	size_t      current_path_len = 0;
-
-	struct stat dir_stat;
-//    blast_info("Making directory %s", m_directory);
-	/** Ensure that we have a NULL delimiter in our temp string */
-	current_path[0]=0;
+    char current_path[PATH_MAX];
+    char *path_chunk = NULL;
+    char *strtok_ref = NULL;
+    int	ret = 0;
+    int stat_return = 0;
+    char *path_ptr;
+    size_t path_chunk_len = 0;
+    size_t current_path_len = 0;
+    struct stat dir_stat;
+    current_path[0]=0;
     path_ptr = current_path;  // We use this to keep track of where we should be writing in current_path;
 
-	// Takes a chunk of the directory path at a time
-	path_chunk = strtok_r(m_directory, "/", &strtok_ref);
-	if (m_directory[0] == '/') {
-		snprintf(path_ptr, sizeof("/"), "/");
-		path_ptr++;
-	}
-	while (path_chunk != NULL) {
-//      blast_info("current_path = %s, path_chunk = %s", current_path, path_chunk);
-	    current_path_len = strlen(current_path);
-	    path_chunk_len = strlen(path_chunk);
-//      blast_info("current_path_len = %i, path_chunk_len = %i", (int) current_path_len, (int) path_chunk_len);
-		if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
-			blast_err("Path too long");
-			return -1;
-		}
-		snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
-		path_ptr += path_chunk_len;
-		snprintf(path_ptr, sizeof("/"), "/");
-		path_ptr++;
-	    current_path_len = strlen(current_path);
-//      blast_info("current_path = %s, length = %i", current_path, (int) current_path_len);
+    // Takes a chunk of the directory path at a time
+    path_chunk = strtok_r(m_directory, "/", &strtok_ref);
+    if (m_directory[0] == '/') {
+	snprintf(path_ptr, sizeof("/"), "/");
+	path_ptr++;
+    }
+    while (path_chunk != NULL) {
+        current_path_len = strlen(current_path);
+        path_chunk_len = strlen(path_chunk);
+	if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
+	    blast_err("Path too long");
+            return -1;
+        }
+	snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
+	path_ptr += path_chunk_len;
+	snprintf(path_ptr, sizeof("/"), "/");
+	path_ptr++;
+	current_path_len = strlen(current_path);
         stat_return = stat(current_path, &dir_stat);
-		if (stat_return != 0) {
-		    blast_info("Making path %s", current_path);
-			ret = mkdir(current_path, ACCESSPERMS);
-			if (ret < 0) {
-				blast_strerror("Could not make %s", current_path);
-				return ret;
-			}
-		}
-		path_chunk = strtok_r(NULL, "/", &strtok_ref);
-	}
-    // blast_tmp_sprintf(change_perm, "sudo chown -R fc1user:blast %s", current_path);
-    // system(change_perm);
-	return 1;
+        if (stat_return != 0) {
+	    blast_info("Making path %s", current_path);
+	    ret = mkdir(current_path, ACCESSPERMS);
+	    if (ret < 0) {
+	        blast_strerror("Could not make %s", current_path);
+	        return ret;
+	    } else { ret = 1; }
+        }
+	path_chunk = strtok_r(NULL, "/", &strtok_ref);
+    }
+    return ret;
+}
+
+int create_sweepdir(roach_state_t *m_roach, int sweep_type)
+{
+    int retval = -1;
+    int ind = m_roach->which - 1;
+    char* new_path;
+    char *path_root;
+    char *type;
+    if ((sweep_type == VNA)) {
+        path_root = m_roach->vna_path_root;
+	type = "VNA";
+    }
+    if ((sweep_type = TARG)) {
+        path_root = m_roach->targ_path_root;
+	type = "TARGET";
+    }
+    new_path = get_path(m_roach, path_root);
+    if (sweep_type == VNA) {
+	    asprintf(&m_roach->last_vna_path, new_path);
+    } else { asprintf(&m_roach->last_targ_path, new_path); }
+    blast_info("ROACH%d, New %s sweep will be saved in %s", ind + 1, type, new_path);
+    if (mkdir_recursive(new_path)) {
+        retval = 1;
+    } else {
+        blast_strerror("Could not create new directory: %s", new_path);
+    }
+    return retval;
 }
 
 int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_targ_path)
@@ -1091,105 +1109,95 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
 }
 
 /* int type: 0 for VNA sweep, 1 for TARG sweep */
-int roach_do_sweep(roach_state_t *m_roach, int type)
+int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
-    char* new_path;
     int retval = SWEEP_SUCCESS;
     int ind = m_roach->which - 1;
     bb_state_t *m_bb = &bb_state_table[ind];
-    /*type = {0:VNA, 1:TARG} */
     double m_span;
-    /* Create VNA and TARG directories on FC1 */
     char *sweep_freq_fname;
-    if ((type == 0)) {
+    char *save_path;
+    size_t comb_len;
+    struct stat dir_stat;
+    int stat_return;
+    if ((sweep_type == VNA)) {
         char *vna_freq_fname;
-        new_path = get_path(m_roach, m_roach->vna_path_root);
-        asprintf(&m_roach->last_vna_path, new_path);
-        if (mkdir_recursive(new_path)) {
-            free(new_path);
-            blast_info("ROACH%d, VNA sweep will be saved in %s", ind + 1, m_roach->last_vna_path);
-        } else {
-            blast_strerror("Could not create new directory: %s", m_roach->last_vna_path);
-            free(m_roach->last_vna_path);
+        if (create_sweepdir(m_roach, VNA) && create_sweepdir(m_roach, TARG)) {
+	    m_span = m_roach->vna_sweep_span;
+	    blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
+	    blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
+	    save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len);
+            save_path = m_roach->last_vna_path;
+	    comb_len = m_roach->vna_comb_len;
+	} else {
+	    return SWEEP_FAIL;
         }
-		m_span = m_roach->vna_sweep_span;
-		// blast_info("ROACH%d, VNA sweep will be saved in %s", m_roach->which, m_roach->last_vna_path);
-		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
-		blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
-		save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len);
-    } else {
-        m_span = TARG_SWEEP_SPAN;
-	if (m_roach->last_targ_path) {
-        free(m_roach->last_targ_path);
+    }
+    if ((sweep_type == TARG)) {
+        stat_return = stat(m_roach->last_targ_path, &dir_stat);
+        if (stat_return != 0) {
+            if (create_sweepdir(m_roach, TARG)) {
+                blast_info("ROACH%d, TARGET sweep will be saved in %s", m_roach->which, m_roach->last_targ_path);
+            } else {
+	       return SWEEP_FAIL;
+            }
         }
-        new_path = get_path(m_roach, m_roach->targ_path_root);
-        asprintf(&m_roach->last_targ_path, new_path);
-        if (mkdir_recursive(new_path)) {
-            free(new_path);
-		blast_info("ROACH%d, TARGET sweep will be saved in %s", m_roach->which, m_roach->last_targ_path);
-        } else {
-            blast_strerror("Could not create new directory: %s", m_roach->last_targ_path);
-            free(m_roach->last_targ_path);
+        save_path = m_roach->last_targ_path;
+        blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
+	blast_info("Sweep freq fname = %s", sweep_freq_fname);
+	// save_freqs(m_roach, targ_freq_fname, m_roach->targ_tones, m_roach->num_kids);
+	blast_info("Uploading TARGET comb...");
+	roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+	comb_len = m_roach->num_kids;
+	blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
+    }
+    /* Determine sweep frequencies */
+    FILE *m_sweep_fd = fopen(sweep_freq_fname, "w");
+    if (!m_sweep_fd) {
+        blast_strerror("Could not open %s for writing", sweep_freq_fname);
+        return SWEEP_FAIL;
+    }
+    double m_min_freq = m_roach->lo_centerfreq - (m_span/2.);
+    double m_max_freq = m_roach->lo_centerfreq + (m_span/2.);
+    size_t m_num_sweep_freqs = (m_max_freq - m_min_freq) / LO_STEP;
+    char *lo_command; /* BB command */
+    double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
+    m_sweep_freqs[0] = m_min_freq;
+    for (size_t i = 1; i < m_num_sweep_freqs; i++) {
+	m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
+    }
+    for (size_t i = 0; i < m_num_sweep_freqs; i++) {
+	m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
+	fprintf(m_sweep_fd, "%d\n", (uint32_t)m_sweep_freqs[i]);
+    }
+    fclose(m_sweep_fd);
+    blast_info("ROACH%d, Sweep freqs written to %s", m_roach->which, sweep_freq_fname);
+    blast_info("ROACH%d Starting new sweep...", m_roach->which);
+    /* Sweep and save data */
+    for (size_t i = 0; i < m_num_sweep_freqs; i++) {
+	if (CommandData.roach[ind].do_sweeps) {
+        if ((ind >= 3)) {
+            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
+		m_sweep_freqs[i]/1.0e6);
+            } else {
+                blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n",
+		m_sweep_freqs[i]/1.0e6);
+	    }
+        m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
+        bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
+    	if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, LO_READ_TIMEOUT) < 1) {
+	blast_info("Error setting LO... reboot BB%d?", ind + 1);
         }
-		blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
-		blast_info("Sweep freq fname = %s", sweep_freq_fname);
-		// save_freqs(m_roach, targ_freq_fname, m_roach->targ_tones, m_roach->num_kids);
-		blast_info("Uploading TARGET comb...");
-		roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-		blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
-	}
-	/* Determine sweep frequencies */
-	FILE *m_sweep_fd = fopen(sweep_freq_fname, "w");
-	if (!m_sweep_fd) {
-        	blast_strerror("Could not open %s for writing", sweep_freq_fname);
-        	return SWEEP_FAIL;
-	}
-	double m_min_freq = m_roach->lo_centerfreq - (m_span/2.);
-	double m_max_freq = m_roach->lo_centerfreq + (m_span/2.);
-	size_t m_num_sweep_freqs = (m_max_freq - m_min_freq) / LO_STEP;
-	char *lo_command; /* BB command */
-	double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
-	m_sweep_freqs[0] = m_min_freq;
-	for (size_t i = 1; i < m_num_sweep_freqs; i++) {
-		m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
-	}
-	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-		m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
-		fprintf(m_sweep_fd, "%d\n", (uint32_t)m_sweep_freqs[i]);
-	}
-	fclose(m_sweep_fd);
-	blast_info("ROACH%d, Sweep freqs written to %s", m_roach->which, sweep_freq_fname);
-	blast_info("ROACH%d Starting new sweep...", m_roach->which);
-	/* Sweep and save data */
-	for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-		if (CommandData.roach[ind].do_sweeps) {
-			// TODO(Sam) Make sure stopping sweep doesn't crash Valon
-		    if ((ind >= 3)) {
-                        blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
-						m_sweep_freqs[i]/1.0e6);
-                    } else {
-                        blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n",
-						m_sweep_freqs[i]/1.0e6);
-		    }
-                    m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-		    bb_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-    	            if (bb_read_string(&bb_state_table[ind], BB_READ_NTRIES, LO_READ_TIMEOUT) < 1) {
-		    blast_info("Error setting LO... reboot BB%d?", ind + 1);
-                    }
-	            if ((type == 0)) {
-		        usleep(10000);
-			roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], m_roach->last_vna_path, m_roach->vna_comb_len);
-		    } else {
-		        roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], m_roach->last_targ_path, m_roach->num_kids);
-		    }
-	        } else {
-		    blast_info("Sweep interrupted by command");
-		    retval = SWEEP_INTERRUPT;
-		    break;
-		}
-	}
-	usleep(3000);
-    if ((ind == 3)) {
+        usleep(10000);
+        roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len);
+	} else {
+        blast_info("Sweep interrupted by command");
+        retval = SWEEP_INTERRUPT;
+        break;
+        }
+    }
+    usleep(3000);
+    if ((ind >= 3)) {
         blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
     } else {
         blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_roach->lo_centerfreq/1.0e6);
@@ -1228,7 +1236,7 @@ void cal_sweep(roach_state_t *m_roach)
 			// Todo(Sam) Make sure this doesn't crash sweep
 			blast_info("Sweep freq = %.7g", m_sweep_freqs[i]/1.0e6);
 			m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-			if ((ind == 3)) {
+			if ((ind >= 3)) {
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
             } else {
                 blast_tmp_sprintf(lo_command, "python /root/device_control/set_lo.py %g\n", m_sweep_freqs[i]/1.0e6);
@@ -1711,7 +1719,7 @@ void *roach_cmd_loop(void* ind)
 				usleep(3000);
 				blast_info("ROACH%d, Initializing VNA sweep", i + 1);
 				blast_info("ROACH%d, Starting VNA sweep...", i + 1);
-				status = roach_do_sweep(&roach_state_table[i], 0);
+				status = roach_do_sweep(&roach_state_table[i], VNA);
 				if ((status == SWEEP_SUCCESS)) {
 					blast_info("ROACH%d, VNA sweep complete", i + 1);
 					roach_state_table[i].status = ROACH_STATUS_VNA;
@@ -1742,7 +1750,7 @@ void *roach_cmd_loop(void* ind)
 				roach_read_int(&roach_state_table[i], "PFB_fft_shift");
 				usleep(3000);
 				blast_info("ROACH%d, STARTING TARG sweep", i + 1);
-				status = roach_do_sweep(&roach_state_table[i], 1);
+				status = roach_do_sweep(&roach_state_table[i], TARG);
 				if ((status == SWEEP_SUCCESS)) {
 					blast_info("ROACH%d, TARG sweep complete", i + 1);
 					roach_state_table[i].status = ROACH_STATUS_TARG;

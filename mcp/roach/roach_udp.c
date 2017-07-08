@@ -72,6 +72,7 @@ const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
 
 uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
 {
+    // blast_info("R%d packet count = %d", m_roach_udp->which, m_packet->packet_count);
     uint16_t retval = 0;
     if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
         blast_warn("roach%i: Packet sequence number is %i. Last sequence number was =%i!",
