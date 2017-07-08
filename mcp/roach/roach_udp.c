@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -131,7 +132,7 @@ int init_socket(roach_state_t *m_roach)
                 close(sock);
         } else { retval = sock;}
         /* Filter only UDP packets */
-        filter_udp(sock);
+        // filter_udp(sock);
         return retval;
 }
 
@@ -194,55 +195,65 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
     }*/
     packet_count++;
 }
-/**
- * Initialize the roach udp packet routine.  The state variable tracks each
- * udp socket and is passed to the connect job.
- *
- * @param m_which
- */
 
-void *roach_process_stream(void *roach_state)
+void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m_packet)
 {
-    roach_state_t *m_roach_state = (roach_state_t *)roach_state;
-    // roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
-    while (1) {
-	roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
-        data_udp_packet_t m_packet;
-        m_packet.rcv_buffer = calloc(UDP_FRAME_LEN, sizeof(uint8_t));
-        uint64_t bytes_read = recvfrom(m_roach_udp->sock, m_packet.rcv_buffer,
-				UDP_FRAME_LEN, 0, NULL, NULL);
-        m_packet.udp = (struct udphdr *)(m_packet.rcv_buffer
-			+ sizeof(struct ethhdr)
-			+ sizeof(struct iphdr));
-        /* Filter destination address */
-	// blast_info("%u\t%u", m_roach_udp->port, ntohs(m_packet.udp->dest));
-        if (m_roach_udp->port != ntohs(m_packet.udp->dest)) {
-            continue;
-        }
-        if (bytes_read < ROACH_UDP_DATA_LEN) {
-    	    blast_err("roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
-            m_roach_udp->roach_invalid_packet_count++;
-            m_roach_udp->roach_packet_count++;
-            continue;
-        }
-        m_packet.buffer_len = bytes_read;
-        // blast_info("BYTES READ = %d", m_packet.buffer_len);
-        parse_udp_packet(&m_packet);
-        uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
+        parse_udp_packet(m_packet);
+        uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
         // store_roach_udp_packet(&m_packet, m_roach_udp); // Writes packet to harddrive.
         if (udperr > 0) {
 	    blast_info("UDPERR = %d", udperr);
 	    // continue;
-        udp_store_to_structure(&m_packet, m_roach_udp);
+        udp_store_to_structure(m_packet, m_roach_udp);
         m_roach_udp->have_warned = 0;
-        free(m_packet.rcv_buffer);
+        free(m_packet->rcv_buffer);
 	}
+}
+
+/* Poll the socket for data. If a packet is received, pass it to roach_process_stream() */
+void *poll_socket(void *roach_state)
+{
+    roach_state_t *m_roach_state = (roach_state_t *)roach_state;
+    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
+    int rv;
+    struct pollfd ufds[1];
+    ufds[0].fd = m_roach_udp->sock;
+    ufds[0].events = POLLIN; // Check for data on socket
+    rv = poll(ufds, 1, 10); // Wait for event, 10 ms timeout
+    while (1) {
+        data_udp_packet_t m_packet;
+        m_packet.rcv_buffer = calloc(UDP_FRAME_LEN, sizeof(uint8_t));
+        if (rv == -1) {
+            perror("poll"); // error occurred in poll()
+        } else if (rv == 0) {
+            printf("Timeout occurred!  No data after 10 ms.\n");
+        } else {
+            if (ufds[0].revents & POLLIN) { // check for events on socket
+                uint64_t bytes_read = recv(m_roach_udp->sock, m_packet.rcv_buffer,
+	                UDP_FRAME_LEN, 0);
+                m_packet.udp = (struct udphdr *)(m_packet.rcv_buffer
+			+ sizeof(struct ethhdr)
+			+ sizeof(struct iphdr));
+                /* Filter destination address */
+                if (m_roach_udp->port != ntohs(m_packet.udp->dest)) {
+                    continue;
+                }
+                if (bytes_read < ROACH_UDP_DATA_LEN) {
+    	            blast_err("roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
+                    m_roach_udp->roach_invalid_packet_count++;
+                    m_roach_udp->roach_packet_count++;
+                    continue;
+                }
+                m_packet.buffer_len = bytes_read;
+                roach_process_stream(m_roach_udp, &m_packet);
+            }
+        }
     }
 }
 
 void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels)
 {
-    pthread_t recv_thread;
+    pthread_t poll_thread;
     uint32_t origaddr;
     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_which-1];
 
@@ -295,7 +306,7 @@ void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t
     if (!m_roach_udp->sock) blast_err("roach%d: Failed to open Socket", m_which);
     m_roach_udp->opened = 1;
     /* Create recv_thread (roach_process_stream) */
-    if (pthread_create(&recv_thread, NULL, roach_process_stream, m_roach_state)) {
+    if (pthread_create(&poll_thread, NULL, poll_socket, m_roach_state)) {
         blast_err("Error creating recv_thread");
     }
 }
