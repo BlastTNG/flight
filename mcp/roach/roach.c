@@ -980,8 +980,7 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
     if ((sweep_type == VNA)) {
         path_root = m_roach->vna_path_root;
 	type = "VNA";
-    }
-    if ((sweep_type = TARG)) {
+    } else if ((sweep_type == TARG)) {
         path_root = m_roach->targ_path_root;
 	type = "TARGET";
     }

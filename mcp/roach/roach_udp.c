@@ -204,9 +204,9 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
 void *roach_process_stream(void *roach_state)
 {
     roach_state_t *m_roach_state = (roach_state_t *)roach_state;
-    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
+    // roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
     while (1) {
-	// roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
+	roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[m_roach_state->which - 1];
         data_udp_packet_t m_packet;
         m_packet.rcv_buffer = calloc(UDP_FRAME_LEN, sizeof(uint8_t));
         uint64_t bytes_read = recvfrom(m_roach_udp->sock, m_packet.rcv_buffer,
