@@ -145,6 +145,10 @@ channel_t channel_list[] =
     { "current_loop_10",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     // ADD CLINOMETER CHANNELS
+    { "clin_1_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_1_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_2_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_2_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
 
     // below are the status channels
     { "status_charcoal_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},

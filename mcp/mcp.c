@@ -340,7 +340,7 @@ static void mcp_100hz_routines(void)
 }
 static void mcp_5hz_routines(void)
 {
-    watchdog_ping();
+    // watchdog_ping();
     // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
@@ -349,7 +349,8 @@ static void mcp_5hz_routines(void)
     WriteAux();
     ControlBalance();
     StoreActBus();
-    level_control();
+    // level_control();
+    level_toggle();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
     #endif
@@ -374,12 +375,15 @@ static void mcp_1hz_routines(void)
 {
     // rec_control();
     of_control();
-    // if_control();
+    if_control();
     // heater_control();
     // heater_read();
     // load_curve_300mk();
     // read_thermometers();
     // auto_cycle_mk2();
+    update_thermistors();
+    update_clinometer();
+    update_current_sensors();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -565,6 +569,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+  initialize_labjack_queue();
   // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
@@ -582,6 +587,9 @@ int main(int argc, char *argv[])
   // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();
+
+  // force incharge for test cryo
+  // force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);

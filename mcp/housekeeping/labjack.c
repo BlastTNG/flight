@@ -67,9 +67,7 @@ static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
     PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
         if (InCharge) {
-            blast_info("writing command");
             heater_write(cmd->labjack, cmd->address, cmd->command);
-            blast_info("command written");
         }
         PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
 
@@ -94,9 +92,7 @@ void labjack_queue_command(int m_labjack, int m_address, float m_command) {
     cmd->labjack = m_labjack;
     cmd->address = m_address;
     cmd->command = m_command;
-    blast_info("inserting command");
     PH_STAILQ_INSERT_TAIL(&s_labjack_command, cmd, q);
-    blast_info("command inserted");
 }
 
 
@@ -533,7 +529,6 @@ void *labjack_cmd_thread(void *m_lj) {
         if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
             init_labjack_stream_commands(m_state);
         }
-        /*
         if (m_state->which == 0) {
             if (CommandData.Labjack_Queue.lj_q0_on == 0) {
                 blast_info("queue set by LJ 0");
@@ -548,17 +543,13 @@ void *labjack_cmd_thread(void *m_lj) {
             }
             CommandData.Labjack_Queue.lj_q1_on = 1;
         }
-         */
-        if (m_state->which == 2 /* && CommandData.Labjack_Queue.lj_q1_on == 0 */) {
+        if (m_state->which == 2 && CommandData.Labjack_Queue.lj_q1_on == 0) {
             labjack_execute_command_queue();
-            /*
             if (CommandData.Labjack_Queue.lj_q2_on == 0) {
                 blast_info("queue set by LJ 2");
             }
             CommandData.Labjack_Queue.lj_q2_on = 1;
-             */
         }
-        /*
         if (m_state->which == 3 && CommandData.Labjack_Queue.lj_q2_on == 0 &&
             CommandData.Labjack_Queue.lj_q0_on == 0 && CommandData.Labjack_Queue.lj_q1_on == 0) {
             labjack_execute_command_queue();
@@ -571,9 +562,12 @@ void *labjack_cmd_thread(void *m_lj) {
             CommandData.Labjack_Queue.lj_q2_on == 0 && CommandData.Labjack_Queue.lj_q0_on == 0 &&
             CommandData.Labjack_Queue.lj_q1_on == 0) {
             labjack_execute_command_queue();
-            blast_info("queue set by LJ 4");
+            static int first_time = 1;
+            if (first_time) {
+                blast_info("queue set by LJ 4");
+                first_time = 0;
+            }
         }
-*/
         /*
           // Set DAC level
             modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
@@ -596,8 +590,11 @@ void *labjack_cmd_thread(void *m_lj) {
 void initialize_labjack_commands(int m_which)
 {
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-    if (!m_which) PH_STAILQ_INIT(&s_labjack_command);
     ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+}
+
+void initialize_labjack_queue(void) {
+    PH_STAILQ_INIT(&s_labjack_command);
 }
 
 /**

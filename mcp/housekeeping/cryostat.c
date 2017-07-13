@@ -282,6 +282,17 @@ void level_control(void) {
     }
 }
 
+void level_toggle(void) {
+    if (InCharge) {
+        static int level_state = 1;
+        if (CommandData.Cryo.do_level_pulse) {
+            CommandData.Cryo.do_level_pulse = 0;
+            labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, level_state);
+            level_state = !level_state;
+        }
+    }
+}
+
 void test_frequencies(void) {
     static channel_t* test_Addr;
     static int first_test = 1;
@@ -714,7 +725,10 @@ void auto_cycle_mk2(void) {
         output_cycle();
     }
 }
-
+void force_incharge(void) {
+    InCharge = 1;
+    // used for the test cryostat without watchdog board
+}
 
 
 

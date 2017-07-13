@@ -401,7 +401,6 @@ void heater_write(int m_labjack, int address, float command) {
     labjack_set_float(command, data);
     if (m_labjack != 1) {
         if (address != 1000) {
-            blast_info("the address is %d", address);
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
             if (ret < 0) {
                 int tries = 1;

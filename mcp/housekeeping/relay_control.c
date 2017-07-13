@@ -257,16 +257,45 @@ static void of_init(void) {
     of_state.of_15_off = 0;
     of_state.of_16_on = 0;
     of_state.of_16_off = 0;
+    CommandData.Relays.of_1_on = of_state.of_1_on;
+    CommandData.Relays.of_1_off = of_state.of_1_off;
+    CommandData.Relays.of_2_on = of_state.of_2_on;
+    CommandData.Relays.of_2_off = of_state.of_2_off;
+    CommandData.Relays.of_3_on = of_state.of_3_on;
+    CommandData.Relays.of_3_off = of_state.of_3_off;
+    CommandData.Relays.of_4_on = of_state.of_4_on;
+    CommandData.Relays.of_4_off = of_state.of_4_off;
+    CommandData.Relays.of_5_on = of_state.of_5_on;
+    CommandData.Relays.of_5_off = of_state.of_5_off;
+    CommandData.Relays.of_6_on = of_state.of_6_on;
+    CommandData.Relays.of_6_off = of_state.of_6_off;
+    CommandData.Relays.of_7_on = of_state.of_7_on;
+    CommandData.Relays.of_7_off = of_state.of_7_off;
+    CommandData.Relays.of_8_on = of_state.of_8_on;
+    CommandData.Relays.of_8_off = of_state.of_8_off;
+    CommandData.Relays.of_9_on = of_state.of_9_on;
+    CommandData.Relays.of_9_off = of_state.of_9_off;
+    CommandData.Relays.of_10_on = of_state.of_10_on;
+    CommandData.Relays.of_10_off = of_state.of_10_off;
+    CommandData.Relays.of_11_on = of_state.of_11_on;
+    CommandData.Relays.of_11_off = of_state.of_11_off;
+    CommandData.Relays.of_12_on = of_state.of_12_on;
+    CommandData.Relays.of_12_off = of_state.of_12_off;
+    CommandData.Relays.of_13_on = of_state.of_13_on;
+    CommandData.Relays.of_13_off = of_state.of_13_off;
+    CommandData.Relays.of_14_on = of_state.of_14_on;
+    CommandData.Relays.of_14_off = of_state.of_14_off;
+    CommandData.Relays.of_15_on = of_state.of_15_on;
+    CommandData.Relays.of_15_off = of_state.of_15_off;
+    CommandData.Relays.of_16_on = of_state.of_16_on;
+    CommandData.Relays.of_16_off = of_state.of_16_off;
 }
 // pulls data from the command data struct
 static void of_update_values(void) {
-    /*
     of_state.of_1_on = CommandData.Relays.of_1_on;
     of_state.of_1_off = CommandData.Relays.of_1_off;
-     */
     of_state.of_2_on = CommandData.Relays.of_2_on;
     of_state.of_2_off = CommandData.Relays.of_2_off;
-    /*
     of_state.of_3_on = CommandData.Relays.of_3_on;
     of_state.of_3_off = CommandData.Relays.of_3_off;
     of_state.of_4_on = CommandData.Relays.of_4_on;
@@ -295,17 +324,13 @@ static void of_update_values(void) {
     of_state.of_15_off = CommandData.Relays.of_15_off;
     of_state.of_16_on = CommandData.Relays.of_16_on;
     of_state.of_16_off = CommandData.Relays.of_16_off;
-     */
 }
 // sends all of the new values to the labjacks for the OF
 static void of_send_values(void) {
-    /*
     labjack_queue_command(LABJACK_OF_1, RELAY_1_ON, of_state.of_1_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_1_OFF, of_state.of_1_off);
-     */
     labjack_queue_command(LABJACK_OF_1, RELAY_2_ON, of_state.of_2_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_2_OFF, of_state.of_2_off);
-    /*
     labjack_queue_command(LABJACK_OF_1, RELAY_3_ON, of_state.of_3_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_3_OFF, of_state.of_3_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_4_ON, of_state.of_4_on);
@@ -334,12 +359,12 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
-     */
 }
 //
 void of_control(void) {
     if (CommandData.Relays.labjack[2] == 1 && CommandData.Relays.labjack[3] == 1) {
         static int of_trigger = 0;
+        static int counter = 0;
         // 1 second later sends all 0s
         if (of_trigger == 1) { // turns off the previous set of pulses
             of_trigger = 0;
@@ -347,9 +372,16 @@ void of_control(void) {
             of_send_values();
         }
         // sends the values from command data
+        if (of_trigger == 2) {
+            counter--;
+            if (counter == 0) {
+                of_trigger = 1;
+            }
+        }
         if ((of_state.update_of = CommandData.Relays.update_of) == 1) {
             of_update_values();
             of_trigger = 1;
+            counter = 1;
             blast_info("preparing to send values");
             of_send_values();
             blast_info("values queued");
@@ -379,6 +411,26 @@ static void if_init(void) {
     if_state.if_9_off = 0;
     if_state.if_10_on = 0;
     if_state.if_10_off = 0;
+    CommandData.Relays.if_1_on = if_state.if_1_on;
+    CommandData.Relays.if_1_off = if_state.if_1_off;
+    CommandData.Relays.if_2_on = if_state.if_2_on;
+    CommandData.Relays.if_2_off = if_state.if_2_off;
+    CommandData.Relays.if_3_on = if_state.if_3_on;
+    CommandData.Relays.if_3_off = if_state.if_3_off;
+    CommandData.Relays.if_4_on = if_state.if_4_on;
+    CommandData.Relays.if_4_off = if_state.if_4_off;
+    CommandData.Relays.if_5_on = if_state.if_5_on;
+    CommandData.Relays.if_5_off = if_state.if_5_off;
+    CommandData.Relays.if_6_on = if_state.if_6_on;
+    CommandData.Relays.if_6_off = if_state.if_6_off;
+    CommandData.Relays.if_7_on = if_state.if_7_on;
+    CommandData.Relays.if_7_off = if_state.if_7_off;
+    CommandData.Relays.if_8_on = if_state.if_8_on;
+    CommandData.Relays.if_8_off = if_state.if_8_off;
+    CommandData.Relays.if_9_on = if_state.if_9_on;
+    CommandData.Relays.if_9_off = if_state.if_9_off;
+    CommandData.Relays.if_10_on = if_state.if_10_on;
+    CommandData.Relays.if_10_off = if_state.if_10_off;
 }
 // pulls the inner frame relay values from the command data struct
 static void if_update_values(void) {
@@ -430,14 +482,22 @@ static void if_send_values(void) {
 void if_control(void) {
     if (CommandData.Relays.labjack[3] == 1) {
         static int if_trigger = 0;
+        static int if_counter = 0;
         if (if_trigger == 1) { // turns off the previous set of pulses
             if_trigger = 0;
             if_init();
             if_send_values();
         }
+        if (if_trigger == 2) {
+            if_counter--;
+            if (if_counter == 0) {
+                if_trigger = 1;
+            }
+        }
         if ((if_state.update_if = CommandData.Relays.update_if) == 1) {
             if_update_values();
-            if_trigger = 1;
+            if_trigger = 2;
+            if_counter = 3;
             if_send_values();
             CommandData.Relays.update_if = 0;
         }

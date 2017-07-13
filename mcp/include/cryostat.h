@@ -26,4 +26,6 @@ void read_chopper(void);
 void set_dac(void);
 void init_array();
 void load_curve_300mk(void);
+void force_incharge();
+void level_toggle();
 #endif /* cryostat_h */
