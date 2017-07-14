@@ -255,7 +255,7 @@ static void roach_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_d
 
     uint16_t udperr = check_udp_packet(&m_packet, m_roach_udp);
 
-    store_roach_udp_packet(&m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
+    // store_roach_udp_packet(&m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
 
     if (udperr > 0) return;
 

@@ -174,7 +174,7 @@ void WriteAux(void)
 
 //    blast_info("InCharge = %i, SouthIAm = %i, statusMCCAddr = %i",
 //                InCharge, SouthIAm, GET_UINT16(statusMCCAddr));
-    InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
+    // InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
 
     if (InCharge != incharge && InCharge) {
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
@@ -182,7 +182,6 @@ void WriteAux(void)
     } else if (InCharge != incharge) {
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
     }
-
 
     incharge = InCharge;
 

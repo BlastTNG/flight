@@ -88,7 +88,7 @@
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int16_t SouthIAm;
-int16_t InCharge = 0;
+int16_t InCharge = 1;
 int16_t InChargeSet = 0;
 
 bool shutdown_mcp = false;
@@ -396,7 +396,7 @@ static void mcp_1hz_routines(void)
     // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
-    blast_store_disk_space();
+    // blast_store_disk_space();
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
@@ -584,8 +584,8 @@ int main(int argc, char *argv[])
 #ifndef NO_KIDS_TEST
 blast_info("Initializing ROACHes from MCP...");
 init_roach(0);
-init_roach(1);
-init_roach(2);
+// init_roach(1);
+// init_roach(2);
 blast_info("Finished initializing ROACHes...");
 #endif
 
@@ -594,7 +594,7 @@ init_beaglebone();
 blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  initialize_diskmanager();
+  // initialize_diskmanager();
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
