@@ -92,12 +92,13 @@
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (1)
 #define SWEEP_FAIL (0)
-#define BB_READ_NTRIES 10 /* Number of times to attempt BB buffer read */
-#define BB_READ_TIMEOUT (1000000) /* BB read timeout, usec */
-#define LO_READ_TIMEOUT (500000) /* BB read timeout, usec */
-#define INIT_VALON_TIMEOUT (500000) /* BB read timeout, usec */
+#define BB_READ_NTRIES 5 /* Number of times to attempt BB buffer read */
+#define BB_READ_TIMEOUT (2000000) /* BB read timeout, usec */
+#define LO_READ_TIMEOUT (2000000) /* BB read timeout, usec */
+#define INIT_VALON_TIMEOUT (2000000) /* BB read timeout, usec */
 
 extern int16_t InCharge;
+extern roach_sock_fd;
 static int fft_len = 1024;
 static uint32_t accum_len = (1 << 19) - 1;
 // Test frequencies for troubleshooting (arbitrary values)
@@ -1518,6 +1519,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 
 void shutdown_roaches(void)
 {
+    close(roach_sock_fd); // close roach UDP socket
     for (int i = 0; i < NUM_ROACHES; i++) {
         blast_info("Closing KATCP on ROACH%d", i + 1);
         if (roach_state_table[i].rpc_conn) {
@@ -1776,10 +1778,10 @@ void *roach_cmd_loop(void* ind)
 
 int init_roach(uint16_t ind)
 {
-	if (ind >= NUM_ROACHES) {
-	    blast_err("Attempted to intialize a non-existent roach #%u", ind + 1);
+    if (ind >= NUM_ROACHES) {
+        blast_err("Attempted to intialize a non-existent roach #%u", ind + 1);
 	    return -1;
-	}
+    }
     memset(&roach_state_table[ind], 0, sizeof(roach_state_t));
     memset(&bb_state_table[ind], 0, sizeof(bb_state_t));
     memset(&rudat_state_table[ind], 0, sizeof(rudat_state_t));
@@ -1792,53 +1794,53 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].qdr_log, "/home/fc1user/sam_tests/roach%d_qdr_cal.log", ind + 1);
     asprintf(&roach_state_table[ind].find_kids_log, "/home/fc1user/sam_tests/roach%d_find_kids.log", ind + 1);
     asprintf(&roach_state_table[ind].opt_tones_log, "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
-	 if ((ind == 0)) {
-	 	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	 	roach_state_table[ind].vna_comb_len = 1000;
-	 	roach_state_table[ind].p_max_freq = 246.001234e6;
-	 	roach_state_table[ind].p_min_freq = 1.02342e6;
-	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-	 }
-	 if ((ind == 1)) {
-	 	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	 	roach_state_table[ind].vna_comb_len = 1000;
-	 	roach_state_table[ind].p_max_freq = 246.001234e6;
-	 	roach_state_table[ind].p_min_freq = 1.02342e6;
-	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-	 }
-	 if ((ind == 2)) {
-	 	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	 	roach_state_table[ind].vna_comb_len = 1000;
-	 	roach_state_table[ind].p_max_freq = 246.001234e6;
-	 	roach_state_table[ind].p_min_freq = 1.02342e6;
-	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-	 }
-	 if ((ind == 3)) {
-	 	roach_state_table[ind].lo_centerfreq = 750.0e6;
-	 	roach_state_table[ind].vna_comb_len = 1000;
-	 	roach_state_table[ind].p_max_freq = 246.001234e6;
-	 	roach_state_table[ind].p_min_freq = 1.02342e6;
-	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	    roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-	 }
-	 if ((ind == 4)) {
-	 	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	 	roach_state_table[ind].vna_comb_len = 1000;
-	 	roach_state_table[ind].p_max_freq = 246.001234e6;
-	 	roach_state_table[ind].p_min_freq = 1.02342e6;
-	 	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	    roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-	 }
-	 roach_state_table[ind].which = ind + 1;
-	 bb_state_table[ind].which = ind + 1;
-	 rudat_state_table[ind].which = ind + 1;
-	 valon_state_table[ind].which = ind + 1;
-         roach_state_table[ind].dest_port = 64000 + ind;
-	 roach_state_table[ind].is_streaming = 0;
-	 roach_udp_networking_init(roach_state_table[ind].which, &roach_state_table[ind], NUM_ROACH_UDP_CHANNELS);
+    if ((ind == 0)) {
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
+	roach_state_table[ind].vna_comb_len = 1000;
+	roach_state_table[ind].p_max_freq = 246.001234e6;
+	roach_state_table[ind].p_min_freq = 1.02342e6;
+	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    if ((ind == 1)) {
+	roach_state_table[ind].lo_centerfreq = 828.0e6;
+	roach_state_table[ind].vna_comb_len = 1000;
+	roach_state_table[ind].p_max_freq = 246.001234e6;
+	roach_state_table[ind].p_min_freq = 1.02342e6;
+	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    if ((ind == 2)) {
+	roach_state_table[ind].lo_centerfreq = 828.0e6;
+	roach_state_table[ind].vna_comb_len = 1000;
+	roach_state_table[ind].p_max_freq = 246.001234e6;
+	roach_state_table[ind].p_min_freq = 1.02342e6;
+	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    if ((ind == 3)) {
+	roach_state_table[ind].lo_centerfreq = 750.0e6;
+	roach_state_table[ind].vna_comb_len = 1000;
+	roach_state_table[ind].p_max_freq = 246.001234e6;
+	roach_state_table[ind].p_min_freq = 1.02342e6;
+	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    if ((ind == 4)) {
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].vna_comb_len = 1000;
+	roach_state_table[ind].p_max_freq = 246.001234e6;
+	roach_state_table[ind].p_min_freq = 1.02342e6;
+	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    roach_state_table[ind].which = ind + 1;
+    bb_state_table[ind].which = ind + 1;
+    rudat_state_table[ind].which = ind + 1;
+    valon_state_table[ind].which = ind + 1;
+    roach_state_table[ind].dest_port = 64000 + ind;
+    roach_state_table[ind].is_streaming = 0;
+    // roach_udp_networking_init(roach_state_table[ind].which, &roach_state_table[ind], NUM_ROACH_UDP_CHANNELS);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
     blast_info("Spawned command thread for roach%i", ind + 1);
     return 0;

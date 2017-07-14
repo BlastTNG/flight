@@ -40,6 +40,19 @@
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
+#define NUM_ROACHES 5
+#define NUM_ROACH_UDP_CHANNELS 1024
+#define ROACH_UDP_LEN 8234
+#define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
+#define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
+                                            (((b) & 0xff) << 16) | \
+                                            (((c) & 0xff) << 8)  | \
+                                            ((d) & 0xff))
+static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
+// Destination IP for fc2
+static const char udp_dest[32] = "192.168.40.4";
+static const char udp_dest_name[32] = "roach-udp-dest";
+int roach_sock_fd;
 
 typedef struct {
     int32_t Ival;
@@ -195,31 +208,15 @@ typedef struct {
 
 // Called each time a packet is received
 typedef struct data_udp_packet {
-    struct udphdr *udp; // will filter on udp dest port
     float Ival[MAX_CHANNELS_PER_ROACH];
     float Qval[MAX_CHANNELS_PER_ROACH];
-    uint32_t buffer_len;
+    struct udphdr *udp_header; // will filter on udp dest port
     uint32_t checksum;
     uint32_t pps_count;
     uint32_t clock_count;
     uint32_t packet_count;
-    unsigned char *rcv_buffer;
+    unsigned char rcv_buffer[ROACH_UDP_LEN];
 } data_udp_packet_t;
-
-#define NUM_ROACHES 5
-#define NUM_ROACH_UDP_CHANNELS 1024
-
-#define ROACH_UDP_LEN 8234
-#define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
-#define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
-                                            (((b) & 0xff) << 16) | \
-                                            (((c) & 0xff) << 8)  | \
-                                            ((d) & 0xff))
-static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
-
-// Destination IP for fc2
-static const char udp_dest[32] = "192.168.40.4";
-static const char udp_dest_name[32] = "roach-udp-dest";
 
 typedef struct {
     int roach;
@@ -272,7 +269,7 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 
 // Defined in roach_udp.c
-void roach_udp_networking_init(int m_which, roach_state_t* m_roach_state, size_t m_numchannels);
+void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
 void shutdown_roaches(void);
 
