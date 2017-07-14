@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
 
@@ -325,7 +326,7 @@ static void mcp_200hz_routines(void)
     cal_control();
 
     framing_publish_200hz();
-    store_data_200hz();
+    // store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -343,7 +344,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
-    store_data_100hz();
+    // store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
     push_bi0_buffer();
@@ -377,7 +378,7 @@ static void mcp_5hz_routines(void)
 #endif
 
     framing_publish_5hz();
-    store_data_5hz();
+//    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -402,7 +403,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    store_data_1hz();
+//    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
@@ -607,14 +608,14 @@ blast_info("Finished initializing Beaglebones..."); */
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(0, 84, 1);
+  // mult_labjack_networking_init(5, 84, 1);
 
   initialize_labjack_commands(LABJACK_CRYO_1);
   initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(0);
+  // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();
 
@@ -627,7 +628,7 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
