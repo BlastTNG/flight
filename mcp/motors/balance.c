@@ -95,7 +95,6 @@ void ControlBalance(void)
                    balance_state.do_move = 1;
                    balance_state.dir = positive;
                } else if (balance_state.moving && (balance_state.i_el_avg > CommandData.balance.i_el_off_bal)) {
-                   blast_info("Still moving and above i_el_off_bal. Keep the balance system going.");
                    balance_state.do_move = 1;
                    balance_state.dir = positive;
                }
@@ -105,7 +104,6 @@ void ControlBalance(void)
                    balance_state.do_move = 1;
                    balance_state.dir = negative;
                } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
-                   blast_info("Still moving and below -i_el_off_bal. Keep the balance system going.");
                    balance_state.do_move = 1;
                    balance_state.dir = negative;
                }
@@ -195,8 +193,6 @@ void DoBalance(struct ezbus* bus)
 // updating the status variables.
     if ((balance_state.do_move) && (!balance_state.moving)) {
         EZBus_Take(bus, balance_state.addr);
-        blast_info("Starting the balance system. Direction = %d", balance_state.dir);
-        blast_info("isPos?: %d, isNeg?: %d", (balance_state.dir == positive), (balance_state.dir == negative));
         if (balance_state.dir == positive) { // Positive direction
 		if (EZBus_RelMove(bus, balance_state.addr, INT_MAX) != EZ_ERR_OK) {
 			blast_warn("Error starting positive balance move");
