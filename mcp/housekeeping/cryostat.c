@@ -214,16 +214,6 @@ void heater_read(void) {
         cal_lamp_status_Addr = channels_find_by_name("status_cal_lamp");
     }
 }
-/*
-Heater status bits
-1 = heater 300mk
-2 = heater 1k
-4 = lna 250
-8 = lna 350
-16 = lna 500
-32 = charcoal
-64 = charcoal_hs
-*/
 
 // function that creates cal lamp pulses via the mcp loop
 // utilizes the cryo control structure
