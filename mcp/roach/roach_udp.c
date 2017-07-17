@@ -19,7 +19,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Created on: July 14, 2015
+ *  Last edited: July 15, 2017
  *      Author: sam + laura + seth
  */
 
@@ -64,14 +64,21 @@
 // #include "command_struct.h"
 #undef I
 
-// TODO(laura/sam): This should be changed to a read checksum once Sam and Adrian
-// incorporate a checksum into the roach packets.
 #define ROACH_CHECKSUM 42
 #define HEADER_LEN 42
-// number of roach channels that will be published to the server
+/* Number of Roach channels for each module that will be published to the server */
 const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
+/* The shared UDP socket file descriptor */
 extern int roach_sock_fd;
 
+/* Function: check_udp_packets
+ * ----------------------------
+ * Verifies checksum and count of received packet
+ * Throws error if either one is incorrect
+ *
+ * @param m_packet UDP packet structure
+ * @param m_roach_udp Roach UDP structure
+ */
 uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
 {
     // blast_info("R%d packet count = %d", m_roach_udp->which, m_packet->packet_count);
@@ -99,82 +106,107 @@ uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_ro
     return retval;
 }
 
-// Used to filter only UDP packets (using IPPROTO_UDP in socket init didn't work)
+/* Function: filter_udp
+ * -------------------------
+ * Filters packets of type UDP
+ *
+ * @param m_sock socket file descriptor
+ */
 void filter_udp(int m_sock)
 {
-        struct sock_fprog prog;
-        struct sock_filter filter[] = {
-            { BPF_LD + BPF_H + BPF_ABS,  0, 0,     12 },
-            { BPF_JMP + BPF_JEQ + BPF_K, 0, 1,  0x800 },
-            { BPF_LD + BPF_B + BPF_ABS,  0, 0,     23 },
-            { BPF_JMP + BPF_JEQ + BPF_K, 0, 1,   0x11 },
-            { BPF_RET + BPF_K,           0, 0, 0xffff },
-            { BPF_RET + BPF_K,           0, 0, 0x0000 },
-        };
-        prog.len = sizeof(filter)/sizeof(filter[0]);
-        prog.filter = filter;
-        if (setsockopt(m_sock, SOL_SOCKET, SO_ATTACH_FILTER, &prog, sizeof(prog)) < 0) {
-            blast_err("Socket filter error\n");
-        }
+    struct sock_fprog prog;
+    struct sock_filter filter[] = {
+        { BPF_LD + BPF_H + BPF_ABS,  0, 0,     12 },
+        { BPF_JMP + BPF_JEQ + BPF_K, 0, 1,  0x800 },
+        { BPF_LD + BPF_B + BPF_ABS,  0, 0,     23 },
+        { BPF_JMP + BPF_JEQ + BPF_K, 0, 1,   0x11 },
+        { BPF_RET + BPF_K,           0, 0, 0xffff },
+        { BPF_RET + BPF_K,           0, 0, 0x0000 },
+    };
+    prog.len = sizeof(filter)/sizeof(filter[0]);
+    prog.filter = filter;
+    if (setsockopt(m_sock, SOL_SOCKET, SO_ATTACH_FILTER, &prog, sizeof(prog)) < 0) {
+        blast_err("Socket filter error\n");
+    }
 }
 
+/* Function init_roach_socket
+ * -------------------------------
+ * Creates RAW socket, binds it to chosen eth interface and applies UDP filter
+ */
 int init_roach_socket(void)
 {
-        int retval = -1;
-        char *eth_iface;
-        if ((roach_sock_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IP))) < 0) {
-                blast_err("Cannot create socket\n");
-        }
-        // Bind our raw socket to this interface
-        eth_iface = "eth0";
-        if (setsockopt(roach_sock_fd, SOL_SOCKET, SO_BINDTODEVICE, eth_iface, 4) < 0) {
-                blast_err("setsockopt failed:\n");
-        } else { retval = 1;}
-        // Filter only UDP packets
-        filter_udp(roach_sock_fd);
-        return retval;
+    int retval = -1;
+    char *eth_iface;
+    if ((roach_sock_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IP))) < 0) {
+        blast_err("Cannot create socket\n");
+    }
+    // Bind our raw socket to this interface
+    eth_iface = "eth0";
+    if (setsockopt(roach_sock_fd, SOL_SOCKET, SO_BINDTODEVICE, eth_iface, 4) < 0) {
+        blast_err("setsockopt failed:\n");
+    } else { retval = 1;}
+    // Filter only UDP packets
+    filter_udp(roach_sock_fd);
+    return retval;
 }
 
+/* Function: parse_udp_packet
+ * --------------------------
+ * Parses packet data (I, Q values) and timing information
+ * Stores result to packet structure.
+ *
+ * @param m_packet UDP packet structure
+ */
 void parse_udp_packet(data_udp_packet_t* m_packet)
 {
-	// static uint64_t i_packet = 0;
-	uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
-	uint8_t *buf = (payload + HEADER_LEN);
-	m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
-	m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
-	m_packet->clock_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
-	m_packet->packet_count = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
-	// I, Q
-	for (int i = 0;	i < 1016; i += 1) {
-		int j;
-		int k;
-		if ((i % 2) == 0) {
-			j = ((i*4) /2);
-			k = 512*4 + ((i*4) /2);
-		} else {
-			j = 1024*4 + (((i*4) - 1) / 2) - 1;
-			k = 1536*4 + (((i*4) - 1) / 2) - 1;
-		}
-		m_packet->Ival[i] = (float)(int32_t)(ntohl((buf[j] << 24) |
-					(buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
-		m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) |
-					(buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
-           /* if ((i == 0) && (i_packet % 60) == 0) {
-                blast_info("i = %i, I = %f, Q = %f, checksum = %u, count = %u", i, m_packet->Ival[i], m_packet->Qval[i],
-		m_packet->checksum, m_packet->packet_count);
-            } */
-	}
-	// i_packet++;
+    // static uint64_t i_packet = 0;
+    uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
+    uint8_t *buf = (payload + HEADER_LEN);
+    m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
+    m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
+    m_packet->clock_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
+    m_packet->packet_count = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
+    // I, Q
+    for (int i = 0;	i < 1016; i += 1) {
+        int j;
+        int k;
+        if ((i % 2) == 0) {
+            j = ((i*4) /2);
+            k = 512*4 + ((i*4) /2);
+        } else {
+            j = 1024*4 + (((i*4) - 1) / 2) - 1;
+            k = 1536*4 + (((i*4) - 1) / 2) - 1;
+        }
+        m_packet->Ival[i] = (float)(int32_t)(ntohl((buf[j] << 24) |
+                       (buf[j + 1] << 16) | (buf[j + 2] << 8) | (buf[j + 3])));
+        m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) |
+                       (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
+        /* if ((i == 0) && (i_packet % 60) == 0) {
+        blast_info("i = %i, I = %f, Q = %f, checksum = %u, count = %u", i, m_packet->Ival[i], m_packet->Qval[i],
+        m_packet->checksum, m_packet->packet_count);
+        } */
+    }
+    // i_packet++;
 }
 
-void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_roach_udp)
+/* Function: udp_store_to_structure
+ * -----------------------------------
+ * Cycles current data packet through a circular buffer (last_pkts)
+ *
+ * @param m_roach_udp roach UDP structure
+ * @param m_packet UDP packet structure
+ * @param
+ *
+ */
+void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t* m_packet)
 {
     static uint64_t packet_count = 0;
     data_udp_packet_t* local_packet;
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
         // m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-    	for (int i = 0; i < NUM_ROACHES; i++) {
+    	for (int i = 0; i < 3; i++) {
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + ROACH_UDP_LEN);
         }
@@ -190,7 +222,14 @@ void udp_store_to_structure(data_udp_packet_t* m_packet, roach_handle_data_t* m_
     packet_count++;
 }
 
-/* Called every time packet is received */
+/* Function: roach_process_stream
+ * ---------------------------------
+ * Called every time packet is received
+ * Parses the packet data, checks its validity and stores to structure
+ *
+ * @param m_roach_udp roach UDP structure
+ * @param m_packet UDP packet structure
+ */
 void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m_packet)
 {
     parse_udp_packet(m_packet);
@@ -199,12 +238,15 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
     if (udperr > 0) {
         blast_info("UDPERR = %d", udperr);
         // continue;
-    udp_store_to_structure(m_packet, m_roach_udp);
-    m_roach_udp->have_warned = 0;
+        udp_store_to_structure(m_roach_udp, m_packet);
+        m_roach_udp->have_warned = 0;
     }
 }
 
-/* Poll the socket for data. If a packet is received, pass it to roach_process_stream() */
+/* Function: poll_socket
+ * ------------------------
+ * Poll the raw socket for data. When data is received, call roach_process_stream
+ */
 void poll_socket(void)
 {
     init_roach_socket();
@@ -221,6 +263,7 @@ void poll_socket(void)
     ufds[0].events = POLLIN; // Check for data on socket
     rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
     while (1) {
+        usleep(10);
         data_udp_packet_t m_packet;
         rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
         if (rv == -1) {
@@ -229,7 +272,7 @@ void poll_socket(void)
 	    // blast_info("I am waiting for a poll event...");
             if (ufds[0].revents & POLLIN) { // check for events on socket
                 uint64_t bytes_read = recv(roach_sock_fd, m_packet.rcv_buffer,
-	                ROACH_UDP_LEN, 0);
+                ROACH_UDP_LEN, 0);
                 m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
 			+ sizeof(struct ethhdr)
 			+ sizeof(struct iphdr));
@@ -237,24 +280,28 @@ void poll_socket(void)
 		// blast_info("Before filt: R%d\t%d\t%d", m_roach_udp->which,
                           // m_roach_udp->port, ntohs(m_packet.udp_header->dest));
                 for (int ind = 0; ind < NUM_ROACHES; ind++) {
-		    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
-		    // blast_info("Roach udp %d, port = %d", m_roach_udp->which, m_roach_udp->port);
+                    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
+                    // blast_info("Roach udp %d, port = %d", m_roach_udp->which, m_roach_udp->port);
                     if ((m_roach_udp->port != ntohs(m_packet.udp_header->dest))) {
-		        continue;
-		    } else if (bytes_read < ROACH_UDP_DATA_LEN) {
-    	                    blast_err("Roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
-                            m_roach_udp->roach_invalid_packet_count++;
-                            m_roach_udp->roach_packet_count++;
-                            continue;
-		        // blast_info("%d: These should match: %d\t%d", m_roach_udp->which,
-                               // m_roach_udp->port, ntohs(m_packet.udp_header->dest));}
-		    } else { roach_process_stream(m_roach_udp, &m_packet);}
-               }
+                        continue;
+                    } else if (bytes_read < ROACH_UDP_DATA_LEN) {
+                        blast_err("Roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
+                        m_roach_udp->roach_invalid_packet_count++;
+                        m_roach_udp->roach_packet_count++;
+                        continue;
+                        // blast_info("%d: These should match: %d\t%d", m_roach_udp->which,
+                         // m_roach_udp->port, ntohs(m_packet.udp_header->dest));}
+                    } else { roach_process_stream(m_roach_udp, &m_packet);}
+                }
            }
        }
     }
 }
 
+/* Function: roach_udp_networking_init
+ * ------------------------------------
+ * The UDP data thread. Called in mcp.c
+ */
 void roach_udp_networking_init(void)
 {
     pthread_t poll_thread;
@@ -311,6 +358,10 @@ void roach_udp_networking_init(void)
     }
 }
 
+/* Function: write_roach_channels_488hz
+ * ------------------------------------
+ * Populates 488 Hz frame fields
+ */
 void write_roach_channels_488hz(void)
 {
     uint8_t i_udp_read;

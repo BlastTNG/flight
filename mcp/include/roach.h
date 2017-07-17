@@ -19,8 +19,8 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Created on: Apr 26, 2016
- *      Author: laura, sam, seth
+ *  Last edited: July 15, 2017
+ *      Author: sam, laura, seth
  */
 
 #ifndef INCLUDE_ROACH_H_
@@ -135,7 +135,7 @@ typedef struct roach_state {
     double lo_centerfreq;
 
     // First two LUTs are for building
-    roach_lut_t DDS;
+    roach_lut_t DDC;
     roach_lut_t DAC;
     // This LUT is what gets written
     roach_uint16_lut_t LUT;
