@@ -289,7 +289,6 @@ typedef struct {
   float rec_on, rec_off, amp_supply_on, amp_supply_off;
   float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
   float update_rec, update_of, update_if;
-  uint16_t of_status, if_status, rec_status; // will have to make initialize all on
   uint16_t labjack[5];
 } relay_cmds_t;
 

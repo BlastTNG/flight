@@ -2314,7 +2314,6 @@ void InitCommandData()
     CommandData.Relays.update_rec = 0;
     CommandData.Relays.update_of = 0;
     CommandData.Relays.update_if = 0;
-    CommandData.Cryo.heater_status = 0;
     CommandData.Relays.labjack[0] = 0;
     CommandData.Relays.labjack[1] = 0;
     CommandData.Relays.labjack[2] = 0;
