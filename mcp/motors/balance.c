@@ -36,7 +36,7 @@
 #include "balance.h"
 #include "motors.h"
 
-#define BAL_EL_FILTER_LEN 500 // 100 seconds
+#define BAL_EL_FILTER_LEN 150 // 30 seconds
 
 typedef enum
 {
@@ -81,6 +81,7 @@ void ControlBalance(void)
     if ((CommandData.balance.mode == bal_rest) || (CommandData.pointing_mode.nw > 0) ||
        (CommandData.pointing_mode.mode == P_EL_SCAN)) {
            balance_state.do_move = 0;
+	   balance_state.dir = no_move;
        } else if (CommandData.balance.mode == bal_manual) {
            balance_state.dir = CommandData.balance.bal_move_type;
        	   if (balance_state.dir != no_move) {
@@ -91,25 +92,36 @@ void ControlBalance(void)
 	} else if (CommandData.balance.mode == bal_auto) {
 	   if (balance_state.i_el_avg > 0) {
                if (balance_state.i_el_avg > CommandData.balance.i_el_on_bal) {
-                   blast_info("Setting the balance system to move in the positive direction.");
+                   blast_info("Setting the balance system to move in the negative direction.");
                    balance_state.do_move = 1;
-                   balance_state.dir = positive;
+                   balance_state.dir = negative;
                } else if (balance_state.moving && (balance_state.i_el_avg > CommandData.balance.i_el_off_bal)) {
-                   balance_state.do_move = 1;
-                   balance_state.dir = positive;
-               }
+                   // blast_info("Balance system still moving in negative direction.");
+		   balance_state.do_move = 1;
+                   balance_state.dir = negative;
+               } else if (balance_state.moving) {
+		   blast_info("Balanced.");
+		   balance_state.do_move = 0;
+		   balance_state.dir = no_move;
+	       }
            } else if (balance_state.i_el_avg < 0) {
                if (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
                    blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
-                   balance_state.dir = negative;
+                   balance_state.dir = positive;
                } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
-                   balance_state.do_move = 1;
-                   balance_state.dir = negative;
-               }
+                   // blast_info("Balance system still moving in positive direction.");
+		   balance_state.do_move = 1;
+                   balance_state.dir = positive;
+               } else if (balance_state.moving) {
+		   blast_info("Balanced.");
+		   balance_state.do_move = 0;
+		   balance_state.dir = no_move;
+	       }
            }
        } else {
            balance_state.do_move = 0;
+      	   balance_state.dir = no_move;
        }
 }
 
@@ -177,7 +189,7 @@ void DoBalance(struct ezbus* bus)
         balance_state.do_move = 0;
 	balance_state.lims = 0;
         firsttime = 0;
-    }
+     }
 
         /* update the Balance move parameters */
     EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
