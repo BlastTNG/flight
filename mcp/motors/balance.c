@@ -166,8 +166,6 @@ void WriteBalance_5Hz(void)
     SET_UINT8(statusBalAddr, status);
     SET_INT32(posBalAddr, balance_state.pos);
     SET_UINT8(limBalAddr, balance_state.lims);
-    // blast_info("i_el_avg = %f, i_level_on_bal = %f, status = %ui",
-    //        balance_state.i_el_avg, CommandData.balance.i_el_on_bal, status);
 }
 // Handles stepper communication for the balance motor.
 void DoBalance(struct ezbus* bus)
