@@ -1017,6 +1017,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+
 #ifndef BOLOTEST
         case blast_rocks:
             CommandData.sucks = 0;
@@ -1664,7 +1665,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.bal_move_type = ((int)(0 < ivalues[0]) - (int)(ivalues[0] < 0)) + 1;
       CommandData.balance.mode = bal_manual;
       break;
     case balance_vel:
