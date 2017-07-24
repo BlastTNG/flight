@@ -830,13 +830,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case pot_valve_open:
             CommandData.Cryo.potvalve_goal = opened;
-	    // CommandData.Cryo.potvalve_open = 100;
-            // CommandData.Cryo.potvalve_close = 0;
             break;
         case pot_valve_close:
             CommandData.Cryo.potvalve_goal = closed;
-	    // CommandData.Cryo.potvalve_close = 100;
-            // CommandData.Cryo.potvalve_open = 0;
             break;
         case pot_valve_on:
             // CommandData.Cryo.potvalve_on = 1;
@@ -844,7 +840,19 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case pot_valve_off:
             // CommandData.Cryo.potvalve_on = 0;
             break;
-        case l_valve_open:
+        case pump_valve_open:
+	    CommandData.Cryo.valve_goals[0] = opened;
+	    break;
+	case pump_valve_close:
+	    CommandData.Cryo.valve_goals[0] = closed;
+	    break;
+	case fill_valve_open:
+	    CommandData.Cryo.valve_goals[1] = opened;
+	    break;
+	case fill_valve_close:
+	    CommandData.Cryo.valve_goals[1] = closed;
+	    break;
+	case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
             CommandData.Cryo.lvalve_close = 0;
             break;
@@ -1530,6 +1538,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
+    case potvalve_set_vel:
+      CommandData.Cryo.potvalve_vel = ivalues[0];
+      break;
+    case potvalve_set_current:
+      CommandData.Cryo.potvalve_opencurrent = ivalues[0];
+      CommandData.Cryo.potvalve_closecurrent = ivalues[1];
+      break;
+    case valves_set_vel:
+      CommandData.Cryo.valve_vel = ivalues[0];
+      break;
+    case valves_set_current:
+      CommandData.Cryo.valve_current = ivalues[0];
+      break;
+
 // .
     // XY STAGE
 // .
@@ -2248,6 +2270,9 @@ void InitCommandData()
     CommandData.Cryo.lvalve_open = 0;
     CommandData.Cryo.lvalve_close = 0;
     CommandData.Cryo.lnvalve_on = 0;
+    CommandData.Cryo.potvalve_opencurrent = 50;
+    CommandData.Cryo.potvalve_closecurrent = 25;
+    CommandData.Cryo.potvalve_vel = 50000;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */

@@ -265,6 +265,10 @@ struct scom scommands[xyzzy + 1] = {
     GR_CRYO},
   {COMMAND(pot_valve_close), "set He4 pot valve direction close",
     GR_CRYO},
+  {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
+  {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
+  {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
+  {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -917,6 +921,30 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
+    {
+      {"Velocity (microsteps/sec)", 0, 100000, 'i', "POTVALVE_VEL"}
+    }
+  },
+
+  {COMMAND(potvalve_set_current), "Set pot valve open and close currents", GR_CRYO, 2,
+    {
+      {"Pot valve open current (% max)", 0, 100, 'i', "POTVALVE_I_OPEN"},
+      {"Pot valve close current (% max)", 0, 100, 'i', "POTVALVE_I_CLOSE"}
+    }
+  },
+
+  {COMMAND(valves_set_vel), "Set cryostat valves velocity", GR_CRYO, 1,
+    {
+      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VALVES_VEL"}
+    }
+  },
+
+  {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
+    {
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "VALVES_I"}
+    }
+  },
 //  <!-- XSC general -->
 
 

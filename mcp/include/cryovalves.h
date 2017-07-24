@@ -30,14 +30,17 @@
 
 /* Index of the balance motor in the Actbus structures */
 #define POTVALVE_NUM 7
+#define PUMPVALVE_NUM 8
+#define FILLVALVE_NUM 9
 
 #define POTVALVE_PREAMBLE "j256"
+#define VALVE_PREAMBLE "n2j256"
 
-void DoCryovalves(struct ezbus* bus);
+void DoCryovalves(struct ezbus* bus, unsigned int actuators_init);
+void DoPotValve(struct ezbus* bus);
+void DoValves(struct ezbus* bus, int index, int addr);
 void GetPotValvePos(struct ezbus bus);
-int SetValveState(void);
-void WriteValves(void);
-
-// void ControlBalance(void);
+int SetValveState(int tight_flag);
+void WriteValves(unsigned int actuators_init, int* valve_addr);
 
 #endif /* CRYOVALVES_H_ */

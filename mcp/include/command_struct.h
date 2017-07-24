@@ -290,7 +290,9 @@ typedef struct {
   int calib_hwpr;
 
   valve_state_t potvalve_goal;
-  // uint16_t potvalve_open, potvalve_on, potvalve_close;
+  uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
+  valve_state_t valve_goals[2];
+  uint16_t valve_vel, valve_current;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
 } cryo_cmds_t;
 
