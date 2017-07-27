@@ -60,5 +60,5 @@ extern struct tm start_time;
 #define USE_SIP_CMD
 #endif
 
-#define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
+// #define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
 #endif
