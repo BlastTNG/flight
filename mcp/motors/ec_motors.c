@@ -62,7 +62,6 @@ static ph_thread_t *motor_ctl_id;
 #define RW_ADDR 0x3
 #define EL_ADDR 0x2
 #define PIV_ADDR 0x1
-// TODO(Peter): Add manufacturer index for Peper FUCHS
 #define FUCHS_MFG_ID 0x00ad
 /**
  * Structure for storing the PDO assignments and their offsets in the
@@ -94,8 +93,8 @@ static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
 /**
  * Memory mapping for the PDO variables
  */
-// static char io_map[1024];
-static char io_map[4096]; // DEBUG PCA
+static char io_map[1024];
+// static char io_map[8192]; // DEBUG PCA
 
 static int motors_exit = false;
 
@@ -501,7 +500,7 @@ static int find_controllers(void)
     int ret_config;
 
     if (controller_state == ECAT_MOTOR_COLD) {
-        if (!(ret_init = ec_init(name))) {
+        if (!(ec_init(name))) {
             berror(err, "Could not initialize %s", name);
             goto find_err;
         }
@@ -515,13 +514,13 @@ static int find_controllers(void)
     }
     blast_startup("ec_config returns %d slaves found", ret_config);
 
-    if (ret_config < 3)
+    if (ret_config < (N_MCs - 1))
         controller_state = ECAT_MOTOR_FOUND_PARTIAL;
     else
         controller_state = ECAT_MOTOR_FOUND;
 
     /* wait for all slaves to reach SAFE_OP state */
-    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 3) != EC_STATE_SAFE_OP) {
+    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * (N_MCs - 1)) != EC_STATE_SAFE_OP) {
         controller_state = ECAT_MOTOR_RUNNING_PARTIAL;
         blast_err("Not all slaves reached safe operational state.");
         ec_readstate();
@@ -815,7 +814,7 @@ static void motor_configure_timing(void)
 {
     int found_dc_master = 0;
     ec_configdc();
-    for (int i = 1; i <= ec_slavecount; i++) {
+    for (int i = 2; i <= ec_slavecount; i++) { // DEBUG
         if (!found_dc_master && ec_slave[i].hasdc) {
             ec_dcsync0(i, true, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
             found_dc_master = 1;
@@ -977,7 +976,7 @@ static void* motor_control(void* arg)
         } else {
             motor_pdo_init(i);
             mc_readPDOassign(i);
-        }
+	}
     }
     /// We re-configure the map now that we have assigned the PDOs
     ec_config_map(&io_map);
@@ -1020,7 +1019,7 @@ static void* motor_control(void* arg)
     piv_init_resolver();
 
     /// Start the Distributed Clock cycle
-    motor_configure_timing();
+    motor_configure_timing(); // DEBUG PCA
 
     /// Put the motors in Operational mode (EtherCAT Operation)
     motor_set_operational();

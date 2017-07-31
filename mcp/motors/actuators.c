@@ -55,7 +55,7 @@ extern int16_t InCharge;		/* tx.c */
 
 /* Index for each stepper for structures, name, id */
 #define LOCKNUM 4
-#define HWPRNUM 5
+// #define HWPRNUM 5
 #define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter"};
@@ -1466,7 +1466,7 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPR_ADDR);
+    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
     blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
               LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
@@ -1553,11 +1553,11 @@ void *ActuatorBus(void *param)
         }
         if (sf_ok) DoActuators();
 
-        if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
-            DoHWPR(&bus);
+        if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
+	    DoHWPR(&bus);
             actuators_init |= 0x1 << HWPRNUM;
         } else {
-            EZBus_ForceRepoll(&bus, HWPR_ADDR);
+            EZBus_ForceRepoll(&bus, id[HWPRNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
         }
@@ -1571,9 +1571,6 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
         }
-
-	hwp_pos = hwp_get_position();
-	blast_info("HWP POS = %f", (hwp_pos/8192.));
 
 	usleep(10000);
     }
