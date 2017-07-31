@@ -406,6 +406,7 @@ static void mcp_1hz_routines(void)
 //    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
+    // roach_timestamp_init(4);
 }
 
 static void *mcp_main_loop(void *m_arg)

@@ -124,7 +124,7 @@ double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
                    0.03688533, 0.05061838, 0.06425732, 0.07654357, 0.08630093,
                    0.09257286, 0.09473569};
 /* Firmware image files - they only differ in  UDP source IP/MAC address */
-const char roach_fpg[5][50] = {"/data/etc/blast/r1_fir_dds330.fpg",
+const char roach_fpg[5][100] = {"/data/etc/blast/r1_fir_dds330.fpg",
                                "/data/etc/blast/r2_fir_dds330.fpg",
 		               "/data/etc/blast/r3_fir_dds330.fpg",
                                "/data/etc/blast/r4_fir_dds330.fpg",
@@ -267,7 +267,7 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest,
 	return -1;
     }
     if (arg_count_katcl(m_roach->rpc_conn) < 3) {
-        blast_err("Expecting 2 return values.  Recevied %d",
+        blast_err("Expecting 2 return values.  Received %d",
                                         arg_count_katcl(m_roach->rpc_conn));
 	return -1;
 	}
@@ -1103,6 +1103,25 @@ void get_time(char *time_buffer)
         if (*p == ':') *p = '_';
     }
     time_buffer[strlen(time_buffer) - 1] = 0;
+}
+
+/* Function: roach_timestamp_init
+ * -------------------
+ * When called, begins writing absolute time in seconds (from FC2)
+ * to Roach SW register 'GbE_ctime'. This timestamp is included in the UDP
+ * packet which is packetized one second later.
+ *
+ * @param ind roach index
+*/
+void roach_timestamp_init(uint16_t ind)
+{
+    if (roach_state_table[ind].katcp_fd) {
+        time_t seconds;
+        seconds = time(NULL);
+        blast_info("ROACH5 time = %u", seconds);
+        roach_write_int(&roach_state_table[ind], "GbE_ctime", 1, 0);
+        roach_read_int(&roach_state_table[ind], "GbE_ctime");
+    }
 }
 
 /* Function: get_path
@@ -1990,9 +2009,9 @@ void *roach_cmd_loop(void* ind)
         roach_write_int(&roach_state_table[i], "dds_shift", DDC_SHIFT, 0);
         // roach_read_int(&roach_state_table[i], "dds_shift");
         roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);
-        // roach_read_int(&roach_state_table[i], "fft_shift");
+        // roach_read_int(&roach_state_table[i], "PFB_fft_shift");
         roach_write_int(&roach_state_table[i], "downsamp_sync_accum_len", accum_len, 0);
-        // roach_read_int(&roach_state_table[i], "sync_accum_len");
+        // roach_read_int(&roach_state_table[i], "downsamp_sync_accum_len");
         roach_write_int(&roach_state_table[i], "GbE_tx_destip", dest_ip, 0);
         roach_write_int(&roach_state_table[i], "GbE_tx_destport", roach_state_table[i].dest_port, 0);
         load_fir(&roach_state_table[i], fir_coeffs);
@@ -2078,7 +2097,6 @@ void *roach_cmd_loop(void* ind)
         }
         roach_write_int(&roach_state_table[i], "PFB_fft_shift", TARG_FFT_SHIFT, 0);/* FFT shift schedule */
         roach_read_int(&roach_state_table[i], "PFB_fft_shift");
-        usleep(3000);
         blast_info("ROACH%d, STARTING TARG sweep", i + 1);
         status = roach_do_sweep(&roach_state_table[i], TARG);
         if ((status == SWEEP_SUCCESS)) {
@@ -2098,8 +2116,16 @@ void *roach_cmd_loop(void* ind)
     if (roach_state_table[i].status == ROACH_STATUS_TARG &&
           roach_state_table[i].desired_status >= ROACH_STATUS_GRAD) {
         blast_info("ROACH%d, Starting CAL sweep...", i + 1);
-        cal_sweep(&roach_state_table[i]);
-        blast_info("ROACH%d, CAL sweep complete", i + 1);
+        status = cal_sweep(&roach_state_table[i]);
+        if ((status == SWEEP_SUCCESS)) {
+            blast_info("ROACH%d, CAL sweep complete", i + 1);
+            roach_state_table[i].status = ROACH_STATUS_GRAD;
+            roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+        } else if ((status == SWEEP_INTERRUPT)) {
+            blast_info("ROACH%d, Cal sweep interrupted by blastcmd", i + 1);
+            roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
+            roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+        } else { blast_info("ROACH%d, Cal sweep failed, will reattempt", i + 1);}
         grad_calc(&roach_state_table[i]);
         roach_state_table[i].status = ROACH_STATUS_GRAD;
         roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;

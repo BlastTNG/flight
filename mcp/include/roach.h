@@ -267,10 +267,14 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_regis
                            uint32_t m_offset, uint32_t m_size, int ms_timeout);
 int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset);
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
+int init_roach(uint16_t ind);
+void write_roach_channels_5hz(void);
+void roach_timestamp_init(uint16_t ind);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
+void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
 
 #endif /* INCLUDE_ROACH_H_ */

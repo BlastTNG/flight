@@ -89,11 +89,11 @@ uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_ro
         m_roach_udp->seq_error_count++;
 	    retval |= ROACH_UDP_SEQ_ERR;
     }
-    if (m_packet->checksum != ROACH_CHECKSUM) {
+    /* if (m_packet->checksum != ROACH_CHECKSUM) {
         blast_err("roach%i: checksum = %i failed!", m_roach_udp->which, m_packet->checksum);
         m_roach_udp->crc_error_count++;
 	    retval |= ROACH_UDP_CRC_ERR;
-    }
+    }*/
     m_roach_udp->seq_number = m_packet->packet_count;
 
     if (retval > 0) {
@@ -235,12 +235,14 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
     parse_udp_packet(m_packet);
     uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
     // store_roach_udp_packet(&m_packet, m_roach_udp); // Writes packet to harddrive.
-    if (udperr > 0) {
+    /* if (udperr > 0) {
         blast_info("UDPERR = %d", udperr);
         // continue;
         udp_store_to_structure(m_roach_udp, m_packet);
         m_roach_udp->have_warned = 0;
-    }
+    }*/
+        udp_store_to_structure(m_roach_udp, m_packet);
+        m_roach_udp->have_warned = 0;
 }
 
 /* Function: poll_socket
