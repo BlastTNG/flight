@@ -89,7 +89,7 @@
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int16_t SouthIAm;
-int16_t InCharge = 0;
+int16_t InCharge = 1;
 int16_t InChargeSet = 0;
 
 bool shutdown_mcp = false;
@@ -397,7 +397,7 @@ static void mcp_1hz_routines(void)
     // auto_cycle_mk2();
     // test_read();
     blast_store_cpu_health();
-    blast_store_disk_space();
+    // blast_store_disk_space();
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
@@ -480,7 +480,6 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
-  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t biphase_writer_id;
@@ -600,7 +599,7 @@ init_beaglebone();
 blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
+  // initialize_diskmanager();
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);

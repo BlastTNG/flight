@@ -42,8 +42,9 @@ static const unsigned int filebuffer_expansion_unit = 32768;
 
 /* How much do we discount the recent size reqs in the average */
 static const float filebuffer_historical_weight = 0.01;
-/* 0.25s in nanoseconds.  Timeout for consolidation lock */
-static const uint32_t nano_wait = 250000000;
+
+extern int16_t SouthIAm;
+uint32_t filebuffer_cached_bytes[2] = {0};
 
 /**
  * Initializes a buffer structure and allocates the memory.
@@ -118,6 +119,7 @@ filebuffer_append(filebuffer_t *m_buffer, const char *m_data, size_t len)
 
 	if (retval != -1) {
 		memcpy(insertion_ptr, m_data, len);
+		filebuffer_cached_bytes[SouthIAm] += len;
 	} else {
 		blast_info("Failed to append data to buffer");
 	}
@@ -170,32 +172,41 @@ int filebuffer_writeout(filebuffer_t *m_buffer, FILE *m_fp)
 	size_t 				len = 0;
 	size_t 				writelen = 0;
 	int					retval = -1;
-	struct timespec		waittime = {0, nano_wait};
 
 	if (m_buffer && m_fp) {
 		pthread_mutex_lock(&(m_buffer->consume_lock));
 		len = filebuffer_len(m_buffer);
 		if (len > 0) {
 			writelen = fwrite(m_buffer->buf + m_buffer->begin, sizeof(char), len, m_fp);
-			if ((fflush(m_fp) == 0) && (len == writelen)) {
+			if (len == writelen) {
 				filebuffer_consume(m_buffer, len);
 				retval = 0;
+			} else {
+			    blast_strerror("Could not write %zu bytes to disk", len);
 			}
 		} else {
+		    pthread_mutex_unlock(&(m_buffer->consume_lock));
 			/**
 			 * If there are no bytes to write, we succeed automatically
 			 */
 			return 0;
 		}
+        /**
+         * We allow locking of the consume mutex above as the write operation may take time where we still
+         * want to allow writing additional data.  But before we clean our buffer, we MUST maintain
+         * appropriate consistent ordering of locks throughout.
+         */
+        pthread_mutex_unlock(&(m_buffer->consume_lock));
 
 		/* We try to get full control of the buffer here and if we are successful, we
 		 * will clean the buffer, consolidating and re-allocating as needed.
 		 */
-		if (pthread_mutex_timedlock(&(m_buffer->append_lock), &waittime) == 0) {
+		if (pthread_mutex_lock(&(m_buffer->append_lock)) == 0) {
+		    pthread_mutex_lock(&(m_buffer->consume_lock));
 			filebuffer_cleanup(m_buffer);
+            pthread_mutex_unlock(&(m_buffer->consume_lock));
 			pthread_mutex_unlock(&(m_buffer->append_lock));
 		}
-		pthread_mutex_unlock(&(m_buffer->consume_lock));
 	}
 
 	return retval;
@@ -225,23 +236,22 @@ static void filebuffer_clear(filebuffer_t *m_buffer)
 static ssize_t filebuffer_append_space(filebuffer_t *m_buffer, char **m_datap, size_t len)
 {
 	while (m_buffer->end + len >= m_buffer->alloc) {
+	    pthread_mutex_lock(&(m_buffer->consume_lock));
 		/* If all the data are gathered at the end, then move to the beginning */
-		if ((m_buffer->begin > m_buffer->alloc/2)
-				&& (pthread_mutex_trylock(&(m_buffer->consume_lock)) == 0)) {
+		if (m_buffer->begin > m_buffer->alloc/2) {
 			filebuffer_defrag(m_buffer);
-			pthread_mutex_unlock(&(m_buffer->consume_lock));
-			continue;
 		}
 
 		if (filebuffer_realloc(m_buffer, len) == -1) {
-			if ((m_buffer->begin != 0)
-					&& (pthread_mutex_lock(&(m_buffer->consume_lock)) == 0)) {
+			if (m_buffer->begin != 0) {
 				filebuffer_defrag(m_buffer);
 			} else {
+			    pthread_mutex_unlock(&(m_buffer->consume_lock));
 				blast_err("file_buffer::filebuffer_append_space : Could not expand buffer");
 				return -1;
 			}
 		}
+		pthread_mutex_unlock(&(m_buffer->consume_lock));
 	}
 
 	*m_datap = m_buffer->buf + m_buffer->end;
@@ -337,6 +347,7 @@ static void filebuffer_consume(filebuffer_t *m_buffer, size_t len)
 	} else {
 		m_buffer->begin += (unsigned int) len;
 	}
+	filebuffer_cached_bytes[SouthIAm] -= len;
 }
 
 /**

@@ -205,7 +205,9 @@ void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t*
     data_udp_packet_t* local_packet;
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
-        // m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+        //  m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
+        // TODO(laura): Check to make sure that this syntax is OK.  It seems to work but would
+        // local packet not be deleted at the end of the call?
     	for (int i = 0; i < 3; i++) {
             local_packet = &m_roach_udp->last_pkts[i];
     	    local_packet = balloc(fatal, sizeof(*m_packet) + ROACH_UDP_LEN);
@@ -308,6 +310,7 @@ void roach_udp_networking_init(void)
 {
     pthread_t poll_thread;
     uint32_t origaddr;
+<<<<<<< HEAD
     for (int ind = 0; ind < NUM_ROACHES; ind++) {
         roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
 
