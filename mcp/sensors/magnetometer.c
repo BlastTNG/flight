@@ -36,7 +36,7 @@
 #include "channels_tng.h"
 #include "pointing_struct.h"
 
-#define MAGCOM "/dev/ttyUSB0"
+#define MAGCOM "/dev/ttyMAG"
 
 ph_serial_t	*mag_comm = NULL;
 
