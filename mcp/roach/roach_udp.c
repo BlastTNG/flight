@@ -305,7 +305,6 @@ void roach_udp_networking_init(void)
 {
     pthread_t poll_thread;
     uint32_t origaddr;
-<<<<<<< HEAD
     for (int ind = 0; ind < NUM_ROACHES; ind++) {
         roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
 
