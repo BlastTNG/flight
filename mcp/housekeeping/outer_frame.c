@@ -192,5 +192,13 @@ void update_current_sensors(void) {
     SET_SCALED_VALUE(current_loop_10_Addr, labjack_get_value(LABJACK_OF_3, 9));
 }
 
+void outer_frame(int setting) {
+    if (setting == 1) {
+        update_current_sensors();
+        update_thermistors();
+        // update_clinometers();
+    }
+}
+
 
 

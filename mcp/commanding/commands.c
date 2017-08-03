@@ -2319,10 +2319,13 @@ void InitCommandData()
     CommandData.Relays.labjack[2] = 0;
     CommandData.Relays.labjack[3] = 0;
     CommandData.Relays.labjack[4] = 0;
-    CommandData.Labjack_Queue.lj_q0_on = 0;
-    CommandData.Labjack_Queue.lj_q1_on = 0;
-    CommandData.Labjack_Queue.lj_q2_on = 0;
-    CommandData.Labjack_Queue.lj_q3_on = 0;
+    CommandData.Labjack_Queue.lj_q_on = 0;
+    CommandData.Labjack_Queue.set_q = 1;
+    CommandData.Labjack_Queue.which_q[0] = 0;
+    CommandData.Labjack_Queue.which_q[1] = 0;
+    CommandData.Labjack_Queue.which_q[2] = 0;
+    CommandData.Labjack_Queue.which_q[3] = 0;
+    CommandData.Labjack_Queue.which_q[4] = 0;
     CommandData.Cryo.load_curve = 0;
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;

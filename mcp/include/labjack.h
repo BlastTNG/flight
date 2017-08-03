@@ -117,5 +117,6 @@ void labjack_reboot(int m_labjack);
 void labjack_queue_command(int, int, float);
 void query_time(int m_labjack);
 void initialize_labjack_queue(void);
+void labjack_choose_execute(void);
 void init_labjack_digital(void);
 #endif /* LABJACK_H_ */

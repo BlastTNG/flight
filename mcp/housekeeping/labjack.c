@@ -70,7 +70,6 @@ static void labjack_execute_command_queue(void) {
             heater_write(cmd->labjack, cmd->address, cmd->command);
         }
         PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
-
         free(cmd);
     }
 }
@@ -464,6 +463,29 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
+void labjack_choose_execute(void) {
+    if (CommandData.Labjack_Queue.set_q == 1) {
+        if (CommandData.Relays.labjack[0] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[0] = 1;
+        } else if (CommandData.Relays.labjack[1] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[1] = 1;
+        } else if (CommandData.Relays.labjack[2] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[2] = 1;
+        } else if (CommandData.Relays.labjack[3] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[3] = 1;
+        } else if (CommandData.Relays.labjack[4] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[4] = 1;
+        } else {
+            blast_info("no queue selected, trying again in 1s");
+        }
+    }
+}
+
 void *labjack_cmd_thread(void *m_lj) {
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
@@ -529,44 +551,13 @@ void *labjack_cmd_thread(void *m_lj) {
         if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
             init_labjack_stream_commands(m_state);
         }
-        if (m_state->which == 0) {
-            if (CommandData.Labjack_Queue.lj_q0_on == 0) {
-                blast_info("queue set by LJ 0");
+
+        if (CommandData.Labjack_Queue.which_q[m_state->which] == 1) {
+            if (CommandData.Labjack_Queue.lj_q_on == 0) {
+                blast_info("queue set by LJ %d", m_state->which);
             }
             labjack_execute_command_queue();
-            CommandData.Labjack_Queue.lj_q0_on = 1;
-        }
-        if (m_state->which == 1 && CommandData.Labjack_Queue.lj_q0_on == 0) {
-            labjack_execute_command_queue();
-            if (CommandData.Labjack_Queue.lj_q1_on == 0) {
-                blast_info("queue set by LJ 1");
-            }
-            CommandData.Labjack_Queue.lj_q1_on = 1;
-        }
-        if (m_state->which == 2 && CommandData.Labjack_Queue.lj_q1_on == 0) {
-            labjack_execute_command_queue();
-            if (CommandData.Labjack_Queue.lj_q2_on == 0) {
-                blast_info("queue set by LJ 2");
-            }
-            CommandData.Labjack_Queue.lj_q2_on = 1;
-        }
-        if (m_state->which == 3 && CommandData.Labjack_Queue.lj_q2_on == 0 &&
-            CommandData.Labjack_Queue.lj_q0_on == 0 && CommandData.Labjack_Queue.lj_q1_on == 0) {
-            labjack_execute_command_queue();
-            if (CommandData.Labjack_Queue.lj_q3_on == 0) {
-                blast_info("queue set by LJ 3");
-            }
-            CommandData.Labjack_Queue.lj_q3_on = 1;
-        }
-        if (m_state->which == 4 && CommandData.Labjack_Queue.lj_q3_on == 0 &&
-            CommandData.Labjack_Queue.lj_q2_on == 0 && CommandData.Labjack_Queue.lj_q0_on == 0 &&
-            CommandData.Labjack_Queue.lj_q1_on == 0) {
-            labjack_execute_command_queue();
-            static int first_time = 1;
-            if (first_time) {
-                blast_info("queue set by LJ 4");
-                first_time = 0;
-            }
+            CommandData.Labjack_Queue.lj_q_on = 1;
         }
         /*
           // Set DAC level

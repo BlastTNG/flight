@@ -504,6 +504,21 @@ void if_control(void) {
     }
 }
 
+void relays(int setting) {
+    if (setting == 1) {
+        if_control();
+        of_control();
+    }
+    if (setting == 2) {
+        rec_control();
+    }
+    if (setting == 3) {
+        if_control();
+        of_control();
+        rec_control();
+    }
+}
+
 
 
 

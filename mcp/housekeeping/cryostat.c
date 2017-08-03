@@ -720,7 +720,23 @@ void force_incharge(void) {
     // used for the test cryostat without watchdog board
 }
 
+void cryo_1hz(int setting_1hz) {
+    if (setting_1hz == 1) {
+        heater_control();
+        heater_read();
+        load_curve_300mk();
+        read_thermometers();
+    }
+}
 
+void cryo_200hz(int setting_200hz) {
+    if (setting_200hz == 1) {
+        cal_control();
+    }
+    if (setting_200hz == 2) {
+        read_chopper();
+    }
+}
 
 
 

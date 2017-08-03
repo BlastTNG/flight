@@ -28,4 +28,6 @@ void init_array();
 void load_curve_300mk(void);
 void force_incharge();
 void level_toggle();
+void cryo_1hz(int setting_1hz);
+void cryo_200hz(int setting_200hz);
 #endif /* cryostat_h */

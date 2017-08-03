@@ -311,8 +311,7 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    // read_chopper();
-    // cal_control();
+    cryo_200hz(0);
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -373,17 +372,11 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    // rec_control();
-    of_control();
-    if_control();
-    // heater_control();
-    // heater_read();
-    // load_curve_300mk();
-    // read_thermometers();
     // auto_cycle_mk2();
-    update_thermistors();
-    update_clinometer();
-    update_current_sensors();
+    cryo_1hz(0);
+    outer_frame(0);
+    relays(0);
+    labjack_choose_execute();
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -576,7 +569,7 @@ int main(int argc, char *argv[])
   labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(5, 84, 1);
-  init_labjack_digital();
+  // init_labjack_digital();
   init_array();
 
   // initialize_labjack_commands(LABJACK_CRYO_1);

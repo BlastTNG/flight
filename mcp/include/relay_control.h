@@ -10,6 +10,7 @@
 void rec_control(void);
 void of_control(void);
 void if_control(void);
+void relays(int setting);
 // DIO addresses LJ CRYO 2
 #define POWER_BOX_ON 2001
 #define POWER_BOX_OFF 2000

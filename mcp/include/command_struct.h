@@ -293,7 +293,9 @@ typedef struct {
 } relay_cmds_t;
 
 typedef struct {
-    uint16_t lj_q0_on, lj_q1_on, lj_q2_on, lj_q3_on;
+    uint16_t lj_q_on;
+    uint16_t which_q[5];
+    uint16_t set_q;
 } labjack_queue_t;
 
 typedef struct slinger_commanding
