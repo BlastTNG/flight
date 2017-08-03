@@ -562,21 +562,9 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  initialize_labjack_queue();
-  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  void init_labjacks(0, 0, 0, 0, 0, 0);
   // mult_labjack_networking_init(5, 84, 1);
-  // init_labjack_digital();
   init_array();
-
-  // initialize_labjack_commands(LABJACK_CRYO_1);
-  // initialize_labjack_commands(LABJACK_CRYO_2);
-  initialize_labjack_commands(LABJACK_OF_1);
-  initialize_labjack_commands(LABJACK_OF_2);
-  initialize_labjack_commands(LABJACK_OF_3);
   // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();

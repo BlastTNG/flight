@@ -119,4 +119,5 @@ void query_time(int m_labjack);
 void initialize_labjack_queue(void);
 void labjack_choose_execute(void);
 void init_labjack_digital(void);
+void init_labjacks(int set_1, int set_2, int set_3, int set_4, int set_5, int q_set);
 #endif /* LABJACK_H_ */
