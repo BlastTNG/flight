@@ -2611,6 +2611,8 @@ void InitCommandData()
     CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
     for (int which = 0; which < 2; which++) {
+        CommandData.XSC[which].is_new_window_period_cs = 1500;
+
         CommandData.XSC[which].heaters.mode = xsc_heater_auto;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
