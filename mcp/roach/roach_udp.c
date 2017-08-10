@@ -236,7 +236,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
 {
     parse_udp_packet(m_packet);
     uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
-    // store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
+    store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
     if (udperr > 0) return;
     udp_store_to_structure(m_roach_udp, m_packet);
     m_roach_udp->have_warned = 0;

@@ -584,14 +584,14 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef NO_KIDS_TEST
-blast_info("Initializing ROACHes from MCP...");
-roach_udp_networking_init();
-init_roach(0);
-init_roach(1);
-init_roach(2);
-init_roach(3);
-init_roach(4);
-blast_info("Finished initializing ROACHes...");
+  blast_info("Initializing ROACHes from MCP...");
+  roach_udp_networking_init();
+  init_roach(0);
+  init_roach(1);
+  init_roach(2);
+  init_roach(3);
+  init_roach(4);
+  blast_info("Finished initializing ROACHes...");
 #endif
 
 /* blast_info("Initializing Beaglebones from MCP...");
@@ -599,7 +599,7 @@ init_beaglebone();
 blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  // initialize_diskmanager();
+  initialize_diskmanager();
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
