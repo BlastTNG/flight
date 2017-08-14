@@ -100,12 +100,12 @@ int main(int argc, char *argv[]) {
         data_to_write[2] = frame_counter;
         if (j%2 == 0) {
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
-            *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
+            *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC if no counter in the frame
             mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
         } else {
             inverse_data_to_write[2] = frame_counter;
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
-            *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC
+            *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC if no counter in the frame
             mpsse_biphase_write_data(ctx, inverse_data_to_write, bytes_to_write);
         }
         mpsse_flush(ctx);

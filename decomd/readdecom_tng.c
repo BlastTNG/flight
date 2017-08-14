@@ -32,8 +32,7 @@ extern double dq_bad;  // data quality - fraction of bad crcs
 
 bool debug_rate = false;
 uint16_t debug_counter = 0;
-uint16_t received_counter_offset = 0;
-bool first = true;
+uint16_t previous_counter = 0;
 
 // void pushDiskFrame(unsigned short *RxFrame);
 
@@ -77,23 +76,10 @@ void ReadDecom (void)
             printf("i_word=%d, raw_word_in = %04x\n", i_word, raw_word_in);
           }
           if (i_word == 2) {
-            if (first) {
-                if (polarity) {
-                    received_counter_offset = raw_word_in;
-                } else {
-                    received_counter_offset = (uint16_t) (~raw_word_in);
-                }
-                first = false;
+            if (((raw_word_in - previous_counter) != 2) || (((int) (raw_word_in - previous_counter) != (-2)))) {
+                printf("We have missed %d frames", raw_word_in - previous_counter);
             }
-            if (polarity) {
-                printf("true frame counter = %d\n", raw_word_in-received_counter_offset); 
-                printf("received frame counter = %d\n", debug_counter);
-                printf("sent/received = %d/%d\n", raw_word_in-received_counter_offset, debug_counter);
-            } else {
-                printf("true frame counter = %d (started at %d)\n", ((uint16_t) (~raw_word_in)), received_counter_offset);
-                printf("received frame counter = %d\n", debug_counter);
-                printf("sent/received = %d/%d\n", ((uint16_t) (~raw_word_in)), debug_counter);
-            }
+            previous_counter = raw_word_in;
           }
           if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
             if (debug_rate) {
