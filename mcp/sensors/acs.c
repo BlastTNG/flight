@@ -383,17 +383,17 @@ void read_5hz_acs(void)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    for (i = 1; i <= NUM_PSS; i++) {
-      for (j = 1; j <= NUM_PSS_V; j++) {
-	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j, i);
+    for (i = 0; i < NUM_PSS; i++) {
+      for (j = 0; j < NUM_PSS_V; j++) {
+	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
 	vPssAddr[i][j] = channels_find_by_name(channel_name);
 	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
   }
-  for (i = 1; i <= NUM_PSS; i++) {
-    for (j = 1; j <= NUM_PSS_V; j++) {
+  for (i = 0; i < NUM_PSS; i++) {
+    for (j = 0; j < NUM_PSS_V; j++) {
       ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
     }
   }

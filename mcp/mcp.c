@@ -70,6 +70,7 @@
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
+#include "diskmanager_tng.h"
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
@@ -79,11 +80,11 @@
 #include "roach.h"
 #include "relay_control.h"
 #include "outer_frame.h"
+#include "store_data.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
-#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -322,8 +323,8 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    read_chopper();
-    cal_control();
+    // read_chopper();
+    // cal_control();
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -347,6 +348,7 @@ static void mcp_100hz_routines(void)
     // store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+
     push_bi0_buffer();
     // test_dio();
 }
@@ -391,7 +393,7 @@ static void mcp_1hz_routines(void)
     // of_control();
     // if_control();
     // labjack_test_dac(3.3, 0);
-    heater_control();
+    // heater_control();
     // test_labjacks(0);
     // read_thermometers();
     // auto_cycle_mk2();
@@ -482,6 +484,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t DiskManagerID;
   pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -599,7 +602,7 @@ init_beaglebone();
 blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  initialize_diskmanager();
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -607,15 +610,15 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(5, 84, 1);
 
-  initialize_labjack_commands(LABJACK_CRYO_1);
-  initialize_labjack_commands(LABJACK_CRYO_2);
+  // initialize_labjack_commands(LABJACK_CRYO_1);
+  // initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
@@ -632,7 +635,7 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
