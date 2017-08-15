@@ -164,6 +164,14 @@ static void ht_free(void *p, size_t b, bool r) {
 
 static struct ck_malloc ALLOCATOR = { .malloc = ht_malloc, .free = ht_free };
 
+// Check whether the disk is initialized (ready).  Returns 1 if so, otherwise 0.
+int check_disk_init() {
+    if (s_ready) {
+        return 1;
+    } else {
+    	return 0;
+    }
+}
 /**
  * Iterate through the #s_diskpool to find first entry with no access time.  This
  * should correspond to an open entry.  The counter will increment from 0 through
@@ -565,13 +573,17 @@ static diskentry_t *diskpool_mount_new(void) {
     diskentry_t *best_disk = 0;
     int32_t count = 0;
     bool disk_mounted = false;
+    bool have_warned = false;
 
     while (!disk_mounted) {
         count = 0;
         while (!disk_mounted && (count++ < NUM_USB_DISKS)) {
             best_disk = diskpool_find_new_disk();
             if (!best_disk) {
-                blast_warn("No USB disks found, waiting...");
+                if (!have_warned) {
+                    blast_warn("No USB disks found, waiting...");
+                    have_warned = true;
+                }
                 usleep(1000);
                 break;
             }
@@ -1528,21 +1540,21 @@ static void *diskmanager(void *m_arg __attribute__((unused))) {
 }
 
 
-bool initialize_diskmanager(void) {
+void initialize_diskmanager(void) {
     ck_ht_init(&s_filepool, CK_HT_MODE_BYTESTRING, NULL, &ALLOCATOR, 16,
             BLAST_MAGIC32);
 
+    blast_info("Beginning initialize_dismanager.");
     diskmanager_clear_old_mounts();
     drivepool_init_usb_info();
     diskpool_mount_primary();
     initialize_total_bytes();
 
     s_ready = true;
+    blast_info("Set s_ready to true.");
 
     pthread_create(&diskman_thread, NULL, diskmanager, NULL);
     pthread_detach(diskman_thread);
-
-    return true;
 }
 
 /**

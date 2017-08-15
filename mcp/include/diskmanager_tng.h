@@ -44,7 +44,9 @@ int file_stat(const char*, struct stat*);
 int file_copy(const char*, const char*);
 int file_get_path(fileentry_t*, char*);
 
-bool initialize_diskmanager();
+int check_disk_init();
+
+void initialize_diskmanager();
 void diskmanager_shutdown();
 
 

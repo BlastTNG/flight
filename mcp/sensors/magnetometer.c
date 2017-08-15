@@ -36,7 +36,7 @@
 #include "channels_tng.h"
 #include "pointing_struct.h"
 
-#define MAGCOM "/dev/ttyUSB0"
+#define MAGCOM "/dev/ttyMAG"
 
 ph_serial_t	*mag_comm = NULL;
 
@@ -176,6 +176,7 @@ void initialize_magnetometer(void)
     	blast_err("Could not open Magnetometer port %s", MAGCOM);
     	return;
     }
+
     mag_comm->callback = mag_process_data;
     mag_comm->timeout_duration.tv_sec = 1;
 
