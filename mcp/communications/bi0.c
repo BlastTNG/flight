@@ -208,8 +208,9 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr)
     // int frequency = 100000; // 100 kbps
 
     // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
-    // 1=output, 0=input. 0x83 = 0b11000001 i.e. pin 0, 1 and 7 are output
-    uint8_t direction = 0x83;
+    // 1=output, 0=input. 0x83 = 0b10000011 i.e. pin 0, 1 and 7 are output
+    // 1=output, 0=input. 0xBF = 0b10111111 i.e. pin 6 is input
+    uint8_t direction = 0xFF; // Hacking all pins to output for testing
     uint8_t initial_value = 0x00;
 
     // The first open is hack, to check chip is there + properly reset it

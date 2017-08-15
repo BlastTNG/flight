@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
 
     uint8_t data = 0x00;
     uint8_t dir = 0xFF;  // direction output for all bits
+    // uint8_t dir = 0xBF;  // 0b10111111 pin 6 = input/read
     uint16_t crc_calculated;
 
     mpsse_set_data_bits_low_byte(ctx, data, dir);
