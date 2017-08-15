@@ -113,11 +113,11 @@ void store_data_1hz(void)
 	static fileentry_t *temp_fp = NULL;
 	static uint32_t frames_stored_to_1hz = 0;
 	uint16_t bytes_written = 0;
+    static char file_name[MAX_NUM_FILENAME_CHARS];
 
     // Checks the s_ready flag in diskmanager.
     if (!store_disks_ready()) return;
 
-    char file_name[MAX_NUM_FILENAME_CHARS];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
     }
