@@ -640,7 +640,7 @@ blast_info("Finished initializing Beaglebones..."); */
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  initialize_watchdog(2);
+  // initialize_watchdog(2);
   initialize_bias_tone();
   startChrgCtrl(0);
 
