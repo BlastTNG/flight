@@ -227,6 +227,7 @@ enum multiCommand {
   set_rox_bias_amp,
   cal_length,
   level_length,
+  heater_sync,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

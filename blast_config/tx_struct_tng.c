@@ -30,7 +30,6 @@
 #include "channels_tng.h"
 #include "calibrate.h"
 #include "conversions.h"
-
 /* Analog channel calibrations */
 /* 16-bit channels with analog preamps. To Volts */
 #define CAL16(m, b) ((m)*M_16PRE),               ((b) + B_16PRE*(m)*M_16PRE)
@@ -68,8 +67,10 @@
 channel_t channel_list[] =
 {
     { "test_values",      SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "heater_status",    1,          0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
-    { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "heater_status_write",    1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -81,6 +82,7 @@ channel_t channel_list[] =
     { "tr_500_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "rox_bias",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "incharge", 1, 0, TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "bias_alsa_state_rox", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -100,6 +102,8 @@ channel_t channel_list[] =
     { "td_vcs1_plate",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     // random cryo labjack AINs
     { "level_sensor_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "cal_lamp_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "heater_300mk_read", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     // below are the thermistor channels as well as the current loop channels
     { "thermistor_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "thermistor_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -139,6 +143,8 @@ channel_t channel_list[] =
     { "current_loop_8",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_9",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_10",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+
+    // ADD CLINOMETER CHANNELS
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
@@ -356,12 +362,14 @@ channel_t channel_list[] =
     { "veto_sensor",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_level_on_bal",       CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
     { "i_level_off_bal",      CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
-    { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
+    { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_INT16, RATE_5HZ, U_I_A, 0 },
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
-    { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_move_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_hold_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "pos_bal", 	     SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0 },
+    { "lim_bal",	     SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
     { "alt_sip",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 

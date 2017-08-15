@@ -270,6 +270,10 @@ typedef struct {
   uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
   uint16_t heater_update;
   uint16_t heater_status;
+  uint16_t sync;
+  uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
 } cryo_cmds_t;
 
 typedef struct {
@@ -296,9 +300,9 @@ typedef struct slinger_commanding
 
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
-    enum {pos = 0, neg} bal_move_type;
+    enum {neg = 0, no_bal, pos} bal_move_type;
     uint32_t pos;
-    uint16_t vel;
+    uint32_t vel;
     uint16_t hold_i;
     uint16_t move_i;
     uint16_t acc;

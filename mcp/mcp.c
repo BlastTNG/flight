@@ -56,6 +56,7 @@
 #include "tx.h"
 #include "lut.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
 
@@ -311,11 +312,11 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    read_chopper();
-    cal_control();
+    // read_chopper();
+    // cal_control();
 
     framing_publish_200hz();
-    store_data_200hz();
+    // store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -333,9 +334,10 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
-    store_data_100hz();
+    // store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+
     push_bi0_buffer();
     // test_dio();
 }
@@ -364,7 +366,7 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
-    store_data_5hz();
+//    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -373,11 +375,11 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    rec_control();
+    // rec_control();
     // of_control();
     // if_control();
     // labjack_test_dac(3.3, 0);
-    heater_control();
+    // heater_control();
     // test_labjacks(0);
     // read_thermometers();
     // auto_cycle_mk2();
@@ -389,7 +391,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    store_data_1hz();
+//    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
@@ -569,19 +571,19 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(0, 84, 1);
+  // mult_labjack_networking_init(5, 84, 1);
 
-  initialize_labjack_commands(LABJACK_CRYO_1);
-  initialize_labjack_commands(LABJACK_CRYO_2);
+  // initialize_labjack_commands(LABJACK_CRYO_1);
+  // initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(0);
+  // mult_initialize_labjack_commands(5);
 
   initialize_CPU_sensors();
 

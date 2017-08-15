@@ -76,6 +76,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(therm_readout_off), "turning off 12V channels", GR_CRYO},
   {COMMAND(heater_supply_on), "turning on 40V channels", GR_CRYO},
   {COMMAND(heater_supply_off), "turning off 40V channels", GR_CRYO},
+  {COMMAND(heater_sync), "syncing heater command channel to input", GR_CRYO},
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 // power box OF and IF relay controls
@@ -891,7 +892,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
       {
-          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_LEVEL"}
+          {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
       }
   },
 

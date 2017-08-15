@@ -19,8 +19,8 @@ void read_thermometers();
 void test_read(void);
 void test_frequencies(void);
 void tie_up(void);
-
-#ifdef USE_XY_THREAD
-	void read_chopper(void);
-#endif
+void heater_read(void);
+void test_cycle(void);
+void auto_cycle_mk2(void);
+void read_chopper(void);
 #endif /* cryostat_h */

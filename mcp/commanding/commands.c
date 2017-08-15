@@ -47,8 +47,10 @@
 #include "pointing_struct.h"
 #include "channels_tng.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "cryostat.h"
 #include "relay_control.h"
+#include "bias_tone.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -253,6 +255,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case level_sensor_pulse:
             CommandData.Cryo.do_level_pulse = 1;
+            break;
+        case heater_sync:
+            CommandData.Cryo.sync = 1;
             break;
         case charcoal_on:
             CommandData.Cryo.charcoal = 1;
@@ -1012,6 +1017,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+
 #ifndef BOLOTEST
         case blast_rocks:
             CommandData.sucks = 0;
@@ -1659,7 +1665,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.bal_move_type = ((int)(0 < ivalues[0]) - (int)(ivalues[0] < 0)) + 1;
       CommandData.balance.mode = bal_manual;
       break;
     case balance_vel:
@@ -1712,6 +1718,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //       need to multiply later instead
     case set_rox_bias_amp: // Set the amplitude of the rox bias signal
       CommandData.rox_bias.amp = ivalues[0];
+      set_rox_bias();
       break;
     case bias_level_500:     // Set bias 1 (500)
       CommandData.Bias.bias[0] = ivalues[0];
@@ -2299,6 +2306,7 @@ void InitCommandData()
     CommandData.parts_sched = 0x0;
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
+    CommandData.Cryo.sync = 0;
 
     /* relays should always be set to zero when starting MCP */
     /* relays */
@@ -2603,6 +2611,8 @@ void InitCommandData()
     CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
     for (int which = 0; which < 2; which++) {
+        CommandData.XSC[which].is_new_window_period_cs = 1500;
+
         CommandData.XSC[which].heaters.mode = xsc_heater_auto;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
