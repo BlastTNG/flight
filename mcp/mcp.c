@@ -69,6 +69,7 @@
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
+#include "diskmanager_tng.h"
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
@@ -78,11 +79,11 @@
 #include "roach.h"
 #include "relay_control.h"
 #include "outer_frame.h"
+#include "store_data.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
-#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -461,6 +462,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t DiskManagerID;
   pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -559,7 +561,7 @@ int main(int argc, char *argv[])
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  initialize_diskmanager();
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);

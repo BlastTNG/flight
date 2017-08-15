@@ -41,6 +41,22 @@
 
 #define MAX_NUM_FILENAME_CHARS 72
 
+int store_disks_ready() {
+	static bool disk_init = false;
+
+    if (!disk_init) {
+        if (check_disk_init()) {
+            blast_info("check_disk_init passed!");
+            disk_init = true;
+        }
+    }
+    if (disk_init) {
+        return(1);
+    } else {
+        return(0);
+    }
+}
+
 void get_write_file_name(char* fname, char* type, uint32_t index)
 {
     static uint16_t extra_tag = 0;
@@ -98,6 +114,9 @@ void store_data_1hz(void)
 	static uint32_t frames_stored_to_1hz = 0;
 	uint16_t bytes_written = 0;
 
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     char file_name[MAX_NUM_FILENAME_CHARS];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
@@ -131,6 +150,9 @@ void store_data_5hz(void)
 	static uint32_t frames_stored_to_5hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
 
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     if (mcp_5hz_framenum_addr == NULL) {
         mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
     }
@@ -161,6 +183,9 @@ void store_data_100hz(void)
 	static uint32_t frames_stored_to_100hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
 
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     if (mcp_100hz_framenum_addr == NULL) {
         mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
     }
@@ -190,6 +215,9 @@ void store_data_200hz(void)
 	uint16_t bytes_written = 0;
 	static uint32_t frames_stored_to_200hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
+
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
 
     if (mcp_200hz_framenum_addr == NULL) {
         mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
