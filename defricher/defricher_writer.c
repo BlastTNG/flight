@@ -408,13 +408,20 @@ void defricher_queue_packet(uint16_t m_rate)
     g_async_queue_push(packet_queue, new_pkt.ptr);
 }
 
+static inline int defricher_new_framenum(uint16_t m_rate)
+{
+    char *frame_counter_channel_name;
+	blast_tmp_sprintf(frame_counter_channel_name, "mcp_%dhz_framecount", defricher_get_rate(m_rate));
+	channel_t *frame_counter_Addr = channels_find_by_name(frame_counter_channel_name);
+	defricher_cache_node_t *framenum_node = frame_counter_Addr->var;
+	return be32toh(*framenum_node->_32bit_data);
+}
 
 static int defricher_write_packet(uint16_t m_rate)
 {
     static int have_warned = 1;
     int32_t new_framenum = 0;
     static int32_t old_framenum = 0;
-    char *frame_counter_channel_name;
     static bool first_time = true;
 
     if (ri.writer_done) {
@@ -429,9 +436,7 @@ static int defricher_write_packet(uint16_t m_rate)
     }
 
     // Writing blanks to dirfile when frames are lost
-    asprintf(&frame_counter_channel_name, "mcp_%dhz_framecount", defricher_get_rate(m_rate));
-    channel_t *frame_counter_Addr = channels_find_by_name(frame_counter_channel_name);
-    new_framenum = GET_INT32(frame_counter_Addr);
+    new_framenum = defricher_new_framenum(m_rate);
 
     if (first_time) {
         old_framenum = new_framenum;
