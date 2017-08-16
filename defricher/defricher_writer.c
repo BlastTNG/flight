@@ -412,6 +412,10 @@ void defricher_queue_packet(uint16_t m_rate)
 static int defricher_write_packet(uint16_t m_rate)
 {
     static int have_warned = 1;
+    int32_t new_framenum = 0;
+    static int32_t old_framenum = 0;
+    char *frame_counter_channel_name;
+    static bool first_time = true;
 
     if (ri.writer_done) {
         defricher_info("Not writing frame due to shutdown request");
@@ -424,6 +428,34 @@ static int defricher_write_packet(uint16_t m_rate)
         return -1;
     }
 
+    // Writing blanks to dirfile when frames are lost
+    asprintf(&frame_counter_channel_name, "mcp_%dhz_framecount", defricher_get_rate(m_rate));
+    channel_t *frame_counter_Addr = channels_find_by_name(frame_counter_channel_name);
+    new_framenum = GET_INT32(frame_counter_Addr);
+
+    if (first_time) {
+        old_framenum = new_framenum;
+        first_time = false;
+    } else {
+        for (int32_t i = (old_framenum + 1); i < new_framenum; i++) {
+            blast_dbg("Doing rate %s, old_framenum=%d, new_framenum=%d, filling in for frame %d\n",
+                    RATE_LOOKUP_TABLE[m_rate].text, old_framenum, new_framenum, i);
+            for (channel_t *channel = channels; channel->field[0]; channel++) {
+                if (channel->rate != m_rate) continue;
+                defricher_cache_node_t *outfile_node = channel->var;
+                if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
+                    if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
+                        defricher_err( "Could not write to %s", outfile_node->output.name);
+                        continue;
+                    }
+                }
+            }
+            dirfile_frames_written++;
+        }
+        old_framenum = new_framenum;
+    }
+
+    // Writing new frame data to dirfile
     if (m_rate == RATE_200HZ) ri.wrote ++;
     have_warned = 0;
     for (channel_t *channel = channels; channel->field[0]; channel++) {
