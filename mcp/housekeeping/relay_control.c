@@ -37,6 +37,7 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
 #include "relay_control.h"
@@ -77,7 +78,7 @@ relay_8 = 128
 relay_9 = 256
 relay_10 = 512
 */
-
+// structure to control the heater and amp power box
 typedef struct {
     uint16_t rec_on;
     uint16_t rec_off;
@@ -89,7 +90,7 @@ typedef struct {
     uint16_t heater_supply_off;
     uint16_t update_rec;
 } rec_control_t;
-
+// structure that contains information about the OF relays state
 typedef struct {
     uint16_t of_1_on;
     uint16_t of_2_on;
@@ -125,7 +126,7 @@ typedef struct {
     uint16_t of_16_off;
     uint16_t update_of;
 } of_control_t;
-
+// structure that contains information about the IF relay state
 typedef struct {
     uint16_t if_1_on;
     uint16_t if_2_on;
@@ -155,7 +156,7 @@ rec_control_t rec_state;
 of_control_t of_state;
 
 if_control_t if_state;
-
+// initializes the REC state values to 0 before starting
 static void rec_init(void) {
     rec_state.rec_on = 0;
     rec_state.rec_off = 0;
@@ -167,7 +168,7 @@ static void rec_init(void) {
     rec_state.heater_supply_off = 0;
     rec_state.update_rec = 0;
 }
-
+// pulls data from the command data structure
 static void rec_update_values(void) {
     rec_state.rec_on = CommandData.Relays.rec_on;
     rec_state.rec_off = CommandData.Relays.rec_off;
@@ -186,7 +187,7 @@ static void rec_update_values(void) {
     CommandData.Relays.heater_supply_on = 0;
     CommandData.Relays.heater_supply_off = 0;
 }
-
+// function called to send the values to the labjack registers
 static void rec_send_values(void) {
     heater_write(LABJACK_CRYO_2, POWER_BOX_ON, rec_state.rec_on);
     heater_write(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
@@ -197,7 +198,7 @@ static void rec_send_values(void) {
     heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
     heater_write(LABJACK_CRYO_2, HEATER_SUPPLY_OFF, rec_state.heater_supply_off);
 }
-
+// function called in the main loop of MCP
 void rec_control(void) {
     if (CommandData.Relays.labjack[1] == 1) {
         static int rec_startup = 1;
@@ -222,7 +223,7 @@ void rec_control(void) {
         }
     }
 }
-
+// initializes the OF relay structure
 static void of_init(void) {
     of_state.of_1_on = 0;
     of_state.of_1_off = 0;
@@ -257,7 +258,7 @@ static void of_init(void) {
     of_state.of_16_on = 0;
     of_state.of_16_off = 0;
 }
-
+// pulls data from the command data struct
 static void of_update_values(void) {
     of_state.of_1_on = CommandData.Relays.of_1_on;
     of_state.of_1_off = CommandData.Relays.of_1_off;
@@ -292,7 +293,7 @@ static void of_update_values(void) {
     of_state.of_16_on = CommandData.Relays.of_16_on;
     of_state.of_16_off = CommandData.Relays.of_16_off;
 }
-
+// sends all of the new values to the labjacks for the OF
 static void of_send_values(void) {
     heater_write(LABJACK_OF_1, RELAY_1_ON, of_state.of_1_on);
     heater_write(LABJACK_OF_1, RELAY_1_OFF, of_state.of_1_off);
@@ -327,15 +328,17 @@ static void of_send_values(void) {
     heater_write(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
     heater_write(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
 }
-
+//
 void of_control(void) {
     if (CommandData.Relays.labjack[2] == 1 && CommandData.Relays.labjack[3] == 1) {
         static int of_trigger = 0;
+        // 1 second later sends all 0s
         if (of_trigger == 1) { // turns off the previous set of pulses
             of_trigger = 0;
             of_init();
             of_send_values();
         }
+        // sends the values from command data
         if ((of_state.update_of = CommandData.Relays.update_of) == 1) {
             of_update_values();
             of_trigger = 1;
@@ -344,7 +347,7 @@ void of_control(void) {
         }
     }
 }
-
+// initializes the IF relay structure to 0
 static void if_init(void) {
     if_state.if_1_on = 0;
     if_state.if_1_off = 0;
@@ -367,7 +370,7 @@ static void if_init(void) {
     if_state.if_10_on = 0;
     if_state.if_10_off = 0;
 }
-
+// pulls the inner frame relay values from the command data struct
 static void if_update_values(void) {
     if_state.if_1_on = CommandData.Relays.if_1_on;
     if_state.if_1_off = CommandData.Relays.if_1_off;
@@ -390,7 +393,7 @@ static void if_update_values(void) {
     if_state.if_10_on = CommandData.Relays.if_10_on;
     if_state.if_10_off = CommandData.Relays.if_10_off;
 }
-
+// sends the inner frame relay values to the labjack
 static void if_send_values(void) {
     heater_write(LABJACK_OF_3, RELAY_1_ON, if_state.if_1_on);
     heater_write(LABJACK_OF_3, RELAY_1_OFF, if_state.if_1_off);
@@ -413,7 +416,7 @@ static void if_send_values(void) {
     heater_write(LABJACK_OF_3, IF_RELAY_10_ON, if_state.if_10_on);
     heater_write(LABJACK_OF_3, IF_RELAY_10_OFF, if_state.if_10_off);
 }
-
+// function that calls all of the sub functions ffor controlling the IF relays
 void if_control(void) {
     if (CommandData.Relays.labjack[3] == 1) {
         static int if_trigger = 0;

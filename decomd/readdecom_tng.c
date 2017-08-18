@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <math.h>
 #include "bbc_pci.h"
 #include "decom_pci.h"
 #include "decomd.h"
@@ -28,7 +29,10 @@ extern uint16_t crc_ok; // 1 if crc was ok
 extern unsigned long frame_counter;
 extern double dq_bad;  // data quality - fraction of bad crcs
 
-bool debug_rate = true;
+
+bool debug_rate = false;
+uint16_t debug_counter = 0;
+uint16_t previous_counter = 0;
 
 // void pushDiskFrame(unsigned short *RxFrame);
 
@@ -68,6 +72,15 @@ void ReadDecom (void)
           read_data = 1;
           out_frame[i_word] = raw_word_in;
           anti_out_frame[i_word] = ~raw_word_in;
+          if (debug_rate) {
+            printf("i_word=%d, raw_word_in = %04x\n", i_word, raw_word_in);
+          }
+          if (i_word == 2) {
+            if (((raw_word_in - previous_counter) != 2) || (((int) (raw_word_in - previous_counter) != (-2)))) {
+                printf("We have missed %d frames", raw_word_in - previous_counter);
+            }
+            previous_counter = raw_word_in;
+          }
           if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
             if (debug_rate) {
                 printf("=================i_word=%d==============================\n", i_word);
@@ -77,13 +90,11 @@ void ReadDecom (void)
             if ((raw_word_in != sync_word) && (raw_word_in != (uint16_t) ~sync_word)) {
                 status = 0;
                 i_word = 0;
-                if (debug_rate) {
-                    printf("***** But it's not: didn't get a sync word, got %04x******\n", raw_word_in);
-                }
             } else {
                 if (debug_rate) {
                     printf("=== FRAME START! i_word=%d===\n== Got sync word %04x ==\n", i_word, raw_word_in);
                 }
+                debug_counter += 1;
                   if (status < 2) {
                       status++;
                   } else {
@@ -118,6 +129,17 @@ void ReadDecom (void)
                         printf("== This is the last word: i_word=%d, and BI0_FRAME_SIZE=%d\n", i_word, BI0_FRAME_SIZE);
                         printf("The last word received (normally the CRC) is %04x\n", raw_word_in); 
                         printf("The last word received negative is (normally the CRC) is %04x\n", (~raw_word_in)&0xffff); 
+                        if (false) {
+                            printf("==frame==\n");
+                            for (int j=0; j<BI0_FRAME_SIZE; j++) {
+                                printf("%02x ", out_frame[j]);
+                            }
+                            printf("========\n== anti frame==\n");
+                            for (int j=0; j<BI0_FRAME_SIZE; j++) {
+                                printf("%04x ", anti_out_frame[j]);
+                            }
+                            printf("\n-------------------\n");
+                        }
                     }
                     out_frame[0] = anti_out_frame[0] = 0xEB90;
                     crc_pos = crc16(CRC16_SEED, out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);

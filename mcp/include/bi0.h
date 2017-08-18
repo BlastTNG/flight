@@ -37,15 +37,16 @@ typedef struct
     int i_out;
     uint8_t *framelist[BI0_FRAME_BUFLEN];
     size_t framesize[BI0_FRAME_BUFLEN];
-} bi0_buffer_t;
+} biphase_frames_t;
 
-extern bi0_buffer_t bi0_buffer;
-extern uint8_t *biphase_frame; // This is pushed to bi0_buffer
+extern biphase_frames_t biphase_frames;
+extern uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
+extern void synclink_close();
 extern pthread_t watchdog_id;
 
 void initialize_biphase_buffer(void);
-void push_bi0_buffer(void);
+void push_biphase_frames(void);
 void biphase_writer(void);
 
 void build_biphase_frame_200hz(const void *m_channel_data);

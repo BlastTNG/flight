@@ -12,7 +12,6 @@
 #include <linux/types.h>
 
 #include "synclink.h"
-#include "blast.h"
 #include "crc.h"
 
 int send_biphase_writes();
@@ -70,7 +69,7 @@ int send_biphase_writes() {
     /* Open device */
     fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
     if (fd < 0) {
-        blast_err("open error=%d %s", errno, strerror(errno));
+        printf("open error=%d %s", errno, strerror(errno));
         return fd;
     }
     usleep(1000);
@@ -79,28 +78,28 @@ int send_biphase_writes() {
     usleep(1000);
     rc = ioctl(fd, MGSL_IOCGSTATS, 0);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCGSTATS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCGSTATS) error=%d %s", errno, strerror(errno));
         return rc;
     }
     // Disable transmitter
     int enable = 0;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
     // Enable transmitter
     enable = 1;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
 
     /* Set parameters */
     rc = ioctl(fd, MGSL_IOCGPARAMS, &params);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
     }
     params.mode = MGSL_MODE_RAW;
@@ -112,23 +111,23 @@ int send_biphase_writes() {
     params.crc_type = HDLC_CRC_NONE;
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
     }
     int mode = MGSL_INTERFACE_RS422;
     // mode += MGSL_INTERFACE_MSB_FIRST;
     rc = ioctl(fd, MGSL_IOCSIF, mode);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
         return rc;
     }
 
     int idlemode;
     rc = ioctl(fd, MGSL_IOCGTXIDLE, &idlemode);
-    blast_info("The current idlemode is %04x", idlemode);
+    printf("The current idlemode is %04x", idlemode);
     idlemode = HDLC_TXIDLE_CUSTOM_16 + 0xAA;
     rc = ioctl(fd, MGSL_IOCGTXIDLE, idlemode);
-    blast_info("The current idlemode is %04x", idlemode);
+    printf("The current idlemode is %04x", idlemode);
 
     // Making an array of data (0xFFFFFFFF...) with sync word and CRC
     uint16_t *data_to_write = NULL;
@@ -159,7 +158,7 @@ int send_biphase_writes() {
     sigs = TIOCM_RTS + TIOCM_DTR;
     rc = ioctl(fd, TIOCMBIS, &sigs);
     if (rc < 0) {
-        blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
+        printf("assert DTR/RTS error = %d %s", errno, strerror(errno));
         return rc;
     }
 
@@ -179,7 +178,7 @@ int send_biphase_writes() {
         gettimeofday(&begin, NULL);
         rc = write(fd, lsb_data_to_write, bytes_to_write);
         if (rc < 0) {
-            blast_err("write error=%d %s. rc=%d. Sleeping 0.05s", errno, strerror(errno), rc);    
+            printf("write error=%d %s. rc=%d. Sleeping 0.05s", errno, strerror(errno), rc);    
             usleep(50000);
             // return rc;
         } else {
@@ -193,8 +192,8 @@ int send_biphase_writes() {
         rc = tcdrain(fd);
         gettimeofday(&end, NULL);
         if ((counter % 10) == 0) {
-            blast_info("The CRC calculated is %04x", crc_calculated);
-            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
+            printf("The CRC calculated is %04x", crc_calculated);
+            printf("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
         }
         counter += 1;
         // usleep(10000);

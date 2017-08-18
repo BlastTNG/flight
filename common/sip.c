@@ -599,7 +599,7 @@ void ProcessUplinkSched(unsigned char *extdat)
 
 void WatchPort(void* parameter)
 {
-    const char *COMM[] = { "/dev/ttyS0", "/dev/ttyS1" };
+    const char *COMM[] = { "/dev/ttyCOMM1", "/dev/ttyCOMM2" };
     const unsigned char route[2] = { 0x09, 0x0c };
 
     unsigned char buf;

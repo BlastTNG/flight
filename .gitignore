@@ -23,6 +23,8 @@ quick_diagnostics/QuickDiag
 
 stars/windows/stars
 
+test_programs/synclink/build
+
 defricher/build
 
 decomd/build
@@ -38,3 +40,5 @@ decom/.decom_pci.o.cmd
 decom/Module.symvers
 decom/decom_pci.mod.c
 decom/modules.order
+
+test_programs/synclink/support/test_biphase

@@ -74,7 +74,7 @@ extern "C" {
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (112.2) //PCA 30-Nov-2016
+#define ENC_RAW_EL_OFFSET (291.84) //PCA 11-May-2017
                                    /* Note this is referenced relative to lock pin hole 0*/
 
 /* to get proper wrapping in KST, the encoder elevation type should be
@@ -128,7 +128,7 @@ extern "C" {
 #define CRYO_A2_B (-1.032198E1 )
 /* Cryo Diode Voltage Calibration */
 /* Modified by Jeff @ Penn, October 6 2009 */
-#define CRYO_D_M ( 10.8/32768.0)
+#define CRYO_D_M ( 10.8/32768)
 #define CRYO_D_B (-10.8)
 /* M3 was not measured (spider cable broken) so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)

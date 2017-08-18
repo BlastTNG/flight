@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <memory.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -12,17 +13,6 @@
 #include <linux/types.h>
 
 #include "synclink.h"
-#include "blast.h"
-#include "crc.h"
-
-int send_biphase_writes();
-
-
-int main() 
-{
-    send_biphase_writes();
-}
-
 
 void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_t *lsb_data_out) {
 
@@ -47,7 +37,8 @@ void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_
     };
     uint16_t lsb;
     uint16_t msb;
-    for (int i = 0; i < ((int) bytes_to_write/2); i++) {
+    int i = 0;
+    for (i = 0; i < ((int) bytes_to_write/2); i++) {
         msb = *(msb_data+i);
         lsb = (BitReverseTable256[msb & 0xff] << 8) | 
               (BitReverseTable256[(msb >> 8) & 0xff]);
@@ -55,7 +46,7 @@ void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_
     }
 }
 
-int send_biphase_writes() {
+int main() {
 
     int fd;
     int rc;
@@ -66,11 +57,12 @@ int send_biphase_writes() {
     struct timeval begin, end;
     uint16_t crc_calculated;
     uint16_t small_counter=0;
+    int i,j = 0;
 
     /* Open device */
     fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
     if (fd < 0) {
-        blast_err("open error=%d %s", errno, strerror(errno));
+        printf("open error=%d %s\n", errno, strerror(errno));
         return fd;
     }
     usleep(1000);
@@ -79,28 +71,28 @@ int send_biphase_writes() {
     usleep(1000);
     rc = ioctl(fd, MGSL_IOCGSTATS, 0);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCGSTATS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCGSTATS) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
     // Disable transmitter
     int enable = 0;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCRXENABLE) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
     // Enable transmitter
     enable = 1;
     rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCRXENABLE) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
 
     /* Set parameters */
     rc = ioctl(fd, MGSL_IOCGPARAMS, &params);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCGPARAMS) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
     params.mode = MGSL_MODE_RAW;
@@ -112,23 +104,23 @@ int send_biphase_writes() {
     params.crc_type = HDLC_CRC_NONE;
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCSPARAMS) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
     int mode = MGSL_INTERFACE_RS422;
     // mode += MGSL_INTERFACE_MSB_FIRST;
     rc = ioctl(fd, MGSL_IOCSIF, mode);
     if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
+        printf("ioctl(MGSL_IOCSIF) error=%d %s\n", errno, strerror(errno));
         return rc;
     }
 
     int idlemode;
     rc = ioctl(fd, MGSL_IOCGTXIDLE, &idlemode);
-    blast_info("The current idlemode is %04x", idlemode);
+    printf("The current idlemode is %04x\n", idlemode);
     idlemode = HDLC_TXIDLE_CUSTOM_16 + 0xAA;
     rc = ioctl(fd, MGSL_IOCGTXIDLE, idlemode);
-    blast_info("The current idlemode is %04x", idlemode);
+    printf("The current idlemode is %04x\n", idlemode);
 
     // Making an array of data (0xFFFFFFFF...) with sync word and CRC
     uint16_t *data_to_write = NULL;
@@ -140,7 +132,7 @@ int send_biphase_writes() {
     lsb_data_to_write = malloc(bytes_to_write); 
     if (data_to_write) {
         *data_to_write = 0xEB90;
-        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
+        for (i = 1; i < ((int) bytes_to_write/2); i++) {
             *(data_to_write+i) = 0xFFFF;
         }
     } else {
@@ -159,19 +151,19 @@ int send_biphase_writes() {
     sigs = TIOCM_RTS + TIOCM_DTR;
     rc = ioctl(fd, TIOCMBIS, &sigs);
     if (rc < 0) {
-        blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
+        printf("assert DTR/RTS error = %d %s\n", errno, strerror(errno));
         return rc;
     }
 
-    for (int j=0; j>-1; j++) {
+    for (j=0; j>-1; j++) {
         data_to_write[2] = small_counter;
         if (j%2 == 0) {
             data_to_write[0] = 0xEB90;
             data_to_write[1] = 0xFFFF;
-            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
+            crc_calculated = 0xABAB;
         } else {
             data_to_write[1] = 0xF1FF;
-            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
+            crc_calculated = 0xABAB;
             data_to_write[0] = 0x146F;
         }
         *(data_to_write+last_word) = crc_calculated;
@@ -179,22 +171,21 @@ int send_biphase_writes() {
         gettimeofday(&begin, NULL);
         rc = write(fd, lsb_data_to_write, bytes_to_write);
         if (rc < 0) {
-            blast_err("write error=%d %s. rc=%d. Sleeping 0.05s", errno, strerror(errno), rc);    
+            printf("write error=%d %s. rc=%d. Sleeping 0.05s\n", errno, strerror(errno), rc);    
             usleep(50000);
             // return rc;
         } else {
             printf("\n");
-            for (int k=0; k<((int) bytes_to_write/2); k++) {
-                printf("%04x ", data_to_write[k]);
+            for (j=0; j<((int) bytes_to_write/2); j++) {
+                printf("%04x ", data_to_write[j]);
             }
         }
-        printf("\nWrote %d bytes", rc);
+        printf("\nWrote %d bytes\n", rc);
         small_counter ++;
         rc = tcdrain(fd);
         gettimeofday(&end, NULL);
         if ((counter % 10) == 0) {
-            blast_info("The CRC calculated is %04x", crc_calculated);
-            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
+            printf("It took %f second to write %zd bytes\n", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
         }
         counter += 1;
         // usleep(10000);
