@@ -25,6 +25,8 @@ stars/windows/stars
 
 defricher/build
 
+test_programs/synclink/build
+
 decomd/build
 decom/test_decom/test_decom
 decom/test_decom/simple_test
