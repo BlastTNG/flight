@@ -615,24 +615,43 @@ int possible_solution(double az, double el, int i_point) {
 static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
 {
     xsc_last_trigger_state_t *trig_state = NULL;
-    // The latest solution isn't good
-    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) return NULL;
-    // The camera system has just started
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0)
-        return NULL;
-    // The solution has already been processed
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter)
-        return NULL;
 
+    // The latest solution isn't good
+    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) {
+        return NULL;
+    }
+
+    // The camera system has just started
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0) {
+        return NULL;
+    }
+
+    // The solution has already been processed
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
+        return NULL;
+    }
+
+    /* Joy is commenting this out, replacing with previous EBEX logic
     while ((trig_state = xsc_get_trigger_data(which))) {
         if (XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
             break;
-
         blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
         free(trig_state);
+    } 
+    */
+    trig_state = xsc_get_trigger_data(which);
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars != trig_state->counter_stars) {
+        free(trig_state);
+        return NULL;
     }
+    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != trig_state->counter_mcp) {
+        free(trig_state);
+        return NULL;
+    }
+
     return trig_state;
 }
+
 
 static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg,
                               gyro_history_t *m_hs, double old_el, int which)
