@@ -34,6 +34,7 @@
 #include <derived.h>
 #include <mputs.h>
 #include <command_struct.h>
+#include <roach.h>
 #include <store_data.h>
 #include <diskmanager_tng.h>
 #include <mcp.h>
@@ -186,5 +187,56 @@ void store_data_200hz(void)
         } else {
 	        blast_err("Failed to open file %s for writing.", file_name);
         }
+    }
+}
+
+// Write each udp packet to the harddisk.
+void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_roach_udp,
+                            uint16_t packet_err)
+{
+	int temp_fd = -1;
+	uint16_t bytes_written = 0;
+    roach_packet_header_out_t packet_header_out;
+    char type_roach[7];
+    char file_name[MAX_NUM_FILENAME_CHARS];
+    size_t header_size, packet_size;
+
+    bytes_written = snprintf(type_roach, sizeof(type_roach), "roach%i", m_roach_udp->index + 1);
+    if (bytes_written < (sizeof(type_roach)-1)) {
+        blast_err("Could not print roach type string!  bytes_written = %u, sizeof(type_roach) = %i, type_roach = %s",
+                   bytes_written, (int) sizeof(type_roach), type_roach);
+        return;
+    }
+    get_write_file_name(file_name, type_roach, m_roach_udp->roach_packet_count);
+
+    header_size = sizeof(packet_header_out);
+    packet_size = sizeof(*m_packet);
+    // Write header information for the packet.
+    packet_header_out.packet_err_code = packet_err;
+    packet_header_out.write_time = time(NULL); // Time before we call write to harddrive.
+    packet_header_out.packet_crc = crc32(BLAST_MAGIC32, m_packet, packet_size); // CRC of the packet
+    packet_header_out.which = m_roach_udp->which;
+    packet_header_out.want_reset = m_roach_udp->want_reset;
+    packet_header_out.port = m_roach_udp->port;
+    packet_header_out.roach_packet_count = m_roach_udp->roach_packet_count;
+
+    temp_fd = file_open(file_name, "w+");
+	if (temp_fd >= 0) {
+	    // blast_info("Opened file %s for writing.", file_name);
+        bytes_written = file_write(temp_fd, (char*) (&packet_header_out), header_size);
+        if (bytes_written < header_size) {
+            blast_err("%s packet header size is %u bytes but we were only able to write %u bytes",
+                      type_roach, (uint16_t) header_size, bytes_written);
+		}
+	    if (packet_size) {
+            bytes_written = file_write(temp_fd, (char*) m_packet, packet_size);
+            if (bytes_written < packet_size) {
+                blast_err("%s packet header size is %u bytes but we were only able to write %u bytes",
+                         type_roach, (uint16_t) packet_size, bytes_written);
+            }
+		}
+        file_close(temp_fd);
+    } else {
+	    blast_err("Failed to open file %s for writing.", file_name);
     }
 }

@@ -451,12 +451,14 @@ void WatchFIFO(void* void_other_ip)
                 reballoc(tfatal, mcommand_data[mcommand_count], pindex + 2);
 
                 strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
+                blast_info("mcommand_count = %d, mcommand_data[mcommand_count] = %s",
+                    mcommand_count - 1, mcommand_data[mcommand_count-1]);
                 pindex = 0;
             } else {
                 pbuf[pindex++] = command[index];
             }
         }while (command[index++] != 0);
-//        blast_info("%i parameters found.\n", mcommand_count);
+        blast_info("%i parameters found.\n", mcommand_count);
 
         pthread_mutex_lock(&mutex);
 

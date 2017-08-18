@@ -517,6 +517,13 @@ init_err:
     return -1;
 }
 
+/* 
+Bias signal monitoring thread.
+void *bias_monitor_thread(void *m_arg)
+{
+    
+}
+ */
 int set_rox_bias() {
     int retval;
     if ((retval = set_mixer_params()) < 0) {

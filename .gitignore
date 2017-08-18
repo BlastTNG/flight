@@ -23,6 +23,8 @@ quick_diagnostics/QuickDiag
 
 stars/windows/stars
 
+test_programs/synclink/build
+
 defricher/build
 
 decomd/build

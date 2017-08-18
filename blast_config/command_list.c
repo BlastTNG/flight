@@ -31,6 +31,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TRIM] = "Pointing Sensor Trims",
                                     [GRPOS_ELECT] = "Aux. Electronics",
                                     [GRPOS_BIAS] = "Bias",
+                                    [GRPOS_ROACH] = "ROACH Commands",
                                     [GRPOS_VETO] = "Pointing Sensor Vetos",
                                     [GRPOS_ACT] = "Actuators",
                                     [GRPOS_XSC_HOUSE] = "XSC Housekeeping",
@@ -817,6 +818,73 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+  {COMMAND(load_new_tone_amplitudes), "loads new tone amplitudes from file", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(df_calc), "Force calculation of I,Q gradient, Delta F", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"1 = Calc new ref grads & ref delta_f, 2 = calculate comparison delta_f", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Manually retune, 1 = Auto retune"}
+    }
+  },
+  {COMMAND(opt_tones), "Attempt to fine tune targ tones found by get_targ_freqs()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Default, off, 1 = Run", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

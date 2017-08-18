@@ -243,6 +243,9 @@ static void close_mcp(int m_code)
     synclink_close();
     watchdog_close();
     shutdown_bias_tone();
+#ifndef NO_KIDS_ROACH
+    shutdown_roaches();
+#endif
     diskmanager_shutdown();
     ph_sched_stop();
 }
@@ -262,6 +265,14 @@ static int AmISouth(int *not_cryo_corner)
     }
 
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
+}
+
+static void mcp_488hz_routines(void)
+{
+#ifndef NO_KIDS_TEST
+    write_roach_channels_488hz();
+#endif
+    framing_publish_488hz();
 }
 
 static void mcp_244hz_routines(void)
@@ -327,6 +338,9 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
+#ifndef NO_KIDS_TEST
+    write_roach_channels_5hz();
+#endif
 
     framing_publish_5hz();
 //    store_data_5hz();
@@ -338,7 +352,7 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    rec_control();
+    // rec_control();
     // of_control();
     // if_control();
     // labjack_test_dac(3.3, 0);
@@ -365,6 +379,7 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
+    int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -415,6 +430,10 @@ static void *mcp_main_loop(void *m_arg)
         if (!--counter_244hz) {
             counter_244hz = HZ_COUNTER(244);
             mcp_244hz_routines();
+        }
+        if (!--counter_488hz) {
+            counter_488hz = HZ_COUNTER(488);
+            mcp_488hz_routines();
         }
     }
 
@@ -495,6 +514,10 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
+#ifdef NO_KIDS_TEST
+    blast_warn("Warning: NO_KIDS_TEST flag is set.  No detector functions will be called!");
+#endif
+
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -524,6 +547,16 @@ int main(int argc, char *argv[])
   initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
+
+#ifndef NO_KIDS_TEST
+blast_info("Initializing ROACHes from MCP...");
+init_roach();
+blast_info("Finished initializing ROACHes...");
+#endif
+
+/* blast_info("Initializing Beaglebones from MCP...");
+init_beaglebone();
+blast_info("Finished initializing Beaglebones..."); */
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   disk_thread = ph_thread_spawn(diskmanager_thread, NULL);

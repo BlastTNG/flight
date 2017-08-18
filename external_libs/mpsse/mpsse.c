@@ -891,8 +891,8 @@ void mpsse_watchdog_ping(struct mpsse_ctx *ctx)
     // CLK, data, WD are bit 0, 1 and 7
     // 0b10000011 = 0x83
     // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
-	mpsse_read_data_bits_low_byte(ctx, &bits);
-	mpsse_flush(ctx);
+    mpsse_read_data_bits_low_byte(ctx, &bits);
+    mpsse_flush(ctx);
     mpsse_set_data_bits_low_byte(ctx, bits ^ (1 << 7), 0x83);
     mpsse_flush(ctx);
 }
