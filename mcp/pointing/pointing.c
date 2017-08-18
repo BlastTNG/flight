@@ -639,6 +639,15 @@ static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
         free(trig_state);
     } 
     */
+    while ((trig_state = xsc_get_trigger_data(which))) {
+        if ((XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
+          & (XSC_SERVER_DATA(which).channels.image_ctr_stars == trig_state->counter_stars)) {
+            break;
+        }
+        blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
+        free(trig_state);
+    }
+    /*
     trig_state = xsc_get_trigger_data(which);
     if (XSC_SERVER_DATA(which).channels.image_ctr_stars != trig_state->counter_stars) {
         free(trig_state);
@@ -648,6 +657,7 @@ static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
         free(trig_state);
         return NULL;
     }
+    */
 
     return trig_state;
 }
