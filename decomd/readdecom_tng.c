@@ -12,7 +12,7 @@
 #include "blast.h"
 
 #define FRAME_SYNC_WORD 0xEB90
-#define DQ_FILTER 0.9977
+#define DQ_FILTER 0.4
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 
 extern int decom_fp;
@@ -75,9 +75,9 @@ void ReadDecom (void)
           if (debug_rate) {
             printf("i_word=%d, raw_word_in = %04x\n", i_word, raw_word_in);
           }
-          if (i_word == 2) {
-            if (((raw_word_in - previous_counter) != 2) || (((int) (raw_word_in - previous_counter) != (-2)))) {
-                printf("We have missed %d frames", raw_word_in - previous_counter);
+          if (i_word == 2 && false) {
+            if (abs(raw_word_in - previous_counter) != 2) {
+                printf("We have missed %d frames\n", abs(raw_word_in - previous_counter));
             }
             previous_counter = raw_word_in;
           }
@@ -95,6 +95,9 @@ void ReadDecom (void)
                     printf("=== FRAME START! i_word=%d===\n== Got sync word %04x ==\n", i_word, raw_word_in);
                 }
                 debug_counter += 1;
+                if (debug_counter % 10 == 0) {
+                    printf("fraction of bad crc weighted: %f\n", dq_bad);
+                }
                   if (status < 2) {
                       status++;
                   } else {
