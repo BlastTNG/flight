@@ -22,8 +22,8 @@ struct fieldStreamStruct streamList[N_OTH_SETS][MAX_OTH_STREAM_FIELDS] = {
   {"ifel_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifyaw_gy", 5, 10, AVG, NODX, 8, SLOW},
   {"ifroll_gy", 5, 10, AVG, NODX, 8, SLOW},
-  {"az", 33140, 5, AVG, DX, 8, SLOW},
-  {"az_isc", 1, 5, NOAVG, DX, 8, SLOW},
+  {"az", 33140, 5, AVG, DX, 8, SLOW}
+  /*{"az_isc", 1, 5, NOAVG, DX, 8, SLOW},
   {"az_osc", 1, 5, NOAVG, DX, 8, SLOW},
   {"el", 33140, 5, AVG, DX, 8, SLOW},
   {"el_isc", 1, 5, NOAVG, DX, 8, SLOW},
@@ -980,5 +980,5 @@ char *frameList[] = {
 "y_off_osc",
 "y_p",
 "z_mag",
-  ""
+*/  ""
 };

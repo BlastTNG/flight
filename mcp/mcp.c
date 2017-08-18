@@ -431,6 +431,9 @@ int main(int argc, char *argv[])
   pthread_t biphase_writer_id;
   int use_starcams = 0;
 
+  // Adding old telemetry
+  pthread_t compression_id;
+  
 #ifndef USE_FIFO_CMD
   pthread_t CommandDatacomm2;
 #endif
@@ -523,6 +526,7 @@ int main(int argc, char *argv[])
   framing_init(channel_list, derived_list);
   initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
+  pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 #endif
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
