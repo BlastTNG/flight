@@ -278,6 +278,69 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Cryo.heater_1k = 0;
             CommandData.Cryo.heater_update = 1;
             break;
+        case cycle_of_1:
+            CommandData.Relays.cycle_of_1 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_2:
+            CommandData.Relays.cycle_of_2 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_3:
+            CommandData.Relays.cycle_of_3 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_4:
+            CommandData.Relays.cycle_of_4 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_5:
+            CommandData.Relays.cycle_of_5 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_6:
+            CommandData.Relays.cycle_of_6 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_7:
+            CommandData.Relays.cycle_of_7 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_8:
+            CommandData.Relays.cycle_of_8 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_9:
+            CommandData.Relays.cycle_of_9 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_10:
+            CommandData.Relays.cycle_of_10 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_11:
+            CommandData.Relays.cycle_of_11 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_12:
+            CommandData.Relays.cycle_of_12 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_13:
+            CommandData.Relays.cycle_of_13 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_14:
+            CommandData.Relays.cycle_of_14 = 1;
+            break;
+        case cycle_of_15:
+            CommandData.Relays.cycle_of_15 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
+        case cycle_of_16:
+            CommandData.Relays.cycle_of_16 = 1;
+            CommandData.Relays.cycled_of = 1;
+            break;
         case of_relay_1_on:
             CommandData.Relays.of_1_on = 1;
             CommandData.Relays.update_of = 1;
@@ -406,8 +469,48 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_16_off = 1;
             CommandData.Relays.update_of = 1;
             break;
+        case cycle_if_1:
+            CommandData.Relays.cycle_if_1 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_2:
+            CommandData.Relays.cycle_if_2 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_3:
+            CommandData.Relays.cycle_if_3 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_4:
+            CommandData.Relays.cycle_if_4 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_5:
+            CommandData.Relays.cycle_if_5 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_6:
+            CommandData.Relays.cycle_if_6 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_7:
+            CommandData.Relays.cycle_if_7 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_8:
+            CommandData.Relays.cycle_if_8 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_9:
+            CommandData.Relays.cycle_if_9 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
+        case cycle_if_10:
+            CommandData.Relays.cycle_if_10 = 1;
+            CommandData.Relays.cycled_if = 1;
+            break;
         case if_relay_1_on:
-            CommandData.Relays.of_1_on = 1;
+            CommandData.Relays.if_1_on = 1;
             CommandData.Relays.update_if = 1;
             break;
         case if_relay_1_off:
@@ -2251,6 +2354,22 @@ void InitCommandData()
 
     /* relays should always be set to zero when starting MCP */
     /* relays */
+    CommandData.Relays.cycle_of_1 = 0;
+    CommandData.Relays.cycle_of_2 = 0;
+    CommandData.Relays.cycle_of_3 = 0;
+    CommandData.Relays.cycle_of_4 = 0;
+    CommandData.Relays.cycle_of_5 = 0;
+    CommandData.Relays.cycle_of_6 = 0;
+    CommandData.Relays.cycle_of_7 = 0;
+    CommandData.Relays.cycle_of_8 = 0;
+    CommandData.Relays.cycle_of_9 = 0;
+    CommandData.Relays.cycle_of_10 = 0;
+    CommandData.Relays.cycle_of_11 = 0;
+    CommandData.Relays.cycle_of_12 = 0;
+    CommandData.Relays.cycle_of_13 = 0;
+    CommandData.Relays.cycle_of_14 = 0;
+    CommandData.Relays.cycle_of_15 = 0;
+    CommandData.Relays.cycle_of_16 = 0;
     CommandData.Relays.of_1_on = 0;
     CommandData.Relays.of_2_on = 0;
     CommandData.Relays.of_3_on = 0;
@@ -2283,6 +2402,16 @@ void InitCommandData()
     CommandData.Relays.of_14_off = 0;
     CommandData.Relays.of_15_off = 0;
     CommandData.Relays.of_16_off = 0;
+    CommandData.Relays.cycle_if_1 = 0;
+    CommandData.Relays.cycle_if_2 = 0;
+    CommandData.Relays.cycle_if_3 = 0;
+    CommandData.Relays.cycle_if_4 = 0;
+    CommandData.Relays.cycle_if_5 = 0;
+    CommandData.Relays.cycle_if_6 = 0;
+    CommandData.Relays.cycle_if_7 = 0;
+    CommandData.Relays.cycle_if_8 = 0;
+    CommandData.Relays.cycle_if_9 = 0;
+    CommandData.Relays.cycle_if_10 = 0;
     CommandData.Relays.if_1_on = 0;
     CommandData.Relays.if_2_on = 0;
     CommandData.Relays.if_3_on = 0;
@@ -2314,6 +2443,8 @@ void InitCommandData()
     CommandData.Relays.update_rec = 0;
     CommandData.Relays.update_of = 0;
     CommandData.Relays.update_if = 0;
+    CommandData.Relays.cycled_of = 0;
+    CommandData.Relays.cycled_if = 0;
     CommandData.Relays.labjack[0] = 0;
     CommandData.Relays.labjack[1] = 0;
     CommandData.Relays.labjack[2] = 0;

@@ -311,11 +311,11 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    cryo_200hz(0);
+    cryo_200hz(1);
 
     framing_publish_200hz();
     // store_data_200hz();
-    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
+    // build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
 {
@@ -333,9 +333,9 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
     // store_data_100hz();
-    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
-    build_biphase_frame_100hz(channel_data[RATE_100HZ]);
-    push_bi0_buffer();
+    // build_biphase_frame_1hz(channel_data[RATE_1HZ]);
+    // build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+    // push_bi0_buffer();
 }
 static void mcp_5hz_routines(void)
 {
@@ -373,7 +373,7 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
-    cryo_1hz(0);
+    cryo_1hz(1);
     outer_frame(0);
     relays(0);
     labjack_choose_execute();
@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
   ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
-  pthread_t biphase_writer_id;
+  // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-  initialize_biphase_buffer();
+  // initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  void init_labjacks(0, 0, 0, 0, 0, 0);
+  init_labjacks(1, 1, 0, 0, 0, 1);
   // mult_labjack_networking_init(5, 84, 1);
   init_array();
   // mult_initialize_labjack_commands(5);
@@ -570,7 +570,7 @@ int main(int argc, char *argv[])
   initialize_CPU_sensors();
 
   // force incharge for test cryo
-  // force_incharge();
+  force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);
@@ -581,7 +581,7 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 

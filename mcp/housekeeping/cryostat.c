@@ -449,6 +449,15 @@ void read_thermometers(void) {
     }
 }
 
+void read_alarm_gauge(void) {
+    static int first_gauge = 1;
+    static channel_t* gauge_Addr;
+    if (first_gauge) {
+        gauge_Addr = channels_find_by_name("alarm_gauge");
+    }
+    SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, 0));
+}
+
 void read_chopper(void)
 {
 	/*

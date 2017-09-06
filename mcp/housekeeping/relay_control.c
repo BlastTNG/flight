@@ -361,8 +361,90 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
 }
 //
+
+static void init_of_cycle(void) {
+    CommandData.Relays.cycle_of_1 = 0;
+    CommandData.Relays.cycle_of_2 = 0;
+    CommandData.Relays.cycle_of_3 = 0;
+    CommandData.Relays.cycle_of_4 = 0;
+    CommandData.Relays.cycle_of_5 = 0;
+    CommandData.Relays.cycle_of_6 = 0;
+    CommandData.Relays.cycle_of_7 = 0;
+    CommandData.Relays.cycle_of_8 = 0;
+    CommandData.Relays.cycle_of_9 = 0;
+    CommandData.Relays.cycle_of_10 = 0;
+    CommandData.Relays.cycle_of_11 = 0;
+    CommandData.Relays.cycle_of_12 = 0;
+    CommandData.Relays.cycle_of_13 = 0;
+    CommandData.Relays.cycle_of_14 = 0;
+    CommandData.Relays.cycle_of_15 = 0;
+    CommandData.Relays.cycle_of_16 = 0;
+}
+
+static void of_cycle_off(void) {
+    of_state.of_1_off = CommandData.Relays.cycle_of_1;
+    of_state.of_2_off = CommandData.Relays.cycle_of_2;
+    of_state.of_3_off = CommandData.Relays.cycle_of_3;
+    of_state.of_4_off = CommandData.Relays.cycle_of_4;
+    of_state.of_5_off = CommandData.Relays.cycle_of_5;
+    of_state.of_6_off = CommandData.Relays.cycle_of_6;
+    of_state.of_7_off = CommandData.Relays.cycle_of_7;
+    of_state.of_8_off = CommandData.Relays.cycle_of_8;
+    of_state.of_9_off = CommandData.Relays.cycle_of_9;
+    of_state.of_10_off = CommandData.Relays.cycle_of_10;
+    of_state.of_11_off = CommandData.Relays.cycle_of_11;
+    of_state.of_12_off = CommandData.Relays.cycle_of_12;
+    of_state.of_13_off = CommandData.Relays.cycle_of_13;
+    of_state.of_14_off = CommandData.Relays.cycle_of_14;
+    of_state.of_15_off = CommandData.Relays.cycle_of_15;
+    of_state.of_16_off = CommandData.Relays.cycle_of_16;
+}
+
+static void of_cycle_on(void) {
+    of_state.of_1_on = CommandData.Relays.cycle_of_1;
+    of_state.of_2_on = CommandData.Relays.cycle_of_2;
+    of_state.of_3_on = CommandData.Relays.cycle_of_3;
+    of_state.of_4_on = CommandData.Relays.cycle_of_4;
+    of_state.of_5_on = CommandData.Relays.cycle_of_5;
+    of_state.of_6_on = CommandData.Relays.cycle_of_6;
+    of_state.of_7_on = CommandData.Relays.cycle_of_7;
+    of_state.of_8_on = CommandData.Relays.cycle_of_8;
+    of_state.of_9_on = CommandData.Relays.cycle_of_9;
+    of_state.of_10_on = CommandData.Relays.cycle_of_10;
+    of_state.of_11_on = CommandData.Relays.cycle_of_11;
+    of_state.of_12_on = CommandData.Relays.cycle_of_12;
+    of_state.of_13_on = CommandData.Relays.cycle_of_13;
+    of_state.of_14_on = CommandData.Relays.cycle_of_14;
+    of_state.of_15_on = CommandData.Relays.cycle_of_15;
+    of_state.of_16_on = CommandData.Relays.cycle_of_16;
+}
+
+static void power_cycle_of(void) {
+    static int cycle_delay = 4;
+    static int cycle_taken = 0;
+    if (CommandData.Relays.cycled_of == 1) {
+        if (!cycle_taken) {
+            of_cycle_off();
+            cycle_taken = 1;
+            cycle_delay = 2;
+            CommandData.Relays.update_of = 1;
+        }
+        if (cycle_delay == 0) {
+            of_cycle_on();
+            CommandData.Relays.update_of = 1;
+            init_of_cycle();
+            CommandData.Relays.cycled_of = 0;
+            cycle_taken = 0;
+        }
+        if (cycle_delay != 0) {
+            cycle_delay--;
+        }
+    }
+}
+
 void of_control(void) {
     if (CommandData.Relays.labjack[2] == 1 && CommandData.Relays.labjack[3] == 1) {
+        power_cycle_of();
         static int of_trigger = 0;
         static int counter = 0;
         // 1 second later sends all 0s
@@ -478,9 +560,73 @@ static void if_send_values(void) {
     labjack_queue_command(LABJACK_OF_3, IF_RELAY_10_ON, if_state.if_10_on);
     labjack_queue_command(LABJACK_OF_3, IF_RELAY_10_OFF, if_state.if_10_off);
 }
+
+static void init_if_cycle(void) {
+    CommandData.Relays.cycle_if_1 = 0;
+    CommandData.Relays.cycle_if_2 = 0;
+    CommandData.Relays.cycle_if_3 = 0;
+    CommandData.Relays.cycle_if_4 = 0;
+    CommandData.Relays.cycle_if_5 = 0;
+    CommandData.Relays.cycle_if_6 = 0;
+    CommandData.Relays.cycle_if_7 = 0;
+    CommandData.Relays.cycle_if_8 = 0;
+    CommandData.Relays.cycle_if_9 = 0;
+    CommandData.Relays.cycle_if_10 = 0;
+}
+
+static void if_cycle_off(void) {
+    if_state.if_1_off = CommandData.Relays.cycle_if_1;
+    if_state.if_2_off = CommandData.Relays.cycle_if_2;
+    if_state.if_3_off = CommandData.Relays.cycle_if_3;
+    if_state.if_4_off = CommandData.Relays.cycle_if_4;
+    if_state.if_5_off = CommandData.Relays.cycle_if_5;
+    if_state.if_6_off = CommandData.Relays.cycle_if_6;
+    if_state.if_7_off = CommandData.Relays.cycle_if_7;
+    if_state.if_8_off = CommandData.Relays.cycle_if_8;
+    if_state.if_9_off = CommandData.Relays.cycle_if_9;
+    if_state.if_10_off = CommandData.Relays.cycle_if_10;
+}
+
+static void if_cycle_on(void) {
+    if_state.if_1_on = CommandData.Relays.cycle_if_1;
+    if_state.if_2_on = CommandData.Relays.cycle_if_2;
+    if_state.if_3_on = CommandData.Relays.cycle_if_3;
+    if_state.if_4_on = CommandData.Relays.cycle_if_4;
+    if_state.if_5_on = CommandData.Relays.cycle_if_5;
+    if_state.if_6_on = CommandData.Relays.cycle_if_6;
+    if_state.if_7_on = CommandData.Relays.cycle_if_7;
+    if_state.if_8_on = CommandData.Relays.cycle_if_8;
+    if_state.if_9_on = CommandData.Relays.cycle_if_9;
+    if_state.if_10_on = CommandData.Relays.cycle_if_10;
+}
+
+static void power_cycle_if(void) {
+    static int cycle_delay = 1;
+    static int cycle_taken = 0;
+    if (CommandData.Relays.cycled_if == 1) {
+        if (!cycle_taken) {
+            if_cycle_off();
+            cycle_taken = 1;
+            cycle_delay = 2;
+            CommandData.Relays.update_if = 1;
+        }
+        if (cycle_delay == 0) {
+            if_cycle_on();
+            CommandData.Relays.update_if = 1;
+            init_if_cycle();
+            CommandData.Relays.cycled_if = 0;
+            cycle_taken = 0;
+        }
+        if (cycle_delay != 0) {
+            cycle_delay--;
+        }
+    }
+}
+
 // function that calls all of the sub functions ffor controlling the IF relays
 void if_control(void) {
     if (CommandData.Relays.labjack[3] == 1) {
+        power_cycle_if();
         static int if_trigger = 0;
         static int if_counter = 0;
         if (if_trigger == 1) { // turns off the previous set of pulses

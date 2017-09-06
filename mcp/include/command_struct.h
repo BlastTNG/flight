@@ -286,6 +286,12 @@ typedef struct {
   float if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
   float if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
   float if_9_on, if_9_off, if_10_on, if_10_off;
+  float cycle_of_1, cycle_of_2, cycle_of_3, cycle_of_4, cycle_of_5, cycle_of_6;
+  float cycle_of_7, cycle_of_8, cycle_of_9, cycle_of_10, cycle_of_11, cycle_of_12;
+  float cycle_of_13, cycle_of_14, cycle_of_15, cycle_of_16;
+  float cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4, cycle_if_5, cycle_if_6;
+  float cycle_if_7, cycle_if_8, cycle_if_9, cycle_if_10;
+  float cycled_of, cycled_if;
   float rec_on, rec_off, amp_supply_on, amp_supply_off;
   float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
   float update_rec, update_of, update_if;

@@ -42,6 +42,7 @@
 #include "mputs.h"
 #include "tx.h"
 #include "labjack_functions.h"
+#include "labjack.h"
 
 #define NUM_LABJACK_AIN 14
 extern labjack_state_t state[NUM_LABJACKS];

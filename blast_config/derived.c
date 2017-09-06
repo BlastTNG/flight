@@ -507,7 +507,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_4K_FILT_INT", "TD_4K_FILT", 0.199656, 0.000034),
     LINCOM("TD_VCS2_HX_INT", "TD_VCS2_HX", 0.199033, -0.000013),
     LINCOM("TD_VCS1_PLATE_INT", "TD_VCS1_PLATE", 0.199517, -0.000026),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt670_orig.text"),
+    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_250fpa", "TD_250FPA_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_hwp", "TD_HWP_INT", LUT_DIR "dt670_orig.text"),
@@ -518,7 +518,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_m3", "TD_M3_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_charcoal", "TD_CHARCOAL_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_ob_filter", "TD_OB_FILTER_INT", LUT_DIR "dt670_orig.text"),
-    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt670_orig.text"),
+    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_m4", "TD_M4_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_4k_filt", "TD_4K_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs2_hx", "TD_VCS2_HX_INT", LUT_DIR "dt670_orig.text"),
@@ -572,6 +572,7 @@ derived_tng_t derived_list[] = {
     // cryo labjack stuff below
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
+    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", .0809, 2.0218),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
