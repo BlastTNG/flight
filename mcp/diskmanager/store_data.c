@@ -254,6 +254,10 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     size_t header_size, packet_size;
     roach_packet_header_out_t packet_header_out;
 
+	if (m_roach_udp->first_packet) {
+	    blast_info("Called store_roach_udp_packet for the first packet of roach%u", m_roach_udp->which);
+	}
+
     if (first_call) { // Initialize the roach_udp_write_info structure.
         blast_info("Initializing roach_udp_write_info structure.");
         for (int i = 0; i < NUM_ROACHES; i++) {
@@ -274,7 +278,7 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
 
     if (!store_disks_ready()) return;
 
-    m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->index]);
+    m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->i_which]);
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);
@@ -287,11 +291,13 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     packet_header_out.port = m_roach_udp->port;
     packet_header_out.roach_packet_count = m_roach_udp->roach_packet_count;
 
-    if (m_roach_write->pkts_written_ct >= STORE_DATA_FRAMES_PER_FILE * 488) {
-    	blast_info("Closing %s", m_roach_write->file_name);
-        file_close(m_roach_write->fp);
+    if ((m_roach_write->pkts_written_ct >= STORE_DATA_FRAMES_PER_FILE * 488) || !(m_roach_write->fp)) {
+        if (m_roach_write->fp) {
+    	    blast_info("Closing %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
+            file_close(m_roach_write->fp);
+        }
         get_write_file_name(m_roach_write->file_name, m_roach_write->type, m_roach_udp->roach_packet_count);
-		blast_info("Opening %s", m_roach_write->file_name);
+		blast_info("Opening %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
         m_roach_write->fp = file_open(m_roach_write->file_name, "w+");
         m_roach_write->pkts_written_ct = 0;
     }
@@ -310,13 +316,5 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
 		    // We wrote the frame successfully.
             (m_roach_write->pkts_written_ct)++;
 		}
-    }
-    if (!(m_roach_write->fp)) {
-        get_write_file_name(m_roach_write->file_name, m_roach_write->type, m_roach_udp->roach_packet_count);
-		blast_info("Opening %s", m_roach_write->file_name);
-        m_roach_write->fp = file_open(m_roach_write->file_name, "w+");
-        if (!m_roach_write->fp) {
-             blast_info("Could not open file %s", m_roach_write->file_name);
-        }
     }
 }
