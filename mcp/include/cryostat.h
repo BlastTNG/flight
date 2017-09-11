@@ -30,4 +30,5 @@ void force_incharge();
 void level_toggle();
 void cryo_1hz(int setting_1hz);
 void cryo_200hz(int setting_200hz);
+void thermal_vac(void);
 #endif /* cryostat_h */

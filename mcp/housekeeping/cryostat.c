@@ -747,6 +747,30 @@ void cryo_200hz(int setting_200hz) {
     }
 }
 
+void thermal_vac(void) {
+    static int first_time_vac = 1;
+    static channel_t* of_1_0_Addr;
+    static channel_t* of_1_13_Addr;
+    static channel_t* of_2_0_Addr;
+    static channel_t* of_2_13_Addr;
+    static channel_t* of_3_0_Addr;
+    static channel_t* of_3_13_Addr;
+    if (first_time_vac) {
+        first_time_vac = 0;
+        of_1_0_Addr = channels_find_by_name("vac_test_1");
+        of_1_13_Addr = channels_find_by_name("vac_test_2");
+        of_2_0_Addr = channels_find_by_name("vac_test_3");
+        of_2_13_Addr = channels_find_by_name("vac_test_4");
+        of_3_0_Addr = channels_find_by_name("vac_test_5");
+        of_3_13_Addr = channels_find_by_name("vac_test_6");
+    }
+    SET_SCALED_VALUE(of_1_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_1_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+}
 
 
 

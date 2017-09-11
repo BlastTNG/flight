@@ -311,7 +311,7 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    cryo_200hz(1);
+    cryo_200hz(0);
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -373,9 +373,10 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
-    cryo_1hz(1);
+    cryo_1hz(0);
     outer_frame(0);
     relays(0);
+    thermal_vac();
     labjack_choose_execute();
     blast_store_cpu_health();
     blast_store_disk_space();
@@ -562,7 +563,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  init_labjacks(1, 1, 0, 0, 0, 1);
+  init_labjacks(0, 0, 1, 1, 1, 0);
   // mult_labjack_networking_init(5, 84, 1);
   init_array();
   // mult_initialize_labjack_commands(5);
