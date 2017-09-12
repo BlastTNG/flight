@@ -25,14 +25,31 @@
 
 #ifndef INCLUDE_REMOTE_SERIAL_H_
 #define INCLUDE_REMOTE_SERIAL_H_
+#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <unistd.h>
+#include "phenom/defs.h"
+#include "phenom/listener.h"
+#include "phenom/socket.h"
+#include "phenom/memory.h"
 
-typedef struct remote_serial remote_serial_t;
+typedef struct remote_serial {
+    int which;
+    int port;
+    bool connected;
+    bool have_warned_version;
+    uint32_t backoff_sec;
+    struct timeval timeout;
+    ph_job_t connect_job;
+    ph_sock_t *sock;
+    ph_bufq_t *input_buffer;
+} remote_serial_t;
 
 int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len);
 int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size);
 int remote_serial_flush(remote_serial_t *m_serial);
+void remote_serial_shutdown(remote_serial_t *m_serial);
 remote_serial_t *remote_serial_init(int m_which, int m_port);
 
 #endif /* INCLUDE_REMOTE_SERIAL_H_ */

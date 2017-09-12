@@ -38,6 +38,7 @@ int32_t get_100hz_framenum(void);
 int32_t get_5hz_framenum(void);
 int32_t get_1hz_framenum(void);
 
+void framing_publish_488hz(void);
 void framing_publish_244hz(void);
 void framing_publish_200hz(void);
 void framing_publish_100hz(void);

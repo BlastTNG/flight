@@ -70,6 +70,7 @@
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
+#include "diskmanager_tng.h"
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
@@ -79,17 +80,17 @@
 #include "roach.h"
 #include "relay_control.h"
 #include "outer_frame.h"
+#include "store_data.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
-#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int16_t SouthIAm;
-int16_t InCharge = 0;
+int16_t InCharge = 1;
 int16_t InChargeSet = 0;
 
 bool shutdown_mcp = false;
@@ -278,6 +279,9 @@ static void close_mcp(int m_code)
     shutdown_mcp = true;
     watchdog_close();
     shutdown_bias_tone();
+#ifndef NO_KIDS_ROACH
+    shutdown_roaches();
+#endif
     diskmanager_shutdown();
     ph_sched_stop();
 }
@@ -297,6 +301,14 @@ static int AmISouth(int *not_cryo_corner)
     }
 
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
+}
+
+static void mcp_488hz_routines(void)
+{
+#ifndef NO_KIDS_TEST
+    write_roach_channels_488hz();
+#endif
+    framing_publish_488hz();
 }
 
 static void mcp_244hz_routines(void)
@@ -361,6 +373,9 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
+#ifndef NO_KIDS_TEST
+    write_roach_channels_5hz();
+#endif
 
     framing_publish_5hz();
 //    store_data_5hz();
@@ -379,13 +394,14 @@ static void mcp_1hz_routines(void)
     thermal_vac();
     labjack_choose_execute();
     blast_store_cpu_health();
-    blast_store_disk_space();
+    // blast_store_disk_space();
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
 //    store_data_1hz();
+    // roach_timestamp_init(4);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -394,6 +410,7 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
+    int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -445,6 +462,10 @@ static void *mcp_main_loop(void *m_arg)
             counter_244hz = HZ_COUNTER(244);
             mcp_244hz_routines();
         }
+        if (!--counter_488hz) {
+            counter_488hz = HZ_COUNTER(488);
+            mcp_488hz_routines();
+        }
     }
 
     return NULL;
@@ -454,10 +475,11 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
-  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
   // pthread_t biphase_writer_id;
+  pthread_t DiskManagerID;
+  pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -524,6 +546,10 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
+#ifdef NO_KIDS_TEST
+    blast_warn("Warning: NO_KIDS_TEST flag is set.  No detector functions will be called!");
+#endif
+
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -554,8 +580,23 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
+#ifndef NO_KIDS_TEST
+  blast_info("Initializing ROACHes from MCP...");
+  roach_udp_networking_init();
+  init_roach(0);
+  init_roach(1);
+  init_roach(2);
+  init_roach(3);
+  init_roach(4);
+  blast_info("Finished initializing ROACHes...");
+#endif
+
+/* blast_info("Initializing Beaglebones from MCP...");
+init_beaglebone();
+blast_info("Finished initializing Beaglebones..."); */
+
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -582,7 +623,7 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
@@ -597,6 +638,7 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
+  blast_info("Joining main thread.");
   ph_thread_join(main_thread, NULL);
 
   return(0);
