@@ -766,10 +766,10 @@ void thermal_vac(void) {
     }
     SET_SCALED_VALUE(of_1_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
     SET_SCALED_VALUE(of_1_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
-    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
-    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
-    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
-    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_2, 0));
+    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_2, 13));
+    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_3, 0));
+    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_3, 13));
 }
 
 
