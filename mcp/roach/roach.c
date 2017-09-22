@@ -124,11 +124,11 @@ double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
                    0.03688533, 0.05061838, 0.06425732, 0.07654357, 0.08630093,
                    0.09257286, 0.09473569};
 /* Firmware image files - they only differ in  UDP source IP/MAC address */
-const char roach_fpg[5][100] = {"/data/etc/blast/r1_fir_dds330.fpg",
-                               "/data/etc/blast/r2_fir_dds330.fpg",
-		               "/data/etc/blast/r3_fir_dds330.fpg",
-                               "/data/etc/blast/r4_fir_dds330.fpg",
-                               "/data/etc/blast/r5_fir_dds330.fpg"};
+const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/r1_fir_dds330.fpg",
+                               "/data/etc/blast/roachFirmware/r2_fir_dds330.fpg",
+		               "/data/etc/blast/roachFirmware/r3_fir_dds330.fpg",
+                               "/data/etc/blast/roachFirmware/r4_fir_dds330.fpg",
+                               "/data/etc/blast/roachFirmware/r5_fir_dds330.fpg"};
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
 /* Beaglebone/Pi state structure, see roach.h */
@@ -178,7 +178,7 @@ int roach_qdr_cal(roach_state_t *m_roach)
     char *m_cal_command;
     char m_line[READ_LINE];
     char *freq;
-    blast_tmp_sprintf(m_cal_command, "python /data/etc/blast/cal_roach_qdr.py %s > %s",
+    blast_tmp_sprintf(m_cal_command, "python /data/etc/blast/roachPython/cal_roach_qdr.py %s > %s",
 							m_roach->address, m_roach->qdr_log);
     system(m_cal_command);
     sleep(5);
@@ -1225,7 +1225,7 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_t
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[READ_LINE];
     blast_tmp_sprintf(py_command,
-            "python /data/etc/blast/find_kids_blast.py %s %s %g %g %g > %s",
+            "python /data/etc/blast/roachPython/find_kids_blast.py %s %s %g %g %g > %s",
 		m_last_vna_path,
 		m_last_targ_path,
 		CommandData.roach_params[m_roach->which - 1].smoothing_scale,
@@ -1288,7 +1288,7 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[256];
     blast_tmp_sprintf(py_command,
-            "python /data/etc/blast/optimize_freqs_mcp.py %s > %s",
+            "python /data/etc/blast/roachPython/optimize_freqs_mcp.py %s > %s",
 		m_last_targ_path, m_roach->opt_tones_log);
     blast_info("%s", py_command);
     system(py_command);
