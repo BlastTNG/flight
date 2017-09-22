@@ -50,6 +50,22 @@ typedef struct {
 
 roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
 
+int store_disks_ready() {
+	static bool disk_init = false;
+
+    if (!disk_init) {
+        if (check_disk_init()) {
+            blast_info("check_disk_init passed!");
+            disk_init = true;
+        }
+    }
+    if (disk_init) {
+        return(1);
+    } else {
+        return(0);
+    }
+}
+
 void get_write_file_name(char* fname, char* type, uint32_t index)
 {
     static uint16_t extra_tag = 0;
@@ -105,8 +121,12 @@ void store_data_1hz(void)
 
 	static fileentry_t *temp_fp = NULL;
 	static uint32_t frames_stored_to_1hz = 0;
+	uint16_t bytes_written = 0;
+    static char file_name[MAX_NUM_FILENAME_CHARS];
 
-    char file_name[MAX_NUM_FILENAME_CHARS];
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
     }
@@ -138,6 +158,9 @@ void store_data_5hz(void)
 	static uint32_t frames_stored_to_5hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
 
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     if (mcp_5hz_framenum_addr == NULL) {
         mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
     }
@@ -166,6 +189,9 @@ void store_data_100hz(void)
 	static fileentry_t *temp_fp = NULL;
 	static uint32_t frames_stored_to_100hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
+
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
 
     if (mcp_100hz_framenum_addr == NULL) {
         mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
@@ -196,6 +222,9 @@ void store_data_200hz(void)
 	static uint32_t frames_stored_to_200hz = 0;
     static char file_name[MAX_NUM_FILENAME_CHARS];
 
+    // Checks the s_ready flag in diskmanager.
+    if (!store_disks_ready()) return;
+
     if (mcp_200hz_framenum_addr == NULL) {
         mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
     }
@@ -225,6 +254,10 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     size_t header_size, packet_size;
     roach_packet_header_out_t packet_header_out;
 
+	if (m_roach_udp->first_packet) {
+	    blast_info("Called store_roach_udp_packet for the first packet of roach%u", m_roach_udp->which);
+	}
+
     if (first_call) { // Initialize the roach_udp_write_info structure.
         blast_info("Initializing roach_udp_write_info structure.");
         for (int i = 0; i < NUM_ROACHES; i++) {
@@ -243,7 +276,9 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
         first_call = 0;
     }
 
-    m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->index]);
+    if (!store_disks_ready()) return;
+
+    m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->i_which]);
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);
@@ -256,11 +291,13 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     packet_header_out.port = m_roach_udp->port;
     packet_header_out.roach_packet_count = m_roach_udp->roach_packet_count;
 
-    if (m_roach_write->pkts_written_ct >= STORE_DATA_FRAMES_PER_FILE * 488) {
-    	blast_info("Closing %s", m_roach_write->file_name);
-        file_close(m_roach_write->fp);
+    if ((m_roach_write->pkts_written_ct >= STORE_DATA_FRAMES_PER_FILE * 488) || !(m_roach_write->fp)) {
+        if (m_roach_write->fp) {
+    	    blast_info("Closing %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
+            file_close(m_roach_write->fp);
+        }
         get_write_file_name(m_roach_write->file_name, m_roach_write->type, m_roach_udp->roach_packet_count);
-		blast_info("Opening %s", m_roach_write->file_name);
+		blast_info("Opening %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
         m_roach_write->fp = file_open(m_roach_write->file_name, "w+");
         m_roach_write->pkts_written_ct = 0;
     }
@@ -279,13 +316,5 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
 		    // We wrote the frame successfully.
             (m_roach_write->pkts_written_ct)++;
 		}
-    }
-    if (!(m_roach_write->fp)) {
-        get_write_file_name(m_roach_write->file_name, m_roach_write->type, m_roach_udp->roach_packet_count);
-		blast_info("Opening %s", m_roach_write->file_name);
-        m_roach_write->fp = file_open(m_roach_write->file_name, "w+");
-        if (!m_roach_write->fp) {
-             blast_info("Could not open file %s", m_roach_write->file_name);
-        }
     }
 }

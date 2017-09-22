@@ -26,9 +26,8 @@
 #ifndef INCLUDE_STORE_DATA_H_
 #define INCLUDE_STORE_DATA_H_
 
-#define STORE_DATA_FRAMES_PER_FILE 20 // Store 1 minutes worth of data in one file.
-
 void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_roach_udp,
                             uint16_t packet_err);
 
+#define STORE_DATA_FRAMES_PER_FILE 300 // Store 5 minutes worth of data in one file.
 #endif /* INCLUDE_STORE_DATA_H_ */

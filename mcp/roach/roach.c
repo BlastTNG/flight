@@ -1534,7 +1534,6 @@ int grad_calc(roach_state_t *m_roach)
     blast_info("ROACH%d, Calculating IQ GRADIENTS", m_roach->which);
     float Ival[m_roach->num_kids][NGRAD_POINTS];
     float Qval[m_roach->num_kids][NGRAD_POINTS];
-    char *in_file;
     char m_time_buffer[4096];
     get_time(m_time_buffer);
     /* open files for reading */
@@ -1550,6 +1549,7 @@ int grad_calc(roach_state_t *m_roach)
             if (!strcmp(file_list[i]->d_name, ".") || !strcmp(file_list[i]->d_name, "..")) {
 		  free(file_list[i]);
             } else {
+                char *in_file;
                 blast_tmp_sprintf(in_file, "%s/%s", m_roach->last_cal_path, file_list[i]->d_name);
                 free(file_list[i]);
                 FILE* fd = fopen(in_file, "r");
@@ -2091,6 +2091,7 @@ void *roach_cmd_loop(void* ind)
         roach_state_table[i].status = ROACH_STATUS_GRAD;
         roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
     }
+    usleep(1000); // prevents mcp from eating up all the CPU.
     }
     return NULL;
 }
