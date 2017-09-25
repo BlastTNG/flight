@@ -389,9 +389,9 @@ static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
     cryo_1hz(0);
-    outer_frame(0);
+    outer_frame(1);
     relays(0);
-    thermal_vac();
+    // thermal_vac();
     labjack_choose_execute();
     blast_store_cpu_health();
     // blast_store_disk_space();
@@ -581,14 +581,14 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef NO_KIDS_TEST
-  // blast_info("Initializing ROACHes from MCP...");
-  // roach_udp_networking_init();
-  // init_roach(0);
-  // init_roach(1);
-  // init_roach(2);
-  // init_roach(3);
-  // init_roach(4);
-  // blast_info("Finished initializing ROACHes...");
+  blast_info("Initializing ROACHes from MCP...");
+  roach_udp_networking_init();
+  init_roach(0);
+  init_roach(1);
+  init_roach(2);
+  init_roach(3);
+  init_roach(4);
+  blast_info("Finished initializing ROACHes...");
 #endif
 
 /* blast_info("Initializing Beaglebones from MCP...");
@@ -604,10 +604,10 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
-  init_labjacks(0, 0, 0, 0, 1, 0);
-  // mult_labjack_networking_init(5, 84, 1);
+  init_labjacks(0, 0, 1, 1, 1, 0);
+  // mult_labjack_networking_init(6, 84, 1);
   init_array();
-  // mult_initialize_labjack_commands(5);
+  // mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
 

@@ -108,6 +108,14 @@ labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 6,
+        .address = "labjack7",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mult_labjack2",
+        .have_warned_write_reg = 0,
     }
 };
 
