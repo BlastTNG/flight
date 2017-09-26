@@ -306,9 +306,9 @@ static int AmISouth(int *not_cryo_corner)
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-    // write_roach_channels_488hz();
+    write_roach_channels_488hz();
 #endif
-    // framing_publish_488hz();
+    framing_publish_488hz();
 }
 
 static void mcp_244hz_routines(void)
