@@ -163,9 +163,9 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
             InCharge = 1;
             if (incharge_old != in_charge) {
                 if (SouthIAm == 1) {
-                    blast_info("I, South, have now gained control");
+                    blast_info("Look at me. I, South, am the captain now");
                 } else {
-                    blast_info("I, North, have now gained control");
+                    blast_info("Look at me. I, North, am the captain now");
                 }
             }
         } else {

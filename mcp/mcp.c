@@ -306,16 +306,16 @@ static int AmISouth(int *not_cryo_corner)
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-    write_roach_channels_488hz();
+    // write_roach_channels_488hz();
 #endif
-    framing_publish_488hz();
+    // framing_publish_488hz();
 }
 
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
 
-    framing_publish_244hz();
+    // framing_publish_244hz();
 }
 
 static void mcp_200hz_routines(void)
@@ -323,12 +323,11 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    // read_chopper();
-    // cal_control();
+    cryo_200hz(0);
 
     framing_publish_200hz();
-    // store_data_200hz();
-    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
+    store_data_200hz();
+    // build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
 {
@@ -345,16 +344,14 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
-    // store_data_100hz();
-    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
-    build_biphase_frame_100hz(channel_data[RATE_100HZ]);
-
-    push_bi0_buffer();
-    // test_dio();
+    store_data_100hz();
+    // build_biphase_frame_1hz(channel_data[RATE_1HZ]);
+    // build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+    // push_bi0_buffer();
 }
 static void mcp_5hz_routines(void)
 {
-    watchdog_ping();
+    // watchdog_ping();
     // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
@@ -363,7 +360,8 @@ static void mcp_5hz_routines(void)
     WriteAux();
     ControlBalance();
     StoreActBus();
-    level_control();
+    // level_control();
+    level_toggle();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
     #endif
@@ -380,7 +378,7 @@ static void mcp_5hz_routines(void)
 #endif
 
     framing_publish_5hz();
-//    store_data_5hz();
+    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -389,15 +387,12 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    // rec_control();
-    // of_control();
-    // if_control();
-    // labjack_test_dac(3.3, 0);
-    // heater_control();
-    // test_labjacks(0);
-    // read_thermometers();
     // auto_cycle_mk2();
-    // test_read();
+    cryo_1hz(0);
+    outer_frame(1);
+    relays(0);
+    // thermal_vac();
+    labjack_choose_execute();
     blast_store_cpu_health();
     // blast_store_disk_space();
     xsc_control_heaters();
@@ -405,9 +400,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-//    store_data_1hz();
-    // query_mult(0, 48);
-    // query_mult(0, 49);
+    store_data_1hz();
     // roach_timestamp_init(4);
 }
 
@@ -484,6 +477,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  // pthread_t biphase_writer_id;
   pthread_t DiskManagerID;
   pthread_t biphase_writer_id;
   int use_starcams = 0;
@@ -582,7 +576,7 @@ int main(int argc, char *argv[])
 //  ReductionInit("/data/etc/blast/ephem.2000");
 
   framing_init(channel_list, derived_list);
-  initialize_biphase_buffer();
+  // initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -610,21 +604,15 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
-  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  // mult_labjack_networking_init(5, 84, 1);
-
-  // initialize_labjack_commands(LABJACK_CRYO_1);
-  // initialize_labjack_commands(LABJACK_CRYO_2);
-  // initialize_labjack_commands(LABJACK_OF_1);
-  // initialize_labjack_commands(LABJACK_OF_2);
-  // initialize_labjack_commands(LABJACK_OF_3);
-  // mult_initialize_labjack_commands(5);
+  init_labjacks(0, 0, 1, 1, 1, 0);
+  // mult_labjack_networking_init(6, 84, 1);
+  init_array();
+  // mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
+
+  // force incharge for test cryo
+  force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);

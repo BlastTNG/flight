@@ -31,6 +31,10 @@
 #include <glib.h>
 #include <modbus/modbus.h>
 #include <errno.h>
+#include "mcp.h"
+#include "channels_tng.h"
+#include "lut.h"
+#include "tx.h"
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -39,8 +43,6 @@
 
 #include "command_struct.h"
 #include "blast.h"
-#include "mcp.h"
-#include "tx.h"
 // Target types for stream configuration
 #define STREAM_TARGET_ETHERNET 0x01  // Ethernet
 #define STREAM_TARGET_USB 0x02  // USB
@@ -94,6 +96,15 @@
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
 #define NUM_LABJACKS 6
+
+typedef struct { // temp names
+    channel_t* status_charcoal_heater_Addr;
+    channel_t* status_250_LNA_Addr;
+    channel_t* status_1K_heater_Addr;
+    channel_t* status_charcoal_hs_Addr;
+    channel_t* status_500_LNA_Addr;
+    channel_t* status_350_LNA_Addr;
+} labjack_digital_in_t;
 
 typedef struct {
     uint16_t trans_id;
@@ -216,7 +227,7 @@ void labjack_test_dac(float v_value, int m_labjack);
 void query_time(int m_labjack);
 int labjack_dio(int m_labjack, int address, int command);
 uint16_t labjack_read_dio(int m_labjack, int address);
-void heater_write(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, float command);
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 

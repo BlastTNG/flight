@@ -139,6 +139,12 @@ enum singleCommand {
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   heater_supply_off, reboot_ljcryo1,
+    cycle_of_1, cycle_of_2, cycle_of_3, cycle_of_4, cycle_of_5,
+    cycle_of_6, cycle_of_7, cycle_of_8, cycle_of_9, cycle_of_10,
+    cycle_of_11, cycle_of_12, cycle_of_13, cycle_of_14, cycle_of_15,
+    cycle_of_16, cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4,
+    cycle_if_5, cycle_if_6, cycle_if_7, cycle_if_8, cycle_if_9,
+    cycle_if_10,
     of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
     of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
     of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
@@ -152,7 +158,7 @@ enum singleCommand {
     if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
-    level_sensor_pulse, single_cal_pulse, heaters_off,
+    level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
   xyzzy
 };
 
@@ -240,6 +246,7 @@ enum multiCommand {
   cal_length,
   level_length,
   heater_sync,
+  send_dac,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

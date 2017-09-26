@@ -49,6 +49,7 @@ const char *GroupNames[N_GROUPS] = {
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[xyzzy + 1] = {
+  {COMMAND(load_curve), "starting load curve", GR_CRYO},
   {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_CRYO},
   {COMMAND(heater_300mk_on), "turning on 300mK heater", GR_CRYO},
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
@@ -81,6 +82,22 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 // power box OF and IF relay controls
+  {COMMAND(cycle_of_1), "powercycling OF relay 1", GR_CRYO},
+  {COMMAND(cycle_of_2), "powercycling OF relay 2", GR_CRYO},
+  {COMMAND(cycle_of_3), "powercycling OF relay 3", GR_CRYO},
+  {COMMAND(cycle_of_4), "powercycling OF relay 4", GR_CRYO},
+  {COMMAND(cycle_of_5), "powercycling OF relay 5", GR_CRYO},
+  {COMMAND(cycle_of_6), "powercycling OF relay 6", GR_CRYO},
+  {COMMAND(cycle_of_7), "powercycling OF relay 7", GR_CRYO},
+  {COMMAND(cycle_of_8), "powercycling OF relay 8", GR_CRYO},
+  {COMMAND(cycle_of_9), "powercycling OF relay 9", GR_CRYO},
+  {COMMAND(cycle_of_10), "powercycling OF relay 10", GR_CRYO},
+  {COMMAND(cycle_of_11), "powercycling OF relay 11", GR_CRYO},
+  {COMMAND(cycle_of_12), "powercycling OF relay 12", GR_CRYO},
+  {COMMAND(cycle_of_13), "powercycling OF relay 13", GR_CRYO},
+  {COMMAND(cycle_of_14), "powercycling OF relay 14", GR_CRYO},
+  {COMMAND(cycle_of_15), "powercycling OF relay 15", GR_CRYO},
+  {COMMAND(cycle_of_16), "powercycling OF relay 16", GR_CRYO},
   {COMMAND(of_relay_1_on), "turning on OF relay 1", GR_CRYO},
   {COMMAND(of_relay_2_on), "turning on OF relay 2", GR_CRYO},
   {COMMAND(of_relay_3_on), "turning on OF relay 3", GR_CRYO},
@@ -113,6 +130,16 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(of_relay_14_off), "turning off OF relay 14", GR_CRYO},
   {COMMAND(of_relay_15_off), "turning off OF relay 15", GR_CRYO},
   {COMMAND(of_relay_16_off), "turning off OF relay 16", GR_CRYO},
+  {COMMAND(cycle_if_1), "powercycling if relay 1", GR_CRYO},
+  {COMMAND(cycle_if_2), "powercycling if relay 2", GR_CRYO},
+  {COMMAND(cycle_if_3), "powercycling if relay 3", GR_CRYO},
+  {COMMAND(cycle_if_4), "powercycling if relay 4", GR_CRYO},
+  {COMMAND(cycle_if_5), "powercycling if relay 5", GR_CRYO},
+  {COMMAND(cycle_if_6), "powercycling if relay 6", GR_CRYO},
+  {COMMAND(cycle_if_7), "powercycling if relay 7", GR_CRYO},
+  {COMMAND(cycle_if_8), "powercycling if relay 8", GR_CRYO},
+  {COMMAND(cycle_if_9), "powercycling if relay 9", GR_CRYO},
+  {COMMAND(cycle_if_10), "powercycling if relay 10", GR_CRYO},
   {COMMAND(if_relay_1_on), "turning on IF relay 1", GR_CRYO},
   {COMMAND(if_relay_2_on), "turning on IF relay 2", GR_CRYO},
   {COMMAND(if_relay_3_on), "turning on IF relay 3", GR_CRYO},
@@ -967,6 +994,12 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /********* Cryo heat   *****************/
+  {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",
+      GR_CRYO, 2, {
+      {"Voltage", 0., 5., 'f', "VOLTS_TO_DAC"},
+      {"Labjack - not 1", 0, 4, 'i', "LABJACK"}
+      }
+  },
   {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
     {
       {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},

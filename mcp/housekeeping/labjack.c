@@ -34,21 +34,66 @@
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
+#include "phenom/queue.h"
 
 #include "command_struct.h"
 #include "blast.h"
 #include "mcp.h"
+#include "mputs.h"
 #include "tx.h"
 #include "labjack_functions.h"
+#include "labjack.h"
 
 #define NUM_LABJACK_AIN 14
 extern labjack_state_t state[NUM_LABJACKS];
 extern int16_t InCharge;
+extern labjack_digital_in_t labjack_digital;
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 
+typedef struct labjack_command {
+    PH_STAILQ_ENTRY(labjack_command) q;
+    int labjack;
+    int address;
+    float command;
+} labjack_command_t;
 
+
+typedef PH_STAILQ_HEAD(labjack_command_q, labjack_command) labjack_commandq_t;
+
+labjack_commandq_t s_labjack_command;
+
+static void labjack_execute_command_queue(void) {
+    labjack_command_t *cmd, *tcmd;
+    PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
+        if (InCharge) {
+            heater_write(cmd->labjack, cmd->address, cmd->command);
+        }
+        PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
+        free(cmd);
+    }
+}
+
+void init_labjack_digital(void) {
+    labjack_digital.status_charcoal_heater_Addr = channels_find_by_name("status_charcoal_heater");
+    labjack_digital.status_250_LNA_Addr = channels_find_by_name("status_250_LNA");
+    labjack_digital.status_1K_heater_Addr = channels_find_by_name("status_1K_heater");
+    labjack_digital.status_charcoal_hs_Addr = channels_find_by_name("status_charcoal_hs");
+    labjack_digital.status_500_LNA_Addr = channels_find_by_name("status_500_LNA");
+    labjack_digital.status_350_LNA_Addr = channels_find_by_name("status_350_LNA");
+    blast_info("init channels for labjack digital");
+}
+
+void labjack_queue_command(int m_labjack, int m_address, float m_command) {
+    labjack_command_t *cmd;
+
+    cmd = balloc(err, sizeof(labjack_command_t));
+    cmd->labjack = m_labjack;
+    cmd->address = m_address;
+    cmd->command = m_command;
+    PH_STAILQ_INSERT_TAIL(&s_labjack_command, cmd, q);
+}
 
 
 // This isn't working now.  TODO(laura): Fix read from internal FLASH memory.
@@ -419,11 +464,33 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
+void labjack_choose_execute(void) {
+    if (CommandData.Labjack_Queue.set_q == 1) {
+        if (CommandData.Relays.labjack[0] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[0] = 1;
+        } else if (CommandData.Relays.labjack[1] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[1] = 1;
+        } else if (CommandData.Relays.labjack[2] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[2] = 1;
+        } else if (CommandData.Relays.labjack[3] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[3] = 1;
+        } else if (CommandData.Relays.labjack[4] == 1) {
+            CommandData.Labjack_Queue.set_q = 0;
+            CommandData.Labjack_Queue.which_q[4] = 1;
+        } else {
+            blast_info("no queue selected, trying again in 1s");
+        }
+    }
+}
+
 void *labjack_cmd_thread(void *m_lj) {
-    int first_time = 1;
     static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
-
+    // int labjack = m_state->which;
     char tname[10];
     snprintf(tname, sizeof(tname), "LJCMD%1d", m_state->which);
     ph_thread_set_name(tname);
@@ -456,7 +523,6 @@ void *labjack_cmd_thread(void *m_lj) {
         blast_info("Labjack%02d address %s corresponds to IP %s", m_state->which, m_state->address, m_state->ip);
     }
     while (!m_state->shutdown) {
-        uint16_t dac_buffer[4];
         usleep(10000);
         if (!m_state->cmd_mb) {
             m_state->cmd_mb = modbus_new_tcp(m_state->ip, 502);
@@ -482,21 +548,29 @@ void *labjack_cmd_thread(void *m_lj) {
             have_warned_connect = 0;
         }
 
-    /*  Start streaming */
-    if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
-        init_labjack_stream_commands(m_state);
-    }
-	/*
-      // Set DAC level
-        modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
-        modbus_set_float(m_state->DAC[1], &dac_buffer[2]);
-        if (modbus_write_registers(m_state->cmd_mb, 1000, 4, dac_buffer) < 0) {
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
+        /*  Start streaming */
+        if (m_state->req_comm_stream_state && !m_state->comm_stream_state) {
+            init_labjack_stream_commands(m_state);
+        }
+
+        if (CommandData.Labjack_Queue.which_q[m_state->which] == 1) {
+            if (CommandData.Labjack_Queue.lj_q_on == 0) {
+                blast_info("queue set by LJ %d", m_state->which);
             }
-            m_state->have_warned_write_reg = 1;
-            continue;
-        } */
+            labjack_execute_command_queue();
+            CommandData.Labjack_Queue.lj_q_on = 1;
+        }
+        /*
+          // Set DAC level
+            modbus_set_float(m_state->DAC[0], &dac_buffer[0]);
+            modbus_set_float(m_state->DAC[1], &dac_buffer[2]);
+            if (modbus_write_registers(m_state->cmd_mb, 1000, 4, dac_buffer) < 0) {
+                if (!m_state->have_warned_write_reg) {
+                    blast_err("Could not write DAC Modbus registers: %s", modbus_strerror(errno));
+                }
+                m_state->have_warned_write_reg = 1;
+                continue;
+            } */
     }
     return NULL;
 }
@@ -507,11 +581,12 @@ void *labjack_cmd_thread(void *m_lj) {
 
 void initialize_labjack_commands(int m_which)
 {
-    ph_thread_t *ljcomm_thread = NULL;
-
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
+    ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+}
 
-    ljcomm_thread = ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+void initialize_labjack_queue(void) {
+    PH_STAILQ_INIT(&s_labjack_command);
 }
 
 /**
@@ -567,3 +642,35 @@ void store_labjack_data(void)
         }
     }
 }
+
+void init_labjacks(int set_1, int set_2, int set_3, int set_4, int set_5, int q_set) {
+    if (set_1 == 1) {
+        labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+        initialize_labjack_commands(LABJACK_CRYO_1);
+    }
+    if (set_2 == 1) {
+        labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+        initialize_labjack_commands(LABJACK_CRYO_2);
+    }
+    if (set_3 == 1) {
+        labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+        initialize_labjack_commands(LABJACK_OF_1);
+    }
+    if (set_4 == 1) {
+        labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+        initialize_labjack_commands(LABJACK_OF_2);
+    }
+    if (set_5 == 1) {
+        labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+        initialize_labjack_commands(LABJACK_OF_3);
+    }
+    if (q_set == 1) {
+        initialize_labjack_queue();
+        init_labjack_digital();
+    }
+}
+
+
+
+
+

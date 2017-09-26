@@ -41,10 +41,14 @@
 #include "tx.h"
 #include "labjack_functions.h"
 
+#include "channels_tng.h"
+#include "lut.h"
+
 
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
+extern uint16_t InCharge;
 
 labjack_state_t state[NUM_LABJACKS] = {
     {
@@ -104,8 +108,18 @@ labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 6,
+        .address = "labjack7",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mult_labjack2",
+        .have_warned_write_reg = 0,
     }
 };
+
+labjack_digital_in_t labjack_digital;
 
 // Used to correct for word swap between the mcp convention and the Labjack.
 // float_in: floating point value to be converted to two 16-bit words.
@@ -150,7 +164,7 @@ float labjack_get_value(int m_labjack, int m_channel)
         return 0;
     }
     if (!(state[m_labjack].initialized)) return 0; // We haven't yet started the command thread
-    // so conn_data is not allocated.
+        // so conn_data is not allocated.
 
     labjack_data_t *state_data = (labjack_data_t*)state[m_labjack].conn_data;
     if (m_channel > state_data->num_channels) {
@@ -158,6 +172,7 @@ float labjack_get_value(int m_labjack, int m_channel)
         return 0;
     }
     return state[m_labjack].AIN[m_channel];
+    // add incharge BS here
 }
 
 int labjack_analog_in_config(labjack_state_t *m_state, uint32_t m_numaddresses,
@@ -384,25 +399,112 @@ uint16_t labjack_read_dio(int m_labjack, int address) {
     }
 }
 
-void heater_write(int m_labjack, int address, int command) {
+void heater_write(int m_labjack, int address, float command) {
     int ret;
-    int retprime;
+    uint16_t retprime[1];
+    int works;
+    uint16_t value;
     static int max_tries = 10;
-    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
-    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-    if (ret < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
+    uint16_t data[2];
+    labjack_set_float(command, data);
+    if (m_labjack != 1) {
+        if (address != 1000) {
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-            if (ret > 0) {
+            if (ret < 0) {
+                int tries = 1;
+                while (tries < max_tries) {
+                    tries++;
+                    usleep(100);
+                    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                    if (ret > 0) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            // blast_info("writing to a DAC");
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
+            if (ret < 0) {
+                int tries = 1;
+                while (tries < max_tries) {
+                    tries++;
+                    usleep(100);
+                    ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
+                    if (ret > 0) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (m_labjack == 1) {
+        works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
+        value = retprime[0];
+        if (works < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
+                value = retprime[0];
+                if (works > 0) {
+                    break;
+                }
+            }
+            switch (address) {
+                case 2009:
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
+                    break;
+                case 2010:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
+                    break;
+                case 2011:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
+                    break;
+                case 2013:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
+                    break;
+                case 2015:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
+                    break;
+                case 2016:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
+                    break;
+            }
+        } else {
+            switch (address) {
+                case 2009:
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
+                    break;
+                case 2010:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
+                    break;
+                case 2011:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
+                    break;
+                case 2013:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
+                    break;
+                case 2015:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
+                    break;
+                case 2016:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
                 break;
             }
         }
     }
 }
-
 // Correct for word swaps between mcp and the labjack
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {

@@ -608,11 +608,12 @@ static diskentry_t *diskpool_mount_new(void) {
  */
 static void diskpool_mount_primary() {
     s_diskpool.current_disk = diskpool_mount_new();
-
     if (!s_diskpool.current_disk) {
         blast_fatal("Could not mount primary disk");
         exit(1);
     }
+    blast_info("New primary disk mounted (index = %u) at mount point %s",
+               (s_diskpool.current_disk)->index, (s_diskpool.current_disk)->mnt_point);
 }
 
 /**
@@ -783,11 +784,12 @@ static void file_free_fileentry(fileentry_t *m_file) {
  * @return -1 on error, 0 on success
  */
 static int file_change_disk(fileentry_t *m_file, diskentry_t *m_disk) {
+	blast_info("Attempting to change the disk for file %s", m_file->filename);
     int retval = -1;
 
     if ((m_file && m_disk) && (diskmanager_dev_is_mounted(m_disk->dev, NULL))) {
         if (m_file->fp)
-            file_close_internal(m_file, true);
+            file_close_internal(m_file, true); // This does not remove the file from the filepool.
         m_file->last_error = 0;
 
         if (m_file->mode[0] != 'r')
@@ -824,6 +826,8 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     char *substr = NULL;
     int name_len;
     int val = 1;
+    int success = 0;
+    ck_ht_entry_t ent;
     if (s_diskmanager_exit) {
         return -1;
     }
@@ -847,6 +851,12 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     if (diskpool_mkdir_file(filename, true) != 0) {
         return -1;
     }
+    // Remove old entry from the hashtable.
+    ck_ht_entry_set(&ent, m_file->filehash, m_file->filename,
+                    strlen(m_file->filename), m_file);
+    if (!ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent)) {
+        blast_err("Could not remove old entry %s from file hash table", m_file->filename);
+    }
 
     blast_tmp_sprintf(full_filename, "%s/%s",
             s_diskpool.current_disk->mnt_point, filename);
@@ -865,7 +875,15 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     BLAST_SAFE_FREE(m_file->filename);
     m_file->filename = filename;
     m_file->disk = m_disk;
-
+    // Now we add back the entry into the filepool hashtable
+    ck_ht_hash(&m_file->filehash, &s_filepool, m_file->filename,
+                strlen(m_file->filename));
+    ck_ht_entry_set(&ent, m_file->filehash, m_file->filename,
+                strlen(m_file->filename), m_file);
+    success = ck_ht_put_spmc(&s_filepool, m_file->filehash, &ent);
+    if (!success) {
+    	blast_info("Could not insert entry %s back into the hashtable.", m_file->filename);
+    }
     return retval;
 }
 
@@ -884,15 +902,18 @@ static void filepool_handle_disk_error(diskentry_t *m_disk) {
     ck_ht_entry_t *entry;
     pthread_t unmount_thread;
 
-    blast_info("Beginning disk error handling");
+    blast_info("Beginning disk error handling for disk %u, free_space = %d, mnt_point = %s",
+               m_disk->index, m_disk->free_space, m_disk->mnt_point);
 
     m_disk->fail_count++;
     if (m_disk == s_diskpool.current_disk) {
+    	blast_info("Problem with current disk, attempting to mount a new disk");
         diskpool_mount_primary();
     }
 
     while (ck_ht_next(&s_filepool, &iter, &entry)) {
         file = (fileentry_t*) ck_ht_entry_value(entry);
+        blast_info("Moving to next entry in the filepool hashtable. name = %s", file->filename);
         if ((file->disk == m_disk)
                 && (file_change_disk(file, s_diskpool.current_disk) == -1)) {
             blast_err("Could not re-open %s of %s",
@@ -989,7 +1010,9 @@ static void filepool_close_file(fileentry_t *m_file) {
     if (!ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent)) {
         blast_err("Could not remove %s from file hash table", m_file->filename);
     }
+    blast_info("Calling file_close_internal for %s", m_file->filename);
     file_close_internal(m_file, false);
+    blast_info("Freeing the hashtag entry");
     file_free_fileentry(m_file);
 }
 
@@ -1003,13 +1026,17 @@ static int filepool_flush_buffers(void) {
     size_t length;
     ck_ht_iterator_t iter = CK_HT_ITERATOR_INITIALIZER;
     ck_ht_entry_t *entry;
+	uint16_t filepool_counter = 0;
 
+	// Move through the hashtable.
     while (ck_ht_next(&s_filepool, &iter, &entry)) {
+		// blast_info("Moving to next entry in the filepool hashtable.");
         file = (fileentry_t*) ck_ht_entry_value(entry);
-
+        diskentry_t *disk = (diskentry_t*) file->disk;
         file->last_error = 0;
         length = filebuffer_len(&(file->buffer));
         if (length > 0) {
+            // blast_info("Attempting to open %s", file->filename);
             if (!file->fp && (file_open_internal(file) < 0)) {
                 blast_err("Couldn't open %s: %s", file->filename,
                         strerror(file->last_error));
@@ -1018,14 +1045,19 @@ static int filepool_flush_buffers(void) {
 
             if (filebuffer_writeout(&(file->buffer), file->fp) < 0) {
                 file->last_error = errno;
+                blast_info("Error writing to file %s, %s on disk %u at mount point %s",
+                           file->filename, strerror(errno), disk->index, disk->mnt_point);
                 return -file->last_error;
             }
             increment_total_bytes(length);
         }
 
         if (file->is_closed) {
+            blast_info("Closing the %uth entry in the hash table", filepool_counter);
+            blast_info("Attempting to close file %s at mount point %s", file->filename, disk->mnt_point);
             filepool_close_file(file);
         }
+        filepool_counter++;
     }
     return 0;
 }
@@ -1279,6 +1311,7 @@ static int file_open_internal(fileentry_t *m_file) {
 
     blast_tmp_sprintf(filename, "%s/%s", s_diskpool.current_disk->mnt_point,
             m_file->filename);
+    blast_info("Opening %s", filename);
     errno = 0;
     m_file->fp = fopen(filename, m_file->mode);
     m_file->disk = s_diskpool.current_disk;

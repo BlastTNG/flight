@@ -67,6 +67,7 @@
 channel_t channel_list[] =
 {
     { "test_values",      SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "alarm_gauge",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "heater_status_write",    1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
@@ -145,6 +146,27 @@ channel_t channel_list[] =
     { "current_loop_10",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     // ADD CLINOMETER CHANNELS
+    { "clin_1_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_1_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_2_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_2_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+
+    // below are the status channels
+    { "status_charcoal_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_250_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_1K_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_charcoal_hs", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_500_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_350_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
+    { "status_300mk_heater",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "status_cal_lamp",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // thermal vac test channels
+    { "vac_test_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "vac_test_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "vac_test_3",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "vac_test_4",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "vac_test_5",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "vac_test_6",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
