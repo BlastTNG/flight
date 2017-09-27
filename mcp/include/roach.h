@@ -19,7 +19,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Last edited: July 15, 2017
+ *  Last edited: September 22, 2017
  *      Author: sam, laura, seth
  */
 
@@ -82,9 +82,9 @@ typedef enum {
 } e_roach_status;
 
 typedef enum {
-    BB_STATUS_BOOT = 0,
-    BB_STATUS_INIT,
-} e_bb_status;
+    PI_STATUS_BOOT = 0,
+    PI_STATUS_INIT,
+} e_pi_status;
 
 typedef enum {
     RUDAT_STATUS_BOOT = 0,
@@ -178,12 +178,12 @@ typedef struct roach_state {
     struct katcl_line *rpc_conn;
 } roach_state_t;
 
-typedef struct bb_state {
+typedef struct pi_state {
     int which;
-    e_bb_status status;
-    e_bb_status desired_status;
-    remote_serial_t *bb_comm;
-} bb_state_t;
+    e_pi_status status;
+    e_pi_status desired_status;
+    remote_serial_t *pi_comm;
+} pi_state_t;
 
 typedef struct rudat_state {
     int which;
