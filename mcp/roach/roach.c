@@ -108,7 +108,7 @@
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
 #define STREAM_NTRIES 10 /* Number of times to check stream status */
-#define STREAM_TIMEOUT 2 /* Seconds to wait between checks */
+#define STREAM_TIMEOUT 3 /* Seconds to wait between checks */
 #define PI_READ_NTRIES 5 /* Number of times to attempt Pi read */
 #define PI_READ_TIMEOUT (2000000) /* Pi read timeout, usec */
 #define LO_READ_TIMEOUT (2000000) /* LO read timeout, usec */
@@ -795,21 +795,23 @@ int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
     int retval = -1;
     int m_last_packet_count = roach_udp[m_roach->which - 1].roach_packet_count;
     // blast_info("m_last_packet_count = % d", m_last_packet_count);
-    int count = 0;
-    if (!m_roach->is_streaming) {
-        while ((count < ntries)) {
+    int try = 0;
+    if (!(m_roach->is_streaming)) {
+        while ((try < ntries)) {
             blast_info("roach_packet_count = % d", roach_udp[m_roach->which - 1].roach_packet_count);
             sleep(sec_timeout);
-            if (roach_udp[m_roach->which - 1].roach_packet_count < m_last_packet_count) {
-                count += 1;
+            if (!(roach_udp[m_roach->which - 1].roach_packet_count > m_last_packet_count)) {
+                try += 1;
             } else {
                 m_roach->is_streaming = 1;
                 retval = 0;
                 break;
             }
-        blast_err("Data stream error on ROACH%d", m_roach->which);
         }
+    } else {
+        retval = 0;
     }
+        // blast_err("Data stream error on ROACH%d", m_roach->which);
     return retval;
 }
 
