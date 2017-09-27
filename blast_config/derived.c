@@ -258,7 +258,6 @@ derived_tng_t derived_list[] = {
     LINTERP("THERMISTOR_64", "THERMISTOR_1_R", LUT_DIR "Thermistor_VtoR.LUT"),
     LINTERP("THERMISTOR_65", "THERMISTOR_1_R", LUT_DIR "Thermistor_VtoR.LUT"),
     LINTERP("THERMISTOR_66", "THERMISTOR_1_R", LUT_DIR "Thermistor_VtoR.LUT"),
-    
     LINTERP("THERMISTOR_1_R", "THERMISTOR_1_T", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_2_R", "THERMISTOR_1_T", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_3_R", "THERMISTOR_1_T", LUT_DIR "Thermistor_RtoT.LUT"),
