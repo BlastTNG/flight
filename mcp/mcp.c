@@ -390,7 +390,7 @@ static void mcp_1hz_routines(void)
     // auto_cycle_mk2();
     cryo_1hz(0);
     outer_frame(1);
-    relays(0);
+    relays(1);
     // thermal_vac();
     labjack_choose_execute();
     blast_store_cpu_health();

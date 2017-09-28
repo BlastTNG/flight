@@ -68,7 +68,9 @@ static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
     PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
         if (InCharge) {
+            // blast_info("Command Executed");
             heater_write(cmd->labjack, cmd->address, cmd->command);
+            // blast_info("Command Executed successfully");
         }
         PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
         free(cmd);
