@@ -172,7 +172,7 @@ channel_t channel_list[] =
     { "thermistor_64",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "thermistor_65",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "thermistor_66",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    
+
     { "current_loop_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_loop_3",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },

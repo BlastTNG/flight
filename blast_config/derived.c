@@ -598,7 +598,7 @@ derived_tng_t derived_list[] = {
     LINTERP("THERMISTOR_64_R", "THERMISTOR_64", LUT_DIR "Thermistor_VtoR.LUT"),
     LINTERP("THERMISTOR_65_R", "THERMISTOR_65", LUT_DIR "Thermistor_VtoR.LUT"),
     LINTERP("THERMISTOR_66_R", "THERMISTOR_66", LUT_DIR "Thermistor_VtoR.LUT"),
-    
+
     LINTERP("THERMISTOR_1_T", "THERMISTOR_1_R", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_2_T", "THERMISTOR_2_R", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_3_T", "THERMISTOR_3_R", LUT_DIR "Thermistor_RtoT.LUT"),
@@ -665,7 +665,7 @@ derived_tng_t derived_list[] = {
     LINTERP("THERMISTOR_64_T", "THERMISTOR_64_R", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_65_T", "THERMISTOR_65_R", LUT_DIR "Thermistor_RtoT.LUT"),
     LINTERP("THERMISTOR_66_T", "THERMISTOR_66_R", LUT_DIR "Thermistor_RtoT.LUT"),
-    
+
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
     BITWORD("TRIGGER_STATE_XSC", "trigger_xsc", 2, 6),

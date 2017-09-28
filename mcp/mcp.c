@@ -604,7 +604,7 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
-  init_labjacks(0, 0, 1, 1, 1, 0);
+  init_labjacks(0, 0, 1, 1, 1, 1);
   // mult_labjack_networking_init(6, 84, 1);
   init_array();
   // mult_initialize_labjack_commands(6);
