@@ -391,7 +391,7 @@ static void mcp_1hz_routines(void)
     cryo_1hz(0);
     outer_frame(1);
     relays(1);
-    // thermal_vac();
+    outer_frame_multiplexed();
     labjack_choose_execute();
     blast_store_cpu_health();
     // blast_store_disk_space();
@@ -605,9 +605,9 @@ blast_info("Finished initializing Beaglebones..."); */
 //  InitSched();
   initialize_motors();
   init_labjacks(0, 0, 1, 1, 1, 1);
-  // mult_labjack_networking_init(6, 84, 1);
+  mult_labjack_networking_init(6, 84, 1);
   init_array();
-  // mult_initialize_labjack_commands(6);
+  mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
 

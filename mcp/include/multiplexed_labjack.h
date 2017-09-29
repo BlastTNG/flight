@@ -33,7 +33,6 @@
 #define LABJACK_OF_SPP 1 // Number of scans to readout per streaming packet
 
 void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
-float mult_labjack_get_value(int m_labjack, int m_channel);
 void mult_initialize_labjack_commands(int m_which);
 void query_mult(int m_labjack, int m_channel);
 #endif /* MULTIPLEXED_LABJACK_H_ */

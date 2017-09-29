@@ -107,7 +107,6 @@
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
-float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
 void labjack_test_dac(float v_value, int m_labjack);
