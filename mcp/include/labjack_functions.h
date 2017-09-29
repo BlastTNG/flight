@@ -232,6 +232,4 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 
 
-
-
 #endif /* LABJACK_FUNCTIONS_H_ */
