@@ -185,7 +185,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     unsigned int autoTarget = STREAM_TARGET_ETHERNET;
     unsigned int numScans = 0; // 0 = Run continuously.
     unsigned int scanListAddresses[MAX_NUM_ADDRESSES] = {0};
-    uint16_t nChanList[MAX_NUM_ADDRESSES] = {0};
+    uint16_t nChanList[1] = {0};
     float rangeList[MAX_NUM_ADDRESSES];
 
 	blast_info("Attempting to set registers for labjack%02d streaming.", m_state->which);
@@ -303,7 +303,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     // stream scan and configure the analog input settings.
     for (int i = 0; i < numAddresses; i++) {
         scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
-        nChanList[i] = 199; // Negative channel is 199 (single ended)
+        nChanList[0] = 199; // Negative channel is 199 (single ended)
         // rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
 	    labjack_set_short(scanListAddresses[i], data);
         m_state_number = m_state->which;
@@ -361,17 +361,16 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
             return;
         } else {
         }
-        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR + i, 1, nChanList+i)) < 0) {
-            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
-                    i, modbus_strerror(errno), nChanList[i]);
-                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
-            }
-            m_state->has_comm_stream_error = 1;
-            m_state->have_warned_write_reg = 1;
-            return;
+    }
+    if ((ret = modbus_write_registers(m_state->cmd_mb, 43902, 1, nChanList)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!m_state->have_warned_write_reg) {
+            blast_err("Could not set AIN negative channel: %s. Data sent %d", modbus_strerror(errno), nChanList[0]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
         }
+        m_state->has_comm_stream_error = 1;
+        m_state->have_warned_write_reg = 1;
+        return;
     }
 	blast_info("Attempting to enable streaming for labjack%02d.", m_state->which);
 

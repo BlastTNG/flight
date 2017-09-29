@@ -95,7 +95,7 @@
 
 // For now we only have one cyro readout Labjack
 // TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_LABJACKS 6
+#define NUM_LABJACKS 7
 
 typedef struct { // temp names
     channel_t* status_charcoal_heater_Addr;
@@ -230,8 +230,6 @@ uint16_t labjack_read_dio(int m_labjack, int address);
 void heater_write(int m_labjack, int address, float command);
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
-
-
 
 
 #endif /* LABJACK_FUNCTIONS_H_ */

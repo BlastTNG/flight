@@ -376,8 +376,9 @@ static void mcp_1hz_routines(void)
     cryo_1hz(0);
     outer_frame(0);
     relays(0);
-    thermal_vac();
-    labjack_choose_execute();
+    // thermal_vac();
+    // labjack_choose_execute();
+    blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -563,10 +564,10 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  init_labjacks(0, 0, 1, 1, 1, 0);
-  // mult_labjack_networking_init(5, 84, 1);
+  // init_labjacks(0, 0, 1, 1, 1, 0);
+  mult_labjack_networking_init(6, 84, 1);
   init_array();
-  // mult_initialize_labjack_commands(5);
+  mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
 

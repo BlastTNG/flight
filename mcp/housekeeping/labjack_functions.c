@@ -108,6 +108,14 @@ labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 6,
+        .address = "labjack7",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mult_labjack2",
+        .have_warned_write_reg = 0,
     }
 };
 
@@ -279,7 +287,154 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
             ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
+    // blast_info("data for %d is value %f", 4, m_state->AIN[4]);
 }
+// Correct for word swaps between mcp and the labjack
+int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
+{
+    uint16_t data_swapped;
+    static int have_warned = 0;
+
+    int n_data = (n_bytes - 16) / 2;
+
+    // TODO(laura): add proper error handling.
+    if (n_bytes < 16) {
+        blast_err("Read only %u bytes!  Aborting", (unsigned int) n_bytes);
+        have_warned = 1;
+        return -1;
+    }
+    if (n_bytes % 2) { // We should have an even number of bytes
+        blast_err("Odd number of bytes read!");
+        have_warned = 1;
+        return -1;
+    }
+    data_swapped = ntohs(m_data_pkt->header.resp.trans_id);
+    m_data_pkt->header.resp.trans_id = data_swapped;
+    data_swapped = ntohs(m_data_pkt->header.resp.proto_id);
+    m_data_pkt->header.resp.proto_id = data_swapped;
+    data_swapped = ntohs(m_data_pkt->header.resp.length);
+    m_data_pkt->header.resp.length = data_swapped;
+    data_swapped = ntohs(m_data_pkt->header.backlog);
+    m_data_pkt->header.backlog = data_swapped;
+    data_swapped = ntohs(m_data_pkt->header.status);
+    m_data_pkt->header.status = data_swapped;
+    data_swapped = ntohs(m_data_pkt->header.addl_status);
+    m_data_pkt->header.addl_status = data_swapped;
+
+    // Correct the streamed data
+    for (int i = 0; i < n_data; i++) {
+        data_swapped = ntohs(m_data_pkt->data[i]);
+        m_data_pkt->data[i] = data_swapped;
+    }
+
+    have_warned = 0;
+    return 1;
+}
+
+/**
+ * Process an incoming LabJack packet.  If we have an error, we'll disable
+ * the socket and schedule a reconnection attempt.  Otherwise, read and store the
+ * camera data.
+ *
+ * @param m_sock Unused
+ * @param m_why Flag indicating why the routine was called
+ * @param m_data Pointer to our state data
+ */
+void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
+{
+    ph_buf_t *buf;
+    labjack_state_t *state = (labjack_state_t*) m_data;
+    labjack_data_pkt_t *data_pkt;
+    labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
+    static uint32_t gainList[MAX_NUM_ADDRESSES];
+    static uint32_t gainList2[MAX_NUM_ADDRESSES];
+    static labjack_device_cal_t labjack_cal;
+    size_t read_buf_size;
+    int ret, i, state_number;
+    state_number = state->which;
+
+    if (!state->calibration_read) {
+        // gain index 0 = +/-10V. Used for conversion to volts.
+        if (state_number == 1) {
+            gainList2[0] = 0;
+            gainList2[1] = 0;
+            gainList2[2] = 1;
+            gainList2[3] = 1;
+            gainList2[4] = 1;
+            gainList2[5] = 1;
+            gainList2[6] = 1;
+            gainList2[7] = 1;
+            gainList2[8] = 1;
+            gainList2[9] = 1;
+            gainList2[10] = 1;
+            gainList2[11] = 0;
+            gainList2[12] = 0;
+            gainList2[13] = 0;
+        } else {
+            for (i = 0; i < state_data->num_channels; i++) {
+                gainList[i] = 0;
+            }
+        }
+        // For now read nominal calibration data (rather than specific calibration data from the device.
+        // TODO(laura) fix labjack_get_cal and use that instead
+        labjack_get_nominal_cal(state, &labjack_cal);
+        //        labjack_get_cal(state, &labjack_cal);
+    }
+    /**
+     * If we have an error, or do not receive data from the LabJack in the expected
+     * amount of time, we tear down the socket and schedule a reconnection attempt.
+     */
+    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
+        blast_err("disconnecting LabJack at %s due to connection issue", state->address);
+        ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
+        ph_sock_enable(m_sock, 0);
+        state->connected = false;
+        CommandData.Relays.labjack[state->which] = 0;
+        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
+        return;
+    }
+    read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
+    buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
+    if (!buf) return; /// We do not have enough data
+    data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
+
+    // Correct for the fact that Labjack readout is MSB first.
+    ret = labjack_data_word_swap(data_pkt, read_buf_size);
+    if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
+        blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
+                   state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
+    }
+    state_data->trans_id = data_pkt->header.resp.trans_id;
+
+    if (data_pkt->header.resp.type != STREAM_TYPE) {
+        blast_warn("Unknown packet type %d received from LabJack at %s", data_pkt->header.resp.type, state->address);
+        ph_buf_delref(buf);
+        return;
+    }
+
+    // TODO(laura): Finish adding error handling.
+    switch (data_pkt->header.status) {
+        case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
+        case STREAM_STATUS_AUTO_RECOVER_END:
+        case STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW:
+        case STREAM_STATUS_BURST_COMPLETE:
+        case STREAM_STATUS_SCAN_OVERLAP:
+            break;
+    }
+
+    memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
+
+    // Convert digital data into voltages.
+    if (state->calibration_read) {
+        if ((state_number == 1)) {
+            labjack_convert_stream_data(state, &labjack_cal, gainList2, state_data->num_channels);
+        } else {
+            labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
+        }
+    }
+    ph_buf_delref(buf);
+}
+// labjack functions from Ian are below
 
 void labjack_reboot(int m_labjack) {
     uint16_t data[2] = {0};
@@ -492,156 +647,10 @@ void heater_write(int m_labjack, int address, float command) {
                 case 2016:
                     // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
-                break;
+                    break;
             }
         }
     }
 }
-// Correct for word swaps between mcp and the labjack
-int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
-{
-    uint16_t data_swapped;
-    static int have_warned = 0;
-
-    int n_data = (n_bytes - 16) / 2;
-
-    // TODO(laura): add proper error handling.
-    if (n_bytes < 16) {
-        blast_err("Read only %u bytes!  Aborting", (unsigned int) n_bytes);
-        have_warned = 1;
-        return -1;
-    }
-    if (n_bytes % 2) { // We should have an even number of bytes
-        blast_err("Odd number of bytes read!");
-        have_warned = 1;
-        return -1;
-    }
-    data_swapped = ntohs(m_data_pkt->header.resp.trans_id);
-    m_data_pkt->header.resp.trans_id = data_swapped;
-    data_swapped = ntohs(m_data_pkt->header.resp.proto_id);
-    m_data_pkt->header.resp.proto_id = data_swapped;
-    data_swapped = ntohs(m_data_pkt->header.resp.length);
-    m_data_pkt->header.resp.length = data_swapped;
-    data_swapped = ntohs(m_data_pkt->header.backlog);
-    m_data_pkt->header.backlog = data_swapped;
-    data_swapped = ntohs(m_data_pkt->header.status);
-    m_data_pkt->header.status = data_swapped;
-    data_swapped = ntohs(m_data_pkt->header.addl_status);
-    m_data_pkt->header.addl_status = data_swapped;
-
-    // Correct the streamed data
-    for (int i = 0; i < n_data; i++) {
-        data_swapped = ntohs(m_data_pkt->data[i]);
-        m_data_pkt->data[i] = data_swapped;
-    }
-
-    have_warned = 0;
-    return 1;
-}
-
-/**
- * Process an incoming LabJack packet.  If we have an error, we'll disable
- * the socket and schedule a reconnection attempt.  Otherwise, read and store the
- * camera data.
- *
- * @param m_sock Unused
- * @param m_why Flag indicating why the routine was called
- * @param m_data Pointer to our state data
- */
-void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
-{
-    ph_buf_t *buf;
-    labjack_state_t *state = (labjack_state_t*) m_data;
-    labjack_data_pkt_t *data_pkt;
-    labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
-    static uint32_t gainList[MAX_NUM_ADDRESSES];
-    static uint32_t gainList2[MAX_NUM_ADDRESSES];
-    static labjack_device_cal_t labjack_cal;
-    size_t read_buf_size;
-    int ret, i, state_number;
-    state_number = state->which;
-
-    if (!state->calibration_read) {
-        // gain index 0 = +/-10V. Used for conversion to volts.
-        if (state_number == 1) {
-            gainList2[0] = 0;
-            gainList2[1] = 0;
-            gainList2[2] = 1;
-            gainList2[3] = 1;
-            gainList2[4] = 1;
-            gainList2[5] = 1;
-            gainList2[6] = 1;
-            gainList2[7] = 1;
-            gainList2[8] = 1;
-            gainList2[9] = 1;
-            gainList2[10] = 1;
-            gainList2[11] = 0;
-            gainList2[12] = 0;
-            gainList2[13] = 0;
-        } else {
-            for (i = 0; i < state_data->num_channels; i++) {
-                gainList[i] = 0;
-            }
-        }
-        // For now read nominal calibration data (rather than specific calibration data from the device.
-        // TODO(laura) fix labjack_get_cal and use that instead
-        labjack_get_nominal_cal(state, &labjack_cal);
-        //        labjack_get_cal(state, &labjack_cal);
-    }
-    /**
-     * If we have an error, or do not receive data from the LabJack in the expected
-     * amount of time, we tear down the socket and schedule a reconnection attempt.
-     */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-        blast_err("disconnecting LabJack at %s due to connection issue", state->address);
-        ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
-        ph_sock_enable(m_sock, 0);
-        state->connected = false;
-        CommandData.Relays.labjack[state->which] = 0;
-        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
-        return;
-    }
-    read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
-    buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
-    if (!buf) return; /// We do not have enough data
-    data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
-
-    // Correct for the fact that Labjack readout is MSB first.
-    ret = labjack_data_word_swap(data_pkt, read_buf_size);
-    if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
-        blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
-                   state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
-    }
-    state_data->trans_id = data_pkt->header.resp.trans_id;
-
-    if (data_pkt->header.resp.type != STREAM_TYPE) {
-        blast_warn("Unknown packet type %d received from LabJack at %s", data_pkt->header.resp.type, state->address);
-        ph_buf_delref(buf);
-        return;
-    }
-
-    // TODO(laura): Finish adding error handling.
-    switch (data_pkt->header.status) {
-        case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
-        case STREAM_STATUS_AUTO_RECOVER_END:
-        case STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW:
-        case STREAM_STATUS_BURST_COMPLETE:
-        case STREAM_STATUS_SCAN_OVERLAP:
-            break;
-    }
-
-    memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
-
-    // Convert digital data into voltages.
-    if (state->calibration_read) {
-        if ((state_number == 1)) {
-            labjack_convert_stream_data(state, &labjack_cal, gainList2, state_data->num_channels);
-        } else {
-            labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
-        }
-    }
-    ph_buf_delref(buf);
-}
-
 
 
