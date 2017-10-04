@@ -288,14 +288,7 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
         }
     }
     if (m_state->which == 6) {
-        static int counter = 1;
-        if (counter == 1) {
-            blast_info("data for %d is value %f", 4, m_state->AIN[4]);
-            counter++;
-            if (counter > 200) {
-                counter = 1;
-            }
-        }
+        blast_info("data for %d is value %f", 4, m_state->AIN[4]);
     }
 }
 // Correct for word swaps between mcp and the labjack
