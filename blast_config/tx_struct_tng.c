@@ -84,6 +84,12 @@ channel_t channel_list[] =
     { "rox_bias",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "incharge", 1, 0, TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "bias_alsa_state_rox", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    // highbay gauges
+    { "n2_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "he_blow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "he_pot_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "he_purge_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "alarm_gauge",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },

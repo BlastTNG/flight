@@ -524,6 +524,13 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_vcs2_hx", "TD_VCS2_HX_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs1_plate", "TD_VCS1_PLATE_INT", LUT_DIR "dt670_orig.text"),
 
+    COMMENT("Highbay stuff"), // raw calibration only -- warning!
+    LINCOM("Nitrogen_Flow", "N2_FLOW_V", -1, 0),
+    LINCOM("He_Blowoff", "HE_BLOW_V", -1, 0),
+    LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", -1, 0),
+    LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", -1, 0),
+    LINCOM("Alarm_Gauge", "ALARM_GAUGE", -1, 0),
+
 
   COMMENT("ROXes"), // raw calibration only -- warning!
     LINCOM("TR_FPA_1K_INT", "TR_FPA_1K", -1, 0),

@@ -40,6 +40,12 @@
 #include "labjack_functions.h"
 #include "highbay.h"
 
+#define N2_FLOW_CHAN 0
+#define HE_BLOW_CHAN 1
+#define HE_POT_FLOW_CHAN 2
+#define HE_PURGE_FLOW_CHAN 3
+#define ALARM_GAUGE 4
+
 static void aalborg_n2(void) {
     static channel_t* flow_n2_Addr;
     static int first_time_n2 = 1;
@@ -47,7 +53,7 @@ static void aalborg_n2(void) {
         flow_n2_Addr = channels_find_by_name("n2_flow_v");
         first_time_n2 = 0;
     }
-    // SET_SCALED_VALUE(flow_n2_Addr, labjack_get_value(LABJACK_HIGHBAY, N2_FLOW_CHAN));
+    SET_SCALED_VALUE(flow_n2_Addr, labjack_get_value(LABJACK_HIGHBAY, N2_FLOW_CHAN));
 }
 
 static void aalborg_he_blow(void) {
@@ -70,8 +76,27 @@ static void aalborg_he_pot(void) {
     // SET_SCALED_VALUE(flow_he_pot_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_FLOW_CHAN));
 }
 
+static void aalborg_he_purge(void) {
+    static channel_t* flow_he_purge_Addr;
+    static int first_time_he_purge = 1;
+    if (first_time_he_purge) {
+        flow_he_purge_Addr = channels_find_by_name("he_purge_flow_v");
+        first_time_he_purge = 0;
+    }
+    // SET_SCALED_VALUE(flow_he_purge_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_PURGE_FLOW_CHAN));
+}
 
-void highbay(int n2, int he_pot, int he_blow) {
+static void read_alarm_gauge(void) {
+    static int first_gauge = 1;
+    static channel_t* gauge_Addr;
+    if (first_gauge) {
+        gauge_Addr = channels_find_by_name("alarm_gauge");
+    }
+    // SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, ALARM_GAUGE));
+}
+
+
+void highbay(int n2, int he_pot, int he_blow, int he_purge) {
     if (n2) {
         aalborg_n2();
     }
@@ -80,5 +105,8 @@ void highbay(int n2, int he_pot, int he_blow) {
     }
     if (he_blow) {
         aalborg_he_blow();
+    }
+    if (he_purge) {
+        aalborg_he_purge();
     }
 }
