@@ -374,9 +374,9 @@ static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
     cryo_1hz(0);
-    outer_frame(0);
-    relays(0);
-    highbay(1, 0, 0);
+    outer_frame(1);
+    relays(1);
+    highbay(0, 0, 0, 0);
     // thermal_vac();
     // labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
@@ -565,10 +565,10 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  // init_labjacks(0, 0, 1, 1, 1, 0);
+  init_labjacks(0, 0, 1, 1, 1, 1);
   // mult_labjack_networking_init(6, 84, 1);
-  labjack_networking_init(7, 14, 1);
-  initialize_labjack_commands(7);
+  // labjack_networking_init(7, 14, 1);
+  // initialize_labjack_commands(7);
   init_array();
   // mult_initialize_labjack_commands(6);
 
