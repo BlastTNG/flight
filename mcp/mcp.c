@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
 // initialize_sip_interface();
   initialize_dsp1760_interface();
 
-#ifdef USE_FIFO_CMD
+#ifdef USE_FIFOb_CMD
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
