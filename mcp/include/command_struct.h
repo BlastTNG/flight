@@ -333,6 +333,11 @@ struct CommandDataStruct {
   uint16_t at_float;
   uint32_t tdrss_bw;
   uint32_t iridium_bw;
+  uint32_t pilot_bw;
+  // from svn version of command_struct.h
+  //unsigned int channelset_oth;
+  // changed to match other variables
+  uint32_t channelset_oth;
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
