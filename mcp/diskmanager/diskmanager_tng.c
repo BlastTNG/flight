@@ -112,14 +112,17 @@ typedef struct fileentry
 } fileentry_t;
 
 // Hardware IDs for the drives connected by USB
-static const char drive_uuids[2][NUM_USB_DISKS][64] = {{"",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""},
+// For now these are the same because we only have one set of disks.
+// TODO(laura): Replace with the new Hardware IDs once the fc1 HDs are integrated.
+static const char drive_uuids[2][NUM_USB_DISKS][64] = {
+        {"ccbff6e7-8e51-49e4-a987-9ebf5644813e",
+        "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
+        "67e991c8-1e1e-4f77-84f1-9273c050e385",
+        "22804e9d-a3e1-4cf8-a5b2-ff2fcf22bc5e",
+        "94ac1984-a52b-4be6-afb7-cb8302d249e0",
+        "993e105e-1cbc-4913-abca-29540242c57e",
+        "6846dffc-cf41-447a-a576-4ab34cad7974",
+        "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c"},
         {"ccbff6e7-8e51-49e4-a987-9ebf5644813e",
         "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
         "67e991c8-1e1e-4f77-84f1-9273c050e385",
