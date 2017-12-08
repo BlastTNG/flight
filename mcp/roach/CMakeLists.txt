@@ -1,17 +1,12 @@
 set(ROACH_SRCS
     ${ROACH_SRCS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/qdr.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/remote_serial.c    
-    ${CMAKE_CURRENT_SOURCE_DIR}/roach.c    
-    ${CMAKE_CURRENT_SOURCE_DIR}/roach_udp.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/valon.c
     PARENT_SCOPE
 )
 set(ROACH_HEADERS
    ${ROACH_HEADERS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/qdr.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/remote_serial.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include/roach.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/valon.h
    PARENT_SCOPE
 )
