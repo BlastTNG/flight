@@ -70,6 +70,7 @@
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
+#include "diskmanager_tng.h"
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
@@ -79,11 +80,11 @@
 #include "roach.h"
 #include "relay_control.h"
 #include "outer_frame.h"
+#include "store_data.h"
 #include "watchdog.h"
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
-#include "diskmanager_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -243,9 +244,6 @@ static void close_mcp(int m_code)
     synclink_close();
     watchdog_close();
     shutdown_bias_tone();
-#ifndef NO_KIDS_ROACH
-    shutdown_roaches();
-#endif
     diskmanager_shutdown();
     ph_sched_stop();
 }
@@ -267,14 +265,6 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
-static void mcp_488hz_routines(void)
-{
-#ifndef NO_KIDS_TEST
-    write_roach_channels_488hz();
-#endif
-    framing_publish_488hz();
-}
-
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
@@ -287,8 +277,8 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    read_chopper();
-    cal_control();
+    // read_chopper();
+    // cal_control();
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -338,9 +328,6 @@ static void mcp_5hz_routines(void)
 //    ControlPower();
 //    VideoTx();
 //    cameraFields();
-#ifndef NO_KIDS_TEST
-    write_roach_channels_5hz();
-#endif
 
     framing_publish_5hz();
 //    store_data_5hz();
@@ -356,7 +343,7 @@ static void mcp_1hz_routines(void)
     // of_control();
     // if_control();
     // labjack_test_dac(3.3, 0);
-    heater_control();
+    // heater_control();
     // test_labjacks(0);
     // read_thermometers();
     // auto_cycle_mk2();
@@ -379,7 +366,6 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
-    int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -431,10 +417,6 @@ static void *mcp_main_loop(void *m_arg)
             counter_244hz = HZ_COUNTER(244);
             mcp_244hz_routines();
         }
-        if (!--counter_488hz) {
-            counter_488hz = HZ_COUNTER(488);
-            mcp_488hz_routines();
-        }
     }
 
     return NULL;
@@ -444,9 +426,9 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
-  ph_thread_t *disk_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t DiskManagerID;
   pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -514,10 +496,6 @@ int main(int argc, char *argv[])
   else
     bputs(info, "System: I am not South.\n");
 
-#ifdef NO_KIDS_TEST
-    blast_warn("Warning: NO_KIDS_TEST flag is set.  No detector functions will be called!");
-#endif
-
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
@@ -548,18 +526,8 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
-#ifndef NO_KIDS_TEST
-blast_info("Initializing ROACHes from MCP...");
-init_roach();
-blast_info("Finished initializing ROACHes...");
-#endif
-
-/* blast_info("Initializing Beaglebones from MCP...");
-init_beaglebone();
-blast_info("Finished initializing Beaglebones..."); */
-
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  disk_thread = ph_thread_spawn(diskmanager_thread, NULL);
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -567,15 +535,15 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  InitSched();
   initialize_motors();
-  labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
-  labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
+  // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // mult_labjack_networking_init(5, 84, 1);
 
-  initialize_labjack_commands(LABJACK_CRYO_1);
-  initialize_labjack_commands(LABJACK_CRYO_2);
+  // initialize_labjack_commands(LABJACK_CRYO_1);
+  // initialize_labjack_commands(LABJACK_CRYO_2);
   // initialize_labjack_commands(LABJACK_OF_1);
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
