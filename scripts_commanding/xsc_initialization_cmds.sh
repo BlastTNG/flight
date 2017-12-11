@@ -27,10 +27,6 @@ blastcmd @192.168.1.3 xsc_scan_force_trigger 0 0
 blastcmd @192.168.1.3 xsc_filter_hor_location 0 1 30
 blastcmd @192.168.1.3 xsc_filter_hor_location 1 1 30
 
-#  xsc_filter_eq which enabled radius_degrees
-blastcmd @192.168.1.3 xsc_filter_eq_location 0 0 10
-blastcmd @192.168.1.3 xsc_filter_eq_location 1 0 10
-
 #  xsc_filter_hor_roll which enabled min_deg max_deg
 blastcmd @192.168.1.3 xsc_filter_hor_roll 0 1 -173 -163
 blastcmd @192.168.1.3 xsc_filter_hor_roll 1 1 -103 -93
