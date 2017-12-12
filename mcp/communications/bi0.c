@@ -64,6 +64,7 @@ static int synclink_fd = -1;
 
 biphase_frames_t biphase_frames; // This is passed to mpsse
 uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
+size_t downlink_frame_size[RATE_END] = {0};
 
 
 void initialize_biphase_buffer(void)
@@ -71,12 +72,15 @@ void initialize_biphase_buffer(void)
     int i;
     // size_t max_rate_size = 0;
 
+    // biphase_frames
     biphase_frames.i_in = 0;
     biphase_frames.i_out = 0;
     for (i = 0; i < BI0_FRAME_BUFLEN; i++) {
         biphase_frames.framelist[i] = calloc(1, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
         memset(biphase_frames.framelist[i], 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
     }
+
+    // biphase_superframe
     biphase_superframe_in = calloc(1,  BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
     memset(biphase_superframe_in, 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
 }
@@ -84,6 +88,8 @@ void initialize_biphase_buffer(void)
 void build_biphase_frame_200hz(const void *m_channel_data)
 {
     static bool even = true;
+    size_t local_frame_size = get_downlink_frame_size(RATE_200HZ);
+
     // Storing 2x200hz data in the biphase frames
     if ((2*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) to hold 2x200Hz frames (byte 0 to %zu).",
