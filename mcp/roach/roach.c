@@ -109,10 +109,10 @@
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
 #define STREAM_NTRIES 10 /* Number of times to check stream status */
 #define STREAM_TIMEOUT 2 /* Seconds to wait between checks */
-#define PI_READ_NTRIES 5 /* Number of times to attempt Pi read */
-#define PI_READ_TIMEOUT (2000000) /* Pi read timeout, usec */
-#define LO_READ_TIMEOUT (2000000) /* LO read timeout, usec */
-#define INIT_VALON_TIMEOUT (2000000) /* Valon init timeout, usec */
+#define PI_READ_NTRIES 50 /* Number of times to attempt Pi read */
+#define PI_READ_TIMEOUT (500*1000) /* Pi read timeout, usec */
+#define LO_READ_TIMEOUT (500*1000) /* LO read timeout, usec */
+#define INIT_VALON_TIMEOUT (500*1000) /* Valon init timeout, usec */
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
 
 extern int16_t InCharge; /* See mcp.c */
@@ -145,7 +145,7 @@ char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Sat_May_13_1
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
-static uint32_t dest_ip = IPv4(192, 168, 40, 4); /* UDP dest IP, FC2 eth0 */
+static uint32_t dest_ip = IPv4(192, 168, 40, 3); /* UDP dest IP, FC2 eth0 */
 void nameThread(const char*);
 
 /* Function: load_fir
@@ -821,22 +821,23 @@ int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
  * @param ntries number of tries before error
  * @param us_timeout microsecond timeout
 */
-int pi_read_string(pi_state_t *m_bb, int ntries, int us_timeout)
+int pi_read_string(pi_state_t *m_pi, int ntries, int us_timeout)
 {
     int retval = -1;
     unsigned char m_read_buffer[READ_BUFFER];
     int bytes_read;
     int count = 0;
     while ((count < ntries)) {
-	if (!ph_bufq_len(m_bb->pi_comm->input_buffer)) {
+	if (!ph_bufq_len(m_pi->pi_comm->input_buffer)) {
         usleep(us_timeout);
+        blast_info("Pi%d timeout", m_pi->which);
         count += 1;
     } else {
-        while (ph_bufq_len(m_bb->pi_comm->input_buffer)) {
-            size_t m_size = (size_t)ph_bufq_len(m_bb->pi_comm->input_buffer);
-            bytes_read = remote_serial_read_data(m_bb->pi_comm, m_read_buffer, m_size);
+        while (ph_bufq_len(m_pi->pi_comm->input_buffer)) {
+            size_t m_size = (size_t)ph_bufq_len(m_pi->pi_comm->input_buffer);
+            bytes_read = remote_serial_read_data(m_pi->pi_comm, m_read_buffer, m_size);
             m_read_buffer[bytes_read++] = '\0';
-            blast_info("Pi%d: %s", m_bb->which, m_read_buffer);
+            blast_info("Pi%d: %s", m_pi->which, m_read_buffer);
 	}
         retval = 0;
         break;
@@ -1914,7 +1915,7 @@ void *roach_cmd_loop(void* ind)
                          pi_state_table[i].desired_status > PI_STATUS_BOOT) {
         blast_info("Initializing Pi%d ...", i + 1);
         pi_state_table[i].which = i + 1;
-        pi_state_table[i].pi_comm = remote_serial_init(i, NC2_PORT);
+        pi_state_table[i].pi_comm = remote_serial_init(i, NC1_PORT);
         while (!pi_state_table[i].pi_comm->connected) {
             // blast_info("We can't connect to bb%d.", i+1);
             usleep(2000);
