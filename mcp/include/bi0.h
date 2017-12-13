@@ -49,8 +49,9 @@ void initialize_biphase_buffer(void);
 void push_biphase_frames(void);
 void biphase_writer(void);
 
-void build_biphase_frame_200hz(const void *m_channel_data);
-void build_biphase_frame_100hz(const void *m_channel_data);
-void build_biphase_frame_1hz(const void *m_channel_data);
+void add_200hz_frame_to_biphase(const void *m_channel_data[]);
+void add_100hz_frame_to_biphase(const void *m_channel_data);
+void add_partial_5hz_frame_to_biphase(const void *m_channel_data);
+void add_partial_1hz_frame_to_biphase(const void *m_channel_data);
 
 #endif /* INCLUDE_BI0_H_ */

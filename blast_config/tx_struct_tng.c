@@ -287,6 +287,7 @@ channel_t channel_list[] =
 
 
     { "subframe_counter_1hz", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_100HZ, U_NONE, 0 },
+    { "subframe_counter_5hz", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_100HZ, U_NONE, 0 },
     { "time",                 SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
     { "time_usec",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
     { "time_sip",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
