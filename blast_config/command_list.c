@@ -797,6 +797,12 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kBps)", 100, 2000, 'f', "rate_biphase"}
+    }
+  },
+
   {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
     {
       {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}

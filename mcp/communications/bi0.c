@@ -41,6 +41,7 @@
 //
 
 #include <blast.h>
+#include <command_struct.h>
 
 #include "bi0.h"
 #include "mpsse.h"
@@ -66,6 +67,8 @@ biphase_frames_t biphase_frames; // This is passed to mpsse
 uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
 
+/******************* Biphase Functions *******************/
+
 void initialize_biphase_buffer(void)
 {
     int i;
@@ -84,7 +87,7 @@ void initialize_biphase_buffer(void)
     memset(biphase_superframe_in, 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
 }
 
-void add_200hz_frame_to_biphase(const void *m_channel_data[])
+void add_200hz_frame_to_biphase(void **m_channel_data)
 {
     // Storing 200hz data in the biphase frames
 
@@ -213,6 +216,8 @@ void push_biphase_frames(void)
     // blast_info("biphase_frames.i_in = %d", i_in);
 }
 
+/******************* Watchdog Functions *******************/
+
 static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     static int first_call = 1;
     int in_charge=-1;
@@ -254,6 +259,8 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     incharge_old = in_charge;
 }
 
+/******************* MPSSE Functions *******************/
+
 void setup_mpsse(struct mpsse_ctx **ctx_ptr)
 {
     const uint16_t vid = 1027;
@@ -261,8 +268,7 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr)
     const char *serial = NULL;
     const char *description = NULL;
     int channel = 0; // IFACE_A
-    int frequency = 1000000; // 1 Mbps
-    // int frequency = 100000; // 100 kbps
+    int frequency = (int) CommandData.biphase_bw;
 
     // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
     // 1=output, 0=input. 0x83 = 0b10000011 i.e. pin 0, 1 and 7 are output
@@ -293,6 +299,9 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr)
     mpsse_flush(*ctx_ptr);
     usleep(1000);
 }
+
+
+/******************* Synclink Functions *******************/
 
 /**
  * Close the synclink device before exiting mcp.
@@ -402,6 +411,8 @@ void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_
     }
 }
 
+/******************** Main Biphase Loop **************************/
+
 void biphase_writer(void)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
@@ -432,6 +443,15 @@ void biphase_writer(void)
                BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES));
 
     while (true) {
+        if (CommandData.biphase_bw_changed) {
+            CommandData.biphase_bw_changed = false;
+            mpsse_reset_purge_close(ctx);
+            usleep(1000);
+            setup_mpsse(&ctx);
+            if (!mpsse_hardware) {
+                rc = setup_synclink();
+            }
+        }
         // blast_dbg("biphase buffer: read_frame is %d, write_frame is %d", read_frame, write_frame);
         write_frame = biphase_frames.i_out;
         read_frame = biphase_frames.i_in;

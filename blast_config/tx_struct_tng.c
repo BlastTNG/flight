@@ -691,6 +691,7 @@ channel_t channel_list[] =
     { "pos3_hwpr",            1.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_pos_rq_hwpr",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rate_tdrss",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_RATE, 0 },
+    { "rate_biphase",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_RATE, 0 },
     { "rate_iridium",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_RATE, 0 },
     { "read_wait_hwpr",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_pos_hwpr",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

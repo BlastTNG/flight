@@ -1694,6 +1694,27 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case iridium_bw:
       CommandData.iridium_bw = rvalues[0];
       break;
+    case biphase_bw:
+      if (rvalues[0] == 100) {
+        CommandData.biphase_bw = 100000;
+        CommandData.biphase_bw_changed = true;
+      } else if (rvalues[0] == 500) {
+        CommandData.biphase_bw = 500000;
+        CommandData.biphase_bw_changed = true;
+      } else if (rvalues[0] == 1000) {
+        CommandData.biphase_bw = 1000000;
+        CommandData.biphase_bw_changed = true;
+      } else {
+        CommandData.biphase_bw_changed = false;
+        char *str;
+        char *str2;
+        char str3[1000];
+        asprintf(&str, "Biphase bw : %f kBps is not allowed (try 100, 500 or 1000).\n", rvalues[0]);
+        asprintf(&str2, "Biphase bw has not been changed, it\'s %d Bps", CommandData.biphase_bw);
+        snprintf(str3, sizeof(str3), "%s %s", str, str2);
+        blast_warn("%s", str3);
+      }
+      break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
 //      if (LoadUplinkFile(ivalues[0])) {
@@ -2486,6 +2507,8 @@ void InitCommandData()
     CommandData.slot_sched = 0;
     CommandData.tdrss_bw = 6000;
     CommandData.iridium_bw = 2000;
+    CommandData.biphase_bw = 1000000; /* Bps */
+    CommandData.biphase_bw_changed = false;
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 

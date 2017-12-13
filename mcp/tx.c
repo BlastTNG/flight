@@ -97,6 +97,7 @@ void WriteAux(void)
     static channel_t* timeAddr;
     static channel_t* timeUSecAddr;
     static channel_t* rateTdrssAddr;
+    static channel_t* rateBiphaseAddr;
     static channel_t* rateIridiumAddr;
 
     static channel_t* statusMCCAddr;
@@ -151,6 +152,7 @@ void WriteAux(void)
         timeAddr = channels_find_by_name("time");
         timeUSecAddr = channels_find_by_name("time_usec");
         rateTdrssAddr = channels_find_by_name("rate_tdrss");
+        rateBiphaseAddr = channels_find_by_name("rate_biphase");
         rateIridiumAddr = channels_find_by_name("rate_iridium");
 
         ploverAddr = channels_find_by_name("plover");
@@ -246,6 +248,7 @@ void WriteAux(void)
 
     SET_VALUE(ploverAddr, CommandData.plover);
     SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
+    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw/1000);
     SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
@@ -383,5 +386,3 @@ double ReadCalData(channel_t *m_ch)
     GET_VALUE(m_ch, retval);
     return (retval * m_ch->m_c2e + m_ch->b_e2e);
 }
-
-
