@@ -63,6 +63,7 @@ extern int16_t InCharge;
 
 static int synclink_fd = -1;
 
+double num_frames_per_superframe[RATE_END];
 biphase_frames_t biphase_frames; // This is passed to mpsse
 uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
 
@@ -85,6 +86,31 @@ void initialize_biphase_buffer(void)
     // biphase_superframe
     biphase_superframe_in = calloc(1,  BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
     memset(biphase_superframe_in, 0, BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES);
+
+    // define the superframe content
+    get_num_frames_per_superframe(num_frames_per_superframe);
+}
+
+void get_num_frames_per_superframe(double *num_frames_per_superframe[])
+{
+    if (CommandData.biphase_bw == 100000) {
+        num_frames_per_superframe[RATE_200HZ] = 20;
+        num_frames_per_superframe[RATE_100HZ] = 10;
+        num_frames_per_superframe[RATE_5HZ] = 0.5;
+        num_frames_per_superframe[RATE_1HZ] = 0.1;
+    }
+    if (CommandData.biphase_bw == 500000) {
+        num_frames_per_superframe[RATE_200HZ] = 4;
+        num_frames_per_superframe[RATE_100HZ] = 2;
+        num_frames_per_superframe[RATE_5HZ] = 0.1;
+        num_frames_per_superframe[RATE_1HZ] = 0.02;
+    }
+    if (CommandData.biphase_bw == 1000000) {
+        num_frames_per_superframe[RATE_200HZ] = 2;
+        num_frames_per_superframe[RATE_100HZ] = 1;
+        num_frames_per_superframe[RATE_5HZ] = 0.05;
+        num_frames_per_superframe[RATE_1HZ] = 0.01;
+    }
 }
 
 void add_200hz_frame_to_biphase(void **m_channel_data)
