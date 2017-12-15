@@ -91,7 +91,7 @@ void initialize_biphase_buffer(void)
     get_num_frames_per_superframe(num_frames_per_superframe);
 }
 
-void get_num_frames_per_superframe(double *num_frames_per_superframe[])
+void get_num_frames_per_superframe(double num_frames_per_superframe[])
 {
     if (CommandData.biphase_bw == 100000) {
         num_frames_per_superframe[RATE_200HZ] = 20;
@@ -111,6 +111,7 @@ void get_num_frames_per_superframe(double *num_frames_per_superframe[])
         num_frames_per_superframe[RATE_5HZ] = 0.05;
         num_frames_per_superframe[RATE_1HZ] = 0.01;
     }
+    // TODO(Joy): Add 2 MBps case
 }
 
 void add_200hz_frame_to_biphase(void **m_channel_data)
@@ -118,20 +119,22 @@ void add_200hz_frame_to_biphase(void **m_channel_data)
     // Storing 200hz data in the biphase frames
 
     static uint8_t frame_position = 0;
+    size_t total_frames = (size_t) num_frames_per_superframe[RATE_200HZ];
 
-    if ((2*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
+    if ((total_frames*frame_size[RATE_200HZ]) > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) to hold 2x200Hz frames (byte 0 to %zu).",
-                    BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, (2*frame_size[RATE_200HZ]));
+                    BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, (total_frames*frame_size[RATE_200HZ]));
         return;
     }
     // 200hz frames occupy the superframe position 0 to n_200*downlink_frame_size[RATE_200HZ]
-    memcpy(biphase_superframe_in+frame_position*frame_size[RATE_200HZ],
+    memcpy(biphase_superframe_in + frame_position*frame_size[RATE_200HZ],
            m_channel_data[RATE_200HZ], frame_size[RATE_200HZ]);
     frame_position++;
-    if (frame_position >= 2) {
+    if (frame_position >= total_frames) {
         // Filling in the partial frames from the slower framerates
         add_partial_5hz_frame_to_biphase(m_channel_data[RATE_5HZ]);
         add_partial_1hz_frame_to_biphase(m_channel_data[RATE_1HZ]);
+        // TODO(Joy): Add partial_100hz for 2 MBps rate
         // Sending superframe to mpsse
         push_biphase_frames();
         frame_position = 0;
@@ -142,8 +145,9 @@ void add_100hz_frame_to_biphase(const void *m_channel_data)
 {
     // Storing 100hz frame in the superframe after nx200 Hz data
     static uint8_t frame_position = 0;
-    size_t start = 2*frame_size[RATE_200HZ];
-    size_t end = start + 1*frame_size[RATE_100HZ];
+    size_t total_frames = (size_t) num_frames_per_superframe[RATE_100HZ];
+    size_t start = ((size_t) num_frames_per_superframe[RATE_200HZ])*frame_size[RATE_200HZ];
+    size_t end = start + total_frames*frame_size[RATE_100HZ];
     if (end > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) to hold the 100Hz frame (byte %zu to %zu).",
                     BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, start, end);
@@ -154,20 +158,28 @@ void add_100hz_frame_to_biphase(const void *m_channel_data)
     memcpy(biphase_superframe_in+start+frame_position*frame_size[RATE_100HZ],
            m_channel_data, frame_size[RATE_100HZ]);
     frame_position++;
-    if (frame_position >= 1) {
+    if (frame_position >= total_frames) {
         frame_position = 0;
     }
 }
 
 void add_partial_5hz_frame_to_biphase(const void *m_channel_data)
 {
-    // This function is called at 100 Hz
     static bool first_time = true;
     static uint8_t counter = 0;
+    uint8_t max_counter;
     static channel_t *subframe_Addr = NULL;
     char *channel_ptr = NULL;
+    double fraction_of_frame = num_frames_per_superframe[RATE_5HZ];
 
     channel_ptr = (char *) m_channel_data;
+
+    if (fraction_of_frame > 0) {
+        max_counter = (uint8_t) (1.0/fraction_of_frame);
+    } else {
+        // This should never happen
+        max_counter = 1;
+    }
 
     // Storing partial 5hz frame in the biphase frame after 100 Hz data
     if (first_time) {
@@ -176,21 +188,22 @@ void add_partial_5hz_frame_to_biphase(const void *m_channel_data)
     }
     SET_SCALED_VALUE(subframe_Addr, counter);
 
-    size_t partial_5hz_frame = (size_t) ceil(((float) frame_size[RATE_5HZ])/20.0);
-    size_t start = 2*frame_size[RATE_200HZ] + 1*frame_size[RATE_100HZ];
-    size_t end = start + partial_5hz_frame;
+    size_t partial_5hz_frame_size = (size_t) ceil(((double) frame_size[RATE_5HZ])*fraction_of_frame);
+    size_t start = ((size_t) num_frames_per_superframe[RATE_200HZ])*frame_size[RATE_200HZ]
+                 + ((size_t) num_frames_per_superframe[RATE_100HZ])*frame_size[RATE_100HZ];
+    size_t end = start + partial_5hz_frame_size;
     if (end > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) for partial 1Hz frame (byte %zu to %zu).",
                     BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, start, end);
         return;
     }
     // Selecting right part of 5hz frame and storing it to superframe
-    if ((counter*partial_5hz_frame) < frame_size[RATE_5HZ]) {
-        channel_ptr += counter*partial_5hz_frame;
-        memcpy(biphase_superframe_in+start, channel_ptr, partial_5hz_frame);
+    if ((counter*partial_5hz_frame_size) < frame_size[RATE_5HZ]) {
+        channel_ptr += counter*partial_5hz_frame_size;
+        memcpy(biphase_superframe_in+start, channel_ptr, partial_5hz_frame_size);
     }
     counter++;
-    if (counter >= 20) {
+    if (counter >= max_counter) {
         counter = 0;
     }
 }
@@ -200,34 +213,46 @@ void add_partial_1hz_frame_to_biphase(const void *m_channel_data)
     // This function is called at 100 Hz
     static bool first_time = true;
     static uint8_t counter = 0;
+    uint8_t max_counter;
     static channel_t *subframe_Addr = NULL;
     char *channel_ptr = NULL;
+    double fraction_of_frame = num_frames_per_superframe[RATE_1HZ];
+    double fraction_of_frame_5Hz = num_frames_per_superframe[RATE_5HZ];
 
     channel_ptr = (char *) m_channel_data;
 
-    // Storing partial 1hz frame in the biphase frame after 5 Hz data
+    if (fraction_of_frame > 0) {
+        max_counter = (uint8_t) (1.0/fraction_of_frame);
+    } else {
+        // This should never happen
+        max_counter = 1;
+    }
+
+    // Storing partial 1 Hz frame in the biphase frame after 5 Hz data
     if (first_time) {
         subframe_Addr = channels_find_by_name("subframe_counter_1hz");
         first_time = false;
     }
     SET_SCALED_VALUE(subframe_Addr, counter);
 
-    size_t partial_1hz_frame = (size_t) ceil(((float) frame_size[RATE_1HZ])/100.0);
-    size_t partial_5hz_frame = (size_t) ceil(((float) frame_size[RATE_5HZ])/20.0);
-    size_t start = 2*frame_size[RATE_200HZ] + 1*frame_size[RATE_100HZ]
+    size_t partial_1hz_frame_size = (size_t) ceil(((float) frame_size[RATE_1HZ])*fraction_of_frame);
+    size_t partial_5hz_frame = (size_t) ceil(((float) frame_size[RATE_5HZ])*fraction_of_frame_5Hz);
+    size_t start = ((size_t) num_frames_per_superframe[RATE_200HZ])*frame_size[RATE_200HZ]
+                 + ((size_t) num_frames_per_superframe[RATE_100HZ])*frame_size[RATE_100HZ]
                  + partial_5hz_frame;
-    size_t end = start + partial_1hz_frame;
+    size_t end = start + partial_1hz_frame_size;
     if (end > BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES) {
         blast_warn("Not enough space in biphase frame (%d bytes) for partial 1Hz frame (byte %zu to %zu).",
                     BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES, start, end);
         return;
     }
-    if ((counter*partial_1hz_frame) < frame_size[RATE_1HZ]) {
-        channel_ptr += counter*partial_1hz_frame;
-        memcpy(biphase_superframe_in+start, channel_ptr, partial_1hz_frame);
+    // Selecting right part of 1 Hz frame and storing it to superframe
+    if ((counter*partial_1hz_frame_size) < frame_size[RATE_1HZ]) {
+        channel_ptr += counter*partial_1hz_frame_size;
+        memcpy(biphase_superframe_in+start, channel_ptr, partial_1hz_frame_size);
     }
     counter++;
-    if (counter >= 100) {
+    if (counter >= max_counter) {
         counter = 0;
     }
 }
@@ -471,6 +496,7 @@ void biphase_writer(void)
     while (true) {
         if (CommandData.biphase_bw_changed) {
             CommandData.biphase_bw_changed = false;
+            get_num_frames_per_superframe(num_frames_per_superframe);
             mpsse_reset_purge_close(ctx);
             usleep(1000);
             setup_mpsse(&ctx);

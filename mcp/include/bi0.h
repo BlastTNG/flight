@@ -49,6 +49,7 @@ void initialize_biphase_buffer(void);
 void push_biphase_frames(void);
 void biphase_writer(void);
 
+void get_num_frames_per_superframe(double num_frames_per_superframe[]);
 void add_200hz_frame_to_biphase(void **m_channel_data);
 void add_100hz_frame_to_biphase(const void *m_channel_data);
 void add_partial_5hz_frame_to_biphase(const void *m_channel_data);
