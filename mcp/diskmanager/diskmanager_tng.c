@@ -485,6 +485,7 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
         uint32_t m_rwflag, void *m_data) {
     char type[3][16] = { "xfs", "ext4", "" };
     int i = 0;
+    static bool first_time = true;
 
     if (m_disk == NULL) {
         blast_err("Attempted to pass a NULL device");
@@ -503,11 +504,15 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
      */
     do {
         errno = 0;
-        blast_info("Mounting %s at %s with filesystem type %s", m_disk->dev,
-                m_disk->mnt_point, type[i]);
+        if (first_time) {
+            blast_info("Mounting %s at %s with filesystem type %s", m_disk->dev,
+                    m_disk->mnt_point, type[i]);
+        }
         if (mount(m_disk->dev, m_disk->mnt_point, type[i], m_rwflag, m_data) == -1) {
-            blast_dbg("Could not mount %s at %s with filesystem type %s: %s",
-                    m_disk->dev, m_disk->mnt_point, type[i], strerror(errno));
+            if (first_time) {
+                blast_dbg("Could not mount %s at %s with filesystem type %s: %s",
+                        m_disk->dev, m_disk->mnt_point, type[i], strerror(errno));
+            }
             /**
              * If the device is not found, or the
              * superblock is invalid, try the next filesystem in #type
@@ -517,6 +522,7 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
         }
         break;
     } while (type[++i][0] != '\0');
+    first_time = false;
 
     if (errno != 0) return -1;
     return 0;
