@@ -19,7 +19,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Last edited: September 22, 2017
+ *  Last edited: December 15, 2017
  *      Author: sam + laura + seth
  */
 
@@ -79,7 +79,7 @@
 /* I = In phase. The cos (real) part of the waveform */
 /* Q = Quadrature. The sine (imaginary) part of the waveform */
 
-#define DDC_SHIFT 330 /* FW version dependent, see roach_fpg */
+#define DDC_SHIFT 318 /* FW version dependent, see roach_fpg */
 #define VNA_FFT_SHIFT 31 /*Controls FW FFT overflow behavior, for VNA SWEEP */
 #define TARG_FFT_SHIFT 127
 #define VNA 0 /* Sweep type */
@@ -109,10 +109,10 @@
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
 #define STREAM_NTRIES 10 /* Number of times to check stream status */
 #define STREAM_TIMEOUT 2 /* Seconds to wait between checks */
-#define PI_READ_NTRIES 50 /* Number of times to attempt Pi read */
-#define PI_READ_TIMEOUT (500*1000) /* Pi read timeout, usec */
-#define LO_READ_TIMEOUT (500*1000) /* LO read timeout, usec */
-#define INIT_VALON_TIMEOUT (500*1000) /* Valon init timeout, usec */
+#define PI_READ_NTRIES 100 /* Number of times to attempt Pi read */
+#define PI_READ_TIMEOUT (800*1000) /* Pi read timeout, usec */
+#define LO_READ_TIMEOUT (800*1000) /* LO read timeout, usec */
+#define INIT_VALON_TIMEOUT (800*1000) /* Valon init timeout, usec */
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
 
 extern int16_t InCharge; /* See mcp.c */
@@ -124,11 +124,23 @@ double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
                    0.03688533, 0.05061838, 0.06425732, 0.07654357, 0.08630093,
                    0.09257286, 0.09473569};
 /* Firmware image files - they only differ in  UDP source IP/MAC address */
-const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/r1_fir_dds330.fpg",
-                               "/data/etc/blast/roachFirmware/r2_fir_dds330.fpg",
-		               "/data/etc/blast/roachFirmware/r3_fir_dds330.fpg",
-                               "/data/etc/blast/roachFirmware/r4_fir_dds330.fpg",
-                               "/data/etc/blast/roachFirmware/r5_fir_dds330.fpg"};
+/* const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/r1.fpg",
+                                "/data/etc/blast/roachFirmware/macTestDec152017/r2.fpg",
+                                "/data/etc/blast/roachFirmware/macTestDec152017/r3.fpg",
+                                "/data/etc/blast/roachFirmware/macTestDec152017/r4.fpg",
+                                "/data/etc/blast/roachFirmware/macTestDec152017/r5.fpg"};
+*/
+const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
+const char dest_mac[] = "000BAB7BA839";
+uint32_t destmac0 = 2877007929;
+uint32_t destmac1 = 11;
+uint32_t srcmac0[5] = {33688323, 33688855, 33688854, 33689868, 33688865};
+uint32_t srcmac1 = 580;
+const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
+                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
+                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
+                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
+                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg"};
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
 /* Beaglebone/Pi state structure, see roach.h */
@@ -262,19 +274,19 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest,
         blast_err("Could not read data '%s' from %s: ROACH Error '%s'",
                                               m_register, m_roach->address,
             ret?ret:"");
-	return -1;
+        return -1;
     }
     if (arg_count_katcl(m_roach->rpc_conn) < 3) {
         blast_err("Expecting 2 return values.  Received %d",
                                         arg_count_katcl(m_roach->rpc_conn));
-	return -1;
-	}
+        return -1;
+    }
     uint32_t bytes_copied = arg_buffer_katcl(m_roach->rpc_conn, 2,
                                                            m_dest, m_size);
     if (bytes_copied != m_size) {
         blast_err("Expecting %ul bytes but only received %ul bytes",
                                                      m_size, bytes_copied);
-	return -1;
+        return -1;
     }
     return 0;
 }
@@ -288,12 +300,12 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest,
 */
 int roach_read_int(roach_state_t *m_roach, const char *m_register)
 {
-  	uint32_t m_data;
-	roach_read_data(m_roach, (uint8_t*) &m_data, m_register, 0,
+    uint32_t m_data;
+    roach_read_data(m_roach, (uint8_t*) &m_data, m_register, 0,
                                                      sizeof(m_data), 100);
-	m_data = ntohl(m_data);
-	blast_info("%s = %d", m_register, m_data);
-	return 0;
+    m_data = ntohl(m_data);
+    blast_info("%s = %d", m_register, m_data);
+    return 0;
 }
 
 /* Function: roach_write_data
@@ -828,20 +840,21 @@ int pi_read_string(pi_state_t *m_pi, int ntries, int us_timeout)
     int bytes_read;
     int count = 0;
     while ((count < ntries)) {
-	if (!ph_bufq_len(m_pi->pi_comm->input_buffer)) {
-        usleep(us_timeout);
-        blast_info("Pi%d timeout", m_pi->which);
-        count += 1;
+        if (!ph_bufq_len(m_pi->pi_comm->input_buffer)) {
+            usleep(us_timeout);
+            blast_info("Pi%d timeout", m_pi->which);
+            count += 1;
     } else {
         while (ph_bufq_len(m_pi->pi_comm->input_buffer)) {
             size_t m_size = (size_t)ph_bufq_len(m_pi->pi_comm->input_buffer);
             bytes_read = remote_serial_read_data(m_pi->pi_comm, m_read_buffer, m_size);
             m_read_buffer[bytes_read++] = '\0';
+            usleep(0.01);
             blast_info("Pi%d: %s", m_pi->which, m_read_buffer);
-	}
+        }
         retval = 0;
         break;
-        }
+    }
     }
     return retval;
 }
@@ -1374,21 +1387,21 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA) && create_sweepdir(m_roach, TARG)) {
             // TODO(Sam) for testing, m_span = VNA_SWEEP_SPAN
-            // m_span = m_roach->vna_sweep_span;
-	    m_span = VNA_SWEEP_SPAN;
-            // blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
-            // blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
-            blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", vna_search_path);
-            blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", vna_search_path);
-	    if (save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len) < 0) {
+            m_span = m_roach->vna_sweep_span;
+            // m_span = VNA_SWEEP_SPAN;
+            blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
+            blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
+            // blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", vna_search_path);
+            // blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", vna_search_path);
+            if (save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len) < 0) {
                 blast_err("Sweep freqs could not be saved to disk");
                 return SWEEP_FAIL;
             }
             save_path = m_roach->last_vna_path;
-	    comb_len = m_roach->vna_comb_len;
-	} else {
-	    return SWEEP_FAIL;
-        }
+            comb_len = m_roach->vna_comb_len;
+         } else {
+             return SWEEP_FAIL;
+         }
     }
     if ((sweep_type == TARG)) {
         stat_return = stat(m_roach->last_targ_path, &dir_stat);
@@ -1397,21 +1410,21 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_info("ROACH%d, TARGET sweep will be saved in %s",
                                m_roach->which, m_roach->last_targ_path);
             } else {
-	       return SWEEP_FAIL;
+                return SWEEP_FAIL;
             }
         }
         save_path = m_roach->last_targ_path;
         blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
-	blast_info("Sweep freq fname = %s", sweep_freq_fname);
+        blast_info("Sweep freq fname = %s", sweep_freq_fname);
         // TODO(Sam) if not testing, uncomment the following
         /* if (save_freqs(m_roach, targ_freq_fname, m_roach->targ_tones, m_roach->num_kids) < 0) {
             blast_err("Sweep freqs could not be saved to disk");
             return SWEEP_FAIL;
         } */
-	blast_info("Uploading TARGET comb...");
-	roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-	comb_len = m_roach->num_kids;
-	blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
+        blast_info("Uploading TARGET comb...");
+        roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+        comb_len = m_roach->num_kids;
+        blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
     }
     /* Determine sweep frequencies */
     // TODO(Sam) uncomment when not testing
@@ -1427,29 +1440,29 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     double *m_sweep_freqs = calloc(m_num_sweep_freqs, sizeof(double));
     m_sweep_freqs[0] = m_min_freq;
     for (size_t i = 1; i < m_num_sweep_freqs; i++) {
-	m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
+        m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
     }
     // TODO(Sam) uncomment when not testing
     /* for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-	m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
-	fprintf(m_sweep_fd, "%d\n", (uint32_t)m_sweep_freqs[i]);
+        m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
+        fprintf(m_sweep_fd, "%d\n", (uint32_t)m_sweep_freqs[i]);
     }
     fclose(m_sweep_fd);
     blast_info("ROACH%d, Sweep freqs written to %s", m_roach->which, sweep_freq_fname);*/
     blast_info("ROACH%d Starting new sweep...", m_roach->which);
     /* Sweep and save data */
     for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-	if (CommandData.roach[ind].do_sweeps) {
+        if (CommandData.roach[ind].do_sweeps) {
             blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
-		m_sweep_freqs[i]/1.0e6);
+            m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
             pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-    	    if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-	        blast_info("Error setting LO... reboot Pi%d?", ind + 1);
+            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
+                blast_info("Error setting LO... reboot Pi%d?", ind + 1);
             }
             usleep(SWEEP_TIMEOUT);
             roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len);
-	} else {
+        } else {
             blast_info("Sweep interrupted by command");
             return SWEEP_INTERRUPT;
         }
@@ -1976,9 +1989,14 @@ void *roach_cmd_loop(void* ind)
         // roach_read_int(&roach_state_table[i], "downsamp_sync_accum_len");
         roach_write_int(&roach_state_table[i], "GbE_tx_destip", dest_ip, 0);
         roach_write_int(&roach_state_table[i], "GbE_tx_destport", roach_state_table[i].dest_port, 0);
-        load_fir(&roach_state_table[i], fir_coeffs);
-		roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
-		roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
+        roach_write_int(&roach_state_table[i], "GbE_tx_srcip", roach_state_table[i].src_ip, 0);
+        roach_write_int(&roach_state_table[i], "GbE_tx_srcmac0", srcmac0[i], 0);
+        roach_write_int(&roach_state_table[i], "GbE_tx_srcmac1", srcmac1, 0);
+        roach_write_int(&roach_state_table[i], "GbE_tx_destmac0", destmac0, 0);
+        roach_write_int(&roach_state_table[i], "GbE_tx_destmac1", destmac1, 0);
+        // load_fir(&roach_state_table[i], fir_coeffs);
+        roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
+        roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
         }
     if (roach_state_table[i].status == ROACH_STATUS_CONFIGURED &&
                roach_state_table[i].desired_status >= ROACH_STATUS_CALIBRATED) {
@@ -1994,7 +2012,7 @@ void *roach_cmd_loop(void* ind)
             roach_write_int(&roach_state_table[i], "GbE_pps_start", 1, 0);
             roach_state_table[i].status = ROACH_STATUS_CALIBRATED;
             roach_state_table[i].desired_status = ROACH_STATUS_TONE;
-	}
+        }
     }
     if (roach_state_table[i].status == ROACH_STATUS_CALIBRATED &&
         roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
@@ -2174,6 +2192,7 @@ int init_roach(uint16_t ind)
     rudat_state_table[ind].which = ind + 1;
     valon_state_table[ind].which = ind + 1;
     roach_state_table[ind].dest_port = 64000 + ind;
+    roach_state_table[ind].src_ip = IPv4(192, 168, 40, 71 + ind);
     roach_state_table[ind].is_streaming = 0;
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
     blast_info("Spawned command thread for roach%i", ind + 1);

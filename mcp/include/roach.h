@@ -50,7 +50,7 @@
                                             ((d) & 0xff))
 static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 // Destination IP for fc2
-static const char udp_dest[32] = "192.168.40.4";
+static const char udp_dest[32] = "192.168.40.3";
 static const char udp_dest_name[32] = "roach-udp-dest";
 int roach_sock_fd;
 
@@ -170,6 +170,7 @@ typedef struct roach_state {
     char *find_kids_log;
     char *opt_tones_log;
     uint16_t dest_port;
+    uint32_t src_ip;
     // Path to tone amplitudes file
     char *amps_path[2];
     fftw_plan comb_plan;

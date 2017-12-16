@@ -180,7 +180,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->backoff_sec = min_backoff_sec;
     state->timeout.tv_sec = 10;
     state->timeout.tv_usec = 0;
-    state->sock->timeout_duration.tv_sec = 0.2;
+    state->sock->timeout_duration.tv_sec = 0.4;
     state->input_buffer = ph_bufq_new(4192);
     m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;
