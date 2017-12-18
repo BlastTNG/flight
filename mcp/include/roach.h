@@ -270,6 +270,7 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
+int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
 
 // Defined in roach_udp.c

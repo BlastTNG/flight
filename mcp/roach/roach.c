@@ -160,6 +160,12 @@ static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 static uint32_t dest_ip = IPv4(192, 168, 40, 3); /* UDP dest IP, FC2 eth0 */
 void nameThread(const char*);
 
+int get_roach_status(uint16_t ind)
+{
+    int status = roach_state_table[ind].status;
+    return status;
+}
+
 /* Function: load_fir
  * ----------------------------
  * Programs the coefficients for the FW FIR filter
@@ -302,7 +308,7 @@ int roach_read_int(roach_state_t *m_roach, const char *m_register)
 {
     uint32_t m_data;
     roach_read_data(m_roach, (uint8_t*) &m_data, m_register, 0,
-                                                     sizeof(m_data), 100);
+                                                     sizeof(m_data), 500);
     m_data = ntohl(m_data);
     blast_info("%s = %d", m_register, m_data);
     return 0;
@@ -874,7 +880,7 @@ int pi_write_string(pi_state_t *m_bb, uint8_t *m_data, size_t m_len)
     int bytes_wrote;
     int retval = -1;
     m_data[m_len++] = '\n';
-    m_data[m_len] = 0;
+    // m_data[m_len] = 0;
     bytes_wrote = remote_serial_write_data(m_bb->pi_comm, m_data, m_len);
     if (!bytes_wrote) {
         return retval;
@@ -1105,13 +1111,12 @@ void get_time(char *time_buffer)
 */
 void roach_timestamp_init(uint16_t ind)
 {
-    if (roach_state_table[ind].katcp_fd) {
-        time_t seconds;
-        seconds = time(NULL);
-        blast_info("ROACH5 time = %u", seconds);
-        roach_write_int(&roach_state_table[ind], "GbE_ctime", 1, 0);
-        roach_read_int(&roach_state_table[ind], "GbE_ctime");
-    }
+    time_t seconds;
+    seconds = time(NULL);
+    // blast_info("ROACH1 time = %u", (uint32_t)seconds);
+    roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
+    sleep(0.3);
+    // roach_read_int(&roach_state_table[ind], "GbE_ctime");
 }
 
 /* Function: get_path
@@ -1357,7 +1362,7 @@ int recenter_lo(roach_state_t *m_roach)
     int ind = m_roach->which - 1;
     pi_state_t *m_bb = &pi_state_table[ind];
     char *lo_command;
-    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
+    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                   m_roach->lo_centerfreq/1.0e6);
     pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
     return 0;
@@ -1453,7 +1458,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     /* Sweep and save data */
     for (size_t i = 0; i < m_num_sweep_freqs; i++) {
         if (CommandData.roach[ind].do_sweeps) {
-            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
+            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
             m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
             pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
@@ -1511,7 +1516,7 @@ int cal_sweep(roach_state_t *m_roach)
         // Todo(Sam) Make sure this doesn't crash sweep
             blast_info("Sweep freq = %.7g", m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g\n",
+            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                         m_sweep_freqs[i]/1.0e6);
             pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
             if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0)

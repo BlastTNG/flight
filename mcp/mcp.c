@@ -401,7 +401,11 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
     store_data_1hz();
-    // roach_timestamp_init(4);
+    if (get_roach_status(0) >= 6) roach_timestamp_init(0);
+    if (get_roach_status(1) >= 6) roach_timestamp_init(1);
+    if (get_roach_status(2) >= 6) roach_timestamp_init(2);
+    if (get_roach_status(3) >= 6) roach_timestamp_init(3);
+    if (get_roach_status(4) >= 6) roach_timestamp_init(4);
 }
 
 static void *mcp_main_loop(void *m_arg)
