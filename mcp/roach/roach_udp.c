@@ -83,12 +83,12 @@ uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_ro
 {
     // blast_info("R%d packet count = %d", m_roach_udp->which, m_packet->packet_count);
     uint16_t retval = 0;
-    if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
+    /* if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
         blast_warn("roach%i: Packet sequence number is %i. Last sequence number was =%i!",
                   m_roach_udp->which, m_packet->packet_count, m_roach_udp->seq_number);
         m_roach_udp->seq_error_count++;
 	    retval |= ROACH_UDP_SEQ_ERR;
-    }
+    } */
     /* if (m_packet->checksum != ROACH_CHECKSUM) {
         blast_err("roach%i: checksum = %i failed!", m_roach_udp->which, m_packet->checksum);
         m_roach_udp->crc_error_count++;

@@ -123,24 +123,34 @@ static uint32_t accum_len = (1 << 19) - 1; /* Number of FW FFT accumulations */
 double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
                    0.03688533, 0.05061838, 0.06425732, 0.07654357, 0.08630093,
                    0.09257286, 0.09473569};
-/* Firmware image files - they only differ in  UDP source IP/MAC address */
-/* const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/r1.fpg",
-                                "/data/etc/blast/roachFirmware/macTestDec152017/r2.fpg",
-                                "/data/etc/blast/roachFirmware/macTestDec152017/r3.fpg",
-                                "/data/etc/blast/roachFirmware/macTestDec152017/r4.fpg",
-                                "/data/etc/blast/roachFirmware/macTestDec152017/r5.fpg"};
-*/
+
+// Roach source MAC addresses
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
-const char dest_mac[] = "000BAB7BA839";
-uint32_t destmac0 = 2877007929;
-uint32_t destmac1 = 11;
 uint32_t srcmac0[5] = {33688323, 33688855, 33688854, 33689868, 33688865};
 uint32_t srcmac1 = 580;
+
+// UDP destination MAC addresses
+
+// FC1
+// uint32_t destmac0 = 2877007929;
+// uint32_t destmac1 = 11;
+
+// FC2
+// uint32_t destmac0 = 2876946759;
+// uint32_t destmac1 = 11;
+
+// MULTICAST
+uint32_t destmac0 = 1577124330;
+uint32_t destmac1 = 256;
+
+static uint32_t dest_ip = IPv4(239, 1, 1, 234);
+
 const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
                             "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
                             "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
                             "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
                             "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg"};
+
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
 /* Beaglebone/Pi state structure, see roach.h */
@@ -157,7 +167,7 @@ char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Sat_May_13_1
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
-static uint32_t dest_ip = IPv4(192, 168, 40, 3); /* UDP dest IP, FC2 eth0 */
+
 void nameThread(const char*);
 
 int get_roach_status(uint16_t ind)
@@ -1933,7 +1943,7 @@ void *roach_cmd_loop(void* ind)
                          pi_state_table[i].desired_status > PI_STATUS_BOOT) {
         blast_info("Initializing Pi%d ...", i + 1);
         pi_state_table[i].which = i + 1;
-        pi_state_table[i].pi_comm = remote_serial_init(i, NC1_PORT);
+        pi_state_table[i].pi_comm = remote_serial_init(i, NC2_PORT);
         while (!pi_state_table[i].pi_comm->connected) {
             // blast_info("We can't connect to bb%d.", i+1);
             usleep(2000);
