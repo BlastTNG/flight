@@ -311,7 +311,7 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
-    cryo_200hz(0);
+    cryo_200hz(1);
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -339,7 +339,9 @@ static void mcp_100hz_routines(void)
 }
 static void mcp_5hz_routines(void)
 {
-    // watchdog_ping();
+    watchdog_ping();
+    // Tickles software WD 2.5x as fast as timeout
+
     // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
@@ -348,7 +350,7 @@ static void mcp_5hz_routines(void)
     WriteAux();
     ControlBalance();
     StoreActBus();
-    // level_control();
+    level_control();
     level_toggle();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
@@ -373,12 +375,12 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
-    cryo_1hz(0);
+    cryo_1hz(1);
     outer_frame(0);
     relays(0);
-    highbay(1, 0, 0);
+    highbay(1, 0, 1, 0, 1);
     // thermal_vac();
-    // labjack_choose_execute();
+    labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();
@@ -565,7 +567,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  // init_labjacks(0, 0, 1, 1, 1, 0);
+  init_labjacks(1, 1, 0, 0, 0, 1);
   // mult_labjack_networking_init(6, 84, 1);
   labjack_networking_init(7, 14, 1);
   initialize_labjack_commands(7);
@@ -591,7 +593,11 @@ int main(int argc, char *argv[])
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  // initialize_watchdog(2);
+
+
+  initialize_watchdog(2);
+  // Turns on software WD 2, which reboots the FC if not tickled
+
   initialize_bias_tone();
   startChrgCtrl(0);
 

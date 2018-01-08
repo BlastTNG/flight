@@ -63,7 +63,7 @@ static void aalborg_he_blow(void) {
         he_blow_Addr = channels_find_by_name("he_blow_v");
         first_time_he_blow = 0;
     }
-    // SET_SCALED_VALUE(he_blow_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_BLOW_CHAN));
+    SET_SCALED_VALUE(he_blow_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_BLOW_CHAN));
 }
 
 static void aalborg_he_pot(void) {
@@ -92,11 +92,37 @@ static void read_alarm_gauge(void) {
     if (first_gauge) {
         gauge_Addr = channels_find_by_name("alarm_gauge");
     }
-    // SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, ALARM_GAUGE));
+    SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, 3));
+}
+
+void monitor_flow(int on) {
+    if (on) {
+        static channel_t* flow_n2_Addr;
+        static int first_time_n2 = 1;
+        static float n2_volts_critical = 0; // set actual value
+        static int burn_counter = -1;
+        float n2_volts;
+        if (first_time_n2) {
+            flow_n2_Addr = channels_find_by_name("n2_flow_v");
+            first_time_n2 = 0;
+        }
+        n2_volts = labjack_get_value(LABJACK_HIGHBAY, N2_FLOW_CHAN);
+        if (burn_counter > 0) {
+            burn_counter--;
+        }
+        if (burn_counter == 0) {
+            labjack_queue_command(LABJACK_HIGHBAY, 2008, 0); // set a real DIO here instead of 2008
+            burn_counter = -1;
+        }
+        if (n2_volts < n2_volts_critical && burn_counter == -1) {
+            labjack_queue_command(LABJACK_HIGHBAY, 2008, 1); // set a real DIO here instead of 2008
+            burn_counter = 10;
+        }
+    }
 }
 
 
-void highbay(int n2, int he_pot, int he_blow, int he_purge) {
+void highbay(int n2, int he_pot, int he_blow, int he_purge, int alarm) {
     if (n2) {
         aalborg_n2();
     }
@@ -108,5 +134,8 @@ void highbay(int n2, int he_pot, int he_blow, int he_purge) {
     }
     if (he_purge) {
         aalborg_he_purge();
+    }
+    if (alarm) {
+        read_alarm_gauge();
     }
 }

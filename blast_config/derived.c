@@ -525,11 +525,11 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_vcs1_plate", "TD_VCS1_PLATE_INT", LUT_DIR "dt670_orig.text"),
 
     COMMENT("Highbay stuff"), // raw calibration only -- warning!
-    LINCOM("Nitrogen_Flow", "N2_FLOW_V", -1, 0),
-    LINCOM("He_Blowoff", "HE_BLOW_V", -1, 0),
+    LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
+    LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
     LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", -1, 0),
     LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", -1, 0),
-    LINCOM("Alarm_Gauge", "ALARM_GAUGE", -1, 0),
+    LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
 
 
   COMMENT("ROXes"), // raw calibration only -- warning!
@@ -579,7 +579,7 @@ derived_tng_t derived_list[] = {
     // cryo labjack stuff below
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
-    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", .0809, 2.0218),
+    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
