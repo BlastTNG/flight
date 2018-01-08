@@ -567,10 +567,14 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+<<<<<<< HEAD
   init_labjacks(1, 1, 0, 0, 0, 1);
+=======
+  init_labjacks(0, 0, 1, 1, 1, 1);
+>>>>>>> 5af6081dbdbef493249236978817692ef76bdc3f
   // mult_labjack_networking_init(6, 84, 1);
-  labjack_networking_init(7, 14, 1);
-  initialize_labjack_commands(7);
+  // labjack_networking_init(7, 14, 1);
+  // initialize_labjack_commands(7);
   init_array();
   // mult_initialize_labjack_commands(6);
 

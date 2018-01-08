@@ -40,6 +40,7 @@
 #include "labjack_functions.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
+#include "calibrate.h"
 
 
 // Add clinometer channels and also add the derived channels when we get to testing.
@@ -180,16 +181,18 @@ void update_current_sensors(void) {
         current_loop_9_Addr = channels_find_by_name("current_loop_9");
         current_loop_10_Addr = channels_find_by_name("current_loop_10");
     }
-    SET_SCALED_VALUE(current_loop_1_Addr, labjack_get_value(LABJACK_OF_3, 0));
-    SET_SCALED_VALUE(current_loop_2_Addr, labjack_get_value(LABJACK_OF_3, 1));
-    SET_SCALED_VALUE(current_loop_3_Addr, labjack_get_value(LABJACK_OF_3, 2));
-    SET_SCALED_VALUE(current_loop_4_Addr, labjack_get_value(LABJACK_OF_3, 3));
-    SET_SCALED_VALUE(current_loop_5_Addr, labjack_get_value(LABJACK_OF_3, 4));
-    SET_SCALED_VALUE(current_loop_6_Addr, labjack_get_value(LABJACK_OF_3, 5));
-    SET_SCALED_VALUE(current_loop_7_Addr, labjack_get_value(LABJACK_OF_3, 6));
-    SET_SCALED_VALUE(current_loop_8_Addr, labjack_get_value(LABJACK_OF_3, 7));
-    SET_SCALED_VALUE(current_loop_9_Addr, labjack_get_value(LABJACK_OF_3, 8));
-    SET_SCALED_VALUE(current_loop_10_Addr, labjack_get_value(LABJACK_OF_3, 9));
+    blast_info("Current Loops: Relay #4 = %f, Relay #8 = %f",
+    			labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_1_Addr, labjack_get_value(LABJACK_OF_3, 0)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_2_Addr, labjack_get_value(LABJACK_OF_3, 1)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_3_Addr, labjack_get_value(LABJACK_OF_3, 2)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_4_Addr, labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_5_Addr, labjack_get_value(LABJACK_OF_3, 4)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_6_Addr, labjack_get_value(LABJACK_OF_3, 5)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_7_Addr, labjack_get_value(LABJACK_OF_3, 6)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_8_Addr, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_9_Addr, labjack_get_value(LABJACK_OF_3, 8)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_10_Addr, labjack_get_value(LABJACK_OF_3, 9)*CURLOOP_CONV);
 }
 
 void outer_frame(int setting) {
