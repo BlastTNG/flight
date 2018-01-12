@@ -406,6 +406,11 @@ static void mcp_1hz_routines(void)
     if (get_roach_status(2) >= 6) roach_timestamp_init(2);
     if (get_roach_status(3) >= 6) roach_timestamp_init(3);
     if (get_roach_status(4) >= 6) roach_timestamp_init(4);
+    roach_switch_LUT(0);
+    roach_switch_LUT(1);
+    roach_switch_LUT(2);
+    roach_switch_LUT(3);
+    roach_switch_LUT(4);
 }
 
 static void *mcp_main_loop(void *m_arg)

@@ -135,10 +135,14 @@ typedef struct roach_state {
     double lo_centerfreq;
 
     // First two LUTs are for building
-    roach_lut_t DDC;
-    roach_lut_t DAC;
+    roach_lut_t DDC0;
+    roach_lut_t DAC0;
+    roach_lut_t DDC1;
+    roach_lut_t DAC1;
     // This LUT is what gets written
-    roach_uint16_lut_t LUT;
+    int lut_idx;
+    roach_uint16_lut_t LUT0;
+    roach_uint16_lut_t LUT1;
 
     // VNA sweep
     double *vna_comb;
@@ -272,6 +276,7 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
+void roach_switch_LUT(uint16_t ind);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);

@@ -69,7 +69,7 @@
 #include "phenom/socket.h"
 #include "phenom/memory.h"
 
-//TODO(Sam + Adrian) Add writing for both LUTs, IQ gradient calc, check lut_idx in packet 
+// TODO(Sam + Adrian) Add writing for both LUTs, IQ gradient calc, check lut_idx in packet
 
 /* MCP = Master Control Program (Blast) */
 /* PPC = PowerPC */
@@ -176,6 +176,17 @@ int get_roach_status(uint16_t ind)
 {
     int status = roach_state_table[ind].status;
     return status;
+}
+
+/* Function: roach_switch_LUT
+ * ----------------------------
+ * @param ind roach index
+*/
+
+void roach_switch_LUT(uint16_t ind)
+{
+    roach_state_table[ind].lut_idx = roach_state_table[ind].lut_idx ^ 1;
+    roach_write_int(&roach_state_table[ind], "qdr_switch", roach_state_table[ind].lut_idx, 0);
 }
 
 /* Function: load_fir
@@ -374,9 +385,15 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register,
 */
 static void roach_init_LUT(roach_state_t *m_roach, size_t m_len)
 {
-    m_roach->LUT.len = m_len;
-    m_roach->LUT.Ival = calloc(m_len, sizeof(uint16_t));
-    m_roach->LUT.Qval = calloc(m_len, sizeof(uint16_t));
+    if (m_roach->lut_idx == 0) {
+        m_roach->LUT0.len = m_len;
+        m_roach->LUT0.Ival = calloc(m_len, sizeof(uint16_t));
+        m_roach->LUT0.Qval = calloc(m_len, sizeof(uint16_t));
+    } else {
+        m_roach->LUT1.len = m_len;
+        m_roach->LUT1.Ival = calloc(m_len, sizeof(uint16_t));
+        m_roach->LUT1.Qval = calloc(m_len, sizeof(uint16_t));
+    }
 }
 
 /* Function: roach_init_DACDDC_LUTs
@@ -388,12 +405,21 @@ static void roach_init_LUT(roach_state_t *m_roach, size_t m_len)
 */
 static void roach_init_DACDDC_LUTs(roach_state_t *m_roach, size_t m_len)
 {
-    m_roach->DAC.len = m_len;
-    m_roach->DAC.Ival = calloc(m_len, sizeof(double));
-    m_roach->DAC.Qval = calloc(m_len, sizeof(double));
-    m_roach->DDC.len = m_len;
-    m_roach->DDC.Ival = calloc(m_len, sizeof(double));
-    m_roach->DDC.Qval = calloc(m_len, sizeof(double));
+    if (m_roach->lut_idx == 0) {
+        m_roach->DAC0.len = m_len;
+        m_roach->DAC0.Ival = calloc(m_len, sizeof(double));
+        m_roach->DAC0.Qval = calloc(m_len, sizeof(double));
+        m_roach->DDC0.len = m_len;
+        m_roach->DDC0.Ival = calloc(m_len, sizeof(double));
+        m_roach->DDC0.Qval = calloc(m_len, sizeof(double));
+    } else {
+        m_roach->DAC1.len = m_len;
+        m_roach->DAC1.Ival = calloc(m_len, sizeof(double));
+        m_roach->DAC1.Qval = calloc(m_len, sizeof(double));
+        m_roach->DDC1.len = m_len;
+        m_roach->DDC1.Ival = calloc(m_len, sizeof(double));
+        m_roach->DDC1.Qval = calloc(m_len, sizeof(double));
+    }
 }
 
 /* Function: roach_fft_bin_idx
@@ -665,18 +691,33 @@ int save_freqs(roach_state_t *m_roach, char *m_save_path, double *m_freqs, size_
 */
 static void roach_define_DAC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-    if (m_roach->DAC.len > 0 && m_roach->DAC.len != LUT_BUFFER_LEN) {
-        free(m_roach->DAC.Ival);
-        free(m_roach->DAC.Qval);
-        m_roach->DAC.len = 0;
+    if (m_roach->lut_idx == 0) {
+        if (m_roach->DAC0.len > 0 && m_roach->DAC0.len != LUT_BUFFER_LEN) {
+            free(m_roach->DAC0.Ival);
+            free(m_roach->DAC0.Qval);
+            m_roach->DAC0.len = 0;
+        }
+        if (m_roach->DAC0.len == 0) {
+            m_roach->DAC0.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
+            m_roach->DAC0.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
+            m_roach->DAC0.len = LUT_BUFFER_LEN;
+        }
+        roach_dac_comb(m_roach, m_freqs, m_freqlen,
+                    DAC_SAMP_FREQ, m_roach->DAC0.Ival, m_roach->DAC0.Qval);
+    } else {
+        if (m_roach->DAC1.len > 0 && m_roach->DAC1.len != LUT_BUFFER_LEN) {
+            free(m_roach->DAC1.Ival);
+            free(m_roach->DAC1.Qval);
+            m_roach->DAC1.len = 0;
+        }
+        if (m_roach->DAC1.len == 0) {
+            m_roach->DAC1.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
+            m_roach->DAC1.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
+            m_roach->DAC1.len = LUT_BUFFER_LEN;
+        }
+        roach_dac_comb(m_roach, m_freqs, m_freqlen,
+                    DAC_SAMP_FREQ, m_roach->DAC1.Ival, m_roach->DAC1.Qval);
     }
-    if (m_roach->DAC.len == 0) {
-        m_roach->DAC.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DAC.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DAC.len = LUT_BUFFER_LEN;
-    }
-    roach_dac_comb(m_roach, m_freqs, m_freqlen,
-                    DAC_SAMP_FREQ, m_roach->DAC.Ival, m_roach->DAC.Qval);
 }
 
 /* Function: roach_select_bins
@@ -720,18 +761,26 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
 */
 void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
+    roach_lut_t m_DAC;
+    roach_lut_t m_DDC;
+    if (m_roach->lut_idx == 0) {
+        m_DAC = m_roach->DAC0;
+        m_DDC = m_roach->DDC0;
+    } else {
+        m_DAC = m_roach->DAC1;
+        m_DDC = m_roach->DDC1;
+    }
     roach_select_bins(m_roach, m_freqs, m_freqlen);
-    if (m_roach->DDC.len > 0 && m_roach->DDC.len != LUT_BUFFER_LEN) {
-        free(m_roach->DDC.Ival);
-        free(m_roach->DDC.Qval);
-        m_roach->DDC.len = 0;
+    if (m_DDC.len > 0 && m_DAC.len != LUT_BUFFER_LEN) {
+        free(m_DDC.Ival);
+        free(m_DDC.Qval);
+        m_DDC.len = 0;
     }
-    if (m_roach->DDC.len == 0) {
-        m_roach->DDC.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DDC.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
-        m_roach->DDC.len = LUT_BUFFER_LEN;
+    if (m_DDC.len == 0) {
+        m_DDC.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_DDC.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
+        m_DDC.len = LUT_BUFFER_LEN;
     }
-
     for (size_t i = 0; i < m_freqlen; i++) {
 	double Ival[2 * fft_len];
     	double Qval[2 * fft_len];
@@ -743,8 +792,8 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 	roach_ddc_comb(m_roach, m_roach->freq_residuals[i], m_freqlen,
                         FPGA_SAMP_FREQ / (fft_len / 2), bin, Ival, Qval);
         for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
-	    m_roach->DDC.Ival[j] = Ival[k];
-            m_roach->DDC.Qval[j] = Qval[k];
+	    m_DDC.Ival[j] = Ival[k];
+            m_DDC.Qval[j] = Qval[k];
         }
     }
 }
@@ -757,16 +806,28 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 */
 void roach_pack_LUTs(roach_state_t *m_roach)
 {
+    roach_lut_t m_DAC;
+    roach_lut_t m_DDC;
+    roach_uint16_lut_t m_LUT;
+    if (m_roach->lut_idx == 0) {
+        m_DAC = m_roach->DAC0;
+        m_DDC = m_roach->DDC0;
+        m_LUT = m_roach->LUT0;
+    } else {
+        m_DAC = m_roach->DAC1;
+        m_DDC = m_roach->DDC1;
+        m_LUT = m_roach->LUT1;
+    }
     roach_init_LUT(m_roach, 2 * LUT_BUFFER_LEN);
     for (size_t i = 0; i < LUT_BUFFER_LEN; i += 2) {
-        m_roach->LUT.Ival[2 * i + 0] = htons(m_roach->DAC.Ival[i + 1]);
-        m_roach->LUT.Ival[2 * i + 1] = htons(m_roach->DAC.Ival[i]);
-        m_roach->LUT.Ival[2 * i + 2] = htons(m_roach->DDC.Ival[i + 1]);
-        m_roach->LUT.Ival[2 * i + 3] = htons(m_roach->DDC.Ival[i]);
-        m_roach->LUT.Qval[2 * i + 0] = htons(m_roach->DAC.Qval[i + 1]);
-        m_roach->LUT.Qval[2 * i + 1] = htons(m_roach->DAC.Qval[i]);
-        m_roach->LUT.Qval[2 * i + 2] = htons(m_roach->DDC.Qval[i + 1]);
-        m_roach->LUT.Qval[2 * i + 3] = htons(m_roach->DDC.Qval[i]);
+        m_LUT.Ival[2 * i + 0] = htons(m_DAC.Ival[i + 1]);
+        m_LUT.Ival[2 * i + 1] = htons(m_DAC.Ival[i]);
+        m_LUT.Ival[2 * i + 2] = htons(m_DDC.Ival[i + 1]);
+        m_LUT.Ival[2 * i + 3] = htons(m_DDC.Ival[i]);
+        m_LUT.Qval[2 * i + 0] = htons(m_DAC.Qval[i + 1]);
+        m_LUT.Qval[2 * i + 1] = htons(m_DAC.Qval[i]);
+        m_LUT.Qval[2 * i + 2] = htons(m_DDC.Qval[i + 1]);
+        m_LUT.Qval[2 * i + 3] = htons(m_DDC.Qval[i]);
     }
 }
 
@@ -777,16 +838,29 @@ void roach_pack_LUTs(roach_state_t *m_roach)
  * @param m_roach a roach state structure
 */
 void roach_write_QDR(roach_state_t *m_roach)
-{   roach_pack_LUTs(m_roach);
+{
+    roach_uint16_lut_t m_LUT;
+    char *reg0;
+    char *reg1;
+    if (m_roach->lut_idx == 0) {
+        m_LUT = m_roach->LUT0;
+	reg0 = "qdr0_memory";
+	reg1 = "qdr1_memory";
+    } else {
+        m_LUT = m_roach->LUT1;
+	reg0 = "qdr2_memory";
+	reg1 = "qdr3_memory";
+    }
+    roach_pack_LUTs(m_roach);
     roach_write_int(m_roach, "dac_reset", 1, 0);
     roach_write_int(m_roach, "dac_reset", 0, 0);
     roach_write_int(m_roach, "start_dac", 0, 0);
-    if (roach_write_data(m_roach, "qdr0_memory", (uint8_t*)m_roach->LUT.Ival,
-        m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
+    if (roach_write_data(m_roach, reg0, (uint8_t*)m_LUT.Ival,
+        m_LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
         blast_info("Could not write to qdr0!");
     }
-    if (roach_write_data(m_roach, "qdr1_memory", (uint8_t*)m_roach->LUT.Qval,
-    	m_roach->LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
+    if (roach_write_data(m_roach, reg1, (uint8_t*)m_LUT.Qval,
+    	m_LUT.len * sizeof(uint16_t), 0, QDR_TIMEOUT) < 0) {
 	blast_info("Could not write to qdr1!");
     }
     sleep(0.3);
@@ -808,7 +882,7 @@ void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen
     roach_init_DACDDC_LUTs(m_roach, LUT_BUFFER_LEN);
     roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
     roach_define_DDC_LUT(m_roach, m_freqs, m_freqlen);
-    blast_info("ROACH%d, Uploading Tone LUTs...", m_roach->which);
+    blast_info("ROACH%d, Uploading Tone LUT %d...", m_roach->which, m_roach->lut_idx);
     roach_write_QDR(m_roach);
 }
 
@@ -2036,6 +2110,8 @@ void *roach_cmd_loop(void* ind)
         blast_info("ROACH%d, Generating search comb...", i + 1);
         roach_vna_comb(&roach_state_table[i]);
         roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
+	                                      roach_state_table[i].vna_comb_len);
+        roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
                                               roach_state_table[i].vna_comb_len);
         blast_info("ROACH%d, Search comb uploaded", i + 1);
         roach_state_table[i].status = ROACH_STATUS_TONE;
@@ -2165,6 +2241,7 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].opt_tones_log,
                       "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
     if ((ind == 0)) {
+        roach_state_table[ind].lut_idx = 0;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
 	roach_state_table[ind].vna_comb_len = 1000;
 	roach_state_table[ind].p_max_freq = 246.001234e6;
@@ -2173,6 +2250,7 @@ int init_roach(uint16_t ind)
 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 1)) {
+        roach_state_table[ind].lut_idx = 0;
 	roach_state_table[ind].lo_centerfreq = 828.0e6;
 	roach_state_table[ind].vna_comb_len = 1000;
 	roach_state_table[ind].p_max_freq = 246.001234e6;
@@ -2181,6 +2259,7 @@ int init_roach(uint16_t ind)
 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 2)) {
+        roach_state_table[ind].lut_idx = 0;
 	roach_state_table[ind].lo_centerfreq = 828.0e6;
 	roach_state_table[ind].vna_comb_len = 1000;
 	roach_state_table[ind].p_max_freq = 246.001234e6;
@@ -2189,6 +2268,7 @@ int init_roach(uint16_t ind)
 	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 3)) {
+        roach_state_table[ind].lut_idx = 0;
 	roach_state_table[ind].lo_centerfreq = 828.0e6;
 	roach_state_table[ind].vna_comb_len = 1000;
 	roach_state_table[ind].p_max_freq = 246.001234e6;
@@ -2197,6 +2277,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 4)) {
+        roach_state_table[ind].lut_idx = 0;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
 	roach_state_table[ind].p_max_freq = 246.001234e6;
