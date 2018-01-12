@@ -19,8 +19,8 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  Last edited: December 15, 2017
- *      Author: sam + laura + seth
+ *  Last edited: January 12, 2018
+ *      Author: sam + adrian + laura
  */
 
 #include "roach.h"
@@ -68,6 +68,8 @@
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
+
+//TODO(Sam + Adrian) Add writing for both LUTs, IQ gradient calc, check lut_idx in packet 
 
 /* MCP = Master Control Program (Blast) */
 /* PPC = PowerPC */
