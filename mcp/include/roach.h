@@ -130,6 +130,8 @@ typedef struct roach_state {
 
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
+    double *targ_tones_LUT0; // freqs for LUT0
+    double *targ_tones_LUT1; // freqs for LUT1
     double lo_freq_req;
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
@@ -164,7 +166,12 @@ typedef struct roach_state {
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
     double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
-    double ref_df[MAX_CHANNELS_PER_ROACH]; // The reference delta f values
+    // The IQ reference values corresponding to ref grad
+    double ref_val[MAX_CHANNELS_PER_ROACH][2];
+    // the reference delta f values
+    double ref_df[MAX_CHANNELS_PER_ROACH];
+    // The delta f values for LUT0 and LUT1
+    double df[MAX_CHANNELS_PER_ROACH][2];
     double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
     double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
     char *last_cal_path;
