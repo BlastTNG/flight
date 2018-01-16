@@ -77,7 +77,7 @@ typedef enum {
     ROACH_STATUS_VNA,
     ROACH_STATUS_ARRAY_FREQS,
     ROACH_STATUS_TARG,
-    ROACH_STATUS_GRAD,
+    ROACH_STATUS_POP_LUTS,
     ROACH_STATUS_ACQUIRING,
 } e_roach_status;
 
@@ -143,6 +143,8 @@ typedef struct roach_state {
     roach_lut_t DAC1;
     // This LUT is what gets written
     int lut_idx;
+    // If one, writing is occuring. Don't switch LUTs while high
+    int write_flag;
     roach_uint16_lut_t LUT0;
     roach_uint16_lut_t LUT1;
 
@@ -161,17 +163,20 @@ typedef struct roach_state {
     char *last_targ_path;
     char *channels_path;
     // For detector retune decision
+    int retune_mask[MAX_CHANNELS_PER_ROACH];
     int has_ref; /* If 1, ref grads exist */
+    int retune_count;
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
     double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
-    // The IQ reference values corresponding to ref grad
-    double ref_val[MAX_CHANNELS_PER_ROACH][2];
+    // The IQ reference values corresponding to each LUT
+    double ref_val0[MAX_CHANNELS_PER_ROACH][2];
+    double ref_val1[MAX_CHANNELS_PER_ROACH][2];
     // the reference delta f values
     double ref_df[MAX_CHANNELS_PER_ROACH];
     // The delta f values for LUT0 and LUT1
-    double df[MAX_CHANNELS_PER_ROACH][2];
+    double df[MAX_CHANNELS_PER_ROACH];
     double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
     double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
     char *last_cal_path;
@@ -284,6 +289,7 @@ void write_roach_channels_5hz(void);
 int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
 void roach_switch_LUT(uint16_t ind);
+void roach_retune_counter(uint16_t ind, int retune_period);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);

@@ -401,16 +401,15 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
     store_data_1hz();
-    if (get_roach_status(0) >= 6) roach_timestamp_init(0);
-    if (get_roach_status(1) >= 6) roach_timestamp_init(1);
-    if (get_roach_status(2) >= 6) roach_timestamp_init(2);
-    if (get_roach_status(3) >= 6) roach_timestamp_init(3);
-    if (get_roach_status(4) >= 6) roach_timestamp_init(4);
-    roach_switch_LUT(0);
-    roach_switch_LUT(1);
-    roach_switch_LUT(2);
-    roach_switch_LUT(3);
-    roach_switch_LUT(4);
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        if (get_roach_status(i) >= 6) roach_timestamp_init(i);
+    }
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_switch_LUT(i);
+    }
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_retune_counter(i, 5);
+    }
 }
 
 static void *mcp_main_loop(void *m_arg)
