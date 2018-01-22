@@ -118,6 +118,7 @@
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
 #define LUT_FREQ_OFFSET 3000 /* Hz, Frequency offset (+/-) of LUT0 and LUT1 from f0 */
 #define DF_THRESHOLD 50000 /* Hz, Delta F threshold for retuning */
+#define DEFAULT_SWITCH_PERIOD 3 /* Seconds, default switching period*/
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -149,11 +150,7 @@ uint32_t destmac1 = 256;
 
 static uint32_t dest_ip = IPv4(239, 1, 1, 234);
 
-const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg"};
+const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_qdr_switch_5_2018_Jan_19_1706.fpg";
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
@@ -180,11 +177,17 @@ int get_roach_status(uint16_t ind)
     return status;
 }
 
-/* Function: roach_switch_LUT
+/* Function: enable_qdr_switch()
  * ----------------------------
- * Switches between tone LUTs (see mcp.c, 1 Hz loop)
- * @param ind roach index
+ * Enables switching between tone LUTs
+ * @param m_roach roach_state_structure
+ * @param enable bool, on or off (0 or 1)
 */
+
+void enable_qdr_switch(roach_state_t *m_roach, int enable)
+{
+    roach_write_int(m_roach, "qdr_switch", enable, 0);
+}
 
 void roach_switch_LUT(uint16_t ind)
 {
@@ -1648,135 +1651,6 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     return SWEEP_SUCCESS;
 }
 
-/* Function: cal_sweep
- * ----------------------------
- * Performs a calibration sweep
- *
- * @param m_roach roach state table
-*/
-int cal_sweep(roach_state_t *m_roach)
-{
-    char* new_path;
-    int ind = m_roach->which - 1;
-    pi_state_t *m_bb = &pi_state_table[ind];
-    new_path = get_path(m_roach, m_roach->cal_path_root);
-    asprintf(&m_roach->last_cal_path, new_path);
-    if (mkdir_recursive(new_path)) {
-        free(new_path);
-    } else {
-        blast_strerror("Could not create new directory: %s", m_roach->last_cal_path);
-        free(m_roach->last_cal_path);
-        return SWEEP_FAIL;
-    }
-    char *lo_command; /* Pi command */
-    double m_sweep_freqs[NGRAD_POINTS];
-    m_sweep_freqs[0] = m_roach->lo_centerfreq - LO_STEP;
-    for (size_t i = 1; i < NGRAD_POINTS; i++) {
-        m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
-    }
-    for (size_t i = 0; i < NGRAD_POINTS; i++) {
-        if (CommandData.roach[ind].do_sweeps) {
-        // Todo(Sam) Make sure this doesn't crash sweep
-            blast_info("Sweep freq = %.7g", m_sweep_freqs[i]/1.0e6);
-            m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
-                        m_sweep_freqs[i]/1.0e6);
-            pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0)
-                        blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-            usleep(SWEEP_TIMEOUT);
-            roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i],
-                        m_roach->last_cal_path, m_roach->num_kids);
-            } else {
-                blast_info("Sweep interrupted by command");
-                return SWEEP_INTERRUPT;
-            }
-    }
-    usleep(SWEEP_TIMEOUT);
-    if (recenter_lo(m_roach) < 0) {
-        blast_info("Error recentering LO");
-    } else {
-    // TODO(Sam) Put in error handling
-        if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-            blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-        }
-    }
-    return SWEEP_SUCCESS;
-}
-
-/* Function: grad_calc
- * ----------------------------
- * Calculates reference gradient (dI/df, dQ/df) from cal_sweep data
- * Used to calculate delta_f, for determining whether or not to retune resonators
- *
- * @param m_roach roach state table
-*/
-int grad_calc(roach_state_t *m_roach)
-{
-    blast_info("ROACH%d, Calculating IQ GRADIENTS", m_roach->which);
-    float Ival[m_roach->num_kids][NGRAD_POINTS];
-    float Qval[m_roach->num_kids][NGRAD_POINTS];
-    char m_time_buffer[4096];
-    get_time(m_time_buffer);
-    /* open files for reading */
-    struct dirent **file_list;
-    int nfiles;
-    int freq_idx = 0;
-    nfiles = scandir(m_roach->last_cal_path, &file_list, NULL, alphasort);
-    /* Read I/Q data from cal sweep */
-    if (nfiles < 0) {
-        blast_strerror("Could not read %s", m_roach->last_cal_path);
-    } else {
-        for (int i = 0; i < nfiles; ++i) {
-            if (!strcmp(file_list[i]->d_name, ".") || !strcmp(file_list[i]->d_name, "..")) {
-                free(file_list[i]);
-            } else {
-                char *in_file;
-                blast_tmp_sprintf(in_file, "%s/%s", m_roach->last_cal_path, file_list[i]->d_name);
-                free(file_list[i]);
-                FILE* fd = fopen(in_file, "r");
-                if (!fd) return -1;
-                for (int kid = 0; kid < m_roach->num_kids; ++kid) {
-                    fscanf(fd, "%d\t%g\t%g\n", &kid, &Ival[kid][freq_idx], &Qval[kid][freq_idx]);
-                }
-                ++freq_idx;
-                // printf("Read: %s\n", in_file);
-                fclose(fd);
-           }
-        }
-        if (file_list) free(file_list);
-    }
-    /* To calculate reference gradient and ref delta_f */
-    if ((!m_roach->has_ref)) {
-        for (int kid = 0; kid < m_roach->num_kids; ++kid) {
-            // printf("%.10f\t%.10f\t%.10f\n", Qval[kid][0], Qval[kid][1], Qval[kid][2]);
-            m_roach->ref_grad[kid][0] = (Ival[kid][NGRAD_POINTS - 1] - Ival[kid][0]);
-            m_roach->ref_grad[kid][1] = (Qval[kid][NGRAD_POINTS - 1] - Qval[kid][0]);
-            m_roach->ref_df[kid] = ((Ival[kid][(NGRAD_POINTS - 1) / 2] * m_roach->ref_grad[kid][0]
-                + Qval[kid][(NGRAD_POINTS - 1) / 2] * m_roach->ref_grad[kid][1])
-                / (pow(m_roach->ref_grad[kid][0], 2) + pow(m_roach->ref_grad[kid][1], 2)))*LO_STEP;
-            // blast_info("R%d chan%d, df = %g", m_roach->which, kid, m_roach->ref_df[kid]);
-        }
-        m_roach->has_ref = 1;
-        blast_info("ROACH%d, stored REF grads & delta F", m_roach->which);
-    } else if ((CommandData.roach[m_roach->which - 1].df_calc == 2) && (m_roach->ref_grad)) {
-        /* To calculate delta_f for comparison to ref delta_f (ref grads must already exist) */
-        for (int kid = 0; kid < m_roach->num_kids; ++kid) {
-            // printf("%.10f\t%.10f\t%.10f\n", Qval[kid][0], Qval[kid][1], Qval[kid][2]);
-            m_roach->comp_df[kid] = ((Ival[kid][(NGRAD_POINTS - 1) / 2] *m_roach->ref_grad[kid][0]
-                 + Qval[kid][(NGRAD_POINTS - 1) / 2] * m_roach->ref_grad[kid][1])
-                 / (pow(m_roach->ref_grad[kid][0], 2) + pow(m_roach->ref_grad[kid][1], 2)))*LO_STEP;
-            blast_info("ROACH%d, stored COMP delta F", m_roach->which);
-        }
-    } else {
-        if ((!m_roach->ref_grad)) {
-            blast_info("No reference gradients found. Try setting df_calc = 1");
-        }
-    }
-    CommandData.roach[m_roach->which - 1].df_calc = 0;
-    return 0;
-}
-
 void roach_calc_ref_grad(roach_state_t *m_roach, int m_chan, double *I0_avg,
                                                 double *Q0_avg, double *I1_avg, double *Q1_avg)
 {
@@ -1883,40 +1757,11 @@ void roach_calc_df(roach_state_t *m_roach)
  * Compares reference gradients to current values to determine
  * whether or not to rewrite the targ comb. 'Retune' if nflags > FLAG_THRESH
  *
- * @param m_roach roach state table11111111111111
+ * @param m_roach roach state table
  *
  * returns: m_roach->retune_flag
 */
-/* static int roach_check_retune(roach_state_t *m_roach)
-{
-    // Compare current delta_f to reference delta_f (both stored in roach state)
-    // Retune if nflags exceeds nflags_threshold
-    // TODO(Sam) determine threshold
-    blast_info("ROACH%d: Checking for retune...", m_roach->which - 1);
-    int nflags;
-    double df_threshold = 50.0e4; // Hz, Roughly a linewidth
-    if ((CommandData.roach[m_roach->which - 1].df_calc == 3) && (m_roach->ref_df) && (m_roach->comp_df)) {
-        for (int kid = 0; kid < m_roach->num_kids; ++kid) {
-            // printf("%.10f\t%.10f\t%.10f\n", Qval[kid][0], Qval[kid][1], Qval[kid][2]);
-            m_roach->df_diff[kid] = fabs(m_roach->comp_df[kid] - m_roach->ref_df[kid]);
-            if ((m_roach->df_diff[kid] > df_threshold)) {
-                nflags++;
-                m_roach->out_of_range[kid] = 1;
-            } else { m_roach->out_of_range[kid] = 0;}
-            blast_info("ROACH%d: %d kids have drifted", m_roach->which + 1, nflags);
-        }
-    } else {
-        blast_info("Ref DF, Ref GRADs not found!");
-        CommandData.roach[m_roach->which - 1].df_calc = 0;
-        return -1;
-    }
-    if (nflags > FLAG_THRESH) {
-        m_roach->retune_flag = 1;
-        blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which + 1);
-    }
-    CommandData.roach[m_roach->which - 1].df_calc = 0;
-    return m_roach->retune_flag;
-}*/
+/* static int roach_check_retune(roach_state_t *m_roach) */
 
 void roach_check_retune(roach_state_t *m_roach)
 {
@@ -2202,26 +2047,15 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
-    if (CommandData.roach[i].change_state) {
-        roach_state_table[i].status = CommandData.roach[i].new_state;
-        CommandData.roach[i].change_state = 0;
+    if (CommandData.roach[i].roach_state) {
+        roach_state_table[i].status = CommandData.roach[i].roach_state;
+        // CommandData.roach[i].change_state = 0;
     }
-    // Check for any additional roach commands
     if (CommandData.roach[i].do_sweeps == 0) {
         roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
     }
-    // TODO(Sam) Add error checking
-    if ((CommandData.roach[i].df_calc > 0) &&
-              (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
-        if ((CommandData.roach[i].df_calc == 1)) {
-              roach_state_table[i].has_ref = 0;
-        }
-        cal_sweep(&roach_state_table[i]);
-        grad_calc(&roach_state_table[i]);
-        if ((CommandData.roach[i].df_calc == 2)) {
-             roach_check_retune(&roach_state_table[i]);
-        }
-        roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
+    if (CommandData.roach[i].switch_period) {
+        roach_write_int(&roach_state_table[i], "switch_period", CommandData.roach_params[i].switch_period, 0);
     }
     /*
     if (CommandData.roach[i].find_kids) {
@@ -2296,7 +2130,7 @@ void *roach_cmd_loop(void* ind)
     }
     if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
         roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
-        if (roach_upload_fpg(&roach_state_table[i], roach_fpg[i]) == 0) {
+        if (roach_upload_fpg(&roach_state_table[i], roach_fpg) == 0) {
             blast_info("ROACH%d, Firmware uploaded", i + 1);
             roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
             roach_state_table[i].desired_status = ROACH_STATUS_CONFIGURED;
@@ -2305,6 +2139,7 @@ void *roach_cmd_loop(void* ind)
     if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
         roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
         blast_info("ROACH%d, Configuring software registers...", i + 1);
+        roach_write_int(&roach_state_table[i], "switch_period", DEFAULT_SWITCH_PERIOD, 0);
         roach_write_int(&roach_state_table[i], "dds_shift", DDC_SHIFT, 0);
         // roach_read_int(&roach_state_table[i], "dds_shift");
         roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);

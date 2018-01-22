@@ -404,9 +404,9 @@ static void mcp_1hz_routines(void)
     for (int i = 0; i < NUM_ROACHES; i++) {
         if (get_roach_status(i) >= 6) roach_timestamp_init(i);
     }
-    for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_switch_LUT(i);
-    }
+    // for (int i = 0; i < NUM_ROACHES; i++) {
+    //    roach_switch_LUT(i);
+    // }
     for (int i = 0; i < NUM_ROACHES; i++) {
         roach_retune_counter(i, 5);
     }

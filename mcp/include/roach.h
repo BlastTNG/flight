@@ -290,6 +290,7 @@ int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
 void roach_switch_LUT(uint16_t ind);
 void roach_retune_counter(uint16_t ind, int retune_period);
+int roach_read_int(roach_state_t *m_roach, const char *m_register);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);

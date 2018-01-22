@@ -332,6 +332,8 @@ typedef struct roach
     unsigned int set_rudats;
     unsigned int set_attens;
     unsigned int find_kids;
+    unsigned int roach_state;
+    unsigned int switch_period;
 } roach_status_t;
 
 typedef struct roach_params
@@ -343,6 +345,8 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+//  Switch period
+    unsigned int switch_period;
 } roach_params_t;
 
 typedef struct {
@@ -583,7 +587,7 @@ struct CommandDataStruct {
     int save_period;
     int auto_save;
     int max_age;    // maximum allowed time between trigger and solution
-    int age;	    // last measured time between trigger and solution
+    int age;    // last measured time between trigger and solution
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];

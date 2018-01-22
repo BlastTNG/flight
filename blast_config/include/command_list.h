@@ -242,6 +242,8 @@ enum multiCommand {
   cal_attens,
   set_attens,
   find_kids,
+  roach_state,
+  switch_period,
   set_rox_bias_amp,
   cal_length,
   level_length,
