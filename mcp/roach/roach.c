@@ -81,7 +81,7 @@
 /* I = In phase. The cos (real) part of the waveform */
 /* Q = Quadrature. The sine (imaginary) part of the waveform */
 
-#define DDC_SHIFT 318 /* FW version dependent, see roach_fpg */
+#define DDC_SHIFT 317 /* FW version dependent, see roach_fpg */
 #define VNA_FFT_SHIFT 31 /*Controls FW FFT overflow behavior, for VNA SWEEP */
 #define TARG_FFT_SHIFT 127
 #define VNA 0 /* Sweep type */
