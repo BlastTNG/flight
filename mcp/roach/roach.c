@@ -145,11 +145,7 @@ uint32_t destmac1 = 256;
 
 static uint32_t dest_ip = IPv4(239, 1, 1, 234);
 
-const char roach_fpg[5][100] = {"/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg",
-                            "/data/etc/blast/roachFirmware/macTestDec152017/gbe_regs.fpg"};
+const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v5_2018_Jan_22_1028.fpg";
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */

@@ -216,6 +216,7 @@ typedef struct data_udp_packet {
     uint32_t pps_count;
     uint32_t clock_count;
     uint32_t packet_count;
+    uint32_t status_reg;
     unsigned char rcv_buffer[ROACH_UDP_LEN];
 } data_udp_packet_t;
 

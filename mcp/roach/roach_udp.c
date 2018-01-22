@@ -163,10 +163,11 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
     // static uint64_t i_packet = 0;
     uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
     uint8_t *buf = (payload + HEADER_LEN);
-    m_packet->checksum = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
-    m_packet->pps_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
-    m_packet->clock_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
-    m_packet->packet_count = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
+    m_packet->checksum = (buf[8172] << 24) | (buf[8173] << 16) | (buf[8174] << 8) | buf[8175];
+    m_packet->pps_count = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
+    m_packet->clock_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
+    m_packet->packet_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
+    m_packet->status_reg = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
     // I, Q
     for (int i = 0;	i < 1016; i += 1) {
         int j;
