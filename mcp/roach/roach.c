@@ -1992,12 +1992,10 @@ void *roach_cmd_loop(void* ind)
     if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
         roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
         blast_info("ROACH%d, Configuring software registers...", i + 1);
+        roach_write_int(&roach_state_table[i], "GbE_packet_info", 42, 0);
         roach_write_int(&roach_state_table[i], "dds_shift", DDC_SHIFT, 0);
-        // roach_read_int(&roach_state_table[i], "dds_shift");
         roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);
-        // roach_read_int(&roach_state_table[i], "PFB_fft_shift");
         roach_write_int(&roach_state_table[i], "downsamp_sync_accum_len", accum_len, 0);
-        // roach_read_int(&roach_state_table[i], "downsamp_sync_accum_len");
         roach_write_int(&roach_state_table[i], "GbE_tx_destip", dest_ip, 0);
         roach_write_int(&roach_state_table[i], "GbE_tx_destport", roach_state_table[i].dest_port, 0);
         roach_write_int(&roach_state_table[i], "GbE_tx_srcip", roach_state_table[i].src_ip, 0);

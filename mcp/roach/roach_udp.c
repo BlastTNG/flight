@@ -163,13 +163,13 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
     // static uint64_t i_packet = 0;
     uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
     uint8_t *buf = (payload + HEADER_LEN);
-    m_packet->checksum = (buf[8172] << 24) | (buf[8173] << 16) | (buf[8174] << 8) | buf[8175];
+    m_packet->ctime = (buf[8172] << 24) | (buf[8173] << 16) | (buf[8174] << 8) | buf[8175];
     m_packet->pps_count = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
     m_packet->clock_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
     m_packet->packet_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
     m_packet->status_reg = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
     // I, Q
-    for (int i = 0;	i < 1016; i += 1) {
+    for (int i = 0; i < 1016; i += 1) {
         int j;
         int k;
         if ((i % 2) == 0) {
@@ -184,9 +184,10 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
         m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) |
                        (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
         /* if ((i == 0) && (i_packet % 60) == 0) {
-        blast_info("i = %i, I = %f, Q = %f, checksum = %u, count = %u", i, m_packet->Ival[i], m_packet->Qval[i],
-        m_packet->checksum, m_packet->packet_count);
-        } */
+        blast_info("i = %i, I = %f, Q = %f, ctime = %u, count = %u, status reg = %u",
+                    i_packet, m_packet->Ival[i], m_packet->Qval[i], m_packet->ctime,
+                    m_packet->packet_count, m_packet->status_reg);
+        }*/
     }
     // i_packet++;
 }

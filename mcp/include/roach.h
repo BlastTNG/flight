@@ -212,7 +212,7 @@ typedef struct data_udp_packet {
     float Ival[MAX_CHANNELS_PER_ROACH];
     float Qval[MAX_CHANNELS_PER_ROACH];
     struct udphdr *udp_header; // will filter on udp dest port
-    uint32_t checksum;
+    uint32_t ctime;
     uint32_t pps_count;
     uint32_t clock_count;
     uint32_t packet_count;
