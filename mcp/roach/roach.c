@@ -1983,7 +1983,7 @@ void *roach_cmd_loop(void* ind)
     }
     if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
         roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
-        if (roach_upload_fpg(&roach_state_table[i], roach_fpg[i]) == 0) {
+        if (roach_upload_fpg(&roach_state_table[i], roach_fpg) == 0) {
             blast_info("ROACH%d, Firmware uploaded", i + 1);
             roach_state_table[i].status = ROACH_STATUS_PROGRAMMED;
             roach_state_table[i].desired_status = ROACH_STATUS_CONFIGURED;
