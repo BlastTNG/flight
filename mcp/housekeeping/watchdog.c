@@ -153,6 +153,8 @@ void watchdog_ping_and_set_in_charge(void) {
     const char *serial = NULL;
     uint8_t direction = 0x00; // All pins set to read (we only use pin 6)
 
+    nameThread("Watchdog");
+
     if (!SouthIAm) {
         serial = "FC1NS9HU"; // "FC1"
     } else {

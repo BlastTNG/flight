@@ -134,7 +134,7 @@ static bool open_matching_device(struct mpsse_ctx *ctx, const uint16_t *vid, con
 		}
 
 		found = true;
-        blast_info("Succes opening MPSSE device with VID=%04x and PID=%04x", *vid, *pid);
+        blast_info("Succes opening MPSSE device with VID=%04x, PID=%04x and serial=%s", *vid, *pid, serial);
 
 		break;
 	}
