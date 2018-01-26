@@ -21,37 +21,18 @@
  *
  */
 
-#ifndef INCLUDE_BI0_H_
-#define INCLUDE_BI0_H_
+#ifndef INCLUDE_BIPHASE_HARDWARE_H
+#define INCLUDE_BIPHASE_HARDWARE_H
 
 #include <stdint.h>
+#include "mpsse.h"
 
-#define BI0_FRAME_BUFBITS (4)
-#define BI0_FRAME_BUFLEN (1 << BI0_FRAME_BUFBITS)
-#define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
+int get_synclink_fd();
+void synclink_close();
+int setup_synclink();
+void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_t *lsb_data_out);
+
+void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction);
 
 
-typedef struct
-{
-    int i_in;
-    int i_out;
-    uint8_t *framelist[BI0_FRAME_BUFLEN];
-    size_t framesize[BI0_FRAME_BUFLEN];
-} biphase_frames_t;
-
-extern biphase_frames_t biphase_frames;
-extern uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
-
-extern pthread_t watchdog_id;
-
-void initialize_biphase_buffer(void);
-void push_biphase_frames(void);
-void biphase_writer(void);
-
-void get_num_frames_per_superframe(double num_frames_per_superframe[]);
-void add_200hz_frame_to_biphase(void **m_channel_data);
-void add_100hz_frame_to_biphase(const void *m_channel_data);
-void add_partial_5hz_frame_to_biphase(const void *m_channel_data);
-void add_partial_1hz_frame_to_biphase(const void *m_channel_data);
-
-#endif /* INCLUDE_BI0_H_ */
+#endif /* INCLUDE_BIPHASE_INTERFACE */

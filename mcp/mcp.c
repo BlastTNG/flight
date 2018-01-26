@@ -75,6 +75,7 @@
 #include "ec_motors.h"
 #include "framing.h"
 #include "bi0.h"
+#include "biphase_hardware.h"
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
@@ -428,6 +429,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm1;
   pthread_t DiskManagerID;
   pthread_t biphase_writer_id;
+  pthread_t watchdog_in_charge_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -559,6 +561,7 @@ int main(int argc, char *argv[])
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
   pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  pthread_create(&watchdog_in_charge_id, NULL, (void*)&watchdog_ping_and_set_in_charge, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
