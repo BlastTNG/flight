@@ -127,6 +127,7 @@ typedef struct roach_state {
     char *address;
     uint16_t port;
     bool is_streaming;
+    bool write_flag;
 
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()

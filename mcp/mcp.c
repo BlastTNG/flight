@@ -385,6 +385,7 @@ static void mcp_2hz_routines(void)
     xsc_write_data(0);
     xsc_write_data(1);
 }
+
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
@@ -401,11 +402,9 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
     store_data_1hz();
-    if (get_roach_status(0) >= 6) roach_timestamp_init(0);
-    if (get_roach_status(1) >= 6) roach_timestamp_init(1);
-    if (get_roach_status(2) >= 6) roach_timestamp_init(2);
-    if (get_roach_status(3) >= 6) roach_timestamp_init(3);
-    if (get_roach_status(4) >= 6) roach_timestamp_init(4);
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        if (get_roach_status(i) >= 6) roach_timestamp_init(i);
+    }
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -627,7 +626,7 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
