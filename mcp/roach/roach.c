@@ -707,29 +707,9 @@ int save_freqs(roach_state_t *m_roach, char *m_save_path, double *m_freqs, size_
 static void roach_define_DAC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     if (m_roach->lut_idx == 0) {
-        if (m_roach->DAC0.len > 0 && m_roach->DAC0.len != LUT_BUFFER_LEN) {
-            free(m_roach->DAC0.Ival);
-            free(m_roach->DAC0.Qval);
-            m_roach->DAC0.len = 0;
-        }
-        if (m_roach->DAC0.len == 0) {
-            m_roach->DAC0.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
-            m_roach->DAC0.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
-            m_roach->DAC0.len = LUT_BUFFER_LEN;
-        }
         roach_dac_comb(m_roach, m_freqs, m_freqlen,
                     DAC_SAMP_FREQ, m_roach->DAC0.Ival, m_roach->DAC0.Qval);
     } else {
-        if (m_roach->DAC1.len > 0 && m_roach->DAC1.len != LUT_BUFFER_LEN) {
-            free(m_roach->DAC1.Ival);
-            free(m_roach->DAC1.Qval);
-            m_roach->DAC1.len = 0;
-        }
-        if (m_roach->DAC1.len == 0) {
-            m_roach->DAC1.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
-            m_roach->DAC1.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
-            m_roach->DAC1.len = LUT_BUFFER_LEN;
-        }
         roach_dac_comb(m_roach, m_freqs, m_freqlen,
                     DAC_SAMP_FREQ, m_roach->DAC1.Ival, m_roach->DAC1.Qval);
     }
@@ -758,10 +738,18 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
         }
         m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (DAC_FREQ_RES)) * (DAC_FREQ_RES);
     }
-    for (int ch = 0; ch < m_freqlen; ch++) {
-        roach_write_int(m_roach, "bins", bins[ch], 0);
-        roach_write_int(m_roach, "load_bins", 2*ch + 1, 0);
-        roach_write_int(m_roach, "load_bins", 0, 0);
+    if (m_roach->lut_idx == 0) {
+        for (int ch = 0; ch < m_freqlen; ch++) {
+            roach_write_int(m_roach, "bins0", bins[ch], 0);
+            roach_write_int(m_roach, "load_bins0", 2*ch + 1, 0);
+            roach_write_int(m_roach, "load_bins0", 0, 0);
+        }
+    } else {
+        for (int ch = 0; ch < m_freqlen; ch++) {
+            roach_write_int(m_roach, "bins1", bins[ch], 0);
+            roach_write_int(m_roach, "load_bins1", 2*ch + 1, 0);
+            roach_write_int(m_roach, "load_bins1", 0, 0);
+        }
     }
 }
 
@@ -776,17 +764,8 @@ static void roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_
 */
 void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
-    roach_lut_t m_DAC;
-    roach_lut_t m_DDC;
-    if (m_roach->lut_idx == 0) {
-        m_DAC = m_roach->DAC0;
-        m_DDC = m_roach->DDC0;
-    } else {
-        m_DAC = m_roach->DAC1;
-        m_DDC = m_roach->DDC1;
-    }
     roach_select_bins(m_roach, m_freqs, m_freqlen);
-    if (m_DDC.len > 0 && m_DAC.len != LUT_BUFFER_LEN) {
+    /* if (m_DDC.len > 0 && m_DAC.len != LUT_BUFFER_LEN) {
         free(m_DDC.Ival);
         free(m_DDC.Qval);
         m_DDC.len = 0;
@@ -795,7 +774,7 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
         m_DDC.Ival = calloc(LUT_BUFFER_LEN, sizeof(double));
         m_DDC.Qval = calloc(LUT_BUFFER_LEN, sizeof(double));
         m_DDC.len = LUT_BUFFER_LEN;
-    }
+    } */
     for (size_t i = 0; i < m_freqlen; i++) {
         double Ival[2 * fft_len];
         double Qval[2 * fft_len];
@@ -806,9 +785,16 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
         }
         roach_ddc_comb(m_roach, m_roach->freq_residuals[i], m_freqlen,
                 FPGA_SAMP_FREQ / (fft_len / 2), bin, Ival, Qval);
-        for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
-            m_DDC.Ival[j] = Ival[k];
-            m_DDC.Qval[j] = Qval[k];
+        if (m_roach->lut_idx == 0) {
+            for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
+                m_roach->DDC0.Ival[j] = Ival[k];
+                m_roach->DDC0.Qval[j] = Qval[k];
+             }
+        } else {
+            for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
+                m_roach->DDC1.Ival[j] = Ival[k];
+                m_roach->DDC1.Qval[j] = Qval[k];
+             }
         }
     }
 }
@@ -821,28 +807,29 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 */
 void roach_pack_LUTs(roach_state_t *m_roach)
 {
-    roach_lut_t m_DAC;
-    roach_lut_t m_DDC;
-    roach_uint16_lut_t m_LUT;
-    if (m_roach->lut_idx == 0) {
-        m_DAC = m_roach->DAC0;
-        m_DDC = m_roach->DDC0;
-        m_LUT = m_roach->LUT0;
-    } else {
-        m_DAC = m_roach->DAC1;
-        m_DDC = m_roach->DDC1;
-        m_LUT = m_roach->LUT1;
-    }
     roach_init_LUT(m_roach, 2 * LUT_BUFFER_LEN);
-    for (size_t i = 0; i < LUT_BUFFER_LEN; i += 2) {
-        m_LUT.Ival[2 * i + 0] = htons(m_DAC.Ival[i + 1]);
-        m_LUT.Ival[2 * i + 1] = htons(m_DAC.Ival[i]);
-        m_LUT.Ival[2 * i + 2] = htons(m_DDC.Ival[i + 1]);
-        m_LUT.Ival[2 * i + 3] = htons(m_DDC.Ival[i]);
-        m_LUT.Qval[2 * i + 0] = htons(m_DAC.Qval[i + 1]);
-        m_LUT.Qval[2 * i + 1] = htons(m_DAC.Qval[i]);
-        m_LUT.Qval[2 * i + 2] = htons(m_DDC.Qval[i + 1]);
-        m_LUT.Qval[2 * i + 3] = htons(m_DDC.Qval[i]);
+    if (m_roach->lut_idx == 0) {
+        for (size_t i = 0; i < LUT_BUFFER_LEN; i += 2) {
+            m_roach->LUT0.Ival[2 * i + 0] = htons(m_roach->DAC0.Ival[i + 1]);
+            m_roach->LUT0.Ival[2 * i + 1] = htons(m_roach->DAC0.Ival[i]);
+            m_roach->LUT0.Ival[2 * i + 2] = htons(m_roach->DDC0.Ival[i + 1]);
+            m_roach->LUT0.Ival[2 * i + 3] = htons(m_roach->DDC0.Ival[i]);
+            m_roach->LUT0.Qval[2 * i + 0] = htons(m_roach->DAC0.Qval[i + 1]);
+            m_roach->LUT0.Qval[2 * i + 1] = htons(m_roach->DAC0.Qval[i]);
+            m_roach->LUT0.Qval[2 * i + 2] = htons(m_roach->DDC0.Qval[i + 1]);
+            m_roach->LUT0.Qval[2 * i + 3] = htons(m_roach->DDC0.Qval[i]);
+        }
+    } else {
+        for (size_t i = 0; i < LUT_BUFFER_LEN; i += 2) {
+            m_roach->LUT1.Ival[2 * i + 0] = htons(m_roach->DAC1.Ival[i + 1]);
+            m_roach->LUT1.Ival[2 * i + 1] = htons(m_roach->DAC1.Ival[i]);
+            m_roach->LUT1.Ival[2 * i + 2] = htons(m_roach->DDC1.Ival[i + 1]);
+            m_roach->LUT1.Ival[2 * i + 3] = htons(m_roach->DDC1.Ival[i]);
+            m_roach->LUT1.Qval[2 * i + 0] = htons(m_roach->DAC1.Qval[i + 1]);
+            m_roach->LUT1.Qval[2 * i + 1] = htons(m_roach->DAC1.Qval[i]);
+            m_roach->LUT1.Qval[2 * i + 2] = htons(m_roach->DDC1.Qval[i + 1]);
+            m_roach->LUT1.Qval[2 * i + 3] = htons(m_roach->DDC1.Qval[i]);
+        }
     }
 }
 
@@ -1219,8 +1206,10 @@ void roach_timestamp_init(uint16_t ind)
     time_t seconds;
     seconds = time(NULL);
     // blast_info("ROACH1 time = %u", (uint32_t)seconds);
-    roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
-    sleep(0.3);
+    if (!roach_state_table[ind].write_flag) {
+        roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
+        sleep(0.1);
+    }
     // roach_read_int(&roach_state_table[ind], "GbE_ctime");
 }
 
@@ -1342,21 +1331,21 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
  * @parm m_last_targ the path for saving the TARG sweep
  *
 */
-/* int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_targ_path)
+int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_targ_path)
 {
     char *py_command;
     char *m_targ_freq_path;
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[READ_LINE];
     blast_tmp_sprintf(py_command,
-            "python /data/etc/blast/roachPython/find_kids_blast.py %s %s %g %g %g %g %g> %s",
+            "python /data/etc/blast/roachPython/find_kids_blast.py %s %s %g %g %g %g %g > %s",
         m_last_vna_path,
         m_last_targ_path,
         CommandData.roach_params[m_roach->which - 1].smoothing_scale,
         CommandData.roach_params[m_roach->which - 1].peak_threshold,
         CommandData.roach_params[m_roach->which - 1].spacing_threshold,
         m_roach->lo_centerfreq,
-        LO_STEP/1000.,
+        ((double)LO_STEP)/1000.,
         m_roach->find_kids_log);
     blast_info("%s", py_command);
     system(py_command);
@@ -1397,61 +1386,48 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
         CommandData.roach[m_roach->which - 1].find_kids = 0;
     }
     return 0;
-}*/
+}
 
-int get_targ_freqs(roach_state_t *m_roach, char *m_last_vna_path, char* m_last_targ_path)
+int calc_grad_freqs(roach_state_t *m_roach, char* m_last_targ_path)
 {
-    char *find_kids_command;
     char *calc_freqs_command;
     char *m_targ_freq_path;
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
-    blast_tmp_sprintf(find_kids_command,
-            "python /data/etc/blast/roachPython/find_kids_blast.py %s %s %g %g %g %g %g > %s",
-        m_last_vna_path,
-        m_last_targ_path,
-        CommandData.roach_params[m_roach->which - 1].smoothing_scale,
-        CommandData.roach_params[m_roach->which - 1].peak_threshold,
-        CommandData.roach_params[m_roach->which - 1].spacing_threshold,
-        m_roach->lo_centerfreq,
-        LO_STEP/1000.,
-        m_roach->find_kids_log);
-    blast_info("%s", find_kids_command);
-    system(find_kids_command);
-    sleep(3);
-    blast_tmp_sprintf(m_targ_freq_path, "%s", m_last_targ_path);
+    m_roach->targ_tones_LUT0 = calloc(m_roach->num_kids, sizeof(double));
+    m_roach->targ_tones_LUT1 = calloc(m_roach->num_kids, sizeof(double));
     blast_tmp_sprintf(calc_freqs_command,
            "python /data/etc/blast/roachPython/calc_targ_freqs.py %s %g",
-           m_targ_freq_path,
+           m_last_targ_path,
            m_roach->lo_centerfreq);
     blast_info("%s", calc_freqs_command);
     system(calc_freqs_command);
+    sleep(6);
     blast_tmp_sprintf(m_targ_freq_path, "%s/gradient_freqs.dat", m_last_targ_path);
+    blast_info("Opening gradient freqs for reading...");
     FILE *fd;
     fd = fopen(m_targ_freq_path, "r");
     if (!fd) {
         blast_strerror("Could not open %s for reading", m_targ_freq_path);
         return -1;
     }
-    m_roach->num_kids = 0;
-    while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
-            && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
+    for (size_t m_index = 0; m_index < m_roach->num_kids; m_index++) {
+        if (fscanf(fd, "%lg\n", &m_temp_freqs[m_index]) == EOF) break;
     }
     fclose(fd);
-    if (m_roach->num_kids > 0) {
-        (m_roach->num_kids)--;
-    } else {
-        return -1;
-    }
-    blast_info("NUM kids = %zd", m_roach->num_kids);
-    m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
+    /* while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
+            && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
+    }*/
+    /* for (size_t j = 0; j < m_roach->num_kids; j++) {
+        blast_info("temp_freqs: %lg", m_temp_freqs[j]);
+    } */
+    blast_info("populating targ_tones...");
     for (size_t j = 0; j < m_roach->num_kids; j++) {
-        m_roach->targ_tones[j] = m_temp_freqs[j];
-        m_roach->targ_tones_LUT0[j] = m_temp_freqs[j] - LUT_FREQ_OFFSET;
-        m_roach->targ_tones_LUT1[j] = m_temp_freqs[j] + LUT_FREQ_OFFSET;
-        // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
-    }
-    if (CommandData.roach[m_roach->which - 1].find_kids) {
-        CommandData.roach[m_roach->which - 1].find_kids = 0;
+        m_roach->targ_tones[j] = m_temp_freqs[j] - m_roach->lo_centerfreq;
+        blast_info("%g", m_roach->targ_tones[j]);
+        m_roach->targ_tones_LUT0[j] = (m_temp_freqs[j] - (double)LUT_FREQ_OFFSET)
+                                 - m_roach->lo_centerfreq;
+        m_roach->targ_tones_LUT1[j] = (m_temp_freqs[j] + (double)LUT_FREQ_OFFSET);
+                                 - m_roach->lo_centerfreq;
     }
     return 0;
 }
@@ -1544,6 +1520,8 @@ int recenter_lo(roach_state_t *m_roach)
 */
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
+    blast_info("ROACH%d, disabling LUT switch", m_roach->which - 1);
+    enable_qdr_switch(m_roach, 0);
     int ind = m_roach->which - 1;
     pi_state_t *m_bb = &pi_state_table[ind];
     double m_span;
@@ -1556,8 +1534,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA) && create_sweepdir(m_roach, TARG)) {
             // TODO(Sam) for testing, m_span = VNA_SWEEP_SPAN
-            m_span = m_roach->vna_sweep_span;
-            // m_span = VNA_SWEEP_SPAN;
+            // m_span = m_roach->vna_sweep_span;
+            m_span = VNA_SWEEP_SPAN;
             blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
             blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
             // blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", vna_search_path);
@@ -2023,7 +2001,7 @@ void *roach_cmd_loop(void* ind)
     CommandData.roach[i].auto_retune = 1;
     char tname[10];
     if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
-    blast_tfatal("Could not name thread for roach%i", i);
+        blast_tfatal("Could not name thread for roach%i", i);
     }
     ph_thread_set_name(tname);
     nameThread(tname);
@@ -2045,48 +2023,47 @@ void *roach_cmd_loop(void* ind)
     roach_state_table[i].status = ROACH_STATUS_BOOT;
     roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
     while (!shutdown_mcp) {
-        // TODO(SAM/LAURA): Fix Roach 1/Add error handling
+         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
-    if (CommandData.roach[i].roach_state) {
-        roach_state_table[i].status = CommandData.roach[i].roach_state;
+        if (CommandData.roach[i].roach_state) {
+            roach_state_table[i].status = CommandData.roach[i].roach_state;
         // CommandData.roach[i].change_state = 0;
-    }
-    if (CommandData.roach[i].do_sweeps == 0) {
-        roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
-    }
-    if (CommandData.roach[i].switch_period) {
-        roach_write_int(&roach_state_table[i], "switch_period", CommandData.roach_params[i].switch_period, 0);
-    }
-    /*
-    if (CommandData.roach[i].find_kids) {
-        roach_state_table[i].last_targ_path = make_dir(&roach_state_table[i], roach_state_table[i].targ_path_root);
-        if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
-                                 roach_state_table[i].last_targ_path)) > 0) {
-        CommandData.roach[i].find_kids = 0;
-        } else { blast_info("ROACH%d: Failed to find kids", i + 1); }
-    }*/
-    if (CommandData.roach[i].set_attens) {
-        if (set_atten(&rudat_state_table[i]) < 0) {
-            blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
-        } else {
-            CommandData.roach[i].set_attens = 0;
         }
-    }
-    if ((CommandData.roach[i].opt_tones) &&
-                         (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
-        if (optimize_targ_tones(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
-            blast_info("ROACH%d: Opt tones success", i + 1);
-        } else {
-             blast_info("ROACH%d: Failed to optimize target tones", i + 1);
+        if (CommandData.roach[i].do_sweeps == 0) {
+            roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
         }
-        CommandData.roach[i].opt_tones = 0;
-    }
-    // The following is initialization
-    if (pi_state_table[i].status == PI_STATUS_BOOT &&
+        /* if (CommandData.roach[i].switch_period) {
+            roach_write_int(&roach_state_table[i], "switch_period", CommandData.roach_params[i].period, 0);
+        } */
+        /*if (CommandData.roach[i].find_kids) {
+            roach_state_table[i].last_targ_path = make_dir(&roach_state_table[i], roach_state_table[i].targ_path_root);
+            if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
+                                     roach_state_table[i].last_targ_path)) > 0) {
+            CommandData.roach[i].find_kids = 0;
+            } else { blast_info("ROACH%d: Failed to find kids", i + 1); }
+        } */
+        if (CommandData.roach[i].set_attens) {
+            if (set_atten(&rudat_state_table[i]) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+            } else {
+                CommandData.roach[i].set_attens = 0;
+            }
+        }
+        if ((CommandData.roach[i].opt_tones) &&
+                             (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
+            if (optimize_targ_tones(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
+                blast_info("ROACH%d: Opt tones success", i + 1);
+            } else {
+                 blast_info("ROACH%d: Failed to optimize target tones", i + 1);
+            }
+            CommandData.roach[i].opt_tones = 0;
+        }
+        // The following is initialization
+        if (pi_state_table[i].status == PI_STATUS_BOOT &&
                          pi_state_table[i].desired_status > PI_STATUS_BOOT) {
-        blast_info("Initializing Pi%d ...", i + 1);
-        pi_state_table[i].which = i + 1;
-        pi_state_table[i].pi_comm = remote_serial_init(i, NC2_PORT);
+            blast_info("Initializing Pi%d ...", i + 1);
+            pi_state_table[i].which = i + 1;
+            pi_state_table[i].pi_comm = remote_serial_init(i, NC2_PORT);
         while (!pi_state_table[i].pi_comm->connected) {
             // blast_info("We can't connect to bb%d.", i+1);
             usleep(2000);
@@ -2202,6 +2179,8 @@ void *roach_cmd_loop(void* ind)
         roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);
         usleep(3000);
         blast_info("ROACH%d, Initializing VNA sweep", i + 1);
+        blast_info("ROACH%d, disabling LUT switch", i + 1);
+        enable_qdr_switch(&roach_state_table[i], 0);
         blast_info("ROACH%d, Starting VNA sweep...", i + 1);
         status = roach_do_sweep(&roach_state_table[i], VNA);
         if ((status == SWEEP_SUCCESS)) {
@@ -2256,6 +2235,9 @@ void *roach_cmd_loop(void* ind)
     }
     if (roach_state_table[i].status == ROACH_STATUS_TARG &&
           roach_state_table[i].desired_status >= ROACH_STATUS_POP_LUTS) {
+          if (calc_grad_freqs(&roach_state_table[i], targ_search_path) < 0) {
+              blast_info("ROACH%d, Error finding GRAD freqs", i + 1);
+          }
         blast_info("ROACH%d, Writing tone LUTs...", i + 1);
         roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones_LUT0,
                                               roach_state_table[i].num_kids);
@@ -2264,6 +2246,8 @@ void *roach_cmd_loop(void* ind)
         blast_info("ROACH%d, calculating ref grads and DF...", i + 1);
         roach_calc_df(&roach_state_table[i]);
         roach_state_table[i].status = ROACH_STATUS_POP_LUTS;
+        blast_info("ROACH%d, enabling LUT switch", i + 1);
+        enable_qdr_switch(&roach_state_table[i], 1);
         roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
     }
     if (roach_state_table[i].status == ROACH_STATUS_POP_LUTS &&

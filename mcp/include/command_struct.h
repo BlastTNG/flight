@@ -346,7 +346,7 @@ typedef struct roach_params
     double in_atten;
     double out_atten;
 //  Switch period
-    unsigned int switch_period;
+    unsigned int period;
 } roach_params_t;
 
 typedef struct {

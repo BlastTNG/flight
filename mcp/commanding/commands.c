@@ -1832,8 +1832,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case switch_period:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].switch_period = rvalues[1];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 1) && rvalues[1] <= 10)) {
+          CommandData.roach_params[ivalues[0]-1].period = rvalues[1];
+          CommandData.roach[ivalues[0]-1].switch_period = 1;
       }
       break;
       /*************************************
@@ -2690,7 +2691,7 @@ void InitCommandData()
         // set_attens
         CommandData.roach_params[i].out_atten = 30;
         CommandData.roach_params[i].in_atten = 16;
-        CommandData.roach_params[i].switch_period = 3;
+        CommandData.roach_params[i].period = 3;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
