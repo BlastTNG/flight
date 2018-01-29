@@ -838,7 +838,7 @@ uint16 ecx_statecheck(ecx_contextt *context, uint16 slave, uint16 reqstate, int 
 
    if ( slave > *(context->slavecount) )
    {
-      return 0;
+       return 0;
    }
    osal_timer_start(&timer, timeout);
    configadr = context->slavelist[slave].configadr;
@@ -861,7 +861,7 @@ uint16 ecx_statecheck(ecx_contextt *context, uint16 slave, uint16 reqstate, int 
       state = rval & 0x000f; /* read slave status */
       if (state != reqstate)
       {
-         osal_usleep(1000);
+	 osal_usleep(1000);
       }
    }
    while ((state != reqstate) && (osal_timer_is_expired(&timer) == FALSE));

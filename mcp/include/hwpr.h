@@ -45,7 +45,7 @@
 #define HWPR_POT_MIN 0.1
 #define HWPR_POT_MAX 0.9
 
-#define HWPR_DEFAULT_STEP 7292 // used if pot is dead
+#define HWPR_DEFAULT_STEP 22.5 // used if pot is dead
 
 void DoHWPR(struct ezbus* bus);
 void StoreHWPRBus(void);

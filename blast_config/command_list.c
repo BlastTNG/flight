@@ -715,10 +715,10 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_goto_pot),
-    "Move wave plate rotator to commanded potentiometer value",
+    "Move wave plate rotator to commanded encoder value",
     GR_HWPR, 1,
     {
-      {"Pot Value ", 0.1, 0.9, 'f', "POT_HWPR"},
+      {"Encoder Value ", 0.0, 360.0, 'f', "POT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_overshoot),

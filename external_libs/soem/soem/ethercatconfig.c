@@ -347,9 +347,11 @@ int ecx_config_init(ecx_contextt *context, uint8 usetable)
    EC_PRINT("ec_config_init %d\n",usetable);
    ecx_init_context(context);
    wkc = ecx_detect_slaves(context);
+
    if (wkc > 0)
    {
       ecx_set_slaves_to_default(context);    
+
       for (slave = 1; slave <= *(context->slavecount); slave++)
       {
          ADPh = (uint16)(1 - slave);
@@ -1411,6 +1413,7 @@ int ec_config(uint8 usetable, void *pIOmap)
 {
    int wkc;
    wkc = ec_config_init(usetable);
+
    if (wkc)
    {   
       ec_config_map(pIOmap);

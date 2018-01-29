@@ -1498,7 +1498,7 @@ void *ActuatorBus(void *param)
             CommandData.actbus.force_repoll = 0;
         }
 
-        if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
             // suppress non-error messages during repoll
             bus.chatter = EZ_CHAT_ERR;
             all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);

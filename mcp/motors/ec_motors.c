@@ -93,12 +93,12 @@ static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
 /**
  * Memory mapping for the PDO variables
  */
-static char io_map[1024];
+static char io_map[4096];
 // static char io_map[8192]; // DEBUG PCA
 
 static int motors_exit = false;
 
-#define N_MCs 5
+#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
 
 /**
  * The following pointers reference data points read from/written to
@@ -142,6 +142,11 @@ static uint32_t *hwp_position = (uint32_t*) &dummy_var;
 uint32_t hwp_get_position(void)
 {
     return *hwp_position;
+}
+
+uint16_t hwp_get_state(void)
+{
+    return ec_slave[hwp_index].state;
 }
 
 /**
