@@ -186,7 +186,7 @@ int get_roach_status(uint16_t ind)
 
 void enable_qdr_switch(roach_state_t *m_roach, int enable)
 {
-    roach_write_int(m_roach, "qdr_switch", enable, 0);
+    roach_write_int(m_roach, "switch_enable", enable, 0);
 }
 
 void roach_switch_LUT(uint16_t ind)
@@ -491,7 +491,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
         // blast_info("m_freq = %g", m_freqs[i]);
     }
-
     comb_fft_len = LUT_BUFFER_LEN;
     complex double *spec = calloc(comb_fft_len, sizeof(complex double));
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
@@ -500,8 +499,10 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     srand48(time(NULL));
     for (size_t i = 0; i < m_freqlen; i++) {
         int bin = roach_fft_bin_idx(m_freqs, i, comb_fft_len, m_samp_freq);
-        if (bin < 0) {
-            bin += comb_fft_len;
+        if (bin < 0) bin += comb_fft_len;
+        if (bin >= LUT_BUFFER_LEN/2.) {
+            blast_info("Write Error: DAC freqs too high, resweep recommended");
+            return -1;
         }
         alpha = drand48() * 2.0 * M_PI;
         spec[bin] = cexp(_Complex_I * alpha);
@@ -916,6 +917,12 @@ void roach_write_QDR(roach_state_t *m_roach)
 void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     m_roach->write_flag = 1;
+    if (!m_roach->rpc_conn) {
+        blast_info("KATCP read collision");
+    } else  {
+        m_roach->lut_idx = roach_read_int(m_roach, "qdr_switch");
+        blast_info("ROACH%d lut idx = %d", m_roach->which, m_roach->lut_idx);
+    }
     roach_init_DACDDC_LUTs(m_roach, LUT_BUFFER_LEN);
     roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen);
     roach_define_DDC_LUT(m_roach, m_freqs, m_freqlen);
@@ -1245,11 +1252,14 @@ void roach_timestamp_init(uint16_t ind)
     time_t seconds;
     seconds = time(NULL);
     // blast_info("ROACH1 time = %u", (uint32_t)seconds);
-    if (!roach_state_table[ind].write_flag) {
-        usleep(3000);
+    // if writing, break out and try again
+    if (roach_state_table[ind].write_flag || !roach_state_table[ind].rpc_conn) {
+        return;
+    } else {
+        roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
+        // roach_read_int(&roach_state_table[ind], "GbE_ctime");
+        return;
     }
-    roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
-    // roach_read_int(&roach_state_table[ind], "GbE_ctime");
 }
 
 /* Function: get_path
@@ -1812,7 +1822,7 @@ void roach_auto_retune(int16_t ind)
                 m_roach.targ_tones_LUT1[chan] += m_roach.df[chan];
             }
         }
-        blast_info("ROACH%d, Writing tone LUTs...", m_roach.which - 1);
+        // blast_info("ROACH%d, Writing tone LUTs...", m_roach.which - 1);
         roach_write_tones(&m_roach, m_roach.targ_tones_LUT0, m_roach.num_kids);
         roach_write_tones(&m_roach, m_roach.targ_tones_LUT1, m_roach.num_kids);
     }
