@@ -1142,12 +1142,13 @@ void roach_timestamp_init(uint16_t ind)
 {
     time_t seconds;
     seconds = time(NULL);
-    // blast_info("ROACH1 time = %u", (uint32_t)seconds);
-    if (!roach_state_table[ind].write_flag) {
+    if (roach_state_table[ind].write_flag || !roach_state_table[ind].rpc_conn) {
+        return;
+    } else {
         roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
-        sleep(0.1);
+        // roach_read_int(&roach_state_table[ind], "GbE_ctime");
+        return;
     }
-    // roach_read_int(&roach_state_table[ind], "GbE_ctime");
 }
 
 /* Function: get_path

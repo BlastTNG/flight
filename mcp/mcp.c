@@ -403,7 +403,7 @@ static void mcp_1hz_routines(void)
     framing_publish_1hz();
     store_data_1hz();
     for (int i = 0; i < NUM_ROACHES; i++) {
-        if (get_roach_status(i) >= 6) roach_timestamp_init(i);
+        roach_timestamp_init(i);
     }
 }
 
