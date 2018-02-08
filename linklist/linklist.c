@@ -56,10 +56,9 @@ unsigned int get_channel_size(const channel_t * chan)
   }
 }
 
-unsigned int get_channel_spf(const channel_t * chan)
+unsigned int get_spf(unsigned int rate)
 {
-  if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
-  switch (chan->rate)
+  switch (rate)
   {
     case RATE_1HZ:
       return 1;
@@ -74,9 +73,16 @@ unsigned int get_channel_spf(const channel_t * chan)
     case RATE_488HZ:
       return 488;
     default:
-      blast_err("Invalid rate %d for channel %s", chan->rate, chan->field);
       return 0;
   }
+}
+
+unsigned int get_channel_spf(const channel_t * chan)
+{
+  if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
+  unsigned int rate = get_spf(chan->rate);
+  if (!rate) blast_err("Invalid rate %d for channel %s", chan->rate, chan->field);
+  return rate;
 }
 
 void realloc_list(struct link_list * ll, int * x)
@@ -400,6 +406,15 @@ int main(int argc, char *argv[])
 {
   channels_initialize(channel_list);
   linklist_t * test_ll = parse_linklist("test.ll");
+
+/*
+  channel_t * chan;
+
+  for (chan = channel_list; chan->field[0]; chan++)
+  {
+    if (chan->rate == RATE_1HZ) printf("%s %d %d\n",chan->field,get_channel_start_in_superframe(chan),get_channel_skip_in_superframe(chan));
+  }
+*/
 }
 
 #endif
