@@ -25,7 +25,7 @@
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
-superframe_t mainframe = {0};
+superframe_t superframe = {0};
 
 // allocates the 1 Hz superframe needed for linklist compression
 uint32_t allocate_superframe(const channel_t * const m_channel_list)
@@ -35,22 +35,25 @@ uint32_t allocate_superframe(const channel_t * const m_channel_list)
   uint32_t blk_size = 0;
   uint32_t byte_loc = 0;
 
+  superframe.offset = calloc(sizeof(uint32_t),RATE_END);
+  superframe.skip = calloc(sizeof(uint32_t),RATE_END);
+
   for (rate = 0; rate<RATE_END; rate++) 
   {
-    mainframe.offset[rate] = byte_loc;
-    mainframe.skip[rate] = frame_size[rate];
+    superframe.offset[rate] = byte_loc;
+    superframe.skip[rate] = frame_size[rate];
     byte_loc += frame_size[rate]*get_spf(rate);
   }
 
   blast_info("%d bytes allocated for superframe\n", byte_loc);
-  mainframe.data = calloc(1,byte_loc);
+  superframe.data = calloc(1,byte_loc);
 
   return byte_loc;
 }
 
 uint32_t get_channel_start_in_superframe(const channel_t * chan)
 {
-  if (!mainframe.data)
+  if (!superframe.offset)
   {
     blast_err("get_channel_start_in_superframe: superframe is not allocated. Fix!");
     return 0;
@@ -60,14 +63,61 @@ uint32_t get_channel_start_in_superframe(const channel_t * chan)
     blast_err("get_channel_start_in_superframe: channel is not in channel_list");
     return 0;
   }
-  return ((long unsigned int) (chan->var-channel_data[chan->rate])) + mainframe.offset[chan->rate];
+  return ((long unsigned int) (chan->var-channel_data[chan->rate])) + superframe.offset[chan->rate];
 }
 
 uint32_t get_channel_skip_in_superframe(const channel_t * chan)
 {
-  return mainframe.skip[chan->rate];
+	if (!superframe.skip)
+  {
+    blast_err("get_channel_skip_in_superframe: superframe is not allocated. Fix!");
+    return 0;
+  }
+  return superframe.skip[chan->rate];
 }
 
+/**
+ * add_frame_to_superframe
+ * 
+ * Takes a BLAST frame at a given rate and copies it to the superframe.
+ * -> frame: BLAST frame to be copied to the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate)
+{
+  static unsigned int frame_location = 0;
+  if (!superframe.data)
+	{
+    blast_err("add_frame_to_superframe: superframe is not allocated. Fix!");
+    return 0;
+  }
+  
+  // clear the frame if wrapping has occurred (ensures no split data)
+  if (frame_location == 0)
+  {
+    memset(superframe.data+superframe.offset[rate],0,frame_size[rate]*get_spf(rate));
+  }
+
+  // copy the frame to the superframe
+  memcpy(superframe.data+superframe.offset[rate]+superframe.skip[rate]*frame_location,frame,frame_size[rate]);
+
+  // update the frame location
+  frame_location = (frame_location+1)%get_spf(rate);
+
+  // return the next frame location in the superframe 
+  // (0 indicates that frame will wrap on next function call)
+  return frame_location;
+}
+
+/**
+ * compress_linklist
+ * 
+ * Selects channels from and compresses a superframe according to the provide
+ * linklist format.
+ * -> buffer_out: buffer in which compressed frame will be written
+ * -> ll: pointer to linklist specifying compression and channel selection
+ * -> buffer_in: pointer to the superframe to be compressed
+ */
 int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
   int i,j;
@@ -166,6 +216,15 @@ int fill_linklist_with_saved(struct link_list * req_ll, int p_start, int p_end, 
 }
 */
 
+/**
+ * decompress_linklist
+ * 
+ * Selects channels from and compresses a superframe according to the provide
+ * linklist format.
+ * -> buffer_out: buffer in which decompressed superframe will be written
+ * -> ll: pointer to linklist specifying compression and channel selection
+ * -> buffer_in: pointer to the compressed frame to be decompressed
+ */
 double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
   int i, j;

@@ -73,6 +73,7 @@ unsigned int get_spf(unsigned int rate)
     case RATE_488HZ:
       return 488;
     default:
+      blast_err("Invalid rate %d", rate);
       return 0;
   }
 }
@@ -80,9 +81,7 @@ unsigned int get_spf(unsigned int rate)
 unsigned int get_channel_spf(const channel_t * chan)
 {
   if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
-  unsigned int rate = get_spf(chan->rate);
-  if (!rate) blast_err("Invalid rate %d for channel %s", chan->rate, chan->field);
-  return rate;
+  return get_spf(chan->rate);
 }
 
 void realloc_list(struct link_list * ll, int * x)
@@ -187,7 +186,7 @@ struct link_list * parse_linklist(char *fname)
   }
 
   // initialize the superframe structure if necessary
-  if (!mainframe.data)
+  if (!superframe.data)
   {
     allocate_superframe(channel_list);
   }

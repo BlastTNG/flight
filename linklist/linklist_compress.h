@@ -11,14 +11,14 @@ extern "C"{
 
 struct superframe
 {
-  uint32_t offset[RATE_END]; // offset of frames at a rate within the superframe
-  uint32_t skip[RATE_END]; // number of bytes to skip in superframe between frames at a single rate
-  uint8_t * data;
+  uint32_t * offset; // locates the start of frames at a given rate
+  uint32_t * skip; // number of bytes to skip in superframe between frames at a particular rate
+  uint8_t * data; // 1 Hz data block for the superframe
 };
 
 typedef struct superframe superframe_t;
 
-extern superframe_t mainframe;
+extern superframe_t superframe;
 extern int (*compressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
 extern int (*decompressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
 
