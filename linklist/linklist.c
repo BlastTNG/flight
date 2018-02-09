@@ -292,7 +292,7 @@ struct link_list * parse_linklist(char *fname)
         num = atoi(temps[2]); // get compressed samples per frame 
 
         // check that comp_type is within range
-        if (comp_type >= num_compression_routines)
+        if ((comp_type >= num_compression_routines) && (comp_type != NO_COMP))
         {
           blast_err("Invalid comp. type %d for \"%s\". Defaulting to uncompressed.",comp_type,chan->field);
           comp_type = NO_COMP;
@@ -405,6 +405,63 @@ int main(int argc, char *argv[])
 {
   channels_initialize(channel_list);
   linklist_t * test_ll = parse_linklist("test.ll");
+
+  // build a superframe
+  int i;
+  int j;
+  int ret;
+  channel_t * chan;
+  memset(channel_data[RATE_1HZ],0,frame_size[RATE_1HZ]);
+  memset(channel_data[RATE_200HZ],0,frame_size[RATE_200HZ]);  
+
+  for (j=0;j<244;j++)
+  {
+    for (i=0;i<test_ll->n_entries;i++)
+    {
+      chan = test_ll->items[i].tlm;
+      if (chan)
+      {
+        if (chan->rate != RATE_1HZ) SET_VALUE(chan,j);
+        else if (j == 0) SET_VALUE(chan,i);
+      }
+    }
+    if (j == 0) 
+    {
+      add_frame_to_superframe(channel_data[RATE_1HZ],RATE_1HZ);
+    }
+    if (j<200) ret = add_frame_to_superframe(channel_data[RATE_200HZ],RATE_200HZ);
+    ret = add_frame_to_superframe(channel_data[RATE_244HZ],RATE_244HZ);
+  }
+
+  printf("Raw\n");
+  for (i=0;i<frame_size[RATE_244HZ]*get_spf(RATE_244HZ);i++)
+  {
+    if ((i%16) == 0) printf("\n");
+    printf("0x%.2x ", superframe.data[superframe.offset[RATE_244HZ]+i]);
+  }
+  printf("\n");
+
+  uint8_t * compressed_frame = calloc(1,test_ll->blk_size);
+
+  compress_linklist(compressed_frame,test_ll,superframe.data);
+
+  printf("Compressed\n");
+  for (i=0;i<test_ll->blk_size;i++)
+  {
+    if ((i%16) == 0) printf("\n");
+    printf("0x%.2x ", compressed_frame[i]);
+  }
+  printf("\n");
+
+  decompress_linklist(superframe.data,test_ll,compressed_frame);
+
+  printf("Uncompressed\n");
+  for (i=0;i<frame_size[RATE_244HZ]*get_spf(RATE_244HZ);i++)
+  {
+    if ((i%16) == 0) printf("\n");
+    printf("0x%.2x ", superframe.data[superframe.offset[RATE_244HZ]+i]);
+  }
+  printf("\n");
 
 /*
   channel_t * chan;

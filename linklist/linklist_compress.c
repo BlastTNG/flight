@@ -85,21 +85,53 @@ uint32_t get_channel_skip_in_superframe(const channel_t * chan)
  */
 unsigned int add_frame_to_superframe(void * frame, E_RATE rate)
 {
+  static unsigned int frame_location[RATE_END] = {0};
+  if (!superframe.data)
+	{
+    blast_err("Superframe is not allocated. Fix!");
+    return 0;
+  }
+  if (!frame)
+  {
+    blast_err("Frame pointer is NULL. Fix!");
+    return 0;
+  }
+  
+  // clear the frame if wrapping has occurred (ensures no split data)
+  if (frame_location[rate] == 0)
+  {
+    memset(superframe.data+superframe.offset[rate],0,frame_size[rate]*get_spf(rate));
+  }
+
+  // copy the frame to the superframe
+  memcpy(superframe.data+superframe.offset[rate]+superframe.skip[rate]*frame_location[rate],frame,frame_size[rate]);
+
+  // update the frame location
+  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+
+  // return the next frame location in the superframe 
+  // (0 indicates that frame will wrap on next function call)
+  return frame_location[rate];
+}
+
+/**
+ * extract_frame_from_superframe
+ * 
+ * Extracts a BLAST frame at a given rate from superframe and copies it to a given buffer.
+ * -> frame: BLAST frame to be copied from the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int extract_frame_from_superframe(void * frame, E_RATE rate)
+{
   static unsigned int frame_location = 0;
   if (!superframe.data)
 	{
     blast_err("add_frame_to_superframe: superframe is not allocated. Fix!");
     return 0;
   }
-  
-  // clear the frame if wrapping has occurred (ensures no split data)
-  if (frame_location == 0)
-  {
-    memset(superframe.data+superframe.offset[rate],0,frame_size[rate]*get_spf(rate));
-  }
 
-  // copy the frame to the superframe
-  memcpy(superframe.data+superframe.offset[rate]+superframe.skip[rate]*frame_location,frame,frame_size[rate]);
+  // copy the frame from the superframe
+  memcpy(frame,superframe.data+superframe.offset[rate]+superframe.skip[rate]*frame_location,frame_size[rate]);
 
   // update the frame location
   frame_location = (frame_location+1)%get_spf(rate);
@@ -324,12 +356,12 @@ double datatodouble(uint8_t * data, char type)
 {
   switch (type) 
   {
-    case TYPE_DOUBLE : return *((double *) data);
-    case TYPE_FLOAT : return *((float *) data);
-    case TYPE_INT16 : return *((int16_t *) data);
-    case TYPE_UINT16 : return *((uint16_t *) data);
-    case TYPE_INT32 : return *((int32_t *) data);
-    case TYPE_UINT32 : return *((uint32_t *) data);
+    case TYPE_DOUBLE : return bedtoh(*((double *) data));
+    case TYPE_FLOAT : return beftoh(*((float *) data));
+    case TYPE_INT16 : return (int16_t) be16toh(*((int16_t *) data)); // TODO: DOUBLE CHECK IS THIS A TYPO WITH GET_INT16!!!
+    case TYPE_UINT16 : return be16toh(*((uint16_t *) data));
+    case TYPE_INT32 : return (int32_t) be32toh(*((int32_t *) data));
+    case TYPE_UINT32 : return be32toh(*((uint32_t *) data));
     case TYPE_INT8 : return *((int8_t *) data);
     case TYPE_UINT8 : return *((uint8_t *) data);
     default : return 0;
@@ -340,50 +372,46 @@ int doubletodata(uint8_t * data, double dub, char type)
 {
   if (type == TYPE_DOUBLE)
   {
-    double d = dub;
-    memcpy(data,&d,8);
+    htobed(dub,*(uint64_t*) data);
     return 8;
   }
   else if (type == TYPE_FLOAT)
   {
-    float f = dub;
-    memcpy(data,&f,4);
+    htobef(dub,*(uint32_t*) data)
     return 4;
   }
   else if (type == TYPE_INT16)
   {
     int16_t s = dub;
-    memcpy(data,&s,2);
+    *(int16_t*) data = htobe16(s);
     return 2;
   }
   else if (type == TYPE_UINT16)
   {
     uint16_t u = dub;
-    memcpy(data,&u,2);
+    *(uint16_t*) data = htobe16(u);
     return 2;
   }
   else if (type == TYPE_INT32)
   {
     int32_t i = dub;
-    memcpy(data,&i,4);
+    *(int32_t*) data = htobe32(i);
     return 4;
   }
   else if (type == TYPE_UINT32)
   {
     uint32_t i = dub;
-    memcpy(data,&i,4);
+    *(uint32_t*) data = htobe32(i);
     return 4;
   }
   else if (type == TYPE_INT8)
   {
-    int8_t u = dub;
-    memcpy(data,&u,1);
+    *(int8_t*) data = dub;
     return 1;
   }
   else if (type == TYPE_UINT8)
   {
-    uint8_t u = dub;
-    memcpy(data,&u,1);
+    *(uint8_t*) data = dub;
     return 1;
   }
   return 0;
@@ -397,8 +425,10 @@ double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int sk
 
   if (num == 1) return datatodouble(data_in,type);
 
-  for (i=0;i<num;i++) halfsum += datatodouble(data_in+i*skip,type);
-
+  for (i=0;i<num;i++) 
+  {
+    halfsum += datatodouble(data_in+i*skip,type); 
+  }
   //ret = (halfsum+(*store))/2.0/num;
   //*store = halfsum;
   ret = halfsum/num;
