@@ -250,6 +250,7 @@ set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
 set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../linklist")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -261,6 +262,7 @@ include_directories (
     "${COMMS_DIR}/include"
     "${MPSSE_DIR}"
     "${SYNCLINK_DIR}"
+    "${LINKLIST_DIR}"
     )
 
 # add commanding objects
@@ -300,6 +302,9 @@ add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 # add MPSSE Files
 add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
 
+#add linklists files
+add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklists")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
@@ -323,6 +328,8 @@ add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
 define_file_basename_for_sources(mpsse)
+add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
+define_file_basename_for_sources(linklist)
 
 add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
 define_file_basename_for_sources(roach)

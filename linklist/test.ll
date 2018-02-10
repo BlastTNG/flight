@@ -17,4 +17,4 @@ incharge 255 1
 stage_chopper 0 10
 _TLM_CHECKSUM_
 time 1 1
-mcp_244hz_framecount 255 61
+mcp_244hz_framecount 0 61

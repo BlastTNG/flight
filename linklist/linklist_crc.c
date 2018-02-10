@@ -1,28 +1,29 @@
-/* -----------------------------------------------------------------------
- * ---------------------------- CRC FUNCTIONS ----------------------------
- * -----------------------------------------------------------------------
- * This program is distributed under the GNU General Public License (GPL).
+/* 
+ * linklist_crc.c: 
  *
- * The following was developed in the QNX Momentics IDE and compiled on
- * using QNX RTOS version 6.5.
+ * This software is copyright 
+ *  (C) 2015-2018 University of Toronto, Toronto, ON
  *
- * ------------------------- Description -------------------------------
- * These are a few simple functions used for generating and checking
- * CRC values for message validation.
+ * This file is part of the SuperBIT project, modified and adapted for BLAST-TNG.
  *
- * ---------------------------- Author ---------------------------------
- * L. Javier Romualdez (B.Eng Aerospace)
- * Institute for Aerospace Studies (UTIAS)
- * University of Toronto
+ * linklist is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Created: August 7, 2013
+ * linklist is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Copyright 2013 Javier Romualdez
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * -------------------------- Revisions --------------------------------
- *
- *
+ * History:
+ * Created on: Jan 25, 2018 by Javier Romualdez
  */
+
 
 #include <stdlib.h>
 #include <stdio.h>

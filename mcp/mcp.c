@@ -38,6 +38,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
+#include <openssl/md5.h>
 
 #include "phenom/job.h"
 #include "phenom/log.h"
@@ -74,6 +75,8 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "linklist.h"
+#include "linklist_compress.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
 #include "hwpr.h"
