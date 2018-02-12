@@ -170,16 +170,16 @@ void update_current_sensors(void) {
     static channel_t* current_loop_10_Addr;
     if (first_time_current == 1) {
         first_time_current = 0;
-        current_loop_1_Addr = channels_find_by_name("current_loop_1");
-        current_loop_2_Addr = channels_find_by_name("current_loop_2");
-        current_loop_3_Addr = channels_find_by_name("current_loop_3");
-        current_loop_4_Addr = channels_find_by_name("current_loop_4");
-        current_loop_5_Addr = channels_find_by_name("current_loop_5");
-        current_loop_6_Addr = channels_find_by_name("current_loop_6");
-        current_loop_7_Addr = channels_find_by_name("current_loop_7");
-        current_loop_8_Addr = channels_find_by_name("current_loop_8");
-        current_loop_9_Addr = channels_find_by_name("current_loop_9");
-        current_loop_10_Addr = channels_find_by_name("current_loop_10");
+        current_loop_1_Addr = channels_find_by_name("current_eth_switch");
+        current_loop_2_Addr = channels_find_by_name("current_fc1");
+        current_loop_3_Addr = channels_find_by_name("current_xsc1");
+        current_loop_4_Addr = channels_find_by_name("current_fc2");
+        current_loop_5_Addr = channels_find_by_name("current_xsc0");
+        current_loop_6_Addr = channels_find_by_name("current_ele_mot");
+        current_loop_7_Addr = channels_find_by_name("current_pivot");
+        current_loop_8_Addr = channels_find_by_name("current_rw_mot");
+        current_loop_9_Addr = channels_find_by_name("current_hd_pv");
+        current_loop_10_Addr = channels_find_by_name("current_gyros");
     }
     blast_info("Current Loops: Relay #4 = %f, Relay #8 = %f",
     			labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);

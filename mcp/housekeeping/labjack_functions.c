@@ -102,7 +102,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .connected = 0,
     },
     {
-        .which = 5,
+        .which = 5, // multiplexed pss
         .address = "labjack6",
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
@@ -110,7 +110,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .have_warned_write_reg = 0,
     },
     {
-        .which = 6,
+        .which = 6, // multiplexed of
         .address = "labjack7",
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},

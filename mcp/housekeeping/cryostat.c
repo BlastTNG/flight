@@ -491,13 +491,17 @@ static void init_cycle_channels(void) {
 }
 
 static void init_cycle_values(void) {
-    cycle_state.standby = 0;
-    cycle_state.cooling = 0;
-    cycle_state.burning_off = 0;
-    cycle_state.heating = 0;
+    // states
+    cycle_state.standby = 0; // waiting
+    cycle_state.cooling = 0; // cooling to operation temp
+    cycle_state.burning_off = 0; // cooking the charcoal
+    cycle_state.heating = 0; // heating the charcoal
+    // counter for HS cooling
     cycle_state.heat_delay = 0;
+    // temperatures of the charcoal
     cycle_state.tcharcoal = 0;
     cycle_state.tcharcoal_old = 0;
+    // array temps
     cycle_state.t250 = 0;
     cycle_state.t350 = 0;
     cycle_state.t500 = 0;
@@ -551,13 +555,16 @@ static void standby_cycle(void) {
         cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
         cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
         cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        // checks each array sequentially to see if the temperature is over the acceptable temp
         if (cycle_state.t250 > cycle_state.tcrit_fpa) {
             cycle_state.standby = 0;
             cycle_state.heating = 1;
+            blast_info("moving on to the heating phase");
         } else {
             if (cycle_state.t350 > cycle_state.tcrit_fpa) {
                 cycle_state.standby = 0;
                 cycle_state.heating = 1;
+                blast_info("moving on to the heating phase");
             } else {
                 if (cycle_state.t500 > cycle_state.tcrit_fpa) {
                     cycle_state.standby = 0;
