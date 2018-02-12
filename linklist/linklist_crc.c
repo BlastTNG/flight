@@ -34,6 +34,12 @@
 
 #include "linklist_crc.h" // CRC checks and generators for message validation
 
+#ifdef __cplusplus
+
+extern "C"{
+
+#endif
+
 unsigned short *crctable = NULL;
 
 // generates and returns a CRC table for serial validation of DPRALTE
@@ -73,4 +79,8 @@ void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *
 {
 	*accumulator = ( *accumulator << 8 ) ^ crctable[( *accumulator >> 8) ^ data];
 }
+#ifdef __cplusplus
 
+}
+
+#endif

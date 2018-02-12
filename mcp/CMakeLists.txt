@@ -357,6 +357,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
+    $<TARGET_OBJECTS:linklist>
     ) 
 
 add_dependencies(mcp soem phenomproj)
@@ -384,7 +385,7 @@ set(check_files ${POINTING_SRCS} ${MOTOR_SRCS}
 		mcp.c tx.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
-		${ROACH_HEADERS}
+		${ROACH_HEADERS} 
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)

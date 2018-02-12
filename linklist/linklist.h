@@ -31,6 +31,7 @@
 #define MAX_NUM_LINKFILE 32 
 #define LINK_HASH_MULT 233
 #define MIN_CHKSM_SPACING 200 // number of bytes after which a checksum is automatically appended
+#define PACKET_HEADER_SIZE 12
 
 #define MAX_DATA_BLOCKS 8 // maximum data blocks per linklist
 #define DEF_BLOCK_ALLOC 10000 // default block buffer size [bytes] 
@@ -89,6 +90,9 @@ typedef struct link_entry linkentry_t;
 unsigned int get_channel_size(const channel_t * );
 unsigned int get_channel_spf(const channel_t * );
 unsigned int get_spf(unsigned int );
+uint16_t writeHeader(uint8_t *, uint32_t, uint32_t, uint16_t, uint16_t);
+uint16_t readHeader(uint8_t *, uint32_t*, uint32_t*, uint16_t*, uint16_t*);
+
 
 #ifdef __cplusplus
 }

@@ -523,11 +523,13 @@ int main(int argc, char *argv[])
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
-
   framing_init(channel_list, derived_list);
   initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
+
+// initialize linklists
+  linklist_t * test_ll = parse_linklist("/data/etc/linklists/test.ll");
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);

@@ -59,11 +59,75 @@
 #define MULT '|'
 #define DESC '"'
 
+#ifdef __cplusplus
+
+extern "C" {
+
+#endif
+
 int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
 
-// TODO: this can be replaced by channel_size in "channels_tng.c", but it currently isn't publically available...
+/* packet header (12 bytes)
+ * ----------------
+ * [0-3] = unique sender recver serial
+ * [4-7] = frame number/frame size
+ * [8-9] = packet number
+ * [10-11] = total number of packets
+ */
+uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint16_t i_pkt, uint16_t n_packets)
+{
+  // allocate crc table if necessary
+  if (crctable == NULL)
+  {
+    if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
+    {
+      blast_fatal("mk_crctable() memory allocation failed\n");
+    }
+  }
+
+  int j;
+  uint16_t checksum = 0;
+
+  // build header
+  *((uint32_t *) (header+0)) = serial;
+  *((uint32_t *) (header+4)) = frame_num;
+  *((uint16_t *) (header+8)) = i_pkt;
+  *((uint16_t *) (header+10)) = n_packets;
+
+  for (j=0;j<PACKET_HEADER_SIZE;j++) crccheck(header[j],&checksum,crctable); // check the checksum
+
+  return checksum;
+}
+
+uint16_t readHeader(uint8_t * header, uint32_t *ser, uint32_t *frame_num, uint16_t *i_pkt, uint16_t *n_pkt)
+{
+  // allocate crc table if necessary
+  if (crctable == NULL)
+  {
+    if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
+    {
+      blast_fatal("mk_crctable() memory allocation failed\n");
+    }
+  }
+
+  int j;
+  uint16_t checksum = 0;
+
+  // extract header
+  *ser = *(uint32_t *) (header+0);
+  *frame_num = *(uint32_t *) (header+4);
+  *i_pkt = *(uint16_t *) (header+8);
+  *n_pkt = *(uint16_t *) (header+10);
+
+  for (j=0;j<PACKET_HEADER_SIZE;j++) crccheck(header[j],&checksum,crctable); // check the checksum
+
+  return checksum;
+}
+
+
+// TODO(javier): this can be replaced by channel_size in "channels_tng.c", but it currently isn't publically available...
 unsigned int get_channel_size(const channel_t * chan)
 {
   if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
@@ -218,12 +282,6 @@ struct link_list * parse_linklist(char *fname)
     num_compression_routines = MIN(c,d);
   }
 
-  // initialize the superframe structure if necessary
-  if (!superframe.data)
-  {
-    allocate_superframe(channel_list);
-  }
-
   FILE * cf = fopen(fname,"r"); 
   if (cf == NULL)
   {
@@ -292,7 +350,6 @@ struct link_list * parse_linklist(char *fname)
       if ((chksm_count >= MIN_CHKSM_SPACING) && !no_auto_min_checksum)
       {
         blk_size = set_checksum_field(&(ll->items[ll->n_entries]),byteloc);
-        //MD5_Update(&mdContext, &ll->items[ll->n_entries], sizeof(struct link_entry)-sizeof(struct telem_entry *));
 				update_linklist_hash(&mdContext,&ll->items[ll->n_entries]);
         byteloc += blk_size;
         ll->n_entries++;
@@ -336,7 +393,7 @@ struct link_list * parse_linklist(char *fname)
         ll->items[ll->n_entries].start = byteloc;
         ll->items[ll->n_entries].num = num;
 
-/*  TODO: blocks
+/*  TODO(javier): blocks
         if (ll->items[ll->n_entries].tlm->type == 'B') // data block field
         {
           if (ll->num_blocks < MAX_DATA_BLOCKS)
@@ -402,7 +459,7 @@ struct link_list * parse_linklist(char *fname)
   MD5_Final(md5hash,&mdContext);
   memcpy(ll->serial,md5hash,MD5_DIGEST_LENGTH);
 
-	
+/*	
   // print result
   for (i=0;i<ll->n_entries;i++)
   {
@@ -419,7 +476,7 @@ struct link_list * parse_linklist(char *fname)
   for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
   printf("\n");
   printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
-	
+*/
 
   return ll;
 }
@@ -438,6 +495,7 @@ int main(int argc, char *argv[])
 {
   channels_initialize(channel_list);
   linklist_t * test_ll = parse_linklist("test.ll");
+  uint8_t * superframe = allocate_superframe();
 
   // build a superframe
   int i;
@@ -454,29 +512,41 @@ int main(int argc, char *argv[])
       chan = test_ll->items[i].tlm;
       if (chan)
       {
-        if (chan->rate != RATE_1HZ) SET_VALUE(chan,j);
+        if (chan->rate != RATE_1HZ) 
+        {
+          SET_VALUE(chan,j);
+        }
         else if (j == 0) SET_VALUE(chan,i);
       }
     }
     if (j == 0) 
     {
-      add_frame_to_superframe(channel_data[RATE_1HZ],RATE_1HZ);
+      add_frame_to_superframe(channel_data[RATE_1HZ],RATE_1HZ,superframe);
     }
-    if (j<200) ret = add_frame_to_superframe(channel_data[RATE_200HZ],RATE_200HZ);
-    ret = add_frame_to_superframe(channel_data[RATE_244HZ],RATE_244HZ);
+    if (j<200) ret = add_frame_to_superframe(channel_data[RATE_200HZ],RATE_200HZ,superframe);
+    ret = add_frame_to_superframe(channel_data[RATE_244HZ],RATE_244HZ,superframe);
+    chan = channels_find_by_name("mcp_244hz_framecount");
+    if (chan)
+    {
+      if (chan->rate == RATE_244HZ) 
+      {
+        if ((j%4) == 0) printf("\n");
+        printf("%d: 0x%.8x ",ret,j);
+      }
+    }
   }
 
-  printf("Raw\n");
+  printf("\nRaw\n");
   for (i=0;i<frame_size[RATE_244HZ]*get_spf(RATE_244HZ);i++)
   {
     if ((i%16) == 0) printf("\n");
-    printf("0x%.2x ", superframe.data[superframe.offset[RATE_244HZ]+i]);
+    printf("0x%.2x ", superframe[superframe_offset[RATE_244HZ]+i]);
   }
   printf("\n");
 
   uint8_t * compressed_frame = calloc(1,test_ll->blk_size);
 
-  compress_linklist(compressed_frame,test_ll,superframe.data);
+  compress_linklist(compressed_frame,test_ll,superframe);
 
   printf("Compressed\n");
   for (i=0;i<test_ll->blk_size;i++)
@@ -486,24 +556,24 @@ int main(int argc, char *argv[])
   }
   printf("\n");
 
-  decompress_linklist(superframe.data,test_ll,compressed_frame);
+  decompress_linklist(superframe,test_ll,compressed_frame);
 
   printf("Uncompressed\n");
-  for (i=0;i<frame_size[RATE_244HZ]*get_spf(RATE_244HZ);i++)
+  for (i=0;i<get_spf(RATE_244HZ);i++)
   {
-    if ((i%16) == 0) printf("\n");
-    printf("0x%.2x ", superframe.data[superframe.offset[RATE_244HZ]+i]);
+    if ((i%4) == 0) printf("\n");
+    int act = extract_frame_from_superframe(channel_data[RATE_244HZ],RATE_244HZ,superframe);
+    uint32_t val;
+    GET_VALUE(channels_find_by_name("mcp_244hz_framecount"),val);
+    printf("%d: 0x%.8x ", act, val);
   }
   printf("\n");
 
-/*
-  channel_t * chan;
+}
 
-  for (chan = channel_list; chan->field[0]; chan++)
-  {
-    if (chan->rate == RATE_1HZ) printf("%s %d %d\n",chan->field,get_channel_start_in_superframe(chan),get_channel_skip_in_superframe(chan));
-  }
-*/
+#endif
+
+#ifdef __cplusplus
 }
 
 #endif
