@@ -332,6 +332,7 @@ typedef struct roach
     unsigned int set_rudats;
     unsigned int set_attens;
     unsigned int find_kids;
+    unsigned int adc_rms;
 } roach_status_t;
 
 typedef struct roach_params

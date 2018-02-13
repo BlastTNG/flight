@@ -1815,7 +1815,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
           CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
-	  CommandData.roach[ivalues[0]-1].set_attens = 1;
+          CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
     case find_kids:
@@ -1823,7 +1823,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
           CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
-	  CommandData.roach[ivalues[0]-1].find_kids = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
+      }
+      break;
+    case show_adc_rms:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].adc_rms = 1;
       }
       break;
       /*************************************
@@ -2357,17 +2362,18 @@ void InitCommandData()
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
 
-	for (i = 0; i < NUM_ROACHES; i++) {
-		CommandData.roach[i].set_rudats = 0;
-		CommandData.roach[i].set_attens = 0;
-		CommandData.roach[i].df_calc = 0; // Sets reference gradients
-		CommandData.roach[i].auto_retune = 0;
-		CommandData.roach[i].do_sweeps = 1;
-		CommandData.roach[i].new_state = 0;
-		CommandData.roach[i].change_state = 0;
-		CommandData.roach[i].find_kids = 0;
-		CommandData.roach[i].opt_tones = 0;
-	}
+    for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].set_rudats = 0;
+        CommandData.roach[i].set_attens = 0;
+        CommandData.roach[i].df_calc = 0; // Sets reference gradients
+        CommandData.roach[i].auto_retune = 0;
+        CommandData.roach[i].do_sweeps = 1;
+        CommandData.roach[i].new_state = 0;
+        CommandData.roach[i].change_state = 0;
+        CommandData.roach[i].find_kids = 0;
+        CommandData.roach[i].opt_tones = 0;
+        CommandData.roach[i].adc_rms = 0;
+    }
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;

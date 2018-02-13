@@ -912,6 +912,11 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
+  {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

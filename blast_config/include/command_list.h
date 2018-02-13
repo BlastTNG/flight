@@ -238,6 +238,7 @@ enum multiCommand {
   opt_tones,
   auto_retune,
   end_sweep,
+  show_adc_rms,
   load_new_tone_amplitudes,
   cal_attens,
   set_attens,
