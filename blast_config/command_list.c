@@ -921,7 +921,18 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(switch_period), "Set the LUT switch period in integer number of seconds", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"switching period in seconds (1 - 10)", 1, 10, 'i', "NONE"}
+      {"switching period in seconds (1 - 10)", 1, 10, 'i', "NONE"},
+    }
+  },
+  {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(test_tone), "Writes a single test tone to the DAC comb", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
     }
   },
   /***************************************/

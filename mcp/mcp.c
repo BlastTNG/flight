@@ -385,6 +385,7 @@ static void mcp_2hz_routines(void)
     xsc_write_data(0);
     xsc_write_data(1);
 }
+
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
@@ -631,7 +632,7 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
+  // pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 

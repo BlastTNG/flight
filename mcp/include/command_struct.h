@@ -334,6 +334,8 @@ typedef struct roach
     unsigned int find_kids;
     unsigned int roach_state;
     unsigned int switch_period;
+    unsigned int adc_rms;
+    unsigned int test_tone;
 } roach_status_t;
 
 typedef struct roach_params
@@ -347,6 +349,7 @@ typedef struct roach_params
     double out_atten;
 //  Switch period
     unsigned int period;
+    double test_freq;
 } roach_params_t;
 
 typedef struct {

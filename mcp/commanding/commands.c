@@ -1836,6 +1836,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].period = rvalues[1];
           CommandData.roach[ivalues[0]-1].switch_period = 1;
       }
+    case show_adc_rms:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].adc_rms = 1;
+      }
+      break;
+    case test_tone:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 1.0e6) && rvalues[1] <= 250.0e6)) {
+          CommandData.roach_params[ivalues[0]-1].test_freq = rvalues[1];
+          CommandData.roach[ivalues[0]-1].test_tone = 1;
+      }
       break;
       /*************************************
       ************** Bias  ****************/
@@ -2373,11 +2383,13 @@ void InitCommandData()
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].df_calc = 0; // Sets reference gradients
         CommandData.roach[i].auto_retune = 0;
-        CommandData.roach[i].do_sweeps = 1;
+        CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].new_state = 0;
+        CommandData.roach[i].change_state = 0;
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
-        CommandData.roach[i].roach_state = 0;
+        CommandData.roach[i].adc_rms = 0;
+        CommandData.roach[i].test_tone = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2692,6 +2704,7 @@ void InitCommandData()
         CommandData.roach_params[i].out_atten = 30;
         CommandData.roach_params[i].in_atten = 16;
         CommandData.roach_params[i].period = 3;
+        CommandData.roach_params[i].test_freq = 10.0125e6;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
