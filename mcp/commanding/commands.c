@@ -1831,6 +1831,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].adc_rms = 1;
       }
       break;
+    case test_tone:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 1.0e6) && rvalues[1] <= 250.0e6)) {
+          CommandData.roach_params[ivalues[0]-1].test_freq = rvalues[1];
+          CommandData.roach[ivalues[0]-1].test_tone = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2373,6 +2379,7 @@ void InitCommandData()
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
+        CommandData.roach[i].test_tone = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2686,6 +2693,7 @@ void InitCommandData()
         // set_attens
         CommandData.roach_params[i].out_atten = 30;
         CommandData.roach_params[i].in_atten = 16;
+        CommandData.roach_params[i].test_freq = 10.0125e6;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

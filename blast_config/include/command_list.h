@@ -242,6 +242,7 @@ enum multiCommand {
   load_new_tone_amplitudes,
   cal_attens,
   set_attens,
+  test_tone,
   find_kids,
   set_rox_bias_amp,
   cal_length,

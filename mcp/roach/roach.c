@@ -128,6 +128,7 @@ double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
 uint32_t srcmac0[5] = {33688323, 33688855, 33688854, 33689868, 33688865};
 uint32_t srcmac1 = 580;
+double test_freq[] = {10.0125e6};
 
 // UDP destination MAC addresses
 
@@ -883,7 +884,6 @@ int pi_read_string(pi_state_t *m_pi, int ntries, int us_timeout)
         }
         count += 1;
     }
-    blast_info("retval = %d", retval);
     return retval;
 }
 
@@ -921,7 +921,7 @@ int pi_write_string(pi_state_t *m_pi, uint8_t *m_data, size_t m_len)
 void roach_read_adc(roach_state_t *m_roach)
 {
     size_t buffer_len = (1<<12);
-    int16_t *temp_data;
+    uint16_t *temp_data;
     char* filename;
     char save_path[] = "/home/fc1user/sam_tests/";
     double irms, qrms, ival, qval, isum, qsum;
@@ -940,25 +940,20 @@ void roach_read_adc(roach_state_t *m_roach)
            "adc_snap_adc_snap_bram", 0, buffer_len * sizeof(uint16_t), QDR_TIMEOUT);
     blast_tmp_sprintf(filename, "%s/adc_vals.dat", save_path);
     FILE *fd = fopen(filename, "w");
-    // roach_buffer_ntohs((uint16_t*)temp_data, buffer_len);
+    roach_buffer_htons((uint16_t*)temp_data, buffer_len);
     isum = 0;
     qsum = 0;
     for (size_t i = 0; i < buffer_len; i++) {
-        // fprintf(fd, "%f\n", (double)((int32_t)temp_data[i]));
         if (i % 2 == 0) {
-            ival = (double)((int32_t)temp_data[i]);
-            blast_info("casted Ival = %f", ival);
-            // ival = htons(ival);
-            ival /= pow(2, 15);
+            ival = (double)((int16_t)temp_data[i]);
             ival *= 550.;
+            ival /= pow(2, 15);
             fprintf(fd, "%f\n", ival);
-            blast_info("norm Ival = %f", ival);
             isum += pow(ival, 2);
         } else {
-            qval = (double)((int32_t)temp_data[i]);
-            // qval = htons(qval);
-            qval /= pow(2, 15);
+            qval = (double)((int16_t)temp_data[i]);
             qval *= 550.;
+            qval /= pow(2, 15);
             fprintf(fd, "%f\n", qval);
             qsum += pow(qval, 2);
         }
@@ -1960,6 +1955,13 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
+    if (CommandData.roach[i].test_tone) {
+        blast_info("Roach%d: Writing test freq %g Hz", i + 1,
+                           CommandData.roach_params[i].test_freq);
+        roach_write_tones(&roach_state_table[i],
+                       &CommandData.roach_params[i].test_freq, 1);
+        CommandData.roach[i].test_tone = 0;
+    }
     if (CommandData.roach[i].adc_rms) {
         roach_read_adc(&roach_state_table[i]);
         CommandData.roach[i].adc_rms = 0;
@@ -2105,6 +2107,7 @@ void *roach_cmd_loop(void* ind)
         roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
         blast_info("ROACH%d, Generating search comb...", i + 1);
         roach_vna_comb(&roach_state_table[i]);
+        // roach_write_tones(&roach_state_table[i], test_freq, 1);
         roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
                                               roach_state_table[i].vna_comb_len);
         blast_info("ROACH%d, Search comb uploaded", i + 1);

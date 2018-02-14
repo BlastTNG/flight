@@ -917,6 +917,12 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(test_tone), "Writes a single test tone to the DAC comb", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

@@ -333,6 +333,7 @@ typedef struct roach
     unsigned int set_attens;
     unsigned int find_kids;
     unsigned int adc_rms;
+    unsigned int test_tone;
 } roach_status_t;
 
 typedef struct roach_params
@@ -344,6 +345,7 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double test_freq;
 } roach_params_t;
 
 typedef struct {
