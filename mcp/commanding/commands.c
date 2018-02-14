@@ -2373,7 +2373,7 @@ void InitCommandData()
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].df_calc = 0; // Sets reference gradients
         CommandData.roach[i].auto_retune = 0;
-        CommandData.roach[i].do_sweeps = 1;
+        CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].new_state = 0;
         CommandData.roach[i].change_state = 0;
         CommandData.roach[i].find_kids = 0;
