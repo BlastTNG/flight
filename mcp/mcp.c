@@ -77,6 +77,7 @@
 #include "framing.h"
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "bitserver.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
 #include "hwpr.h"
