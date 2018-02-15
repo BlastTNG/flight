@@ -50,8 +50,8 @@
 
 #include "blast.h"
 #include "channels_tng.h"
+#include "CRC.h"
 #include "linklist.h"
-#include "linklist_crc.h"
 #include "linklist_compress.h"
 
 #define COMM '#'
@@ -68,64 +68,6 @@ extern "C" {
 int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
-
-/* packet header (12 bytes)
- * ----------------
- * [0-3] = unique sender recver serial
- * [4-7] = frame number/frame size
- * [8-9] = packet number
- * [10-11] = total number of packets
- */
-uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint16_t i_pkt, uint16_t n_packets)
-{
-  // allocate crc table if necessary
-  if (crctable == NULL)
-  {
-    if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
-    {
-      blast_fatal("mk_crctable() memory allocation failed\n");
-    }
-  }
-
-  int j;
-  uint16_t checksum = 0;
-
-  // build header
-  *((uint32_t *) (header+0)) = serial;
-  *((uint32_t *) (header+4)) = frame_num;
-  *((uint16_t *) (header+8)) = i_pkt;
-  *((uint16_t *) (header+10)) = n_packets;
-
-  for (j=0;j<PACKET_HEADER_SIZE;j++) crccheck(header[j],&checksum,crctable); // check the checksum
-
-  return checksum;
-}
-
-uint16_t readHeader(uint8_t * header, uint32_t *ser, uint32_t *frame_num, uint16_t *i_pkt, uint16_t *n_pkt)
-{
-  // allocate crc table if necessary
-  if (crctable == NULL)
-  {
-    if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
-    {
-      blast_fatal("mk_crctable() memory allocation failed\n");
-    }
-  }
-
-  int j;
-  uint16_t checksum = 0;
-
-  // extract header
-  *ser = *(uint32_t *) (header+0);
-  *frame_num = *(uint32_t *) (header+4);
-  *i_pkt = *(uint16_t *) (header+8);
-  *n_pkt = *(uint16_t *) (header+10);
-
-  for (j=0;j<PACKET_HEADER_SIZE;j++) crccheck(header[j],&checksum,crctable); // check the checksum
-
-  return checksum;
-}
-
 
 // TODO(javier): this can be replaced by channel_size in "channels_tng.c", but it currently isn't publically available...
 unsigned int get_channel_size(const channel_t * chan)

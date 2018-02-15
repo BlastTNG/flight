@@ -1,5 +1,5 @@
 /* 
- * linklist_crc.h: 
+ * CRC.h: 
  *
  * This software is copyright 
  *  (C) 2015-2018 University of Toronto, Toronto, ON

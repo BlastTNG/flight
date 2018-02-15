@@ -1,5 +1,5 @@
 /* 
- * linklist_crc.c: 
+ * CRC.c: 
  *
  * This software is copyright 
  *  (C) 2015-2018 University of Toronto, Toronto, ON
@@ -32,7 +32,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "linklist_crc.h" // CRC checks and generators for message validation
+#include "CRC.h" // CRC checks and generators for message validation
 
 #ifdef __cplusplus
 

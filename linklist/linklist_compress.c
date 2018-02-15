@@ -43,11 +43,11 @@
 #include <float.h>
 
 #include "blast.h"
+#include "CRC.h"
 #include "channels_tng.h"
 #include "channel_macros.h"
 #include "linklist.h"
 #include "linklist_compress.h"
-#include "linklist_crc.h"
 
 #ifdef __cplusplus
 

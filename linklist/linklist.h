@@ -90,8 +90,6 @@ typedef struct link_entry linkentry_t;
 unsigned int get_channel_size(const channel_t * );
 unsigned int get_channel_spf(const channel_t * );
 unsigned int get_spf(unsigned int );
-uint16_t writeHeader(uint8_t *, uint32_t, uint32_t, uint16_t, uint16_t);
-uint16_t readHeader(uint8_t *, uint32_t*, uint32_t*, uint16_t*, uint16_t*);
 
 
 #ifdef __cplusplus
