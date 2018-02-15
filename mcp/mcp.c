@@ -402,15 +402,15 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
     store_data_1hz();
-    for (int i = 0; i < NUM_ROACHES; i++) {
+    /*for (int i = 0; i < NUM_ROACHES; i++) {
         roach_timestamp_init(i);
-    }
+    }*/
     /*for (int i = 0; i < NUM_ROACHES; i++) {
         roach_switch_LUT(i);
     }*/
-    for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_retune_counter(i, 5);
-    }
+    /*for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_retune_counter(i, 10);
+    }*/
 }
 
 static void *mcp_main_loop(void *m_arg)

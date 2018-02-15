@@ -184,7 +184,7 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
         m_packet->Qval[i] = (float)(int32_t)(ntohl((buf[k] << 24) |
                        (buf[k + 1] << 16) | (buf[k + 2] << 8) | (buf[k + 3])));
         /* if ((i == 0) && (i_packet % 60) == 0) {
-        blast_info("i = %i, I = %f, Q = %f, ctime = %u, count = %u, status reg = %u",
+        blast_info("i = %d, I = %f, Q = %f, ctime = %u, count = %u, status reg = %u",
                     i_packet, m_packet->Ival[i], m_packet->Qval[i], m_packet->ctime,
                     m_packet->packet_count, m_packet->status_reg);
         }*/

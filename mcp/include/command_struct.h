@@ -333,6 +333,8 @@ typedef struct roach
     unsigned int set_attens;
     unsigned int find_kids;
     unsigned int roach_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
     unsigned int switch_period;
     unsigned int adc_rms;
     unsigned int test_tone;

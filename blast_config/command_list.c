@@ -912,10 +912,11 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
-  {COMMAND(roach_state), "Change Roach state", GR_ROACH, 2,
+  {COMMAND(roach_state), "Change Roach state", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"ROACH Status", 0, 11, 'i', "NONE"},
+      {"ROACH status", 0, 11, 'i', "NONE"},
+      {"ROACH desired status", 0, 11, 'i', "NONE"},
     }
   },
   {COMMAND(switch_period), "Set the LUT switch period in integer number of seconds", GR_ROACH, 2,

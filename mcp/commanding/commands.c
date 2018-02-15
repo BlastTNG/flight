@@ -1784,7 +1784,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case targ_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_ARRAY_FREQS;
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_VNA;
           CommandData.roach[ivalues[0]-1].change_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
@@ -1827,8 +1827,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case roach_state:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 11)) {
-          CommandData.roach[ivalues[0]-1].roach_state = ivalues[1];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 11)
+                           && ((ivalues[2] >= 0) && ivalues[2] <= 11)) {
+          CommandData.roach[ivalues[0]-1].roach_new_state = ivalues[1];
+          CommandData.roach[ivalues[0]-1].roach_desired_state = ivalues[2];
+          CommandData.roach[ivalues[0]-1].roach_state = 1;
       }
       break;
     case switch_period:
@@ -2386,6 +2389,7 @@ void InitCommandData()
         CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].new_state = 0;
         CommandData.roach[i].change_state = 0;
+        CommandData.roach[i].roach_state = 0;
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
