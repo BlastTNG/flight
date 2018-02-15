@@ -26,7 +26,7 @@
 
 
 #ifndef LINKLIST_COMPRESS_H_
-#define LINKLIST_COMPRESSH_
+#define LINKLIST_COMPRESS_H_
 
 #include "linklist.h"
 
@@ -50,6 +50,8 @@ uint32_t get_channel_start_in_superframe(const channel_t * );
 uint32_t get_channel_skip_in_superframe(const channel_t * );
 unsigned int add_frame_to_superframe(void * , E_RATE , void * );
 unsigned int extract_frame_from_superframe(void * , E_RATE , void *);
+void assign_superframe_to_linklist(linklist_t *, uint8_t *);
+void assign_compframe_to_linklist(linklist_t *, uint8_t *);
 
 #ifdef __cplusplus
 }

@@ -39,6 +39,9 @@
 #define ALL_FRAME_SERIAL 0x42424242
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
 
+#define SUPERFRAME_READY 0x1
+#define COMPFRAME_READ 0x2
+
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
@@ -82,14 +85,18 @@ struct link_list
   struct link_entry * items; // pointer to entries in the list
   struct block_container * blocks; // pointer to blocks
   unsigned int num_blocks; // number of data block fields
+  uint8_t data_ready; // indicates whether or not data can be read from the superframe/compframe
+  uint8_t * superframe; // a pointer to the superframe to/from which data is decompressed/compressed
+  uint8_t * compframe; // a pointer to the compressed from to/from which data is compressed/decompressed
 };
 
 typedef struct link_list linklist_t;
 typedef struct link_entry linkentry_t;
 
-unsigned int get_channel_size(const channel_t * );
-unsigned int get_channel_spf(const channel_t * );
-unsigned int get_spf(unsigned int );
+linklist_t * parse_linklist(char *);
+unsigned int get_channel_size(const channel_t *);
+unsigned int get_channel_spf(const channel_t *);
+unsigned int get_spf(unsigned int);
 
 
 #ifdef __cplusplus

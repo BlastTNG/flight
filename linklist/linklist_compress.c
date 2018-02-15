@@ -86,6 +86,16 @@ uint8_t * allocate_superframe()
   return ptr;
 }
 
+// assigns a superframe buffer to a particular linklist
+void assign_superframe_to_linklist(linklist_t * ll, uint8_t * superframe) {
+  ll->superframe = superframe;
+}
+
+// assigns a compressed frame buffer to a particular linklist
+void assign_compframe_to_linklist(linklist_t * ll, uint8_t * compframe) {
+  ll->compframe = compframe;
+}
+
 uint32_t get_channel_start_in_superframe(const channel_t * chan)
 {
   if (!superframe_size) define_superframe();
@@ -201,6 +211,22 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
   struct link_entry * tlm_le;
   uint16_t checksum = 0;
 
+  // check validity of buffers
+  if (!buffer_in) {
+    if (!ll->superframe) {
+      blast_err("buffer_in is NULL and no superframe assigned to linklist");
+      return 0;
+    }
+    buffer_in = ll->superframe;
+  }
+  if (!buffer_out) {
+    if (!ll->compframe) {
+      blast_err("buffer_out is NULL and no compframe assigned to linklist");
+      return 0;
+    }
+    buffer_out = ll->compframe;
+  }
+
   for (i=0;i<ll->n_entries;i++)
   {
     tlm_le = &(ll->items[i]);
@@ -311,6 +337,22 @@ double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer
 	uint16_t prechecksum = 0;
 	uint16_t sumcount = 0;
 	double ret = 0, tot = 0;
+
+  // check validity of buffers
+  if (!buffer_out) {
+    if (!ll->superframe) {
+      blast_err("buffer_out is NULL and no superframe assigned to linklist");
+      return 0;
+    }
+    buffer_out = ll->superframe;
+  }
+  if (!buffer_in) {
+    if (!ll->compframe) {
+      blast_err("buffer_in is NULL and no compframe assigned to linklist");
+      return 0;
+    }
+    buffer_in = ll->compframe;
+  }
 
   /* TODO PERSISENT DATA
 	if (buffer_save == NULL) buffer_save = calloc(1,frame_size*2+all_frame_size);

@@ -203,7 +203,7 @@ void update_channel_hash(MD5_CTX *mdContext, channel_t * chan)
  * -> fname: path to linklist to be parsed
  */
 
-struct link_list * parse_linklist(char *fname)
+linklist_t * parse_linklist(char *fname)
 {
   // allocate crc table if necessary
   if (crctable == NULL)
@@ -392,7 +392,10 @@ struct link_list * parse_linklist(char *fname)
   ll->n_entries++;
 
   ll->blk_size = byteloc;
-  
+  ll->superframe = NULL; // pointer initialized to NULL 
+  ll->compframe = NULL; // pointer initialized to NULL
+  ll->data_ready = 0; // set the data ready flag to none ready
+
   // update the hash
   MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
   MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
