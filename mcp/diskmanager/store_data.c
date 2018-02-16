@@ -38,11 +38,6 @@
 #include <channel_macros.h>
 #include <store_data.h>
 
-static channel_header_t *channels_pkg_1hz = NULL;
-static channel_header_t *channels_pkg_5hz = NULL;
-static channel_header_t *channels_pkg_100hz = NULL;
-static channel_header_t *channels_pkg_200hz = NULL;
-
 static store_file_info_t storage_info_1hz = {0};
 static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
@@ -124,70 +119,6 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
 	    return(-1);
 	}
     return(0);
-}
-
-//             bytes_written = store_data(&m_storage->fp, m_storage->file_name, m_storage->type, m_storage->rate,
-//                                    m_storage->mcp_framenum, &(m_storage->frames_stored), m_storage->nrate);
-
-// Handles the file_open, file_write, and file_close calls.
-int store_data_v2(store_file_info_t *m_storage)
-{
-    uint16_t bytes_written = 0;
-    if ((m_storage->frames_stored) >= STORE_DATA_FRAMES_PER_FILE * m_storage->nrate) {
-    	blast_info("Closing %s", m_storage->file_name);
-        file_close(m_storage->fp);
-        get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
-		blast_info("Opening %s", m_storage->file_name);
-        m_storage->fp = file_open(m_storage->file_name, "w+");
-        (m_storage->frames_stored) = 0;
-    }
-    if (m_storage->fp) {
-	    // blast_info("writing to %s", m_file);
-        bytes_written = file_write(m_storage->fp, channel_data[m_storage->rate], frame_size[m_storage->rate]);
-		if (bytes_written < frame_size[m_storage->rate]) {
-            blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
-                        m_storage->type, (uint16_t) frame_size[m_storage->rate], bytes_written);
-		} else {
-		    // We wrote the frame successfully.
-            (m_storage->frames_stored)++;
-		}
-		// blast_info("frames_written = %u", (*m_counter));
-		return bytes_written;
-    } else {
-	    blast_err("Failed to open file %s for writing.", m_storage->file_name);
-	    return 0;
-    }
-}
-
-// Handles the file_open, file_write, and file_close calls.
-int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
-                int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
-{
-    uint16_t bytes_written = 0;
-    if ((*m_counter) >= STORE_DATA_FRAMES_PER_FILE * m_freq) {
-    	blast_info("Closing %s", m_file);
-        file_close(*m_fp);
-        get_write_file_name(m_file, m_type, m_frame_number);
-		blast_info("Opening %s", m_file);
-        *m_fp = file_open(m_file, "w+");
-        (*m_counter) = 0;
-    }
-    if (*m_fp) {
-	    // blast_info("writing to %s", m_file);
-        bytes_written = file_write(*m_fp, channel_data[m_rate], frame_size[m_rate]);
-		if (bytes_written < frame_size[m_rate]) {
-            blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
-                        m_type, (uint16_t) frame_size[m_rate], bytes_written);
-		} else {
-		    // We wrote the frame successfully.
-            (*m_counter)++;
-		}
-		// blast_info("frames_written = %u", (*m_counter));
-		return bytes_written;
-    } else {
-	    blast_err("Failed to open file %s for writing.", m_file);
-	    return 0;
-    }
 }
 
 // Generic data storage routine that can be used for any rate or roach data;
