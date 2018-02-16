@@ -334,6 +334,9 @@ typedef struct roach
     unsigned int find_kids;
     unsigned int adc_rms;
     unsigned int test_tone;
+    unsigned int roach_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
 } roach_status_t;
 
 typedef struct roach_params

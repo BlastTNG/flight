@@ -241,6 +241,7 @@ enum multiCommand {
   show_adc_rms,
   load_new_tone_amplitudes,
   cal_attens,
+  roach_state,
   set_attens,
   test_tone,
   find_kids,

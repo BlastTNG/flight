@@ -923,6 +923,13 @@ struct mcom mcommands[plugh + 2] = {
       {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
     }
   },
+  {COMMAND(roach_state), "Change Roach state", GR_ROACH, 3,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"ROACH status", 0, 11, 'i', "NONE"},
+    {"ROACH desired status", 0, 11, 'i', "NONE"},
+  }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
