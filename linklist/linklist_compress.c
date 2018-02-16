@@ -360,9 +360,9 @@ double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer
   struct link_entry * tlm_le;
   int p_start = 0, p_end = 0;
   uint16_t checksum = 0;
-	uint16_t prechecksum = 0;
-	uint16_t sumcount = 0;
-	double ret = 0, tot = 0;
+  uint16_t prechecksum = 0;
+  uint16_t sumcount = 0;
+  double ret = 0, tot = 0;
 
   // check validity of buffers
   if (!buffer_out) {
