@@ -59,6 +59,8 @@ void pilot_compress_and_send(void *arg) {
   initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
   linklist_t * ll = NULL;
 
+  uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE);
+
   while (1) {
     // get the current pointer to the pilot linklist
     ll = *(linklist_t **) arg;
@@ -68,15 +70,18 @@ void pilot_compress_and_send(void *arg) {
       ll->data_ready &= ~SUPERFRAME_READY;
 
       // compress the linklist
-      if (!compress_linklist(NULL, ll, NULL)) continue;
+      if (!compress_linklist(compbuffer, ll, NULL)) continue;
 
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
 
       // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_pilot_bw))
       // send the data to the ground station via bitsender
-      sendToBITSender(&pilotsender, ll->compframe, ll->blk_size, 0);
+      sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
+      memset(compbuffer, 0, PILOT_MAX_PACKET_SIZE);
+
+      blast_info("Superframe compressed (serial 0x%x) and sent\n", *(uint32_t *) ll->serial);
     } else {
       usleep(100000); // zzz...
     }

@@ -58,6 +58,8 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
+uint32_t superframe_flag[RATE_END] = {0};
+
 uint32_t superframe_offset[RATE_END] = {0};
 uint32_t superframe_skip[RATE_END] = {0};
 uint32_t superframe_size = 0;
@@ -155,6 +157,8 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
 
   // return the next frame location in the superframe 
   // (0 indicates that frame will wrap on next function call)
+  superframe_flag[rate] = !frame_location[rate];
+
   return frame_location[rate];
 }
 
@@ -187,7 +191,21 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
 
   // return the next frame location in the superframe 
   // (0 indicates that frame will wrap on next function call)
+  superframe_flag[rate] = !frame_location[rate];
+
   return frame_location[rate];
+}
+
+// returns true if all frames are ready and synced to the superframe
+// i.e. superframe is ready for compression
+int superframe_data_is_ready() {
+  int i;
+  uint8_t data_ready = 1;
+  for (i = 0; i < RATE_END; i++) {
+    data_ready &= superframe_flag[i];
+    blast_info("Frame flag: %u\n", superframe_flag[i]);
+  }
+  return data_ready;
 }
 
 /**
@@ -195,9 +213,13 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
  * 
  * Selects channels from and compresses a superframe according to the provide
  * linklist format.
- * -> buffer_out: buffer in which compressed frame will be written
+ * -> buffer_out: buffer in which compressed frame will be written.
+                  If NULL, the buffer assigned to the linklist via 
+                  assign_compframe_to_linklist will be used. 
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the superframe to be compressed
+ * -> buffer_in: pointer to the superframe to be compressed. If NULL
+                  the buffer assigned to the linklist via
+                  assign_superframe_to_linklist will be used.
  */
 int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
@@ -318,9 +340,13 @@ int fill_linklist_with_saved(struct link_list * req_ll, int p_start, int p_end, 
  * 
  * Selects channels from and compresses a superframe according to the provide
  * linklist format.
- * -> buffer_out: buffer in which decompressed superframe will be written
+ * -> buffer_out: buffer in which decompressed superframe will be written.
+                  If NULL, the buffer assigned to the linklist via
+                  assign_superframe_to_linklist will be used.
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the compressed frame to be decompressed
+ * -> buffer_in: pointer to the compressed frame to be decompressed. If NULL,
+                  the buffer assigned to the linklist via
+                  assign_compframe_to_linklist will be used.
  */
 double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {

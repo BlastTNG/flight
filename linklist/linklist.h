@@ -40,7 +40,7 @@
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
 
 #define SUPERFRAME_READY 0x1
-#define COMPFRAME_READ 0x2
+#define COMPFRAME_READY 0x2
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -100,6 +100,10 @@ unsigned int get_spf(unsigned int);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
+void linklist_set_superframe_ready(linklist_t *);
+void linklist_set_compframe_ready(linklist_t *);
+void set_all_linklist_superframe_ready(linklist_t **);
+void set_all_linklist_compframe_ready(linklist_t **);
 
 #ifdef __cplusplus
 }

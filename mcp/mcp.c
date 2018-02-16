@@ -77,6 +77,7 @@
 #include "framing.h"
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "pilot.h"
 #include "bitserver.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
@@ -108,6 +109,9 @@ void StageBus(void);
 
 struct chat_buf chatter_buffer;
 struct tm start_time;
+
+linklist_t * linklist_array[16] = {NULL};
+uint8_t * superframe = NULL;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -275,6 +279,7 @@ static void mcp_244hz_routines(void)
 //    write_roach_channels_244hz();
 
     framing_publish_244hz();
+    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, superframe);
 }
 
 static void mcp_200hz_routines(void)
@@ -288,6 +293,7 @@ static void mcp_200hz_routines(void)
     framing_publish_200hz();
     // store_data_200hz();
     add_200hz_frame_to_biphase(channel_data);
+    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, superframe);
 }
 static void mcp_100hz_routines(void)
 {
@@ -306,6 +312,7 @@ static void mcp_100hz_routines(void)
     framing_publish_100hz();
     // store_data_100hz();
     add_100hz_frame_to_biphase(channel_data[RATE_100HZ]);
+    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, superframe);
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -333,6 +340,7 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
+    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, superframe);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -358,6 +366,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, superframe);
+    set_all_linklist_superframe_ready(linklist_array);
 //    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
@@ -530,7 +540,16 @@ int main(int argc, char *argv[])
 #endif
 
 // initialize linklists
-  linklist_t * test_ll = parse_linklist("/data/etc/linklists/test.ll");
+  superframe = allocate_superframe();
+
+  // TODO(javier): loop over all linklists available
+  linklist_array[0] = parse_linklist("/data/etc/linklists/test.ll");
+  assign_superframe_to_linklist(linklist_array[0], superframe);
+
+  linklist_generate_lookup(linklist_array);
+
+  pthread_t pilot_send_worker;
+  pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) linklist_array);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);

@@ -472,6 +472,33 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
   return ll_list[ind];
 }
 
+void linklist_set_superframe_ready(linklist_t * ll) {
+  if (ll) ll->data_ready |= SUPERFRAME_READY;
+}
+void linklist_set_compframe_ready(linklist_t * ll) {
+  if (ll) ll->data_ready |= COMPFRAME_READY;
+}
+void set_all_linklist_superframe_ready(linklist_t ** ll_list) {
+  if (ll_list) {
+    linklist_t * ll = ll_list[0];
+    int i = 0;
+    while (ll) {
+      linklist_set_superframe_ready(ll);
+      ll = ll_list[++i];
+    }
+  }
+}
+void set_all_linklist_compframe_ready(linklist_t ** ll_list) {
+  if (ll_list) {
+    linklist_t * ll = ll_list[0];
+    int i = 0;
+    while (ll) {
+      linklist_set_compframe_ready(ll);
+      ll = ll_list[++i];
+    }
+  }
+}
+
 #ifdef _TESTING
 
 int main(int argc, char *argv[])
