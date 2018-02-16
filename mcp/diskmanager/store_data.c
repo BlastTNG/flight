@@ -30,20 +30,54 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
-#include <crc.h>
 #include <derived.h>
 #include <mputs.h>
 #include <command_struct.h>
-#include <store_data.h>
 #include <diskmanager_tng.h>
 #include <mcp.h>
 #include <channel_macros.h>
+#include <store_data.h>
 
-#define MAX_NUM_FILENAME_CHARS 72
+static channel_header_t *channels_pkg_1hz = NULL;
+static channel_header_t *channels_pkg_5hz = NULL;
+static channel_header_t *channels_pkg_100hz = NULL;
+static channel_header_t *channels_pkg_200hz = NULL;
+
+static store_file_info_t storage_info_1hz = {0};
+static store_file_info_t storage_info_5hz = {0};
+static store_file_info_t storage_info_100hz = {0};
+static store_file_info_t storage_info_200hz = {0};
+
+// int are_channel_headers_ready() {
+// 	static bool channel_headers_ready = false;
+// 	static bool have_warned = false;
+// 	if (!channel_headers_ready) {
+// 		blast_info("Creating channel headers for writing to disk...");
+// 		if (!(channels_pkg_1hz = channels_create_rate_map(channel_list, RATE_1HZ))) {
+//             if (!have_warned) {
+//             	blast_err("Exiting are_channel_headers_ready because we cannot get the channel list.");
+//             	have_warned = true;
+//             }
+//         	return(-1);
+//         }
+// 		if (!(channels_pkg_5hz = channels_create_rate_map(channel_list, RATE_5HZ))) {
+//         	return(-1);
+//         }
+// 		if (!(channels_pkg_100hz = channels_create_rate_map(channel_list, RATE_100HZ))) {
+//         	return(-1);
+//         }
+// 		if (!(channels_pkg_200hz = channels_create_rate_map(channel_list, RATE_200HZ))) {
+//         	return(-1);
+//         }
+//         channel_headers_ready = true;
+//         blast_info("Channel pkg headers are ready.");
+//         return(1);
+//     }
+//     return(1);
+// }
 
 int store_disks_ready() {
 	static bool disk_init = false;
-
     if (!disk_init) {
         if (check_disk_init()) {
             blast_info("check_disk_init passed!");
@@ -71,6 +105,58 @@ void get_write_file_name(char* fname, char* type, uint32_t index)
              start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
              start_time.tm_hour, start_time.tm_min, extra_tag, type, index, type);
 //    blast_info("Will store next %s frame to %s", type, fname);
+}
+
+int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char *m_type) {
+    size_t pkg_size = sizeof(channel_header_t) + m_channels_pkg->length * sizeof(struct channel_packed);
+    size_t bytes_written = 0;
+    if (*m_fp) {
+        bytes_written = file_write(*m_fp, (void*) m_channels_pkg, pkg_size);
+		if (bytes_written < pkg_size) {
+            blast_err("%s package header is %u bytes but we were only able to write %u bytes",
+                        m_type, (uint16_t) pkg_size, (uint16_t) bytes_written);
+		} else {
+		    // We wrote the frame successfully.
+		}
+		return(bytes_written);
+	} else {
+	    blast_err("File pointer is invalid.  Returning -1");
+	    return(-1);
+	}
+    return(0);
+}
+
+//             bytes_written = store_data(&m_storage->fp, m_storage->file_name, m_storage->type, m_storage->rate,
+//                                    m_storage->mcp_framenum, &(m_storage->frames_stored), m_storage->nrate);
+
+// Handles the file_open, file_write, and file_close calls.
+int store_data_v2(store_file_info_t *m_storage)
+{
+    uint16_t bytes_written = 0;
+    if ((m_storage->frames_stored) >= STORE_DATA_FRAMES_PER_FILE * m_storage->nrate) {
+    	blast_info("Closing %s", m_storage->file_name);
+        file_close(m_storage->fp);
+        get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
+		blast_info("Opening %s", m_storage->file_name);
+        m_storage->fp = file_open(m_storage->file_name, "w+");
+        (m_storage->frames_stored) = 0;
+    }
+    if (m_storage->fp) {
+	    // blast_info("writing to %s", m_file);
+        bytes_written = file_write(m_storage->fp, channel_data[m_storage->rate], frame_size[m_storage->rate]);
+		if (bytes_written < frame_size[m_storage->rate]) {
+            blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
+                        m_storage->type, (uint16_t) frame_size[m_storage->rate], bytes_written);
+		} else {
+		    // We wrote the frame successfully.
+            (m_storage->frames_stored)++;
+		}
+		// blast_info("frames_written = %u", (*m_counter));
+		return bytes_written;
+    } else {
+	    blast_err("Failed to open file %s for writing.", m_storage->file_name);
+	    return 0;
+    }
 }
 
 // Handles the file_open, file_write, and file_close calls.
@@ -104,136 +190,115 @@ int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
     }
 }
 
+// Generic data storage routine that can be used for any rate or roach data;
+void store_rate_data(store_file_info_t *m_storage) {
+    // Checks the s_ready flag in diskmanager.
+    uint16_t bytes_written = 0;
+    if (!store_disks_ready() && !(m_storage->have_warned)) {
+        blast_info("store_disks_ready is returning false!");
+        m_storage->have_warned = true;
+        return;
+    }
+    m_storage->mcp_framenum = GET_INT32(m_storage->mcp_framenum_addr);
+    if (frame_size[m_storage->rate]) {
+        if (!(m_storage->fp)) {
+            get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
+		    blast_info("Opening %s", m_storage->file_name);
+            m_storage->fp = file_open(m_storage->file_name, "w+");
+            m_storage->header_written = false;
+        }
+	    if (m_storage->fp) {
+	        // Have we already written enough data to the file so that a new one should be opened?
+	        if ((m_storage->frames_stored) >= STORE_DATA_FRAMES_PER_FILE * m_storage->nrate) {
+    	        blast_info("Closing %s", m_storage->file_name);
+                file_close(m_storage->fp);
+                m_storage->header_written = false;
+                get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
+		        blast_info("Opening %s", m_storage->file_name);
+                m_storage->fp = file_open(m_storage->file_name, "w+");
+                (m_storage->frames_stored) = 0;
+            }
+            // Write the header to the beginning of the file;
+	    	if (!m_storage->header_written) {
+	    	    bytes_written = store_data_header(&m_storage->fp, m_storage->channels_pkg, m_storage->type);
+	    	    if (bytes_written > 0) {
+	    	        m_storage->header_written = true;
+	    	    }
+	    	}
+            // Write the data to the file.
+        	bytes_written = file_write(m_storage->fp, channel_data[m_storage->rate], frame_size[m_storage->rate]);
+		    if (bytes_written < frame_size[m_storage->rate]) {
+                if (m_storage->have_warned) {
+                    blast_err("%s frame size is %u bytes but we were only able to write %u bytes",
+                                m_storage->type, (uint16_t) frame_size[m_storage->rate], bytes_written);
+                    m_storage->have_warned = true;
+                }
+		    } else {
+		        // We wrote the frame successfully.
+                (m_storage->frames_stored)++;
+                m_storage->have_warned = false;
+		    }
+        } else {
+	        if (m_storage->have_warned) {
+	            blast_err("Failed to open file %s for writing.", m_storage->file_name);
+	            m_storage->have_warned = true;
+	        }
+        }
+    }
+}
+
 void store_data_1hz(void)
 {
-    static channel_t *mcp_1hz_framenum_addr = NULL;
-    uint32_t mcp_1hz_framenum = 0;
-	char type_1hz[12] = "1hz";
-
-	static fileentry_t *temp_fp = NULL;
-	static uint32_t frames_stored_to_1hz = 0;
-	uint16_t bytes_written = 0;
-    static char file_name[MAX_NUM_FILENAME_CHARS];
-
-    // Checks the s_ready flag in diskmanager.
-    if (!store_disks_ready()) return;
-
-    if (mcp_1hz_framenum_addr == NULL) {
-        mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
-    }
-
-    mcp_1hz_framenum = GET_INT32(mcp_1hz_framenum_addr);
-
-    if (frame_size[RATE_1HZ]) {
-        if (!temp_fp) {
-            get_write_file_name(file_name, type_1hz, mcp_1hz_framenum);
-		    blast_info("Opening %s", file_name);
-            temp_fp = file_open(file_name, "w+");
-        }
-	    if (temp_fp) {
-            bytes_written = store_data(&temp_fp, file_name, type_1hz, RATE_1HZ,
-                                   mcp_1hz_framenum, &frames_stored_to_1hz, 1);
-        } else {
-	        blast_err("Failed to open file %s for writing.", file_name);
-        }
-    }
+	if (!storage_info_1hz.init) {
+	    storage_info_1hz.fp = NULL;
+	    snprintf(storage_info_1hz.type, sizeof(storage_info_1hz.type), "1hz");
+	    storage_info_1hz.mcp_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+	    storage_info_1hz.channels_pkg = channels_create_rate_map(channel_list, RATE_1HZ);
+	    storage_info_1hz.rate = RATE_1HZ;
+	    storage_info_1hz.nrate = 1;
+	    storage_info_1hz.init = true;
+	}
+	store_rate_data(&storage_info_1hz);
 }
 
 void store_data_5hz(void)
 {
-    static channel_t *mcp_5hz_framenum_addr = NULL;
-    uint32_t mcp_5hz_framenum = 0;
-	char type_5hz[12] = "5hz";
-
-	static fileentry_t *temp_fp = NULL;
-	uint16_t bytes_written = 0;
-	static uint32_t frames_stored_to_5hz = 0;
-    static char file_name[MAX_NUM_FILENAME_CHARS];
-
-    // Checks the s_ready flag in diskmanager.
-    if (!store_disks_ready()) return;
-
-    if (mcp_5hz_framenum_addr == NULL) {
-        mcp_5hz_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
-    }
-
-    mcp_5hz_framenum = GET_INT32(mcp_5hz_framenum_addr);
-
-    if (frame_size[RATE_5HZ]) {
-        if (!temp_fp) {
-            get_write_file_name(file_name, type_5hz, mcp_5hz_framenum);
-		    blast_info("Opening %s", file_name);
-            temp_fp = file_open(file_name, "w+");
-        }
-        if (temp_fp) {
-            bytes_written = store_data(&temp_fp, file_name, type_5hz, RATE_5HZ,
-                                   mcp_5hz_framenum, &frames_stored_to_5hz, 5);
-        }
-    }
+	if (!storage_info_5hz.init) {
+	    storage_info_5hz.fp = NULL;
+	    snprintf(storage_info_5hz.type, sizeof(storage_info_5hz.type), "5hz");
+	    storage_info_5hz.mcp_framenum_addr = channels_find_by_name("mcp_5hz_framecount");
+	    storage_info_5hz.channels_pkg = channels_create_rate_map(channel_list, RATE_5HZ);
+	    storage_info_5hz.rate = RATE_5HZ;
+	    storage_info_5hz.nrate = 5;
+	    storage_info_5hz.init = true;
+	}
+	store_rate_data(&storage_info_5hz);
 }
 
 void store_data_100hz(void)
 {
-    static channel_t *mcp_100hz_framenum_addr = NULL;
-    uint32_t mcp_100hz_framenum = 0;
-	char type_100hz[12] = "100hz";
-
-	static fileentry_t *temp_fp = NULL;
-	uint16_t bytes_written = 0;
-	static uint32_t frames_stored_to_100hz = 0;
-    static char file_name[MAX_NUM_FILENAME_CHARS];
-
-    // Checks the s_ready flag in diskmanager.
-    if (!store_disks_ready()) return;
-
-    if (mcp_100hz_framenum_addr == NULL) {
-        mcp_100hz_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
-    }
-
-    mcp_100hz_framenum = GET_INT32(mcp_100hz_framenum_addr);
-
-    if (frame_size[RATE_100HZ]) {
-        if (!temp_fp) {
-            get_write_file_name(file_name, type_100hz, mcp_100hz_framenum);
-		    blast_info("Opening %s", file_name);
-            temp_fp = file_open(file_name, "w+");
-        }
-        if (temp_fp) {
-            bytes_written = store_data(&temp_fp, file_name, type_100hz, RATE_100HZ,
-                                   mcp_100hz_framenum, &frames_stored_to_100hz, 100);
-        }
-    }
+	if (!storage_info_100hz.init) {
+	    storage_info_100hz.fp = NULL;
+	    snprintf(storage_info_100hz.type, sizeof(storage_info_100hz.type), "100hz");
+	    storage_info_100hz.mcp_framenum_addr = channels_find_by_name("mcp_100hz_framecount");
+	    storage_info_100hz.channels_pkg = channels_create_rate_map(channel_list, RATE_100HZ);
+	    storage_info_100hz.rate = RATE_100HZ;
+	    storage_info_100hz.nrate = 100;
+	    storage_info_100hz.init = true;
+	}
+	store_rate_data(&storage_info_100hz);
 }
 
 void store_data_200hz(void)
 {
-    static channel_t *mcp_200hz_framenum_addr = NULL;
-    uint32_t mcp_200hz_framenum = 0;
-	char type_200hz[12] = "200hz";
-
-	static fileentry_t *temp_fp = NULL;
-	uint16_t bytes_written = 0;
-	static uint32_t frames_stored_to_200hz = 0;
-    static char file_name[MAX_NUM_FILENAME_CHARS];
-
-    // Checks the s_ready flag in diskmanager.
-    if (!store_disks_ready()) return;
-
-    if (mcp_200hz_framenum_addr == NULL) {
-        mcp_200hz_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
-    }
-
-    mcp_200hz_framenum = GET_INT32(mcp_200hz_framenum_addr);
-
-    if (frame_size[RATE_200HZ]) {
-        if (!temp_fp) {
-            get_write_file_name(file_name, type_200hz, mcp_200hz_framenum);
-		    blast_info("Opening %s", file_name);
-            temp_fp = file_open(file_name, "w+");
-        }
-        if (temp_fp) {
-            bytes_written = store_data(&temp_fp, file_name, type_200hz, RATE_200HZ,
-                                   mcp_200hz_framenum, &frames_stored_to_200hz, 200);
-        }
-    }
+	if (!storage_info_200hz.init) {
+	    storage_info_200hz.fp = NULL;
+	    snprintf(storage_info_200hz.type, sizeof(storage_info_200hz.type), "200hz");
+	    storage_info_200hz.mcp_framenum_addr = channels_find_by_name("mcp_200hz_framecount");
+	    storage_info_200hz.channels_pkg = channels_create_rate_map(channel_list, RATE_200HZ);
+	    storage_info_200hz.rate = RATE_200HZ;
+	    storage_info_200hz.nrate = 200;
+	    storage_info_200hz.init = true;
+	}
+	store_rate_data(&storage_info_200hz);
 }

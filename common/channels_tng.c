@@ -159,6 +159,64 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     return new_pkt;
 }
 
+/**
+ * Takes an aligned channel list for a single down sample rate and re-packs it into a
+ * packed structure for sharing over MQTT or writing as a head in the data files stored
+ * on the external HDs.
+ * @param m_channel_list Pointer to the aligned channel list
+ * @param m_rate Pointer to the aligned channel list
+ * @return Newly allocated channel_header_t structure or NULL on failure
+ */
+channel_header_t *channels_create_rate_map(channel_t *m_channel_list, E_RATE m_rate)
+{
+    channel_header_t *new_pkt = NULL;
+    size_t channels_count, total_channels_count;
+    uint32_t i_channels, i_rate = 0;
+
+	for (total_channels_count = 0; m_channel_list[total_channels_count].field[0]; total_channels_count++)
+        continue;
+    total_channels_count++; // Add one extra channel to allow for the NULL terminating field
+
+	channels_count = (channel_count[m_rate][TYPE_INT8]+channel_count[m_rate][TYPE_UINT8]) +
+                       2 * (channel_count[m_rate][TYPE_INT16]+channel_count[m_rate][TYPE_UINT16]) +
+                       4 * (channel_count[m_rate][TYPE_INT32]+channel_count[m_rate][TYPE_UINT32] +
+                            channel_count[m_rate][TYPE_FLOAT]) +
+                       8 * (channel_count[m_rate][TYPE_INT64]+channel_count[m_rate][TYPE_UINT64] +
+                            channel_count[m_rate][TYPE_DOUBLE]);
+    new_pkt = balloc(err, sizeof(channel_header_t) + sizeof(struct channel_packed) * channels_count);
+    if (!new_pkt) return NULL;
+    memset(new_pkt, 0, sizeof(channel_header_t) + sizeof(struct channel_packed) * channels_count);
+
+    new_pkt->magic = BLAST_MAGIC32;
+    new_pkt->version = BLAST_TNG_CH_VERSION;
+    new_pkt->length = channels_count;
+    new_pkt->crc = 0;
+
+    /**
+     * Copy over the data values one at a time from the aligned to the packed structure
+     */
+    for (i_channels = 0; i_channels < total_channels_count; i_channels++) {
+    	if (m_channel_list[i_channels].rate == m_rate) {
+	    	if (i_rate >= channels_count) {
+    			blast_err("More channels found with rate index %i (>=%i) than allocated (%i)",
+    					   (uint16_t) m_rate, (uint32_t) i_rate, (uint32_t) total_channels_count);
+    			return(new_pkt);
+    		}
+    	    memcpy(new_pkt->data[i_rate].field, m_channel_list[i_channels].field, FIELD_LEN);
+            new_pkt->data[i_rate].m_c2e = m_channel_list[i_channels].m_c2e;
+            new_pkt->data[i_rate].b_e2e = m_channel_list[i_channels].b_e2e;
+            new_pkt->data[i_rate].type = m_channel_list[i_channels].type;
+            new_pkt->data[i_rate].rate = m_channel_list[i_channels].rate;
+            memcpy(new_pkt->data[i_rate].quantity, m_channel_list[i_channels].quantity, UNITS_LEN);
+            memcpy(new_pkt->data[i_rate].units, m_channel_list[i_channels].units, UNITS_LEN);
+            i_rate++;
+    	}
+	}
+    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) +
+                              sizeof(struct channel_packed) * channels_count);
+
+    return new_pkt;
+}
 
 /**
  * Takes an aligned channel list and re-packs it into a packed structure for sharing over

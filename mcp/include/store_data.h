@@ -27,4 +27,20 @@
 #define INCLUDE_STORE_DATA_H_
 
 #define STORE_DATA_FRAMES_PER_FILE 300 // Store 5 minutes worth of data in one file.
+#define MAX_NUM_FILENAME_CHARS 72
 #endif /* INCLUDE_STORE_DATA_H_ */
+typedef struct {
+    bool    header_written;
+    bool    have_warned;
+    bool    init;
+    uint32_t    crc;
+    uint32_t mcp_framenum;
+    uint32_t frames_stored;
+    E_RATE rate;
+    uint16_t nrate;
+    char file_name[MAX_NUM_FILENAME_CHARS];
+    char type[12];
+    fileentry_t *fp;
+    channel_t *mcp_framenum_addr;
+    channel_header_t *channels_pkg;
+} store_file_info_t;

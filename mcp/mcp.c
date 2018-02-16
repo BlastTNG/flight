@@ -316,7 +316,7 @@ static void mcp_200hz_routines(void)
     // cal_control();
 
     framing_publish_200hz();
-    // store_data_200hz();
+    store_data_200hz();
     build_biphase_frame_200hz(channel_data[RATE_200HZ]);
 }
 static void mcp_100hz_routines(void)
@@ -334,7 +334,7 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
-    // store_data_100hz();
+    store_data_100hz();
     build_biphase_frame_1hz(channel_data[RATE_1HZ]);
     build_biphase_frame_100hz(channel_data[RATE_100HZ]);
 
@@ -366,7 +366,7 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
-//    store_data_5hz();
+    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -391,7 +391,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-//    store_data_1hz();
+    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
 }
