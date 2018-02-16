@@ -54,7 +54,7 @@ extern "C" {
  * [8-9] = packet number
  * [10-11] = total number of packets
  */
-int verbosity = 1;
+int verbosity = 0;
 
 uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint16_t i_pkt, uint16_t n_packets)
 {

@@ -87,39 +87,3 @@ void pilot_compress_and_send(void *arg) {
     }
   }
 }
-
-void pilot_recv_and_decompress(void *arg) {
-  // initialize UDP connection via bitserver/BITRecver
-  struct BITRecver pilotrecver = {0};
-  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
-  uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0;
-  linklist_t * ll = NULL;
-  uint32_t blk_size = 0;
-
-  while (1) {
-    do {
-      // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
-      serial = *(uint32_t *) recvbuffer;
-    } while (!(ll = linklist_lookup_by_serial(serial)) != -1);
-
-    // set the linklist serial
-    setBITRecverSerial(&pilotrecver, serial);
-
-    // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, ll->compframe, PILOT_MAX_PACKET_SIZE, 0);
-
-    if (blk_size < 0) {
-      blast_info("Malformed packed received on Pilot\n");
-      continue;
-    }
-
-    // TODO(javier): deal with blk_size < ll->blk_size
-    // decompress the linklist
-    if (!decompress_linklist(NULL, ll, NULL)) continue;
-
-    // set the superframe ready flag
-    ll->data_ready |= SUPERFRAME_READY;
-  }
-}

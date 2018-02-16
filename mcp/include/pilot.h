@@ -32,7 +32,6 @@
 #define PILOT_MAX_PACKET_SIZE 200000
 
 void pilot_compress_and_send(void *);
-void pilot_recv_and_decompress(void *);
 
 
 #endif /* INCLUDE_PILOT_H */

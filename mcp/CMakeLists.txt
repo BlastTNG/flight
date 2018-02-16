@@ -250,7 +250,7 @@ set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
 set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
-set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../linklist")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
