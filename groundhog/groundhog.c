@@ -21,8 +21,6 @@
 #include "blast.h"
 #include "../mcp/include/pilot.h"
 
-uint8_t * superframe = NULL;
-
 void pilot_recv_and_decompress(void *arg) {
   // initialize UDP connection via bitserver/BITRecver
   struct BITRecver pilotrecver = {0};
@@ -31,8 +29,6 @@ void pilot_recv_and_decompress(void *arg) {
   uint32_t serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
-
-  uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE);
 
   while (1) {
     blast_info("Waiting for data..\n");
@@ -52,7 +48,7 @@ void pilot_recv_and_decompress(void *arg) {
     blast_info("Received linklist with serial 0x%x\n", serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
+    blk_size = recvFromBITRecver(&pilotrecver, ll->compframe, PILOT_MAX_PACKET_SIZE, 0);
 
     if (blk_size < 0) {
       blast_info("Malformed packed received on Pilot\n");
@@ -61,7 +57,7 @@ void pilot_recv_and_decompress(void *arg) {
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    if (!decompress_linklist(NULL, ll, compbuffer)) continue;
+    if (!decompress_linklist(NULL, ll, NULL)) continue;
 
     // set the superframe ready flag
     ll->data_ready |= SUPERFRAME_READY;
@@ -73,8 +69,7 @@ int main(int argc, char * argv[]) {
   linklist_t * ll_list[2] = {parse_linklist("test.ll"), NULL};
   linklist_generate_lookup(ll_list);  
  
-  superframe = allocate_superframe();
-  assign_superframe_to_linklist(ll_list[0], superframe);
+  uint8_t * superframe = allocate_superframe();
 
   pthread_t recv_worker;
   pthread_create(&recv_worker, NULL, (void *) &pilot_recv_and_decompress, NULL);
