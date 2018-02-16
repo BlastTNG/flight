@@ -281,7 +281,7 @@ void biphase_writer(void)
         if (!SouthIAm) {
             serial = "FC1"; // "FC1NS9HU"
         } else {
-            serial = "?";
+            serial = "?"; // "FC2"
         }
         setup_mpsse(&ctx, serial, direction);
     } else {

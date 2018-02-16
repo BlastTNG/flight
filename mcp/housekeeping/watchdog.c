@@ -38,6 +38,7 @@
 #include "blast.h"
 #include "mpsse.h"
 #include "channels_tng.h"
+#include "mputs.h"
 
 
 #define BI0_INCHARGE_CALL_PERIOD 250000 // Number of microseconds between in charge calls.
@@ -158,7 +159,7 @@ void watchdog_ping_and_set_in_charge(void) {
     if (!SouthIAm) {
         serial = "FC1NS9HU"; // "FC1"
     } else {
-        serial = "?";
+        serial = "FC2"; // "?"
     }
     setup_mpsse(&ctx, serial, direction);
     while (true) {
