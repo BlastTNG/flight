@@ -43,34 +43,6 @@ static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
 
-// int are_channel_headers_ready() {
-// 	static bool channel_headers_ready = false;
-// 	static bool have_warned = false;
-// 	if (!channel_headers_ready) {
-// 		blast_info("Creating channel headers for writing to disk...");
-// 		if (!(channels_pkg_1hz = channels_create_rate_map(channel_list, RATE_1HZ))) {
-//             if (!have_warned) {
-//             	blast_err("Exiting are_channel_headers_ready because we cannot get the channel list.");
-//             	have_warned = true;
-//             }
-//         	return(-1);
-//         }
-// 		if (!(channels_pkg_5hz = channels_create_rate_map(channel_list, RATE_5HZ))) {
-//         	return(-1);
-//         }
-// 		if (!(channels_pkg_100hz = channels_create_rate_map(channel_list, RATE_100HZ))) {
-//         	return(-1);
-//         }
-// 		if (!(channels_pkg_200hz = channels_create_rate_map(channel_list, RATE_200HZ))) {
-//         	return(-1);
-//         }
-//         channel_headers_ready = true;
-//         blast_info("Channel pkg headers are ready.");
-//         return(1);
-//     }
-//     return(1);
-// }
-
 int store_disks_ready() {
 	static bool disk_init = false;
     if (!disk_init) {
