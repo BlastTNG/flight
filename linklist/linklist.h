@@ -98,6 +98,8 @@ unsigned int get_channel_size(const channel_t *);
 unsigned int get_channel_spf(const channel_t *);
 unsigned int get_spf(unsigned int);
 
+int linklist_generate_lookup(linklist_t **);
+linklist_t * linklist_lookup_by_serial(uint32_t);
 
 #ifdef __cplusplus
 }

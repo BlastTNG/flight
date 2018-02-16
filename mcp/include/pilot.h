@@ -29,6 +29,7 @@
 
 #define PILOT_PORT 31213 // port that pilot data is sent to
 #define PILOT_ADDR "192.168.1.55" // address that pilot data is sent to
+#define PILOT_MAX_PACKET_SIZE 200000
 
 void pilot_compress_and_send(void *);
 void pilot_recv_and_decompress(void *);

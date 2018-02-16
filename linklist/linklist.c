@@ -433,14 +433,56 @@ void delete_linklist(struct link_list * ll)
   free(ll);
 }
 
+linklist_t ** ll_list = NULL;
+int8_t linktable[65536] = {0};
+
+int linklist_generate_lookup(linklist_t ** lll) {
+  uint16_t hash;
+  int i = 0;
+
+  memset(linktable, -1, 65536*sizeof(int8_t));
+  if (!lll) {
+    blast_err("Linklist array is null\n");
+    return 0;
+  }
+  ll_list = lll;
+  linklist_t * ll = ll_list[0];
+
+  while (ll) {
+    hash = *((uint16_t *) ll->serial);
+    if (linktable[hash] != -1)
+    {
+      blast_err("Hash colliision for linklist %d and %d\n", i, linktable[hash]);
+      return -1;
+    }
+    linktable[hash] = i;
+    ll = ll_list[++i];
+  }
+  return 1;
+}
+
+// returns the a pointer to the linklist with the given serial number 
+linklist_t * linklist_lookup_by_serial(uint32_t serial) {
+  if (!ll_list) {
+    blast_err("linklist lookup is unallocated\n");
+    return NULL;
+  }
+  int ind = linktable[*((uint16_t *) &serial)];
+  if (ind < 0) return NULL;
+  return ll_list[ind];
+}
 
 #ifdef _TESTING
 
 int main(int argc, char *argv[])
 {
   channels_initialize(channel_list);
+  linklist_t * ll_list[2] = {NULL};
   linklist_t * test_ll = parse_linklist("test.ll");
+  ll_list[0] = test_ll;
   uint8_t * superframe = allocate_superframe();
+  linklist_generate_lookup(ll_list);
+  test_ll = linklist_lookup_by_serial(*(uint32_t *) test_ll->serial);
 
   // build a superframe
   int i;

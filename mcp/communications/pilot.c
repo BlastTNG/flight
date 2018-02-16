@@ -51,25 +51,31 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
+#include "blast.h"
 
 void pilot_compress_and_send(void *arg) {
-  linklist_t * ll = (linklist_t *) arg;
-
-  // initialize UDP connection using bitserver
+  // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
-  initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, 200000, 200000);
-  uint32_t blk_size = 0;
+  initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
+  linklist_t * ll = NULL;
 
   while (1) {
+    // get the current pointer to the pilot linklist
+    ll = *(linklist_t **) arg;
+
     if (ll->data_ready & SUPERFRAME_READY) { // data is ready to be sent
       // unset the data ready bit
       ll->data_ready &= ~SUPERFRAME_READY;
 
       // compress the linklist
-      blk_size = compress_linklist(NULL, ll, NULL);
+      if (!compress_linklist(NULL, ll, NULL)) continue;
 
+      // have packet header serials match the linklist serials
+      setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
+
+      // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_pilot_bw))
       // send the data to the ground station via bitsender
-      sendToBITSender(&pilotsender, ll->compframe, blk_size, 0);
+      sendToBITSender(&pilotsender, ll->compframe, ll->blk_size, 0);
 
     } else {
       usleep(100000); // zzz...
@@ -78,4 +84,37 @@ void pilot_compress_and_send(void *arg) {
 }
 
 void pilot_recv_and_decompress(void *arg) {
+  // initialize UDP connection via bitserver/BITRecver
+  struct BITRecver pilotrecver = {0};
+  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
+  uint8_t * recvbuffer = NULL;
+  uint32_t serial = 0;
+  linklist_t * ll = NULL;
+  uint32_t blk_size = 0;
+
+  while (1) {
+    do {
+      // get the linklist serial for the data received
+      recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
+      serial = *(uint32_t *) recvbuffer;
+    } while (!(ll = linklist_lookup_by_serial(serial)) != -1);
+
+    // set the linklist serial
+    setBITRecverSerial(&pilotrecver, serial);
+
+    // receive the data from payload via bitserver
+    blk_size = recvFromBITRecver(&pilotrecver, ll->compframe, PILOT_MAX_PACKET_SIZE, 0);
+
+    if (blk_size < 0) {
+      blast_info("Malformed packed received on Pilot\n");
+      continue;
+    }
+
+    // TODO(javier): deal with blk_size < ll->blk_size
+    // decompress the linklist
+    if (!decompress_linklist(NULL, ll, NULL)) continue;
+
+    // set the superframe ready flag
+    ll->data_ready |= SUPERFRAME_READY;
+  }
 }
