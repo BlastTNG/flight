@@ -260,6 +260,7 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
+    "${COMMS_DIR}"
     "${MPSSE_DIR}"
     "${SYNCLINK_DIR}"
     "${LINKLIST_DIR}"

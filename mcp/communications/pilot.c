@@ -26,8 +26,7 @@
 /**
  * Description:
  *
- * This file contains functions for compressing, sending, receiving, and
- * decompressing pilot data using linklists. 
+ * This file contains functions for compressing and sending pilot data using linklists. 
  *
 */
 #include <math.h>

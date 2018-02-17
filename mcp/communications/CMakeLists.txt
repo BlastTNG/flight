@@ -15,6 +15,6 @@ set(MCP_COMMS_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/bi0.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/biphase_hardware.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/blast_sip_interface.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/pilot.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/pilot.h
    PARENT_SCOPE
 )
