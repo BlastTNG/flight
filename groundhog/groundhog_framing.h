@@ -45,8 +45,8 @@ typedef struct
 } superframes_list_t;
 
 
-void initialize_circular_superframes(void);
-void push_superframe(const void *m_frame);
+void initialize_circular_superframes(superframes_list_t *superframes);
+void push_superframe(const void *m_frame, superframes_list_t *superframes);
 
 int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);

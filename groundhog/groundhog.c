@@ -1,15 +1,16 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <math.h>
 #include <arpa/inet.h> // socket stuff
 #include <netinet/in.h> // socket stuff
-#include <stdio.h> // socket stuff
 #include <sys/types.h> // socket types
 #include <sys/socket.h> // socket stuff
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <string.h>
 #include <pthread.h> // threads
 #include <float.h>
@@ -19,6 +20,7 @@
 #include "blast.h"
 #include "groundhog_framing.h"
 #include "channels_tng.h"
+#include "groundhog.h"
 
 
 int system_idled = 0;
@@ -106,34 +108,6 @@ void daemonize()
 
     /* block signals */
     pthread_sigmask(SIG_BLOCK, &signals, NULL);
-}
-
-static inline int groundhog_get_rate(const E_RATE m_rate)
-{
-    E_RATE rate = -1;
-    switch (m_rate) {
-        case RATE_1HZ:
-            rate = 1;
-            break;
-        case RATE_5HZ:
-            rate = 5;
-            break;
-        case RATE_100HZ:
-            rate = 100;
-            break;
-        case RATE_200HZ:
-            rate = 200;
-            break;
-        case RATE_244HZ:
-            rate = 244;
-            break;
-        case RATE_488HZ:
-            rate = 488;
-            break;
-        default:
-            defricher_err( "Unknown rate %d", m_rate);
-    }
-    return rate;
 }
 
 int main(int argc, char * argv[]) {

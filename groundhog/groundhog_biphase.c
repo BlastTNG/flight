@@ -20,18 +20,23 @@
 
 #include "bbc_pci.h"
 #include "decom_pci.h"
+#include "linklist.h"
+#include "linklist_compress.h"
 #include "channels_tng.h"
 #include "crc.h"
 #include "blast.h"
 #include "groundhog_framing.h"
+#include "groundhog.h"
 
 #define FRAME_SYNC_WORD 0xEB90
 #define DQ_FILTER 0.4
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 
+#define DEV "/dev/decom_pci"
+
 superframes_list_t superframes;
 
-void biphase_receive(void)
+void biphase_receive(void *args)
 {
   int decom_fp;
 
@@ -43,7 +48,7 @@ void biphase_receive(void)
   uint16_t polarity;
   int system_idled; // if 1, don't write to disk
   uint16_t crc_ok; // 1 if crc was ok
-  unsigned long frame_counter;
+  // unsigned long frame_counter;
   double dq_bad;  // data quality - fraction of bad crcs
 
   bool debug_rate = false;
@@ -187,7 +192,7 @@ void biphase_receive(void)
   }
 }
 
-void biphase_publish(){
+void biphase_publish(void *args){
 
     static char frame_name[RATE_END][32];
     int frame_offset = 0;
@@ -215,14 +220,14 @@ void biphase_publish(){
             continue;
         }
         while (read_frame != write_frame) {
-            for (int rate = 0; rate < RATE_END; rate++) {
-                int freq = groundhog_get_rate(rate);
-                for (int i = 0; i < freq; i++) {
-                    frame_offset = i*frame_size[rate];
-                    memcpy(biphase_data[rate], superframes.framelist[write_frame]+frame_offset, frame_size[rate]);
-                    framing_publish_200hz(biphase_data[rate], "biphase");
-                }
-            }
+            // for (int rate = 0; rate < RATE_END; rate++) {
+            //     int freq = groundhog_get_rate(rate);
+            //     for (int i = 0; i < freq; i++) {
+            //         frame_offset = i*frame_size[rate];
+            //         memcpy(biphase_data[rate], superframes.framelist[write_frame]+frame_offset, frame_size[rate]);
+            //         framing_publish_200hz(biphase_data[rate], "biphase");
+            //     }
+            // }
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
         }
         superframes.i_out = write_frame;

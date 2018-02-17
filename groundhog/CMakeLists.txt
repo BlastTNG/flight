@@ -124,14 +124,15 @@ include_directories ("/usr/include/machine")
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
 set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 
 include_directories (
     "${COMMON_DIR}/include"
-    "${MCP_DIR}/include"
     "${CONFIG_DIR}/include"
     "${LINKLIST_DIR}"
+    "${COMMUNICATIONS_DIR}"
     )
 
 # add common objects
@@ -150,6 +151,7 @@ add_executable (groundhog
     $<TARGET_OBJECTS:linklist>
     ${PROJECT_SOURCE_DIR}/groundhog.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
+    ${PROJECT_SOURCE_DIR}/groundhog.h
     ${PROJECT_SOURCE_DIR}/groundhog_framing.h
     ${PROJECT_SOURCE_DIR}/groundhog_framing.c
     ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
@@ -163,6 +165,7 @@ target_link_libraries(groundhog
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
+    ssl crypto
     )
 
 set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} 

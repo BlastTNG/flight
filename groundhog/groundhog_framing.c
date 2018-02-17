@@ -32,13 +32,14 @@
 
 #include <mosquitto.h>
 
-#include <blast.h>
-#include <blast_time.h>
-#include <channels_tng.h>
-#include <crc.h>
-#include <derived.h>
-#include <mputs.h>
-#include <linklist_compress.h>
+#include "blast.h"
+#include "blast_time.h"
+#include "channels_tng.h"
+#include "groundhog_framing.h"
+#include "crc.h"
+#include "derived.h"
+#include "mputs.h"
+#include "linklist_compress.h"
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
@@ -47,21 +48,21 @@ static struct mosquitto *mosq = NULL;
 void initialize_circular_superframes(superframes_list_t *superframes)
 {
     int i;
-    superframes.i_in = 0;
-    superframes.i_out = 0;
+    superframes->i_in = 0;
+    superframes->i_out = 0;
     for (i = 0; i < NUM_FRAMES; i++) {
-        superframes.framelist[i] = calloc(1, superframe_size);
-        memset(superframes.framelist[i], 0, superframe_size);
+        superframes->framelist[i] = calloc(1, superframe_size);
+        memset(superframes->framelist[i], 0, superframe_size);
     }
 }
 
 void push_superframe(const void *m_frame, superframes_list_t *superframes)
 {
     int i_in;
-    i_in = (superframes.i_in + 1) & (NUM_FRAMES-1);
-    superframes.framesize[i_in] = superframe_size;
-    memcpy(superframes.framelist[i_in], m_frame, superframe_size);
-    superframes.i_in = i_in;
+    i_in = (superframes->i_in + 1) & (NUM_FRAMES-1);
+    superframes->framesize[i_in] = superframe_size;
+    memcpy(superframes->framelist[i_in], m_frame, superframe_size);
+    superframes->i_in = i_in;
 }
 
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)

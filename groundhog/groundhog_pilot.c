@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include <arpa/inet.h> // socket stuff
 #include <netinet/in.h> // socket stuff
 #include <stdio.h> // socket stuff
@@ -26,18 +27,20 @@ superframes_list_t superframes;
 
 void pilot_receive(void *arg) {
 
-  // initialize UDP connection via bitserver/BITRecver
   struct BITRecver pilotrecver = {0};
-  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
 
-  initialize_circular_superframes(&superframes);
-  uint8_t *local_superframe = allocate_superframe(); // Joy: do we still need this? Seems like the circular buffer is taking care of it
+  uint8_t *local_superframe = allocate_superframe();
+  uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
 
-  while (1) {
+  // initialize UDP connection via bitserver/BITRecver
+  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
+  initialize_circular_superframes(&superframes);
+
+  while (true) {
     blast_info("Waiting for data..\n");
     do {
       // get the linklist serial for the data received
@@ -48,14 +51,14 @@ void pilot_receive(void *arg) {
       } else {
         break;
       }
-    } while (1);
+    } while (true);
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
     blast_info("Received linklist with serial 0x%x\n", serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, ll->compframe, PILOT_MAX_PACKET_SIZE, 0);
+    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
 
     if (blk_size < 0) {
       blast_info("Malformed packed received on Pilot\n");
@@ -64,8 +67,9 @@ void pilot_receive(void *arg) {
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    // TODO(joy): line below needs to fill local_superframe
-    if (!decompress_linklist(NULL, ll, NULL)) continue;
+    if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
+      continue;
+    }
     push_superframe(local_superframe, &superframes);
 
     // set the superframe ready flag
