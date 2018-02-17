@@ -174,6 +174,8 @@ typedef struct roach_state {
     uint32_t src_ip;
     // Path to tone amplitudes file
     char *amps_path[2];
+    char *vna_amps_path[2];
+    char *targ_amps_path[2];
     fftw_plan comb_plan;
 
     // PPC link

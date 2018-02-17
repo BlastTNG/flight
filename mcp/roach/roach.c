@@ -98,7 +98,7 @@
 #define TARG_SWEEP_SPAN 200.0e3 /* Target sweep span = 200 kHz */
 #define NGRAD_POINTS 6 /* Number of points to use for gradient sweep */
 #define NCOEFF 12 /* 1 + Number of FW FIR coefficients */
-#define N_AVG 40 /* Number of packets to average for each sweep point */
+#define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Netcat port on Pi for FC1 */
 #define NC2_PORT 12346 /* Netcat port on Pi for FC2 */
 #define SWEEP_INTERRUPT (-1)
@@ -160,7 +160,7 @@ static valon_state_t valon_state_table[NUM_ROACHES];
 char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 /* For testing, use detector data from Feb, 2018 cooldown */
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Tue_Feb_13_13_13_40_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Feb_16_13_52_53_2018";
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
@@ -2002,10 +2002,10 @@ void *roach_cmd_loop(void* ind)
         /* if (CommandData.roach[i].do_sweeps == 0) {
             roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
         } */
-        if ((CommandData.roach[i].do_sweeps == 1) &&
+        /* if ((CommandData.roach[i].do_sweeps == 1) &&
                     (roach_state_table[i].status >= ROACH_STATUS_STREAMING)) {
             roach_state_table[i].desired_status = ROACH_STATUS_VNA;
-        }
+        }*/
         // TODO(Sam) Add error checking
         if ((CommandData.roach[i].df_calc > 0) &&
                   (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
@@ -2180,20 +2180,20 @@ void *roach_cmd_loop(void* ind)
             } else { blast_info("ROACH%d, VNA sweep failed, will reattempt", i + 1);}
         }
         if (roach_state_table[i].status == ROACH_STATUS_VNA &&
-              roach_state_table[i].desired_status == ROACH_STATUS_ARRAY_FREQS) {
+              roach_state_table[i].desired_status >= ROACH_STATUS_ARRAY_FREQS) {
               /*if (get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
                                     roach_state_table[i].last_targ_path) < 0) {
                   blast_info("ROACH%d, Error finding TARG freqs", i + 1);
               }*/
               if (get_targ_freqs(&roach_state_table[i], vna_search_path,
-                                   targ_search_path) < 0) {
+                                   roach_state_table[i].last_targ_path) < 0) {
                   blast_info("ROACH%d, Error finding TARG freqs", i + 1);
               }
               roach_state_table[i].status = ROACH_STATUS_ARRAY_FREQS;
               roach_state_table[i].desired_status = ROACH_STATUS_TARG;
         }
         if (roach_state_table[i].status == ROACH_STATUS_ARRAY_FREQS &&
-                 roach_state_table[i].desired_status == ROACH_STATUS_TARG) {
+                 roach_state_table[i].desired_status >= ROACH_STATUS_TARG) {
             if (!roach_state_table[i].targ_tones) {
                 blast_info("ROACH%d, Targ comb not found, ending sweep", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
@@ -2232,7 +2232,7 @@ void *roach_cmd_loop(void* ind)
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else { blast_info("ROACH%d, Cal sweep failed, will reattempt", i + 1);}
-            grad_calc(&roach_state_table[i]);
+            // grad_calc(&roach_state_table[i]);
             roach_state_table[i].status = ROACH_STATUS_GRAD;
             roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
         }

@@ -275,8 +275,8 @@ void poll_socket(void)
                 uint64_t bytes_read = recv(roach_sock_fd, m_packet.rcv_buffer,
                 ROACH_UDP_LEN, 0);
                 m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
-			+ sizeof(struct ethhdr)
-			+ sizeof(struct iphdr));
+                    + sizeof(struct ethhdr)
+                    + sizeof(struct iphdr));
                 /* Filter destination address */
 		// blast_info("Before filt: R%d\t%d\t%d", m_roach_udp->which,
                           // m_roach_udp->port, ntohs(m_packet.udp_header->dest));
