@@ -328,7 +328,8 @@ typedef struct roach
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
-    unsigned int load_amps;
+    unsigned int load_vna_amps;
+    unsigned int load_targ_amps;
     unsigned int set_rudats;
     unsigned int set_attens;
     unsigned int find_kids;

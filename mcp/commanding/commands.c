@@ -1760,9 +1760,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 // *****************************************
 // ROACH Commands
 // *****************************************
-    case load_new_tone_amplitudes:
+    case load_new_vna_amps:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
-          CommandData.roach[ivalues[0]-1].load_amps = ivalues[1];
+          CommandData.roach[ivalues[0]-1].load_vna_amps = ivalues[1];
+      }
+      break;
+    case load_new_targ_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
       }
       break;
     case cal_attens:
@@ -2453,7 +2458,8 @@ void InitCommandData()
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
     for (i = 0; i < NUM_ROACHES - 1; i++) {
-        CommandData.roach[i].load_amps = 0;
+        CommandData.roach[i].load_vna_amps = 0;
+        CommandData.roach[i].load_targ_amps = 0;
     }
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;

@@ -433,8 +433,9 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     for (size_t i = 0; i < m_freqlen; i++) {
         amps[i] = 1.0;
     }
-    if (CommandData.roach[m_roach->which - 1].load_amps) {
-        char *amps_path = m_roach->amps_path[CommandData.roach[m_roach->which - 1].load_amps - 1];
+    // TODO(Sam) Combine vna and targ cases into one?
+    if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
+        char *amps_path = m_roach->vna_amps_path[CommandData.roach[m_roach->which - 1].load_vna_amps - 1];
         blast_info("Amps file = %s", amps_path);
         FILE *fd = fopen(amps_path, "r");
         if (!fd) {
@@ -454,8 +455,33 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
             } */
             fclose(fd);
         }
+    CommandData.roach[m_roach->which - 1].load_vna_amps = 0;
     }
-    CommandData.roach[m_roach->which - 1].load_amps = 0;
+
+    if (CommandData.roach[m_roach->which - 1].load_targ_amps) {
+            char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
+        blast_info("Amps file = %s", amps_path);
+        FILE *fd = fopen(amps_path, "r");
+        if (!fd) {
+            blast_strerror("Could not open %s for reading", amps_path);
+            fclose(fd);
+        } else {
+            blast_info("Opened %s", amps_path);
+            // while(!feof(m_atten_file)) {
+            int idx = 0;
+            while (idx < m_freqlen
+                && fscanf(fd, "%lg\n", &amps[idx++]) != EOF) {
+                // blast_info("Roach%d tone amps: %g", m_roach->which, amps[idx]);
+            }
+            /* for (size_t i = 0; i < m_freqlen; i++) {
+                if (fscanf(fd, "%lg\n", &amps[i]) == EOF)
+                break;
+            } */
+            fclose(fd);
+        }
+    CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
+    }
+
     for (size_t i = 0; i < m_freqlen; i++) {
         blast_info("Roach%d tone amps: %g", m_roach->which, amps[i]);
         m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
@@ -1363,6 +1389,9 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
         m_roach->targ_tones[j] = m_temp_freqs[j];
         // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
     }
+    blast_info("Uploading TARGET comb...");
+    roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
     if (CommandData.roach[m_roach->which - 1].find_kids) {
         CommandData.roach[m_roach->which - 1].find_kids = 0;
     }
@@ -1508,10 +1537,10 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
             blast_err("Sweep freqs could not be saved to disk");
             return SWEEP_FAIL;
         }*/
-        blast_info("Uploading TARGET comb...");
-        roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+        // blast_info("Uploading TARGET comb...");
+        // roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
         comb_len = m_roach->num_kids;
-        blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
+        // blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
     }
     /* Determine sweep frequencies */
     // TODO(Sam) uncomment when not testing
@@ -1979,7 +2008,7 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].roach_desired_state);
             CommandData.roach[i].roach_state = 0;
         }
-        if (CommandData.roach[i].load_amps) {
+        if (CommandData.roach[i].load_vna_amps || CommandData.roach[i].load_targ_amps) {
             roach_state_table[i].status = ROACH_STATUS_CALIBRATED;
             roach_state_table[i].desired_status = ROACH_STATUS_TONE;
         }
@@ -2138,11 +2167,16 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].status == ROACH_STATUS_CALIBRATED &&
             roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
             blast_info("ROACH%d, Generating search comb...", i + 1);
-            roach_vna_comb(&roach_state_table[i]);
-            // roach_write_tones(&roach_state_table[i], test_freq, 1);
-            roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
+            if (CommandData.roach[i].load_targ_amps) {
+                roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
                                                   roach_state_table[i].vna_comb_len);
-            blast_info("ROACH%d, Search comb uploaded", i + 1);
+                blast_info("ROACH%d, TARG tones uploaded", i + 1);
+            } else {
+                roach_vna_comb(&roach_state_table[i]);
+                roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
+                                                  roach_state_table[i].num_kids);
+                blast_info("ROACH%d, Search comb uploaded", i + 1);
+            }
             roach_state_table[i].status = ROACH_STATUS_TONE;
             roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
         }
@@ -2265,10 +2299,14 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/sweeps/roach%d/targ", ind + 1);
     asprintf(&roach_state_table[ind].cal_path_root,
                       "/home/fc1user/sam_tests/sweeps/roach%d/cal", ind + 1);
-    asprintf(&roach_state_table[ind].amps_path[0],
+    asprintf(&roach_state_table[ind].vna_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_amps.dat", ind + 1);
-    asprintf(&roach_state_table[ind].amps_path[1],
-                      "/home/fc1user/sam_tests/amps.dat");
+    asprintf(&roach_state_table[ind].vna_amps_path[1],
+                      "/home/fc1user/sam_tests/roach%d_vna_amps.dat", ind + 1);
+    asprintf(&roach_state_table[ind].targ_amps_path[0],
+                      "/home/fc1user/sam_tests/roach%d_default_targ_amps.dat", ind + 1);
+    asprintf(&roach_state_table[ind].targ_amps_path[1],
+                      "/home/fc1user/sam_tests/roach%d_targ_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].qdr_log,
                       "/home/fc1user/sam_tests/roach%d_qdr_cal.log", ind + 1);
     asprintf(&roach_state_table[ind].find_kids_log,
