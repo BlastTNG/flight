@@ -17,6 +17,8 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "blast.h"
+#include "groundhog_framing.h"
+#include "channels_tng.h"
 
 
 int system_idled = 0;

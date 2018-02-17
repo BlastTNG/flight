@@ -44,7 +44,7 @@ static int frame_stop;
 static struct mosquitto *mosq = NULL;
 
 
-void initialize_circular_superframes(void)
+void initialize_circular_superframes(superframes_list_t *superframes)
 {
     int i;
     superframes.i_in = 0;
@@ -55,7 +55,7 @@ void initialize_circular_superframes(void)
     }
 }
 
-void push_superframe(const void *m_frame)
+void push_superframe(const void *m_frame, superframes_list_t *superframes)
 {
     int i_in;
     i_in = (superframes.i_in + 1) & (NUM_FRAMES-1);

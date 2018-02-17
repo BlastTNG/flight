@@ -1,49 +1,78 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <math.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <syslog.h>
+#include <signal.h>
+#include <libgen.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/statvfs.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <pthread.h>
+
 #include "bbc_pci.h"
 #include "decom_pci.h"
-#include "decomd.h"
 #include "channels_tng.h"
 #include "crc.h"
 #include "blast.h"
+#include "groundhog_framing.h"
 
 #define FRAME_SYNC_WORD 0xEB90
 #define DQ_FILTER 0.4
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 
-extern int decom_fp;
-
-extern uint16_t out_frame[BI0_FRAME_SIZE+3];
-extern uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
-extern superframes_list_t superframes;
-
-extern int16_t du; // num_unlocked: info only
-extern int status; // unlocked, searching. or locked.
-extern uint16_t polarity;
-extern int system_idled; // if 1, don't write to disk
-extern uint16_t crc_ok; // 1 if crc was ok
-extern unsigned long frame_counter;
-extern double dq_bad;  // data quality - fraction of bad crcs
-
-
-bool debug_rate = false;
-uint16_t debug_counter = 0;
-uint16_t previous_counter = 0;
-
+superframes_list_t superframes;
 
 void biphase_receive(void)
 {
+  int decom_fp;
+
+  uint16_t out_frame[BI0_FRAME_SIZE+3];
+  uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
+
+  int16_t du; // num_unlocked: info only
+  int status; // unlocked, searching. or locked.
+  uint16_t polarity;
+  int system_idled; // if 1, don't write to disk
+  uint16_t crc_ok; // 1 if crc was ok
+  unsigned long frame_counter;
+  double dq_bad;  // data quality - fraction of bad crcs
+
+  bool debug_rate = false;
+  uint16_t debug_counter = 0;
+  uint16_t previous_counter = 0;
+
   uint16_t raw_word_in;
   int i_word = 0;
   int read_data = 0;
   uint16_t crc_pos, crc_neg;
   const uint16_t sync_word = 0xeb90;
 
-  initialize_circular_superframes();
+  buos_use_stdio();
+
+  /* Open Decom */
+  if ((decom_fp = open(DEV, O_RDONLY | O_NONBLOCK)) == -1) {
+      berror(fatal, "fatal error opening " DEV);
+  }
+
+  /* Initialise Decom */
+  ioctl(decom_fp, DECOM_IOC_RESET);
+  ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
+
+  /* set up our outputs */
+  openlog("decomd", LOG_PID, LOG_DAEMON);
+  // buos_use_syslog();
+
+
+  initialize_circular_superframes(&superframes);
 
   while(true) {
       while ((read(decom_fp, &raw_word_in, sizeof(uint16_t))) > 0) {
@@ -132,11 +161,11 @@ void biphase_receive(void)
                     if (raw_word_in == crc_pos) {
                         crc_ok = 1;
                         polarity = 1;
-                        push_superframe(out_frame);
+                        push_superframe(out_frame, &superframes);
                     } else if ((uint16_t)(~raw_word_in) == crc_neg) {
                         crc_ok = 1;
                         polarity = 0;
-                        push_superframe(anti_out_frame);
+                        push_superframe(anti_out_frame, &superframes);
                     } else {
                         crc_ok = 0;
                     }
