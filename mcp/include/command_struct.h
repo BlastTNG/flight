@@ -330,7 +330,7 @@ typedef struct roach
     unsigned int do_sweeps;
     unsigned int load_vna_amps;
     unsigned int load_targ_amps;
-    unsigned int set_rudats;
+    unsigned int calibrate_adc;
     unsigned int set_attens;
     unsigned int find_kids;
     unsigned int adc_rms;

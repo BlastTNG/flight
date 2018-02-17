@@ -860,7 +860,7 @@ struct mcom mcommands[plugh + 2] = {
       {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
     }
   },
-  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
+  {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
@@ -914,8 +914,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
       {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,

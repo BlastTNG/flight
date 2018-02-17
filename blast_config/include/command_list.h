@@ -241,7 +241,7 @@ enum multiCommand {
   show_adc_rms,
   load_new_vna_amps,
   load_new_targ_amps,
-  cal_attens,
+  cal_adc,
   roach_state,
   set_attens,
   test_tone,

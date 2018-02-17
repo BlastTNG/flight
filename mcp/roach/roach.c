@@ -114,6 +114,9 @@
 #define LO_READ_TIMEOUT (600*1000) /* LO read timeout, usec */
 #define INIT_VALON_TIMEOUT (500*1000) /* Valon init timeout, usec */
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
+#define ADC_CAL_NTRIES 30
+#define ADC_TARG_RMS 60 /* mV */
+#define ADC_RMS_RANGE 5 /* mV */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -954,12 +957,13 @@ int pi_write_string(pi_state_t *m_pi, uint8_t *m_data, size_t m_len)
  *
  * returns: RMS voltage of digitized freq comb
 */
-void roach_read_adc(roach_state_t *m_roach)
+double *roach_read_adc(roach_state_t *m_roach)
 {
     size_t buffer_len = (1<<12);
     uint16_t *temp_data;
     char* filename;
     char save_path[] = "/home/fc1user/sam_tests/";
+    double *rms = malloc(sizeof(double) * 2);;
     double irms, qrms, ival, qval, isum, qsum;
     temp_data = calloc((uint16_t)buffer_len, sizeof(uint16_t));
     roach_write_int(m_roach, "adc_snap_adc_snap_ctrl", 0, 0);
@@ -997,44 +1001,24 @@ void roach_read_adc(roach_state_t *m_roach)
     fclose(fd);
     irms = sqrt(isum / ((double)buffer_len / 2.));
     qrms = sqrt(qsum / ((double)buffer_len / 2.));
+    rms[0] = irms;
+    rms[1] = qrms;
     free(temp_data);
-    blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, irms, qrms);
+    // blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[0]);
+    return rms;
+}
+
+void get_adc_rms(roach_state_t *m_roach)
+{
+    double *rms;
+    rms = roach_read_adc(m_roach);
+    blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
 }
 
 // TODO(Sam) Finish and test this function
-/* Function: cal_atten
- * ----------------------------
- * Attempts to adjust Roach input and output attenuators until full scale of ADC is utilized
- * Attenuators are set to maximize Vrms
- *
- * @param m_roach roach state table
- *
-*/
-/* int cal_atten(roach_state_t *m_roach)
-{
-    int pre_amp = 20;
-    // int pre_adc = 20;
-    // int lower = 0.0;
-    double upper = 0.0;
-    double rms_voltage = roach_read_adc(m_roach);
-    while (rms_voltage < upper) {
-        char *atten_command;
-	pre_amp += 0.5;
-	// TODO(Sam) Make sure the order of attenuators is correct here, update Python call
-	blast_tmp_sprintf(atten_command, "python ~/init_attenuators.py %d %d", pre_amp, 30);
-	blast_info("Setting Pi%d pre-amp attenuation: %d dB", m_roach->which - 1, pre_amp);
-        pi_write_string(&pi_state_table[m_roach->which - 1], (unsigned char*)atten_command, strlen(atten_command));
-	while (pi_read_string(&pi_state_table[m_roach->which - 1]) < 0) {
-	    sleep(3);
-	}
-	rms_voltage = roach_read_adc(m_roach);
-    }
-    return 0;
-} */
-
 /* Function: set_atten
  * ----------------------------
- * Sets Roach attenuators; levels are in dB, between 0 and 30. 
+ * Sets Roach attenuators; levels are in dB, between 0 and 30.
  *
  * @param m_rudat rudat state table
  *
@@ -1045,10 +1029,10 @@ int set_atten(rudat_state_t *m_rudat)
     char *m_command;
     char *m_command2;
     int ind = m_rudat->which - 1;
-    blast_info("Pi%d, attempting to set RUDATs...", ind + 1);
+    // blast_info("Pi%d, attempting to set RUDATs...", ind + 1);
     blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-        CommandData.roach_params[m_rudat->which - 1].in_atten,
-        CommandData.roach_params[m_rudat->which - 1].out_atten);
+        CommandData.roach_params[m_rudat->which - 1].out_atten,
+        CommandData.roach_params[m_rudat->which - 1].in_atten);
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command, strlen(m_command));
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command2, strlen(m_command2));
@@ -1059,6 +1043,67 @@ int set_atten(rudat_state_t *m_rudat)
     }
     return retval;
 }
+
+// TODO(Sam) Finish and test this function
+/* Function: cal_adc_rms
+ * ----------------------------
+ * Attempts to adjust Roach input and output attenuators until full scale of ADC is utilized
+ * Attenuators are set to maximize Vrms
+ *
+ * @param m_roach roach state table
+ *
+*/
+
+void cal_adc_rms(roach_state_t *m_roach, int ntries)
+{
+    double *rms;
+    double output_atten = 3.;
+    // For now, keep output atten at 10 dB
+    CommandData.roach_params[m_roach->which - 1].out_atten = output_atten;
+    int count = 0;
+    double high_range = (double)ADC_TARG_RMS + (double)ADC_RMS_RANGE;
+    double low_range = (double)ADC_TARG_RMS - (double)ADC_RMS_RANGE;
+    while (count < ADC_CAL_NTRIES) {
+        rms = roach_read_adc(m_roach);
+        blast_info("count = %d", count);
+        if ((CommandData.roach_params[m_roach->which - 1].in_atten <= 1) ||
+                     (CommandData.roach_params[m_roach->which - 1].in_atten >= 30)) {
+            blast_info("ROACH%d, Input atten limit, aborting cal", m_roach->which);
+            break;
+        } else {
+            // if rms is too low
+            blast_info("High range, low_range = %g, %g", high_range, low_range);
+            blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
+            if ((rms[0] < high_range) ||
+                      (rms[1] < high_range)) {
+                blast_info("ROACH%d, Warning: ADC RMS < %g mV", m_roach->which, high_range);
+                CommandData.roach_params[m_roach->which - 1].in_atten -= 1;
+                blast_info("ROACH%d, Adjusting input atten...", m_roach->which);
+                set_atten(&rudat_state_table[m_roach->which - 1]);
+                if ((rms[0] <= high_range) &&
+                      (rms[0] >= low_range)) {
+                    blast_info("ROACH%d, ADC cal set", m_roach->which);
+                    break;
+                }
+            }
+            // if rms is too high
+            if ((rms[0] > high_range) ||
+                              (rms[1] > high_range)) {
+                blast_info("ROACH%d, Warning: ADC RMS > %g mV", m_roach->which, high_range);
+                CommandData.roach_params[m_roach->which - 1].in_atten += 1;
+                blast_info("ROACH%d, Adjusting input atten...", m_roach->which);
+                set_atten(&rudat_state_table[m_roach->which - 1]);
+                if ((rms[0] <= high_range) &&
+                      (rms[0] >= low_range)) {
+                    blast_info("ROACH%d, ADC cal set", m_roach->which);
+                    break;
+                }
+            }
+        }
+        count += 1;
+    }
+}
+
 
 /* Function: init_valon
  * ----------------------------
@@ -2020,8 +2065,12 @@ void *roach_cmd_loop(void* ind)
             CommandData.roach[i].test_tone = 0;
         }
         if (CommandData.roach[i].adc_rms) {
-            roach_read_adc(&roach_state_table[i]);
+            get_adc_rms(&roach_state_table[i]);
             CommandData.roach[i].adc_rms = 0;
+        }
+        if (CommandData.roach[i].calibrate_adc) {
+            cal_adc_rms(&roach_state_table[i], ADC_CAL_NTRIES);
+            CommandData.roach[i].calibrate_adc = 0;
         }
         if (CommandData.roach[i].change_state) {
             roach_state_table[i].status = CommandData.roach[i].new_state;
@@ -2168,14 +2217,19 @@ void *roach_cmd_loop(void* ind)
             roach_state_table[i].desired_status >= ROACH_STATUS_TONE) {
             blast_info("ROACH%d, Generating search comb...", i + 1);
             if (CommandData.roach[i].load_targ_amps) {
-                roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
-                                                  roach_state_table[i].vna_comb_len);
+                roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
+                                                  roach_state_table[i].num_kids);
                 blast_info("ROACH%d, TARG tones uploaded", i + 1);
             } else {
                 roach_vna_comb(&roach_state_table[i]);
-                roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
-                                                  roach_state_table[i].num_kids);
+                roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
+                                                  roach_state_table[i].vna_comb_len);
                 blast_info("ROACH%d, Search comb uploaded", i + 1);
+            }
+            // get_adc_rms(&roach_state_table[i]);
+            if (i == 1) {
+                blast_info("ROACH%d, Checking ADC rms voltages...", i + 1);
+                cal_adc_rms(&roach_state_table[i], ADC_CAL_NTRIES);
             }
             roach_state_table[i].status = ROACH_STATUS_TONE;
             roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
