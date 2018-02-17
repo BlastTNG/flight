@@ -55,7 +55,6 @@ void pilot_recv_and_decompress(void *arg) {
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
-    blast_info("Received linklist with serial 0x%x (packet %d)\n", serial, count++);
 
     // receive the data from payload via bitserver
     blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
@@ -64,19 +63,22 @@ void pilot_recv_and_decompress(void *arg) {
       blast_info("Malformed packed received on Pilot\n");
       continue;
     }
+    
+    /*
+    for (i = 0; i < 16*50; i++) {
+      if ((i % 16) == 0) printf("\n");
+      printf("0x%x ", compbuffer[i]);
+    }
+    printf("\n");
+    */
 
     if (!read_allframe(superframe, compbuffer)) { // just a regular frame
-      for (i = 0; i < blk_size; i++) {
-        if ((i % 16) == 0) printf("\n");
-        printf("0x%x ", compbuffer[i]);
-      }
-      printf("\n");
+      blast_info("Linklist frame with serial 0x%x (packet %d)\n", serial, count++);
 
       // TODO(javier): deal with blk_size < ll->blk_size
       // decompress the linklist
       if (!decompress_linklist(superframe, ll, compbuffer)) continue;
-    }
-    else {
+    } else {
       printf("\nReceived all frame :)\n");
     }
 

@@ -31,6 +31,28 @@ set(MCP_COMMON_HEADERS
    PARENT_SCOPE
 )
 
+set(GROUNDHOG_COMMON_SRCS
+    ${GROUNDHOG_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
+    PARENT_SCOPE
+)
+set(GROUNDHOG_COMMON_HEADERS
+   ${GROUNDHOG_COMMON_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
+   PARENT_SCOPE
+)
+
 set(DECOM_COMMON_SRCS
     ${DECOM_COMMON_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
