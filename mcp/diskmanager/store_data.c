@@ -35,6 +35,7 @@
 #include <command_struct.h>
 #include <diskmanager_tng.h>
 #include <mcp.h>
+#include <crc.h>
 #include <channel_macros.h>
 #include <store_data.h>
 
@@ -109,13 +110,16 @@ void store_rate_data(store_file_info_t *m_storage) {
 		    blast_info("Opening %s", m_storage->file_name);
             m_storage->fp = file_open(m_storage->file_name, "w+");
             m_storage->header_written = false;
+            m_storage->crc = BLAST_MAGIC32;
         }
 	    if (m_storage->fp) {
 	        // Have we already written enough data to the file so that a new one should be opened?
 	        if ((m_storage->frames_stored) >= STORE_DATA_FRAMES_PER_FILE * m_storage->nrate) {
+	        	bytes_written = file_write(m_storage->fp, (void*) &(m_storage->crc), sizeof(uint32_t));
     	        blast_info("Closing %s", m_storage->file_name);
                 file_close(m_storage->fp);
                 m_storage->header_written = false;
+                m_storage->crc = BLAST_MAGIC32;
                 get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
 		        blast_info("Opening %s", m_storage->file_name);
                 m_storage->fp = file_open(m_storage->file_name, "w+");
@@ -137,9 +141,10 @@ void store_rate_data(store_file_info_t *m_storage) {
                     m_storage->have_warned = true;
                 }
 		    } else {
-		        // We wrote the frame successfully.
+		        // We wrote the frame successfully.  Update the crc.
                 (m_storage->frames_stored)++;
                 m_storage->have_warned = false;
+                m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
 		    }
         } else {
 	        if (m_storage->have_warned) {
