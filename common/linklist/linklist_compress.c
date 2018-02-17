@@ -63,6 +63,7 @@ uint32_t superframe_flag[RATE_END] = {0};
 uint32_t superframe_offset[RATE_END] = {0};
 uint32_t superframe_skip[RATE_END] = {0};
 uint32_t superframe_size = 0;
+uint32_t allframe_size = 0;
 
 void define_superframe()
 {
@@ -73,6 +74,7 @@ void define_superframe()
     superframe_skip[rate] = frame_size[rate];
     superframe_size += frame_size[rate]*get_spf(rate);
   }
+  allframe_size = write_allframe(NULL, NULL);
   blast_info("Superframe skip and offsets allocated\n");
   
 }
@@ -524,6 +526,62 @@ int doubletodata(uint8_t * data, double dub, char type)
   return 0;
 }
 
+// takes superframe at buffer in and creates an all frame in buffer out
+// all frame is 1 sample per field uncompressed
+int write_allframe(uint8_t * allframe, uint8_t * superframe) {
+  int i;
+  int tlm_out_start = 4; // the first 4 bytes are the serial for allframes
+  int tlm_in_start = 0; 
+  unsigned int tlm_size = 0; 
+  uint32_t test = ALLFRAME_SERIAL;
+
+  int wd = 1;
+  if ((allframe == NULL) || (superframe == NULL)) wd = 0;
+
+  if (wd) memcpy(allframe, &test, 4);
+
+  for (i=0;i<channels_count;i++) {
+    tlm_in_start = get_channel_start_in_superframe(&channel_list[i]);
+    tlm_size = channel_size(&channel_list[i]);
+
+    if (wd) memcpy(allframe+tlm_out_start, superframe+tlm_in_start, tlm_size);
+    tlm_out_start += tlm_size;
+  }
+  return tlm_out_start;
+
+}
+
+// takes an allframe at buffer in at 1 sample per frame and writes repeated
+// samples in the superframe
+int read_allframe(uint8_t * superframe, uint8_t * allframe) {
+  int i,j;
+  int tlm_out_start = 0;
+  int tlm_in_start = 4;
+  int tlm_num = 0;
+  int tlm_skip = 0;
+  unsigned int tlm_size = 0;
+  
+  // check to see if this is actually an allframe
+  if (*((uint32_t *) allframe) != ALLFRAME_SERIAL) { 
+    return 0;
+  }
+  
+  for (i=0; i<channels_count; i++) { 
+    tlm_out_start = get_channel_start_in_superframe(&channel_list[i]);
+    tlm_size = channel_size(&channel_list[i]);
+    tlm_num = get_channel_spf(&channel_list[i]);
+    tlm_skip = get_channel_skip_in_superframe(&channel_list[i]);
+
+    for (j=0;j<tlm_num;j++) {
+      memcpy(superframe+tlm_out_start, allframe+tlm_in_start, tlm_size);
+      tlm_out_start += tlm_skip;
+    }
+    tlm_in_start += tlm_size;
+  } 
+  return tlm_in_start;
+
+}
+
 double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int skip, double * store)
 {
   int i;
@@ -552,7 +610,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   double temp1;
 
   char type = le->tlm->type;
-  //unsigned int inputsize = get_channel_size(le->tlm);
+  //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
   unsigned int outputnum = le->num;
@@ -603,7 +661,7 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   double gain = 1.0, offset = 0.0;
 
   char type = le->tlm->type;
-  unsigned int outputsize = get_channel_size(le->tlm);
+  unsigned int outputsize = channel_size(le->tlm);
   unsigned int outputskip = get_channel_skip_in_superframe(le->tlm);
   int outputnum = get_channel_spf(le->tlm);
   int inputnum = le->num;
@@ -653,7 +711,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   double temp1;
 
   char type = le->tlm->type;
-  //unsigned int inputsize = get_channel_size(le->tlm);
+  //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
   unsigned int outputnum = le->num;
@@ -704,7 +762,7 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   double gain = 1.0, offset = 0.0;
 
   char type = le->tlm->type;
-  unsigned int outputsize = get_channel_size(le->tlm);
+  unsigned int outputsize = channel_size(le->tlm);
   unsigned int outputskip = get_channel_skip_in_superframe(le->tlm);
   int outputnum = get_channel_spf(le->tlm);
   int inputnum = le->num;
@@ -752,7 +810,7 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
   float offset, gain;
 
   char type = le->tlm->type;
-  //unsigned int inputsize = get_channel_size(le->tlm);
+  //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
   unsigned int outputnum = le->num;
@@ -812,7 +870,7 @@ int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_
   float offset = 0;
 
   char type = le->tlm->type;
-  unsigned int outputsize = get_channel_size(le->tlm);
+  unsigned int outputsize = channel_size(le->tlm);
   unsigned int outputskip = get_channel_skip_in_superframe(le->tlm);
   int outputnum = get_channel_spf(le->tlm);
   int inputnum = le->num;
@@ -854,7 +912,7 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
   float offset, gain;
 
   char type = le->tlm->type;
-  //unsigned int inputsize = get_channel_size(le->tlm);
+  //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
   unsigned int outputnum = le->num;
@@ -924,7 +982,7 @@ int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * 
   float offset = 0;
 
   char type = le->tlm->type;
-  unsigned int outputsize = get_channel_size(le->tlm);
+  unsigned int outputsize = channel_size(le->tlm);
   unsigned int outputskip = get_channel_skip_in_superframe(le->tlm);
   int outputnum = get_channel_spf(le->tlm);
   int inputnum = le->num;
@@ -963,12 +1021,12 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
   int wd = 1;
   int blk_size = 0;
 
-  //unsigned int inputsize = get_channel_size(le->tlm);
+  //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
   unsigned int outputnum = le->num;
   unsigned int decim = inputnum/outputnum;
-  unsigned int size = get_channel_size(le->tlm);  
+  unsigned int size = channel_size(le->tlm);  
 
 
   if (decim == 0) return 0;
@@ -1004,7 +1062,7 @@ int decimationDecompress(uint8_t * data_out, struct link_entry *le, uint8_t * da
   int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
 
-  unsigned int size = get_channel_size(le->tlm);
+  unsigned int size = channel_size(le->tlm);
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 

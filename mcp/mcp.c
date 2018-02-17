@@ -377,7 +377,6 @@ static void mcp_1hz_routines(void)
 
     // TODO(javier): check flags for all superframe rates
     incrementFifo(superframe_fifo); // increment the write location
-    blast_info("Fifo %d %d\n", superframe_fifo->start, superframe_fifo->end);
     assign_all_linklist_superframe(linklist_array, getFifoRead(superframe_fifo));
     set_all_linklist_superframe_ready(linklist_array);
 //    store_data_1hz();

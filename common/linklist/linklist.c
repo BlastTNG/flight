@@ -69,32 +69,6 @@ int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
 
-// TODO(javier): this can be replaced by channel_size in "channels_tng.c", but it currently isn't publically available...
-unsigned int get_channel_size(const channel_t * chan)
-{
-  if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
-  switch (chan->type)
-  {
-    case TYPE_UINT8:
-    case TYPE_INT8:
-      return sizeof(int8_t);
-    case TYPE_INT16:
-    case TYPE_UINT16:
-      return sizeof(int16_t);
-    case TYPE_INT32:
-    case TYPE_UINT32:
-    case TYPE_FLOAT:
-      return sizeof(int32_t);
-    case TYPE_INT64:
-    case TYPE_UINT64:
-    case TYPE_DOUBLE:
-      return sizeof(int64_t);
-    default:
-      blast_err("Invalid type %d for channel %s", chan->type, chan->field);
-      return 0;
-  }
-}
-
 unsigned int get_spf(unsigned int rate)
 {
   switch (rate)
@@ -358,7 +332,7 @@ linklist_t * parse_linklist(char *fname)
         }
         else // no compression, so identical field to telemlist, but with decimation
         {
-          blk_size = num*get_channel_size(ll->items[ll->n_entries].tlm);
+          blk_size = num*channel_size(ll->items[ll->n_entries].tlm);
         }
         if (blk_size > 0) ll->items[ll->n_entries].blk_size = blk_size;
         else

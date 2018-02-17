@@ -30,6 +30,8 @@
 
 #include "linklist.h"
 
+#define ALLFRAME_SERIAL 0x42424242
+
 #ifdef __cplusplus
 
 extern "C"{
@@ -42,6 +44,7 @@ extern uint32_t superframe_offset[RATE_END];
 extern uint32_t superframe_skip[RATE_END];
 extern uint32_t superframe_size;
 extern uint32_t superframe_flag[RATE_END];
+extern uint32_t allframe_size;
 
 int compress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
@@ -55,6 +58,8 @@ unsigned int extract_frame_from_superframe(void * , E_RATE , void *);
 int superframe_data_is_ready();
 void assign_superframe_to_linklist(linklist_t *, uint8_t *);
 void assign_compframe_to_linklist(linklist_t *, uint8_t *);
+int write_allframe(uint8_t *, uint8_t *);
+int read_allframe(uint8_t *, uint8_t *);
 
 #ifdef __cplusplus
 }

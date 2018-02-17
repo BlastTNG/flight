@@ -45,8 +45,6 @@ extern "C" {
 #include "bitserver.h"
 #include "blast.h"
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-
 /* packet header (12 bytes)
  * ----------------
  * [0-3] = unique sender recver serial

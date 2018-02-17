@@ -54,12 +54,13 @@
 
 static GHashTable *frame_table = NULL;
 static int channel_count[RATE_END][TYPE_END] = {{0}};
+int channels_count = 0;
 
 void *channel_data[RATE_END] = {0};
 size_t frame_size[RATE_END] = {0};
 static void *channel_ptr[RATE_END] = {0};
 
-static inline size_t channel_size(channel_t *m_channel)
+size_t channel_size(channel_t *m_channel)
 {
     size_t retsize = 0;
     switch (m_channel->type) {
@@ -329,7 +330,9 @@ int channels_initialize(const channel_t * const m_channel_list)
     if (frame_table == NULL) return -1;
 
     for (int j = 0; j < RATE_END; j++) {
-        for (int k = 0; k < TYPE_END; k++) channel_count[j][k] = 0;
+        for (int k = 0; k < TYPE_END; k++) {
+          channel_count[j][k] = 0;
+        }
         if (channel_data[j]) {
             free(channel_data[j]);
             channel_data[j] = NULL;
@@ -340,6 +343,7 @@ int channels_initialize(const channel_t * const m_channel_list)
      * First Pass:  Add each entry in the channels array to a hash table for later lookup.
      * Then count each type of channel, separating by source, variable type and rate
      */
+    channels_count = 0;
     for (channel = m_channel_list; channel->field[0]; channel++) {
         g_hash_table_insert(frame_table, (gpointer)channel->field, (gpointer)channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
@@ -348,6 +352,7 @@ int channels_initialize(const channel_t * const m_channel_list)
             blast_fatal("Could not map %d and %d to rate and type!, %s", channel->rate, channel->type, channel->field);
             return 1;
         }
+        channels_count++;
     }
 
     /**

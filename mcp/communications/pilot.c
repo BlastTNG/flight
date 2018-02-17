@@ -59,10 +59,12 @@ uint8_t pilot_idle = 0;
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
-  initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
+  unsigned int fifosize = MAX(PILOT_MAX_SIZE, allframe_size);
+  initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
   linklist_t * ll = NULL;
 
-  uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE);
+  uint8_t * compbuffer = calloc(1, fifosize);
+  int allframe_count = 0;
 
   while (1) {
     // get the current pointer to the pilot linklist
@@ -71,6 +73,12 @@ void pilot_compress_and_send(void *arg) {
     if (ll->data_ready & SUPERFRAME_READY) { // data is ready to be sent
       // unset the data ready bit
       ll->data_ready &= ~SUPERFRAME_READY;
+
+      // send allframe if necessary
+      if (!allframe_count) {
+        write_allframe(compbuffer, ll->superframe);
+        sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+      }
 
       // compress the linklist
       int retval = compress_linklist(compbuffer, ll, NULL);
@@ -85,6 +93,7 @@ void pilot_compress_and_send(void *arg) {
       sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_PACKET_SIZE);
+      allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
     } else {
       usleep(100000); // zzz...
     }
