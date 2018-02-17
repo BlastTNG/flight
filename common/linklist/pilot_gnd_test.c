@@ -19,7 +19,7 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "blast.h"
-#include "../mcp/include/pilot.h"
+#include "../../mcp/include/pilot.h"
 
 uint8_t * superframe = NULL;
 
@@ -33,9 +33,9 @@ void pilot_recv_and_decompress(void *arg) {
   uint32_t blk_size = 0;
 
   uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE);
+  int i = 0;
 
   while (1) {
-    blast_info("Waiting for data..\n");
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
@@ -49,7 +49,7 @@ void pilot_recv_and_decompress(void *arg) {
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
-    blast_info("Received linklist with serial 0x%x\n", serial);
+    blast_info("Received linklist with serial 0x%x (packet %d)\n", serial, i++);
 
     // receive the data from payload via bitserver
     blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
