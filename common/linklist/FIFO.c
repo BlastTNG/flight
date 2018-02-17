@@ -387,7 +387,7 @@ uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t p
   memcpy(retval, packet, packet_size);
 
   // update packet size and location
-  *buffer_size += packet_size;
+  if (buffer_size) *buffer_size += packet_size;
   *i_pkt += 1;
 
   return retval; 
