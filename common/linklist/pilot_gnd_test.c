@@ -21,8 +21,6 @@
 #include "blast.h"
 #include "../../mcp/include/pilot.h"
 
-uint8_t * superframe = NULL;
-
 void pilot_recv_and_decompress(void *arg) {
   // initialize UDP connection via bitserver/BITRecver
   struct BITRecver pilotrecver = {0};
@@ -32,9 +30,17 @@ void pilot_recv_and_decompress(void *arg) {
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
 
-  uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE);
-  int i = 0;
+  // allocate buffers
+  uint8_t * compbuffer = calloc(1, PILOT_MAX_PACKET_SIZE); // compressed buffer
+  uint8_t * superframe = allocate_superframe(); // uncompressed superframe
+  uint8_t * pilot_channel_data[RATE_END] = {NULL};
 
+  int i = 0, rate = 0;
+  for (rate = 0; rate < RATE_END; rate++) {
+    pilot_channel_data[rate] = calloc(1, frame_size[rate]);
+  }  
+
+  int count = 0;
   while (1) {
     do {
       // get the linklist serial for the data received
@@ -49,7 +55,7 @@ void pilot_recv_and_decompress(void *arg) {
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
-    blast_info("Received linklist with serial 0x%x (packet %d)\n", serial, i++);
+    blast_info("Received linklist with serial 0x%x (packet %d)\n", serial, count++);
 
     // receive the data from payload via bitserver
     blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
@@ -59,12 +65,26 @@ void pilot_recv_and_decompress(void *arg) {
       continue;
     }
 
+    for (i = 0; i < blk_size; i++) {
+      if ((i % 16) == 0) printf("\n");
+      printf("0x%x ", compbuffer[i]);
+    }
+    printf("\n");
+
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    if (!decompress_linklist(NULL, ll, compbuffer)) continue;
+    if (!decompress_linklist(superframe, ll, compbuffer)) continue;
 
     // set the superframe ready flag
     ll->data_ready |= SUPERFRAME_READY;
+
+    // extract data from the superframe for each rate
+    for (rate = 0; rate < RATE_END; rate++) {
+      int next_frame = 0; // the next frame to be extracted from the superframe
+      for (i = 0; i < get_spf(rate); i++) {
+        next_frame = extract_frame_from_superframe(pilot_channel_data[rate], rate, superframe);
+      }
+    }
   }
 }
 
@@ -73,8 +93,6 @@ int main(int argc, char * argv[]) {
   linklist_t * ll_list[2] = {parse_linklist("test.ll"), NULL};
   linklist_generate_lookup(ll_list);  
  
-  superframe = allocate_superframe();
-  assign_superframe_to_linklist(ll_list[0], superframe);
 
   pthread_t recv_worker;
   pthread_create(&recv_worker, NULL, (void *) &pilot_recv_and_decompress, NULL);
