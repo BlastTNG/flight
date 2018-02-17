@@ -315,6 +315,83 @@ int setFifoWrite(struct Fifo * fifo, uint8_t *buffer)
 }
 
 
+/* -------------------------
+ * ---- packetizeBuffer ----
+ * -------------------------
+ * 
+ * This function takes a buffer and splits it into n packets of a given size.
+ * Returns the location in the buffer for the ith packet.
+ * 
+ * Parameters:
+ * --------------------------
+ *      buffer:    A pointer to the buffer to be packetized. 
+ * buffer_size:    The total size of the buffer to be packetized.
+ * packet_size:    A pointer to the size of packets from the buffer.
+                   This value will be updated to reflect the size of the packet to 
+                   be read from the buffer.
+ *       i_pkt:    A pointer to the packet number to be written. This value will be
+ *                 incremented on successful execution of this function.
+ *       n_pkt:    A pointer to the total number of packets required. If 0, the number
+ *                 of packets will be written based on the total size and packet size.
+ *
+ * 
+*/
+uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * packet_size,
+                          uint16_t * i_pkt, uint16_t * n_pkt) {
+  // compute the total number of packets if necessary
+  if (!n_pkt) *n_pkt = (buffer_size-1)/(*packet_size)+1;
+
+  // reached the end of the buffer
+  if (*i_pkt >= *n_pkt) return NULL;
+  
+  // get the packet_size
+  uint32_t read_size = MIN(*packet_size, buffer_size-((*i_pkt)*(*packet_size)));
+  uint8_t * retval = buffer+(*packet_size)*(*i_pkt);
+
+  // update packet size and location
+  *packet_size = read_size;
+  *i_pkt += 1;
+
+  return retval; 
+}
+
+/* -------------------------
+ * --- depacketizeBuffer ---
+ * -------------------------
+ * 
+ * This function takes sequential n packets and assembles them into a main buffer.
+ * Data for the ith packet (i<n) is written to an output buffer. Returns the 
+ * location in the buffer for the ith packet.
+ * 
+ * Parameters:
+ * --------------------------
+ *      buffer:    A pointer to the buffer containing depacketized data. 
+ * buffer_size:    A pointer to the total size of the buffer to be packetized.
+                   This value is updated as packets are added.
+ * packet_size:    The size of packet to add to the buffer.
+ *       i_pkt:    A pointer to the packet number to be written. This value will be
+ *                 incremented on successful execution of this function.
+ *       n_pkt:    A pointer to the total number of packets required.
+ *
+ * 
+*/
+uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
+                          uint16_t * i_pkt, uint16_t * n_pkt, uint8_t * packet) {
+  // reached the end of the buffer
+  if (*i_pkt >= *n_pkt) return NULL;
+  
+  // get the packet_size
+  uint8_t * retval = buffer+packet_size*(*i_pkt);
+
+  // copy the data to the buffer
+  memcpy(retval, packet, packet_size);
+
+  // update packet size and location
+  *buffer_size += packet_size;
+  *i_pkt += 1;
+
+  return retval; 
+}
 #ifdef __cplusplus
 
 }

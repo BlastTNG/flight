@@ -123,7 +123,7 @@ uint16_t readHeader(uint8_t * header, uint32_t **ser, uint32_t **frame_num, uint
 void*  sendDataThread(void *arg)
 {
   struct BITSender *server = (struct BITSender *) arg;
-  unsigned int start, size, n_packets, packet_size, packet_maxsize;
+  unsigned int start, size, n_packets, packet_size;
   unsigned int i;
   uint8_t *header;
   uint32_t serial, frame_num;
@@ -141,9 +141,8 @@ void*  sendDataThread(void *arg)
       size = server->send_fifo->size[start];
       flags = server->send_fifo->flags[start];
       frame_num = server->send_fifo->frame_num[start];
-      packet_maxsize = server->packet_maxsize;
+      packet_size = server->packet_maxsize;
       buffer = getFifoRead(server->send_fifo);
-      n_packets = (size-1)/(packet_maxsize)+1;
       
       if (flags & NO_HEADER) // send packet with header
       {
@@ -161,11 +160,11 @@ void*  sendDataThread(void *arg)
       }
       else
       {
-        for (i=0;i<n_packets;i++) // split data into packets
+        i = 0;
+        n_packets = 1; // initializer
+        while (i < n_packets) // split data into packets
         {
           writeHeader(header, serial, frame_num, i, n_packets);          
-          packet_size = MIN(packet_maxsize,size-(i*packet_maxsize));
-
 #ifdef MSG_MORE // general Linux kernel
 
           // add header to packet (adds due to MSG_MORE flag)
@@ -175,7 +174,9 @@ void*  sendDataThread(void *arg)
             server->slen) < 0) blast_err("sendTo failed()");
           
           // add data to packet and send
-          if (sendto(server->sck, buffer+(packet_maxsize*i), packet_size,
+          uint8_t * packet_buffer = packetizeBuffer(buffer, size, (uint32_t *) &packet_size, 
+                                    (uint16_t *) &i, (uint16_t *) &n_packets);
+          if (sendto(server->sck, packet_buffer, packet_size,
             MSG_NOSIGNAL,(struct sockaddr*)&(server->send_addr), 
             server->slen) < 0) blast_err("sendTo failed()");
 

@@ -31,6 +31,13 @@
 
 #define MAX_TELEM_FIFO_SIZE 20000	// maximum number of telemetry entries in the FIFO
 
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
 #ifdef __cplusplus
 
 extern "C" {
@@ -60,6 +67,8 @@ uint8_t *getFifoRead(struct Fifo *);
 uint8_t *getFifoLastRead(struct Fifo *);
 uint8_t *getFifoWrite(struct Fifo *);
 int setFifoWrite(struct Fifo *, uint8_t *);
+uint8_t * packetizeBuffer(uint8_t *, uint32_t, uint32_t *, uint16_t *, uint16_t *);
+uint8_t * depacketizeBuffer(uint8_t *, uint32_t *, uint32_t, uint16_t *, uint16_t *, uint8_t *);
 
 #ifdef __cplusplus
 
