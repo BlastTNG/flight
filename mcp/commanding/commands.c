@@ -381,7 +381,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_5_off = 1;
             CommandData.Relays.update_of = 1;
             break;
-        case sxc0_acs_on:
+        case xsc0_acs_on:
             CommandData.Relays.of_6_on = 1;
             CommandData.Relays.update_of = 1;
             break;

@@ -144,7 +144,7 @@ enum singleCommand {
     cycle_of_16, cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4,
     cycle_if_5, cycle_if_6, cycle_if_7, cycle_if_8, cycle_if_9,
     cycle_if_10,
-    hd_pv_on, hd_pv_off,eth_switch_on, eth_switch_off,
+    hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
     fc1_on, fc1_off, xsc1_acs_on, xsc1_acs_off,
     fc2_on, fc2_off, xsc0_acs_on, xsc0_acs_off,
     gyros_on, gyros_off, data_transmit_on, data_transmit_off,
