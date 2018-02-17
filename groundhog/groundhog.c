@@ -115,7 +115,7 @@ int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
   framing_init(channel_list, derived_list);
 
-  linklist_t * ll_list[2] = {parse_linklist("test.ll"), NULL};
+  linklist_t * ll_list[2] = {parse_linklist("/data/etc/linklists/test.ll"), NULL};
   linklist_generate_lookup(ll_list);  
 
   if (false) {
@@ -127,20 +127,20 @@ int main(int argc, char * argv[]) {
   pthread_t biphase_receive_worker;
 
   pthread_create(&pilot_receive_worker, NULL, (void *) &pilot_receive, NULL);
-  pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
+  //pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
 
   // Publishing data to MSQT
   pthread_t pilot_publish_worker;
   pthread_t biphase_publish_worker;
 
   pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
-  pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+  //pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
 
   // Joining
   pthread_join(pilot_receive_worker, NULL);
-  pthread_join(biphase_receive_worker, NULL);
+  //pthread_join(biphase_receive_worker, NULL);
   pthread_join(pilot_publish_worker, NULL);
-  pthread_join(biphase_publish_worker, NULL);
+  //pthread_join(biphase_publish_worker, NULL);
 
   return 0;
 }

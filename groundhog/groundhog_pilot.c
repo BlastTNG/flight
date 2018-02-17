@@ -41,7 +41,6 @@ void pilot_receive(void *arg) {
   initialize_circular_superframes(&superframes);
 
   while (true) {
-    blast_info("Waiting for data..\n");
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
@@ -55,10 +54,9 @@ void pilot_receive(void *arg) {
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
-    blast_info("Received linklist with serial 0x%x\n", serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_PACKET_SIZE, 0);
+    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_SIZE, 0);
 
     if (blk_size < 0) {
       blast_info("Malformed packed received on Pilot\n");
@@ -67,13 +65,15 @@ void pilot_receive(void *arg) {
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
-      continue;
+    if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
+      blast_info("Received linklist with serial 0x%x\n", serial);
+      if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
+        continue;
+      }
+    } else {
+      blast_info("\nReceived an all frame :)\n");
     }
     push_superframe(local_superframe, &superframes);
-
-    // set the superframe ready flag
-    ll->data_ready |= SUPERFRAME_READY;
   }
 }
 

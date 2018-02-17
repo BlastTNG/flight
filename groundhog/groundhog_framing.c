@@ -207,7 +207,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
 
     ret = mosquitto_connect_async(mosq, host, port, keepalive); 
     if (ret == MOSQ_ERR_SUCCESS) {
-   	printf("Succesfully connected decomd to mosquitto server on %s\n", host);
+   	printf("Succesfully connected groundhog to mosquitto server on %s\n", host);
     } else if (ret == MOSQ_ERR_INVAL) {
         blast_info("Unable to connect to mosquitto server: Invalid Parameters!\n");
     } else {
@@ -222,7 +222,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
 
     /**
      * Set up the channels and derived packages for subscribers
-     */
+     */ 
     if (!(channels_pkg = channels_create_map(channel_list))) {
         blast_info("Exiting framing routine because we cannot get the channel list");
         return -1;
@@ -236,7 +236,6 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         snprintf(topic, sizeof(topic), "channels/%s", m_telemetries.types[i]);
         mosquitto_publish(mosq, NULL, topic,
                 sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
-        bfree(err, channels_pkg);
 
         if (!(derived_pkg = channels_create_derived_map(m_derived))) {
             blast_info("Failed sending derived packages for telemetry %s\n", m_telemetries.types[i]);
@@ -247,6 +246,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
             bfree(err, derived_pkg);
         }
     }
+    bfree(err, channels_pkg);
 
     return 0;
 }

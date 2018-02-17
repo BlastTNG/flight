@@ -24,7 +24,7 @@
 void pilot_recv_and_decompress(void *arg) {
   // initialize UDP connection via bitserver/BITRecver
   struct BITRecver pilotrecver = {0};
-  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_PACKET_SIZE, PILOT_MAX_PACKET_SIZE);
+  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0;
   linklist_t * ll = NULL;
