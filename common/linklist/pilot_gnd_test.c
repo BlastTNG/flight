@@ -65,15 +65,20 @@ void pilot_recv_and_decompress(void *arg) {
       continue;
     }
 
-    for (i = 0; i < blk_size; i++) {
-      if ((i % 16) == 0) printf("\n");
-      printf("0x%x ", compbuffer[i]);
-    }
-    printf("\n");
+    if (!read_allframe(superframe, compbuffer)) { // just a regular frame
+      for (i = 0; i < blk_size; i++) {
+        if ((i % 16) == 0) printf("\n");
+        printf("0x%x ", compbuffer[i]);
+      }
+      printf("\n");
 
-    // TODO(javier): deal with blk_size < ll->blk_size
-    // decompress the linklist
-    if (!decompress_linklist(superframe, ll, compbuffer)) continue;
+      // TODO(javier): deal with blk_size < ll->blk_size
+      // decompress the linklist
+      if (!decompress_linklist(superframe, ll, compbuffer)) continue;
+    }
+    else {
+      printf("\nReceived all frame :)\n");
+    }
 
     // set the superframe ready flag
     ll->data_ready |= SUPERFRAME_READY;
