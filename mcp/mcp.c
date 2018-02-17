@@ -281,6 +281,12 @@ static void mcp_244hz_routines(void)
 
     framing_publish_244hz();
     add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, getFifoWrite(superframe_fifo));
+
+    // TODO(javier): add idle flags for all links to decrement superframe FIFO read location
+    if (pilot_idle) {
+      decrementFifo(superframe_fifo);
+      pilot_idle = 0;
+    }
 }
 
 static void mcp_200hz_routines(void)
@@ -370,7 +376,8 @@ static void mcp_1hz_routines(void)
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, getFifoWrite(superframe_fifo));
 
     // TODO(javier): check flags for all superframe rates
-    incrementFifo(superframe_fifo);
+    incrementFifo(superframe_fifo); // increment the write location
+    blast_info("Fifo %d %d\n", superframe_fifo->start, superframe_fifo->end);
     assign_all_linklist_superframe(linklist_array, getFifoRead(superframe_fifo));
     set_all_linklist_superframe_ready(linklist_array);
 //    store_data_1hz();

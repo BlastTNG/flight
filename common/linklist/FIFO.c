@@ -153,16 +153,16 @@ int incrementFifo(struct Fifo * fifo)
 	}
 	fifo->end = (fifo->end+1)%(fifo->length); // update FIFO end
 	if (fifo->flags[fifo->end] & MEMALLOC)
-        {
-                memset(fifo->buffer[fifo->end],0,fifo->maxsize);
-                fifo->flags[fifo->end] = MEMALLOC; // clear flags
-        }
-        else
-        {
-                fifo->flags[fifo->end] = 0; // clear flags
-        }
-        fifo->size[fifo->end] = 0; // clear size
-        fifo->frame_num[fifo->end] = 0; // clear the frame number
+  {
+    memset(fifo->buffer[fifo->end],0,fifo->maxsize);
+    fifo->flags[fifo->end] = MEMALLOC; // clear flags
+  }
+  else
+  {
+    fifo->flags[fifo->end] = 0; // clear flags
+  }
+  fifo->size[fifo->end] = 0; // clear size
+  fifo->frame_num[fifo->end] = 0; // clear the frame number
 	//if (fifoIsEmpty(fifo)) printf("SOMETHING IS VERY WRONG!!!\n");
 	return 1;
 }

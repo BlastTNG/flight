@@ -54,6 +54,8 @@
 #include "pilot.h"
 #include "blast.h"
 
+uint8_t pilot_idle = 0;
+
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
@@ -71,7 +73,9 @@ void pilot_compress_and_send(void *arg) {
       ll->data_ready &= ~SUPERFRAME_READY;
 
       // compress the linklist
-      if (!compress_linklist(compbuffer, ll, NULL)) continue;
+      int retval = compress_linklist(compbuffer, ll, NULL);
+      pilot_idle = 1; // set the FIFO flag in mcp
+      if (!retval) continue;
 
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
