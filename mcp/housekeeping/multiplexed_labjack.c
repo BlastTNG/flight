@@ -432,6 +432,7 @@ void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_sc
     labjack_data_t *data_state = calloc(1, sizeof(labjack_data_t) +
                                         m_numchannels * m_scans_per_packet * sizeof(uint16_t));
     data_state->num_channels = m_numchannels;
+    state[m_which].initialized = true;
     data_state->scans_per_packet = m_scans_per_packet;
     state[m_which].conn_data = data_state;
 

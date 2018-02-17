@@ -568,11 +568,11 @@ int main(int argc, char *argv[])
 //  InitSched();
   initialize_motors();
   init_labjacks(1, 1, 0, 0, 0, 1);
-  // mult_labjack_networking_init(6, 84, 1);
+  mult_labjack_networking_init(6, 84, 1);
   // labjack_networking_init(7, 14, 1);
   // initialize_labjack_commands(7);
   init_array();
-  // mult_initialize_labjack_commands(6);
+  mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
 
