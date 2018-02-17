@@ -47,6 +47,7 @@
 #include <openssl/md5.h>
 #include <float.h>
 
+#include "FIFO.h"
 #include "bitserver.h"
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -80,8 +81,6 @@ void pilot_compress_and_send(void *arg) {
       sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_PACKET_SIZE);
-
-      blast_info("Superframe compressed (serial 0x%x) and sent\n", *(uint32_t *) ll->serial);
     } else {
       usleep(100000); // zzz...
     }

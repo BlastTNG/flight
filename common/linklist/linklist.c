@@ -498,6 +498,26 @@ void set_all_linklist_compframe_ready(linklist_t ** ll_list) {
     }
   }
 }
+void assign_all_linklist_superframe(linklist_t ** ll_list, uint8_t * superframe) {
+  if (ll_list) {
+    linklist_t * ll = ll_list[0];
+    int i = 0;
+    while (ll) {
+      assign_superframe_to_linklist(ll, superframe);
+      ll = ll_list[++i]; 
+    }
+  }
+}
+void assign_all_linklist_compframe(linklist_t ** ll_list, uint8_t * compframe) {
+  if (ll_list) {
+    linklist_t * ll = ll_list[0];
+    int i = 0;
+    while (ll) {
+      assign_compframe_to_linklist(ll, compframe);
+      ll = ll_list[++i]; 
+    }
+  }
+}
 
 #ifdef _TESTING
 

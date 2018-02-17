@@ -47,6 +47,7 @@ int compress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 
 uint8_t * allocate_superframe();
+void define_superframe();
 uint32_t get_channel_start_in_superframe(const channel_t * );
 uint32_t get_channel_skip_in_superframe(const channel_t * );
 unsigned int add_frame_to_superframe(void * , E_RATE , void * );

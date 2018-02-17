@@ -104,6 +104,8 @@ void linklist_set_superframe_ready(linklist_t *);
 void linklist_set_compframe_ready(linklist_t *);
 void set_all_linklist_superframe_ready(linklist_t **);
 void set_all_linklist_compframe_ready(linklist_t **);
+void assign_all_linklist_superframe(linklist_t **, uint8_t *);
+void assign_all_linklist_compframe(linklist_t **, uint8_t *);
 
 #ifdef __cplusplus
 }
