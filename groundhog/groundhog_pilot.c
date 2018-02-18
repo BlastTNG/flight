@@ -93,7 +93,10 @@ void pilot_publish(void *arg) {
     }
  
     for (int rate = 0; rate < RATE_END; rate++) {
-        snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/pilot/%s", RATE_LOOKUP_TABLE[rate].text);
+        char rate_name[16];
+        strcpy(rate_name, RATE_LOOKUP_TABLE[rate].text);
+        rate_name[strlen(rate_name)-1] = 'z';
+        snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/pilot/%s", rate_name);
         blast_info("there will be a topic with name %s", frame_name[rate]);
     }
 
