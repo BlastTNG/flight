@@ -80,11 +80,12 @@ void pilot_receive(void *arg) {
 void pilot_publish(void *arg) {
 
     static char frame_name[RATE_END][32];
-    int frame_offset = 0;
     void *pilot_data[RATE_END] = {0};
 
     uint16_t    read_frame;
     uint16_t    write_frame;
+
+    int next_frame = 0;
 
     for (int rate = 0; rate < RATE_END; rate++) {
         size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
@@ -105,15 +106,13 @@ void pilot_publish(void *arg) {
             continue;
         }
         while (read_frame != write_frame) {
-            // loop below to be replaced by linklist code
-            // for (int rate = 0; rate < RATE_END; rate++) {
-            //     int freq = groundhog_get_rate(rate);
-            //     for (int i = 0; i < freq; i++) {
-            //         frame_offset = i*frame_size[rate];
-            //         memcpy(pilot_data[rate], superframes.framelist[write_frame]+frame_offset, frame_size[rate]);
-            //         framing_publish_200hz(pilot_data[rate], "pilot");
-            //     }
-            // }
+            for (int rate = 0; rate < RATE_END; rate++) {
+                int freq = get_spf(rate);
+                for (int i = 0; i < freq; i++) {
+                    next_frame = extract_frame_from_superframe(pilot_data[rate], rate, superframes.framelist[write_frame]);
+                    framing_publish(pilot_data[rate], "pilot", rate);
+                }
+            }
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
         }
         superframes.i_out = write_frame;
