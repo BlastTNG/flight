@@ -51,6 +51,7 @@ void push_superframe(const void *m_frame, superframes_list_t *superframes);
 int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 void framing_shutdown(void);
 
+void framing_publish(void* m_frame, char *telemetry, E_RATE rate);
 void framing_publish_244hz(void* m_frame, char *telemetry);
 void framing_publish_200hz(void* m_frame, char *telemetry);
 void framing_publish_100hz(void* m_frame, char *telemetry);
