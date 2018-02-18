@@ -81,6 +81,15 @@ void pilot_compress_and_send(void *arg) {
 
       // compress the linklist
       int retval = compress_linklist(compbuffer, ll, NULL);
+/*
+      decompress_linklist(NULL, ll, compbuffer);
+      int i;
+      for (i = 0; i < 5; i++) {
+        int af = extract_frame_from_superframe(channel_data[RATE_5HZ], RATE_5HZ, ll->superframe);
+        printf("%d %d\n", GET_INT32(channels_find_by_name("mcp_5hz_framecount")), af);
+      }
+*/
+
       pilot_idle = 1; // set the FIFO flag in mcp
       if (!retval) continue;
 
@@ -91,7 +100,7 @@ void pilot_compress_and_send(void *arg) {
       // send the data to the ground station via bitsender
       sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
-      memset(compbuffer, 0, PILOT_MAX_PACKET_SIZE);
+      memset(compbuffer, 0, PILOT_MAX_SIZE);
       allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
     } else {
       usleep(100000); // zzz...
