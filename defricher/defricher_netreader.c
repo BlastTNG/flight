@@ -41,6 +41,8 @@
 #include "defricher_utils.h"
 #include "defricher_writer.h"
 
+#include "defricher_data.h"
+
 #ifndef HOST_NAME_MAX
     #define HOST_NAME_MAX 255
 #endif
@@ -73,6 +75,15 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
         return;
     }
 
+    if (false) {
+        if (strncasecmp("5HZ", m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) {
+            channel_t *framecount_5hz = channels_find_by_name("mcp_5hz_framecount");
+            defricher_cache_node_t *outfile_node = framecount_5hz->var;
+            int framecount = be32toh(*outfile_node->_32bit_data);
+            defricher_info("5Hz framecount is %d\n", framecount);
+        }
+    }
+
     channels_store_data(rate->position, m_data, m_len);
     defricher_queue_packet(rate->position);
 }
@@ -83,16 +94,28 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     int count;
     static uint32_t last_crc = 0;
     static uint32_t last_derived_crc = 0;
-
+    char *telemetry = (char *) userdata;
+    bool correct_topic = false;
+    
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-            if ( (count == 4 || count == 3) && topics[0] && strcmp(topics[0], "frames") == 0) {
+            if (strcmp(telemetry, "lab") == 0) {
+                correct_topic = ((count == 4) && topics[0] && strcmp(topics[0], "frames") == 0);
+            } else {
+                correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
+            }
+            if (correct_topic) {
                 if (ri.channels_ready) {
                     if (!strcasecmp(topics[count-1], "200HZ")) ri.read ++;
                     frame_handle_data(topics[count-1], message->payload, message->payloadlen);
                 }
             }
-            if ( (count == 3 || count == 2) && topics[0] && strcmp(topics[0], "channels") == 0) {
+            if (strcmp(telemetry, "lab") == 0) {
+                correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "channels") == 0);
+            } else {
+                correct_topic = ((count == 2) && topics[0] && strcmp(topics[0], "channels") == 0 && strcmp(topics[1], telemetry) == 0);
+            }
+            if (correct_topic) {
                 if (((channel_header_t*)message->payload)->crc != last_crc && !ri.new_channels) {
                     defricher_info( "Received updated Channels.  Ready to initialize new DIRFILE!");
                     if (channels_read_map(message->payload, message->payloadlen, &new_channels) > 0 ) {
@@ -102,7 +125,12 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     }
                 }
             }
-            if ( (count == 3 || count == 2) && topics[0] && strcmp(topics[0], "derived") == 0) {
+            if (strcmp(telemetry, "lab") == 0) {
+                correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "derived") == 0);
+            } else {
+                correct_topic = ((count == 2) && topics[0] && strcmp(topics[0], "derived") == 0 && strcmp(topics[1], telemetry) == 0);
+            }
+            if (correct_topic) {
                 if (((derived_header_t*)message->payload)->crc != last_derived_crc) {
                     defricher_info( "Received updated Derived Channels.");
                     if (channels_read_derived_map(message->payload, message->payloadlen, &derived_channels) > 0 ) {
@@ -188,7 +216,7 @@ static void *netreader_routine(void *m_arg)
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-pthread_t netreader_init(const char *m_host)
+pthread_t netreader_init(const char *m_host, char *m_telemetry)
 {
     pthread_t netread_thread;
 
@@ -205,6 +233,7 @@ pthread_t netreader_init(const char *m_host)
 
     mosquitto_connect_callback_set(mosq, frame_connect_callback);
     mosquitto_message_callback_set(mosq, frame_message_callback);
+    mosquitto_user_data_set(mosq, (void *) m_telemetry);
 //    mosquitto_subscribe_callback_set(mosq, frame_subscribe_callback);
 
     if (mosquitto_connect(mosq, remote_host, port, keepalive)) {

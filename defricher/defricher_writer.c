@@ -432,10 +432,6 @@ static inline int defricher_get_last_framenum(uint16_t m_rate)
 static int defricher_write_packet(uint16_t m_rate)
 {
     static int have_warned = 1;
-    int32_t new_framenum = 0;
-    static int32_t old_framenum[RATE_END];
-    static bool first_time = true;
-    RATE_LOOKUP_T *rate;
 
     if (ri.writer_done) {
         defricher_info("Not writing frame due to shutdown request");
@@ -448,40 +444,6 @@ static int defricher_write_packet(uint16_t m_rate)
         return -1;
     }
 
-    if (true) {
-        // Writing old values to dirfile when frames are lost
-        if (first_time & (defricher_get_rate(m_rate) == 1)) {
-            for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
-                old_framenum[rate->position] = dirfile_offset*defricher_get_rate(rate->position);
-            }
-            first_time = false;
-        } else { 
-            // This doesnt seem to work, so using static for now
-            // old_framenum[m_rate] = defricher_get_last_framenum(m_rate);
-        }
-
-        new_framenum = defricher_new_framenum(m_rate);
-
-        for (int32_t i = (old_framenum[m_rate] + 1); i < new_framenum; i++) {
-            if (i == (old_framenum[m_rate] + 1)) {
-                blast_dbg("Doing rate %s, old_framenum=%d, new_framenum=%d, filling in for %d frames\n",
-                        RATE_LOOKUP_TABLE[m_rate].text, old_framenum[m_rate], new_framenum, new_framenum-(old_framenum[m_rate]+1));
-            }
-            for (channel_t *channel = channels; channel->field[0]; channel++) {
-                if (channel->rate != m_rate) continue;
-                defricher_cache_node_t *outfile_node = channel->var;
-                if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
-                    if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
-                        defricher_err( "Could not write to %s", outfile_node->output.name);
-                        continue;
-                    }
-                }
-            }
-            dirfile_frames_written++;
-        }
-        old_framenum[m_rate] = new_framenum;
-    }
-
     // Writing new frame data to dirfile
     char *frame_counter_channel_name;
     if (m_rate == RATE_200HZ) ri.wrote ++;
@@ -492,9 +454,13 @@ static int defricher_write_packet(uint16_t m_rate)
         // Filling in last value to use for missed frames
         blast_tmp_sprintf(frame_counter_channel_name, "mcp_%dhz_framecount", defricher_get_rate(m_rate));
         if (!strcmp(channel->field, frame_counter_channel_name)) {
-            outfile_node->output.lastval = GET_INT32(channel);
+            outfile_node->output.lastval = (int32_t) be32toh(*(outfile_node->_32bit_data));
         }
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
+            if (strcmp(channel->field, "mcp_5hz_framecount") == 0) {
+                int framecount = (int32_t) be32toh(*(outfile_node->_32bit_data));
+                printf("5hz counter %d\n", framecount);
+            }
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
@@ -510,6 +476,7 @@ static void *defricher_write_loop(void *m_arg)
 {
     DIRFILE *dirfile = NULL;
     char *dirfile_name = NULL;
+    int queue_length = 0;
 
     bprintf(info, "Starting Defricher Write task\n");
 
@@ -570,7 +537,8 @@ static void *defricher_write_loop(void *m_arg)
             dirfile_update_derived = 0;
         }
 
-        while(g_async_queue_length(packet_queue)) {
+        while((queue_length = g_async_queue_length(packet_queue))) {
+            // defricher_dbg("async queue length: %d\n", queue_length);
             queue_data_t pkt;
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {

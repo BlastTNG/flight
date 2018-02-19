@@ -26,7 +26,7 @@
 #ifndef DEFRICHER_NETREADER_H_
 #define DEFRICHER_NETREADER_H_
 
-pthread_t netreader_init(const char *m_host);
+pthread_t netreader_init(const char *m_host, void *m_telemetry);
 
 
 #endif /* DEFRICHER_NETREADER_H_ */
