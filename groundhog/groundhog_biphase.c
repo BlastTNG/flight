@@ -25,6 +25,7 @@
 #include "channels_tng.h"
 #include "crc.h"
 #include "blast.h"
+#include "blast_time.h"
 #include "groundhog_framing.h"
 #include "groundhog.h"
 
@@ -166,11 +167,11 @@ void biphase_receive(void *args)
                     if (raw_word_in == crc_pos) {
                         crc_ok = 1;
                         polarity = 1;
-                        push_superframe(out_frame, &superframes);
+                        // push_superframe(out_frame, &superframes);
                     } else if ((uint16_t)(~raw_word_in) == crc_neg) {
                         crc_ok = 1;
                         polarity = 0;
-                        push_superframe(anti_out_frame, &superframes);
+                        // push_superframe(anti_out_frame, &superframes);
                     } else {
                         crc_ok = 0;
                     }
@@ -192,6 +193,10 @@ void biphase_receive(void *args)
   }
 }
 
+
+#define MCP_FREQ 24400
+#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 void biphase_publish(void *args){
 
     static char frame_name[RATE_END][32];
@@ -200,7 +205,8 @@ void biphase_publish(void *args){
     uint16_t    read_frame;
     uint16_t    write_frame;
 
-    int next_frame = 0;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
 
     for (int rate = 0; rate < RATE_END; rate++) {
         size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
@@ -220,20 +226,63 @@ void biphase_publish(void *args){
         read_frame = superframes.i_in;
 
         if (read_frame == write_frame) {
-            usleep(10000);
+            usleep(100);
             continue;
         }
         while (read_frame != write_frame) {
-            for (int rate = 0; rate < RATE_END; rate++) {
-                int freq = get_spf(rate);
-                for (int i = 0; i < freq; i++) {
-                    next_frame = extract_frame_from_superframe(biphase_data[rate], rate, superframes.framelist[write_frame]);
-                    framing_publish(biphase_data[rate], "pilot", rate);
+            int counter_488hz = 1;
+            int counter_244hz = 1;
+            int counter_200hz = 1;
+            int counter_100hz = 1;
+            int counter_5hz = 1;
+            int counter_1hz = 1;
+            int frame_488_counter = 0;
+
+            while(frame_488_counter < 488) {
+                const struct timespec interval_ts = {.tv_sec = 0, .tv_nsec = MCP_NS_PERIOD};
+                ts = timespec_add(ts, interval_ts);
+                clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+                if (!--counter_1hz) {
+                    counter_1hz = HZ_COUNTER(1);
+                    extract_frame_from_superframe(biphase_data[RATE_1HZ], RATE_1HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_1HZ], "biphase", RATE_1HZ);
+                    //printf("1Hz\n");
+                }
+                  if (!--counter_5hz) {
+                    counter_5hz = HZ_COUNTER(5);
+                    extract_frame_from_superframe(biphase_data[RATE_5HZ], RATE_5HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_5HZ], "biphase", RATE_5HZ);
+                    //printf("5Hz\n");
+                }
+                if (!--counter_100hz) {
+                    counter_100hz = HZ_COUNTER(100);
+                    extract_frame_from_superframe(biphase_data[RATE_100HZ], RATE_100HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_100HZ], "biphase", RATE_100HZ);
+                    //printf("100Hz\n");
+                }
+                if (!--counter_200hz) {
+                    counter_200hz = HZ_COUNTER(200);
+                    extract_frame_from_superframe(biphase_data[RATE_200HZ], RATE_200HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_200HZ], "biphase", RATE_200HZ);
+                    //printf("200Hz\n");
+                }
+                if (!--counter_244hz) {
+                    counter_244hz = HZ_COUNTER(244);
+                    extract_frame_from_superframe(biphase_data[RATE_244HZ], RATE_244HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_244HZ], "biphase", RATE_244HZ);
+                    //printf("244Hz\n");
+                }
+                if (!--counter_488hz) {
+                    counter_488hz = HZ_COUNTER(488);
+                    extract_frame_from_superframe(biphase_data[RATE_488HZ], RATE_488HZ, superframes.framelist[write_frame]);
+                    framing_publish(biphase_data[RATE_488HZ], "biphase", RATE_488HZ);
+                    frame_488_counter++;
+                    //printf("488Hz\n");
                 }
             }
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
+            superframes.i_out = write_frame;
         }
-        superframes.i_out = write_frame;
-        usleep(10000);
     }
 }

@@ -29,7 +29,7 @@
 #include "channel_macros.h"
 #include "derived.h"
 
-#define NUM_FRAMES 4
+#define NUM_FRAMES 20 
 
 struct telemetries {
     uint8_t number;

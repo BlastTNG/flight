@@ -73,6 +73,12 @@ void pilot_receive(void *arg) {
       if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
         continue;
       }
+      /*
+      printf("Start\n");
+      for (int i = 0; i < 5; i++) {
+        printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
+      }
+      */
       push_superframe(local_superframe, &superframes);
     } else {
       blast_info("\nReceived an all frame :)\n");
@@ -90,8 +96,6 @@ void pilot_publish(void *arg) {
 
     uint16_t    read_frame;
     uint16_t    write_frame;
-
-    int next_frame = 0;
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -114,7 +118,7 @@ void pilot_publish(void *arg) {
         read_frame = superframes.i_in;
 
         if (read_frame == write_frame) {
-            usleep(10000);
+            usleep(100);
             continue;
         }
         while (read_frame != write_frame) {
@@ -139,7 +143,7 @@ void pilot_publish(void *arg) {
                 }
                   if (!--counter_5hz) {
                     counter_5hz = HZ_COUNTER(5);
-                    extract_frame_from_superframe(channel_data[RATE_5HZ], RATE_5HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_5HZ], RATE_5HZ, superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_5HZ], "pilot", RATE_5HZ);
                     //printf("5Hz\n");
                 }
@@ -172,7 +176,7 @@ void pilot_publish(void *arg) {
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
             superframes.i_out = write_frame;
         }
-        usleep(10000);
+        //usleep(100);
     }
 }
 
