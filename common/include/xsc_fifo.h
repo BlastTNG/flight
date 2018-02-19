@@ -25,37 +25,37 @@
  */
 
 
-#ifndef INCLUDE_FIFO_H_
-#define INCLUDE_FIFO_H_
+#ifndef INCLUDE_XSC_FIFO_H_
+#define INCLUDE_XSC_FIFO_H_
 #include <unistd.h>
 #include <atomic.h>
 #include <stdbool.h>
 
-typedef struct fifo_node
+typedef struct xsc_fifo_node
 {
-    struct fifo_node    *next;
+    struct xsc_fifo_node    *next;
     void                *data;
-} __attribute__((packed)) fifo_node_t;
+} __attribute__((packed)) xsc_fifo_node_t;
 
 typedef struct fifo
 {
-    fifo_node_t     *head;
+    xsc_fifo_node_t     *head;
     intptr_t        pop_count;
-    fifo_node_t     *tail;
+    xsc_fifo_node_t     *tail;
     intptr_t        push_count;
-} __attribute__((packed, aligned(ALIGN_SIZE))) fifo_t;
+} __attribute__((packed, aligned(ALIGN_SIZE))) xsc_fifo_t;
 
-bool fifo_push(fifo_t *m_fifo, void *m_data);
-void *fifo_pop(fifo_t *m_fifo);
-fifo_t *fifo_new();
-void fifo_free(fifo_t *m_fifo, void (*m_free)(void*) );
+bool xsc_fifo_push(xsc_fifo_t *m_fifo, void *m_data);
+void *xsc_fifo_pop(xsc_fifo_t *m_fifo);
+xsc_fifo_t *fifo_new();
+void xsc_fifo_free(xsc_fifo_t *m_fifo, void (*m_free)(void*) );
 
-static inline intptr_t fifo_count(fifo_t *m_fifo)
+static inline intptr_t fifo_count(xsc_fifo_t *m_fifo)
 {
     if (!m_fifo) return 0;
     return (m_fifo->push_count - m_fifo->pop_count);
 }
 
-#define END_FIFO(...) NULL
+#define END_XSC_FIFO(...) NULL
 
 #endif /* BLAST_FIFO_H_ */

@@ -1,5 +1,5 @@
 /**
- * @file fifo.c
+ * @file xsc_fifo.c
  *
  * @date Feb 14, 2011
  * @author seth
@@ -29,11 +29,11 @@
 
 #include <blast.h>
 #include <atomic.h>
-#include <fifo.h>
+#include <xsc_fifo.h>
 
 typedef struct __attribute__((packed)) fifo_element
 {
-    fifo_node_t *node;
+    xsc_fifo_node_t *node;
     intptr_t count;
 }  fifo_element_t __attribute__((aligned(ALIGN_SIZE)));
 /**
@@ -41,9 +41,9 @@ typedef struct __attribute__((packed)) fifo_element
  * @param m_fifo Pointer to the queue
  * @param m_data Pointer to the data to add
  */
-bool fifo_push(fifo_t *m_fifo, void *m_data)
+bool xsc_fifo_push(xsc_fifo_t *m_fifo, void *m_data)
 {
-    fifo_node_t *new_node = malloc(sizeof(fifo_node_t));
+    xsc_fifo_node_t *new_node = malloc(sizeof(fifo_node_t));
     fifo_element_t push_struct[2];
 
     if (!m_fifo || !m_data) return false;
@@ -81,7 +81,7 @@ bool fifo_push(fifo_t *m_fifo, void *m_data)
  * @param m_fifo Pointer to the FIFO queue
  * @return Pointer to the data chunk or NULL on failure
  */
-void *fifo_pop(fifo_t *m_fifo)
+void *xsc_fifo_pop(xsc_fifo_t *m_fifo)
 {
     void *retval = NULL;
     fifo_element_t pop_struct[2];
@@ -120,14 +120,14 @@ void *fifo_pop(fifo_t *m_fifo)
  * Creates a new FIFO structure and initializes the dummy node
  * @return Pointer to the FIFO structure
  */
-fifo_t *fifo_new()
+xsc_fifo_t *fifo_new()
 {
-    fifo_t *new_fifo = NULL;
-    fifo_node_t *new_node = NULL;
+    xsc_fifo_t *new_fifo = NULL;
+    xsc_fifo_node_t *new_node = NULL;
 
-    if ((new_node = calloc(1, sizeof(fifo_node_t)))
-            && (new_fifo = calloc(1, sizeof(fifo_t)))) {
-        new_fifo->head = new_fifo->tail = (fifo_node_t*) new_node;
+    if ((new_node = calloc(1, sizeof(xsc_fifo_node_t)))
+            && (new_fifo = calloc(1, sizeof(xsc_fifo_t)))) {
+        new_fifo->head = new_fifo->tail = (xsc_fifo_node_t*) new_node;
     } else {
         if (new_node) free(new_node);
     }
@@ -140,7 +140,7 @@ fifo_t *fifo_new()
  * @param m_fifo Pointer to the FIFO data structure
  * @param m_free Pointer to the free()-equivalent function
  */
-void fifo_free(fifo_t *m_fifo, void (*m_free)(void*))
+void xsc_fifo_free(xsc_fifo_t *m_fifo, void (*m_free)(void*))
 {
     void *m_data = NULL;
 

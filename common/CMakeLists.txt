@@ -4,12 +4,12 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/fir.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lut.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/pq.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sip.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/xsc_fifo.c
     PARENT_SCOPE
 )
 set(MCP_COMMON_HEADERS
@@ -21,13 +21,13 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/fir.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/include/fifo.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/lut.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/pq.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/xsc_fifo.h
    PARENT_SCOPE
 )
 
