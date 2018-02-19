@@ -76,11 +76,12 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
         return;
     }
 
-    // channels_store_data(rate->position, m_data, m_len);
-    channels_check_size_of_frame(rate->position, m_len);
-    memcpy(getFifoWrite(&fifo_data[rate->position]), m_data, m_len);
-    incrementFifo(&fifo_data[rate->position]);
-    defricher_queue_packet(rate->position);
+    if (ready_to_read(rate->position)) {
+        channels_check_size_of_frame(rate->position, m_len);
+        memcpy(getFifoWrite(&fifo_data[rate->position]), m_data, m_len);
+        incrementFifo(&fifo_data[rate->position]);
+        defricher_queue_packet(rate->position);
+    }
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
