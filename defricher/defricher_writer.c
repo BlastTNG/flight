@@ -394,6 +394,7 @@ void defricher_queue_packet(uint16_t m_rate)
                 defricher_cache_node_t *outfile_node = frame_offset->var;
                 dirfile_offset = be32toh(*outfile_node->_32bit_data);
                 defricher_info("Setting offset to %d", dirfile_offset);
+                while (!dirfile_ready) sleep(1);
             }
             else {
                 defricher_err("Missing \"mcp_1hz_framecount\" channel.  Please report this!");
@@ -550,19 +551,14 @@ static void *defricher_write_loop(void *m_arg)
         }
 
         while((queue_length = g_async_queue_length(packet_queue))) {
-            // defricher_dbg("async queue length: %d\n", queue_length);
             queue_data_t pkt;
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
                 // transfer data from the fifo to channels data
-                if (!fifoIsEmpty(&fifo_data[pkt.rate])) {
-                    channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
-                    decrementFifo(&fifo_data[pkt.rate]);
-                    defricher_write_packet(pkt.rate);
-                    usleep(1);
-                }
+								channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
+								decrementFifo(&fifo_data[pkt.rate]);
+								defricher_write_packet(pkt.rate);
             }
-
         }
         usleep(100);
     }
