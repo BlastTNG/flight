@@ -329,17 +329,16 @@ int setFifoWrite(struct Fifo * fifo, uint8_t *buffer)
  * packet_size:    A pointer to the size of packets from the buffer.
                    This value will be updated to reflect the size of the packet to 
                    be read from the buffer.
- *       i_pkt:    A pointer to the packet number to be written. This value will be
- *                 incremented on successful execution of this function.
- *       n_pkt:    A pointer to the total number of packets required. If 0, the number
- *                 of packets will be written based on the total size and packet size.
+ *       i_pkt:    A pointer to the packet number to be written.
+ *       n_pkt:    A pointer to the total number of packets required. If i_pkt=0, the number
+ *                 of packets will be written based on the total buffer size and packet size.
  *
  * 
 */
 uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt) {
   // compute the total number of packets if necessary
-  if (!n_pkt) *n_pkt = (buffer_size-1)/(*packet_size)+1;
+  if (*i_pkt == 0) *n_pkt = (buffer_size-1)/(*packet_size)+1;
 
   // reached the end of the buffer
   if (*i_pkt >= *n_pkt) return NULL;
@@ -350,7 +349,6 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
 
   // update packet size and location
   *packet_size = read_size;
-  *i_pkt += 1;
 
   return retval; 
 }
