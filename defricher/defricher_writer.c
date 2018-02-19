@@ -460,10 +460,6 @@ static int defricher_write_packet(uint16_t m_rate)
             outfile_node->output.lastval = (int32_t) be32toh(*(outfile_node->_32bit_data));
         }
         if (outfile_node && outfile_node->magic == BLAST_MAGIC32 && outfile_node->output.fp ) {
-            if (strcmp(channel->field, "mcp_5hz_framecount") == 0) {
-                int framecount = (int32_t) be32toh(*(outfile_node->_32bit_data));
-                printf("5hz counter %d\n", framecount);
-            }
             if (fwrite(outfile_node->raw_data, outfile_node->output.element_size, 1, outfile_node->output.fp) != 1) {
                 defricher_err( "Could not write to %s", outfile_node->output.name);
                 continue;
@@ -505,8 +501,14 @@ static void *defricher_write_loop(void *m_arg)
 
                 // initialize FIFO buffer
                 int rate;
+                int num_elements_in_fifo = 1;
                 for (rate = 0; rate < RATE_END; rate++) {
-                  allocFifo(&fifo_data[rate], defricher_get_rate(rate)*2, frame_size[rate]);
+                  if (rate == 0) {
+                    num_elements_in_fifo = 5;
+                  } else {
+                    num_elements_in_fifo = defricher_get_rate(rate)*2;
+                  }
+                  allocFifo(&fifo_data[rate], num_elements_in_fifo, frame_size[rate]);
                 }
             }
             
@@ -553,10 +555,12 @@ static void *defricher_write_loop(void *m_arg)
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
                 // transfer data from the fifo to channels data
-                channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
-                decrementFifo(&fifo_data[pkt.rate]);
-                defricher_write_packet(pkt.rate);
-                usleep(1);
+                if (!fifoIsEmpty(&fifo_data[pkt.rate])) {
+                    channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
+                    decrementFifo(&fifo_data[pkt.rate]);
+                    defricher_write_packet(pkt.rate);
+                    usleep(1);
+                }
             }
 
         }
