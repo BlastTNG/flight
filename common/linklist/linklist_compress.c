@@ -1024,6 +1024,7 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
   //unsigned int inputsize = channel_size(le->tlm);
   unsigned int inputskip = get_channel_skip_in_superframe(le->tlm);
   unsigned int inputnum = get_channel_spf(le->tlm);
+  unsigned int inputsize = channel_size(le->tlm);
   unsigned int outputnum = le->num;
   unsigned int decim = inputnum/outputnum;
   unsigned int size = channel_size(le->tlm);  
@@ -1043,7 +1044,7 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
       doubletodata((uint8_t *) &dout,temp1,type);
-      memcpy(data_out+(i*inputskip),&dout,size);
+      memcpy(data_out+(i*inputsize),&dout,size);
     }
     blk_size += size;
   }
@@ -1072,7 +1073,7 @@ int decimationDecompress(uint8_t * data_out, struct link_entry *le, uint8_t * da
     {
       if (wd) 
       {
-        memcpy(data_out+((i*decim+j)*outputskip),data_in+(i*outputskip),size);
+        memcpy(data_out+((i*decim+j)*outputskip),data_in+(i*size),size);
       }
       blk_size += size;
     }

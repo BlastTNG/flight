@@ -75,12 +75,13 @@ void pilot_compress_and_send(void *arg) {
 
       // send allframe if necessary
       if (!allframe_count) {
-        write_allframe(compbuffer, ll->superframe);
-        sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+      //  write_allframe(compbuffer, ll->superframe);
+      //  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
       }
 
       // compress the linklist
       int retval = compress_linklist(compbuffer, ll, NULL);
+
       pilot_idle = 1; // set the FIFO flag in mcp
       if (!retval) continue;
 
@@ -91,7 +92,7 @@ void pilot_compress_and_send(void *arg) {
       // send the data to the ground station via bitsender
       sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
-      memset(compbuffer, 0, PILOT_MAX_PACKET_SIZE);
+      memset(compbuffer, 0, PILOT_MAX_SIZE);
       allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
     } else {
       usleep(100000); // zzz...

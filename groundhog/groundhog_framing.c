@@ -74,7 +74,10 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
 void framing_publish(void *m_frame, char *telemetry, E_RATE m_rate)
 {
     static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/%s", telemetry, RATE_LOOKUP_TABLE[m_rate].text);
+    char rate_name[16];
+    strcpy(rate_name, RATE_LOOKUP_TABLE[m_rate].text);
+    rate_name[strlen(rate_name)-1] = 'z';
+    snprintf(frame_name, sizeof(frame_name), "frames/%s/%s", telemetry, rate_name);
     // if (frame_stop) return;
     if (frame_size[m_rate]) {
         mosquitto_publish(mosq, NULL, frame_name,
@@ -197,7 +200,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     derived_header_t *derived_pkg = NULL;
 
     char id[20] = "groundhog_blastgs01";
-    char host[9] = "blastgs01";
+    char host[10] = "localhost";
     char topic[64];
 
     int ret = 0;
