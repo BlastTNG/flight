@@ -100,7 +100,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
             }
             if (correct_topic) {
-                if (ri.channels_ready) {
+                if (ri.channels_ready && ri.ready_to_read) {
                     if (!strcasecmp(topics[count-1], "200HZ")) ri.read ++;
                     frame_handle_data(topics[count-1], message->payload, message->payloadlen);
                 }

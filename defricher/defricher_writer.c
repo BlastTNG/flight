@@ -394,7 +394,7 @@ void defricher_queue_packet(uint16_t m_rate)
                 defricher_cache_node_t *outfile_node = frame_offset->var;
                 dirfile_offset = be32toh(*outfile_node->_32bit_data);
                 defricher_info("Setting offset to %d", dirfile_offset);
-                while (!dirfile_ready) sleep(1);
+                //while (!dirfile_ready) sleep(1);
             }
             else {
                 defricher_err("Missing \"mcp_1hz_framecount\" channel.  Please report this!");
@@ -485,6 +485,7 @@ static void *defricher_write_loop(void *m_arg)
         if (ri.new_channels) {
             ri.channels_ready = false;
             ri.new_channels = false;
+            ri.ready_to_read = false;
             if (channels_initialize(new_channels) < 0) {
                 defricher_err("Could not initialize channels");
                 free(new_channels);
@@ -534,6 +535,7 @@ static void *defricher_write_loop(void *m_arg)
             } else {
                 dirfile_create_new = 0;
                 dirfile_ready = true;
+                ri.ready_to_read = true;
                 ri.symlink_updated = false;
                 dirfile_frames_written = 0;
             }
