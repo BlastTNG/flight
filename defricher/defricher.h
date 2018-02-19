@@ -95,6 +95,9 @@ struct ri_struct {
 extern struct rc_struct rc;
 extern struct ri_struct ri;
 
+#include "FIFO.h"
+extern struct Fifo fifo_data[RATE_END];
+
 extern sigset_t signals;
 
 #ifdef DEBUG

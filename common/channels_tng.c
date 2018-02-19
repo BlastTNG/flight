@@ -304,6 +304,16 @@ channel_t *channels_find_by_name(const char *m_name)
     return retval;
 }
 
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len)
+{
+	if (m_len != frame_size[m_rate]) {
+		blast_err("Size mismatch storing data for %s! Got %zu bytes, expected %zu",
+		        RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_rate]);
+		return -1;
+	}
+    return 0;
+}
+
 int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_rate]) {

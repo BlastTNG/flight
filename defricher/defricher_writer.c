@@ -42,6 +42,7 @@
 #include <derived.h>
 #include <blast.h>
 
+#include "FIFO.h"
 #include "defricher.h"
 #include "defricher_utils.h"
 #include "defricher_data.h"
@@ -431,23 +432,25 @@ static inline int defricher_get_last_framenum(uint16_t m_rate)
 
 static int defricher_write_packet(uint16_t m_rate)
 {
-    static int have_warned = 1;
+    static bool dirfile_have_warned = false;
+    static bool write_have_warned = false;
+
+    char *frame_counter_channel_name;
 
     if (ri.writer_done) {
-        defricher_info("Not writing frame due to shutdown request");
+        if (!write_have_warned) defricher_info("Not writing frame due to shutdown request");
+        write_have_warned = true;
         return -1;
     }
 
     if (!dirfile_ready) {
-        if (!have_warned) defricher_info("Discarding frame due to DIRFILE not being ready for writing");
-        have_warned = 1;
+        if (!dirfile_have_warned) defricher_info("Discarding frame due to DIRFILE not being ready for writing");
+        dirfile_have_warned = 1;
         return -1;
     }
 
     // Writing new frame data to dirfile
-    char *frame_counter_channel_name;
     if (m_rate == RATE_200HZ) ri.wrote ++;
-    have_warned = 0;
     for (channel_t *channel = channels; channel->field[0]; channel++) {
         if (channel->rate != m_rate) continue;
         defricher_cache_node_t *outfile_node = channel->var;
@@ -499,7 +502,14 @@ static void *defricher_write_loop(void *m_arg)
                 dirfile_create_new = 1;
                 dirfile_offset = -1;
                 dirfile_ready = false;
+
+                // initialize FIFO buffer
+                int rate;
+                for (rate = 0; rate < RATE_END; rate++) {
+                  allocFifo(&fifo_data[rate], defricher_get_rate(rate)*2, frame_size[rate]);
+                }
             }
+            
 
         }
         if (dirfile_create_new && dirfile_offset >= 0) {
@@ -542,6 +552,9 @@ static void *defricher_write_loop(void *m_arg)
             queue_data_t pkt;
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
+                // transfer data from the fifo to channels data
+                channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
+                decrementFifo(&fifo_data[pkt.rate]);
                 defricher_write_packet(pkt.rate);
                 usleep(1);
             }

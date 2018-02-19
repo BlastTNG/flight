@@ -114,6 +114,7 @@ extern int channels_count;
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len);
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
 size_t channel_size(channel_t *);

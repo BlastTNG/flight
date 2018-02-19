@@ -36,6 +36,7 @@ set(GROUNDHOG_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/FIFO.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     PARENT_SCOPE
@@ -47,6 +48,7 @@ set(GROUNDHOG_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/FIFO.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
@@ -80,6 +82,7 @@ set(DEFRICHER_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/FIFO.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     PARENT_SCOPE
@@ -91,6 +94,7 @@ set(DEFRICHER_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/FIFO.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h

@@ -68,6 +68,8 @@ static GOptionEntry cmdline_options[] =
 struct ri_struct ri;
 struct rc_struct rc;
 
+struct Fifo fifo_data[RATE_END] = {{0}};
+
 static const double TC = 1.7;
 static pthread_t writer_thread;
 static pthread_t reader_thread;
