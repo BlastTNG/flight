@@ -148,9 +148,14 @@ void * sendDataThread(void *arg) {
         }
       }
       else {
-        for (i = 0; i < n_packets; i++) {
-          writeHeader(header, serial, frame_num, i, n_packets);          
-          packet_size = MIN(packet_maxsize, size-(i*packet_maxsize));
+        i = 0;
+        n_packets = 1;
+        packet_size = server->packet_maxsize;
+        while (i < n_packets) {
+          uint8_t * pkt_buffer = packetizeBuffer(buffer, size, (uint32_t *) &packet_size,
+                                                 (uint16_t *) &i, (uint16_t *) &n_packets);
+          writeHeader(header, serial, frame_num, i++, n_packets);          
+          //packet_size = MIN(packet_maxsize, size-(i*packet_maxsize));
 #ifdef MSG_MORE // general Linux kernel
 
           // add header to packet (adds due to MSG_MORE flag)
@@ -160,7 +165,8 @@ void * sendDataThread(void *arg) {
             server->slen) < 0) blast_err("sendTo failed()");
           
           // add data to packet and send
-          if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
+          //if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
+          if (sendto(server->sck, pkt_buffer, packet_size,
             MSG_NOSIGNAL,(struct sockaddr*)&(server->send_addr), 
             server->slen) < 0) blast_err("sendTo failed()");
 
