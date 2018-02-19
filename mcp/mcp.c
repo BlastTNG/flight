@@ -275,12 +275,15 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
+unsigned int superframe_counter[RATE_END] = {1};
+
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
 
     framing_publish_244hz();
-    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, getFifoWrite(superframe_fifo));
+    superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
+                                       RATE_244HZ, getFifoWrite(superframe_fifo));
 
     // TODO(javier): add idle flags for all links to decrement superframe FIFO read location
     if (pilot_idle) {
@@ -300,7 +303,8 @@ static void mcp_200hz_routines(void)
     framing_publish_200hz();
     // store_data_200hz();
     add_200hz_frame_to_biphase(channel_data);
-    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, getFifoWrite(superframe_fifo));
+    superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
+                                       RATE_200HZ, getFifoWrite(superframe_fifo));
 }
 static void mcp_100hz_routines(void)
 {
@@ -319,7 +323,8 @@ static void mcp_100hz_routines(void)
     framing_publish_100hz();
     // store_data_100hz();
     add_100hz_frame_to_biphase(channel_data[RATE_100HZ]);
-    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, getFifoWrite(superframe_fifo));
+    superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
+                                       RATE_100HZ, getFifoWrite(superframe_fifo));
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -347,7 +352,8 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
-    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, getFifoWrite(superframe_fifo));
+    superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
+                                     RATE_5HZ, getFifoWrite(superframe_fifo));
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -357,6 +363,16 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    // TODO(javier): make this the fastest 488Hz when the routines exist
+    int ready = !superframe_counter[RATE_244HZ];
+    // int ready = 1;
+    // int i = 0;
+    // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
+    if (ready) {
+      incrementFifo(superframe_fifo); // increment the write location
+      assign_all_linklist_superframe(linklist_array, getFifoRead(superframe_fifo));
+      set_all_linklist_superframe_ready(linklist_array);
+    }
     // rec_control();
     // of_control();
     // if_control();
@@ -373,12 +389,9 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
-    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, getFifoWrite(superframe_fifo));
+    superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
+                                     RATE_1HZ, getFifoWrite(superframe_fifo));
 
-    // TODO(javier): check flags for all superframe rates
-    incrementFifo(superframe_fifo); // increment the write location
-    assign_all_linklist_superframe(linklist_array, getFifoRead(superframe_fifo));
-    set_all_linklist_superframe_ready(linklist_array);
 //    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
@@ -399,6 +412,8 @@ static void *mcp_main_loop(void *m_arg)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
+
+    superframe_counter[RATE_244HZ] = 1;
 
     while (!shutdown_mcp) {
         int ret;
