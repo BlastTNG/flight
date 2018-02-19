@@ -488,6 +488,10 @@ static void *defricher_write_loop(void *m_arg)
                 defricher_err("Could not initialize channels");
                 free(new_channels);
                 new_channels = NULL;
+                for (int rate = 0; rate < RATE_END; rate++) {
+                   freeFifo(&fifo_data[rate]);
+                }
+
             } else {
                 defricher_free_channels_list(channels);
                 if (channels) free(channels);
