@@ -47,7 +47,7 @@ typedef struct fifo
 
 bool xsc_fifo_push(xsc_fifo_t *m_fifo, void *m_data);
 void *xsc_fifo_pop(xsc_fifo_t *m_fifo);
-xsc_fifo_t *fifo_new();
+xsc_fifo_t *xsc_fifo_new();
 void xsc_fifo_free(xsc_fifo_t *m_fifo, void (*m_free)(void*) );
 
 static inline intptr_t fifo_count(xsc_fifo_t *m_fifo)
@@ -56,6 +56,6 @@ static inline intptr_t fifo_count(xsc_fifo_t *m_fifo)
     return (m_fifo->push_count - m_fifo->pop_count);
 }
 
-#define END_XSC_FIFO(...) NULL
+#define END_FIFO(...) NULL
 
-#endif /* BLAST_FIFO_H_ */
+#endif /* XSC_FIFO_H_ */

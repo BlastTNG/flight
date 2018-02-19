@@ -1,4 +1,5 @@
-/* -----------------------------------------------------------------------
+/* "Copyright 2017 Javier Romualdez"
+ * -----------------------------------------------------------------------
  * ----------------------------- BIT ADCS FIFO ---------------------------
  * -----------------------------------------------------------------------
  * This program is distributed under the GNU General Public License (GPL)
@@ -24,24 +25,22 @@
  *
  */
 
-#ifndef FIFO_H_
-#define FIFO_H_
+#ifndef INCLUDE_FIFO_H_
+#define INCLUDE_FIFO_H_
 
 #define MEMALLOC 0x01
 
 #define MAX_TELEM_FIFO_SIZE 20000	// maximum number of telemetry entries in the FIFO
 
 #ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 #ifndef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifdef __cplusplus
-
 extern "C" {
-
 #endif
 
 
@@ -49,7 +48,7 @@ struct Fifo
 {
 	unsigned int start, end;
 	unsigned int length, maxsize;
-	
+
 	uint32_t *frame_num;
 	uint8_t *flags;
 	uint32_t *size;
@@ -71,11 +70,7 @@ uint8_t * packetizeBuffer(uint8_t *, uint32_t, uint32_t *, uint16_t *, uint16_t 
 uint8_t * depacketizeBuffer(uint8_t *, uint32_t *, uint32_t, uint16_t *, uint16_t *, uint8_t *);
 
 #ifdef __cplusplus
-
 }
-
 #endif
 
-
-
-#endif /* FIFO_H_ */
+#endif /* INCLUDE_FIFO_H_ */

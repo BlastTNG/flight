@@ -1,4 +1,6 @@
-/* -----------------------------------------------------------------------
+/* "Copyright 2017 Javier Romualdez"
+ *
+ * -----------------------------------------------------------------------
  * ----------------------------- BIT ADCS FIFO ---------------------------
  * -----------------------------------------------------------------------
  * This program is distributed under the GNU General Public License (GPL)
@@ -31,13 +33,9 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
-
 #include "FIFO.h"
-
 #ifdef __cplusplus
-
 extern "C" {
-
 #endif
 
 
@@ -45,38 +43,35 @@ extern "C" {
 /* -------------------------
  * ------- allocFifo -------
  * -------------------------
- * 
+ *
  * This function allocates memory for the specified FIFO, which includes
  * sizes, flags, and buffers.
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO to allocate memory for.
  * length:		The number of elements in the FIFO
  * maxsize:		The maximum size of each element in the FIFO. If the maxsize
- * 				is set to 0, each buffer pointer will be NULL. This is 
+ * 				is set to 0, each buffer pointer will be NULL. This is
  * 				desirable if the FIFO only points to buffer elements without
  * 				copying data.
- * 
+ *
 */
-int allocFifo(struct Fifo *fifo, unsigned int length, unsigned int maxsize)
-{
+int allocFifo(struct Fifo *fifo, unsigned int length, unsigned int maxsize) {
 	unsigned int i;
-	
+
 	fifo->length = length;
 	fifo->maxsize = maxsize;
 	fifo->start = 0;
 	fifo->end = 0;
-	fifo->size = (uint32_t *) calloc(length,sizeof(uint32_t));
-	fifo->frame_num = (uint32_t *) calloc(length,sizeof(uint32_t));
-	fifo->flags = (uint8_t *) calloc(length,sizeof(uint8_t));
-	fifo->buffer = (uint8_t **) calloc(length,sizeof(uint8_t*));
-	
-	if (maxsize != 0)
-	{
-		for (i=0;i<length;i++)
-		{
-			fifo->buffer[i] = (uint8_t *) calloc(maxsize,sizeof(uint8_t));
+	fifo->size = (uint32_t *) calloc(length, sizeof(uint32_t));
+	fifo->frame_num = (uint32_t *) calloc(length, sizeof(uint32_t));
+	fifo->flags = (uint8_t *) calloc(length, sizeof(uint8_t));
+	fifo->buffer = (uint8_t **) calloc(length, sizeof(uint8_t*));
+
+	if (maxsize != 0) {
+		for (i = 0; i < length; i++) {
+			fifo->buffer[i] = (uint8_t *) calloc(maxsize, sizeof(uint8_t));
 			fifo->flags[i] = MEMALLOC;
 		}
 	}
@@ -96,11 +91,9 @@ int allocFifo(struct Fifo *fifo, unsigned int length, unsigned int maxsize)
  * fifo:		A pointer to the FIFO to free memory.
  *
 */
-int freeFifo(struct Fifo *fifo)
-{
+int freeFifo(struct Fifo *fifo) {
 	unsigned int i;
-	for (i=0;i<fifo->length;i++)
-	{
+	for (i = 0; i < fifo->length; i++) {
 		if (fifo->flags[i] & MEMALLOC) free(fifo->buffer[i]);
 	}
 	free(fifo->flags);
@@ -114,16 +107,15 @@ int freeFifo(struct Fifo *fifo)
 /* -------------------------
  * ------ fifoIsEmpty ------
  * -------------------------
- * 
+ *
  * This function returns 1 the FIFO is empty and 0 if it isn't...
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO in question.
- * 
+ *
 */
-int fifoIsEmpty(struct Fifo * fifo)
-{
+int fifoIsEmpty(struct Fifo * fifo) {
 	if ((fifo->start == fifo->end) && (fifo->length > 1)) return 1;
 	return 0;
 }
@@ -133,37 +125,32 @@ int fifoIsEmpty(struct Fifo * fifo)
 /* -------------------------
  * ----- incrementFifo -----
  * -------------------------
- * 
+ *
  * This function takes a FIFO and increments the end of the buffer by 1.
  * As a result, the buffer is incremented in a way that newest data is added to
  * the tail of the buffer.
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO to increment.
- * 
+ *
 */
-int incrementFifo(struct Fifo * fifo)
-{
-	if ((fifo->end+1)%(fifo->length) == fifo->start) 
-	{
-		//printf("Dump FIFO!\n");
+int incrementFifo(struct Fifo * fifo) {
+	if ((fifo->end+1)%(fifo->length) == fifo->start) {
+		// printf("Dump FIFO!\n");
 		return -1; // can't increment because will overflow
-		//decrementFifo(fifo); // OR dump the oldest measurement
+		// decrementFifo(fifo); // OR dump the oldest measurement
 	}
 	fifo->end = (fifo->end+1)%(fifo->length); // update FIFO end
-	if (fifo->flags[fifo->end] & MEMALLOC)
-  {
-    memset(fifo->buffer[fifo->end],0,fifo->maxsize);
-    fifo->flags[fifo->end] = MEMALLOC; // clear flags
-  }
-  else
-  {
-    fifo->flags[fifo->end] = 0; // clear flags
-  }
-  fifo->size[fifo->end] = 0; // clear size
-  fifo->frame_num[fifo->end] = 0; // clear the frame number
-	//if (fifoIsEmpty(fifo)) printf("SOMETHING IS VERY WRONG!!!\n");
+	if (fifo->flags[fifo->end] & MEMALLOC) {
+        memset(fifo->buffer[fifo->end], 0, fifo->maxsize);
+        fifo->flags[fifo->end] = MEMALLOC; // clear flags
+    } else {
+        fifo->flags[fifo->end] = 0; // clear flags
+    }
+    fifo->size[fifo->end] = 0; // clear size
+    fifo->frame_num[fifo->end] = 0; // clear the frame number
+	// if (fifoIsEmpty(fifo)) printf("SOMETHING IS VERY WRONG!!!\n");
 	return 1;
 }
 
@@ -171,38 +158,29 @@ int incrementFifo(struct Fifo * fifo)
 /* -------------------------
  * ----- decrementFifo -----
  * -------------------------
- * 
+ *
  * This function takes a FIFO and increments the start of the buffer by 1.
  * As a result, the buffer is incremented in a way that oldest data is removed
  * from the head of the FIFO.
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO to decrement.
- * 
+ *
 */
-int decrementFifo(struct Fifo * fifo)
-{
-	if (fifoIsEmpty(fifo))
-	{
+int decrementFifo(struct Fifo * fifo) {
+	if (fifoIsEmpty(fifo)) {
 		printf("Cannot decrement empty FIFO!\n");
 		return -1;
-	}
-	else 
-	{
-
-		if (fifo->flags[fifo->start] & MEMALLOC)
-		{
-			//memset(fifo->buffer[fifo->start],0,fifo->maxsize);
-			//fifo->flags[fifo->start] = MEMALLOC; // clear flags
+	} else {
+		if (fifo->flags[fifo->start] & MEMALLOC) {
+			// memset(fifo->buffer[fifo->start], 0, fifo->maxsize);
+			// fifo->flags[fifo->start] = MEMALLOC; // clear flags
+		} else {
+			// fifo->flags[fifo->start] = 0; // clear flags
 		}
-		else
-		{
-			//fifo->flags[fifo->start] = 0; // clear flags
-		}
-
-		//fifo->size[fifo->start] = 0; // clear size
-		//fifo->frame_num[fifo->start] = 0; // clear the frame number
+		// fifo->size[fifo->start] = 0; // clear size
+		// fifo->frame_num[fifo->start] = 0; // clear the frame number
 		fifo->start = (fifo->start+1)%(fifo->length); // update FIFO
 	}
 	return 1;
@@ -220,25 +198,23 @@ int decrementFifo(struct Fifo * fifo)
  *
 */
 
-void clearFifo(struct Fifo *fifo)
-{
+void clearFifo(struct Fifo *fifo) {
   fifo->start = fifo->end;
 }
 
 /* -------------------------
  * ------ getFifoRead ------
  * -------------------------
- * 
+ *
  * This function returns a pointer to the oldest element in the FIFO to
  * be read.
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO to read.
- * 
+ *
 */
-uint8_t * getFifoRead(struct Fifo * fifo)
-{
+uint8_t * getFifoRead(struct Fifo * fifo) {
 	return fifo->buffer[fifo->start];
 }
 
@@ -255,30 +231,30 @@ uint8_t * getFifoRead(struct Fifo * fifo)
  * fifo:		A pointer to the FIFO to read.
  *
 */
-uint8_t * getFifoLastRead(struct Fifo * fifo)
-{
+uint8_t * getFifoLastRead(struct Fifo * fifo) {
 	unsigned int last = (fifo->start+fifo->length-1)%fifo->length; // get last element circularly
-	if ((last == fifo->end) || fifoIsEmpty(fifo)) return NULL; // not enough data in the FIFO
-	else return fifo->buffer[last];
+	if ((last == fifo->end) || fifoIsEmpty(fifo)) {
+        return NULL; // not enough data in the FIFO
+	} else {
+        return fifo->buffer[last];
+    }
 }
 
 /* -------------------------
  * ------ getFifoWrite -----
  * -------------------------
- * 
+ *
  * This function returns a pointer to the newest element in the FIFO to
  * be written to. Note that this function only returns a valid pointer for
  * a FIFO that has memory allocated to it (maxsize != 0).
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO to be written to.
- * 
+ *
 */
-uint8_t * getFifoWrite(struct Fifo * fifo)
-{
-	if (fifo->maxsize == 0)
-	{
+uint8_t * getFifoWrite(struct Fifo * fifo) {
+	if (fifo->maxsize == 0) {
 		printf("Cannot get write address for unallocated FIFO\n");
 		printf("Point to data with setFifoWrite()\n");
 		return NULL;
@@ -289,28 +265,26 @@ uint8_t * getFifoWrite(struct Fifo * fifo)
 /* -------------------------
  * ------ setFifoWrite -----
  * -------------------------
- * 
+ *
  * This function sets the pointer for the newest element in the FIFO to be
  * written to. Note that this funcion is only successful for a FIFO that
  * is unallocated (maxsize == 0).
- * 
+ *
  * Parameters:
  * --------------------------
  * fifo:		A pointer to the FIFO.
- * buffer: 		A pointer to the external buffer containing data to be 
+ * buffer: 		A pointer to the external buffer containing data to be
  * 				added to the FIFO.
- * 
+ *
 */
-int setFifoWrite(struct Fifo * fifo, uint8_t *buffer)
-{
-	if (fifo->maxsize != 0)
-	{
+int setFifoWrite(struct Fifo * fifo, uint8_t *buffer) {
+	if (fifo->maxsize != 0) {
 		printf("Cannot set write address for allocated FIFO\n");
 		printf("Get write address with getFifoWrite()\n");
 		return -1;
 	}
 	fifo->buffer[fifo->end] = buffer;
-	
+
 	return 1;
 }
 
@@ -318,22 +292,22 @@ int setFifoWrite(struct Fifo * fifo, uint8_t *buffer)
 /* -------------------------
  * ---- packetizeBuffer ----
  * -------------------------
- * 
+ *
  * This function takes a buffer and splits it into n packets of a given size.
  * Returns the location in the buffer for the ith packet.
- * 
+ *
  * Parameters:
  * --------------------------
- *      buffer:    A pointer to the buffer to be packetized. 
+ *      buffer:    A pointer to the buffer to be packetized.
  * buffer_size:    The total size of the buffer to be packetized.
  * packet_size:    A pointer to the size of packets from the buffer.
-                   This value will be updated to reflect the size of the packet to 
+                   This value will be updated to reflect the size of the packet to
                    be read from the buffer.
  *       i_pkt:    A pointer to the packet number to be written.
  *       n_pkt:    A pointer to the total number of packets required. If i_pkt=0, the number
  *                 of packets will be written based on the total buffer size and packet size.
  *
- * 
+ *
 */
 uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt) {
@@ -342,7 +316,7 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
 
   // reached the end of the buffer
   if (*i_pkt >= *n_pkt) return NULL;
-  
+
   // get the packet_size
   uint32_t read_size = MIN(*packet_size, buffer_size-((*i_pkt)*(*packet_size)));
   uint8_t * retval = buffer+(*packet_size)*(*i_pkt);
@@ -350,20 +324,20 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
   // update packet size and location
   *packet_size = read_size;
 
-  return retval; 
+  return retval;
 }
 
 /* -------------------------
  * --- depacketizeBuffer ---
  * -------------------------
- * 
+ *
  * This function takes sequential n packets and assembles them into a main buffer.
- * Data for the ith packet (i<n) is written to an output buffer. Returns the 
+ * Data for the ith packet (i<n) is written to an output buffer. Returns the
  * location in the buffer for the ith packet.
- * 
+ *
  * Parameters:
  * --------------------------
- *      buffer:    A pointer to the buffer containing depacketized data. 
+ *      buffer:    A pointer to the buffer containing depacketized data.
  * buffer_size:    A pointer to the total size of the buffer to be packetized.
                    This value is updated as packets are added.
  * packet_size:    The size of packet to add to the buffer.
@@ -371,13 +345,13 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
  *                 incremented on successful execution of this function.
  *       n_pkt:    A pointer to the total number of packets required.
  *
- * 
+ *
 */
 uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt, uint8_t * packet) {
   // reached the end of the buffer
   if (*i_pkt >= *n_pkt) return NULL;
-  
+
   // get the packet_size
   uint8_t * retval = buffer+packet_size*(*i_pkt);
 
@@ -388,10 +362,9 @@ uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t p
   if (buffer_size) *buffer_size += packet_size;
   *i_pkt += 1;
 
-  return retval; 
+  return retval;
 }
 #ifdef __cplusplus
-
 }
 
 #endif

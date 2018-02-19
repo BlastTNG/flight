@@ -43,7 +43,7 @@ typedef struct __attribute__((packed)) fifo_element
  */
 bool xsc_fifo_push(xsc_fifo_t *m_fifo, void *m_data)
 {
-    xsc_fifo_node_t *new_node = malloc(sizeof(fifo_node_t));
+    xsc_fifo_node_t *new_node = malloc(sizeof(xsc_fifo_node_t));
     fifo_element_t push_struct[2];
 
     if (!m_fifo || !m_data) return false;
@@ -120,7 +120,7 @@ void *xsc_fifo_pop(xsc_fifo_t *m_fifo)
  * Creates a new FIFO structure and initializes the dummy node
  * @return Pointer to the FIFO structure
  */
-xsc_fifo_t *fifo_new()
+xsc_fifo_t *xsc_fifo_new()
 {
     xsc_fifo_t *new_fifo = NULL;
     xsc_fifo_node_t *new_node = NULL;
@@ -145,7 +145,7 @@ void xsc_fifo_free(xsc_fifo_t *m_fifo, void (*m_free)(void*))
     void *m_data = NULL;
 
     if (m_fifo) {
-        while ((m_data = fifo_pop(m_fifo))) {
+        while ((m_data = xsc_fifo_pop(m_fifo))) {
             if (m_free) m_free(m_data);
         }
         if (m_fifo->head) {
