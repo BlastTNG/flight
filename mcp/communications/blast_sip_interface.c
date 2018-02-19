@@ -142,7 +142,8 @@ static blast_master_packet_t *sip_segment_get_complete_packet(GList *m_list)
  */
 bool initialize_sip_interface(void)
 {
-    if (sip_comm1) comms_serial_free(sip_comm1);
+	blast_info("Initializing the BLAST-TNG SIP interface...");
+	if (sip_comm1) comms_serial_free(sip_comm1);
     if (sip_comm2) comms_serial_free(sip_comm2);
 
     sip_comm1 = comms_serial_new(NULL);
@@ -349,9 +350,11 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK(const uint8_t* m_data, size_t m_len)
     blast_master_packet_t *header;
     bool free_header = false;
     static GList *upload_llist = NULL;
+    char output_string[256];
     ssize_t consumed = 0;
 
-    blast_dbg("Received command packet with %u bytes over SIP connection", (unsigned) cmd_pkt->length);
+    blast_dbg("Received command packet with %u bytes over SIP connection, m_len = %u",
+               (unsigned) cmd_pkt->length, (unsigned) m_len);
 
     if (!upload_llist) upload_llist = g_list_alloc();
 
@@ -360,6 +363,14 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK(const uint8_t* m_data, size_t m_len)
      * cmd_pkt->length counts just the packet data
      * Thus m_len should be 2 bytes longer than cmd_pkt->length for a completed packet
      */
+    blast_info("start_byte = %x, id_byte = %x, length = %x",
+               cmd_pkt->header.start_byte, cmd_pkt->header.id_byte, cmd_pkt->length);
+    for (int i = 0; i < m_len-3; i++) {
+    	blast_info("i = %i, byte = %x", i, (uint8_t) cmd_pkt->data[i]);
+        // snprintf(output_string+2*i, 2*sizeof(char), "%2x", cmd_pkt->data[2*i]);
+    }
+    // if (i > 0) blast_info("Command received so far: %s ", output_string);
+
     if ((size_t) (cmd_pkt->length + 4) > m_len) {
         blast_dbg("Packet incomplete.  Waiting for more data");
         return 0;
@@ -378,6 +389,8 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK(const uint8_t* m_data, size_t m_len)
     if (header->magic != BLAST_MAGIC8 || header->version != 2) {
         blast_warn("Received invalid packet over SIP.  Magic byte 0x%02X and version %d", header->magic,
                    header->version);
+        blast_warn("Should have found.  Magic byte 0x%02X and version %d", BLAST_MAGIC8,
+                   2);
         /// Consume 1 byte here to revert to searching for the SIP start byte.
         return 1;
     }

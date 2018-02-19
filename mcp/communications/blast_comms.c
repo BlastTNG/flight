@@ -101,6 +101,7 @@ static void *blast_comms_monitor(void *m_arg __attribute__((unused)))
                                     .tv_nsec = 1000000}; /// 1000HZ interval
 
     nameThread("Comms");
+    blast_info("Starting comms monitor thread.");
     pthread_cleanup_push(blast_comms_cleanup, comms_ports);
     clock_gettime(CLOCK_REALTIME, &ts);
 
