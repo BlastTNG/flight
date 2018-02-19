@@ -208,8 +208,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     int keepalive = 60;
     bool clean_session = true;
 
-    // struct telemetries m_telemetries = {3, {"biphase", "pilot", "tdrss"}};
-    struct telemetries m_telemetries = {1, {"pilot"}};
+    struct telemetries m_telemetries = {3, {"biphase", "pilot", "tdrss"}};
 
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
