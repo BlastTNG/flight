@@ -383,10 +383,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     return new_file;
 }
 
-void defricher_queue_packet(uint16_t m_rate)
-{
-    queue_data_t new_pkt = {._dummy = (1<<15)};//Set this bit to avoid glib assertions
-
+bool ready_to_read(uint16_t m_rate) {
     if (dirfile_offset < 0) {
         if (m_rate == RATE_1HZ) {
             channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
@@ -394,22 +391,30 @@ void defricher_queue_packet(uint16_t m_rate)
                 defricher_cache_node_t *outfile_node = frame_offset->var;
                 dirfile_offset = be32toh(*outfile_node->_32bit_data);
                 defricher_info("Setting offset to %d", dirfile_offset);
-                //while (!dirfile_ready) sleep(1);
-            }
-            else {
+		while(!dirfile_ready) {
+			sleep(1);
+		}
+		return true;
+            } else {
                 defricher_err("Missing \"mcp_1hz_framecount\" channel.  Please report this!");
                 dirfile_offset = 0;
+		return false;
             }
         } else {
             /**
              * We are looking for the 1Hz packet to mark the start of a new frame.  Until we receive
              * it, we discard the extra sub-frames.
              */
-            return;
+            return false;
         }
     }
-    new_pkt.rate = m_rate;
+    return true;
+}
 
+void defricher_queue_packet(uint16_t m_rate)
+{
+    queue_data_t new_pkt = {._dummy = (1<<15)}; //Set this bit to avoid glib assertions
+    new_pkt.rate = m_rate;
     g_async_queue_push(packet_queue, new_pkt.ptr);
 }
 
@@ -485,7 +490,6 @@ static void *defricher_write_loop(void *m_arg)
         if (ri.new_channels) {
             ri.channels_ready = false;
             ri.new_channels = false;
-            ri.ready_to_read = false;
             if (channels_initialize(new_channels) < 0) {
                 defricher_err("Could not initialize channels");
                 free(new_channels);
@@ -535,7 +539,6 @@ static void *defricher_write_loop(void *m_arg)
             } else {
                 dirfile_create_new = 0;
                 dirfile_ready = true;
-                ri.ready_to_read = true;
                 ri.symlink_updated = false;
                 dirfile_frames_written = 0;
             }

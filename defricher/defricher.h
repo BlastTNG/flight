@@ -85,7 +85,6 @@ struct ri_struct {
   int wrote;                // Current number of samples written
   bool new_channels;        // Have we received a new channels structure?
   bool channels_ready;      // Is the channels structure initialized?
-  bool ready_to_read;       // Are we ready to read from the MSQT server?
   bool symlink_updated;     // Is the symbolic link current with the new dirfile?
   bool writer_done;
   bool tty;              // Boolean is there a message for output?

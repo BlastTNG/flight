@@ -76,11 +76,12 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
         return;
     }
 
-    // channels_store_data(rate->position, m_data, m_len);
-    channels_check_size_of_frame(rate->position, m_len);
-    memcpy(getFifoWrite(&fifo_data[rate->position]), m_data, m_len);
-    incrementFifo(&fifo_data[rate->position]);
-    defricher_queue_packet(rate->position);
+    if (ready_to_read(rate->position)) {
+        channels_check_size_of_frame(rate->position, m_len);
+        memcpy(getFifoWrite(&fifo_data[rate->position]), m_data, m_len);
+        incrementFifo(&fifo_data[rate->position]);
+        defricher_queue_packet(rate->position);
+    }
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -100,7 +101,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                 correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
             }
             if (correct_topic) {
-                if (ri.channels_ready && ri.ready_to_read) {
+                if (ri.channels_ready) {
                     if (!strcasecmp(topics[count-1], "200HZ")) ri.read ++;
                     frame_handle_data(topics[count-1], message->payload, message->payloadlen);
                 }
