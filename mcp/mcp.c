@@ -111,7 +111,7 @@ void StageBus(void);
 struct chat_buf chatter_buffer;
 struct tm start_time;
 
-linklist_t * linklist_array[16] = {NULL};
+linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 struct Fifo * superframe_fifo = NULL;
 
 #define MPRINT_BUFFER_SIZE 1024
@@ -467,7 +467,8 @@ int main(int argc, char *argv[])
 
   pthread_t CommandDatacomm1;
   pthread_t DiskManagerID;
-  pthread_t biphase_writer_id;
+  pthread_t pilot_send_worker;
+  pthread_t bi0_send_worker;
   pthread_t watchdog_in_charge_id;
   int use_starcams = 0;
 
@@ -569,12 +570,12 @@ int main(int argc, char *argv[])
   superframe_fifo = (struct Fifo *) calloc(1, sizeof(struct Fifo));
   allocFifo(superframe_fifo, 3, superframe_size);
 
-  // TODO(javier): loop over all linklists available
-  linklist_array[0] = parse_linklist("/data/etc/linklists/test.ll");
+  // load all the linklists
+  load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
   linklist_generate_lookup(linklist_array);
 
-  pthread_t pilot_send_worker;
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) linklist_array);
+  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) linklist_array);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
@@ -610,7 +611,6 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
   pthread_create(&watchdog_in_charge_id, NULL, (void*)&watchdog_ping_and_set_in_charge, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);

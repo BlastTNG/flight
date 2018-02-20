@@ -142,6 +142,53 @@ void parse_line(char *line, char ** sinks, unsigned int nargs)
   
 }
 
+static int one (const struct dirent *unused)
+{
+  return 1;
+}
+
+int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
+  struct dirent **dir;
+  int n = scandir(linklistdir,&dir,one,alphasort);
+  int i;
+  int num = 0;
+
+  if (n<0) { 
+    blast_fatal("Cannot open the linklists directory %s", linklistdir);
+  } else if (n>=MAX_NUM_LINKLIST_FILES) { 
+    blast_fatal("Max linklists in %s\n",linklistdir);
+  }
+  
+  // check to see if there are already linklists allocated
+  i = 0;
+  while (ll_array[i]) {
+    delete_linklist(ll_array[i]);
+    ll_array[i] = 0;
+    i++;
+  }
+
+  char full_path_name[128] = {0};
+
+  // load linklist names
+  for (i = 0; i < n; i++) {
+    int len = strlen(dir[i]->d_name);
+    if ((len >= 3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
+      sprintf(full_path_name, "%s%s",linklistdir, dir[i]->d_name);
+      
+      if ((ll_array[num] = parse_linklist(full_path_name)) == NULL) {
+        blast_fatal("Unable to load linklist at %s", full_path_name);
+      }
+      num++;
+    }
+  }
+  ll_array[n] = NULL; // null terminate the list
+
+  blast_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
+
+  return 1;
+}
+
+
 int set_checksum_field(struct link_entry * le, unsigned int byteloc)
 {
   int blk_size = 2; // checksums are 16 bit

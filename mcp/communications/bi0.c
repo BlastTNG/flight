@@ -32,14 +32,15 @@
 #include <pthread.h>
 #include <termios.h>
 
-#include <blast.h>
-#include <command_struct.h>
-
+#include "linklist.h"
+#include "linklist_compress.h"
 #include "bi0.h"
-#include "crc.h"
-#include "channels_tng.h"
-#include "mputs.h"
+#include "blast.h"
+#include "command_struct.h"
+#include "FIFO.h"
+#include "bitserver.h"
 #include "bbc_pci.h"
+#include "mputs.h"
 #include "biphase_hardware.h"
 
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
@@ -47,11 +48,11 @@
 #define BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES (BI0_FRAME_SIZE*2 - 4)
 
 extern int16_t SouthIAm;
-
+uint8_t bi0_idle = 0;
 
 /******************** Main Biphase Loop **************************/
 
-void biphase_writer(void)
+void biphase_writer(void * arg)
 {
     // TODO(Joy): Verify what error checks are performed in BLAST code
 
@@ -69,6 +70,12 @@ void biphase_writer(void)
     uint16_t lsb_biphase_linklist_chunk[BI0_FRAME_SIZE];
     int synclink_fd = get_synclink_fd();
 
+    // setup linklists
+    linklist_t * ll = NULL;
+    linklist_t ** ll_array = arg;
+    int allframe_count = 0;
+    uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
+
     nameThread("Biphase");
 
     if (mpsse_hardware) {
@@ -82,14 +89,9 @@ void biphase_writer(void)
         rc = setup_synclink();
     }
 
-    // blast_info("used biphase_linklist_chunk is %zd, biphase frame size is %d, biphase frame size for data is %d (bytes)",
-    //            (size_t) (frame_size[RATE_100HZ]+2*frame_size[RATE_200HZ]+ceil(frame_size[RATE_1HZ]/100.0)),
-    //            BIPHASE_FRAME_SIZE_BYTES, (BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES));
-
     while (true) {
         if (CommandData.biphase_bw_changed) {
             CommandData.biphase_bw_changed = false;
-            get_num_frames_per_superframe(num_frames_per_superframe);
             if (mpsse_hardware) {
                 mpsse_reset_purge_close(ctx);
                 usleep(1000);
@@ -99,36 +101,91 @@ void biphase_writer(void)
             }
         }
 
-        // TODO (Javier): place the correct chunk of linklist into biphase_linklist_chunk
-        // memcpy(biphase_linklist_chunk, your_linklist)
+        // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
+        // get the current linklist
+        ll = ll_array[1];
 
-         // This used to be when we used this to compute the CRC before alternation
-        // biphase_linklist_chunk[0] = 0xEB90;
-        // biphase_linklist_chunk[BI0_FRAME_SIZE-1] = crc16(CRC16_SEED, biphase_linklist_chunk, BIPHASE_FRAME_SIZE_NOCRC_BYTES);
-        // blast_info("The computed CRC is %04x\n", biphase_linklist_chunk[BI0_FRAME_SIZE - 1]);
+        if (ll->data_ready & SUPERFRAME_READY) { // data is ready to be sent
+            // unset the ready bit
+            ll->data_ready &= ~SUPERFRAME_READY;
 
-        biphase_linklist_chunk[0] = sync_word;
-        sync_word = ~sync_word;
+						// send allframe if necessary
+						if (!allframe_count) {
+						//  write_allframe(compbuffer, ll->superframe);
+						//  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+						}
 
-        gettimeofday(&begin, NULL);
-        if (mpsse_hardware) {
-            mpsse_biphase_write_data(ctx, biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
-            mpsse_flush(ctx); // This should be a blocking call until data is written
-            if (ctx->retval != ERROR_OK) {
-                blast_err("Error writing frame to Biphase, discarding.");
+            // compress the linklist
+            int retval = compress_linklist(compbuffer, ll, NULL);
+
+            bi0_idle = 1; // set the FIFO flag in mcp
+            if (!retval) continue;
+
+            // packetize the linklist and send the chunks
+            uint16_t i_pkt = 0;
+            uint16_t n_pkt = 1;
+            uint8_t * chunk = NULL;
+            uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-PACKET_HEADER_SIZE-2;
+            uint32_t sendsize = 0;
+
+            while (i_pkt < n_pkt) {
+                // TODO(javier): make the size commandable for bw
+                chunk = packetizeBuffer(compbuffer, ll->blk_size, &chunksize,
+                                         &i_pkt, &n_pkt);
+                sendsize = chunksize+PACKET_HEADER_SIZE+2;
+
+                // copy the data, prepending with the 2 byte syncword and 12 byte header
+                biphase_linklist_chunk[0] = sync_word;
+                // TODO(javier): put a sensible framenumber (perhaps mcp_1hz_framecount?)
+                writeHeader(((uint8_t *) biphase_linklist_chunk)+2, *(uint32_t *) ll->serial,
+                             0, i_pkt++, n_pkt);
+                memcpy(((uint8_t *) biphase_linklist_chunk)+PACKET_HEADER_SIZE+2, chunk, chunksize);
+
+                // invert the syncword
+                sync_word = ~sync_word;
+
+                // send the data to mpsse chip
+								gettimeofday(&begin, NULL);
+								if (mpsse_hardware) {
+										mpsse_biphase_write_data(ctx, biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
+										mpsse_flush(ctx); // This should be a blocking call until data is written
+										if (ctx->retval != ERROR_OK) {
+												blast_err("Error writing frame to Biphase, discarding.");
+										}
+								} else {
+										reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
+										rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
+										if (rc < 0) {
+												blast_err("Synclink write error=%d %s", errno, strerror(errno));
+												usleep(5000);
+										} else {
+												blast_info("Wrote %d bytes through synclink", rc);
+										}
+										rc = tcdrain(synclink_fd);
+								}
+                memset(biphase_linklist_chunk, 0, BIPHASE_FRAME_SIZE_BYTES);
+								gettimeofday(&end, NULL);
+								usleep(10); // This should not be needed
             }
-        } else {
-            reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
-            rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
-            if (rc < 0) {
-                blast_err("Synclink write error=%d %s", errno, strerror(errno));
-                usleep(5000);
-            } else {
-                blast_info("Wrote %d bytes through synclink", rc);
-            }
-            rc = tcdrain(synclink_fd);
+        } else { // zzzzz.....
+						if (mpsse_hardware) {
+								mpsse_biphase_write_data(ctx, biphase_linklist_chunk, BI0_ZERO_PADDING);
+								mpsse_flush(ctx); // This should be a blocking call until data is written
+								if (ctx->retval != ERROR_OK) {
+										blast_err("Error writing frame to Biphase, discarding.");
+								}
+						} else {
+								reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
+								rc = write(synclink_fd, lsb_biphase_linklist_chunk, BI0_ZERO_PADDING);
+								if (rc < 0) {
+										blast_err("Synclink write error=%d %s", errno, strerror(errno));
+										usleep(5000);
+								} else {
+										blast_info("Wrote %d bytes through synclink", rc);
+								}
+								rc = tcdrain(synclink_fd);
+						}
+            usleep(10000);
         }
-        gettimeofday(&end, NULL);
-        usleep(10); // This should not be needed
     }
 }
