@@ -1823,6 +1823,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
+    case new_output_atten:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
+          CommandData.roach_params[ivalues[0]-1].new_out_atten = rvalues[1];
+          CommandData.roach[ivalues[0]-1].new_atten = 1;
+      }
+      break;
     case find_kids:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
@@ -2394,6 +2400,7 @@ void InitCommandData()
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
         CommandData.roach[i].test_tone = 0;
+        CommandData.roach[i].new_atten = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2706,7 +2713,7 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].in_atten = 30;
+        CommandData.roach_params[i].in_atten = 29;
         CommandData.roach_params[i].out_atten = 16;
         CommandData.roach_params[i].test_freq = 10.0125e6;
     }

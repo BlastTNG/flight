@@ -328,6 +328,7 @@ typedef struct roach
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
+    unsigned int new_atten;
     unsigned int load_vna_amps;
     unsigned int load_targ_amps;
     unsigned int calibrate_adc;
@@ -349,6 +350,7 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double new_out_atten;
     double test_freq;
 } roach_params_t;
 

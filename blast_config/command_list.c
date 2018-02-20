@@ -918,6 +918,12 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
+  {COMMAND(new_output_atten), "Set attenuators", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"new_out_atten", 0.0, 30.0, 'f', "NONE"}
+    }
+  },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
