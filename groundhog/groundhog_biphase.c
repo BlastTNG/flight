@@ -28,41 +28,81 @@
 #include "blast_time.h"
 #include "groundhog_framing.h"
 #include "groundhog.h"
+#include "linklist.h"
+#include "bitserver.h"
+#include "FIFO.h"
 
-#define FRAME_SYNC_WORD 0xEB90
-#define DQ_FILTER 0.4
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
+#define BIPHASE_PACKET_SIZE (BIPHASE_FRAME_SIZE_BYTES-2-PACKET_HEADER_SIZE)
+#define BIPHASE_PACKET_WORD_START (7)
+
+#define MAX_LL_SIZE (250000)
 
 #define DEV "/dev/decom_pci"
 
 superframes_list_t superframes;
 
+void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped, const uint16_t *receive_buffer, 
+                         const uint16_t *anti_receive_buffer, linklist_t **ll, uint16_t **i_pkt, uint16_t **n_pkt) {
+
+  uint8_t *header = NULL;
+  uint32_t *serial;
+  uint32_t *frame_number;
+
+  if (*normal_polarity) {
+      // Getting header
+      memcpy(header, receive_buffer+1, PACKET_HEADER_SIZE);
+      // Reading the header
+      readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+      // Checking for polarity
+      if ((*ll = linklist_lookup_by_serial(*serial))) {
+          *normal_polarity = true;
+          memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+      } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
+          *normal_polarity = false;
+      }
+  }
+  if (!(*normal_polarity)) {
+      // Getting header
+      memcpy(header, anti_receive_buffer+1, PACKET_HEADER_SIZE);
+      // Reading the header
+      readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+      // Checking for polarity
+      if ((*ll = linklist_lookup_by_serial(*serial))) {
+          *normal_polarity = false;
+          memcpy(receive_buffer_stripped, anti_receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+      } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
+          *normal_polarity = true;
+          memcpy(header, receive_buffer+1, PACKET_HEADER_SIZE);
+          readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+          memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+      }
+  }
+}
+
 void biphase_receive(void *args)
 {
+
   int decom_fp;
-
-  uint16_t out_frame[BI0_FRAME_SIZE+3];
-  uint16_t anti_out_frame[BI0_FRAME_SIZE+3];
-
-  int16_t du; // num_unlocked: info only
-  int status; // unlocked, searching. or locked.
-  uint16_t polarity;
-  int system_idled; // if 1, don't write to disk
-  uint16_t crc_ok; // 1 if crc was ok
-  // unsigned long frame_counter;
-  double dq_bad;  // data quality - fraction of bad crcs
-
-  bool debug_rate = false;
-  uint16_t debug_counter = 0;
-  uint16_t previous_counter = 0;
-
-  uint16_t raw_word_in;
   int i_word = 0;
-  int read_data = 0;
-  uint16_t crc_pos, crc_neg;
+  int16_t du; // num_unlocked: info only
   const uint16_t sync_word = 0xeb90;
+  uint16_t raw_word_in;
 
-  buos_use_stdio();
+  uint16_t receive_buffer[BI0_FRAME_SIZE];
+  uint16_t anti_receive_buffer[BI0_FRAME_SIZE];
+  uint8_t receive_buffer_stripped[BIPHASE_PACKET_SIZE];
+  uint8_t *compressed_linklist = calloc(1, MAX_LL_SIZE);
+  uint32_t compressed_linklist_size = 0;
+
+  linklist_t *ll = NULL;
+  uint16_t *i_pkt;
+  uint16_t *n_pkt;
+  uint8_t *retval;
+  uint8_t *local_superframe = allocate_superframe();
+  bool normal_polarity = true;
+
+  // buos_use_stdio();
 
   /* Open Decom */
   if ((decom_fp = open(DEV, O_RDONLY | O_NONBLOCK)) == -1) {
@@ -77,119 +117,38 @@ void biphase_receive(void *args)
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
 
-
   initialize_circular_superframes(&superframes);
 
   while(true) {
       while ((read(decom_fp, &raw_word_in, sizeof(uint16_t))) > 0) {
-          read_data = 1;
-          out_frame[i_word] = raw_word_in;
-          anti_out_frame[i_word] = ~raw_word_in;
-          if (debug_rate) {
-            printf("i_word=%d, raw_word_in = %04x\n", i_word, raw_word_in);
-          }
-          if (i_word == 2 && false) {
-            if (abs(raw_word_in - previous_counter) != 2) {
-                printf("We have missed %d frames\n", abs(raw_word_in - previous_counter));
-            }
-            previous_counter = raw_word_in;
-          }
-          if (i_word % BI0_FRAME_SIZE == 0) { /* begining of frame */
-            if (debug_rate) {
-                printf("=================i_word=%d==============================\n", i_word);
-                printf("This should be frame start: it's been BIO_FRAME_SIZE_WORDS since last sync word\n");
-            }
-            du = ioctl(decom_fp, DECOM_IOC_NUM_UNLOCKED);
-            if ((raw_word_in != sync_word) && (raw_word_in != (uint16_t) ~sync_word)) {
-                status = 0;
-                i_word = 0;
-            } else {
-                if (debug_rate) {
-                    printf("=== FRAME START! i_word=%d===\n== Got sync word %04x ==\n", i_word, raw_word_in);
-                }
-                debug_counter += 1;
-                if (debug_counter % 10 == 0) {
-                    printf("fraction of bad crc weighted: %f\n", dq_bad);
-                }
-                  if (status < 2) {
-                      status++;
-                  } else {
-                      if (polarity) {
-                          out_frame[BI0_FRAME_SIZE] = crc_ok;
-                          out_frame[BI0_FRAME_SIZE + 1] = polarity;
-                          out_frame[BI0_FRAME_SIZE + 2] = du;
-                          // if (!system_idled) {
-                          //   pushDiskFrame(out_frame);
-                          //   frame_counter++;
-                          // }
-                      } else {
-                          anti_out_frame[BI0_FRAME_SIZE] = crc_ok;
-                          anti_out_frame[BI0_FRAME_SIZE + 1] = polarity;
-                          anti_out_frame[BI0_FRAME_SIZE + 2] = du;
-                          // if (!system_idled) {
-                          //   pushDiskFrame(anti_out_frame);
-                          //   frame_counter++;
-                          // }
-                      }
-                  }
-                  if (crc_ok == 1) {
-                      dq_bad *= DQ_FILTER;
-                  } else {
-                      dq_bad = dq_bad * DQ_FILTER + (1.0 - DQ_FILTER);
-                  }
-                  i_word++;
+          // Fill receive and anti receive
+          receive_buffer[i_word] = raw_word_in;
+          anti_receive_buffer[i_word] = ~raw_word_in;
+          if (i_word == 0) {
+              // Beginning of packet?
+              du = ioctl(decom_fp, DECOM_IOC_NUM_UNLOCKED);
+              if ((raw_word_in != sync_word) && (raw_word_in != (uint16_t) ~sync_word)) {
+                  // This was not the beginning actually
+                  i_word = 0;
+                  continue;
               }
-          } else {
-                if ((i_word) == (BI0_FRAME_SIZE-1)) {
-                    if (debug_rate) {
-                        printf("== This is the last word: i_word=%d, and BI0_FRAME_SIZE=%d\n", i_word, BI0_FRAME_SIZE);
-                        printf("The last word received (normally the CRC) is %04x\n", raw_word_in); 
-                        printf("The last word received negative is (normally the CRC) is %04x\n", (~raw_word_in)&0xffff); 
-                        if (false) {
-                            printf("==frame==\n");
-                            for (int j=0; j<BI0_FRAME_SIZE; j++) {
-                                printf("%02x ", out_frame[j]);
-                            }
-                            printf("========\n== anti frame==\n");
-                            for (int j=0; j<BI0_FRAME_SIZE; j++) {
-                                printf("%04x ", anti_out_frame[j]);
-                            }
-                            printf("\n-------------------\n");
-                        }
-                    }
-                    out_frame[0] = anti_out_frame[0] = 0xEB90;
-                    crc_pos = crc16(CRC16_SEED, out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
-                    crc_neg = crc16(CRC16_SEED, anti_out_frame, BI0_FRAME_SIZE*sizeof(uint16_t)-2);
-                    if (debug_rate) {
-                        printf("The CRC_POS computed is %04x\n", crc_pos);
-                        printf("The CRC_NEG computed is %04x\n", crc_neg);
-                    }
-                    if (raw_word_in == crc_pos) {
-                        crc_ok = 1;
-                        polarity = 1;
-                        // push_superframe(out_frame, &superframes);
-                    } else if ((uint16_t)(~raw_word_in) == crc_neg) {
-                        crc_ok = 1;
-                        polarity = 0;
-                        // push_superframe(anti_out_frame, &superframes);
-                    } else {
-                        crc_ok = 0;
-                    }
-                    if (debug_rate) {
-                        blast_dbg("Last word of frame, is crc ok? %d\n======================\n", (int) crc_ok);
-                    }
-              }
-              if (++i_word >= BI0_FRAME_SIZE) {
-                    i_word = 0;
+          } else if ((i_word) == (BI0_FRAME_SIZE-1)) {
+              get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
+                                  &ll, &i_pkt, &n_pkt);
+              retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, BIPHASE_PACKET_SIZE, 
+                                         i_pkt, n_pkt, receive_buffer_stripped);
+              memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
+              if (retval == NULL){
+                  // The compressed linklist has been fully reconstructed
+                  decompress_linklist(local_superframe, ll, compressed_linklist);
+                  push_superframe(local_superframe, &superframes);
+                  memset(compressed_linklist, 0, compressed_linklist_size);
+                  compressed_linklist_size = 0;
               }
           }
+          i_word++;
+          i_word = (i_word % BI0_FRAME_SIZE);
       }
-      if (!read_data) {
-          status = 0;
-      } else {
-          read_data = 0;
-      }
-      usleep(5000);
   }
 }
 

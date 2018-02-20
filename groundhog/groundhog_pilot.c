@@ -176,7 +176,6 @@ void pilot_publish(void *arg) {
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
             superframes.i_out = write_frame;
         }
-        //usleep(100);
     }
 }
 
