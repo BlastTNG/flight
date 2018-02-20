@@ -67,7 +67,7 @@
 #include "balance.h"
 #include "blast.h"
 #include "blast_comms.h"
-#include "blast_sip_interface.h"
+// #include "blast_sip_interface.h"
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
@@ -545,15 +545,15 @@ int main(int argc, char *argv[])
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
 
   initialize_blast_comms();
-  initialize_sip_interface();
+//  initialize_sip_interface();
   initialize_dsp1760_interface();
 
-// #ifdef USE_FIFO_CMD
-//   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
-// #else
-//   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
-//   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-// #endif
+#ifdef USE_FIFO_CMD
+    pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
+#else
+    pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
+    pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
+#endif
 #ifdef USE_XY_THREAD
   // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif

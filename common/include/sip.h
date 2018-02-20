@@ -34,38 +34,38 @@
 /*     Used: Main thread                      */
 // TODO(lmf): These structure definitions have been moved to /git/flight/mcp/include/blast_sip_interface.h
 // if not needed delete these lines.
-// struct GPSposStruct {
-//   double lat;   // probably degrees
-//   double lon;   // probably degrees
-//   double alt;
-// };
-//
-// struct MKSaltStruct {
-//   float hi;
-//   float med;
-//   float lo;
-// };
-//
-// struct TimeStruct {
-//   int UTC;
-//   int CPU;
-// };
-//
-// struct MKScalStruct {
-//   float m_hi, m_med, m_lo;
-//   float b_hi, b_med, b_lo;
-// };
-//
-// struct SIPDataStruct {
-//   struct GPSposStruct GPSpos;
-//   struct TimeStruct GPStime;
-//   struct MKSaltStruct MKSalt;
-//   char GPSstatus1;
-//   char GPSstatus2;
-//   struct MKScalStruct MKScal;
-// };
-//
-// extern struct SIPDataStruct SIPData;
+struct GPSposStruct {
+  double lat;   // probably degrees
+  double lon;   // probably degrees
+  double alt;
+};
+
+struct MKSaltStruct {
+  float hi;
+  float med;
+  float lo;
+};
+
+struct TimeStruct {
+  int UTC;
+  int CPU;
+};
+
+struct MKScalStruct {
+  float m_hi, m_med, m_lo;
+  float b_hi, b_med, b_lo;
+};
+
+struct SIPDataStruct {
+  struct GPSposStruct GPSpos;
+  struct TimeStruct GPStime;
+  struct MKSaltStruct MKSalt;
+  char GPSstatus1;
+  char GPSstatus2;
+  struct MKScalStruct MKScal;
+};
+
+extern struct SIPDataStruct SIPData;
 
 void WatchPort(void* parameter);
 

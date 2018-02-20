@@ -43,6 +43,7 @@
 #include "blast.h"
 #include "command_common.h"
 #include "command_struct.h"
+#include "commands.h"
 #include "mcp.h"
 
 #define REQ_POSITION    0x50
@@ -274,24 +275,24 @@ static void SetParameters(enum multiCommand command, uint16_t *dataq, double* rv
 }
 
 #ifdef USE_SIP_CMD
-// static void GPSPosition(unsigned char *indata)
-// {
-//     double lat;
-//
-//     SIPData.GPSstatus1 = *(indata + 12);
-//     SIPData.GPSstatus2 = *(indata + 13);
-//
-//     lat = ParseGPS(indata + 4);
-//     if (fabs(lat) > 20) {
-//         SIPData.GPSpos.lat = lat;
-//         SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
-//         /* end of hack */
-//
-//         SIPData.GPSpos.alt = ParseGPS(indata + 8);
-//
-//         WritePrevStatus();
-//     }
-// }
+static void GPSPosition(unsigned char *indata)
+{
+    double lat;
+
+    SIPData.GPSstatus1 = *(indata + 12);
+    SIPData.GPSstatus2 = *(indata + 13);
+
+    lat = ParseGPS(indata + 4);
+    if (fabs(lat) > 20) {
+        SIPData.GPSpos.lat = lat;
+        SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
+        /* end of hack */
+
+        SIPData.GPSpos.alt = ParseGPS(indata + 8);
+
+//        WritePrevStatus();
+    }
+}
 #endif    // USE_SIP_CMD
 
 void ScheduledCommand(struct ScheduleEvent *event)
@@ -330,33 +331,33 @@ void ScheduledCommand(struct ScheduleEvent *event)
 }
 
 #ifdef USE_SIP_CMD
-// static void GPSTime(unsigned char *indata)
-// {
-//   float GPStime, offset;
-//   int CPUtime, GPSweek;
-//
-//   /* Send new information to CommandData */
-//
-//   GPStime = ParseGPS(indata);
-//   GPSweek = *((uint16_t*)(indata + 4));
-//   offset = ParseGPS(indata + 6);
-//   CPUtime = ParseGPS(indata + 10);
-//
-//   SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek) + GPStime - offset) +
-//     SUN_JAN_6_1980;
-//   SIPData.GPStime.CPU = CPUtime;
-//
-//   WritePrevStatus();
-// }
+static void GPSTime(unsigned char *indata)
+{
+  float GPStime, offset;
+  int CPUtime, GPSweek;
 
-// static void MKSAltitude(unsigned char *indata)
-// {
-//   SIPData.MKSalt.hi = ((uint16_t *)indata)[0];;
-//   SIPData.MKSalt.med = ((uint16_t *)indata)[1];;
-//   SIPData.MKSalt.lo = ((uint16_t *)indata)[2];;
-//
-//   WritePrevStatus();
-// }
+  /* Send new information to CommandData */
+
+  GPStime = ParseGPS(indata);
+  GPSweek = *((uint16_t*)(indata + 4));
+  offset = ParseGPS(indata + 6);
+  CPUtime = ParseGPS(indata + 10);
+
+  SIPData.GPStime.UTC = (int)(SEC_IN_WEEK * (GPSweek) + GPStime - offset) +
+    SUN_JAN_6_1980;
+  SIPData.GPStime.CPU = CPUtime;
+
+//  WritePrevStatus();
+}
+
+static void MKSAltitude(unsigned char *indata)
+{
+  SIPData.MKSalt.hi = ((uint16_t *)indata)[0];;
+  SIPData.MKSalt.med = ((uint16_t *)indata)[1];;
+  SIPData.MKSalt.lo = ((uint16_t *)indata)[2];;
+
+//  WritePrevStatus();
+}
 
 /* Send TDRSS Low Rate Packet */
 
@@ -597,274 +598,274 @@ void ProcessUplinkSched(unsigned char *extdat)
                chunks_received);
 }
 
-// void WatchPort(void* parameter)
-// {
-//     const char *COMM[] = { "/dev/ttyCOMM1", "/dev/ttyCOMM2" };
-//     const unsigned char route[2] = { 0x09, 0x0c };
-//
-//     unsigned char buf;
-//     uint16_t *indatadumper;
-//     unsigned char indata[20];
-//     int readstage = 0;
-//     int tty_fd;
-//
-//     intptr_t port = (intptr_t) parameter;
-//
-//     double rvalues[MAX_N_PARAMS];
-//     int ivalues[MAX_N_PARAMS];
-//     char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
-//
-//     int mcommand = -1;
-//     int mcommand_count = 0;
-//     int dataqsize = 0;
-//     uint16_t mcommand_data[DATA_Q_SIZE];
-//     unsigned char mcommand_time = 0;
-//
-//     int timer = 0;
-//     int bytecount = 0;
-//     int extlen = 0;
-//
-//     unsigned char extdat[256];
-//
-//     char tname[6];
-//     snprintf(tname, sizeof(tname), "COMM%1d", port + 1);
-//     nameThread(tname);
-//     // blast_startup("WatchPort startup\n");
-//
-//     tty_fd = sip_setserial(COMM[port]);
-//
-//     for (;;) {
-//         /* Loop until data come in */
-//         while (read(tty_fd, &buf, 1) <= 0) {
-//             timer++;
-//             /** Request updated info every 50 seconds */
-//             if (timer == 800) {
-//                 pthread_mutex_lock(&mutex);
-//                 SendRequest(REQ_POSITION, tty_fd);
-// #ifdef SIP_CHATTER
-//                 blast_info("Request SIP Position\n");
-// #endif
-//                 pthread_mutex_unlock(&mutex);
-//             } else if (timer == 1700) {
-//                 pthread_mutex_lock(&mutex);
-//                 SendRequest(REQ_TIME, tty_fd);
-// #ifdef SIP_CHATTER
-//                 blast_info("Request SIP Time\n");
-// #endif
-//                 pthread_mutex_unlock(&mutex);
-//             } else if (timer > 2500) {
-//                 pthread_mutex_lock(&mutex);
-//                 SendRequest(REQ_ALTITUDE, tty_fd);
-// #ifdef SIP_CHATTER
-//                 blast_info("Request SIP Altitude\n");
-// #endif
-//                 pthread_mutex_unlock(&mutex);
-//                 timer = 0;
-//             }
-//             usleep(10000); /* sleep for 10ms */
-//         }
-// #ifdef VERBOSE_SIP_CHATTER
-//         blast_info("read SIP byte %02x\n", buf);
-// #endif
-//
-//         /* Take control of memory */
-//         pthread_mutex_lock(&mutex);
-//
-//         /* Process data */
-//         switch (readstage) {
-//             /* readstage: 0: waiting for packet beginning (0x10) */
-//             /*            1: waiting for packet type (e.g., 0x14 = command packet) */
-//             /*            2: waiting for command packet datum: case 0x14 */
-//             /*            3: waiting for request data packet end: case 0x13 */
-//             /*            4: waiting for GPS position datum: case 0x10 */
-//             /*            5: waiting for GPS time datum:  case 0x11 */
-//             /*            6: waiting for MKS pressure datum: case 0x12 */
-//
-//             case 0: /* waiting for packet beginning */
-//                 if (buf == 0x10) readstage = 1;
-//                 break;
-//             case 1: /* wating for packet type */
-//                 if (buf == 0x13) { /* Send data request */
-//                     readstage = 3;
-// #ifdef SIP_CHATTER
-//                     blast_info("Data request\n");
-// #endif
-//                 } else if (buf == 0x14) { /* Command */
-//                     readstage = 2;
-// #ifdef SIP_CHATTER
-//                     blast_info("Command\n");
-// #endif
-//                 } else if (buf == 0x10) { /* GPS Position */
-//                     readstage = 4;
-// #ifdef SIP_CHATTER
-//                     blast_info("GPS Position\n");
-// #endif
-//                 } else if (buf == 0x11) { /* GPS Time */
-//                     readstage = 5;
-// #ifdef SIP_CHATTER
-//                     blast_info("GPS Time\n");
-// #endif
-//                 } else if (buf == 0x12) { /* MKS Altitude */
-//                     readstage = 6;
-// #ifdef SIP_CHATTER
-//                     blast_info("MKS Altitude\n");
-// #endif
-//                 } else {
-//                     blast_warn("Bad packet received: " "Unrecognised Packet Type: %02X\n", buf);
-//                     readstage = 0;
-//                 }
-//                 break;
-//             case 2: /* waiting for command packet datum */
-//                 if (bytecount == 0) { /* Look for 2nd byte of command packet = 0x02 */
-//                     if (buf == 0x02) {
-//                         bytecount = 1;
-//                     } else {
-//                         readstage = 7;
-//                         extlen = buf;
-//                     }
-//                 } else if (bytecount >= 1 && bytecount <= 2) {
-//                     /* Read the two data bytes of the command packet */
-//                     indata[bytecount - 1] = buf;
-//                     bytecount++;
-//                 } else {
-//                     bytecount = 0;
-//                     if (buf == 0x03) {
-//                         /* We should now be at the end of the command packet */
-//                         readstage = 0;
-//
-//                         /* Check bits 6-8 from second data byte for type of command */
-//                         /* Recall:    101? ???? = 0xA0 = single command */
-//                         /*            100? ???? = 0x80 = begin multi command */
-//                         /*            110? ???? = 0xC0 = end multi command */
-//                         /*            0??? ???? = 0x00 = data packet in multi command */
-//
-//                         if ((indata[1] & 0xE0) == 0xA0) {
-//                             /*** Single command ***/
-//                             // blast_info("Single command received\n");
-//                             // FIXME(seth): this limits # single commands to 255. use indata[1] too
-//                             SingleCommand(indata[0], 0);
-//                             mcommand = -1;
-//                         } else if ((indata[1] & 0xE0) == 0x80) {
-//                             /*** Beginning of multi command ***/
-//                             /*Grab first five bits of second byte containing command number*/
-//                             mcommand = indata[0];
-//                             mcommand_count = 0;
-//                             dataqsize = DataQSize(MIndex(mcommand));
-//                             blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
-//                                         MName(mcommand), mcommand);
-//
-//                             /* The time of sending, a "unique" number shared by the first */
-//                             /* and last packed of a multi-command */
-//                             mcommand_time = indata[1] & 0x1F;
-//                         } else if (((indata[1] & 0x80) == 0) && (mcommand >= 0) && (mcommand_count < dataqsize)) {
-//                             /*** Parameter values in multi-command ***/
-//                             indatadumper = (uint16_t *) indata;
-//                             mcommand_data[mcommand_count] = *indatadumper;
-//                             blast_info("Multi word command continues...\n");
-//                             mcommand_count++;
-//                         } else if (((indata[1] & 0xE0) == 0xC0) && (mcommand == indata[0])
-//                                    && ((indata[1] & 0x1F) == mcommand_time) && (mcommand_count == dataqsize)) {
-//                             /*** End of multi-command ***/
-//                             blast_info("Multi word command ends \n");
-//                             SetParameters(mcommand, (uint16_t*) mcommand_data, rvalues, ivalues, svalues);
-//                             MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
-//                             mcommand = -1;
-//                             mcommand_count = 0;
-//                             mcommand_time = 0;
-//                         } else {
-//                             mcommand = -1;
-//                             mcommand_count = 0;
-//                             blast_warn("Command packet discarded: Bad Encoding: %04X\n", indata[1]);
-//                             mcommand_time = 0;
-//                         }
-//                     }
-//                 }
-//                 break;
-//             case 3: /* waiting for request data packet end */
-//                 readstage = 0;
-//                 if (buf == 0x03) {
-//                     SendDownData(tty_fd);
-//                 } else {
-//                     blast_warn("Bad encoding: Bad packet terminator: %02X\n", buf);
-//                 }
-//                 break;
-//             case 4: /* waiting for GPS position datum */
-//                 if (bytecount < 14) { /* There are 14 data bytes for GPS position */
-//                     indata[bytecount] = buf;
-//                     bytecount++;
-//                 } else {
-//                     bytecount = 0;
-//                     readstage = 0;
-//                     if (buf == 0x03) {
-//                         GPSPosition((unsigned char *) indata);
-//                     } else {
-//                         blast_warn("Bad encoding in GPS Position: " "Bad packet terminator: %02X\n", buf);
-//                     }
-//                 }
-//                 break;
-//             case 5: /* waiting for GPS time datum:  case 0x11 */
-//                 if (bytecount < 14) { /* There are fourteen data bytes for GPS time */
-//                     indata[bytecount] = buf;
-//                     bytecount++;
-//                 } else {
-//                     bytecount = 0;
-//                     readstage = 0;
-//                     if (buf == 0x03) {
-//                         GPSTime((unsigned char *) indata);
-//                     } else {
-//                         blast_warn("Bad encoding in GPS Time: " "Bad packet terminator: %02X\n", buf);
-//                     }
-//                 }
-//                 break;
-//             case 6: /* waiting for MKS pressure datum: case 0x12 */
-//                 if (bytecount < 6) {
-//                     indata[bytecount] = buf;
-//                     bytecount++;
-//                 } else {
-//                     bytecount = 0;
-//                     readstage = 0;
-//                     if (buf == 0x03) {
-//                         MKSAltitude((unsigned char *) indata);
-//                     } else {
-//                         blast_warn("Bad encoding in MKS Altitude: " "Bad packet terminator: %02X\n", buf);
-//                     }
-//                 }
-//                 break;
-//             case 7: // reading extended command
-//                 if (bytecount < extlen) {
-//                     extdat[bytecount] = buf;
-//                     bytecount++;
-//                 } else {
-//                     if (buf == 0x03) {
-//                         if (extdat[0] == sched_packet) {
-//                             if (extdat[EXT_ROUTE] == route[port]) {
-//                                 blast_info("Schedule file uplink packet detected\n");
-//                                 ProcessUplinkSched(extdat);
-//                             } else {
-//                                 blast_info("Schedule file uplink packet bad route %d != %d\n", extdat[EXT_ROUTE],
-//                                            route[port]);
-//                             }
-//                         } else {
-//                             if (MIndex(extdat[0]) < 0) {
-//                                 blast_warn("ignoring unknown extended command (%d)", extdat[0]);
-//                             } else {
-//                                 blast_info("extended command %s (%d)", MName(extdat[0]), extdat[0]);
-//                                 SetParameters(extdat[0], (uint16_t*) (extdat + 2), rvalues, ivalues, svalues);
-//                                 MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
-//                             }
-//                         }
-//                     } else {
-//                         blast_warn("Bad encoding in extended command: " "Bad packet terminator: %02X\n", buf);
-//                     }
-//                     bytecount = 0;
-//                     readstage = 0;
-//                 }
-//                 break;
-//         }
-//
-//         /* Relinquish control of memory */
-//         pthread_mutex_unlock(&mutex);
-//     }
-// }
+void WatchPort(void* parameter)
+{
+    const char *COMM[] = { "/dev/ttyCOMM1", "/dev/ttyCOMM2" };
+    const unsigned char route[2] = { 0x09, 0x0c };
+
+    unsigned char buf;
+    uint16_t *indatadumper;
+    unsigned char indata[20];
+    int readstage = 0;
+    int tty_fd;
+
+    intptr_t port = (intptr_t) parameter;
+
+    double rvalues[MAX_N_PARAMS];
+    int ivalues[MAX_N_PARAMS];
+    char svalues[MAX_N_PARAMS][CMD_STRING_LEN];
+
+    int mcommand = -1;
+    int mcommand_count = 0;
+    int dataqsize = 0;
+    uint16_t mcommand_data[DATA_Q_SIZE];
+    unsigned char mcommand_time = 0;
+
+    int timer = 0;
+    int bytecount = 0;
+    int extlen = 0;
+
+    unsigned char extdat[256];
+
+    char tname[6];
+    snprintf(tname, sizeof(tname), "COMM%1d", port + 1);
+    nameThread(tname);
+    // blast_startup("WatchPort startup\n");
+
+    tty_fd = sip_setserial(COMM[port]);
+
+    for (;;) {
+        /* Loop until data come in */
+        while (read(tty_fd, &buf, 1) <= 0) {
+            timer++;
+            /** Request updated info every 50 seconds */
+            if (timer == 800) {
+                pthread_mutex_lock(&mutex);
+                SendRequest(REQ_POSITION, tty_fd);
+#ifdef SIP_CHATTER
+                blast_info("Request SIP Position\n");
+#endif
+                pthread_mutex_unlock(&mutex);
+            } else if (timer == 1700) {
+                pthread_mutex_lock(&mutex);
+                SendRequest(REQ_TIME, tty_fd);
+#ifdef SIP_CHATTER
+                blast_info("Request SIP Time\n");
+#endif
+                pthread_mutex_unlock(&mutex);
+            } else if (timer > 2500) {
+                pthread_mutex_lock(&mutex);
+                SendRequest(REQ_ALTITUDE, tty_fd);
+#ifdef SIP_CHATTER
+                blast_info("Request SIP Altitude\n");
+#endif
+                pthread_mutex_unlock(&mutex);
+                timer = 0;
+            }
+            usleep(10000); /* sleep for 10ms */
+        }
+#ifdef VERBOSE_SIP_CHATTER
+        blast_info("read SIP byte %02x\n", buf);
+#endif
+
+        /* Take control of memory */
+        pthread_mutex_lock(&mutex);
+
+        /* Process data */
+        switch (readstage) {
+            /* readstage: 0: waiting for packet beginning (0x10) */
+            /*            1: waiting for packet type (e.g., 0x14 = command packet) */
+            /*            2: waiting for command packet datum: case 0x14 */
+            /*            3: waiting for request data packet end: case 0x13 */
+            /*            4: waiting for GPS position datum: case 0x10 */
+            /*            5: waiting for GPS time datum:  case 0x11 */
+            /*            6: waiting for MKS pressure datum: case 0x12 */
+
+            case 0: /* waiting for packet beginning */
+                if (buf == 0x10) readstage = 1;
+                break;
+            case 1: /* wating for packet type */
+                if (buf == 0x13) { /* Send data request */
+                    readstage = 3;
+#ifdef SIP_CHATTER
+                    blast_info("Data request\n");
+#endif
+                } else if (buf == 0x14) { /* Command */
+                    readstage = 2;
+#ifdef SIP_CHATTER
+                    blast_info("Command\n");
+#endif
+                } else if (buf == 0x10) { /* GPS Position */
+                    readstage = 4;
+#ifdef SIP_CHATTER
+                    blast_info("GPS Position\n");
+#endif
+                } else if (buf == 0x11) { /* GPS Time */
+                    readstage = 5;
+#ifdef SIP_CHATTER
+                    blast_info("GPS Time\n");
+#endif
+                } else if (buf == 0x12) { /* MKS Altitude */
+                    readstage = 6;
+#ifdef SIP_CHATTER
+                    blast_info("MKS Altitude\n");
+#endif
+                } else {
+                    blast_warn("Bad packet received: " "Unrecognised Packet Type: %02X\n", buf);
+                    readstage = 0;
+                }
+                break;
+            case 2: /* waiting for command packet datum */
+                if (bytecount == 0) { /* Look for 2nd byte of command packet = 0x02 */
+                    if (buf == 0x02) {
+                        bytecount = 1;
+                    } else {
+                        readstage = 7;
+                        extlen = buf;
+                    }
+                } else if (bytecount >= 1 && bytecount <= 2) {
+                    /* Read the two data bytes of the command packet */
+                    indata[bytecount - 1] = buf;
+                    bytecount++;
+                } else {
+                    bytecount = 0;
+                    if (buf == 0x03) {
+                        /* We should now be at the end of the command packet */
+                        readstage = 0;
+
+                        /* Check bits 6-8 from second data byte for type of command */
+                        /* Recall:    101? ???? = 0xA0 = single command */
+                        /*            100? ???? = 0x80 = begin multi command */
+                        /*            110? ???? = 0xC0 = end multi command */
+                        /*            0??? ???? = 0x00 = data packet in multi command */
+
+                        if ((indata[1] & 0xE0) == 0xA0) {
+                            /*** Single command ***/
+                            // blast_info("Single command received\n");
+                            // FIXME(seth): this limits # single commands to 255. use indata[1] too
+                            SingleCommand(indata[0], 0);
+                            mcommand = -1;
+                        } else if ((indata[1] & 0xE0) == 0x80) {
+                            /*** Beginning of multi command ***/
+                            /*Grab first five bits of second byte containing command number*/
+                            mcommand = indata[0];
+                            mcommand_count = 0;
+                            dataqsize = DataQSize(MIndex(mcommand));
+                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
+                                        MName(mcommand), mcommand);
+
+                            /* The time of sending, a "unique" number shared by the first */
+                            /* and last packed of a multi-command */
+                            mcommand_time = indata[1] & 0x1F;
+                        } else if (((indata[1] & 0x80) == 0) && (mcommand >= 0) && (mcommand_count < dataqsize)) {
+                            /*** Parameter values in multi-command ***/
+                            indatadumper = (uint16_t *) indata;
+                            mcommand_data[mcommand_count] = *indatadumper;
+                            blast_info("Multi word command continues...\n");
+                            mcommand_count++;
+                        } else if (((indata[1] & 0xE0) == 0xC0) && (mcommand == indata[0])
+                                   && ((indata[1] & 0x1F) == mcommand_time) && (mcommand_count == dataqsize)) {
+                            /*** End of multi-command ***/
+                            blast_info("Multi word command ends \n");
+                            SetParameters(mcommand, (uint16_t*) mcommand_data, rvalues, ivalues, svalues);
+                            MultiCommand(mcommand, rvalues, ivalues, svalues, 0);
+                            mcommand = -1;
+                            mcommand_count = 0;
+                            mcommand_time = 0;
+                        } else {
+                            mcommand = -1;
+                            mcommand_count = 0;
+                            blast_warn("Command packet discarded: Bad Encoding: %04X\n", indata[1]);
+                            mcommand_time = 0;
+                        }
+                    }
+                }
+                break;
+            case 3: /* waiting for request data packet end */
+                readstage = 0;
+                if (buf == 0x03) {
+                    SendDownData(tty_fd);
+                } else {
+                    blast_warn("Bad encoding: Bad packet terminator: %02X\n", buf);
+                }
+                break;
+            case 4: /* waiting for GPS position datum */
+                if (bytecount < 14) { /* There are 14 data bytes for GPS position */
+                    indata[bytecount] = buf;
+                    bytecount++;
+                } else {
+                    bytecount = 0;
+                    readstage = 0;
+                    if (buf == 0x03) {
+                        GPSPosition((unsigned char *) indata);
+                    } else {
+                        blast_warn("Bad encoding in GPS Position: " "Bad packet terminator: %02X\n", buf);
+                    }
+                }
+                break;
+            case 5: /* waiting for GPS time datum:  case 0x11 */
+                if (bytecount < 14) { /* There are fourteen data bytes for GPS time */
+                    indata[bytecount] = buf;
+                    bytecount++;
+                } else {
+                    bytecount = 0;
+                    readstage = 0;
+                    if (buf == 0x03) {
+                        GPSTime((unsigned char *) indata);
+                    } else {
+                        blast_warn("Bad encoding in GPS Time: " "Bad packet terminator: %02X\n", buf);
+                    }
+                }
+                break;
+            case 6: /* waiting for MKS pressure datum: case 0x12 */
+                if (bytecount < 6) {
+                    indata[bytecount] = buf;
+                    bytecount++;
+                } else {
+                    bytecount = 0;
+                    readstage = 0;
+                    if (buf == 0x03) {
+                        MKSAltitude((unsigned char *) indata);
+                    } else {
+                        blast_warn("Bad encoding in MKS Altitude: " "Bad packet terminator: %02X\n", buf);
+                    }
+                }
+                break;
+            case 7: // reading extended command
+                if (bytecount < extlen) {
+                    extdat[bytecount] = buf;
+                    bytecount++;
+                } else {
+                    if (buf == 0x03) {
+                        if (extdat[0] == sched_packet) {
+                            if (extdat[EXT_ROUTE] == route[port]) {
+                                blast_info("Schedule file uplink packet detected\n");
+                                ProcessUplinkSched(extdat);
+                            } else {
+                                blast_info("Schedule file uplink packet bad route %d != %d\n", extdat[EXT_ROUTE],
+                                           route[port]);
+                            }
+                        } else {
+                            if (MIndex(extdat[0]) < 0) {
+                                blast_warn("ignoring unknown extended command (%d)", extdat[0]);
+                            } else {
+                                blast_info("extended command %s (%d)", MName(extdat[0]), extdat[0]);
+                                SetParameters(extdat[0], (uint16_t*) (extdat + 2), rvalues, ivalues, svalues);
+                                MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+                            }
+                        }
+                    } else {
+                        blast_warn("Bad encoding in extended command: " "Bad packet terminator: %02X\n", buf);
+                    }
+                    bytecount = 0;
+                    readstage = 0;
+                }
+                break;
+        }
+
+        /* Relinquish control of memory */
+        pthread_mutex_unlock(&mutex);
+    }
+}
 
 #endif    // USE_SIP_CMD

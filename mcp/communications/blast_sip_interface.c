@@ -387,9 +387,9 @@ static ssize_t SIP_RECV_MSG_CMD_CALLBACK(const uint8_t* m_data, size_t m_len)
 
     header = (blast_master_packet_t*) (cmd_pkt->data);
     if (header->magic != BLAST_MAGIC8 || header->version != 2) {
-        blast_warn("Received invalid packet over SIP.  Magic byte 0x%02X and version %d", header->magic,
+        blast_warn("Received invalid packet over SIP.  Magic byte 0x%02X and version 0x%02X", header->magic,
                    header->version);
-        blast_warn("Should have found.  Magic byte 0x%02X and version %d", BLAST_MAGIC8,
+        blast_warn("Should have found.  Magic byte 0x%02X and version 0x%02X", BLAST_MAGIC8,
                    2);
         /// Consume 1 byte here to revert to searching for the SIP start byte.
         return 1;
