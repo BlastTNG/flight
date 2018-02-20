@@ -30,28 +30,14 @@
 #define BI0_FRAME_BUFLEN (1 << BI0_FRAME_BUFBITS)
 #define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
 
+#define BI0_MAX_BUFFER_SIZE 250000 // maximum frame size at 1 Hz (i.e. 2 Mbits)
+#define BI0_ZERO_PADDING 1200 // number of bytes =0 to pad every 100 Hz
 
-typedef struct
-{
-    int i_in;
-    int i_out;
-    uint8_t *framelist[BI0_FRAME_BUFLEN];
-    size_t framesize[BI0_FRAME_BUFLEN];
-} biphase_frames_t;
-
-extern biphase_frames_t biphase_frames;
-extern uint8_t *biphase_superframe_in; // This is pushed to biphase_frames
+extern uint8_t bi0_idle;
 
 extern pthread_t watchdog_id;
 
-void initialize_biphase_buffer(void);
-void push_biphase_frames(void);
-void biphase_writer(void);
+void biphase_writer(void * arg);
 
-void get_num_frames_per_superframe(double num_frames_per_superframe[]);
-void add_200hz_frame_to_biphase(void **m_channel_data);
-void add_100hz_frame_to_biphase(const void *m_channel_data);
-void add_partial_5hz_frame_to_biphase(const void *m_channel_data);
-void add_partial_1hz_frame_to_biphase(const void *m_channel_data);
 
 #endif /* INCLUDE_BI0_H_ */

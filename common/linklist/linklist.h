@@ -28,7 +28,7 @@
 #define LINKLIST_H_
 
 #define NO_COMP 0xff
-#define MAX_NUM_LINKFILE 32 
+#define MAX_NUM_LINKLIST_FILES 128 
 #define LINK_HASH_MULT 233
 #define MIN_CHKSM_SPACING 200 // number of bytes after which a checksum is automatically appended
 #define PACKET_HEADER_SIZE 12
@@ -38,6 +38,7 @@
 
 #define ALL_FRAME_SERIAL 0x42424242
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
+#define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -106,6 +107,8 @@ void set_all_linklist_superframe_ready(linklist_t **);
 void set_all_linklist_compframe_ready(linklist_t **);
 void assign_all_linklist_superframe(linklist_t **, uint8_t *);
 void assign_all_linklist_compframe(linklist_t **, uint8_t *);
+void delete_linklist(linklist_t *);
+int load_all_linklists(char *, linklist_t **);
 
 #ifdef __cplusplus
 }

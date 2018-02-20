@@ -383,10 +383,7 @@ static DIRFILE *defricher_init_new_dirfile(const char *m_name, channel_t *m_chan
     return new_file;
 }
 
-void defricher_queue_packet(uint16_t m_rate)
-{
-    queue_data_t new_pkt = {._dummy = (1<<15)};//Set this bit to avoid glib assertions
-
+bool ready_to_read(uint16_t m_rate) {
     if (dirfile_offset < 0) {
         if (m_rate == RATE_1HZ) {
             channel_t *frame_offset = channels_find_by_name("mcp_1hz_framecount");
@@ -394,21 +391,30 @@ void defricher_queue_packet(uint16_t m_rate)
                 defricher_cache_node_t *outfile_node = frame_offset->var;
                 dirfile_offset = be32toh(*outfile_node->_32bit_data);
                 defricher_info("Setting offset to %d", dirfile_offset);
-            }
-            else {
+		while(!dirfile_ready) {
+			sleep(1);
+		}
+		return true;
+            } else {
                 defricher_err("Missing \"mcp_1hz_framecount\" channel.  Please report this!");
                 dirfile_offset = 0;
+		return false;
             }
         } else {
             /**
              * We are looking for the 1Hz packet to mark the start of a new frame.  Until we receive
              * it, we discard the extra sub-frames.
              */
-            return;
+            return false;
         }
     }
-    new_pkt.rate = m_rate;
+    return true;
+}
 
+void defricher_queue_packet(uint16_t m_rate)
+{
+    queue_data_t new_pkt = {._dummy = (1<<15)}; //Set this bit to avoid glib assertions
+    new_pkt.rate = m_rate;
     g_async_queue_push(packet_queue, new_pkt.ptr);
 }
 
@@ -488,6 +494,10 @@ static void *defricher_write_loop(void *m_arg)
                 defricher_err("Could not initialize channels");
                 free(new_channels);
                 new_channels = NULL;
+                for (int rate = 0; rate < RATE_END; rate++) {
+                   freeFifo(&fifo_data[rate]);
+                }
+
             } else {
                 defricher_free_channels_list(channels);
                 if (channels) free(channels);
@@ -550,19 +560,14 @@ static void *defricher_write_loop(void *m_arg)
         }
 
         while((queue_length = g_async_queue_length(packet_queue))) {
-            // defricher_dbg("async queue length: %d\n", queue_length);
             queue_data_t pkt;
 
             if ((pkt.ptr = g_async_queue_pop(packet_queue))) {
                 // transfer data from the fifo to channels data
-                if (!fifoIsEmpty(&fifo_data[pkt.rate])) {
-                    channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
-                    decrementFifo(&fifo_data[pkt.rate]);
-                    defricher_write_packet(pkt.rate);
-                    usleep(1);
-                }
+								channels_store_data(pkt.rate, getFifoRead(&fifo_data[pkt.rate]), frame_size[pkt.rate]); 
+								decrementFifo(&fifo_data[pkt.rate]);
+								defricher_write_packet(pkt.rate);
             }
-
         }
         usleep(100);
     }

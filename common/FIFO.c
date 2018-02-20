@@ -202,6 +202,13 @@ void clearFifo(struct Fifo *fifo) {
   fifo->start = fifo->end;
 }
 
+int getFifoSize(struct Fifo *fifo) {
+  int end = fifo->end;
+  int start = fifo->start;
+  int diff = end-start;
+  return (diff < 0) ? diff + fifo->length : diff;
+}
+
 /* -------------------------
  * ------ getFifoRead ------
  * -------------------------
