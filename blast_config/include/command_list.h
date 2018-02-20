@@ -253,6 +253,7 @@ enum multiCommand {
   send_dac,
   plugh,                // plugh should be at the end of the list
   new_output_atten,
+  cal_sweeps,
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
 

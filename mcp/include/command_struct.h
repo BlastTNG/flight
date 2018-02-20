@@ -339,6 +339,7 @@ typedef struct roach
     unsigned int roach_state;
     unsigned int roach_new_state;
     unsigned int roach_desired_state;
+    unsigned int do_cal_sweeps;
 } roach_status_t;
 
 typedef struct roach_params

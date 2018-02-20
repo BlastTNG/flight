@@ -1787,6 +1787,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
+    case cal_sweeps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_cal_sweeps = 1;
+      }
+      break;
     case targ_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_ARRAY_FREQS;
@@ -2393,6 +2398,7 @@ void InitCommandData()
         CommandData.roach[i].df_calc = 0; // Sets reference gradients
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
+        CommandData.roach[i].do_cal_sweeps = 0;
         CommandData.roach[i].new_state = 0;
         CommandData.roach[i].change_state = 0;
         CommandData.roach[i].roach_state = 0;

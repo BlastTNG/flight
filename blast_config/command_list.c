@@ -875,6 +875,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -918,7 +923,7 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
     }
   },
-  {COMMAND(new_output_atten), "Set attenuators", GR_ROACH, 2,
+  {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"new_out_atten", 0.0, 30.0, 'f', "NONE"}

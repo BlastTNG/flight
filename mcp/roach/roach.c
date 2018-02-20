@@ -84,6 +84,7 @@
 #define TARG_FFT_SHIFT 127
 #define VNA 0 /* Sweep type */
 #define TARG 1 /* Sweep type */
+#define CAL_AMPS 2 /* Sweep type */
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -119,10 +120,11 @@
 #define ADC_TARG_RMS_250 100 /* mV, For 250 micron array TARG sweep */
 #define ADC_RMS_RANGE 5 /* mV */
 #define ATTEN_STEP 0.5 /* dB */
-#define OUTPUT_ATTEN_VNA 3 /* dB, for VNA sweep */
-#define OUTPUT_ATTEN_TARG 6 /* dB, initial level for TARG sweep */
+#define OUTPUT_ATTEN_VNA 10 /* dB, for VNA sweep */
+#define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
 #define EXT_REF 0 /* Valon external ref (10 MHz) */
+#define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1063,10 +1065,10 @@ int set_atten(rudat_state_t *m_rudat)
 
 void cal_adc_rms(roach_state_t *m_roach, double targ_rms, double output_atten, int ntries)
 {
-    if (CommandData.roach_params[m_roach->which - 1].in_atten <= 0.5) {
+    if (CommandData.roach_params[m_roach->which - 1].in_atten <= 1.0) {
         CommandData.roach_params[m_roach->which - 1].in_atten += 1.0;
     }
-    if (CommandData.roach_params[m_roach->which - 1].in_atten >= 30.5) {
+    if (CommandData.roach_params[m_roach->which - 1].in_atten >= 30.0) {
         CommandData.roach_params[m_roach->which - 1].in_atten -= 1.0;
     }
     double *rms;
@@ -1316,7 +1318,7 @@ static int mkdir_recursive(char *m_directory)
     char current_path[PATH_MAX];
     char *path_chunk = NULL;
     char *strtok_ref = NULL;
-    int	ret = 0;
+    int ret = 0;
     int stat_return = 0;
     char *path_ptr;
     size_t path_chunk_len = 0;
@@ -1328,31 +1330,31 @@ static int mkdir_recursive(char *m_directory)
     // Takes a chunk of the directory path at a time
     path_chunk = strtok_r(m_directory, "/", &strtok_ref);
     if (m_directory[0] == '/') {
-	snprintf(path_ptr, sizeof("/"), "/");
-	path_ptr++;
+        snprintf(path_ptr, sizeof("/"), "/");
+        path_ptr++;
     }
     while (path_chunk != NULL) {
         current_path_len = strlen(current_path);
         path_chunk_len = strlen(path_chunk);
-	if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
-	    blast_err("Path too long");
+        if (current_path_len + path_chunk_len + 2 > PATH_MAX) {
+            blast_err("Path too long");
             return -1;
         }
-	snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
-	path_ptr += path_chunk_len;
-	snprintf(path_ptr, sizeof("/"), "/");
-	path_ptr++;
-	current_path_len = strlen(current_path);
+        snprintf(path_ptr, path_chunk_len + 1, path_chunk); // The +1 is for the '\0'
+        path_ptr += path_chunk_len;
+        snprintf(path_ptr, sizeof("/"), "/");
+        path_ptr++;
+        current_path_len = strlen(current_path);
         stat_return = stat(current_path, &dir_stat);
         if (stat_return != 0) {
-	    blast_info("Making path %s", current_path);
-	    ret = mkdir(current_path, ACCESSPERMS);
-	    if (ret < 0) {
-	        blast_strerror("Could not make %s", current_path);
-	        return ret;
-	    } else { ret = 1; }
+            blast_info("Making path %s", current_path);
+            ret = mkdir(current_path, ACCESSPERMS);
+            if (ret < 0) {
+                blast_strerror("Could not make %s", current_path);
+                return ret;
+            } else { ret = 1; }
         }
-	path_chunk = strtok_r(NULL, "/", &strtok_ref);
+        path_chunk = strtok_r(NULL, "/", &strtok_ref);
     }
     return ret;
 }
@@ -1365,12 +1367,12 @@ static int mkdir_recursive(char *m_directory)
  * @param sweep_type:
  *    0 = VNA
  *    1 = TARG
+ *    2 = CAL_AMPS
 */
 int create_sweepdir(roach_state_t *m_roach, int sweep_type)
 {
-    int retval = -1;
-    int ind = m_roach->which - 1;
-    char* new_path;
+    int retval = -1;;
+    char *new_path;
     char *path_root;
     char *type;
     if ((sweep_type == VNA)) {
@@ -1379,14 +1381,19 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
     } else if ((sweep_type == TARG)) {
         path_root = m_roach->targ_path_root;
         type = "TARGET";
+    } else if ((sweep_type == CAL_AMPS)) {
+        path_root = m_roach->cal_path_root;
+        type = "CAL_AMPS";
     }
     new_path = get_path(m_roach, path_root);
     if (sweep_type == VNA) {
         asprintf(&m_roach->last_vna_path, new_path);
-    } else {
+    } else if (sweep_type == TARG) {
         asprintf(&m_roach->last_targ_path, new_path);
+    } else if (sweep_type == CAL_AMPS) {
+        asprintf(&m_roach->last_cal_path, new_path);
     }
-    blast_info("ROACH%d, New %s sweep will be saved in %s", ind + 1, type, new_path);
+    blast_info("ROACH%d, New %s sweep will be saved in %s", m_roach->which, type, new_path);
     if (mkdir_recursive(new_path)) {
         retval = 1;
     } else {
@@ -1495,7 +1502,7 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     char m_line[256];
     blast_tmp_sprintf(py_command,
             "python /data/etc/blast/roachPython/optimize_freqs_mcp.py %s > %s",
-		m_last_targ_path, m_roach->opt_tones_log);
+            m_last_targ_path, m_roach->opt_tones_log);
     blast_info("%s", py_command);
     system(py_command);
     sleep(3);
@@ -1521,19 +1528,19 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     }
     fclose(fd);
     if (m_roach->num_kids > 0) {
-    	(m_roach->num_kids)--;
+        (m_roach->num_kids)--;
     } else {
-    	return -1;
+        return -1;
     }
     blast_info("NUM kids = %zd", m_roach->num_kids);
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
     for (size_t j = 0; j < m_roach->num_kids; j++) {
         m_roach->targ_tones[j] = m_temp_freqs[j];
         // m_roach->targ_tones[j] = 1.0e7;
-	blast_info("Optimized KID freq = %lg", m_roach->targ_tones[j]);
+        blast_info("Optimized KID freq = %lg", m_roach->targ_tones[j]);
     }
     if (CommandData.roach[m_roach->which - 1].find_kids) {
-    	CommandData.roach[m_roach->which - 1].find_kids = 0;
+        CommandData.roach[m_roach->which - 1].find_kids = 0;
     }
     return 1;
 }
@@ -1690,56 +1697,110 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 /* Function: cal_sweep
  * ----------------------------
  * Performs a calibration sweep
+ * Sweep data is saved like VNA/TARG sweeps
  *
  * @param m_roach roach state table
 */
-int cal_sweep(roach_state_t *m_roach)
+int cal_sweep(roach_state_t *m_roach, char *subdir)
 {
-    char* new_path;
-    int ind = m_roach->which - 1;
-    pi_state_t *m_bb = &pi_state_table[ind];
-    new_path = get_path(m_roach, m_roach->cal_path_root);
-    asprintf(&m_roach->last_cal_path, new_path);
-    if (mkdir_recursive(new_path)) {
-        free(new_path);
-    } else {
-        blast_strerror("Could not create new directory: %s", m_roach->last_cal_path);
-        free(m_roach->last_cal_path);
-        return SWEEP_FAIL;
+    if (!CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
+        return SWEEP_INTERRUPT;
     }
+    pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
     char *lo_command; /* Pi command */
     double m_sweep_freqs[NGRAD_POINTS];
     m_sweep_freqs[0] = m_roach->lo_centerfreq - LO_STEP;
     for (size_t i = 1; i < NGRAD_POINTS; i++) {
         m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
     }
+    // If doesn't exist, create cal sweep parent directory
+    if (!m_roach->last_cal_path) {
+        if (create_sweepdir(m_roach, CAL_AMPS)) {
+            blast_info("ROACH%d, CAL sweeps will be saved in %s",
+                           m_roach->which, m_roach->last_cal_path);
+        } else {
+            blast_info("ROACH%d, Could not create CAL dir", m_roach->which);
+            return SWEEP_FAIL;
+        }
+    }
+    // Save the paths to last sweeps for data analysis
+    system("python /home/fc1user/sam_builds/sweep_list.py cal");
+    char *new_path;
+    char *save_path;
+    // asprintf(&new_path, "%s/%s", m_roach->last_cal_path, subdir);
+    blast_tmp_sprintf(new_path, "%s/%s", m_roach->last_cal_path, subdir);
+    blast_tmp_sprintf(save_path, "%s/%s", m_roach->last_cal_path, subdir);
+    // Create child directory to hold cal sweeps, with name of count (0,...,break)
+    if (mkdir_recursive(new_path)) {
+        blast_info("ROACH%d, New %s sweep will be saved in %s", m_roach->which, "CAL", save_path);
+    } else {
+        blast_strerror("Could not create new directory: %s", save_path);
+        return SWEEP_FAIL;
+    }
+    // Do a series of sweeps while recalculating amplitudes
     for (size_t i = 0; i < NGRAD_POINTS; i++) {
-        if (CommandData.roach[ind].do_sweeps) {
-        // Todo(Sam) Make sure this doesn't crash sweep
-            blast_info("Sweep freq = %.7g", m_sweep_freqs[i]/1.0e6);
+        if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
+                blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
+                   m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
-                        m_sweep_freqs[i]/1.0e6);
-            pi_write_string(m_bb, (unsigned char*)lo_command, strlen(lo_command));
-            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0)
-                        blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-            usleep(SWEEP_TIMEOUT);
-            roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i],
-                        m_roach->last_cal_path, m_roach->num_kids);
-            } else {
-                blast_info("Sweep interrupted by command");
-                return SWEEP_INTERRUPT;
+            pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
+            // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
+            if (pi_read_string(&pi_state_table[m_roach->which - 1], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
+                blast_info("Error setting LO... reboot Pi%d?", m_roach->which);
             }
+            usleep(SWEEP_TIMEOUT);
+            roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, m_roach->num_kids);
+        } else {
+            blast_info("Sweep interrupted by command");
+            CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+            return SWEEP_INTERRUPT;
+        }
     }
     usleep(SWEEP_TIMEOUT);
     if (recenter_lo(m_roach) < 0) {
         blast_info("Error recentering LO");
     } else {
     // TODO(Sam) Put in error handling
-        if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-            blast_info("Error setting LO... reboot Pi%d?", ind + 1);
+        if (pi_read_string(&pi_state_table[m_roach->which - 1], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
+            blast_info("Error setting LO... reboot Pi%d?", m_roach->which);
         }
     }
+    return SWEEP_SUCCESS;
+}
+
+int cal_tone_amps(roach_state_t *m_roach, int ncycles)
+{
+    if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
+        int count = 1;
+        char *subdir;
+        blast_info("ROACH%d, running tone amp cal for %d cycles", m_roach->which, ncycles);
+        while (count < ncycles + 1) {
+            blast_info("Count = %d", count);
+            blast_tmp_sprintf(subdir, "%d", count);
+            int status = cal_sweep(m_roach, subdir);
+            if (status == SWEEP_SUCCESS) {
+                blast_info("ROACH%d, CAL sweep %d complete, stepping output atten", m_roach->which, count);
+                if (set_output_atten(m_roach, OUTPUT_ATTEN_TARG + count) < 0) {
+                    blast_info("ROACH%d: Failed to set RUDATs...", m_roach->which);
+                    return SWEEP_FAIL;
+                }
+            } else if ((status == SWEEP_INTERRUPT)) {
+                blast_info("ROACH%d, Cal sweep interrupted by blastcmd", m_roach->which);
+                m_roach->status = ROACH_STATUS_ACQUIRING;
+                m_roach->desired_status = ROACH_STATUS_ACQUIRING;
+                CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+                return SWEEP_INTERRUPT;
+            } else {
+                blast_info("ROACH%d, Cal sweep failed, will reattempt", m_roach->which);
+                m_roach->status = ROACH_STATUS_ACQUIRING;
+                m_roach->desired_status = ROACH_STATUS_ACQUIRING;
+                CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+                return SWEEP_FAIL;
+            }
+        count += 1;
+        }
+    }
+    CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
     return SWEEP_SUCCESS;
 }
 
@@ -1764,11 +1825,11 @@ int grad_calc(roach_state_t *m_roach)
     nfiles = scandir(m_roach->last_cal_path, &file_list, NULL, alphasort);
     /* Read I/Q data from cal sweep */
     if (nfiles < 0) {
-	blast_strerror("Could not read %s", m_roach->last_cal_path);
+        blast_strerror("Could not read %s", m_roach->last_cal_path);
     } else {
         for (int i = 0; i < nfiles; ++i) {
             if (!strcmp(file_list[i]->d_name, ".") || !strcmp(file_list[i]->d_name, "..")) {
-		  free(file_list[i]);
+                free(file_list[i]);
             } else {
                 char *in_file;
                 blast_tmp_sprintf(in_file, "%s/%s", m_roach->last_cal_path, file_list[i]->d_name);
@@ -2137,6 +2198,10 @@ void *roach_cmd_loop(void* ind)
             roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             CommandData.roach[i].change_state = 0;
         }
+        if (CommandData.roach[i].do_cal_sweeps &&
+                roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS) {
+            roach_state_table[i].desired_status = ROACH_STATUS_CAL_AMPS;
+        }
         /* if (CommandData.roach[i].do_sweeps == 0) {
             roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
         } */
@@ -2145,7 +2210,7 @@ void *roach_cmd_loop(void* ind)
             roach_state_table[i].desired_status = ROACH_STATUS_VNA;
         }*/
         // TODO(Sam) Add error checking
-        if ((CommandData.roach[i].df_calc > 0) &&
+        /* if ((CommandData.roach[i].df_calc > 0) &&
                   (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
             if ((CommandData.roach[i].df_calc == 1)) {
                   roach_state_table[i].has_ref = 0;
@@ -2156,7 +2221,7 @@ void *roach_cmd_loop(void* ind)
                  roach_check_retune(&roach_state_table[i]);
             }
             roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
-        }
+        } */
         if (CommandData.roach[i].find_kids) {
             /* if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
                          roach_state_table[i].last_targ_path)) < 0) {
@@ -2239,6 +2304,7 @@ void *roach_cmd_loop(void* ind)
                 roach_state_table[i].status = ROACH_STATUS_CONNECTED;
             } else {
                 blast_err("ROACH%d, KATCP connection error", i + 1);
+                sleep(3);
             }
         }
         if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
@@ -2365,31 +2431,36 @@ void *roach_cmd_loop(void* ind)
                     blast_err("ROACH%d data streaming error. Reboot Roach?", i + 1);
                 }*/
                 blast_info("ROACH%d, TARG sweep complete", i + 1);
+                // creates file for downlinking sweep path to local machine
                 system("python /home/fc1user/sam_builds/sweep_list.py targ");
                 roach_state_table[i].status = ROACH_STATUS_TARG;
-                roach_state_table[i].desired_status = ROACH_STATUS_GRAD;
+                roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else if ((status == SWEEP_INTERRUPT)) {
                 blast_info("ROACH%d, TARG sweep interrupted by blastcmd", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else { blast_info("ROACH%d, TARG sweep failed, will reattempt", i + 1);}
         }
-        if (roach_state_table[i].status == ROACH_STATUS_TARG &&
-              roach_state_table[i].desired_status == ROACH_STATUS_GRAD) {
-            blast_info("ROACH%d, Starting CAL sweep...", i + 1);
-            status = cal_sweep(&roach_state_table[i]);
+        /* Do a series of small (~6 point) sweeps, check minimum amplitude of each
+        sweep. If minimum is lower than previous, rewrite that tone amp and iterate
+        until break condition */
+        if (roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS &&
+              roach_state_table[i].desired_status == ROACH_STATUS_CAL_AMPS) {
+            blast_info("ROACH%d, Starting CAL sweeps...", i + 1);
+            status = cal_tone_amps(&roach_state_table[i], N_CAL_CYCLES);
             if ((status == SWEEP_SUCCESS)) {
-                blast_info("ROACH%d, CAL sweep complete", i + 1);
-                roach_state_table[i].status = ROACH_STATUS_GRAD;
+                blast_info("ROACH%d, CAL sweeps complete", i + 1);
+                roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else if ((status == SWEEP_INTERRUPT)) {
                 blast_info("ROACH%d, Cal sweep interrupted by blastcmd", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
-            } else { blast_info("ROACH%d, Cal sweep failed, will reattempt", i + 1);}
-            // grad_calc(&roach_state_table[i]);
-            roach_state_table[i].status = ROACH_STATUS_GRAD;
-            roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+            } else {
+                blast_info("ROACH%d, Cal sweep failed, will reattempt", i + 1);
+                roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+                roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
+            }
         }
         usleep(1000); // prevents mcp from eating up all the CPU.
     }
