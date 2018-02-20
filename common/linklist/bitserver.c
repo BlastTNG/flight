@@ -1,6 +1,9 @@
 /* ---------------------------------------------------------------------
  * ----------------------------- BITSERVER -----------------------------
  * ---------------------------------------------------------------------
+ *
+ * Copyright 2014 Javier Romualdez
+ *
  * This program is distributed under the GNU General Public License (GPL)
  * Version 2 or higher.
  *
@@ -15,7 +18,6 @@
  *
  * Created: May 1, 2014
  *
- * Copyright 2014 Javier Romualdez
  *
  * -------------------------- Revisions --------------------------------
  *
@@ -35,9 +37,7 @@
 #include <pthread.h> // threads
 
 #ifdef __cplusplus
-
 extern "C" {
-
 #endif
 
 #include "FIFO.h"
@@ -57,7 +57,7 @@ int verbosity = 0;
 uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint16_t i_pkt, uint16_t n_packets) {
   // allocate crc table if necessary
   if (crctable == NULL) {
-    if((crctable = mk_crctable((unsigned short) CRC_POLY, crchware)) == NULL) {
+    if ((crctable = mk_crctable((uint16_t) CRC_POLY, crchware)) == NULL) {
       blast_fatal("mk_crctable() memory allocation failed");
     }
   }
@@ -71,7 +71,7 @@ uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint
   *((uint16_t *) (header+8)) = i_pkt;
   *((uint16_t *) (header+10)) = n_packets;
 
-  for (j=0; j<PACKET_HEADER_SIZE; j++) crccheck(header[j], &checksum, crctable); // check the checksum
+  for (j = 0; j < PACKET_HEADER_SIZE; j++) crccheck(header[j], &checksum, crctable); // check the checksum
 
   return checksum;
 }
@@ -79,7 +79,7 @@ uint16_t writeHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint
 uint16_t readHeader(uint8_t * header, uint32_t **ser, uint32_t **frame_num, uint16_t **i_pkt, uint16_t **n_pkt) {
   // allocate crc table if necessary
   if (crctable == NULL) {
-    if((crctable = mk_crctable((unsigned short)CRC_POLY, crchware)) == NULL) {
+    if ((crctable = mk_crctable((uint16_t) CRC_POLY, crchware)) == NULL) {
       blast_fatal("mk_crctable() memory allocation failed");
     }
   }
@@ -123,10 +123,10 @@ void * sendDataThread(void *arg) {
   uint8_t *buffer;
   uint8_t flags;
 
-  header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize,1);
+  header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize, 1);
 
   while (1) {
-    if (!fifoIsEmpty(server->send_fifo)) { // something in the buffer 
+    if (!fifoIsEmpty(server->send_fifo)) { // something in the buffer
       serial = server->serial;
       start = server->send_fifo->start;
       size = server->send_fifo->size[start];
@@ -134,59 +134,56 @@ void * sendDataThread(void *arg) {
       frame_num = server->send_fifo->frame_num[start];
       packet_maxsize = server->packet_maxsize;
       buffer = getFifoRead(server->send_fifo);
-      n_packets = (size-1)/packet_maxsize+1;     
- 
-      if (flags & NO_HEADER) { // send packet with header 
+      n_packets = (size-1)/packet_maxsize+1;
+
+      if (flags & NO_HEADER) { // send packet with header
         if (n_packets > 1) {
           blast_err("cannot send headerless multi-packet message.");
-        }
-        else {
-          //printf("Sending headerless packet\n");
+        } else {
+          // printf("Sending headerless packet\n");
           if (sendto(server->sck, buffer, size,
-            MSG_NOSIGNAL,(struct sockaddr*)&(server->send_addr),
+            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) blast_err("sendTo failed()");
         }
-      }
-      else {
+      } else {
         i = 0;
         n_packets = 1;
         packet_size = server->packet_maxsize;
         while (i < n_packets) {
           uint8_t * pkt_buffer = packetizeBuffer(buffer, size, (uint32_t *) &packet_size,
                                                  (uint16_t *) &i, (uint16_t *) &n_packets);
-          writeHeader(header, serial, frame_num, i++, n_packets);          
-          //packet_size = MIN(packet_maxsize, size-(i*packet_maxsize));
+          writeHeader(header, serial, frame_num, i++, n_packets);
+          // packet_size = MIN(packet_maxsize, size-(i*packet_maxsize));
 #ifdef MSG_MORE // general Linux kernel
 
           // add header to packet (adds due to MSG_MORE flag)
           if (sendto(server->sck, header, PACKET_HEADER_SIZE,
             MSG_NOSIGNAL | MSG_MORE,
-            (struct sockaddr*)&(server->send_addr), 
+            (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) blast_err("sendTo failed()");
-          
+
           // add data to packet and send
-          //if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
+          // if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
           if (sendto(server->sck, pkt_buffer, packet_size,
-            MSG_NOSIGNAL,(struct sockaddr*)&(server->send_addr), 
+            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) blast_err("sendTo failed()");
 
 
 #else // for QNX kernel
 
-          memcpy(header+PACKET_HEADER_SIZE,buffer+(packet_maxsize*i),packet_size);
+          memcpy(header+PACKET_HEADER_SIZE, buffer+(packet_maxsize*i), packet_size);
           // send packet
           if (sendto(server->sck, header, PACKET_HEADER_SIZE+packet_size,
-            MSG_NOSIGNAL,(struct sockaddr*)&(server->send_addr),
+            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) blast_err("sendTo failed()");
-          //memset(header+PACKET_HEADER_SIZE,0,packet_size); // clear data
+          // memset(header+PACKET_HEADER_SIZE, 0, packet_size); // clear data
 
 #endif
-        //usleep(10000/n_packets); // don't overflow udp sendto buffer
+        // usleep(10000/n_packets); // don't overflow udp sendto buffer
         }
       }
       decrementFifo(server->send_fifo);
-    }
-    else { // sleep the FIFO 
+    } else { // sleep the FIFO
       usleep(1000); // FIFO is sleeping
     }
   }
@@ -224,17 +221,16 @@ void * recvDataThread(void *arg) {
   while (1) {
     num_bytes = recvfrom(server->sck, getFifoWrite(server->recv_fifo),
       UDPMAXBUFLEN, 0, (struct sockaddr*)&server->recv_addr, &server->slen);
-      
+
     if (num_bytes <= 0) blast_err("recvfrom() failed!");
     else if (num_bytes > server->packet_maxsize) {
       blast_err("Buffer overflow! Received %d bytes for %d byte buffer\n",
         num_bytes, server->packet_maxsize);
-      //exit(2);
+      // exit(2);
     }
 
     server->recv_fifo->size[server->recv_fifo->end] = num_bytes;
     incrementFifo(server->recv_fifo); // update the fifo
-       
   }
   return NULL;
 }
@@ -279,10 +275,9 @@ void * recvDataThread(void *arg) {
  *           requirement.
  *           
 */
-int initBITSender(struct BITSender *server, const char *send_addr, 
+int initBITSender(struct BITSender *server, const char *send_addr,
   unsigned int port, unsigned int fifo_length,
   unsigned int fifo_maxsize, unsigned int packet_maxsize) {
-
   /* ----- BEGIN UDP SOCKET SETUP ------ */
   blast_info("Initializing BITSender:");
 
@@ -304,7 +299,7 @@ int initBITSender(struct BITSender *server, const char *send_addr,
     blast_err("socket() unsuccessful");
     return -1;
   }
-  
+
   if (setsockopt(server->sck, SOL_SOCKET, SO_SNDBUF, &udpbuffersize,
     sizeof(udpbuffersize)) < 0)  {
     blast_err("unable to set socket options.");
@@ -314,8 +309,8 @@ int initBITSender(struct BITSender *server, const char *send_addr,
   if (setsockopt(server->sck, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
     blast_err("unable to set reusable port");
   }
-  
-  if (strcmp(send_addr,"255.255.255.255") == 0) { // broadcaster 
+
+  if (strcmp(send_addr, "255.255.255.255") == 0) { // broadcaster
     int broadcast = 1;
     if (setsockopt(server->sck, SOL_SOCKET, SO_BROADCAST, &broadcast,
       sizeof(broadcast)) == -1)  {
@@ -323,15 +318,14 @@ int initBITSender(struct BITSender *server, const char *send_addr,
       return -1;
     }
     blast_info("-> Broadcast mode");
-  }
-  else { // non-broadcast, so bind to local address 
+  } else { // non-broadcast, so bind to local address
     // set up socket address
     bzero(&(server->my_addr), sizeof(server->my_addr));
     server->my_addr.sin_family = AF_INET;
     server->my_addr.sin_port = htons(port);
     server->my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(server->sck, (struct sockaddr *) &(server->my_addr), 
+    if (bind(server->sck, (struct sockaddr *) &(server->my_addr),
       sizeof(server->my_addr)) == -1) perror("bind");
   }
 
@@ -345,12 +339,12 @@ int initBITSender(struct BITSender *server, const char *send_addr,
   bzero(&(server->send_addr), sizeof(server->send_addr));
   server->send_addr.sin_family = AF_INET;
   server->send_addr.sin_port = htons(port);
-  memcpy(&server->send_addr.sin_addr.s_addr, the_target->h_addr, 
+  memcpy(&server->send_addr.sin_addr.s_addr, the_target->h_addr,
     the_target->h_length);
 
   // set up FIFO
   server->send_fifo = (struct Fifo *) calloc(1, sizeof(struct Fifo));
-    
+
   if (fifo_maxsize != 0) {
     allocFifo(server->send_fifo, fifo_length, fifo_maxsize+PACKET_HEADER_SIZE);
   } else {
@@ -402,10 +396,9 @@ int initBITSender(struct BITSender *server, const char *send_addr,
  *
  *           
 */
-int initBITRecver(struct BITRecver *server, const char *recv_addr, 
+int initBITRecver(struct BITRecver *server, const char *recv_addr,
   unsigned int port, unsigned int fifo_length,
   unsigned int fifo_maxsize, unsigned int packet_maxsize) {
-
   /* ----- BEGIN UDP SOCKET SETUP ------ */
   blast_info("Initializing BITRecver:");
 
@@ -421,7 +414,6 @@ int initBITRecver(struct BITRecver *server, const char *recv_addr,
     blast_err("cannot have a FIFO with 0 elements");
     return -1;
   }
-    
 
   int udpbuffersize = UDPMAXBUFLEN;
   struct hostent* the_target;
@@ -432,24 +424,24 @@ int initBITRecver(struct BITRecver *server, const char *recv_addr,
     blast_err("socket() unsuccessful");
     return -1;
   }
-  
+
   if (setsockopt(server->sck, SOL_SOCKET, SO_SNDBUF, &udpbuffersize,
     sizeof(udpbuffersize)) < 0) {
     blast_err("unable to set socket options.");
     return -1;
- }
+  }
   int optval = 1;
     if (setsockopt(server->sck, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
     blast_err("unable to set reusable port");
   }
-   
+
   // set up socket address
   bzero(&(server->my_addr), sizeof(server->my_addr));
   server->my_addr.sin_family = AF_INET;
   server->my_addr.sin_port = htons(port);
   server->my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (bind(server->sck, (struct sockaddr *) &(server->my_addr), 
+  if (bind(server->sck, (struct sockaddr *) &(server->my_addr),
     sizeof(server->my_addr)) == -1) {
     blast_err("Bind address already in use");
     return -1;
@@ -465,13 +457,13 @@ int initBITRecver(struct BITRecver *server, const char *recv_addr,
   bzero(&(server->recv_addr), sizeof(server->recv_addr));
   server->recv_addr.sin_family = AF_INET;
   server->recv_addr.sin_port = htons(port);
-  memcpy(&server->recv_addr.sin_addr.s_addr, the_target->h_addr, 
+  memcpy(&server->recv_addr.sin_addr.s_addr, the_target->h_addr,
     the_target->h_length);
 
   // set up FIFO
   // need enough space for all packets that constitute a full element
   server->recv_fifo = (struct Fifo *) calloc(1, sizeof(struct Fifo));
-  
+
   unsigned int num_packets = (fifo_maxsize-1)/packet_maxsize+1;
   allocFifo(server->recv_fifo, fifo_length*num_packets,
     packet_maxsize+PACKET_HEADER_SIZE);
@@ -699,7 +691,7 @@ int removeBITRecverAddr(struct BITRecver *server) {
 int sendToBITSender(struct BITSender *server, uint8_t *buffer,
   unsigned int size, uint8_t flags) {
   if ((size > server->send_fifo->maxsize) && (server->send_fifo->maxsize != 0)) {
-    blast_err("specified size %d is larger than maximum %d", 
+    blast_err("specified size %d is larger than maximum %d",
       size, server->send_fifo->maxsize);
     return -1;
   }
@@ -730,7 +722,7 @@ int sendToBITSender(struct BITSender *server, uint8_t *buffer,
 
 int peekBITRecver(struct BITRecver *server) {
   return !(fifoIsEmpty(server->recv_fifo));
-}  
+}
 
 /* -------------------------
  * --- recvFromBITRecver ---
@@ -769,7 +761,7 @@ int peekBITRecver(struct BITRecver *server) {
  *         fits in the FIFO as a single packet.
  * 
 */
-int recvFromBITRecver(struct BITRecver *server, uint8_t *buffer, 
+int recvFromBITRecver(struct BITRecver *server, uint8_t *buffer,
   unsigned int size, uint8_t flags) {
   uint8_t *readbuffer;
   unsigned int totalbytes = 0;
@@ -781,14 +773,13 @@ int recvFromBITRecver(struct BITRecver *server, uint8_t *buffer,
   uint16_t *n_pkt;
   uint16_t cur = 0;
   uint8_t complete = 0;
-  
   unsigned int offset = server->packet_maxsize-PACKET_HEADER_SIZE;
 
   while (!complete) {
     if (flags & RECV_TIMEOUT) {
       int timeout_count = 0;
-      while (!peekBITRecver(server))  {
-        if (timeout_count >= RECV_TIMEOUT_NUM)  {
+      while (!peekBITRecver(server)) {
+        if (timeout_count >= RECV_TIMEOUT_NUM) {
           blast_err("recvFrom timeout");
 	        return -1;
         }
@@ -796,30 +787,29 @@ int recvFromBITRecver(struct BITRecver *server, uint8_t *buffer,
         usleep(100000);
       }
     }
-    readbuffer = getBITRecverAddr(server,&tempsize);
+    readbuffer = getBITRecverAddr(server, &tempsize);
 
     if (flags & NO_HEADER) {
-      //printf("Receiving headerless packet\n");
-      memcpy(buffer,readbuffer,MIN(tempsize,size));
-      totalbytes = MIN(tempsize,size);
+      // printf("Receiving headerless packet\n");
+      memcpy(buffer, readbuffer, MIN(tempsize, size));
+      totalbytes = MIN(tempsize, size);
       removeBITRecverAddr(server);
       break;
-    }
-    else {
+    } else {
       // read and verify the header
-      readHeader(readbuffer,&ser,&frame_num,&i_pkt,&n_pkt);
+      readHeader(readbuffer, &ser, &frame_num, &i_pkt, &n_pkt);
       tempsize -= PACKET_HEADER_SIZE; // data size
 
-      if (*ser != server->serial) { // matched serial 
-        blast_info("Serial mismatch: 0x%.08x != 0x%.08x",*ser,server->serial);
+      if (*ser != server->serial) { // matched serial
+        blast_info("Serial mismatch: 0x%.08x != 0x%.08x", *ser, server->serial);
         removeBITRecverAddr(server);
         return -2;
       }
       // set the frame number
       server->frame_num = *frame_num;
       server->recv_fifo->frame_num[server->recv_fifo->start] = *frame_num;
-      
-      //printf("%ld %d %d : %d\n",*frame_num,*i_pkt,*n_pkt,tempsize);
+
+      // printf("%ld %d %d : %d\n",*frame_num,*i_pkt,*n_pkt,tempsize);
 
       // broken buffer breaks
       if ((offset != tempsize) && ((*i_pkt+1) != *n_pkt)) {
@@ -834,39 +824,43 @@ int recvFromBITRecver(struct BITRecver *server, uint8_t *buffer,
       }
 
       // missed packet breaks
-      if (tempnum == -1) { // first packet in message 
-        if (*i_pkt != 0) { // missed first packet, so bail 
-          blast_info("Missed first packet! Packet %d/%d, serial 0x%.08x, framenumber %d",*i_pkt,*n_pkt,*ser,*frame_num);
+      if (tempnum == -1) { // first packet in message
+        if (*i_pkt != 0) { // missed first packet, so bail
+          blast_info("Missed first packet! Packet %d/%d, serial 0x%.08x,"
+                       "framenumber %d", *i_pkt, *n_pkt, *ser, *frame_num);
           removeBITRecverAddr(server);
           return -1;
+        } else {
+          tempnum = *frame_num; // set frame number for message
         }
-        else tempnum = *frame_num; // set frame number for message
-      }
-      else if (cur != *i_pkt) { // missed middle packet, so bail 
-        blast_info("Missed packet %d != %d (framenum=%d)",cur,*i_pkt,*frame_num);
-        //removeBITRecverAddr(server);
-        //return -1;
+      } else if (cur != *i_pkt) { // missed middle packet, so bail
+        blast_info("Missed packet %d != %d (framenum=%d)", cur, *i_pkt, *frame_num);
+        // removeBITRecverAddr(server);
+        // return -1;
       }
 
       // normal breaks
       if (*frame_num != ((unsigned int) tempnum))  {
         complete = 1; // next message, so exit
         break;
+      } else if ((*i_pkt+1) == *n_pkt) {
+        complete = 1; // done message
       }
-      else if ((*i_pkt+1) == *n_pkt) complete = 1; // done message
 
       memcpy(buffer+((*i_pkt)*offset),
-        readbuffer+PACKET_HEADER_SIZE,tempsize);
+        readbuffer+PACKET_HEADER_SIZE, tempsize);
       cur++;
-
     }
     totalbytes += tempsize;
-    if (flags & DONT_REMOVE) break;
-    else removeBITRecverAddr(server);
+    if (flags & DONT_REMOVE) {
+      break;
+    } else {
+      removeBITRecverAddr(server);
+    }
   }
   return totalbytes;
 }
 
 #ifdef __cplusplus
 }
-#endif  
+#endif
