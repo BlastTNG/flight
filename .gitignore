@@ -23,12 +23,12 @@ quick_diagnostics/QuickDiag
 
 stars/windows/stars
 
-test_programs/synclink/build
 
 defricher/build
 groundhog/build
 
 test_programs/synclink/build
+test_programs/mpsse/build
 
 decomd/build
 decom/test_decom/test_decom

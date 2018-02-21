@@ -68,7 +68,7 @@ uint8_t *getFifoWrite(struct Fifo *);
 int setFifoWrite(struct Fifo *, uint8_t *);
 int getFifoSize(struct Fifo *);
 uint8_t * packetizeBuffer(uint8_t *, uint32_t, uint32_t *, uint16_t *, uint16_t *);
-uint8_t * depacketizeBuffer(uint8_t *, uint32_t *, uint32_t, uint16_t *, uint16_t *, uint8_t *);
+int depacketizeBuffer(uint8_t *, uint32_t *, uint32_t, uint16_t *, uint16_t *, uint8_t *);
 
 #ifdef __cplusplus
 }
