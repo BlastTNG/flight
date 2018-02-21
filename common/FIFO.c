@@ -354,10 +354,13 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
  *
  *
 */
-uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
+int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt, uint8_t * packet) {
+  // nonsense values for i_pkt
+  if ((*i_pkt)*packet_size > *buffer_size) return -1;
+
   // reached the end of the buffer
-  if (*i_pkt >= *n_pkt) return NULL;
+  if (*i_pkt >= *n_pkt) return 0;
 
   // get the packet_size
   uint8_t * retval = buffer+packet_size*(*i_pkt);
@@ -369,7 +372,8 @@ uint8_t * depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t p
   if (buffer_size) *buffer_size += packet_size;
   *i_pkt += 1;
 
-  return retval;
+
+  return 1;
 }
 #ifdef __cplusplus
 }

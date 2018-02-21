@@ -45,36 +45,34 @@ superframes_list_t superframes;
 void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped, const uint16_t *receive_buffer, 
                          const uint16_t *anti_receive_buffer, linklist_t **ll, uint16_t **i_pkt, uint16_t **n_pkt) {
 
-  uint8_t *header = NULL;
   uint32_t *serial;
   uint32_t *frame_number;
 
   if (*normal_polarity) {
-      // Getting header
-      memcpy(header, receive_buffer+1, PACKET_HEADER_SIZE);
       // Reading the header
-      readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+      readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
+          printf("I found a linklist with serial %x\n", *serial);
           *normal_polarity = true;
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
       } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
+          printf("inverted 1: I found a linklist with serial %x\n", (uint16_t) ~(*serial));
           *normal_polarity = false;
       }
   }
   if (!(*normal_polarity)) {
-      // Getting header
-      memcpy(header, anti_receive_buffer+1, PACKET_HEADER_SIZE);
       // Reading the header
-      readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+      readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
+          printf("inverted 2: I found a linklist with serial %x\n", *serial);
           *normal_polarity = false;
           memcpy(receive_buffer_stripped, anti_receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
       } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
+          printf("inverted 3: I found a linklist with serial %x\n", (uint16_t) ~(*serial));
           *normal_polarity = true;
-          memcpy(header, receive_buffer+1, PACKET_HEADER_SIZE);
-          readHeader(header, &serial, &frame_number, i_pkt, n_pkt);
+          readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
       }
   }
@@ -98,7 +96,8 @@ void biphase_receive(void *args)
   linklist_t *ll = NULL;
   uint16_t *i_pkt;
   uint16_t *n_pkt;
-  uint8_t *retval;
+  // uint8_t *retval = calloc(1, sizeof(uint8_t));
+  int retval;
   uint8_t *local_superframe = allocate_superframe();
   bool normal_polarity = true;
 
@@ -111,7 +110,8 @@ void biphase_receive(void *args)
 
   /* Initialise Decom */
   ioctl(decom_fp, DECOM_IOC_RESET);
-  ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
+  // ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
+  ioctl(decom_fp, DECOM_IOC_FRAMELEN, 2*BI0_FRAME_SIZE-1);
 
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
@@ -132,14 +132,16 @@ void biphase_receive(void *args)
                   i_word = 0;
                   continue;
               }
+              printf("\n=== Frame Start ==\n");
           } else if ((i_word) == (BI0_FRAME_SIZE-1)) {
               get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
-                                  &ll, &i_pkt, &n_pkt);
+                                 &ll, &i_pkt, &n_pkt);
               retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, BIPHASE_PACKET_SIZE, 
-                                         i_pkt, n_pkt, receive_buffer_stripped);
+                                       i_pkt, n_pkt, receive_buffer_stripped);
               memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
-              if (retval == NULL){
+              if ((retval == 0) && (ll != NULL)){
                   // The compressed linklist has been fully reconstructed
+                  printf("holy fucking shit we have a linklist!! Serial: %x\n", *(uint32_t *) ll->serial);
                   decompress_linklist(local_superframe, ll, compressed_linklist);
                   push_superframe(local_superframe, &superframes);
                   memset(compressed_linklist, 0, compressed_linklist_size);
@@ -148,6 +150,7 @@ void biphase_receive(void *args)
           }
           i_word++;
           i_word = (i_word % BI0_FRAME_SIZE);
+          printf("%04x ", raw_word_in);
       }
   }
 }
