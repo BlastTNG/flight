@@ -76,7 +76,8 @@ int main(int argc, char *argv[]) {
     if (data_to_write) {
         *data_to_write = 0xEB90;
         for (int i = 1; i < ((int) bytes_to_write/2); i++) {
-            *(data_to_write+i) = 0xFFFF;
+            //*(data_to_write+i) = 0xFFFF;
+            *(data_to_write+i) = i;
         }
     } else {
        mpsse_close(ctx); 
@@ -86,8 +87,8 @@ int main(int argc, char *argv[]) {
     if (inverse_data_to_write) {
         *inverse_data_to_write = 0x146F;
         for (int i = 1; i < ((int) bytes_to_write/2); i++) {
-            *(inverse_data_to_write+i) = 0xFFFF;
-            // *(inverse_data_to_write+i) = 0x5555;
+            //*(inverse_data_to_write+i) = 0xFFFF;
+             *(inverse_data_to_write+i) = i;
         }
     } else {
        mpsse_close(ctx); 
