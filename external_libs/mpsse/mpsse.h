@@ -55,7 +55,7 @@
 #define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
 
 /*DEBUG FLAG*/
-// #define _DEBUG_JTAG_IO_ 1
+#define _DEBUG_JTAG_IO_ 1
 
 enum ftdi_chip_type {
 	TYPE_FT2232C,
@@ -124,7 +124,7 @@ void mpsse_purge(struct mpsse_ctx *ctx);
 
 
 /* Biphase specific routines */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length);
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length, uint8_t * bit_double_buffer);
 void mpsse_watchdog_ping(struct mpsse_ctx *ctx);
 int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
 

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <libusb-1.0/libusb.h>
 
 #include "mpsse.h"
 #include "blast.h"
@@ -19,6 +20,12 @@ void send_bitbang_value();
 
 struct mpsse_ctx *ctx; 
 
+static LIBUSB_CALL void demo_cb(struct libusb_transfer * write_transfer) {
+
+    printf("I am demo_cb, about to resubmit transfer\n");
+    libusb_submit_transfer(write_transfer);
+
+}
 
 int main(int argc, char *argv[]) {
 
@@ -46,7 +53,7 @@ int main(int argc, char *argv[]) {
 
     uint16_t *data_to_write = NULL;
     uint16_t *inverse_data_to_write = NULL;
-    size_t bytes_to_write = 1248; 
+    size_t bytes_to_write = 1248+3; 
     if (argc == 2) {
         frequency = atoi(argv[1]);
     } else {
@@ -69,13 +76,17 @@ int main(int argc, char *argv[]) {
     mpsse_set_frequency(ctx, frequency);
     mpsse_flush(ctx);
     usleep(1000);
-    // mpsse_purge(ctx);
-    // usleep(1000);
+
+    // libubs stuff
+    struct libusb_transfer *write_transfer = NULL;
+    write_transfer = libusb_alloc_transfer(0);
 
     data_to_write = malloc(bytes_to_write); 
     if (data_to_write) {
-        *data_to_write = 0xEB90;
-        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
+        *data_to_write = 0xDF11;
+        *(data_to_write+1) = 0xEB04;
+        *(data_to_write+2) = 0x0090;
+        for (int i = 3; i < ((int) bytes_to_write/2); i++) {
             *(data_to_write+i) = 0xFFFF;
             // *(data_to_write+i) = i;
         }
@@ -85,9 +96,10 @@ int main(int argc, char *argv[]) {
     }
     inverse_data_to_write = malloc(bytes_to_write); 
     if (inverse_data_to_write) {
-        *inverse_data_to_write = 0x146F;
-        // *inverse_data_to_write = 0xEB90;
-        for (int i = 1; i < ((int) bytes_to_write/2); i++) {
+        *inverse_data_to_write = 0xdf11;
+        *(inverse_data_to_write+1) = 0x1404;
+        *(inverse_data_to_write+2) = 0x006F;
+        for (int i = 3; i < ((int) bytes_to_write/2); i++) {
             *(inverse_data_to_write+i) = 0xFFFF;
             // *(inverse_data_to_write+i) = i;
         }
@@ -96,31 +108,42 @@ int main(int argc, char *argv[]) {
        return 0;
     }
 
+    libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, (void *) data_to_write, bytes_to_write, demo_cb, write_transfer, 2000);
+    libusb_submit_transfer(write_transfer);
+
     int last_word = ((int) bytes_to_write/2) - 1;
+    int retval = 0;
 
     for (int j=0; j>-1; j++) {
+        data_to_write[10] = frame_counter;
         gettimeofday(&begin, NULL);
-        data_to_write[2] = frame_counter;
         if (j%2 == 0) {
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
             *(data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC if no counter in the frame
-            mpsse_biphase_write_data(ctx, data_to_write, bytes_to_write);
+            write_transfer->buffer = (void *) data_to_write;
+            blast_info("==== Array to send ====");
+            for (int i = 0; i < ((int) bytes_to_write); i++) {
+                printf("%02x ", *(((uint8_t *) (data_to_write))+i));
+            }
         } else {
-            inverse_data_to_write[2] = frame_counter;
+            inverse_data_to_write[10] = frame_counter;
             crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
             *(inverse_data_to_write+last_word) = crc_calculated; // I know 0xAB40 is the CRC if no counter in the frame
-            mpsse_biphase_write_data(ctx, inverse_data_to_write, bytes_to_write);
+            write_transfer->buffer = (void *) inverse_data_to_write;
+            blast_info("==== Array to send ====");
+            for (int i = 0; i < ((int) bytes_to_write); i++) {
+                printf("%02x ", *(((uint8_t *) (inverse_data_to_write))+i));
+            }
         }
-        mpsse_flush(ctx);
+        retval = libusb_handle_events(ctx->usb_ctx);
+        printf("Handle events returned: %s\n", libusb_strerror(retval));
         gettimeofday(&end, NULL);
-        if ((counter % 10) == 0) {
+        if ((counter % 1) == 0) {
             blast_info("The CRC calculated is %04x", crc_calculated);
-            blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
+            blast_dbg("It took %f second to write %zd bytes", (end.tv_sec+(end.tv_usec/1000000.0) - (begin.tv_sec+(begin.tv_usec/1000000.0))), bytes_to_write);
         }
         counter += 1;
         frame_counter++;
-        // signal(SIGHUP, close_mpsse);
-        // signal(SIGINT, close_mpsse);
-        // signal(SIGTERM, close_mpsse);
     } 
+    // libusb_free_transfer(write_transfer);
 }

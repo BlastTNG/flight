@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <libusb-1.0/libusb.h>
+#include <sys/time.h>
 
 #include "binarybuffer.h"
 #include "mpsse.h"
@@ -739,6 +740,7 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 
 	// DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
 	// DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+  blast_info("transferred %d of %d", res->transferred, ctx->write_count);
 
 	if (res->transferred == ctx->write_count) {
 		res->done = true;
@@ -797,12 +799,12 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
-        // blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
+    // blast_info("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
 			libusb_cancel_transfer(write_transfer);
-            blast_dbg("Cancelling transfer because retval = %d", retval);
+    //        blast_dbg("Cancelling transfer because retval = %d", retval);
 			if (read_transfer)
 				libusb_cancel_transfer(read_transfer);
 			while (!write_result.done || !read_result.done)
@@ -810,8 +812,6 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 					break;
 		}
 	}
-
-
 	if (retval != LIBUSB_SUCCESS) {
 		blast_err("libusb_handle_events() failed with %s", libusb_error_name(retval));
 		retval = ERROR_FAIL;
@@ -835,7 +835,6 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		bit_copy_discard(&ctx->read_queue);
 		retval = ERROR_OK;
 	}
-
 	libusb_free_transfer(write_transfer);
 	if (read_transfer)
 		libusb_free_transfer(read_transfer);
@@ -853,11 +852,11 @@ int mpsse_flush(struct mpsse_ctx *ctx)
  * @param out_offset Offset in bytes into the output data buffer to begin reading
  * @param length Number of bytes to output
  */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length)
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length, uint8_t *bit_doubler_buffer)
 {
 	// unsigned output_length = 2*length;
 	unsigned output_length = length;
-	uint8_t bit_doubler_buffer[output_length];
+	// uint8_t bit_doubler_buffer[output_length];
 
     unsigned max_i = (unsigned) floor(length/2.0);
     uint8_t msbs, lsbs;
@@ -877,9 +876,9 @@ void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32
 	    // bit_doubler_buffer[i*4 + 3] = (uint8_t)(bit_doubler[lsbs] & 0xff);
 	}
 
-    // This somehow seems to be the change that stopped irregular streaming of data
+  // This somehow seems to be the change that stopped irregular streaming of data
 	// mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
-	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, NEG_EDGE_OUT | MSB_FIRST);
+	// mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, NEG_EDGE_OUT | MSB_FIRST); // This is CORRECT
 }
 
 /**

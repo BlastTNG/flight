@@ -28,7 +28,7 @@ sigset_t signals;
 
 void clean_up(void) {
     unlink("/var/run/groundhog.pid");
-    closelog();
+    // closelog();
 }
 
 void signal_action(int signo) {
@@ -80,7 +80,7 @@ void daemonize()
         fflush(stream);
         fclose(stream);
     }
-    closelog();
+    // closelog();
     printf("PID = %i\n", pid);
     exit(0);
     }
@@ -134,13 +134,13 @@ int main(int argc, char * argv[]) {
   pthread_t biphase_publish_worker;
 
   pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
-  //pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+  pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
 
   // Joining
   pthread_join(pilot_receive_worker, NULL);
   pthread_join(biphase_receive_worker, NULL);
   pthread_join(pilot_publish_worker, NULL);
-  //pthread_join(biphase_publish_worker, NULL);
+  pthread_join(biphase_publish_worker, NULL);
 
   return 0;
 }

@@ -39,5 +39,4 @@ extern pthread_t watchdog_id;
 
 void biphase_writer(void * arg);
 
-
 #endif /* INCLUDE_BI0_H_ */
