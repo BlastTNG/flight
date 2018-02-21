@@ -384,10 +384,10 @@ void *bias_monitor(void *param)
                blast_err("Could not parse the snd_pcm_state return value: %s",  snd_strerror(err));
                have_warned = 1;
         }
-//        if (first_time) {
+        if (first_time) {
             blast_info("bias_state = %i.", bias_state);
             first_time = 0;
-//        }
+        }
         if (((err = snd_pcm_status(handle, status)) < 0) && !have_warned_status) {
                 blast_info("Stream status error: %s\n", snd_strerror(err));
                 have_warned_status = 1;

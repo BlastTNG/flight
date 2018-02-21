@@ -2507,7 +2507,7 @@ void InitCommandData()
     CommandData.balance.i_el_off_bal = 1.0;
     CommandData.balance.mode = bal_rest;
 
-    CommandData.rox_bias.amp = 60;
+    CommandData.rox_bias.amp = 56;
     CommandData.rox_bias.status = 0;
     // TODO(laura): These are for the BLASTPol detector biasing and should be removed.
     CommandData.Bias.bias[0] = 12470;   // 500um
