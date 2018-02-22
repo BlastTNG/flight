@@ -1,4 +1,6 @@
 mcp_1hz_framecount 255 1
+ifyaw_1_gy 255 200
+ifyaw_2_gy 255 200
 mcp_5hz_framecount 255 5
 mcp_100hz_framecount 255 100
 mcp_200hz_framecount 255 200
@@ -13,8 +15,6 @@ q_kid0006_roach1 255 488
 q_kid0007_roach1 255 488
 q_kid0008_roach1 255 488
 q_kid0009_roach1 255 488
-ifyaw_1_gy 255 200
-ifyaw_2_gy 255 200
 q_kid0001_roach1 255 488
 q_kid0002_roach1 255 488
 q_kid0003_roach1 255 488
