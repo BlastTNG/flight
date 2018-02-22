@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
   printf("Reseting board . . . \n");
   ioctl(fp, DECOM_IOC_RESET);
   usleep(100);
-  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", BI0_FRAME_SIZE-1);
-  ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
+  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", 2*(BI0_FRAME_SIZE)-1);
+  ioctl(fp, DECOM_IOC_FRAMELEN, 2*(BI0_FRAME_SIZE)-1);
   usleep(100);
   printf("Force unlock:\n");
   ioctl(fp, DECOM_IOC_FORCE_UNLOCK);
@@ -75,6 +75,9 @@ int main(int argc, char *argv[]) {
   printf("\tLocked ? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
   printf("\tNum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
   printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+  printf("Reseting board . . . \n");
+  ioctl(fp, DECOM_IOC_RESET);
+  usleep(100);
 
 
   for (i = 0; ; i++) {
