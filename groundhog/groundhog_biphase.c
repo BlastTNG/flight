@@ -40,7 +40,14 @@
 
 #define DEV "/dev/decom_pci"
 
-superframes_list_t superframes;
+superframes_list_t biphase_superframes;
+
+void print_packet(uint8_t * packet, size_t length) {
+    printf("Packet Received is: \n");
+    for (int i = 0; i < length; i++) {
+        printf("%04x ", *(packet + i));
+    }
+}
 
 void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped, const uint16_t *receive_buffer, 
                          const uint16_t *anti_receive_buffer, linklist_t **ll, uint16_t **i_pkt, uint16_t **n_pkt) {
@@ -53,27 +60,29 @@ void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped
       readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
-          printf("I found a linklist with serial %x\n", *serial);
+          //blast_dbg("\n=== I found a linklist with serial %x, counter: %x, i_pkt: %d, n_pkt: %d==\n", *serial, *frame_number, **i_pkt, **n_pkt);
           *normal_polarity = true;
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+          // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
       } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
-          printf("inverted 1: I found a linklist with serial %x\n", (uint16_t) ~(*serial));
           *normal_polarity = false;
       }
   }
   if (!(*normal_polarity)) {
       // Reading the header
-      readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
+      readHeader((uint8_t *) (anti_receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
-          printf("inverted 2: I found a linklist with serial %x\n", *serial);
+          //blast_dbg("Inverted 1: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
           *normal_polarity = false;
           memcpy(receive_buffer_stripped, anti_receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+          // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
       } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
-          printf("inverted 3: I found a linklist with serial %x\n", (uint16_t) ~(*serial));
           *normal_polarity = true;
           readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
+          //blast_dbg("Inverted 2: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
+          // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
       }
   }
 }
@@ -96,7 +105,6 @@ void biphase_receive(void *args)
   linklist_t *ll = NULL;
   uint16_t *i_pkt;
   uint16_t *n_pkt;
-  // uint8_t *retval = calloc(1, sizeof(uint8_t));
   int retval;
   uint8_t *local_superframe = allocate_superframe();
   bool normal_polarity = true;
@@ -117,7 +125,7 @@ void biphase_receive(void *args)
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
 
-  initialize_circular_superframes(&superframes);
+  initialize_circular_superframes(&biphase_superframes);
 
   while(true) {
       while ((read(decom_fp, &raw_word_in, sizeof(uint16_t))) > 0) {
@@ -132,7 +140,7 @@ void biphase_receive(void *args)
                   i_word = 0;
                   continue;
               }
-              printf("\n=== Frame Start ==\n");
+           //   printf("\n=== Frame Start ==\n");
           } else if ((i_word) == (BI0_FRAME_SIZE-1)) {
               get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
                                  &ll, &i_pkt, &n_pkt);
@@ -143,14 +151,14 @@ void biphase_receive(void *args)
                   // The compressed linklist has been fully reconstructed
                   printf("holy fucking shit we have a linklist!! Serial: %x\n", *(uint32_t *) ll->serial);
                   decompress_linklist(local_superframe, ll, compressed_linklist);
-                  push_superframe(local_superframe, &superframes);
+                  push_superframe(local_superframe, &biphase_superframes);
                   memset(compressed_linklist, 0, compressed_linklist_size);
                   compressed_linklist_size = 0;
               }
           }
           i_word++;
           i_word = (i_word % BI0_FRAME_SIZE);
-          printf("%04x ", raw_word_in);
+          //printf("%04x ", raw_word_in);
       }
   }
 }
@@ -184,8 +192,8 @@ void biphase_publish(void *args){
     }
 
     while (true) {
-        write_frame = superframes.i_out;
-        read_frame = superframes.i_in;
+        write_frame = biphase_superframes.i_out;
+        read_frame = biphase_superframes.i_in;
 
         if (read_frame == write_frame) {
             usleep(100);
@@ -207,44 +215,44 @@ void biphase_publish(void *args){
 
                 if (!--counter_1hz) {
                     counter_1hz = HZ_COUNTER(1);
-                    extract_frame_from_superframe(biphase_data[RATE_1HZ], RATE_1HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_1HZ], RATE_1HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_1HZ], "biphase", RATE_1HZ);
                     //printf("1Hz\n");
                 }
                   if (!--counter_5hz) {
                     counter_5hz = HZ_COUNTER(5);
-                    extract_frame_from_superframe(biphase_data[RATE_5HZ], RATE_5HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_5HZ], RATE_5HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_5HZ], "biphase", RATE_5HZ);
                     //printf("5Hz\n");
                 }
                 if (!--counter_100hz) {
                     counter_100hz = HZ_COUNTER(100);
-                    extract_frame_from_superframe(biphase_data[RATE_100HZ], RATE_100HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_100HZ], RATE_100HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_100HZ], "biphase", RATE_100HZ);
                     //printf("100Hz\n");
                 }
                 if (!--counter_200hz) {
                     counter_200hz = HZ_COUNTER(200);
-                    extract_frame_from_superframe(biphase_data[RATE_200HZ], RATE_200HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_200HZ], RATE_200HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_200HZ], "biphase", RATE_200HZ);
                     //printf("200Hz\n");
                 }
                 if (!--counter_244hz) {
                     counter_244hz = HZ_COUNTER(244);
-                    extract_frame_from_superframe(biphase_data[RATE_244HZ], RATE_244HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_244HZ], RATE_244HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_244HZ], "biphase", RATE_244HZ);
                     //printf("244Hz\n");
                 }
                 if (!--counter_488hz) {
                     counter_488hz = HZ_COUNTER(488);
-                    extract_frame_from_superframe(biphase_data[RATE_488HZ], RATE_488HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(biphase_data[RATE_488HZ], RATE_488HZ, biphase_superframes.framelist[write_frame]);
                     framing_publish(biphase_data[RATE_488HZ], "biphase", RATE_488HZ);
                     frame_488_counter++;
                     //printf("488Hz\n");
                 }
             }
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
-            superframes.i_out = write_frame;
+            biphase_superframes.i_out = write_frame;
         }
     }
 }
