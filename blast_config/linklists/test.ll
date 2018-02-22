@@ -22,3 +22,11 @@ mcp_5hz_framecount 255 5
 mcp_100hz_framecount 255 100
 mcp_200hz_framecount 255 200
 mcp_244hz_framecount 255 244
+_TLM_CHECKSUM_
+ifyaw_1_gy 255 200
+ifyaw_2_gy 255 200
+ifroll_1_gy 255 200
+ifroll_2_gy 255 200
+ifel_1_gy 255 200
+ifel_2_gy 255 200
+
