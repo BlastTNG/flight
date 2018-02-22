@@ -25,8 +25,8 @@
 
 #include <arpa/inet.h> // socket stuff
 #include <netinet/in.h> // socket stuff
-#include <stdio.h> // socket stuff
-#include <sys/types.h> // socket types
+#include <stdio.h>
+#include <sys/types.h>
 #include <sys/socket.h> // socket stuff
 #include <sys/stat.h>
 #include <unistd.h>
