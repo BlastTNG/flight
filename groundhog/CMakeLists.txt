@@ -156,6 +156,7 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/groundhog_framing.c
     ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
     ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
+    ${PROJECT_SOURCE_DIR}/groundhog_tdrss.c
     ) 
 
 define_file_basename_for_sources(groundhog)
@@ -169,7 +170,7 @@ target_link_libraries(groundhog
     )
 
 set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} 
-		groundhog.c groundhog_biphase.c groundhog_pilot.c 
+		groundhog.c groundhog_biphase.c groundhog_pilot.c groundhog_tdrss.c
                 ${FRAME_HEADERS} ${GROUNDHOG_COMMON_HEADERS}
    )
 

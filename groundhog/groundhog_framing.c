@@ -151,45 +151,6 @@ void framing_publish_488hz(void *m_frame, char *telemetry)
     }
 }
 
-
-static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
-{
-    RATE_LOOKUP_T *rate;
-
-    if (!m_src || !m_rate) {
-        printf("Err in pointers\n");
-        return;
-    }
-    if (!m_len) {
-        printf("Zero-length string for frame\n");
-        return;
-    }
-
-    for (rate = RATE_LOOKUP_TABLE; rate->position < RATE_END; rate++) {
-        if (strncasecmp(rate->text, m_rate, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-    }
-    if (rate->position == RATE_END) {
-        printf("Did not recognize rate %s!\n", m_rate);
-        return;
-    }
-}
-
-static void framing_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
-{
-    char **topics;
-    int count;
-
-    if (message->payloadlen) {
-        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
-            if (count == 4 && topics[0] && strcmp(topics[0], "frames") == 0) {
-                framing_handle_data(topics[1], topics[3], message->payload, message->payloadlen);
-            }
-            mosquitto_sub_topic_tokens_free(&topics, count);
-        }
-    }
-}
-
-
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
@@ -218,7 +179,6 @@ int framing_init(void)
         return -1;
     }
     mosquitto_log_callback_set(mosq, frame_log_callback);
-    mosquitto_message_callback_set(mosq, framing_message_callback);
 
     ret = mosquitto_connect_async(mosq, host, port, keepalive); 
     if (ret == MOSQ_ERR_SUCCESS) {
@@ -231,7 +191,7 @@ int framing_init(void)
            blast_info("Connection in progress...\n");
         } else {
             blast_info("Unable to connect to mosquitto server: %s\n", strerror(errno));
-	    return -1;
+            return -1;
         }
     }
 
