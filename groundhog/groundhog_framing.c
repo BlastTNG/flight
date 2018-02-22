@@ -194,7 +194,8 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
  * Initializes the mosquitto library and associated framing routines.
  * @return
  */
-int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
+// int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
+int framing_init(void)
 {
     channel_header_t *channels_pkg = NULL;
     derived_header_t *derived_pkg = NULL;
@@ -251,7 +252,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
         mosquitto_publish(mosq, NULL, topic,
                 sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
-        if (!(derived_pkg = channels_create_derived_map(m_derived))) {
+        if (!(derived_pkg = channels_create_derived_map(derived_list))) {
             blast_info("Failed sending derived packages for telemetry %s\n", m_telemetries.types[i]);
         } else {
             snprintf(topic, sizeof(topic), "derived/%s", m_telemetries.types[i]);

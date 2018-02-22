@@ -26,8 +26,8 @@
 #ifndef INCLUDE_FRAMING_H_
 #define INCLUDE_FRAMING_H_
 
-#include "channel_macros.h"
-#include "derived.h"
+//#include "channel_macros.h"
+//#include "derived.h"
 
 #define NUM_FRAMES 20 
 
@@ -48,7 +48,8 @@ typedef struct
 void initialize_circular_superframes(superframes_list_t *superframes);
 void push_superframe(const void *m_frame, superframes_list_t *superframes);
 
-int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
+// int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
+int framing_init(void);
 void framing_shutdown(void);
 
 void framing_publish(void* m_frame, char *telemetry, E_RATE rate);
