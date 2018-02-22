@@ -56,35 +56,94 @@ uint8_t bi0_idle = 0;
 
 /******************** Main Biphase Loop **************************/
 
-static LIBUSB_CALL void demo_cb(struct libusb_transfer * write_transfer) {
-    printf("Data that was sent\n");
-    int i = 0;
-    for (i = 0; i < BIPHASE_FRAME_SIZE_BYTES+3; i++) {
-       if (i % 32 == 0) printf("\n");
-       printf("0x%.2x ", write_transfer->buffer[i]);
+struct mpsse_ctx *ctx = NULL;
+uint16_t sync_word = 0xeb90;
+
+static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
+		static uint8_t * doublerbuffer;
+		static uint8_t * zerobuffer;
+    static int first_time = 1;
+    static int counter = 0;
+
+    if (first_time) {
+				// allocate memory for callback function
+				doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+				zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+        first_time = 0;
+    } else {
+				printf("Data that was sent\n");
+				int i = 0;
+				for (i = 0; i < BIPHASE_FRAME_SIZE_BYTES+3; i++) {
+					 if (i % 32 == 0) printf("\n");
+					 printf("0x%.2x ", write_transfer->buffer[i]);
+				}
+				printf("\n");
     }
-    printf("\n");
 
-    printf("I am demo_cb, about to resubmit transfer\n");
+    uint8_t * read_buf;
+
+    int data_present = 0;
+		if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
+				// syncword header for the packet and invert syncword for next send
+				read_buf = getFifoRead(&libusb_fifo);
+        //printf("Start %d, end %d\n", libusb_fifo.start, libusb_fifo.end);
+        data_present = 1;
+		} else { // nothing in the fifo from the main thread, so send zeros
+				read_buf = zerobuffer;
+        data_present = 0;
+		}
+
+    *(uint32_t *) (read_buf+6) = counter++;
+
+		// add headers and reshuffle data
+		*(uint16_t *) read_buf = sync_word;
+		sync_word = ~sync_word;
+		mpsse_biphase_write_data(ctx, (void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
+    if (data_present) decrementFifo(&libusb_fifo);
+
+		// build the header for mpsse
+		write_transfer->buffer[0] = NEG_EDGE_OUT | MSB_FIRST | 0x10;
+		write_transfer->buffer[1] = (BIPHASE_FRAME_SIZE_BYTES-1) & 0xff;
+		write_transfer->buffer[2] = (BIPHASE_FRAME_SIZE_BYTES-1) >> 8;
+
+    // copy the data to the send_buffer
+		memcpy(write_transfer->buffer+3, doublerbuffer, BIPHASE_FRAME_SIZE_BYTES); // data
+
+    // zero the buffers for the next time around
+		memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+    memset(zerobuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+
     libusb_submit_transfer(write_transfer);
-
 }
 
+void libusb_handle_all_events(libusb_context * usb_ctx)
+{
+    struct timeval begin, end;
+    //struct timeval notime = {0};   
+
+    while (1) {
+				// handle usb events
+				gettimeofday(&begin, NULL);
+				int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
+				//printf("Handle events returned: %s\n", libusb_strerror(retval));
+				gettimeofday(&end, NULL);
+				//if ((counter % 1) == 0) {
+				//		blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) - 
+				//																			(begin.tv_sec+(begin.tv_usec/1000000.0))));
+				//}
+    }
+}
 
 void biphase_writer(void * arg)
 {
     // send buffers
     uint16_t lsb_biphase_linklist_chunk[BI0_FRAME_SIZE];
     uint16_t biphase_linklist_chunk[BI0_FRAME_SIZE];
-    uint8_t * doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
-    uint16_t sync_word = 0xeb90;
 
     int counter = 0;
-    int frequency = 0;
     uint16_t frame_counter = 0;
 
     // mpsse variables
-    struct mpsse_ctx *ctx = NULL;
     const char *serial = NULL;
     uint8_t direction = 0xFF; // all pins set to write
     bool mpsse_hardware = true;
@@ -93,7 +152,6 @@ void biphase_writer(void * arg)
     int rc;
     int synclink_fd = get_synclink_fd();
  
-    struct timeval begin, end;
 
     nameThread("Biphase");
 
@@ -116,9 +174,7 @@ void biphase_writer(void * arg)
     write_transfer = libusb_alloc_transfer(0);
 
     // libusb variables
-    allocFifo(&libusb_fifo, 32, BIPHASE_FRAME_SIZE_BYTES+3);
-    static int first_time = 1;
-    uint8_t * write_buf = NULL;
+    allocFifo(&libusb_fifo, 128, BIPHASE_FRAME_SIZE_BYTES);
 
     // setup linklists
     linklist_t ** ll_array = arg;
@@ -132,6 +188,16 @@ void biphase_writer(void * arg)
     uint16_t n_pkt = 0;
     unsigned int count = 0; 
  
+    // threading for libusb handles
+    pthread_t libusb_thread;
+	  uint8_t * send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
+
+		// initial fill_bulk_transfer and submit_transfer to start things off
+		libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer, 
+                                BIPHASE_FRAME_SIZE_BYTES+3, write_cb, write_transfer, 2000);
+    write_cb(write_transfer); // call this once to initialize transfer loop
+		pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) ctx->usb_ctx);
+
     while (1) {
         // check if commanding data changed the bandwidth
         if (CommandData.biphase_bw_changed) {
@@ -160,8 +226,6 @@ void biphase_writer(void * arg)
 						//  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
 						}
 
-            blast_info("Biphase send %d\n", count++);
-
             // compress the linklist to compbuffer
             compress_linklist(compbuffer, ll, NULL);
             bi0_idle = 1; // set the FIFO flag in mcp
@@ -169,80 +233,47 @@ void biphase_writer(void * arg)
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
-        }
 
-        // packetization temporatry variables
-				// TODO(javier): make the size commandable for bw
-        uint8_t * chunk = NULL;
-        uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-PACKET_HEADER_SIZE-2;
-        
-        // packetize the linklist and send the chunks if there is data to packetize
-        if ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, ll->blk_size,
-                                                         &chunksize, &i_pkt, &n_pkt))) {
-						// copy the data, prepending with header
-						// TODO(javier): put a sensible framenumber (perhaps mcp_1hz_framecount?)
-						writeHeader(((uint8_t *) biphase_linklist_chunk)+2, *(uint32_t *) ll->serial,
-						             count, i_pkt, n_pkt);
-						memcpy(((uint8_t *) biphase_linklist_chunk)+PACKET_HEADER_SIZE+2, chunk, chunksize);
-						i_pkt++;
-            printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
-        } else {
-            // printf("Send zero packet\n");
-        }
-
-        // syncword header for the packet and invert syncword for next send
-        biphase_linklist_chunk[0] = sync_word;
-        sync_word = ~sync_word; 
-
-        // queue the packets to be sent
-        if (mpsse_hardware) {
-						mpsse_biphase_write_data(ctx, biphase_linklist_chunk, 
-																			BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
-						// libusb calls
-						write_buf = getFifoWrite(&libusb_fifo);
-						write_buf[0] = NEG_EDGE_OUT | MSB_FIRST | 0x10;
-						write_buf[1] = (BIPHASE_FRAME_SIZE_BYTES-1) & 0xff;
-						write_buf[2] = (BIPHASE_FRAME_SIZE_BYTES-1) >> 8;
-						memcpy(write_buf+3, doublerbuffer, BIPHASE_FRAME_SIZE_BYTES); // data
-
-						// increment the fifo and libusb_handle_events
-						incrementFifo(&libusb_fifo); // push data to fifo
-						if (first_time) {
-								// initial fill_bulk_transfer and submit_transfer to start things off
-								libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, 
-                      (void *) getFifoRead(&libusb_fifo), BIPHASE_FRAME_SIZE_BYTES+3, 
-                      demo_cb, write_transfer, 2000);
-							  libusb_submit_transfer(write_transfer);
-                first_time = 0;
-						} else {
-                decrementFifo(&libusb_fifo); // remove read data from fifo
-						    write_transfer->buffer = getFifoRead(&libusb_fifo); // get next read in fifo
+            // packetization temporatry variables
+				    // TODO(javier): make the size commandable for bw
+						uint8_t * chunk = NULL;
+						uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-PACKET_HEADER_SIZE-2;
+						
+						// packetize the linklist and send the chunks if there is data to packetize
+						while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, ll->blk_size,
+																														 &chunksize, &i_pkt, &n_pkt))) {
+								// copy the data, prepending with header
+                uint8_t * write_buf = getFifoWrite(&libusb_fifo); 
+								writeHeader(write_buf+2, *(uint32_t *) ll->serial, count, i_pkt, n_pkt);
+								memcpy(write_buf+PACKET_HEADER_SIZE+2, chunk, chunksize);
+                incrementFifo(&libusb_fifo);
+                count++;
+								i_pkt++;
+								//printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
+                usleep(1000);
             }
 
-            // handle usb events
-            gettimeofday(&begin, NULL);
-						retval = libusb_handle_events(ctx->usb_ctx); // wait for data to be clocked
-						printf("Handle events returned: %s\n", libusb_strerror(retval));
-						gettimeofday(&end, NULL);
-						if ((counter % 1) == 0) {
-								blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) - 
-                                                  (begin.tv_sec+(begin.tv_usec/1000000.0))));
-						}
-				} else {
-						reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
-						rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
-						if (rc < 0) {
-								blast_err("Synclink write error=%d %s", errno, strerror(errno));
-								usleep(5000);
+						// queue the packets to be sent
+						if (mpsse_hardware) {
 						} else {
-								blast_info("Wrote %d bytes through synclink", rc);
+								reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
+								rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
+								if (rc < 0) {
+										blast_err("Synclink write error=%d %s", errno, strerror(errno));
+										usleep(5000);
+								} else {
+										blast_info("Wrote %d bytes through synclink", rc);
+								}
+								rc = tcdrain(synclink_fd);
 						}
-						rc = tcdrain(synclink_fd);
-				}
-				memset(biphase_linklist_chunk, 0, BIPHASE_FRAME_SIZE_BYTES);
-				memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
-        counter += 1;
-        frame_counter++;
+						memset(biphase_linklist_chunk, 0, BIPHASE_FRAME_SIZE_BYTES);
+						counter += 1;
+						frame_counter++;
+        } else {
+            usleep(10000);
+        }
+
+
     }
     libusb_free_transfer(write_transfer);
 }
