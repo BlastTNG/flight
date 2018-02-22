@@ -80,6 +80,9 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
 				}
 				printf("\n");
 */
+      if (write_transfer->actual_length != (BIPHASE_FRAME_SIZE_BYTES+3)) {
+        blast_dbg("Transfer %d != %d", write_transfer->actual_length, BIPHASE_FRAME_SIZE_BYTES+3);
+      }
     }
 
     uint8_t * read_buf = NULL;
@@ -95,7 +98,7 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
         data_present = 0;
 		}
 
-    *(uint32_t *) (read_buf+6) = counter++;
+ //   *(uint32_t *) (read_buf+6) = counter++;
 
 		// add headers and reshuffle data
 		*(uint16_t *) read_buf = sync_word;
@@ -126,14 +129,14 @@ void libusb_handle_all_events(libusb_context * usb_ctx)
     while (1) {
 				// handle usb events
 				gettimeofday(&begin, NULL);
-				libusb_handle_events(usb_ctx); // wait for data to be clocked
+				int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
 				// int retval = libusb_handle_events_timeout(usb_ctx, &notime); // wait for data to be clocked
-				// printf("Handle events returned: %s\n", libusb_strerror(retval));
 				gettimeofday(&end, NULL);
-				// if ((counter % 1) == 0) {
-				//		blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
-				//																			(begin.tv_sec+(begin.tv_usec/1000000.0))));
-				// }
+				if (retval != LIBUSB_SUCCESS) {
+				    printf("Handle events returned: %s\n", libusb_strerror(retval));
+					  blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
+																						(begin.tv_sec+(begin.tv_usec/1000000.0))));
+				}
     }
 }
 
@@ -193,7 +196,7 @@ void biphase_writer(void * arg)
     pthread_t libusb_thread;
 	  uint8_t * send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
 
-		// initial fill_bulk_transfer and submit_transfer to start things off
+		// initial fill_bulk_transfer and callback to start things off
 		libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer,
                                 BIPHASE_FRAME_SIZE_BYTES+3, write_cb, write_transfer, 2000);
     write_cb(write_transfer); // call this once to initialize transfer loop
