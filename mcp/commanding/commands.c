@@ -36,7 +36,6 @@
 #include <conversions.h>
 #include <crc.h>
 #include <pointing.h>
-#include <blast_sip_interface.h>
 #include <ec_motors.h>
 
 #include "command_list.h"
@@ -51,6 +50,7 @@
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
+#include "sip.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.

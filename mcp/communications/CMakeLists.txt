@@ -2,10 +2,8 @@ set(MCP_COMMS_SRCS
     ${MCP_COMMS_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/blast_comms.c
     ${CMAKE_CURRENT_SOURCE_DIR}/blast_comms_internal.h
-#    ${CMAKE_CURRENT_SOURCE_DIR}/blast_sip_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bi0.c
     ${CMAKE_CURRENT_SOURCE_DIR}/biphase_hardware.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/blast_sip_interface_internal.h
     ${CMAKE_CURRENT_SOURCE_DIR}/pilot.c
     PARENT_SCOPE
 )
@@ -14,7 +12,6 @@ set(MCP_COMMS_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/blast_comms.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/bi0.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/biphase_hardware.h
-#   ${CMAKE_CURRENT_SOURCE_DIR}/../include/blast_sip_interface.h
    ${CMAKE_CURRENT_SOURCE_DIR}/pilot.h
    PARENT_SCOPE
 )

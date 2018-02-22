@@ -42,7 +42,6 @@
 #include <sys/time.h>
 
 #include <conversions.h>
-#include <blast_sip_interface.h>
 #include <computer_sensors.h>
 
 #include "channels_tng.h"

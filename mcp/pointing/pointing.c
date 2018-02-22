@@ -59,7 +59,6 @@
 #include "conversions.h"
 #include "time_lst.h"
 #include "utilities_pointing.h"
-// #include "blast_sip_interface.h"
 #include "magnetometer.h"
 #include "sip.h"
 
