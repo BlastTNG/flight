@@ -70,6 +70,24 @@ static LIBUSB_CALL void demo_cb(struct libusb_transfer * write_transfer) {
 
 }
 
+void libusb_handle_all_events(libusb_context * usb_ctx)
+{
+    struct timeval begin, end;
+    struct timeval notime = {0};   
+
+    while (1) {
+				// handle usb events
+				gettimeofday(&begin, NULL);
+				int retval = libusb_handle_events_timeout(usb_ctx, &notime); // wait for data to be clocked
+				//printf("Handle events returned: %s\n", libusb_strerror(retval));
+				gettimeofday(&end, NULL);
+				//if ((counter % 1) == 0) {
+				//		blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) - 
+				//																			(begin.tv_sec+(begin.tv_usec/1000000.0))));
+				//}
+        usleep(10);
+    }
+}
 
 void biphase_writer(void * arg)
 {
@@ -93,7 +111,6 @@ void biphase_writer(void * arg)
     int rc;
     int synclink_fd = get_synclink_fd();
  
-    struct timeval begin, end;
 
     nameThread("Biphase");
 
@@ -132,6 +149,9 @@ void biphase_writer(void * arg)
     uint16_t n_pkt = 0;
     unsigned int count = 0; 
  
+    pthread_t libusb_thread;
+    pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) ctx->usb_ctx);
+
     while (1) {
         // check if commanding data changed the bandwidth
         if (CommandData.biphase_bw_changed) {
@@ -160,8 +180,6 @@ void biphase_writer(void * arg)
 						//  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
 						}
 
-            blast_info("Biphase send %d\n", count++);
-
             // compress the linklist to compbuffer
             compress_linklist(compbuffer, ll, NULL);
             bi0_idle = 1; // set the FIFO flag in mcp
@@ -187,8 +205,10 @@ void biphase_writer(void * arg)
 						i_pkt++;
             printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
         } else {
+						writeHeader(((uint8_t *) biphase_linklist_chunk)+2, 0, count, 0, 0);
             // printf("Send zero packet\n");
         }
+        count++;
 
         // syncword header for the packet and invert syncword for next send
         biphase_linklist_chunk[0] = sync_word;
@@ -219,15 +239,6 @@ void biphase_writer(void * arg)
 						    write_transfer->buffer = getFifoRead(&libusb_fifo); // get next read in fifo
             }
 
-            // handle usb events
-            gettimeofday(&begin, NULL);
-						retval = libusb_handle_events(ctx->usb_ctx); // wait for data to be clocked
-						printf("Handle events returned: %s\n", libusb_strerror(retval));
-						gettimeofday(&end, NULL);
-						if ((counter % 1) == 0) {
-								blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) - 
-                                                  (begin.tv_sec+(begin.tv_usec/1000000.0))));
-						}
 				} else {
 						reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
 						rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
@@ -243,6 +254,7 @@ void biphase_writer(void * arg)
 				memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
         counter += 1;
         frame_counter++;
+        usleep(10000);
     }
     libusb_free_transfer(write_transfer);
 }
