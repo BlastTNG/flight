@@ -359,9 +359,6 @@ int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_
   // nonsense values for i_pkt
   if ((*i_pkt)*packet_size > *buffer_size) return -1;
 
-  // reached the end of the buffer
-  if (*i_pkt >= *n_pkt) return 0;
-
   // get the packet_size
   uint8_t * retval = buffer+packet_size*(*i_pkt);
 
@@ -371,6 +368,9 @@ int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_
   // update packet size and location
   if (buffer_size) *buffer_size += packet_size;
   *i_pkt += 1;
+
+  // reached the end of the buffer
+  if (*i_pkt >= *n_pkt) return 0;
 
 
   return 1;
