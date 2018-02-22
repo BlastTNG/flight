@@ -26,7 +26,7 @@
 #include "pilot.h"
 #include "groundhog_framing.h"
 
-superframes_list_t superframes;
+superframes_list_t pilot_superframes;
 
 void pilot_receive(void *arg) {
 
@@ -41,7 +41,7 @@ void pilot_receive(void *arg) {
 
   // initialize UDP connection via bitserver/BITRecver
   initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
-  initialize_circular_superframes(&superframes);
+  initialize_circular_superframes(&pilot_superframes);
 
   while (true) {
     do {
@@ -79,7 +79,7 @@ void pilot_receive(void *arg) {
         printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
       }
       */
-      push_superframe(local_superframe, &superframes);
+      push_superframe(local_superframe, &pilot_superframes);
     } else {
       blast_info("\nReceived an all frame :)\n");
     }
@@ -114,8 +114,8 @@ void pilot_publish(void *arg) {
     }
 
     while (true) {
-        write_frame = superframes.i_out;
-        read_frame = superframes.i_in;
+        write_frame = pilot_superframes.i_out;
+        read_frame = pilot_superframes.i_in;
 
         if (read_frame == write_frame) {
             usleep(100);
@@ -137,44 +137,44 @@ void pilot_publish(void *arg) {
 
                 if (!--counter_1hz) {
                     counter_1hz = HZ_COUNTER(1);
-                    extract_frame_from_superframe(pilot_data[RATE_1HZ], RATE_1HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_1HZ], RATE_1HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_1HZ], "pilot", RATE_1HZ);
                     //printf("1Hz\n");
                 }
                   if (!--counter_5hz) {
                     counter_5hz = HZ_COUNTER(5);
-                    extract_frame_from_superframe(pilot_data[RATE_5HZ], RATE_5HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_5HZ], RATE_5HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_5HZ], "pilot", RATE_5HZ);
                     //printf("5Hz\n");
                 }
                 if (!--counter_100hz) {
                     counter_100hz = HZ_COUNTER(100);
-                    extract_frame_from_superframe(pilot_data[RATE_100HZ], RATE_100HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_100HZ], RATE_100HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_100HZ], "pilot", RATE_100HZ);
                     //printf("100Hz\n");
                 }
                 if (!--counter_200hz) {
                     counter_200hz = HZ_COUNTER(200);
-                    extract_frame_from_superframe(pilot_data[RATE_200HZ], RATE_200HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_200HZ], RATE_200HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_200HZ], "pilot", RATE_200HZ);
                     //printf("200Hz\n");
                 }
                 if (!--counter_244hz) {
                     counter_244hz = HZ_COUNTER(244);
-                    extract_frame_from_superframe(pilot_data[RATE_244HZ], RATE_244HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_244HZ], RATE_244HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_244HZ], "pilot", RATE_244HZ);
                     //printf("244Hz\n");
                 }
                 if (!--counter_488hz) {
                     counter_488hz = HZ_COUNTER(488);
-                    extract_frame_from_superframe(pilot_data[RATE_488HZ], RATE_488HZ, superframes.framelist[write_frame]);
+                    extract_frame_from_superframe(pilot_data[RATE_488HZ], RATE_488HZ, pilot_superframes.framelist[write_frame]);
                     framing_publish(pilot_data[RATE_488HZ], "pilot", RATE_488HZ);
                     frame_488_counter++;
                     //printf("488Hz\n");
                 }
             }
             write_frame = (write_frame + 1) & (NUM_FRAMES-1);
-            superframes.i_out = write_frame;
+            pilot_superframes.i_out = write_frame;
         }
     }
 }
