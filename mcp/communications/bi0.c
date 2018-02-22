@@ -71,6 +71,7 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
 				zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
         first_time = 0;
     } else {
+/*
 				printf("Data that was sent\n");
 				int i = 0;
 				for (i = 0; i < BIPHASE_FRAME_SIZE_BYTES+3; i++) {
@@ -78,15 +79,16 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
 					 printf("0x%.2x ", write_transfer->buffer[i]);
 				}
 				printf("\n");
+*/
     }
 
-    uint8_t * read_buf;
+    uint8_t * read_buf = NULL;
 
     int data_present = 0;
 		if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
 				// syncword header for the packet and invert syncword for next send
 				read_buf = getFifoRead(&libusb_fifo);
-        //printf("Start %d, end %d\n", libusb_fifo.start, libusb_fifo.end);
+        // printf("Start %d, end %d\n", libusb_fifo.start, libusb_fifo.end);
         data_present = 1;
 		} else { // nothing in the fifo from the main thread, so send zeros
 				read_buf = zerobuffer;
@@ -119,39 +121,38 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer * write_transfer) {
 void libusb_handle_all_events(libusb_context * usb_ctx)
 {
     struct timeval begin, end;
-    //struct timeval notime = {0};   
+    // struct timeval notime = {0};
 
     while (1) {
 				// handle usb events
 				gettimeofday(&begin, NULL);
-				int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
-				//printf("Handle events returned: %s\n", libusb_strerror(retval));
+				libusb_handle_events(usb_ctx); // wait for data to be clocked
+				// int retval = libusb_handle_events_timeout(usb_ctx, &notime); // wait for data to be clocked
+				// printf("Handle events returned: %s\n", libusb_strerror(retval));
 				gettimeofday(&end, NULL);
-				//if ((counter % 1) == 0) {
-				//		blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) - 
+				// if ((counter % 1) == 0) {
+				//		blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
 				//																			(begin.tv_sec+(begin.tv_usec/1000000.0))));
-				//}
+				// }
     }
 }
 
 void biphase_writer(void * arg)
 {
-    // send buffers
-    uint16_t lsb_biphase_linklist_chunk[BI0_FRAME_SIZE];
-    uint16_t biphase_linklist_chunk[BI0_FRAME_SIZE];
-
-    int counter = 0;
-    uint16_t frame_counter = 0;
-
     // mpsse variables
     const char *serial = NULL;
     uint8_t direction = 0xFF; // all pins set to write
     bool mpsse_hardware = true;
 
+/*
     // synclink variables
     int rc;
     int synclink_fd = get_synclink_fd();
- 
+
+    // send buffers
+    uint16_t lsb_biphase_linklist_chunk[BI0_FRAME_SIZE];
+    uint16_t biphase_linklist_chunk[BI0_FRAME_SIZE];
+*/
 
     nameThread("Biphase");
 
@@ -160,13 +161,14 @@ void biphase_writer(void * arg)
         if (!SouthIAm) {
             serial = "FC1BIPHASE"; // "FC1NS9HU"
         } else {
+        // TODO(joy): set this to the proper serial number fo FC2
             serial = NULL; // "FC2"
             //serial = "?"; // "FC2"
         }
         setup_mpsse(&ctx, serial, direction);
-        //setup_mpsse(&ctx, NULL, direction);
+        // setup_mpsse(&ctx, NULL, direction);
     } else {
-        rc = setup_synclink();
+        // rc = setup_synclink();
     }
 
     // libubs setup
@@ -181,7 +183,6 @@ void biphase_writer(void * arg)
     linklist_t * ll = NULL;
     int allframe_count = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
-    int retval = 0;
   
     // packetization variables
     uint16_t i_pkt = 0;
@@ -193,7 +194,7 @@ void biphase_writer(void * arg)
 	  uint8_t * send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
 
 		// initial fill_bulk_transfer and submit_transfer to start things off
-		libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer, 
+		libusb_fill_bulk_transfer(write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer,
                                 BIPHASE_FRAME_SIZE_BYTES+3, write_cb, write_transfer, 2000);
     write_cb(write_transfer); // call this once to initialize transfer loop
 		pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) ctx->usb_ctx);
@@ -207,7 +208,7 @@ void biphase_writer(void * arg)
                 usleep(1000);
                 setup_mpsse(&ctx, serial, direction);
             } else {
-                rc = setup_synclink();
+                // rc = setup_synclink();
             }
         }
        
@@ -249,14 +250,16 @@ void biphase_writer(void * arg)
                 incrementFifo(&libusb_fifo);
                 count++;
 								i_pkt++;
-								//printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
+								// printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
 
+/*
 						// queue the packets to be sent
 						if (mpsse_hardware) {
 						} else {
-								reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, lsb_biphase_linklist_chunk);
+								reverse_bits(BIPHASE_FRAME_SIZE_BYTES, biphase_linklist_chunk, 
+                              lsb_biphase_linklist_chunk);
 								rc = write(synclink_fd, lsb_biphase_linklist_chunk, BIPHASE_FRAME_SIZE_BYTES);
 								if (rc < 0) {
 										blast_err("Synclink write error=%d %s", errno, strerror(errno));
@@ -269,11 +272,11 @@ void biphase_writer(void * arg)
 						memset(biphase_linklist_chunk, 0, BIPHASE_FRAME_SIZE_BYTES);
 						counter += 1;
 						frame_counter++;
-        } else {
+*/
+        } else { // sleep until the next superframe
             usleep(10000);
         }
-
-
     }
+    // free the libusb transfer on thread exit
     libusb_free_transfer(write_transfer);
 }
