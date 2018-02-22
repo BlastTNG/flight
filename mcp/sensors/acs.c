@@ -29,7 +29,7 @@
 #include <blast.h>
 
 #include <channel_macros.h>
-#include <blast_sip_interface.h>
+// #include <blast_sip_interface.h>
 #include <conversions.h>
 #include <channels_tng.h>
 #include <command_struct.h>
@@ -38,7 +38,7 @@
 #include <mcp.h>
 #include <pointing_struct.h>
 #include <dsp1760.h>
-
+#include "sip.h"
 #include "xsc_network.h"
 
 static const float gy_inv[64][3][6] =

@@ -43,6 +43,7 @@
 #include "blast.h"
 #include "command_common.h"
 #include "command_struct.h"
+#include "commands.h"
 #include "mcp.h"
 
 #define REQ_POSITION    0x50
@@ -289,7 +290,7 @@ static void GPSPosition(unsigned char *indata)
 
         SIPData.GPSpos.alt = ParseGPS(indata + 8);
 
-        WritePrevStatus();
+//        WritePrevStatus();
     }
 }
 #endif    // USE_SIP_CMD
@@ -346,7 +347,7 @@ static void GPSTime(unsigned char *indata)
     SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 static void MKSAltitude(unsigned char *indata)
@@ -355,7 +356,7 @@ static void MKSAltitude(unsigned char *indata)
   SIPData.MKSalt.med = ((uint16_t *)indata)[1];;
   SIPData.MKSalt.lo = ((uint16_t *)indata)[2];;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 /* Send TDRSS Low Rate Packet */
@@ -750,7 +751,8 @@ void WatchPort(void* parameter)
                             mcommand = indata[0];
                             mcommand_count = 0;
                             dataqsize = DataQSize(MIndex(mcommand));
-                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n", MName(mcommand), mcommand);
+                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
+                                        MName(mcommand), mcommand);
 
                             /* The time of sending, a "unique" number shared by the first */
                             /* and last packed of a multi-command */
