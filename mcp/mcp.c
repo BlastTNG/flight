@@ -77,6 +77,7 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
+#include "tdrss_hga.h"
 #include "bitserver.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
@@ -286,9 +287,10 @@ static void mcp_244hz_routines(void)
                                        RATE_244HZ, getFifoWrite(superframe_fifo));
 
     // TODO(javier): add idle flags for all links to decrement superframe FIFO read location
-    if (pilot_idle) {
+    if (pilot_idle & tdrss_hga_idle) {
       decrementFifo(superframe_fifo);
       pilot_idle = 0;
+      tdrss_hga_idle = 0;
     }
 }
 
@@ -468,6 +470,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDatacomm1;
   pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
+  pthread_t tdrss_hga_send_worker;
   pthread_t bi0_send_worker;
   pthread_t watchdog_in_charge_id;
   int use_starcams = 0;
@@ -575,6 +578,7 @@ int main(int argc, char *argv[])
   linklist_generate_lookup(linklist_array);
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) linklist_array);
+  pthread_create(&tdrss_hga_send_worker, NULL, (void *) &tdrss_hga_compress_and_send, (void *) linklist_array);
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) linklist_array);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
