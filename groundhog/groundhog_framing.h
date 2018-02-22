@@ -26,9 +26,6 @@
 #ifndef INCLUDE_FRAMING_H_
 #define INCLUDE_FRAMING_H_
 
-//#include "channel_macros.h"
-//#include "derived.h"
-
 #define NUM_FRAMES 20 
 
 struct telemetries {

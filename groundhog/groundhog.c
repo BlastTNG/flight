@@ -113,7 +113,6 @@ void daemonize()
 int main(int argc, char * argv[]) {
 
   channels_initialize(channel_list);
-  // framing_init(channel_list, derived_list);
   framing_init();
 
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};

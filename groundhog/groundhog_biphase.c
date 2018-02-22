@@ -20,15 +20,13 @@
 
 #include "bbc_pci.h"
 #include "decom_pci.h"
-#include "linklist.h"
+#include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
-#include "channels_tng.h"
 #include "crc.h"
 #include "blast.h"
 #include "blast_time.h"
 #include "groundhog_framing.h"
 #include "groundhog.h"
-#include "linklist.h"
 #include "bitserver.h"
 #include "FIFO.h"
 
