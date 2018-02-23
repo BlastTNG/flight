@@ -69,7 +69,7 @@ void pilot_receive(void *arg) {
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
     if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
-      blast_info("Received linklist with serial 0x%x\n", serial);
+      blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
       if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
         continue;
       }

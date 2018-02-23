@@ -1,4 +1,5 @@
 #include <math.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <arpa/inet.h> // socket stuff
 #include <netinet/in.h> // socket stuff
@@ -24,64 +25,86 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "groundhog_framing.h"
+#include "tdrss_hga.h"
+#include "comms_serial.h"
+
 
 superframes_list_t tdrss_superframes;
 
+int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
+{
+    int i = 0;
+    while (1) { 
+        if (read(fd, buffer+i, 1)) {
+            i++;
+        } else {
+            usleep(1000);
+        }
+        if (i >= num_bytes) break;
+    }
+    return num_bytes;
+}
+
 void tdrss_receive(void *arg) {
 
-  struct BITRecver tdrssrecver = {0};
-  uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
 
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
+  uint8_t *compressed_buffer = calloc(1, TDRSS_HGA_MAX_SIZE);
 
-  // initialize UDP connection via bitserver/BITRecver
-  initBITRecver(&tdrssrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
+  uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
+
+  uint32_t *serial_number = 0;
+  uint16_t *i_pkt, *n_pkt;
+  uint32_t *frame_number;
+
   initialize_circular_superframes(&tdrss_superframes);
 
+  // Open serial port
+  comms_serial_t *serial = comms_serial_new(NULL);
+  comms_serial_connect(serial, TDRSS_HGA_PORT);
+  comms_serial_setspeed(serial, B115200);
+  int fd = serial->sock->fd; 
+
+  uint8_t byte = 0;
+
   while (true) {
-    do {
-      // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&tdrssrecver, &blk_size);
-      serial = *(uint32_t *) recvbuffer;
-      if (!(ll = linklist_lookup_by_serial(serial))) {
-        removeBITRecverAddr(&tdrssrecver);
+      int byte_pos = 0;
+      // perform a search for a valid serial
+      while (1) {
+          if (read(fd, &byte, 1)) {
+              if (byte_pos >= 3) { // shift the bytes
+                  for (int i = 0; i < 3; i++) {
+                      header_buffer[i] = header_buffer[i+1];
+                  }
+              } else {
+                  byte_pos++;
+              }
+              header_buffer[byte_pos] = byte;
+              if ((ll = linklist_lookup_by_serial(*(uint32_t *) header_buffer))) break;
+          } else {
+              usleep(1000);
+          }
+      }
+       
+      // read the rest of the header
+      blocking_read(fd, header_buffer+4, PACKET_HEADER_SIZE-4);
+    
+      readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
+      blocking_read(fd, compressed_buffer, ll->blk_size);
+
+      // decompress the linklist
+      if (!read_allframe(local_superframe, compressed_buffer)) {
+          blast_info("[TDRSS HGA] Received linklist with serial_number 0x%x\n", *serial_number);
+          if (!decompress_linklist(local_superframe, ll, compressed_buffer)) { 
+              continue;
+          }
+          push_superframe(local_superframe, &tdrss_superframes);
       } else {
-        break;
+          blast_info("\nReceived an all frame :)\n");
       }
-    } while (true);
-
-    // set the linklist serial
-    setBITRecverSerial(&tdrssrecver, serial);
-
-    // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&tdrssrecver, compbuffer, PILOT_MAX_SIZE, 0);
-
-    if (blk_size < 0) {
-      blast_info("Malformed packed received on Pilot\n");
-      continue;
-    }
-
-    // TODO(javier): deal with blk_size < ll->blk_size
-    // decompress the linklist
-    if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
-      blast_info("Received linklist with serial 0x%x\n", serial);
-      if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
-        continue;
-      }
-      /*
-      printf("Start\n");
-      for (int i = 0; i < 5; i++) {
-        printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
-      }
-      */
-      push_superframe(local_superframe, &tdrss_superframes);
-    } else {
-      blast_info("\nReceived an all frame :)\n");
-    }
+      memset(header_buffer, 0, PACKET_HEADER_SIZE);
   }
 }
 

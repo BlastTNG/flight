@@ -147,7 +147,7 @@ void biphase_receive(void *args)
               memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
               if ((retval == 0) && (ll != NULL)){
                   // The compressed linklist has been fully reconstructed
-                  printf("holy fucking shit we have a linklist!! Serial: %x\n", *(uint32_t *) ll->serial);
+                  blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
                   decompress_linklist(local_superframe, ll, compressed_linklist);
                   push_superframe(local_superframe, &biphase_superframes);
                   memset(compressed_linklist, 0, compressed_linklist_size);

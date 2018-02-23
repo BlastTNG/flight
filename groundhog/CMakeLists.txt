@@ -127,9 +127,11 @@ set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
 set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
+set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 
 include_directories (
     "${COMMON_DIR}/include"
+    "${COMMS_DIR}/include"
     "${CONFIG_DIR}/include"
     "${LINKLIST_DIR}"
     "${COMMUNICATIONS_DIR}"
@@ -139,16 +141,23 @@ include_directories (
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
 add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklist")
+# add asynchronous communication objects
+add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
+
 
 add_library (blast_common OBJECT ${GROUNDHOG_COMMON_SRCS} ${GROUNDHOG_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
 
 add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
 define_file_basename_for_sources(linklist)
+
+add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
+define_file_basename_for_sources(blast_comms)
             
 add_executable (groundhog 
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:linklist>
+    $<TARGET_OBJECTS:blast_comms>
     ${PROJECT_SOURCE_DIR}/groundhog.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
     ${PROJECT_SOURCE_DIR}/groundhog.h
@@ -169,9 +178,9 @@ target_link_libraries(groundhog
     ssl crypto
     )
 
-set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} 
-		groundhog.c groundhog_biphase.c groundhog_pilot.c groundhog_tdrss.c
-                ${FRAME_HEADERS} ${GROUNDHOG_COMMON_HEADERS}
+set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} ${COMMS_SRCS} 
+    groundhog.c groundhog_biphase.c groundhog_pilot.c groundhog_tdrss.c
+    ${FRAME_HEADERS} ${GROUNDHOG_COMMON_HEADERS} ${COMMS_HEADERS}
    )
 
 
