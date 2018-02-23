@@ -217,7 +217,7 @@ void biphase_writer(void * arg)
        
         // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
         // get the current linklist
-        ll = ll_array[3];
+        ll = ll_array[0];
 
         // check if superframe is ready and compress if so
         if (ll->data_ready & SUPERFRAME_READY) { // a superframe is ready 
