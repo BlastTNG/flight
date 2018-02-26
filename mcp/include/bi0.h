@@ -33,7 +33,7 @@
 #define BI0_MAX_BUFFER_SIZE 250000 // maximum frame size at 1 Hz (i.e. 2 Mbits)
 #define BI0_ZERO_PADDING 1200 // number of bytes =0 to pad every 100 Hz
 
-extern uint8_t bi0_idle;
+extern struct Fifo bi0_fifo;
 
 extern pthread_t watchdog_id;
 

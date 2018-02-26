@@ -112,8 +112,10 @@ void StageBus(void);
 struct chat_buf chatter_buffer;
 struct tm start_time;
 
+#define NUM_TELEMETRIES 3
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
-struct Fifo * superframe_fifo = NULL;
+uint8_t * master_superframe = NULL;
+struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &tdrss_hga_fifo};
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -284,14 +286,7 @@ static void mcp_244hz_routines(void)
 
     framing_publish_244hz();
     superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
-                                       RATE_244HZ, getFifoWrite(superframe_fifo));
-
-    // TODO(javier): add idle flags for all links to decrement superframe FIFO read location
-    if (pilot_idle & tdrss_hga_idle) {
-      decrementFifo(superframe_fifo);
-      pilot_idle = 0;
-      tdrss_hga_idle = 0;
-    }
+                                       RATE_244HZ, master_superframe);
 }
 
 static void mcp_200hz_routines(void)
@@ -305,7 +300,7 @@ static void mcp_200hz_routines(void)
     framing_publish_200hz();
     // store_data_200hz();
     superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
-                                       RATE_200HZ, getFifoWrite(superframe_fifo));
+                                       RATE_200HZ, master_superframe);
 }
 static void mcp_100hz_routines(void)
 {
@@ -324,7 +319,7 @@ static void mcp_100hz_routines(void)
     framing_publish_100hz();
     // store_data_100hz();
     superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
-                                       RATE_100HZ, getFifoWrite(superframe_fifo));
+                                       RATE_100HZ, master_superframe);
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -353,7 +348,7 @@ static void mcp_5hz_routines(void)
 
     framing_publish_5hz();
     superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
-                                     RATE_5HZ, getFifoWrite(superframe_fifo));
+                                     RATE_5HZ, master_superframe);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -369,9 +364,10 @@ static void mcp_1hz_routines(void)
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
     if (ready) {
-      incrementFifo(superframe_fifo); // increment the write location
-      assign_all_linklist_superframe(linklist_array, getFifoRead(superframe_fifo));
-      set_all_linklist_superframe_ready(linklist_array);
+      for (int i = 0; i < NUM_TELEMETRIES; i++) {
+         memcpy(getFifoWrite(telem_fifo[i]), master_superframe, superframe_size);
+         incrementFifo(telem_fifo[i]);
+      } 
     }
     // rec_control();
     // of_control();
@@ -390,8 +386,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     framing_publish_1hz();
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
-                                     RATE_1HZ, getFifoWrite(superframe_fifo));
-
+                                     RATE_1HZ, master_superframe);
 //    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
@@ -499,6 +494,7 @@ int main(int argc, char *argv[])
   }
   umask(0);  /* clear umask */
 
+
   ph_library_init();
   ph_nbio_init(4);
 
@@ -551,10 +547,10 @@ int main(int argc, char *argv[])
   initialize_dsp1760_interface();
 
 #ifdef USE_FIFO_CMD
-    pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
 #else
-    pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
-    pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
+  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
+  pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #endif
 #ifdef USE_XY_THREAD
   // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
@@ -570,8 +566,10 @@ int main(int argc, char *argv[])
 // initialize linklists
   // initialize superframe FIFO
   define_superframe();
-  superframe_fifo = (struct Fifo *) calloc(1, sizeof(struct Fifo));
-  allocFifo(superframe_fifo, 3, superframe_size);
+  master_superframe = calloc(1, superframe_size);
+  for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
+   allocFifo(telem_fifo[i], 3, superframe_size);
+  } 
 
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
@@ -621,7 +619,7 @@ int main(int argc, char *argv[])
 
   initialize_data_sharing();
   // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
-  initialize_bias_tone();
+  //initialize_bias_tone();
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);

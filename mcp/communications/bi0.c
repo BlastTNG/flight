@@ -52,7 +52,7 @@ int counter = 0;
 struct Fifo libusb_fifo = {0}; 
 
 extern int16_t SouthIAm;
-uint8_t bi0_idle = 0;
+struct Fifo bi0_fifo = {0};
 
 /******************** Main Biphase Loop **************************/
 
@@ -217,22 +217,19 @@ void biphase_writer(void * arg)
        
         // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
         // get the current linklist
-        ll = ll_array[0];
+        ll = ll_array[1];
 
         // check if superframe is ready and compress if so
-        if (ll->data_ready & SUPERFRAME_READY) { // a superframe is ready 
-            // unset the ready bit
-            ll->data_ready &= ~SUPERFRAME_READY;
- 
+        if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 
 						// send allframe if necessary
 						if (!allframe_count) {
-						//  write_allframe(compbuffer, ll->superframe);
+						//  write_allframe(compbuffer, getFifoRead(&bi0_fifo));
 						//  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
 						}
 
             // compress the linklist to compbuffer
-            compress_linklist(compbuffer, ll, NULL);
-            bi0_idle = 1; // set the FIFO flag in mcp
+            compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
+            decrementFifo(&bi0_fifo);
 
             // set initialization for packetization
             i_pkt = 0;
@@ -253,7 +250,7 @@ void biphase_writer(void * arg)
                 incrementFifo(&libusb_fifo);
                 count++;
 								i_pkt++;
-								// printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
+								//printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
 

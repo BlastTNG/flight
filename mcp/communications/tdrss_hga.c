@@ -37,13 +37,13 @@
 #include "linklist_compress.h"
 #include "blast.h"
 // #include "command_struct.h"
-// #include "FIFO.h"
+#include "FIFO.h"
 #include "bitserver.h"
 #include "mputs.h"
 #include "comms_serial.h"
 #include "tdrss_hga.h"
 
-uint8_t tdrss_hga_idle = 0;
+struct Fifo tdrss_hga_fifo = {0};
 
 void tdrss_hga_compress_and_send(void *arg) {
 
@@ -65,31 +65,30 @@ void tdrss_hga_compress_and_send(void *arg) {
   while (true) {
 
     // get the current pointer to the pilot linklist
-    ll = ll_array[0];
+    ll = ll_array[2];
 
-    if (ll->data_ready & SUPERFRAME_READY) { // data is ready to be sent
-      // unset the data ready bit
-      ll->data_ready &= ~SUPERFRAME_READY;
-
+    if (!fifoIsEmpty(&tdrss_hga_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
       if (!allframe_count) {
-      //  write_allframe(compressed_buffer, ll->superframe);
+      //  write_allframe(compressed_buffer, getFifoRead(&tdrss_hga_fifo));
       //  sendToBITSender(&pilotsender, compressed_buffer, allframe_size, 0);
       }
 
       // compress the linklist
-      int retval = compress_linklist(compressed_buffer, ll, NULL);
+      int retval = compress_linklist(compressed_buffer, ll, getFifoRead(&tdrss_hga_fifo));
+      decrementFifo(&tdrss_hga_fifo);
 
-      tdrss_hga_idle = 1; // set the FIFO flag in mcp
       if (!retval) continue;
 
       // have packet header serials match the linklist serials
       writeHeader(header_buffer, *(uint32_t *) ll->serial, 0, 0, 1);
-      comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
+      // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
+      write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE);
 
       // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_tdrss_hga_bw))
       // send the data to the ground station via ttyHighRate
-      comms_serial_write(serial, compressed_buffer, ll->blk_size);
+      // comms_serial_write(serial, compressed_buffer, ll->blk_size);
+      write(serial->sock->fd, compressed_buffer, ll->blk_size);
 
       memset(compressed_buffer, 0, TDRSS_HGA_MAX_SIZE);
       allframe_count = (allframe_count + 1) % TDRSS_HGA_ALLFRAME_PERIOD;

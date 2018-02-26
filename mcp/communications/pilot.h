@@ -34,7 +34,7 @@
 // TODO(javier): make allframe period commandable
 #define PILOT_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
-extern uint8_t pilot_idle;
+extern struct Fifo pilot_fifo;
 
 void pilot_compress_and_send(void *);
 

@@ -27,7 +27,7 @@
 #define TDRSS_HGA_PORT "/dev/ttyHighRate"
 #define TDRSS_HGA_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
-extern uint8_t tdrss_hga_idle;
+extern struct Fifo tdrss_hga_fifo;
 
 void tdrss_hga_compress_and_send(void *);
 
