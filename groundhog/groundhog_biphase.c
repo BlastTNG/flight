@@ -58,7 +58,7 @@ void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped
       readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
-          //blast_dbg("\n=== I found a linklist with serial %x, counter: %x, i_pkt: %d, n_pkt: %d==\n", *serial, *frame_number, **i_pkt, **n_pkt);
+          // blast_dbg("\n=== I found a linklist with serial %x, counter: %x, i_pkt: %d, n_pkt: %d==\n", *serial, *frame_number, **i_pkt, **n_pkt);
           *normal_polarity = true;
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
           // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
@@ -71,14 +71,14 @@ void get_stripped_packet(bool *normal_polarity, uint8_t *receive_buffer_stripped
       readHeader((uint8_t *) (anti_receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
       // Checking for polarity
       if ((*ll = linklist_lookup_by_serial(*serial))) {
-          //blast_dbg("Inverted 1: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
+          // blast_dbg("Inverted 1: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
           *normal_polarity = false;
           memcpy(receive_buffer_stripped, anti_receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
           // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
       } else if ((*ll = linklist_lookup_by_serial((uint16_t) ~(*serial)))) {
           *normal_polarity = true;
           readHeader((uint8_t *) (receive_buffer+1), &serial, &frame_number, i_pkt, n_pkt);
-          //blast_dbg("Inverted 2: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
+          // blast_dbg("Inverted 2: I found a linklist with serial %x, counter: %d, i_pkt: %d, n_pkt: %d\n", *serial, *frame_number, **i_pkt, **n_pkt);
           memcpy(receive_buffer_stripped, receive_buffer+BIPHASE_PACKET_WORD_START, BIPHASE_PACKET_SIZE);
           // print_packet(receive_buffer_stripped, BIPHASE_PACKET_SIZE);
       }
@@ -116,8 +116,8 @@ void biphase_receive(void *args)
 
   /* Initialise Decom */
   ioctl(decom_fp, DECOM_IOC_RESET);
-  // ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
-  ioctl(decom_fp, DECOM_IOC_FRAMELEN, 2*BI0_FRAME_SIZE-1);
+  ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+  //ioctl(decom_fp, DECOM_IOC_FRAMELEN, 2*BI0_FRAME_SIZE-1);
 
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);

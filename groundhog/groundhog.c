@@ -133,20 +133,20 @@ int main(int argc, char * argv[]) {
   pthread_create(&tdrss_receive_worker, NULL, (void *) &tdrss_receive, NULL);
 
   // Publishing data to MSQT
-  // pthread_t pilot_publish_worker;
-  // pthread_t biphase_publish_worker;
+  pthread_t pilot_publish_worker;
+  pthread_t biphase_publish_worker;
   pthread_t tdrss_publish_worker;
 
-  // pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
-  // pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+  pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
+  pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
   pthread_create(&tdrss_publish_worker, NULL, (void *) &tdrss_publish, NULL);
 
   // Joining
-  // pthread_join(pilot_receive_worker, NULL);
-  // pthread_join(biphase_receive_worker, NULL);
+  pthread_join(pilot_receive_worker, NULL);
+  pthread_join(biphase_receive_worker, NULL);
   pthread_join(tdrss_receive_worker, NULL);
-  // pthread_join(pilot_publish_worker, NULL);
-  // pthread_join(biphase_publish_worker, NULL);
+  pthread_join(pilot_publish_worker, NULL);
+  pthread_join(biphase_publish_worker, NULL);
   pthread_join(tdrss_publish_worker, NULL);
 
   return 0;
