@@ -55,6 +55,7 @@ int counter = 0;
 struct Fifo libusb_fifo = {0}; 
 
 extern int16_t SouthIAm;
+extern int16_t InCharge;
 struct Fifo bi0_fifo = {0};
 
 /******************** Main Biphase Loop **************************/

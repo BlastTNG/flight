@@ -81,7 +81,6 @@ channel_t channel_list[] =
     { "tr_he3_fridge",    SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "tr_500_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "rox_bias",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "incharge", 1, 0, TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "bias_alsa_state_rox", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
