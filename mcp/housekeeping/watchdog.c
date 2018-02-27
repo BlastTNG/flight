@@ -36,7 +36,6 @@
 #include "watchdog.h"
 #include "biphase_hardware.h"
 #include "blast.h"
-#include "mpsse.h"
 #include "channels_tng.h"
 #include "mputs.h"
 
@@ -108,7 +107,7 @@ int initialize_watchdog(int m_timeout)
 
 /******* In Charge Functions *********/
 
-static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
+void set_incharge(int in_charge_from_wd) {
     static int first_call = 1;
     int in_charge=-1;
     static int incharge_old=-1;
@@ -121,8 +120,8 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
     } else if (init_timeout > 0) {
         init_timeout--;
     } else {
-        in_charge = mpsse_watchdog_get_incharge(ctx_passed_read);
-//        blast_warn("in_charge = %d, incharge_old = %d, SouthIAm = %d", in_charge, incharge_old, SouthIAm);
+        in_charge = in_charge_from_wd;
+        // blast_warn("in_charge = %d, incharge_old = %d, SouthIAm = %d", in_charge, incharge_old, SouthIAm);
         SET_SCALED_VALUE(incharge_Addr, in_charge);
         if (in_charge == SouthIAm) {
             // We're in charge!
@@ -147,24 +146,4 @@ static void set_incharge(struct mpsse_ctx *ctx_passed_read) {
         }
     }
     incharge_old = in_charge;
-}
-
-void watchdog_ping_and_set_in_charge(void) {
-    struct mpsse_ctx *ctx = NULL;
-    const char *serial = NULL;
-    uint8_t direction = 0x00; // All pins set to read (we only use pin 6)
-
-    nameThread("Watchdog");
-
-    if (!SouthIAm) {
-        serial = "FC1NS9HU"; // "FC1"
-    } else {
-        serial = "FC2"; // "?"
-    }
-    setup_mpsse(&ctx, serial, direction);
-    while (true) {
-        mpsse_watchdog_ping(ctx);
-        set_incharge(ctx);
-        usleep(100000); // 10 Hz
-    }
 }

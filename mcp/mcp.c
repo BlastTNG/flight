@@ -467,7 +467,6 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t tdrss_hga_send_worker;
   pthread_t bi0_send_worker;
-  pthread_t watchdog_in_charge_id;
   int use_starcams = 0;
 
 #ifndef USE_FIFO_CMD
@@ -613,12 +612,10 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&watchdog_in_charge_id, NULL, (void*)&watchdog_ping_and_set_in_charge, NULL);
-
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
+  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
   //initialize_bias_tone();
   startChrgCtrl(0);
 
