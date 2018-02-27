@@ -31,7 +31,7 @@
 #define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
 
 #define BI0_MAX_BUFFER_SIZE 250000 // maximum frame size at 1 Hz (i.e. 2 Mbits)
-#define BI0_ZERO_PADDING 1200 // number of bytes =0 to pad every 100 Hz
+#define BI0_ZERO_PADDING 250 // number of bytes =0 to pad at the end of every packet sent 
 
 extern struct Fifo bi0_fifo;
 

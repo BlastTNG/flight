@@ -135,7 +135,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     }
 
     // WATCHDOG READ IN CHARGE AND TOGGLE 
-    if (reader_done && (dt > 1.0)){
+    if (reader_done && (dt > 1.0) && false){
         gettimeofday(&begin, NULL);
         gettimeofday(&end, NULL);
         libusb_submit_transfer(watchdog_read_transfer);
@@ -291,7 +291,7 @@ void biphase_writer(void * arg)
             // packetization temporatry variables
         // TODO(javier): make the size commandable for bw
         uint8_t * chunk = NULL;
-        uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-PACKET_HEADER_SIZE-2;
+        uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-BI0_ZERO_PADDING-PACKET_HEADER_SIZE-2;
                     
         // packetize the linklist and send the chunks if there is data to packetize
         while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, ll->blk_size,
