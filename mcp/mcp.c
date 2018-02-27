@@ -77,7 +77,7 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
-#include "tdrss_hga.h"
+#include "highrate.h"
 #include "bitserver.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
@@ -115,7 +115,7 @@ struct tm start_time;
 #define NUM_TELEMETRIES 3
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 uint8_t * master_superframe = NULL;
-struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &tdrss_hga_fifo};
+struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
   pthread_t CommandDataFIFO;
   pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
-  pthread_t tdrss_hga_send_worker;
+  pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
   int use_starcams = 0;
 
@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
   linklist_generate_lookup(linklist_array);
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) linklist_array);
-  pthread_create(&tdrss_hga_send_worker, NULL, (void *) &tdrss_hga_compress_and_send, (void *) linklist_array);
+  pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) linklist_array);
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) linklist_array);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
