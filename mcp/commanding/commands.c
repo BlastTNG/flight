@@ -2407,6 +2407,8 @@ void InitCommandData()
         CommandData.roach[i].adc_rms = 0;
         CommandData.roach[i].test_tone = 0;
         CommandData.roach[i].new_atten = 0;
+        CommandData.roach[i].load_vna_amps = 0;
+        CommandData.roach[i].load_targ_amps = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2470,10 +2472,6 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
-    for (i = 0; i < NUM_ROACHES - 1; i++) {
-        CommandData.roach[i].load_vna_amps = 0;
-        CommandData.roach[i].load_targ_amps = 0;
-    }
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;

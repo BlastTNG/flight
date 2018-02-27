@@ -450,6 +450,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
     // TODO(Sam) Combine vna and targ cases into one?
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
+        blast_info("Roach%d, Loading VNA AMPS", m_roach->which);
         char *amps_path = m_roach->vna_amps_path[CommandData.roach[m_roach->which - 1].load_vna_amps - 1];
         blast_info("Amps file = %s", amps_path);
         FILE *fd = fopen(amps_path, "r");
@@ -475,7 +476,8 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
 
     if (CommandData.roach[m_roach->which - 1].load_targ_amps) {
-            char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
+        blast_info("Roach%d, Loading TARG AMPS", m_roach->which);
+        char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
         blast_info("Amps file = %s", amps_path);
         FILE *fd = fopen(amps_path, "r");
         if (!fd) {
@@ -523,7 +525,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     fftw_execute(m_roach->comb_plan);
     fftw_destroy_plan(m_roach->comb_plan);
     pthread_mutex_unlock(&fft_mutex);
-    // blast_info("Roach%d, ended FFT", m_roach->which);
     for (size_t i = 0; i < comb_fft_len; i++) {
         wave[i] /= comb_fft_len;
         // fprintf(f2,"%f, %f\n", creal(wave[i]), cimag(wave[i]));
