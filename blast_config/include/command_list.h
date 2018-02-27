@@ -137,7 +137,7 @@ enum singleCommand {
   level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
-  heater_supply_off, reboot_ljcryo1,
+  heater_supply_off, reboot_ljcryo1, bias_reset_rox,
     of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
     of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
     of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
