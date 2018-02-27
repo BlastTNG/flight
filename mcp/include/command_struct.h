@@ -369,6 +369,7 @@ struct CommandDataStruct {
   uint32_t pilot_bw;
   uint32_t biphase_bw;
   uint32_t biphase_clk_speed;
+  bool highrate_through_tdrss;
   bool biphase_clk_speed_changed;
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];

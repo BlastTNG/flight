@@ -1693,6 +1693,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
       blast_info("Changed highrate bw to %f kbps", rvalues[0]);
       break;
+    case highrate_through_tdrss:
+      if (ivalues[0]) {
+        CommandData.highrate_through_tdrss = true;
+      } else {
+        CommandData.highrate_through_tdrss = false;
+      }
     case pilot_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
@@ -2520,6 +2526,7 @@ void InitCommandData()
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_clk_speed_changed = false;
+    CommandData.highrate_through_tdrss = true;
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 

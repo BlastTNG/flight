@@ -814,6 +814,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Clock speed (kbps)", 100, 2000, 'f', "mpsse_clock_speed"}
     }
   },
+  {COMMAND(highrate_through_tdrss), "Path for Highrate downlink", GR_TELEM, 1,
+    {
+      {"Downlink highrate through TDRSS or Iridium", 0, 1, 'i', "highrate_through_tdrss"}
+    }
+  },
+
 
   /****************************************/
   /*************** Misc.  *****************/
