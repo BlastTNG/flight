@@ -628,7 +628,7 @@ void WatchPort(void* parameter)
     unsigned char extdat[256];
 
     char tname[6];
-    snprintf(tname, sizeof(tname), "COMM%1d", port + 1);
+    snprintf(tname, sizeof(tname), "COMM%1d", (int) (port + 1));
     nameThread(tname);
     // blast_startup("WatchPort startup\n");
 

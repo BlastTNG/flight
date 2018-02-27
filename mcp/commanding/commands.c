@@ -1695,22 +1695,28 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.iridium_bw = rvalues[0];
       break;
     case biphase_bw:
+      // Value entered by user in kbps but stored in bps
+      CommandData.biphase_bw = rvalues[0]*1000.0;
+      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+      break;
+    case biphase_clk_speed:
+      // Value entered by user in kbps but stored in bps
       if (rvalues[0] == 100) {
-        CommandData.biphase_bw = 100000;
-        CommandData.biphase_bw_changed = true;
+        CommandData.biphase_clk_speed = 100000;
+        CommandData.biphase_clk_speed_changed = true;
       } else if (rvalues[0] == 500) {
-        CommandData.biphase_bw = 500000;
-        CommandData.biphase_bw_changed = true;
+        CommandData.biphase_clk_speed = 500000;
+        CommandData.biphase_clk_speed_changed = true;
       } else if (rvalues[0] == 1000) {
-        CommandData.biphase_bw = 1000000;
-        CommandData.biphase_bw_changed = true;
+        CommandData.biphase_clk_speed = 1000000;
+        CommandData.biphase_clk_speed_changed = true;
       } else {
-        CommandData.biphase_bw_changed = false;
+        CommandData.biphase_clk_speed_changed = false;
         char *str;
         char *str2;
         char str3[1000];
-        asprintf(&str, "Biphase bw : %f kBps is not allowed (try 100, 500 or 1000).\n", rvalues[0]);
-        asprintf(&str2, "Biphase bw has not been changed, it\'s %d Bps", CommandData.biphase_bw);
+        asprintf(&str, "Biphase clk_speed : %f kbps is not allowed (try 100, 500 or 1000).\n", rvalues[0]);
+        asprintf(&str2, "Biphase clk_speed has not been changed, it\'s %d bps", CommandData.biphase_clk_speed);
         snprintf(str3, sizeof(str3), "%s %s", str, str2);
         blast_warn("%s", str3);
       }
@@ -2507,8 +2513,9 @@ void InitCommandData()
     CommandData.slot_sched = 0;
     CommandData.tdrss_bw = 6000;
     CommandData.iridium_bw = 2000;
-    CommandData.biphase_bw = 1000000; /* Bps */
-    CommandData.biphase_bw_changed = false;
+    CommandData.biphase_bw = 1000000; /* bps */
+    CommandData.biphase_clk_speed = 1000000; /* bps */
+    CommandData.biphase_clk_speed_changed = false;
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 

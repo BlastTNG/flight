@@ -254,7 +254,6 @@ static void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
-    synclink_close();
     watchdog_close();
     shutdown_bias_tone();
     diskmanager_shutdown();

@@ -98,6 +98,7 @@ void WriteAux(void)
     static channel_t* rateTdrssAddr;
     static channel_t* rateBiphaseAddr;
     static channel_t* rateIridiumAddr;
+    static channel_t* rateMPSSEClockAddr;
 
     static channel_t* statusMCCAddr;
     static channel_t* ploverAddr;
@@ -249,6 +250,8 @@ void WriteAux(void)
     SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
     SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw/1000);
     SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
+
+    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed/1000);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));

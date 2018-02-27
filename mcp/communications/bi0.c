@@ -265,8 +265,8 @@ void biphase_writer(void * arg)
 
     while (true) {
         // check if commanding data changed the bandwidth
-        if (CommandData.biphase_bw_changed) {
-            CommandData.biphase_bw_changed = false;
+        if (CommandData.biphase_clk_speed_changed) {
+            CommandData.biphase_clk_speed_changed = false;
                 mpsse_reset_purge_close(ctx);
                 usleep(1000);
                 setup_mpsse(&ctx, serial, direction);

@@ -27,11 +27,7 @@
 #include <stdint.h>
 #include "mpsse.h"
 
-int get_synclink_fd();
-void synclink_close();
-int setup_synclink();
 void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_t *lsb_data_out);
-
 void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction);
 
 
