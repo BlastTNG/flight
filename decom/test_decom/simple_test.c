@@ -65,7 +65,8 @@ int main(int argc, char *argv[]) {
   ioctl(fp, DECOM_IOC_RESET);
   usleep(100);
   printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", 2*(BI0_FRAME_SIZE)-1);
-  ioctl(fp, DECOM_IOC_FRAMELEN, 2*(BI0_FRAME_SIZE)-1);
+  // ioctl(fp, DECOM_IOC_FRAMELEN, 2*(BI0_FRAME_SIZE)-1);
+  ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
   usleep(100);
   printf("Force unlock:\n");
   ioctl(fp, DECOM_IOC_FORCE_UNLOCK);

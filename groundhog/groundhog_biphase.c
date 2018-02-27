@@ -33,6 +33,7 @@
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 #define BIPHASE_PACKET_SIZE (BIPHASE_FRAME_SIZE_BYTES-2-PACKET_HEADER_SIZE)
 #define BIPHASE_PACKET_WORD_START (7)
+#define BIPHASE_ZERO_PADDING 250 
 
 #define MAX_LL_SIZE (250000)
 
@@ -142,16 +143,21 @@ void biphase_receive(void *args)
           } else if ((i_word) == (BI0_FRAME_SIZE-1)) {
               get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
                                  &ll, &i_pkt, &n_pkt);
-              retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, BIPHASE_PACKET_SIZE, 
+              retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, 
+                                       BIPHASE_PACKET_SIZE-BIPHASE_ZERO_PADDING, 
                                        i_pkt, n_pkt, receive_buffer_stripped);
               memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
-              if ((retval == 0) && (ll != NULL)){
-                  // The compressed linklist has been fully reconstructed
-                  blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
-                  decompress_linklist(local_superframe, ll, compressed_linklist);
-                  push_superframe(local_superframe, &biphase_superframes);
-                  memset(compressed_linklist, 0, compressed_linklist_size);
-                  compressed_linklist_size = 0;
+              if ((retval == 0) && (ll != NULL)) {
+                  if (!read_allframe(local_superframe, compressed_linklist)) {
+                      // The compressed linklist has been fully reconstructed
+                      blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
+                      decompress_linklist(local_superframe, ll, compressed_linklist);
+                      push_superframe(local_superframe, &biphase_superframes);
+                      memset(compressed_linklist, 0, compressed_linklist_size);
+                      compressed_linklist_size = 0;
+                  } else {
+                      printf("[Biphase] Received an allframe :)\n");
+                  }
               }
           }
           i_word++;

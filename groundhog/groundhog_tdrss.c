@@ -102,7 +102,7 @@ void tdrss_receive(void *arg) {
           }
           push_superframe(local_superframe, &tdrss_superframes);
       } else {
-          blast_info("\nReceived an all frame :)\n");
+          blast_info("[TDRSS HGA] Received an allframe :)\n");
       }
       memset(header_buffer, 0, PACKET_HEADER_SIZE);
   }

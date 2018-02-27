@@ -81,7 +81,7 @@ void pilot_receive(void *arg) {
       */
       push_superframe(local_superframe, &pilot_superframes);
     } else {
-      blast_info("\nReceived an all frame :)\n");
+      blast_info("[Pilot] Received an allframe :)\n");
     }
   }
 }
