@@ -45,6 +45,8 @@
 #include "biphase_hardware.h"
 #include "watchdog.h"
 
+#define WATCHDOG_PING_TIMEOUT 0.25 // seconds between pings to the watchdog card
+
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 #define BIPHASE_FRAME_SIZE_NOCRC_BYTES (BI0_FRAME_SIZE*2 - 2)
 #define BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES (BI0_FRAME_SIZE*2 - 4)
@@ -62,7 +64,7 @@ uint16_t sync_word = 0xeb90;
 
 // callback function that is called when the read transfer for the watchdog is complete
 static LIBUSB_CALL void watchdog_read_cb(struct libusb_transfer * watchdog_read_transfer) {
-    blast_info("I am read_cb and I just read 0x%.6x", *(uint32_t *) watchdog_read_transfer->buffer);
+    // blast_info("I am read_cb and I just read 0x%.6x", *(uint32_t *) watchdog_read_transfer->buffer);
     bool * reader_done = watchdog_read_transfer->user_data;
     *reader_done = true;
 }
@@ -81,10 +83,9 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     static struct libusb_transfer *watchdog_read_transfer = NULL;
     static struct libusb_transfer *watchdog_write_transfer = NULL;
     static struct libusb_transfer *watchdog_read_req_transfer = NULL;
+
     static uint8_t watchdog_read_buffer[64] = {0x00};
-//    static uint8_t watchdog_commands[5] = {0x81, 0x87, // read pin state cmd with immediate return
-//                                           0x80, 0x84, 0xFB}; // set pin state cmd 
-    static uint8_t watchdog_commands[3] = {0x80, 0x84, 0xFB}; // pin state cmd with immediate return
+    static uint8_t watchdog_commands[3] = {0x80, 0x84, 0xBF}; // pin state cmd with immediate return
     static uint8_t watchdog_read_req_commands[2] = {0x81, 0x87}; // set pin state cmd 
     static struct timeval begin = {0}, end = {0};
     static bool reader_done = false;
@@ -149,9 +150,9 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     }
 
     // enough time has elapsed, so request another read
-    if (dt > 1.0) {
-        blast_info("========= IN request read, dt=%f s ==========", dt);
-        blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
+    if (dt > WATCHDOG_PING_TIMEOUT) {
+        // blast_info("========= IN request read, dt=%f s ==========", dt);
+        // blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
 
         // submit transfer for the read pin state cmd
         libusb_submit_transfer(watchdog_read_transfer);
@@ -164,15 +165,15 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     // reader has finished retrieving state, so write the toggle pin 7 state
     // WATCHDOG READ IN CHARGE AND TOGGLE 
     if (reader_done) { 
-        blast_info("========= IN reader_done, writer_done=%d ==========", writer_done);
+        // blast_info("========= IN reader_done, writer_done=%d ==========", writer_done);
         // set in charge based on latest read
         in_charge_from_wd = (watchdog_read_buffer[2] & 0x40) >> 6; // get pin 6 state
-        blast_info("in charge from watchdog reads %d", in_charge_from_wd);
+        // blast_info("in charge from watchdog reads %d", in_charge_from_wd);
         set_incharge(in_charge_from_wd);
 
         // toggle pin 7 for the watchdog ping and request read pin state
         watchdog_commands[1] = (watchdog_read_buffer[2]) ^ (1 << 7);
-        blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[1], ((watchdog_commands[1]&(0x80))>>7));
+        // blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[1], ((watchdog_commands[1]&(0x80))>>7));
  
         // submit transfer to request pin state again and to set the current pin state
         libusb_submit_transfer(watchdog_write_transfer);
@@ -230,7 +231,8 @@ void biphase_writer(void * arg)
     // 0xFB = 0b11111011 leaving pin 6 to read for in_charge
     // 0x83 = 0b10000011, 0xC1 = 0b11000001 
     const char *serial = NULL;
-    uint8_t direction = 0xFB; 
+    // uint8_t direction = 0xFB; 
+    uint8_t direction = 0xBF; 
     setup_mpsse(&ctx, NULL, direction);
 
     // libubs setup
