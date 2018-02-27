@@ -809,7 +809,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(biphase_bw), "mpsse clock speed", GR_TELEM, 1,
+  {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
     {
       {"Clock speed (kbps)", 100, 2000, 'f', "mpsse_clock_speed"}
     }

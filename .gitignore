@@ -29,6 +29,7 @@ groundhog/build
 
 test_programs/synclink/build
 test_programs/mpsse/build
+test_programs/flash_eeprom/libftdi
 
 decomd/build
 decom/test_decom/test_decom
