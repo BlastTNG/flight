@@ -142,6 +142,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
 
         gettimeofday(&begin, NULL);
         gettimeofday(&end, NULL);
+
         blast_info("========= IN reader_done, dt=%f s ==========", dt);
         libusb_submit_transfer(watchdog_read_transfer);
         blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
