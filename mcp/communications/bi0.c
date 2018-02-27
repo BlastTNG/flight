@@ -60,50 +60,62 @@ struct Fifo bi0_fifo = {0};
 struct mpsse_ctx *ctx = NULL;
 uint16_t sync_word = 0xeb90;
 
-bool reader_done = false;
-
+// callback function that is called when the read transfer for the watchdog is complete
 static LIBUSB_CALL void watchdog_read_cb(struct libusb_transfer * watchdog_read_transfer) {
-    // blast_info("I am read_cb and I just read 0x%.2x, 0x%.2x, 0x%.2x", watchdog_read_transfer->buffer[0], watchdog_read_transfer->buffer[1], watchdog_read_transfer->buffer[2]);
-    reader_done = true;
+    blast_info("I am read_cb and I just read 0x%.6x", *(uint32_t *) watchdog_read_transfer->buffer);
+    bool * reader_done = watchdog_read_transfer->user_data;
+    *reader_done = true;
 }
 
+// callback function that is called when the write transfer for the watchdog is complete
+static LIBUSB_CALL void watchdog_write_cb(struct libusb_transfer * watchdog_write_transfer) {
+    //blast_info("I am write_cb");
+    bool * writer_done = watchdog_write_transfer->user_data;
+    *writer_done = true;
+}
 
 static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_transfer) {
     static uint8_t * doublerbuffer;
     static uint8_t * zerobuffer;
-    static int first_time = 1;
-    static int counter = 0;
 
     static struct libusb_transfer *watchdog_read_transfer = NULL;
     static struct libusb_transfer *watchdog_write_transfer = NULL;
-    static uint8_t watchdog_read_buffer[3] = {0x00, 0x00, 0x00};
-    static uint8_t watchdog_commands[5] = {0x81, 0x87, 0x80, 0x84, 0xFB};
-    static struct timeval begin, end;
+    static uint8_t watchdog_read_buffer[3] = {0x00};
+    static uint8_t watchdog_commands[5] = {0x81, 0x87, // read pin state cmd with immediate return
+                                           0x80, 0x84, 0xFB}; // set pin state cmd 
+    static struct timeval begin = {0}, end = {0};
+    static bool reader_done = false;
+    static bool writer_done = false;
 
     uint8_t *read_buf = NULL;
     int data_present = 0;
     int in_charge_from_wd = -1;
     double dt = 0;
 
+    static int first_time = 1;
     if (first_time) {
         // allocate memory for callback function
         doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
         zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
         first_time = 0;
 
-        // WATCHDOG READ 
+        // WATCHDOG READ SETUP
         watchdog_read_transfer = libusb_alloc_transfer(0);
-        libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, (void *) watchdog_read_buffer,
-                                  3, watchdog_read_cb, watchdog_read_transfer, 2000);
+        libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
+                                    (void *) watchdog_read_buffer, 3, watchdog_read_cb, 
+                                    &reader_done, 2000);
         libusb_submit_transfer(watchdog_read_transfer);
 
-        // WATCHDOG PING
+        // WATCHDOG PING SETUP
         watchdog_write_transfer = libusb_alloc_transfer(0);
-        libusb_fill_bulk_transfer(watchdog_write_transfer, ctx->usb_dev, ctx->out_ep, (void *) watchdog_commands,
-                                  5, NULL, NULL, 2000);
+        libusb_fill_bulk_transfer(watchdog_write_transfer, ctx->usb_dev, ctx->out_ep, 
+                                    (void *) watchdog_commands, 5, watchdog_write_cb, 
+                                    &writer_done, 2000);
         libusb_submit_transfer(watchdog_write_transfer);
-        gettimeofday(&begin, NULL);
+
+        // get initial time and sync clock markers
         gettimeofday(&end, NULL);
+        memcpy(&begin, &end, sizeof(struct timeval));
     } else {
 /*
         printf("Data that was sent\n");
@@ -114,20 +126,16 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         }
         printf("\n");
 */
-       if (biphase_write_transfer->actual_length != (BIPHASE_FRAME_SIZE_BYTES+3)) {
-           blast_dbg("Transfer %d != %d", biphase_write_transfer->actual_length, BIPHASE_FRAME_SIZE_BYTES+3);
+        if (biphase_write_transfer->actual_length != (BIPHASE_FRAME_SIZE_BYTES+3)) {
+            blast_dbg("Transfer %d != %d", biphase_write_transfer->actual_length,
+                                             BIPHASE_FRAME_SIZE_BYTES+3);
         }
-    }
-
-    if (!first_time) {
         gettimeofday(&end, NULL);
-        dt = (end.tv_sec+(end.tv_usec/1000000.0) - (begin.tv_sec+(begin.tv_usec/1000000.0)));
+        dt = (end.tv_sec+(end.tv_usec/1000000.0)) - (begin.tv_sec+(begin.tv_usec/1000000.0));
     }
 
     if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
-        // syncword header for the packet and invert syncword for next send
         read_buf = getFifoRead(&libusb_fifo);
-        // printf("Start %d, end %d\n", libusb_fifo.start, libusb_fifo.end);
         data_present = 1;
     } else { // nothing in the fifo from the main thread, so send zeros
         read_buf = zerobuffer;
@@ -135,26 +143,34 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     }
 
     // WATCHDOG READ IN CHARGE AND TOGGLE 
-    if (reader_done && (dt > 0.1)){
+    if (reader_done && (dt > 1.0)) {
+        // set in charge based on latest read
         in_charge_from_wd = (watchdog_read_buffer[2] & 0x40) >> 6;
         blast_info("in charge from watchdog reads %d", in_charge_from_wd);
         set_incharge(in_charge_from_wd);
 
-        gettimeofday(&begin, NULL);
-        gettimeofday(&end, NULL);
+        // sync clocks
+        memcpy(&begin, &end, sizeof(struct timeval));
 
-        blast_info("========= IN reader_done, dt=%f s ==========", dt);
+        // submit transfer for the read pin state
+        blast_info("========= IN reader_done, dt=%f s, writer_done=%d ==========", dt, writer_done);
         libusb_submit_transfer(watchdog_read_transfer);
         blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
+
+        // toggle pin 7 for the watchdog ping
         watchdog_commands[3] = (watchdog_read_buffer[2])^(1 << 7);
         blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[3], ((watchdog_commands[3]&(0x80))>>7));
+ 
+        // submit transfer to request pin state again and to set the current pin state
         libusb_submit_transfer(watchdog_write_transfer);
         reader_done = false;
     }
 
-    // add headers and doubling data
+    // syncword header for the packet and invert syncword for next send
     *(uint16_t *) read_buf = sync_word;
     sync_word = ~sync_word;
+
+    // data doubling (i.e. switch byte endianness)
     mpsse_biphase_write_data(ctx, (void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
     if (data_present) decrementFifo(&libusb_fifo);
 
@@ -176,21 +192,19 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
 void libusb_handle_all_events(libusb_context * usb_ctx)
 {
     struct timeval begin, end;
-    // struct timeval notime = {0};
-
     nameThread("HandleEvents");
 
     while (true) {
-            // handle usb events
-            gettimeofday(&begin, NULL);
-            int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
-            // int retval = libusb_handle_events_timeout(usb_ctx, &notime); // wait for data to be clocked
-            gettimeofday(&end, NULL);
-            if (retval != LIBUSB_SUCCESS) {
-                printf("Handle events returned: %s\n", libusb_strerror(retval));
-                  blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
-                           (begin.tv_sec+(begin.tv_usec/1000000.0))));
-            }
+				// handle usb events
+				gettimeofday(&begin, NULL);
+				int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
+				// int retval = libusb_handle_events_timeout(usb_ctx, &notime); // nonblock data clocking 
+				gettimeofday(&end, NULL);
+				if (retval != LIBUSB_SUCCESS) {
+						printf("Handle events returned: %s\n", libusb_strerror(retval));
+							blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
+											                        (begin.tv_sec+(begin.tv_usec/1000000.0))));
+				}
     }
 }
 
