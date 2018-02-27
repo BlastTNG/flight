@@ -231,7 +231,6 @@ void biphase_writer(void * arg)
     // 0xFB = 0b11111011 leaving pin 6 to read for in_charge
     // 0x83 = 0b10000011, 0xC1 = 0b11000001 
     const char *serial = NULL;
-    // uint8_t direction = 0xFB; 
     uint8_t direction = 0xBF; 
     setup_mpsse(&ctx, NULL, direction);
 

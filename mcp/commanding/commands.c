@@ -1685,6 +1685,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
+    case use_linklist:
+      copysvalue(CommandData.linklist_name, svalues[0]);
+      copysvalue(CommandData.telemetry_for_linklist, svalues[1]);
     case timeout:        // Set timeout
       CommandData.timeout = rvalues[0];
       break;
@@ -2527,6 +2530,8 @@ void InitCommandData()
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_clk_speed_changed = false;
     CommandData.highrate_through_tdrss = true;
+    copysvalue(CommandData.linklist_name, "test.ll");
+    copysvalue(CommandData.telemetry_for_linklist, "biphase");
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 

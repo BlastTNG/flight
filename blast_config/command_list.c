@@ -312,7 +312,7 @@ struct scom scommands[xyzzy + 1] = {
  * l :  parameter is 32 bit unnormalised integer. Max is CMD_L_MAX
  * f :  parameter is 16 bit renormalised floating point
  * d :  parameter is 32 bit renormalised floating point
- * s :  parameter is 7-bit character string
+ * s :  parameter is 7-bit character string JOY: actually 32 char long
  */
 struct mcom mcommands[plugh + 2] = {
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
@@ -790,6 +790,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
+  {COMMAND(use_linklist), "change linklist", GR_TELEM, 2,
+    {
+      {"linklist name", 0, 32, 's', "NONE"},
+      {"telemetry path", 0, 32, 's', "NONE"}
+    }
+  },
 
   {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
     {
@@ -814,9 +820,9 @@ struct mcom mcommands[plugh + 2] = {
       {"Clock speed (kbps)", 100, 2000, 'f', "mpsse_clock_speed"}
     }
   },
-  {COMMAND(highrate_through_tdrss), "Path for Highrate downlink", GR_TELEM, 1,
+  {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
     {
-      {"Downlink highrate through TDRSS or Iridium", 0, 1, 'i', "highrate_through_tdrss"}
+      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
     }
   },
 
