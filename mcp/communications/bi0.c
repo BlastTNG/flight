@@ -135,7 +135,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     }
 
     // WATCHDOG READ IN CHARGE AND TOGGLE 
-    if (reader_done && (dt > 1.0) && false){
+    if (reader_done && (dt > 1.0)){
         gettimeofday(&begin, NULL);
         gettimeofday(&end, NULL);
         libusb_submit_transfer(watchdog_read_transfer);
