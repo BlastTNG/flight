@@ -19,7 +19,7 @@ tr_350_fpa 255 1
 tr_he3_fridge 255 1
 tr_500_fpa 255 1
 rox_bias 255 1
-mcc_status 255 1
+status_mcc 255 1
 stage_chopper 0 10
 time 1 1
 _TLM_CHECKSUM_
