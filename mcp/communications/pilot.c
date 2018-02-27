@@ -54,6 +54,8 @@
 #include "blast.h"
 #include "mputs.h"
 
+extern int16_t InCharge;
+
 struct Fifo pilot_fifo = {0};
 
 void pilot_compress_and_send(void *arg) {
@@ -73,7 +75,7 @@ void pilot_compress_and_send(void *arg) {
     // get the current pointer to the pilot linklist
     ll = ll_array[0];
 
-    if (!fifoIsEmpty(&pilot_fifo) && ll) { // data is ready to be sent
+    if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
       // send allframe if necessary
       if (!allframe_count) {

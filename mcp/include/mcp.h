@@ -53,12 +53,5 @@ extern struct tm start_time;
 
 #define MAX_LINE_LENGTH 1024
 
-// #define USE_FIFO_CMD
-
-// preserve use of FIFO or SIP, not both
-#ifndef USE_FIFO_CMD
-#define USE_SIP_CMD
-#endif
-
 // #define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
 #endif

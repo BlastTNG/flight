@@ -85,7 +85,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled); // commands.c
 
 
-#ifdef USE_SIP_CMD
 int sip_setserial(const char *input_tty)
 {
   int fd;
@@ -118,9 +117,7 @@ int sip_setserial(const char *input_tty)
 
   return fd;
 }
-#endif    // USE_SIP_CMD
 
-#ifdef USE_SIP_CMD
 static float ParseGPS(unsigned char *data)
 {
   char exponent;
@@ -171,7 +168,6 @@ static void SendRequest(int req, char tty_fd)
   if (write(tty_fd, buffer, 3) < 0)
     berror(warning, "error sending SIP request\n");
 }
-#endif    // USE_SIP_CMD
 
 
 
@@ -274,7 +270,6 @@ static void SetParameters(enum multiCommand command, uint16_t *dataq, double* rv
     }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSPosition(unsigned char *indata)
 {
     double lat;
@@ -293,7 +288,6 @@ static void GPSPosition(unsigned char *indata)
 //        WritePrevStatus();
     }
 }
-#endif    // USE_SIP_CMD
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
@@ -330,7 +324,6 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSTime(unsigned char *indata)
 {
   float GPStime, offset;
@@ -390,10 +383,7 @@ static int DataQSize(int index)
 
   return size;
 }
-#endif    // USE_SIP_CMD
 
-
-#ifdef USE_FIFO_CMD
 void WatchFIFO(void* void_other_ip)
 {
     unsigned char buf[1];
@@ -485,9 +475,7 @@ void WatchFIFO(void* void_other_ip)
         pthread_mutex_unlock(&mutex);
     }
 }
-#endif  // USE_FIFO_CMD
 
-#ifdef USE_SIP_CMD
 
 struct LibraryStruct
 {
@@ -868,4 +856,3 @@ void WatchPort(void* parameter)
     }
 }
 
-#endif    // USE_SIP_CMD

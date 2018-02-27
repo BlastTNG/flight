@@ -462,15 +462,14 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t CommandDatacomm2;
+  pthread_t CommandDataFIFO;
   pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
   pthread_t tdrss_hga_send_worker;
   pthread_t bi0_send_worker;
   int use_starcams = 0;
 
-#ifndef USE_FIFO_CMD
-  pthread_t CommandDatacomm2;
-#endif
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
   // pthread_t xy_id;
 #endif
@@ -544,12 +543,9 @@ int main(int argc, char *argv[])
 //  initialize_sip_interface();
   initialize_dsp1760_interface();
 
-#ifdef USE_FIFO_CMD
-  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
-#else
+  pthread_create(&CommandDataFIFO, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-#endif
 #ifdef USE_XY_THREAD
   // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
