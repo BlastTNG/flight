@@ -80,9 +80,11 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
 
     static struct libusb_transfer *watchdog_read_transfer = NULL;
     static struct libusb_transfer *watchdog_write_transfer = NULL;
-    static uint8_t watchdog_read_buffer[3] = {0x00};
-    static uint8_t watchdog_commands[5] = {0x81, 0x87, // read pin state cmd with immediate return
-                                           0x80, 0x84, 0xFB}; // set pin state cmd 
+    static uint8_t watchdog_read_buffer[64] = {0x00};
+//    static uint8_t watchdog_commands[5] = {0x81, 0x87, // read pin state cmd with immediate return
+//                                           0x80, 0x84, 0xFB}; // set pin state cmd 
+    static uint8_t watchdog_commands[5] = {0x80, 0x84, 0xFB, // pin state cmd with immediate return
+                                           0x81, 0x87}; // set pin state cmd 
     static struct timeval begin = {0}, end = {0};
     static bool reader_done = false;
     static bool writer_done = false;
@@ -102,7 +104,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         // WATCHDOG READ SETUP
         watchdog_read_transfer = libusb_alloc_transfer(0);
         libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
-                                    (void *) watchdog_read_buffer, 3, watchdog_read_cb, 
+                                    (void *) watchdog_read_buffer, 64, watchdog_read_cb, 
                                     &reader_done, 2000);
         libusb_submit_transfer(watchdog_read_transfer);
 
@@ -152,18 +154,19 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         // sync clocks
         memcpy(&begin, &end, sizeof(struct timeval));
 
-        // submit transfer for the read pin state
+        // submit transfer for the read pin state cmd
         blast_info("========= IN reader_done, dt=%f s, writer_done=%d ==========", dt, writer_done);
         libusb_submit_transfer(watchdog_read_transfer);
         blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
 
-        // toggle pin 7 for the watchdog ping
-        watchdog_commands[3] = (watchdog_read_buffer[2])^(1 << 7);
-        blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[3], ((watchdog_commands[3]&(0x80))>>7));
+        // toggle pin 7 for the watchdog ping and request read pin state
+        watchdog_commands[1] = (watchdog_read_buffer[2])^(1 << 7);
+        blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[1], ((watchdog_commands[1]&(0x80))>>7));
  
         // submit transfer to request pin state again and to set the current pin state
         libusb_submit_transfer(watchdog_write_transfer);
         reader_done = false;
+        memset(watchdog_read_buffer, 0 ,3);
     }
 
     // syncword header for the packet and invert syncword for next send
