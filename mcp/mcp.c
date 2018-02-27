@@ -562,7 +562,6 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
-// initialize linklists
   // initialize superframe FIFO
   define_superframe();
   master_superframe = calloc(1, superframe_size);
@@ -615,8 +614,8 @@ int main(int argc, char *argv[])
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
-  //initialize_bias_tone();
+  // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
+  // initialize_bias_tone();
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
