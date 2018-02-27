@@ -166,6 +166,8 @@ typedef struct roach_state {
     double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
     char *last_cal_path;
     char *cal_path_root;
+    // array of tone amplitudes used for calibration
+    double cal_amps[MAX_CHANNELS_PER_ROACH][5];
     // Python logs (for saving/reading response)
     char *qdr_log;
     char *find_kids_log;
