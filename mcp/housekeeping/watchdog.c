@@ -111,18 +111,15 @@ void set_incharge(int in_charge_from_wd) {
     static int first_call = 1;
     int in_charge=-1;
     static int incharge_old=-1;
-    static channel_t* incharge_Addr;
     static int init_timeout = WATCHDOG_CTRL_INIT_TIMEOUT;
     if (first_call == 1) {
         blast_info("Called set_incharge for the first time");
-        incharge_Addr = channels_find_by_name("incharge");
         first_call = 0;
     } else if (init_timeout > 0) {
         init_timeout--;
     } else {
         in_charge = in_charge_from_wd;
         // blast_warn("in_charge = %d, incharge_old = %d, SouthIAm = %d", in_charge, incharge_old, SouthIAm);
-        SET_SCALED_VALUE(incharge_Addr, in_charge);
         if (in_charge == SouthIAm) {
             // We're in charge!
             // set incharge here to 1 if the && comes true
