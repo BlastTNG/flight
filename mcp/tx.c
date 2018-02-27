@@ -133,7 +133,6 @@ void WriteAux(void)
         _ch[1] = channels_find_by_name(buf); \
     })
 
-    static int incharge = -1;
     time_t t;
     int i_point;
     struct timeval tv;
@@ -174,20 +173,6 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
-
-    InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
-
-    if (InCharge != incharge && InCharge) {
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-        blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
-        CommandData.actbus.force_repoll = 1;
-    } else if (InCharge != incharge) {
-        blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-    }
-
-
-    incharge = InCharge;
 
     gettimeofday(&tv, &tz);
 
@@ -261,6 +246,7 @@ void WriteAux(void)
             (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
             (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
             (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
+            (InCharge ? 0x20 : 0x00) +               // 0x20
 //            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
             ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00
 

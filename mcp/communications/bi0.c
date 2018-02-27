@@ -55,6 +55,7 @@ int counter = 0;
 struct Fifo libusb_fifo = {0}; 
 
 extern int16_t SouthIAm;
+extern int16_t InCharge;
 struct Fifo bi0_fifo = {0};
 
 /******************** Main Biphase Loop **************************/
@@ -169,7 +170,9 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         // set in charge based on latest read
         in_charge_from_wd = (watchdog_read_buffer[2] & 0x40) >> 6; // get pin 6 state
         // blast_info("in charge from watchdog reads %d", in_charge_from_wd);
+        printf("Bi0 incharge before %d\n", InCharge);
         set_incharge(in_charge_from_wd);
+        printf("Bi0 incharge after %d\n", InCharge);
 
         // toggle pin 7 for the watchdog ping and request read pin state
         watchdog_commands[1] = (watchdog_read_buffer[2]) ^ (1 << 7);

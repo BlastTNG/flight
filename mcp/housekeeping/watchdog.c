@@ -38,7 +38,7 @@
 #include "blast.h"
 #include "channels_tng.h"
 #include "mputs.h"
-
+#include "command_struct.h"
 
 #define BI0_INCHARGE_CALL_PERIOD 250000 // Number of microseconds between in charge calls.
 #define WATCHDOG_CTRL_INIT_TIMEOUT 10   // Wait 10 calls before we actually decide whether we are in charge.
@@ -133,6 +133,7 @@ void set_incharge(int in_charge_from_wd) {
                 } else {
                     blast_info("I, North, have now gained control");
                 }
+                CommandData.actbus.force_repoll = 1;
             }
         } else {
             InCharge = 0;
