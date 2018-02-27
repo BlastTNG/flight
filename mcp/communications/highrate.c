@@ -41,42 +41,42 @@
 #include "bitserver.h"
 #include "mputs.h"
 #include "comms_serial.h"
-#include "tdrss_hga.h"
+#include "highrate.h"
 
-struct Fifo tdrss_hga_fifo = {0};
+struct Fifo highrate_fifo = {0};
 
-void tdrss_hga_compress_and_send(void *arg) {
+void highrate_compress_and_send(void *arg) {
 
   linklist_t * ll = NULL;
   linklist_t ** ll_array = arg;
 
-  unsigned int fifosize = MAX(TDRSS_HGA_MAX_SIZE, allframe_size);
+  unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
 
   comms_serial_t * serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, TDRSS_HGA_PORT);
+  comms_serial_connect(serial, HIGHRATE_PORT);
   comms_serial_setspeed(serial, B115200);
 
   uint8_t * header_buffer = calloc(1, PACKET_HEADER_SIZE);
   uint8_t * compressed_buffer = calloc(1, fifosize);
   int allframe_count = 0;
 
-  nameThread("TDRSS_HGA");
+  nameThread("Highrate");
 
   while (true) {
 
     // get the current pointer to the pilot linklist
     ll = ll_array[2];
 
-    if (!fifoIsEmpty(&tdrss_hga_fifo) && ll) { // data is ready to be sent
+    if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
       if (!allframe_count) {
-      //  write_allframe(compressed_buffer, getFifoRead(&tdrss_hga_fifo));
+      //  write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
       //  sendToBITSender(&pilotsender, compressed_buffer, allframe_size, 0);
       }
 
       // compress the linklist
-      int retval = compress_linklist(compressed_buffer, ll, getFifoRead(&tdrss_hga_fifo));
-      decrementFifo(&tdrss_hga_fifo);
+      int retval = compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
+      decrementFifo(&highrate_fifo);
 
       if (!retval) continue;
 
@@ -85,13 +85,13 @@ void tdrss_hga_compress_and_send(void *arg) {
       // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
       write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE);
 
-      // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_tdrss_hga_bw))
+      // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_highrate_bw))
       // send the data to the ground station via ttyHighRate
       // comms_serial_write(serial, compressed_buffer, ll->blk_size);
       write(serial->sock->fd, compressed_buffer, ll->blk_size);
 
-      memset(compressed_buffer, 0, TDRSS_HGA_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % TDRSS_HGA_ALLFRAME_PERIOD;
+      memset(compressed_buffer, 0, HIGHRATE_MAX_SIZE);
+      allframe_count = (allframe_count + 1) % HIGHRATE_ALLFRAME_PERIOD;
     } else {
       usleep(100000); // zzz...
     }

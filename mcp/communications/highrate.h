@@ -19,18 +19,18 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#ifndef INCLUDE_TDRSS_HGA_H
-#define INCLUDE_TDRSS_HGA_H
+#ifndef INCLUDE_HIGHRATE_H
+#define INCLUDE_HIGHRATE_H
 
 // TODO(javier): make allframe period commandable
-#define TDRSS_HGA_MAX_SIZE (11500)
-#define TDRSS_HGA_PORT "/dev/ttyHighRate"
-#define TDRSS_HGA_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
+#define HIGHRATE_MAX_SIZE (11500)
+#define HIGHRATE_PORT "/dev/ttyHighRate"
+#define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
-extern struct Fifo tdrss_hga_fifo;
+extern struct Fifo highrate_fifo;
 
-void tdrss_hga_compress_and_send(void *);
+void highrate_compress_and_send(void *);
 
 
-#endif /* INCLUDE_TDRSS_HGA_H */
+#endif /* INCLUDE_HIGHRATE_H */
 
