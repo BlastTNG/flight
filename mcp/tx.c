@@ -95,9 +95,9 @@ void WriteAux(void)
 {
     static channel_t* timeAddr;
     static channel_t* timeUSecAddr;
-    static channel_t* rateTdrssAddr;
+    static channel_t* rateHighrateAddr;
     static channel_t* rateBiphaseAddr;
-    static channel_t* rateIridiumAddr;
+    static channel_t* ratePilotAddr;
     static channel_t* rateMPSSEClockAddr;
 
     static channel_t* statusMCCAddr;
@@ -151,9 +151,10 @@ void WriteAux(void)
 
         timeAddr = channels_find_by_name("time");
         timeUSecAddr = channels_find_by_name("time_usec");
-        rateTdrssAddr = channels_find_by_name("rate_tdrss");
+        rateHighrateAddr = channels_find_by_name("rate_highrate");
         rateBiphaseAddr = channels_find_by_name("rate_biphase");
-        rateIridiumAddr = channels_find_by_name("rate_iridium");
+        ratePilotAddr = channels_find_by_name("rate_pilot");
+        rateMPSSEClockAddr = channels_find_by_name("mpsse_clock_speed");
 
         ploverAddr = channels_find_by_name("plover");
         statusEthAddr = channels_find_by_name("status_eth");
@@ -247,11 +248,11 @@ void WriteAux(void)
     SET_VALUE(timeout_addr[1], shared_data[1].timeout);
 
     SET_VALUE(ploverAddr, CommandData.plover);
-    SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
-    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw/1000);
-    SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
+    SET_VALUE(rateHighrateAddr, CommandData.highrate_bw); // Bps
+    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw); // Bps
+    SET_VALUE(ratePilotAddr, CommandData.pilot_bw); // Bps
 
-    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed/1000);
+    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));

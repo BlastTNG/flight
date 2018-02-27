@@ -1688,15 +1688,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case timeout:        // Set timeout
       CommandData.timeout = rvalues[0];
       break;
-    case tdrss_bw:
-      CommandData.tdrss_bw = rvalues[0];
+    case highrate_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
       break;
-    case iridium_bw:
-      CommandData.iridium_bw = rvalues[0];
+    case pilot_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
       break;
     case biphase_bw:
-      // Value entered by user in kbps but stored in bps
-      CommandData.biphase_bw = rvalues[0]*1000.0;
+      // Value entered by user in kbps but stored in Bps
+      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
       blast_info("Changed biphase bw to %f kbps", rvalues[0]);
       break;
     case biphase_clk_speed:
@@ -2511,9 +2515,9 @@ void InitCommandData()
     CommandData.at_float = 0;
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
-    CommandData.tdrss_bw = 6000;
-    CommandData.iridium_bw = 2000;
-    CommandData.biphase_bw = 1000000; /* bps */
+    CommandData.highrate_bw = 6000/8.0; /* Bps */
+    CommandData.pilot_bw = 2000/8.0; /* Bps */
+    CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_clk_speed_changed = false;
     CommandData.vtx_sel[0] = vtx_isc;

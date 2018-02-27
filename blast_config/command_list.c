@@ -791,21 +791,21 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
+  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_tdrss"}
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
     }
   },
 
   {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (kbps)", 100, 2000, 'f', "rate_biphase"}
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
     }
   },
 
-  {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
+  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
     }
   },
 
