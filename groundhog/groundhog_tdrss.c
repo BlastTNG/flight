@@ -48,7 +48,6 @@ int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
 void tdrss_receive(void *arg) {
 
   linklist_t * ll = NULL;
-  uint32_t blk_size = 0;
 
   uint8_t *local_superframe = allocate_superframe();
   uint8_t *compressed_buffer = calloc(1, HIGHRATE_MAX_SIZE);
@@ -58,6 +57,7 @@ void tdrss_receive(void *arg) {
   uint32_t *serial_number = 0;
   uint16_t *i_pkt, *n_pkt;
   uint32_t *frame_number;
+  uint32_t transmit_size;
 
   initialize_circular_superframes(&tdrss_superframes);
 
@@ -92,12 +92,21 @@ void tdrss_receive(void *arg) {
       blocking_read(fd, header_buffer+4, PACKET_HEADER_SIZE-4);
     
       readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
-      blocking_read(fd, compressed_buffer, ll->blk_size);
+ 
+      // hijack frame number for transmit size
+      transmit_size = *frame_number;
+      if (transmit_size > ll->blk_size) {
+          blast_err("Transmit size larger than assigned linklist");
+      }
+
+      // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
+
+      blocking_read(fd, compressed_buffer, transmit_size);
 
       // decompress the linklist
       if (!read_allframe(local_superframe, compressed_buffer)) {
           blast_info("[TDRSS HGA] Received linklist with serial_number 0x%x\n", *serial_number);
-          if (!decompress_linklist(local_superframe, ll, compressed_buffer)) { 
+          if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
               continue;
           }
           push_superframe(local_superframe, &tdrss_superframes);

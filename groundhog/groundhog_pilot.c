@@ -65,8 +65,8 @@ void pilot_receive(void *arg) {
     // hijacking frame number for transmit size
     transmit_size = pilotrecver.frame_num; 
 
-    printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
-
+    // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
+ 
     if (blk_size < 0) {
       blast_info("Malformed packed received on Pilot\n");
       continue;
