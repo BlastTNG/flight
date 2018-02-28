@@ -314,8 +314,10 @@ static void bias_tone_callback(snd_async_handler_t *ahandler)
 void *bias_monitor(void *param)
 {
 	snd_pcm_state_t state;
-	int have_warned = 0;
+	snd_pcm_status_t* 	status;
+	int have_warned, have_warned_status = 0;
     int ret = 0;
+    int err;
     int first_time = 1;
     uint16_t bias_state = 0;
     static channel_t *bias_alsa_state_rox_channel;
@@ -328,6 +330,7 @@ void *bias_monitor(void *param)
     nameThread("BiasMonitor");
     blast_info("BiasMonitor thread startup.");
     clock_gettime(CLOCK_REALTIME, &ts);
+    snd_pcm_status_alloca(&status);
 
     while (!bias_tone_shutting_down) {
         bias_state = 0;
@@ -385,7 +388,13 @@ void *bias_monitor(void *param)
             blast_info("bias_state = %i.", bias_state);
             first_time = 0;
         }
+        if (((err = snd_pcm_status(handle, status)) < 0) && !have_warned_status) {
+                blast_info("Stream status error: %s\n", snd_strerror(err));
+                have_warned_status = 1;
+        }
+
         SET_SCALED_VALUE(bias_alsa_state_rox_channel, bias_state);
+
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 

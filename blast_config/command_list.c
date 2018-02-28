@@ -914,7 +914,7 @@ struct mcom mcommands[plugh + 2] = {
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
     {
-      {"ROX bias amplitude (0-100)", 0, 100, 'i', "NONE"}
+      {"ROX bias amplitude (0-64)", 0, 64, 'i', "NONE"}
     }
   },
   /***************************************/
