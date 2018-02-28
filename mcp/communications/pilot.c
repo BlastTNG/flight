@@ -65,7 +65,7 @@ void pilot_compress_and_send(void *arg) {
   struct BITSender pilotsender = {0};
   unsigned int fifosize = MAX(PILOT_MAX_SIZE, allframe_size);
   initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
-  linklist_t * ll = NULL;
+  linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
 
   uint8_t * compbuffer = calloc(1, fifosize);
@@ -77,6 +77,11 @@ void pilot_compress_and_send(void *arg) {
   while (1) {
     // get the current pointer to the pilot linklist
     ll = ll_array[PILOT_TELEMETRY_INDEX];
+    if (ll != ll_old) {
+        if (ll) blast_info("Pilot linklist set to \"%s\"", ll->name);
+        else blast_info("Pilot linklist set to NULL");
+    }
+    ll_old = ll;
 
     // get the current bandwidth
     bandwidth = CommandData.pilot_bw;

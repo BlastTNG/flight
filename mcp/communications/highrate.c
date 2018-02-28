@@ -48,7 +48,7 @@ struct Fifo highrate_fifo = {0};
 
 void highrate_compress_and_send(void *arg) {
 
-  linklist_t * ll = NULL;
+  linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
 
   unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
@@ -67,6 +67,11 @@ void highrate_compress_and_send(void *arg) {
 
     // get the current pointer to the pilot linklist
     ll = ll_array[HIGHRATE_TELEMETRY_INDEX];
+		if (ll != ll_old) {
+				if (ll) blast_info("Highrate linklist set to \"%s\"", ll->name);
+				else blast_info("Highrate linklist set to NULL");
+		}
+		ll_old = ll;
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary

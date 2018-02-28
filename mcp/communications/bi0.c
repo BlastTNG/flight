@@ -245,7 +245,7 @@ void biphase_writer(void * arg)
 
     // setup linklists
     linklist_t ** ll_array = arg;
-    linklist_t * ll = NULL;
+    linklist_t * ll = NULL, * ll_old = NULL;
     int allframe_count = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
   
@@ -278,6 +278,11 @@ void biphase_writer(void * arg)
         // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
         // get the current linklist
         ll = ll_array[BI0_TELEMETRY_INDEX];
+        if (ll != ll_old) {
+            if (ll) blast_info("BI0 linklist set to \"%s\"", ll->name);
+            else blast_info("BI0 linklist set to NULL");
+        }
+        ll_old = ll;
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 
