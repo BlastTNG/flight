@@ -261,7 +261,7 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
-    "${COMMUNICATIONS_DIR}"
+    "${COMMUNICATIONS_DIR}/include"
     "${MPSSE_DIR}"
     "${SYNCLINK_DIR}"
     "${LINKLIST_DIR}"
@@ -315,8 +315,8 @@ add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 define_file_basename_for_sources(sensors)
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 define_file_basename_for_sources(commanding)
-add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
-define_file_basename_for_sources(mcp_comms)
+add_library (communications OBJECT ${MCP_COMMUNICATIONS_SRCS} ${MCP_COMMUNICATIONS_HEADERS})
+define_file_basename_for_sources(communications)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 define_file_basename_for_sources(housekeeping)
 add_library (diskmanager OBJECT ${DISKMANAGER_SRCS} ${DISKMANAGER_HEADERS})
@@ -349,7 +349,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:housekeeping>
     $<TARGET_OBJECTS:diskmanager>
     $<TARGET_OBJECTS:commanding>
-    $<TARGET_OBJECTS:mcp_comms>
+    $<TARGET_OBJECTS:communications>
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>

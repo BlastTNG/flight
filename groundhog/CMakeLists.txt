@@ -134,7 +134,7 @@ include_directories (
     "${COMMS_DIR}/include"
     "${CONFIG_DIR}/include"
     "${LINKLIST_DIR}"
-    "${COMMUNICATIONS_DIR}"
+    "${COMMUNICATIONS_DIR}/include"
     )
 
 # add common objects

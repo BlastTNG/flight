@@ -281,8 +281,9 @@ void biphase_writer(void * arg)
     linklist_t ** ll_array = arg;
     linklist_t * ll = NULL, * ll_old = NULL;
     int allframe_count = 0;
-    uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
-  
+    uint32_t bandwidth = 0, transmit_size = 0;
+    uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE); 
+ 
     // packetization variables
     uint16_t i_pkt = 0;
     uint16_t n_pkt = 0;
@@ -318,6 +319,9 @@ void biphase_writer(void * arg)
         }
         ll_old = ll;
 
+        // get the current bandwidth
+        bandwidth = CommandData.biphase_bw;
+
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 
             // send allframe if necessary
@@ -330,6 +334,9 @@ void biphase_writer(void * arg)
             compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
             decrementFifo(&bi0_fifo);
 
+            // compute the transmit size based on bandwidth
+            transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -340,11 +347,11 @@ void biphase_writer(void * arg)
             uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-BI0_ZERO_PADDING-PACKET_HEADER_SIZE-2;
                         
             // packetize the linklist and send the chunks if there is data to packetize
-            while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, ll->blk_size,
+            while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, transmit_size,
                                            &chunksize, &i_pkt, &n_pkt))) {
                 // copy the data, prepending with header
                 uint8_t * write_buf = getFifoWrite(&libusb_fifo); 
-                writeHeader(write_buf+2, *(uint32_t *) ll->serial, count, i_pkt, n_pkt);
+                writeHeader(write_buf+2, *(uint32_t *) ll->serial, transmit_size, i_pkt, n_pkt);
                 memcpy(write_buf+PACKET_HEADER_SIZE+2, chunk, chunksize);
                     incrementFifo(&libusb_fifo);
                     count++;

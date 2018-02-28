@@ -57,10 +57,13 @@ void highrate_compress_and_send(void *arg) {
   comms_serial_connect(serial, HIGHRATE_PORT);
   comms_serial_setspeed(serial, B115200);
 
+  uint8_t * csbf_header = calloc(1, CSBF_HEADER_SIZE);
+  uint8_t csbf_checksum = 0;
   uint8_t * header_buffer = calloc(1, PACKET_HEADER_SIZE);
   uint8_t * compressed_buffer = calloc(1, fifosize);
   int allframe_count = 0;
   uint32_t bandwidth = 0, transmit_size = 0;
+  int i;
 
   nameThread("Highrate");
 
@@ -90,15 +93,36 @@ void highrate_compress_and_send(void *arg) {
 
       if (!retval) continue;
 
+      // compute the transmite size based on bandwidth
+      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+ 
+      // write the CSBF header
+      csbf_header[0] = HIGHRATE_SYNC1;
+      csbf_header[1] = (CommandData.highrate_through_tdrss) ? HIGHRATE_TDRSS_SYNC2 : HIGHRATE_IRIDIUM_SYNC2;
+      csbf_header[2] = HIGHRATE_ORIGIN_COMM1; // TODO(javier): check if this needs to be commanded 
+      csbf_header[3] = 0x00; // zero
+      csbf_header[4] = ((transmit_size+PACKET_HEADER_SIZE) >> 8) & 0xff; // msb of size
+      csbf_header[5] = (transmit_size+PACKET_HEADER_SIZE) & 0xff;  // lsb of size
+
+      // compute checksum
+      csbf_checksum = 0;
+      for (i = 2; i < CSBF_HEADER_SIZE; i++) csbf_checksum += csbf_header[i];
+      for (i = 0; i < PACKET_HEADER_SIZE; i++) csbf_checksum += header_buffer[i];
+      for (i = 0; i < transmit_size; i++) csbf_checksum += compressed_buffer[i];
+
       // have packet header serials match the linklist serials
-      writeHeader(header_buffer, *(uint32_t *) ll->serial, 0, 0, 1);
+      writeHeader(header_buffer, *(uint32_t *) ll->serial, transmit_size, 0, 1);
+
       // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
-      write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE);
+      write(serial->sock->fd, csbf_header, CSBF_HEADER_SIZE); // send csbf header 
+      write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE); // send our header
 
       // send the data to the ground station via ttyHighRate
       // comms_serial_write(serial, compressed_buffer, ll->blk_size);
-      transmit_size = MIN(ll->blk_size, bandwidth);
       write(serial->sock->fd, compressed_buffer, transmit_size);
+
+      // send the checksum as the last byte
+      write(serial->sock->fd, &csbf_checksum, 1);
 
       memset(compressed_buffer, 0, HIGHRATE_MAX_SIZE);
       allframe_count = (allframe_count + 1) % HIGHRATE_ALLFRAME_PERIOD;

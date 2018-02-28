@@ -27,6 +27,13 @@
 #define HIGHRATE_PORT "/dev/ttyHighRate"
 #define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
+#define CSBF_HEADER_SIZE 6
+#define HIGHRATE_SYNC1 0xfa
+#define HIGHRATE_TDRSS_SYNC2 0xff
+#define HIGHRATE_IRIDIUM_SYNC2 0xfd
+#define HIGHRATE_ORIGIN_COMM1 0x02
+#define HIGHRATE_ORIGIN_COMM2 0x0a 
+
 extern struct Fifo highrate_fifo;
 
 void highrate_compress_and_send(void *);
