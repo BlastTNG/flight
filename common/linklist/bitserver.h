@@ -112,6 +112,8 @@ uint8_t *getBITRecverAddr(struct BITRecver *, unsigned int *);
 
 int setBITSenderSerial(struct BITSender *, uint32_t );
 int setBITRecverSerial(struct BITRecver *, uint32_t );
+int setBITSenderFramenum(struct BITSender *, uint32_t);
+int setBITRecverFramenum(struct BITRecver *, uint32_t);
 
 int appendBITSenderAddr(struct BITSender *, unsigned int);
 int removeBITRecverAddr(struct BITRecver *);

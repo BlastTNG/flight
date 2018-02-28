@@ -37,7 +37,7 @@
 #include "linklist_compress.h"
 #include "blast.h"
 #include "mcp.h"
-// #include "command_struct.h"
+#include "command_struct.h"
 #include "FIFO.h"
 #include "bitserver.h"
 #include "mputs.h"
@@ -60,6 +60,7 @@ void highrate_compress_and_send(void *arg) {
   uint8_t * header_buffer = calloc(1, PACKET_HEADER_SIZE);
   uint8_t * compressed_buffer = calloc(1, fifosize);
   int allframe_count = 0;
+  uint32_t bandwidth = 0, transmit_size = 0;
 
   nameThread("Highrate");
 
@@ -72,6 +73,9 @@ void highrate_compress_and_send(void *arg) {
 				else blast_info("Highrate linklist set to NULL");
 		}
 		ll_old = ll;
+
+    // get the current bandwidth
+    bandwidth = CommandData.highrate_bw;
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
@@ -91,10 +95,10 @@ void highrate_compress_and_send(void *arg) {
       // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
       write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE);
 
-      // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_highrate_bw))
       // send the data to the ground station via ttyHighRate
       // comms_serial_write(serial, compressed_buffer, ll->blk_size);
-      write(serial->sock->fd, compressed_buffer, ll->blk_size);
+      transmit_size = MIN(ll->blk_size, bandwidth);
+      write(serial->sock->fd, compressed_buffer, transmit_size);
 
       memset(compressed_buffer, 0, HIGHRATE_MAX_SIZE);
       allframe_count = (allframe_count + 1) % HIGHRATE_ALLFRAME_PERIOD;

@@ -91,6 +91,7 @@ void pilot_compress_and_send(void *arg) {
       // send allframe if necessary
       if (!allframe_count) {
       //  write_allframe(compbuffer, getFifoRead(&pilot_fifo));
+      //  setBITSenderFramenum(&pilotsender, allframe_size);
       //  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
       }
 
@@ -100,12 +101,17 @@ void pilot_compress_and_send(void *arg) {
 
       if (!retval) continue;
 
+      // compute the transmit size based on bandwidth
+      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwith == size
+
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
 
+      // commendeer the framenum for total transmit size
+      setBITSenderFramenum(&pilotsender, transmit_size);
+
       // send the data to the ground station via bitsender
-      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwith == size
-      sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
+      sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
       allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;

@@ -578,6 +578,19 @@ int setBITRecverSerial(struct BITRecver *server, uint32_t serial) {
   return 1;
 }
 
+int setBITSenderFramenum(struct BITSender * server, uint32_t frame_num)
+{
+  server->frame_num = frame_num;
+  server->send_fifo->frame_num[server->send_fifo->end] = frame_num;
+  return 1;
+}
+
+int setBITRecverFramenum(struct BITRecver * server, uint32_t frame_num)
+{
+  server->frame_num = frame_num;
+  return 1;
+}
+
 /* -------------------------
  * --- setBITSenderAddr ----
  * -------------------------
