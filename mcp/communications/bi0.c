@@ -52,7 +52,6 @@
 #define BIPHASE_FRAME_SIZE_NOCRC_BYTES (BI0_FRAME_SIZE*2 - 2)
 #define BIPHASE_FRAME_SIZE_NOCRC_NOSYNC_BYTES (BI0_FRAME_SIZE*2 - 4)
 
-int counter = 0;
 struct Fifo libusb_fifo = {0}; 
 
 extern int16_t SouthIAm;
@@ -63,6 +62,8 @@ struct Fifo bi0_fifo = {0};
 
 struct mpsse_ctx *ctx = NULL;
 uint16_t sync_word = 0xeb90;
+bool mpsse_closing = false;
+bool just_reopened_mpsse = false;
 
 // callback function that is called when the read transfer for the watchdog is complete
 static LIBUSB_CALL void watchdog_read_cb(struct libusb_transfer * watchdog_read_transfer) {
@@ -79,8 +80,9 @@ static LIBUSB_CALL void watchdog_write_cb(struct libusb_transfer * watchdog_writ
 }
 
 static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_transfer) {
-    static uint8_t * doublerbuffer;
-    static uint8_t * zerobuffer;
+
+    static uint8_t *doublerbuffer = NULL;
+    static uint8_t *zerobuffer = NULL;
 
     static struct libusb_transfer *watchdog_read_transfer = NULL;
     static struct libusb_transfer *watchdog_write_transfer = NULL;
@@ -99,130 +101,161 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     double dt = 0;
 
     static int first_time = 1;
-    if (first_time) {
-        // allocate memory for callback function
-        doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
-        zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
-        first_time = 0;
 
-        // WATCHDOG READ SETUP
-        watchdog_read_transfer = libusb_alloc_transfer(0);
-        libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
-                                    (void *) watchdog_read_buffer, 64, watchdog_read_cb, 
-                                    &reader_done, 2000);
+    if (!mpsse_closing) {
+        if (first_time) {
+            // allocate memory for callback function
+            doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+            zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+            first_time = 0;
 
-        // WATCHDOG READ REQUEST SETUP
-        watchdog_read_req_transfer = libusb_alloc_transfer(0);
-        libusb_fill_bulk_transfer(watchdog_read_req_transfer, ctx->usb_dev, ctx->out_ep, 
-                                    (void *) watchdog_read_req_commands, 2, NULL, NULL, 2000);
+            // WATCHDOG READ SETUP
+            watchdog_read_transfer = libusb_alloc_transfer(0);
+            libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
+                                        (void *) watchdog_read_buffer, 64, watchdog_read_cb, 
+                                        &reader_done, 2000);
 
-        // WATCHDOG PING SETUP
-        watchdog_write_transfer = libusb_alloc_transfer(0);
-        libusb_fill_bulk_transfer(watchdog_write_transfer, ctx->usb_dev, ctx->out_ep, 
-                                    (void *) watchdog_commands, 3, watchdog_write_cb, 
-                                    &writer_done, 2000);
+            // WATCHDOG READ REQUEST SETUP
+            watchdog_read_req_transfer = libusb_alloc_transfer(0);
+            libusb_fill_bulk_transfer(watchdog_read_req_transfer, ctx->usb_dev, ctx->out_ep, 
+                                        (void *) watchdog_read_req_commands, 2, NULL, NULL, 2000);
 
-        // get initial time and sync clock markers
-        gettimeofday(&end, NULL);
-        memcpy(&begin, &end, sizeof(struct timeval));
-    } else {
-/*
-        printf("Data that was sent\n");
-        int i = 0;
-        for (i = 0; i < BIPHASE_FRAME_SIZE_BYTES+3; i++) {
-             if (i % 32 == 0) printf("\n");
-             printf("0x%.2x ", biphase_write_transfer->buffer[i]);
+            // WATCHDOG PING SETUP
+            watchdog_write_transfer = libusb_alloc_transfer(0);
+            libusb_fill_bulk_transfer(watchdog_write_transfer, ctx->usb_dev, ctx->out_ep, 
+                                        (void *) watchdog_commands, 3, watchdog_write_cb, 
+                                        &writer_done, 2000);
+
+            // get initial time and sync clock markers
+            gettimeofday(&end, NULL);
+            memcpy(&begin, &end, sizeof(struct timeval));
+        } else {
+            if (false) {
+                // debugging
+                printf("Data that was sent\n");
+                int i = 0;
+                for (i = 0; i < BIPHASE_FRAME_SIZE_BYTES+3; i++) {
+                     if (i % 32 == 0) printf("\n");
+                     printf("0x%.2x ", biphase_write_transfer->buffer[i]);
+                }
+                printf("\n");
+            }
+            if (biphase_write_transfer->actual_length != (BIPHASE_FRAME_SIZE_BYTES+3)) {
+                blast_dbg("Transfer %d != %d", biphase_write_transfer->actual_length,
+                                                 BIPHASE_FRAME_SIZE_BYTES+3);
+            }
+            gettimeofday(&end, NULL);
+            dt = (end.tv_sec+(end.tv_usec/1000000.0)) - (begin.tv_sec+(begin.tv_usec/1000000.0));
         }
-        printf("\n");
-*/
-        if (biphase_write_transfer->actual_length != (BIPHASE_FRAME_SIZE_BYTES+3)) {
-            blast_dbg("Transfer %d != %d", biphase_write_transfer->actual_length,
-                                             BIPHASE_FRAME_SIZE_BYTES+3);
+        if (just_reopened_mpsse & (!first_time)){
+            // usb_dev changed when reopned chip, need to update
+            libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
+                                        (void *) watchdog_read_buffer, 64, watchdog_read_cb, 
+                                        &reader_done, 2000);
+            libusb_fill_bulk_transfer(watchdog_read_req_transfer, ctx->usb_dev, ctx->out_ep, 
+                                        (void *) watchdog_read_req_commands, 2, NULL, NULL, 2000);
+            libusb_fill_bulk_transfer(watchdog_write_transfer, ctx->usb_dev, ctx->out_ep, 
+                                        (void *) watchdog_commands, 3, watchdog_write_cb, 
+                                        &writer_done, 2000);
+            just_reopened_mpsse = false;
         }
-        gettimeofday(&end, NULL);
-        dt = (end.tv_sec+(end.tv_usec/1000000.0)) - (begin.tv_sec+(begin.tv_usec/1000000.0));
+
+        if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
+            read_buf = getFifoRead(&libusb_fifo);
+            data_present = 1;
+        } else { // nothing in the fifo from the main thread, so send zeros
+            read_buf = zerobuffer;
+            data_present = 0;
+        }
+
+        // enough time has elapsed, so request another read
+        if (dt > WATCHDOG_PING_TIMEOUT) {
+            // submit transfer for the read pin state cmd
+            libusb_submit_transfer(watchdog_read_transfer);
+            libusb_submit_transfer(watchdog_read_req_transfer);
+
+            // sync clocks
+            memcpy(&begin, &end, sizeof(struct timeval));
+        }
+
+        // reader has finished retrieving state, get in_charge and toggle wd
+        if (reader_done) { 
+            // set in charge based on latest read
+            in_charge_from_wd = (watchdog_read_buffer[2] & 0x40) >> 6; // get pin 6 state
+            set_incharge(in_charge_from_wd);
+            // blast_info("in charge from watchdog reads %d", in_charge_from_wd);
+
+            // toggle pin 7 for the watchdog ping and write new state
+            watchdog_commands[1] = (watchdog_read_buffer[2]) ^ (1 << 7);
+            libusb_submit_transfer(watchdog_write_transfer);
+            reader_done = false;
+            memset(watchdog_read_buffer, 0 , 3);
+            // blast_info("Just wrote to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[1], ((watchdog_commands[1]&(0x80))>>7));
+        }
+
+        // syncword header for the packet and invert syncword for next send
+        *(uint16_t *) read_buf = sync_word;
+        sync_word = ~sync_word;
+
+        // data doubling (i.e. switch byte endianness)
+        mpsse_biphase_write_data(ctx, (void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
+        if (data_present) decrementFifo(&libusb_fifo);
+
+        // build the header for mpsse
+        biphase_write_transfer->buffer[0] = NEG_EDGE_OUT | MSB_FIRST | 0x10;
+        biphase_write_transfer->buffer[1] = (BIPHASE_FRAME_SIZE_BYTES-1) & 0xff;
+        biphase_write_transfer->buffer[2] = (BIPHASE_FRAME_SIZE_BYTES-1) >> 8;
+
+        // copy the data to the send_buffer
+        memcpy(biphase_write_transfer->buffer+3, doublerbuffer, BIPHASE_FRAME_SIZE_BYTES);
+
+        // zero the buffers for the next time around
+        memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+        memset(zerobuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+
+        libusb_submit_transfer(biphase_write_transfer);
     }
-
-    if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
-        read_buf = getFifoRead(&libusb_fifo);
-        data_present = 1;
-    } else { // nothing in the fifo from the main thread, so send zeros
-        read_buf = zerobuffer;
-        data_present = 0;
-    }
-
-    // enough time has elapsed, so request another read
-    if (dt > WATCHDOG_PING_TIMEOUT) {
-        // blast_info("========= IN request read, dt=%f s ==========", dt);
-        // blast_info("watchdog read buffer is: 0x%.2x, the toggle pin reads %d", watchdog_read_buffer[2], ((watchdog_read_buffer[2]&(0x80))>>7));
-
-        // submit transfer for the read pin state cmd
-        libusb_submit_transfer(watchdog_read_transfer);
-        libusb_submit_transfer(watchdog_read_req_transfer);
-
-        // sync clocks
-        memcpy(&begin, &end, sizeof(struct timeval));
-    }
-
-    // reader has finished retrieving state, so write the toggle pin 7 state
-    // WATCHDOG READ IN CHARGE AND TOGGLE 
-    if (reader_done) { 
-        // blast_info("========= IN reader_done, writer_done=%d ==========", writer_done);
-        // set in charge based on latest read
-        in_charge_from_wd = (watchdog_read_buffer[2] & 0x40) >> 6; // get pin 6 state
-        // blast_info("in charge from watchdog reads %d", in_charge_from_wd);
-        set_incharge(in_charge_from_wd);
-
-        // toggle pin 7 for the watchdog ping and request read pin state
-        watchdog_commands[1] = (watchdog_read_buffer[2]) ^ (1 << 7);
-        // blast_info("About to write to wd: 0x%.2x, with toggling pin set to %d", watchdog_commands[1], ((watchdog_commands[1]&(0x80))>>7));
- 
-        // submit transfer to request pin state again and to set the current pin state
-        libusb_submit_transfer(watchdog_write_transfer);
-        reader_done = false;
-        memset(watchdog_read_buffer, 0 ,3);
-    }
-
-    // syncword header for the packet and invert syncword for next send
-    *(uint16_t *) read_buf = sync_word;
-    sync_word = ~sync_word;
-
-    // data doubling (i.e. switch byte endianness)
-    mpsse_biphase_write_data(ctx, (void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
-    if (data_present) decrementFifo(&libusb_fifo);
-
-    // build the header for mpsse
-    biphase_write_transfer->buffer[0] = NEG_EDGE_OUT | MSB_FIRST | 0x10;
-    biphase_write_transfer->buffer[1] = (BIPHASE_FRAME_SIZE_BYTES-1) & 0xff;
-    biphase_write_transfer->buffer[2] = (BIPHASE_FRAME_SIZE_BYTES-1) >> 8;
-
-    // copy the data to the send_buffer
-    memcpy(biphase_write_transfer->buffer+3, doublerbuffer, BIPHASE_FRAME_SIZE_BYTES); // data
-
-    // zero the buffers for the next time around
-    memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
-    memset(zerobuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
-
-    libusb_submit_transfer(biphase_write_transfer);
 }
 
-void libusb_handle_all_events(libusb_context * usb_ctx)
+void libusb_handle_all_events(struct libusb_transfer *biphase_write_transfer)
 {
     struct timeval begin, end;
     nameThread("HandleEvents");
 
     while (true) {
-				// handle usb events
-				gettimeofday(&begin, NULL);
-				int retval = libusb_handle_events(usb_ctx); // wait for data to be clocked
-				// int retval = libusb_handle_events_timeout(usb_ctx, &notime); // nonblock data clocking 
-				gettimeofday(&end, NULL);
-				if (retval != LIBUSB_SUCCESS) {
-						printf("Handle events returned: %s\n", libusb_strerror(retval));
-							blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
-											                        (begin.tv_sec+(begin.tv_usec/1000000.0))));
-				}
+        if (!mpsse_closing) {
+            gettimeofday(&begin, NULL);
+            int retval = libusb_handle_events(ctx->usb_ctx); // blocking call: wait for data to be clocked
+            gettimeofday(&end, NULL);
+            if (retval != LIBUSB_SUCCESS) {
+                    blast_info("Handle events returned: %s", libusb_strerror(retval));
+                    blast_dbg("It took %f seconds", (end.tv_sec+(end.tv_usec/1000000.0) -
+                                                                (begin.tv_sec+(begin.tv_usec/1000000.0))));
+            }
+        } else {
+            biphase_write_transfer->flags |= LIBUSB_TRANSFER_FREE_BUFFER; // This also frees send_buffer
+            libusb_free_transfer(biphase_write_transfer);
+            pthread_exit(0);
+        }
     }
+}
+
+void setup_libusb_transfers(void) 
+{
+    struct libusb_transfer *biphase_write_transfer = NULL;
+    biphase_write_transfer = libusb_alloc_transfer(0);
+
+    pthread_t libusb_thread;
+
+    uint8_t *send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
+
+    // initial fill_bulk_transfer and callback to start things off
+    libusb_fill_bulk_transfer(biphase_write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer,
+                                BIPHASE_FRAME_SIZE_BYTES+3, biphase_write_cb, biphase_write_transfer, 2000);
+    // call this once to initialize transfer loop
+    biphase_write_cb(biphase_write_transfer);
+    // start the handle events parallel loop
+    pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) biphase_write_transfer);
 }
 
 void biphase_writer(void * arg)
@@ -234,13 +267,14 @@ void biphase_writer(void * arg)
     // 0x83 = 0b10000011, 0xC1 = 0b11000001 
     const char *serial = NULL;
     uint8_t direction = 0xBF; 
-    setup_mpsse(&ctx, NULL, direction);
+    uint32_t previous_clock_speed = CommandData.biphase_clk_speed;
 
-    // libubs setup
-    struct libusb_transfer *biphase_write_transfer = NULL;
-    biphase_write_transfer = libusb_alloc_transfer(0);
+    while (!setup_mpsse(&ctx, serial, direction)) {
+        blast_warn("Error opening mpsse. Will retry in 5s");
+        sleep(5);
+    }
 
-    // libusb variables
+    // biphase fifo
     allocFifo(&libusb_fifo, 128, BIPHASE_FRAME_SIZE_BYTES);
 
     // setup linklists
@@ -253,26 +287,26 @@ void biphase_writer(void * arg)
     uint16_t i_pkt = 0;
     uint16_t n_pkt = 0;
     unsigned int count = 0; 
+
+    // Start the loop of mpsse communication
+    setup_libusb_transfers(); 
  
-    // threading for libusb handles
-    pthread_t libusb_thread;
-    uint8_t * send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
-
-    // initial fill_bulk_transfer and callback to start things off
-    libusb_fill_bulk_transfer(biphase_write_transfer, ctx->usb_dev, ctx->out_ep, (void *) send_buffer,
-                                BIPHASE_FRAME_SIZE_BYTES+3, biphase_write_cb, biphase_write_transfer, 2000);
-    biphase_write_cb(biphase_write_transfer); // call this once to initialize transfer loop
-
-
-    pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) ctx->usb_ctx);
-
     while (true) {
-        // check if commanding data changed the bandwidth
-        if (CommandData.biphase_clk_speed_changed) {
-            CommandData.biphase_clk_speed_changed = false;
+        // if changing mpsse clock, close and reopen the chip, restart transfer loops
+        if (previous_clock_speed != CommandData.biphase_clk_speed) {
+                mpsse_closing = true;
+                sleep(1);
                 mpsse_reset_purge_close(ctx);
                 usleep(1000);
-                setup_mpsse(&ctx, serial, direction);
+                while (!setup_mpsse(&ctx, serial, direction)) {
+                    blast_warn("Error opening mpsse. Will retry in 5s");
+                    sleep(5);
+                }
+                previous_clock_speed = CommandData.biphase_clk_speed;
+                usleep(1000);
+                mpsse_closing = false;
+                just_reopened_mpsse = true;
+                setup_libusb_transfers(); 
         }
        
         // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
@@ -322,6 +356,4 @@ void biphase_writer(void * arg)
             usleep(10000);
         }
     }
-    // free the libusb transfer on thread exit
-    libusb_free_transfer(biphase_write_transfer);
 }

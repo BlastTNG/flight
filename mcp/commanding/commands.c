@@ -1728,21 +1728,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
-      if (rvalues[0] == 100) {
+      if (ivalues[0] == 100) {
         CommandData.biphase_clk_speed = 100000;
-        CommandData.biphase_clk_speed_changed = true;
-      } else if (rvalues[0] == 500) {
+      } else if (ivalues[0] == 500) {
         CommandData.biphase_clk_speed = 500000;
-        CommandData.biphase_clk_speed_changed = true;
-      } else if (rvalues[0] == 1000) {
+      } else if (ivalues[0] == 1000) {
         CommandData.biphase_clk_speed = 1000000;
-        CommandData.biphase_clk_speed_changed = true;
       } else {
-        CommandData.biphase_clk_speed_changed = false;
         char *str;
         char *str2;
         char str3[1000];
-        asprintf(&str, "Biphase clk_speed : %f kbps is not allowed (try 100, 500 or 1000).\n", rvalues[0]);
+        asprintf(&str, "Biphase clk_speed : %d kbps is not allowed (try 100, 500 or 1000).\n", ivalues[0]);
         asprintf(&str2, "Biphase clk_speed has not been changed, it\'s %d bps", CommandData.biphase_clk_speed);
         snprintf(str3, sizeof(str3), "%s %s", str, str2);
         blast_warn("%s", str3);
@@ -2542,7 +2538,6 @@ void InitCommandData()
     CommandData.pilot_bw = 2000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
-    CommandData.biphase_clk_speed_changed = false;
     CommandData.highrate_through_tdrss = true;
     copysvalue(CommandData.pilot_linklist_name, "test.ll");
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");

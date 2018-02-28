@@ -28,7 +28,7 @@
 #include "mpsse.h"
 
 void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_t *lsb_data_out);
-void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction);
+int setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction);
 
 
 #endif /* INCLUDE_BIPHASE_INTERFACE */

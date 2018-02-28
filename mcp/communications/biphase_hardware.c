@@ -37,7 +37,7 @@
 #include "biphase_hardware.h"
 #include "mpsse.h"
 
-void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction)
+int setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction)
 {
     const uint16_t vid = 1027;
     const uint16_t pid = 24593;
@@ -46,18 +46,14 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t directi
     int channel = 0; // IFACE_A
     int frequency = (int) CommandData.biphase_clk_speed;
 
-    // Setting pin direction. CLK, data, WD are output and pins 0, 1 and 7
-    // 1=output, 0=input. 0x83 = 0b10000011 i.e. pin 0, 1 and 7 are output
-    // 1=output, 0=input. 0xBF = 0b10111111 i.e. pin 6 is input
-    // 1=output, 0=input. 0xFB = 0b11111011 i.e. pin 6 is input
-    // uint8_t direction = 0xFF; // Hacking all pins to output for testing
     uint8_t initial_value = 0x00;
 
     // The first open is hack, to check chip is there + properly reset it
     *ctx_ptr = mpsse_open(&vid, &pid, description, serial, channel);
     if (!*ctx_ptr) {
-        blast_warn("Error Opening mpsse. Stopped Biphase or Watchdog Thread");
-        pthread_exit(0);
+        // blast_warn("Error Opening mpsse. will retry in 10s.");
+        // pthread_exit(0);
+        return 0;
     }
     mpsse_reset_purge_close(*ctx_ptr);
     usleep(1000);
@@ -65,8 +61,9 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t directi
     // This is now the real open
 	*ctx_ptr = mpsse_open(&vid, &pid, description, serial, channel);
     if (!*ctx_ptr) {
-        blast_warn("Error Opening mpsse. Stopped Biphase or Watchdog Thread");
-        pthread_exit(0);
+        // blast_warn("Error Opening mpsse. will retry in 10s.");
+        // pthread_exit(0);
+        return 0;
     }
     usleep(1000);
 
@@ -75,6 +72,7 @@ void setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t directi
 
     mpsse_flush(*ctx_ptr);
     usleep(1000);
+    return 1;
 }
 
 

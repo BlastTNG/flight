@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
-  InitCommandData();
+  InitCommandData(); // This should happen before all other threads
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
 
