@@ -97,6 +97,7 @@ void tdrss_receive(void *arg) {
       transmit_size = *frame_number;
       if (transmit_size > ll->blk_size) {
           blast_err("Transmit size larger than assigned linklist");
+          transmit_size = ll->blk_size;
       }
 
       // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
