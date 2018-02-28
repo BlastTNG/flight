@@ -90,14 +90,17 @@ void highrate_compress_and_send(void *arg) {
 
       if (!retval) continue;
 
+      // compute the transmite size based on bandwidth
+      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+ 
       // have packet header serials match the linklist serials
-      writeHeader(header_buffer, *(uint32_t *) ll->serial, 0, 0, 1);
+      writeHeader(header_buffer, *(uint32_t *) ll->serial, transmit_size, 0, 1);
+
       // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
       write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE);
 
       // send the data to the ground station via ttyHighRate
       // comms_serial_write(serial, compressed_buffer, ll->blk_size);
-      transmit_size = MIN(ll->blk_size, bandwidth);
       write(serial->sock->fd, compressed_buffer, transmit_size);
 
       memset(compressed_buffer, 0, HIGHRATE_MAX_SIZE);
