@@ -75,6 +75,26 @@ int setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t directio
     return 1;
 }
 
+/**
+ * Writes data in Bi-phase format (switchting endianness)
+ * @param out Pointer to the output data buffer
+ * @param length Number of bytes to output
+ * @param bit_doubler_buffer Output buffer
+ */
+void biphase_reverse_bytes(const uint16_t *out, uint32_t length, uint8_t *bit_doubler_buffer)
+{
+    unsigned max_i = (unsigned) floor(length/2.0);
+    uint8_t msbs, lsbs;
+
+	for (unsigned i = 0; i < max_i; i++) {
+        msbs = (uint8_t) ((out[i] >> 8) & 0xff);
+        lsbs = (uint8_t) out[i] & 0xff;
+	    bit_doubler_buffer[i*2] = msbs;
+	    bit_doubler_buffer[i*2 + 1] = lsbs;
+	}
+}
+
+
 
 /*
  Synclink sends LSB first, but decom MSB, this is used to reverse the bits before sending

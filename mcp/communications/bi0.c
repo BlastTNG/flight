@@ -82,7 +82,7 @@ static LIBUSB_CALL void watchdog_write_cb(struct libusb_transfer * watchdog_writ
 
 static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_transfer) {
 
-    static uint8_t *doublerbuffer = NULL;
+    static uint8_t *reverse_buffer = NULL;
     static uint8_t *zerobuffer = NULL;
 
     static struct libusb_transfer *watchdog_read_transfer = NULL;
@@ -107,7 +107,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     if (!mpsse_closing) {
         if (first_time) {
             // allocate memory for callback function
-            doublerbuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
+            reverse_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
             zerobuffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES);
             first_time = 0;
 
@@ -228,8 +228,8 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         *(uint16_t *) read_buf = sync_word;
         sync_word = ~sync_word;
 
-        // data doubling (i.e. switch byte endianness)
-        mpsse_biphase_write_data(ctx, (void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, doublerbuffer);
+        // switch byte endianness
+        biphase_reverse_bytes((void *) read_buf, BIPHASE_FRAME_SIZE_BYTES, reverse_buffer);
         if (data_present) decrementFifo(&libusb_fifo);
 
         // build the header for mpsse
@@ -238,10 +238,10 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
         biphase_write_transfer->buffer[2] = (BIPHASE_FRAME_SIZE_BYTES-1) >> 8;
 
         // copy the data to the send_buffer
-        memcpy(biphase_write_transfer->buffer+3, doublerbuffer, BIPHASE_FRAME_SIZE_BYTES);
+        memcpy(biphase_write_transfer->buffer+3, reverse_buffer, BIPHASE_FRAME_SIZE_BYTES);
 
         // zero the buffers for the next time around
-        memset(doublerbuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+        memset(reverse_buffer, 0, BIPHASE_FRAME_SIZE_BYTES);
         memset(zerobuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
 
         retval = libusb_submit_transfer(biphase_write_transfer);
