@@ -102,7 +102,7 @@ void pilot_compress_and_send(void *arg) {
       if (!retval) continue;
 
       // compute the transmit size based on bandwidth
-      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwith == size
+      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
 
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);

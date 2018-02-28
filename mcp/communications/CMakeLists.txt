@@ -1,16 +1,16 @@
-set(MCP_COMMS_SRCS
-    ${MCP_COMMS_SRCS}
+set(MCP_COMMUNICATIONS_SRCS
+    ${MCP_COMMUNICATIONS_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/bi0.c
     ${CMAKE_CURRENT_SOURCE_DIR}/biphase_hardware.c
     ${CMAKE_CURRENT_SOURCE_DIR}/pilot.c
     ${CMAKE_CURRENT_SOURCE_DIR}/highrate.c
     PARENT_SCOPE
 )
-set(MCP_COMMS_HEADERS
-   ${MCP_COMMS_HEADERS}
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/bi0.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/biphase_hardware.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/pilot.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/../include/highrate.h
+set(MCP_COMMUNICATIONS_HEADERS
+   ${MCP_COMMUNICATIONS_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/bi0.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/biphase_hardware.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/pilot.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/highrate.h
    PARENT_SCOPE
 )
