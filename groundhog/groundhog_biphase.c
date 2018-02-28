@@ -22,6 +22,7 @@
 #include "decom_pci.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
+#include "bi0.h"
 #include "crc.h"
 #include "blast.h"
 #include "blast_time.h"
@@ -33,9 +34,6 @@
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 #define BIPHASE_PACKET_SIZE (BIPHASE_FRAME_SIZE_BYTES-2-PACKET_HEADER_SIZE)
 #define BIPHASE_PACKET_WORD_START (7)
-#define BIPHASE_ZERO_PADDING 250 
-
-#define MAX_LL_SIZE (250000)
 
 #define DEV "/dev/decom_pci"
 
@@ -99,7 +97,7 @@ void biphase_receive(void *args)
   uint16_t receive_buffer[BI0_FRAME_SIZE];
   uint16_t anti_receive_buffer[BI0_FRAME_SIZE];
   uint8_t receive_buffer_stripped[BIPHASE_PACKET_SIZE];
-  uint8_t *compressed_linklist = calloc(1, MAX_LL_SIZE);
+  uint8_t *compressed_linklist = calloc(1, BI0_MAX_BUFFER_SIZE);
   uint32_t compressed_linklist_size = 0;
 
   linklist_t *ll = NULL;
@@ -146,7 +144,7 @@ void biphase_receive(void *args)
               get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
                                  &ll, &frame_number, &i_pkt, &n_pkt);
               retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, 
-                                       BIPHASE_PACKET_SIZE-BIPHASE_ZERO_PADDING, 
+                                       BIPHASE_PACKET_SIZE-BI0_ZERO_PADDING, 
                                        i_pkt, n_pkt, receive_buffer_stripped);
               memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
 
@@ -166,7 +164,7 @@ void biphase_receive(void *args)
                       blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
                       decompress_linklist_by_size(local_superframe, ll, compressed_linklist, transmit_size);
                       push_superframe(local_superframe, &biphase_superframes);
-                      memset(compressed_linklist, 0, MAX_LL_SIZE);
+                      memset(compressed_linklist, 0, BI0_MAX_BUFFER_SIZE);
                       compressed_linklist_size = 0;
                   } else {
                       printf("[Biphase] Received an allframe :)\n");
