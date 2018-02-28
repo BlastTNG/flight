@@ -25,7 +25,7 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "groundhog_framing.h"
-#include "tdrss_hga.h"
+#include "highrate.h"
 #include "comms_serial.h"
 
 
@@ -51,7 +51,7 @@ void tdrss_receive(void *arg) {
   uint32_t blk_size = 0;
 
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compressed_buffer = calloc(1, TDRSS_HGA_MAX_SIZE);
+  uint8_t *compressed_buffer = calloc(1, HIGHRATE_MAX_SIZE);
 
   uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
 
@@ -63,7 +63,7 @@ void tdrss_receive(void *arg) {
 
   // Open serial port
   comms_serial_t *serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, TDRSS_HGA_PORT);
+  comms_serial_connect(serial, HIGHRATE_PORT);
   comms_serial_setspeed(serial, B115200);
   int fd = serial->sock->fd; 
 

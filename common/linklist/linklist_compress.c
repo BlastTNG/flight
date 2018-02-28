@@ -304,41 +304,55 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 }
 
 
-/* TODO: PERSISTENT DATA
 uint8_t * buffer_save = NULL;
 
-int fill_linklist_with_saved(struct link_list * req_ll, int p_start, int p_end, uint8_t *buffer_out)
+int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_t *buffer_out)
 {
-	int i, k;
-	struct link_entry * tlm_le = NULL;
-	unsigned int tlm_out_start;
-	unsigned int loc1, loc2;
+  int i, k;
+  struct link_entry * tlm_le = NULL;
+  unsigned int tlm_out_start;
+  unsigned int loc1, loc2;
+  unsigned int tlm_out_num;
+  unsigned int tlm_size;
+  unsigned int tlm_out_skip;
 
   for (i=p_start;i<p_end;i++)
-  {
+  { 
     tlm_le = &(req_ll->items[i]);
-		if (tlm_le->tlm != NULL)
-		{
-			if (tlm_le->tlm->type != 'B')
-			{
-				tlm_out_start = tlm_le->tlm->start;
-				//printf("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
-				for (k=0;k<tlm_le->tlm->num;k++)
-				{
-					loc1 = tlm_le->tlm->skip*k;
-					loc2 = tlm_le->tlm->skip*(tlm_le->tlm->num-1);
-					memcpy(buffer_out+tlm_out_start+loc1,buffer_save+tlm_out_start+loc2,tlm_le->tlm->size);
-				}
-			}
-    	//memset(buffer_out+tlm_le->tlm->start,0,tlm_le->tlm->size*tlm_le->tlm->num);
-		}
+    if (tlm_le->tlm != NULL)
+    { 
+      if (tlm_le->tlm->type != 'B')
+      { 
+        tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
+        tlm_out_skip = get_channel_skip_in_superframe(tlm_le->tlm);
+        tlm_out_num = get_channel_spf(tlm_le->tlm);
+        tlm_size = channel_size(tlm_le->tlm);
+        //printf("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
+        for (k=0;k<tlm_out_num;k++)
+        { 
+          loc1 = tlm_out_skip*k;
+          loc2 = tlm_out_skip*(tlm_out_num-1);
+          memcpy(buffer_out+tlm_out_start+loc1, buffer_save+tlm_out_start+loc2, tlm_size);
+        }
+      }
+      //memset(buffer_out+tlm_le->tlm->start,0,tlm_le->tlm->size*tlm_le->tlm->num);
+    }
   }
-	return i;
+  return i;
 }
-*/
 
 /**
  * decompress_linklist
+ *
+ * See description below for decompress_linklist_by_size.
+ */
+double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buffer_in)
+{
+  return decompress_linklist_by_size(buffer_out, ll, buffer_in, UINT32_MAX);
+}
+
+/**
+ * decompress_linklist_by_size
  * 
  * Selects channels from and compresses a superframe according to the provide
  * linklist format.
@@ -349,8 +363,11 @@ int fill_linklist_with_saved(struct link_list * req_ll, int p_start, int p_end, 
  * -> buffer_in: pointer to the compressed frame to be decompressed. If NULL,
                   the buffer assigned to the linklist via
                   assign_compframe_to_linklist will be used.
+ * -> maxsize: the maximum size of the input buffer which may be less than
+                  ll->blk_size. All data after maxsize will be assumed to
+                  be corrupt or empty.
  */
-double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
+double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize)
 {
   int i, j;
 
@@ -382,10 +399,7 @@ double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer
     buffer_in = ll->compframe;
   }
 
-  /* TODO PERSISENT DATA
-	if (buffer_save == NULL) buffer_save = calloc(1,frame_size*2+all_frame_size);
-	//memset(buffer_out,0,frame_size);
-  */
+  if (buffer_save == NULL) buffer_save = calloc(1, superframe_size);
 
   // extract the data to the full buffer
   for (j=0;j<ll->n_entries;j++)
@@ -402,22 +416,21 @@ double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer
 
     if (tlm_le->tlm == NULL) // evaluating a checksum...
     {
-      if ((checksum != 0)) // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
-      {
+      if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
+        fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+      } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
-        printf("decompress_linklist: checksum failed -> bad data (block %d)\n",sumcount);
-/* TODO: PERSISTENT DATA
-        fill_linklist_with_saved(req_ll,p_start,p_end,buffer_out);
-*/
+        printf("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
-			else ret++;
+      else ret++;
       //if (!tlm_no_checksum) printf("Checksum result: 0x%x\n",checksum);
       // reset checksum
-			prechecksum |= *(uint16_t *) tlm_in_buf;
+      prechecksum |= *(uint16_t *) tlm_in_buf;
       checksum = 0;
-			sumcount++;
+      sumcount++;
       p_start = j+1;
-			tot++;
+      tot++;
 
     }
     else
@@ -444,19 +457,15 @@ double decompress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer
       }
     }
   }
+  if (!prechecksum) // all the checksums were zero; must be blank frame
+  {
+    fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
+    ret = 0;
+  }
+  // save the data
+  memcpy(buffer_save, buffer_out, superframe_size);
 
-/* TODO: PERSISTENT DATA
-	if (!prechecksum) // all the checksums were zero; must be blank frame
-	{
-		fill_linklist_with_saved(req_ll,0,req_ll->n_entries,buffer_out);
-		ret = 0;
-	}
-
-	// save the data
-	memcpy(buffer_save,buffer_out,frame_size);
-*/
-
-	ret = (tot == 0) ? ret : ret/tot;
+  ret = (tot == 0) ? ret : ret/tot;
 
   return ret;
 }

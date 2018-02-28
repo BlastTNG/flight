@@ -48,6 +48,7 @@ extern uint32_t allframe_size;
 
 int compress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
+double decompress_linklist_by_size(uint8_t *, linklist_t * , uint8_t *, uint32_t);
 
 uint8_t * allocate_superframe();
 void define_superframe();

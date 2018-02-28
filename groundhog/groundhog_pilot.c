@@ -35,6 +35,7 @@ void pilot_receive(void *arg) {
   uint32_t serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
+  uint32_t transmit_size = 0;
 
   uint8_t *local_superframe = allocate_superframe();
   uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
@@ -61,16 +62,23 @@ void pilot_receive(void *arg) {
     // receive the data from payload via bitserver
     blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_SIZE, 0);
 
+    // hijacking frame number for transmit size
+    transmit_size = pilotrecver.frame_num; 
+
+    printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
+
     if (blk_size < 0) {
       blast_info("Malformed packed received on Pilot\n");
       continue;
+    } else if (blk_size != transmit_size) {
+      blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
     }
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
     if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
       blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
-      if (!decompress_linklist(local_superframe, ll, compbuffer)) { 
+      if (!decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size)) { 
         continue;
       }
       /*
