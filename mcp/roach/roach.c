@@ -105,7 +105,7 @@
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (1)
 #define SWEEP_FAIL (0)
-#define SWEEP_TIMEOUT 200 /* microsecond timeout between set LO and save data */
+#define SWEEP_TIMEOUT 500 /* microsecond timeout between set LO and save data */
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
 #define STREAM_NTRIES 10 /* Number of times to check stream status */
@@ -120,8 +120,8 @@
 #define ADC_TARG_RMS_250 100 /* mV, For 250 micron array TARG sweep */
 #define ADC_RMS_RANGE 5 /* mV */
 #define ATTEN_STEP 0.5 /* dB */
-#define OUTPUT_ATTEN_VNA 10 /* dB, for VNA sweep */
-#define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
+#define OUTPUT_ATTEN_VNA 6 /* dB, for VNA sweep */
+#define OUTPUT_ATTEN_TARG 12 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
 #define EXT_REF 1 /* Valon external ref (10 MHz) */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
@@ -172,10 +172,11 @@ char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char valon_init_pi_extref[] = "python /home/pi/device_control/init_valon_ext.py";
 char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 /* For testing, use detector data from Feb, 2018 cooldown */
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Mon_Feb_19_15_56_01_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Tue_Feb_27_14_18_57_2018";
+// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Mon_Feb_19_15_56_01_2018";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Feb_16_13_52_53_2018";
 
-char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
+// char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
 char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
@@ -708,6 +709,23 @@ int save_freqs(roach_state_t *m_roach, char *m_save_path, double *m_freqs, size_
     return 0;
 }
 
+int save_sweep_freqs(roach_state_t *m_roach, char *m_save_path, double *m_sweep_freqs, size_t m_freqlen)
+{
+    double freqs[m_freqlen];
+    FILE *m_sweep_fd = fopen(m_save_path, "w");
+    if (!m_sweep_fd) {
+        blast_strerror("Could not open %s for writing", m_save_path);
+        return -1;
+    } else {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
+            fprintf(m_sweep_fd, "%d\n", (uint32_t)freqs[i]);
+        }
+    }
+    fclose(m_sweep_fd);
+    return 0;
+}
+
 /* Function: roach_define_DAC_LUT
  * ----------------------------
  * Checks to see if freq comb LUTs have been allocated,
@@ -1067,10 +1085,10 @@ int set_atten(rudat_state_t *m_rudat)
 void cal_adc_rms(roach_state_t *m_roach, double targ_rms, double output_atten, int ntries)
 {
     if (CommandData.roach_params[m_roach->which - 1].in_atten <= 1.0) {
-        CommandData.roach_params[m_roach->which - 1].in_atten += 1.0;
+        CommandData.roach_params[m_roach->which - 1].in_atten += 2.0;
     }
     if (CommandData.roach_params[m_roach->which - 1].in_atten >= 30.0) {
-        CommandData.roach_params[m_roach->which - 1].in_atten -= 1.0;
+        CommandData.roach_params[m_roach->which - 1].in_atten -= 2.0;
     }
     double *rms;
     // For now, keep output atten at 10 dB
@@ -1082,7 +1100,7 @@ void cal_adc_rms(roach_state_t *m_roach, double targ_rms, double output_atten, i
         rms = roach_read_adc(m_roach);
         blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
         blast_info("count = %d", count);
-        if ((CommandData.roach_params[m_roach->which - 1].in_atten <= 0.5) ||
+        if ((CommandData.roach_params[m_roach->which - 1].in_atten <= 1.0) ||
                      (CommandData.roach_params[m_roach->which - 1].in_atten >= 30.5)) {
             blast_info("ROACH%d, Input atten limit, aborting cal", m_roach->which);
             break;
@@ -1756,11 +1774,12 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
     pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
     char *lo_command; /* Pi command */
     char *save_bbfreqs_command;
+    char *sweep_freq_fname;
     double m_sweep_freqs[NCAL_POINTS];
     double span = ((double)NCAL_POINTS - 1.0)/2.0;
     m_sweep_freqs[0] = m_roach->lo_centerfreq - span*LO_STEP;
-    for (size_t i = 0; i < NCAL_POINTS; i++) {
-        m_sweep_freqs[i] = round(m_sweep_freqs[i] / LO_STEP) * LO_STEP;
+    for (size_t i = 1; i < NCAL_POINTS; i++) {
+        m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
     }
     // If doesn't exist, create cal sweep parent directory
     if (!m_roach->last_cal_path) {
@@ -1776,8 +1795,6 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
             return SWEEP_FAIL;
         }
     }
-    // Save the paths to last sweeps for data analysis
-    system("python /home/fc1user/sam_builds/sweep_list.py cal");
     char *new_path;
     char *save_path;
     // asprintf(&new_path, "%s/%s", m_roach->last_cal_path, subdir);
@@ -1790,6 +1807,9 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
         blast_strerror("Could not create new directory: %s", save_path);
         return SWEEP_FAIL;
     }
+    // Save sweep freqs in cal subdir
+    blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_cal_path);
+    save_sweep_freqs(m_roach, sweep_freq_fname, m_sweep_freqs, NCAL_POINTS);
     // Do a series of sweeps while recalculating amplitudes
     for (size_t i = 0; i < NCAL_POINTS; i++) {
         if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
@@ -2598,6 +2618,8 @@ void *roach_cmd_loop(void* ind)
             blast_info("ROACH%d, Starting CAL sweeps...", i + 1);
             status = cal_sweep_attens(&roach_state_table[i], N_CAL_CYCLES);
             if ((status == SWEEP_SUCCESS)) {
+                // Save the paths to last sweeps for data analysis
+                system("python /home/fc1user/sam_builds/sweep_list.py cal");
                 blast_info("ROACH%d, CAL sweeps complete", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
@@ -2640,10 +2662,10 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/sweeps/roach%d/targ", ind + 1);
     asprintf(&roach_state_table[ind].cal_path_root,
                       "/home/fc1user/sam_tests/sweeps/roach%d/cal", ind + 1);
-    asprintf(&roach_state_table[ind].vna_amps_path[0],
-                      "/home/fc1user/sam_tests/sweeps/roach%d/vna_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].vna_amps_path[1],
-                      "/home/fc1user/sam_tests/roach%d_vna_amps.dat", ind + 1);
+                      "/home/fc1user/sam_tests/sweeps/roach%d/vna_trf.dat", ind + 1);
+    asprintf(&roach_state_table[ind].vna_amps_path[0],
+                      "/home/fc1user/sam_tests/roach2%d_default_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[0],
                       "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[1],

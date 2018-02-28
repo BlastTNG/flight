@@ -2714,7 +2714,7 @@ void InitCommandData()
         CommandData.udp_roach[i].publish_udp = 1;
         // find_kids
         CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
-        CommandData.roach_params[i].peak_threshold = 1; // dB
+        CommandData.roach_params[i].peak_threshold = 3; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
         CommandData.roach_params[i].in_atten = 29;
