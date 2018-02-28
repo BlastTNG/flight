@@ -143,7 +143,9 @@ void * sendDataThread(void *arg) {
           // printf("Sending headerless packet\n");
           if (sendto(server->sck, buffer, size,
             MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) blast_err("sendTo failed()");
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+            }
         }
       } else {
         i = 0;
@@ -160,14 +162,17 @@ void * sendDataThread(void *arg) {
           if (sendto(server->sck, header, PACKET_HEADER_SIZE,
             MSG_NOSIGNAL | MSG_MORE,
             (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) blast_err("sendTo failed()");
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+            }
 
           // add data to packet and send
           // if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
           if (sendto(server->sck, pkt_buffer, packet_size,
             MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) blast_err("sendTo failed()");
-
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+            }
 
 #else // for QNX kernel
 
@@ -326,7 +331,10 @@ int initBITSender(struct BITSender *server, const char *send_addr,
     server->my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(server->sck, (struct sockaddr *) &(server->my_addr),
-      sizeof(server->my_addr)) == -1) perror("bind");
+         sizeof(server->my_addr)) < 0) {
+      perror("bind");
+      blast_err("Unable to bind to socket (errno=%d)", errno);
+    }
   }
 
   // set up target address
