@@ -53,6 +53,7 @@ void tdrss_receive(void *arg) {
   uint8_t *compressed_buffer = calloc(1, HIGHRATE_MAX_SIZE);
 
   uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
+  uint8_t *csbf_header = calloc(1, CSBF_HEADER_SIZE);
 
   uint32_t *serial_number = 0;
   uint16_t *i_pkt, *n_pkt;
@@ -68,26 +69,67 @@ void tdrss_receive(void *arg) {
   int fd = serial->sock->fd; 
 
   uint8_t byte = 0;
+  uint8_t csbf_origin = 0;
+  uint8_t csbf_sync2 = 0;
+  uint16_t csbf_size = 0;
+  int byte_pos = 0;
+  char source_str[32] = {0};
 
   while (true) {
-      int byte_pos = 0;
       // perform a search for a valid serial
+      byte_pos = 0;
       while (1) {
           if (read(fd, &byte, 1)) {
-              if (byte_pos >= 3) { // shift the bytes
-                  for (int i = 0; i < 3; i++) {
-                      header_buffer[i] = header_buffer[i+1];
+              // handle sync
+              if (byte_pos == 0) { // check first sync byte
+                  if (byte == HIGHRATE_SYNC1) { // check first sync byte
+                      csbf_header[byte_pos++] = byte;
+                      //printf("Tentative 1\n");
                   }
+              } else if (byte_pos == 1) { // check 2nd sync byte
+                  if ((byte == HIGHRATE_TDRSS_SYNC2) || (byte == HIGHRATE_IRIDIUM_SYNC2)) { 
+                  csbf_header[byte_pos++] = byte;
+                  //printf("Definite 0\n");
+                  } else { // false alarm, lost sync
+                      byte_pos = 0;
+                  }
+              } else if (byte_pos < CSBF_HEADER_SIZE) { // fill the CSBF header
+                  //printf("Filling csbf header %d 0x%x\n", byte_pos, byte);
+                  csbf_header[byte_pos++] = byte;
+              } else if (byte_pos < (CSBF_HEADER_SIZE+4)) { // fill our header
+                  //printf("Filling our header %d 0x%x\n", byte_pos, byte);
+                  header_buffer[(byte_pos++)-CSBF_HEADER_SIZE] = byte;
               } else {
-                  byte_pos++;
+                  byte_pos = 0;
               }
-              header_buffer[byte_pos] = byte;
-              if ((ll = linklist_lookup_by_serial(*(uint32_t *) header_buffer))) break;
+               
+              // handle potentially valid header data
+              if (byte_pos == (CSBF_HEADER_SIZE+4)) { // check the serial to see if there's a match
+                 //printf("Checking serial 0x%x\n", *(uint32_t *) header_buffer);
+                 if ((ll = linklist_lookup_by_serial(*(uint32_t *) header_buffer))) {
+                     //printf("Found serial\n");
+                     break; // the only way out is with a valid serial
+                 } else {
+                     byte_pos = 0; // not a valid serial, so lose sync
+                 }
+              }
           } else {
               usleep(1000);
           }
       }
-       
+ 
+      // get the CSBF header info
+      csbf_sync2 = csbf_header[1];
+      csbf_origin = csbf_header[2];
+      csbf_size = (csbf_header[4] << 8) + (csbf_header[5]);
+      if (csbf_sync2 == HIGHRATE_TDRSS_SYNC2) {
+          sprintf(source_str, "[TDRSS]");
+      } else if (csbf_sync2 == HIGHRATE_IRIDIUM_SYNC2) {
+          sprintf(source_str, "[Iridium]");
+      } else {
+          sprintf(source_str, "[Unknown]");
+      }
+
       // read the rest of the header
       blocking_read(fd, header_buffer+4, PACKET_HEADER_SIZE-4);
     
@@ -100,13 +142,13 @@ void tdrss_receive(void *arg) {
           transmit_size = ll->blk_size;
       }
 
-      // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
+      //blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d", transmit_size, ll->blk_size, csbf_size);
 
-      blocking_read(fd, compressed_buffer, transmit_size);
+      blocking_read(fd, compressed_buffer, transmit_size+1); // +1 for the crc footer
 
       // decompress the linklist
       if (!read_allframe(local_superframe, compressed_buffer)) {
-          blast_info("[TDRSS HGA] Received linklist with serial_number 0x%x\n", *serial_number);
+          blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
           if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
               continue;
           }
