@@ -246,7 +246,7 @@ void WriteAux(void)
             (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
             (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
             (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
-            (InCharge ? 0x20 : 0x00) +               // 0x20
+            (InCharge ? 0x80 : 0x00) +               // 0x80
 //            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
             ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00
 

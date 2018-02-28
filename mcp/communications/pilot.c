@@ -46,6 +46,7 @@
 #include <openssl/md5.h>
 #include <float.h>
 
+#include "mcp.h"
 #include "FIFO.h"
 #include "bitserver.h"
 #include "linklist.h"
@@ -53,6 +54,7 @@
 #include "pilot.h"
 #include "blast.h"
 #include "mputs.h"
+#include "command_struct.h"
 
 extern int16_t InCharge;
 
@@ -68,12 +70,16 @@ void pilot_compress_and_send(void *arg) {
 
   uint8_t * compbuffer = calloc(1, fifosize);
   int allframe_count = 0;
+  uint32_t bandwidth = 0, transmit_size = 0;
 
   nameThread("Pilot");
 
   while (1) {
     // get the current pointer to the pilot linklist
-    ll = ll_array[0];
+    ll = ll_array[PILOT_TELEMETRY_INDEX];
+
+    // get the current bandwidth
+    bandwidth = CommandData.pilot_bw;
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
@@ -92,8 +98,8 @@ void pilot_compress_and_send(void *arg) {
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
 
-      // TODO(javier): make send size commandable (e.g. MIN(ll->blk_size, cmd_pilot_bw))
       // send the data to the ground station via bitsender
+      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwith == size
       sendToBITSender(&pilotsender, compbuffer, ll->blk_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);

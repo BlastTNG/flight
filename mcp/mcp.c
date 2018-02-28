@@ -112,8 +112,8 @@ void StageBus(void);
 struct chat_buf chatter_buffer;
 struct tm start_time;
 
-#define NUM_TELEMETRIES 3
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
+linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL}; 
 uint8_t * master_superframe = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
@@ -567,10 +567,18 @@ int main(int argc, char *argv[])
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
   linklist_generate_lookup(linklist_array);
+ 
+  // load the latest linklist into telemetry
+  telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+  telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+  telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
 
-  pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) linklist_array);
-  pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) linklist_array);
-  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) linklist_array);
+  pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
+  pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
+  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);

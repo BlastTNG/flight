@@ -188,6 +188,19 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
   return 1;
 }
 
+linklist_t * linklist_find_by_name(char * name, linklist_t ** ll_array)
+{
+  linklist_t * ll = ll_array[0];
+  int i = 0;
+
+  while (ll) {
+    if (strcmp(ll->name, name) == 0) return ll;
+    ll = ll_array[++i];
+  }
+  blast_err("Linklist \"%s\" not found.\n", name);
+
+  return NULL;
+}
 
 int set_checksum_field(struct link_entry * le, unsigned int byteloc)
 {
@@ -417,9 +430,20 @@ linklist_t * parse_linklist(char *fname)
   ll->compframe = NULL; // pointer initialized to NULL
   ll->data_ready = 0; // set the data ready flag to none ready
 
+  // add the linklist name
+  for (i = strlen(fname)-1; i > 0; i--) {
+    if (fname[i] == '/') { // got the filename
+      i++;
+      break;
+    }
+  }
+  memset(ll->name, 0, 64); // clear name completely
+  strcpy(ll->name, fname+i); // copy the name
+
   // update the hash
   MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
   MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
+  MD5_Update(&mdContext, ll->name, strlen(ll->name));
 
   // generate serial
   MD5_Final(md5hash,&mdContext);
@@ -427,6 +451,7 @@ linklist_t * parse_linklist(char *fname)
 
 /*
   // print result
+  printf("Linklist %s:\n", ll->name);
   for (i=0;i<ll->n_entries;i++)
   {
     if (ll->items[i].tlm != NULL)

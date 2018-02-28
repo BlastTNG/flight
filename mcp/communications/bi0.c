@@ -37,6 +37,7 @@
 #include "linklist_compress.h"
 #include "bi0.h"
 #include "blast.h"
+#include "mcp.h"
 #include "command_struct.h"
 #include "FIFO.h"
 #include "bitserver.h"
@@ -276,7 +277,7 @@ void biphase_writer(void * arg)
        
         // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
         // get the current linklist
-        ll = ll_array[1];
+        ll = ll_array[BI0_TELEMETRY_INDEX];
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 

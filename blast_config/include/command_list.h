@@ -172,7 +172,7 @@ enum multiCommand {
   pos_set,
   roll_gain,         az_scan_accel,
   t_gyro_set,        highrate_bw,       pilot_bw,         biphase_bw,
-  biphase_clk_speed, highrate_through_tdrss,              use_linklist,
+  biphase_clk_speed, highrate_through_tdrss,              set_linklists,
   t_gyro_gain,       timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
   hwpr_set_overshoot,

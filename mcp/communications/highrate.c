@@ -36,6 +36,7 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "blast.h"
+#include "mcp.h"
 // #include "command_struct.h"
 #include "FIFO.h"
 #include "bitserver.h"
@@ -65,7 +66,7 @@ void highrate_compress_and_send(void *arg) {
   while (true) {
 
     // get the current pointer to the pilot linklist
-    ll = ll_array[2];
+    ll = ll_array[HIGHRATE_TELEMETRY_INDEX];
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary

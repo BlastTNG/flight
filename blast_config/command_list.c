@@ -790,10 +790,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-  {COMMAND(use_linklist), "change linklist", GR_TELEM, 2,
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
-      {"linklist name", 0, 32, 's', "NONE"},
-      {"telemetry path", 0, 32, 's', "NONE"}
+      {"Pilot Linklist", 0, 32, 's', "NONE"},
+      {"Biphase Linklist", 0, 32, 's', "NONE"},
+      {"High Rate Linklist", 0, 32, 's', "NONE"}
     }
   },
 

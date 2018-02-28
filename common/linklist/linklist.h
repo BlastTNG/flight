@@ -80,6 +80,7 @@ struct block_container
 
 struct link_list
 {
+  char name[64]; // name of the linklist file
   uint32_t n_entries; // number of entries in the list
   uint32_t blk_size; // size of entire compressed frame
   uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
@@ -109,6 +110,7 @@ void assign_all_linklist_superframe(linklist_t **, uint8_t *);
 void assign_all_linklist_compframe(linklist_t **, uint8_t *);
 void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
+linklist_t * linklist_find_by_name(char *, linklist_t **);
 
 #ifdef __cplusplus
 }

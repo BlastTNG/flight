@@ -371,8 +371,9 @@ struct CommandDataStruct {
   uint32_t biphase_clk_speed;
   bool highrate_through_tdrss;
   bool biphase_clk_speed_changed;
-  char linklist_name[32];
-  char telemetry_for_linklist[32];
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 

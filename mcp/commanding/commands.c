@@ -47,6 +47,7 @@
 #include "channels_tng.h"
 #include "labjack.h"
 #include "labjack_functions.h"
+#include "linklist.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
@@ -83,6 +84,9 @@ void NormalizeAngle(double*);
 int LoadUplinkFile(int slot); /*sched.c */
 
 extern int doing_schedule; /* sched.c */
+
+extern linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES];
+extern linklist_t * telemetries_linklist[NUM_TELEMETRIES];
 
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
@@ -1685,9 +1689,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
-    case use_linklist:
-      copysvalue(CommandData.linklist_name, svalues[0]);
-      copysvalue(CommandData.telemetry_for_linklist, svalues[1]);
+    case set_linklists:
+      copysvalue(CommandData.pilot_linklist_name, svalues[0]);
+      telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+
+      copysvalue(CommandData.bi0_linklist_name, svalues[1]);
+      telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+
+      copysvalue(CommandData.highrate_linklist_name, svalues[2]);
+      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+
     case timeout:        // Set timeout
       CommandData.timeout = rvalues[0];
       break;
@@ -2530,8 +2544,9 @@ void InitCommandData()
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_clk_speed_changed = false;
     CommandData.highrate_through_tdrss = true;
-    copysvalue(CommandData.linklist_name, "test.ll");
-    copysvalue(CommandData.telemetry_for_linklist, "biphase");
+    copysvalue(CommandData.pilot_linklist_name, "test.ll");
+    copysvalue(CommandData.bi0_linklist_name, "test2.ll");
+    copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 
