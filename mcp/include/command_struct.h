@@ -277,22 +277,35 @@ typedef struct {
   uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
+  int labjack, send_dac, load_curve;
+  float dac_value;
 } cryo_cmds_t;
 
 typedef struct {
-  uint16_t of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
-  uint16_t of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
-  uint16_t of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
-  uint16_t of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
-  uint16_t if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
-  uint16_t if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
-  uint16_t if_9_on, if_9_off, if_10_on, if_10_off;
-  uint16_t rec_on, rec_off, amp_supply_on, amp_supply_off;
-  uint16_t therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
-  uint16_t update_rec, update_of, update_if;
-  uint16_t of_status, if_status, rec_status; // will have to make initialize all on
+  float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
+  float of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
+  float of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
+  float of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
+  float if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
+  float if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
+  float if_9_on, if_9_off, if_10_on, if_10_off;
+  float cycle_of_1, cycle_of_2, cycle_of_3, cycle_of_4, cycle_of_5, cycle_of_6;
+  float cycle_of_7, cycle_of_8, cycle_of_9, cycle_of_10, cycle_of_11, cycle_of_12;
+  float cycle_of_13, cycle_of_14, cycle_of_15, cycle_of_16;
+  float cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4, cycle_if_5, cycle_if_6;
+  float cycle_if_7, cycle_if_8, cycle_if_9, cycle_if_10;
+  float cycled_of, cycled_if;
+  float rec_on, rec_off, amp_supply_on, amp_supply_off;
+  float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
+  float update_rec, update_of, update_if;
   uint16_t labjack[5];
 } relay_cmds_t;
+
+typedef struct {
+    uint16_t lj_q_on;
+    uint16_t which_q[5];
+    uint16_t set_q;
+} labjack_queue_t;
 
 typedef struct slinger_commanding
 {
@@ -477,6 +490,8 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+
+  labjack_queue_t Labjack_Queue;
 
   relay_cmds_t Relays;
 

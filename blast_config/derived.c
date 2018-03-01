@@ -508,7 +508,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_4K_FILT_INT", "TD_4K_FILT", 0.199656, 0.000034),
     LINCOM("TD_VCS2_HX_INT", "TD_VCS2_HX", 0.199033, -0.000013),
     LINCOM("TD_VCS1_PLATE_INT", "TD_VCS1_PLATE", 0.199517, -0.000026),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS", LUT_DIR "dt-simonchase.txt"),
+    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_250fpa", "TD_250FPA_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_hwp", "TD_HWP_INT", LUT_DIR "dt670_orig.text"),
@@ -519,11 +519,18 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_m3", "TD_M3_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_charcoal", "TD_CHARCOAL_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_ob_filter", "TD_OB_FILTER_INT", LUT_DIR "dt670_orig.text"),
-    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt670_orig.text"),
+    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt-simonchase.txt"),
     LINTERP("Td_m4", "TD_M4_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_4k_filt", "TD_4K_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs2_hx", "TD_VCS2_HX_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs1_plate", "TD_VCS1_PLATE_INT", LUT_DIR "dt670_orig.text"),
+
+    COMMENT("Highbay stuff"), // raw calibration only -- warning!
+    LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
+    LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
+    LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", -1, 0),
+    LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", 200, 0), // in mL/min
+    LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
 
 
   COMMENT("ROXes"), // raw calibration only -- warning!
@@ -537,7 +544,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TR_500_FPA_INT", "TR_500_FPA", -1, 0),
     LINCOM("ROX_BIAS_INT", "ROX_BIAS", -1, 0),
     LINTERP("NOMINAL_BIAS", "ROX_BIAS_INT", LUT_DIR "Vbias_LUT.txt"),
-    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.43803875, 0),
+    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.296602587, 0),
     DIVIDE("TR_FPA_1K_CORRECTED", "TR_FPA_1K_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_250_FPA_CORRECTED", "TR_250_FPA_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_1K_PLATE_CORRECTED", "TR_1K_PLATE_INT", "ROX_BIAS_COMPARE"),
@@ -562,17 +569,18 @@ derived_tng_t derived_list[] = {
     UNITS("Tr_1k_plate", "Temperature", "K"),
     LINTERP("Tr_300mk_strap", "RR_300MK_STRAP", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_300mk_strap", "Temperature", "K"),
-    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "ROX_Cal_U04486.LUT"),
+    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_350_fpa", "Temperature", "K"),
     LINTERP("Tr_he4_pot",   "RR_HE4_POT"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he4_pot", "Temperature", "K"),
-    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "rox-raw.txt"),
+    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "ROX_Cal_U04486.LUT"),
     UNITS("Tr_he3_fridge", "Temperature", "K"),
-    LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-500.txt"),
+    LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_500_fpa", "Temperature", "K"),
     // cryo labjack stuff below
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
+    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),

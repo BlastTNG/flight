@@ -293,6 +293,7 @@ static void mcp_200hz_routines(void)
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
+<<<<<<< HEAD
     // read_chopper();
     // cal_control();
 
@@ -300,6 +301,13 @@ static void mcp_200hz_routines(void)
     // store_data_200hz();
     superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
                                        RATE_200HZ, master_superframe);
+=======
+    cryo_200hz(1);
+
+    framing_publish_200hz();
+    // store_data_200hz();
+    // build_biphase_frame_200hz(channel_data[RATE_200HZ]);
+>>>>>>> labjack
 }
 static void mcp_100hz_routines(void)
 {
@@ -317,13 +325,21 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
     // store_data_100hz();
+<<<<<<< HEAD
     superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
                                        RATE_100HZ, master_superframe);
     // test_dio();
+=======
+    // build_biphase_frame_1hz(channel_data[RATE_1HZ]);
+    // build_biphase_frame_100hz(channel_data[RATE_100HZ]);
+    // push_bi0_buffer();
+>>>>>>> labjack
 }
 static void mcp_5hz_routines(void)
 {
     watchdog_ping();
+    // Tickles software WD 2.5x as fast as timeout
+
     // update_sun_sensors();
     read_5hz_acs();
     store_5hz_acs();
@@ -333,6 +349,7 @@ static void mcp_5hz_routines(void)
     ControlBalance();
     StoreActBus();
     level_control();
+    level_toggle();
     #ifdef USE_XY_THREAD
     StoreStageBus(0);
     #endif
@@ -368,15 +385,18 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       } 
     }
-    // rec_control();
-    // of_control();
-    // if_control();
-    // labjack_test_dac(3.3, 0);
-    // heater_control();
-    // test_labjacks(0);
-    // read_thermometers();
     // auto_cycle_mk2();
-    // test_read();
+    // all 1hz cryo monitoring 1 on 0 off
+    cryo_1hz(1);
+    // out frame monitoring (current loops and thermistors) 1 on 0 off
+    outer_frame(1);
+    // relays arg defines found in relay.h
+    relays(ALL_RELAYS);
+    // highbay will be rewritten as all on or off when box is complete
+    highbay(1, 1, 1, 1, 1);
+    // thermal_vac();
+    labjack_choose_execute();
+    // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();
     xsc_control_heaters();
@@ -387,8 +407,6 @@ static void mcp_1hz_routines(void)
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
                                      RATE_1HZ, master_superframe);
 //    store_data_1hz();
-    // query_mult(0, 48);
-    // query_mult(0, 49);
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -468,6 +486,7 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
+  // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
@@ -554,6 +573,10 @@ int main(int argc, char *argv[])
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
   framing_init(channel_list, derived_list);
+<<<<<<< HEAD
+=======
+  // initialize_biphase_buffer();
+>>>>>>> labjack
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
@@ -589,6 +612,7 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+<<<<<<< HEAD
   // labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_CRYO_2, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
   // labjack_networking_init(LABJACK_OF_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
@@ -602,8 +626,24 @@ int main(int argc, char *argv[])
   // initialize_labjack_commands(LABJACK_OF_2);
   // initialize_labjack_commands(LABJACK_OF_3);
   // mult_initialize_labjack_commands(5);
+=======
+  // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
+  // last argument turns commanding on/off
+  // arguments are 1/0 0 off 1 on
+  // order is CRYO1 CRYO2 OF1 OF2 OF3
+  init_labjacks(1, 1, 0, 0, 0, 1);
+  // mult_labjack_networking_init(6, 84, 1);
+  labjack_networking_init(7, 14, 1);
+  initialize_labjack_commands(7);
+  // initializes an array of voltages for load curves
+  init_array();
+  // mult_initialize_labjack_commands(6);
+>>>>>>> labjack
 
   initialize_CPU_sensors();
+
+  // force incharge for test cryo
+  force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);
@@ -617,8 +657,17 @@ int main(int argc, char *argv[])
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
+<<<<<<< HEAD
   // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
   // initialize_bias_tone();
+=======
+
+
+  initialize_watchdog(2);
+  // Turns on software WD 2, which reboots the FC if not tickled
+
+//  initialize_bias_tone();
+>>>>>>> labjack
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
