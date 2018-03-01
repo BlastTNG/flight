@@ -10,6 +10,7 @@
 **.obj
 **.fits
 **.suo
+stars/windows/stars/*
 **.ko
 
 moc_*

@@ -139,20 +139,26 @@ enum singleCommand {
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
-    of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
-    of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
-    of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
-    of_relay_7_on, of_relay_7_off, of_relay_8_on, of_relay_8_off,
-    of_relay_9_on, of_relay_9_off, of_relay_10_on, of_relay_10_off,
-    of_relay_11_on, of_relay_11_off, of_relay_12_on, of_relay_12_off,
-    of_relay_13_on, of_relay_13_off, of_relay_14_on, of_relay_14_off,
+    cycle_hd_pv, cycle_eth_switch, cycle_fc1, cycle_xsc1, cycle_fc2,
+    cycle_xsc0, cycle_gyros, cycle_data_transmit, cycle_el_mot, cycle_pivot,
+    cycle_magnetometer, cycle_rw_mot, cycle_steppers, cycle_clinometers, cycle_of_15,
+    cycle_of_16, cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4,
+    cycle_if_5, cycle_if_6, cycle_if_7, cycle_if_8, cycle_if_9,
+    cycle_if_10,
+    hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
+    fc1_on, fc1_off, xsc1_acs_on, xsc1_acs_off,
+    fc2_on, fc2_off, xsc0_acs_on, xsc0_acs_off,
+    gyros_on, gyros_off, data_transmit_on, data_transmit_off,
+    el_mot_on, el_mot_off, pivot_on, pivot_off,
+    magnetometer_on, magnetometer_off, rw_mot_on, rw_mot_off,
+    steppers_on, steppers_off, clinometers_on, clinometers_off,
     of_relay_15_on, of_relay_15_off, of_relay_16_on, of_relay_16_off,
     if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
     if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
     if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
-    level_sensor_pulse, single_cal_pulse, heaters_off,
+    level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
   xyzzy
 };
 
@@ -241,6 +247,7 @@ enum multiCommand {
   cal_length,
   level_length,
   heater_sync,
+  send_dac,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
