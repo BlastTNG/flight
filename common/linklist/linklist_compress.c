@@ -580,7 +580,16 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   int fsize = read_block_header(buffer,&id,&blksize,&i,&n,&totalsize);
 
   // no data to read
-  if (blksize == 0) return;
+  if (blksize == 0) {
+    // close any dangling file pointers
+    if (block->fp) {
+      blast_info("Closing \"%s\"", block->filename);
+      fclose(block->fp);
+      block->fp = NULL;
+      block->filename[0] = 0;
+    }
+    return;
+  }
 
   if (n == 0) { // special case of block fragment
     blast_info("Received block fragment %d (size %d)\n",i,totalsize);
@@ -600,6 +609,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
   if (id & BLOCK_FILE_MASK) { // receiving a file
     // a different id packet was received, so close file if that packet is open
+    id ^= BLOCK_FILE_MASK; // remove the mask
     if ((id != block->id) && block->fp) {
       fclose(block->fp);
       block->fp = NULL;
