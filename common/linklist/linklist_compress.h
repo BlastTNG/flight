@@ -61,6 +61,7 @@ void assign_superframe_to_linklist(linklist_t *, uint8_t *);
 void assign_compframe_to_linklist(linklist_t *, uint8_t *);
 int write_allframe(uint8_t *, uint8_t *);
 int read_allframe(uint8_t *, uint8_t *);
+void packetize_block_raw(struct block_container * , uint8_t *);
 
 #ifdef __cplusplus
 }

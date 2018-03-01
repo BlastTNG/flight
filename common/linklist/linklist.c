@@ -104,17 +104,6 @@ void realloc_list(struct link_list * ll, int * x)
   ll->items = (struct link_entry *) realloc(ll->items,(*x)*(sizeof(struct link_entry)));
 }
 
-uint16_t compute_intname(char * name)
-{
-  int i;
-
-  uint16_t intname = 0;
-
-  for (i=0;i<strlen(name);i+=2) intname ^= *(uint16_t *) (name+i);
-
-  return intname;
-}
-
 void parse_line(char *line, char ** sinks, unsigned int nargs)
 {
   int i, j;
@@ -253,6 +242,26 @@ void parse_block(linklist_t * ll, char * name)
   ll->blocks[ll->num_blocks].n = 1; // inits
   ll->blocks[ll->num_blocks].num = 0; // inits
   ll->num_blocks++;
+}
+
+block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
+{
+  int i;
+  for (i = 0; i < ll->num_blocks; i++) {
+    if (ll->blocks[i].le == le) return &ll->blocks[i];
+  }
+  return NULL;
+}
+
+uint16_t compute_intname(char * name)
+{
+  int i;
+
+  uint16_t intname = 0;
+
+  for (i=0;i<strlen(name);i+=2) intname ^= *(uint16_t *) (name+i);
+
+  return intname;
 }
 
 /**
@@ -493,7 +502,7 @@ linklist_t * parse_linklist(char *fname)
 
 	for (i=0;i<ll->num_blocks;i++)
 	{
-		printf("%s == %d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].intname,ll->blocks[i].alloc_size);
+		printf("%s == %d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].intname, ll->blocks[i].alloc_size);
 	}
 
   printf("Serial: ");

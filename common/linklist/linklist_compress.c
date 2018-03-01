@@ -65,6 +65,38 @@ uint32_t superframe_skip[RATE_END] = {0};
 uint32_t superframe_size = 0;
 uint32_t allframe_size = 0;
 
+// generates the block header in the buffer
+int make_block_header(uint8_t * buffer, uint16_t id, uint16_t size, uint16_t i, uint16_t n, uint32_t totalsize)
+{
+  /* block header (12 bytes)
+   * ----------------
+   * [0-1] = identifier
+   * [2-3] = packet size [bytes]
+   * [4-5] = packet number
+   * [6-7] = total number of packets
+   * [8-12] = total block size [bytes]
+   */
+  *((uint16_t *) (buffer+0)) = id; // ID
+  memcpy(buffer+2,&size,2); // packet size
+  memcpy(buffer+4,&i,2); // packet number
+  memcpy(buffer+6,&n,2); // number of packets
+  memcpy(buffer+8,&totalsize,4); // total size
+
+  return PACKET_HEADER_SIZE;
+}
+
+// generates the block header in the buffer
+int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *i, uint16_t *n, uint32_t *totalsize)
+{
+  *id = *(uint16_t *) (buffer+0);
+  *size = *(uint16_t *) (buffer+2);
+  *i = *(uint16_t *) (buffer+4);
+  *n = *(uint16_t *) (buffer+6);
+  *totalsize = *(uint32_t *) (buffer+8);
+
+  return PACKET_HEADER_SIZE;
+}
+
 void define_superframe()
 {
   int rate = 0;
@@ -248,15 +280,13 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
       tlm_comp_type = tlm_le->comp_type;
       tlm_in_buf = buffer_in+tlm_in_start;
 
-/* TODO: BLOCKS
-      if (tlm_le->tlm->type == 'B') // block types for images
+      if (tlm_le->tlm == &block_channel) // block types
       {
-        packetize_block(downlinklist[linkfile_ind],tlm_le->tlm->name,tlm_out_buf);
-        //printf("intname = %d\n",*(uint16_t *) tlm_out_buf);
+        block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+        if (theblock) packetize_block_raw(theblock, tlm_out_buf);
+        else blast_err("Could not find block in linklist \"%s\"", ll->name);
       }
-      else 
-*/
-      if (tlm_comp_type != NO_COMP) // compression
+      else if (tlm_comp_type != NO_COMP) // compression
       {
         (*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
       }
@@ -427,6 +457,30 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
   ret = (tot == 0) ? ret : ret/tot;
 
   return ret;
+}
+
+void packetize_block_raw(struct block_container * block, uint8_t * buffer)
+{
+  if (block->i < block->n) // packets left to be sent
+  { 
+    unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
+    unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE,block->curr_size-loc);
+    
+    int fsize = make_block_header(buffer,block->intname,cpy,block->i,block->n,block->curr_size);
+    memcpy(buffer+fsize,block->buffer+loc,cpy);
+
+    //printf("Sent block %d/%d (name == %d, size = %d)\n",block->i+1,block->n,block->intname,cpy);
+    
+    block->i++;
+    block->num++;
+  }
+  else // no blocks left
+  {
+    memset(buffer,0,block->le->blk_size);
+    block->i = block->n;
+    //printf("Nothing to send\n");
+  }
+
 }
 
 double datatodouble(uint8_t * data, char type)

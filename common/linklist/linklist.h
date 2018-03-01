@@ -91,6 +91,7 @@ struct link_list
 
 typedef struct link_list linklist_t;
 typedef struct link_entry linkentry_t;
+typedef struct block_container block_t;
 
 extern channel_t block_channel;
 
@@ -98,13 +99,14 @@ linklist_t * parse_linklist(char *);
 unsigned int get_channel_size(const channel_t *);
 unsigned int get_channel_spf(const channel_t *);
 unsigned int get_spf(unsigned int);
-uint16_t compute_intname(char * );
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
 void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
+uint16_t compute_intname(char * );
+block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 
 #ifdef __cplusplus
 }
