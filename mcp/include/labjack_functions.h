@@ -93,8 +93,6 @@
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 4096
 
-// For now we only have one cyro readout Labjack
-// TODO(laura): Integrate PSS and OF Labjacks
 #define NUM_LABJACKS 8
 
 typedef struct { // temp names

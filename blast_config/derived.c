@@ -528,7 +528,7 @@ derived_tng_t derived_list[] = {
     LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
     LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
     LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", -1, 0),
-    LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", -1, 0),
+    LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", 200, 0), // in mL/min
     LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
 
 
@@ -543,7 +543,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TR_500_FPA_INT", "TR_500_FPA", -1, 0),
     LINCOM("ROX_BIAS_INT", "ROX_BIAS", -1, 0),
     LINTERP("NOMINAL_BIAS", "ROX_BIAS_INT", LUT_DIR "Vbias_LUT.txt"),
-    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.42763512, 0),
+    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.296602587, 0),
     DIVIDE("TR_FPA_1K_CORRECTED", "TR_FPA_1K_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_250_FPA_CORRECTED", "TR_250_FPA_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_1K_PLATE_CORRECTED", "TR_1K_PLATE_INT", "ROX_BIAS_COMPARE"),

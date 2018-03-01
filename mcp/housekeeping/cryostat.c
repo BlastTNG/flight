@@ -444,7 +444,7 @@ void read_thermometers(void) {
         SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
         // below are the random cryo labjack channels
         SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
-        SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ));
+        SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ)); // mve to 200 hz
         SET_SCALED_VALUE(heater_300mk_Addr, labjack_get_value(LABJACK_CRYO_2, HEATER_300MK_READ));
     }
 }
@@ -732,16 +732,17 @@ void cryo_1hz(int setting_1hz) {
         heater_control();
         heater_read();
         load_curve_300mk();
-        read_thermometers();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
     if (setting_200hz == 1) {
         cal_control();
+        read_thermometers();
     }
     if (setting_200hz == 2) {
         read_chopper();
+        read_thermometers();
     }
 }
 

@@ -42,8 +42,8 @@
 
 #define N2_FLOW_CHAN 0
 #define HE_BLOW_CHAN 1
-#define HE_POT_FLOW_CHAN 2
-#define HE_PURGE_FLOW_CHAN 3
+#define HE_POT_FLOW_CHAN 2 // low flow
+#define HE_PURGE_FLOW_CHAN 3 // hi flow
 #define ALARM_GAUGE 4
 
 static void aalborg_n2(void) {
@@ -73,7 +73,7 @@ static void aalborg_he_pot(void) {
         flow_he_pot_Addr = channels_find_by_name("he_pot_flow_v");
         first_time_he_pot = 0;
     }
-    // SET_SCALED_VALUE(flow_he_pot_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_FLOW_CHAN));
+    SET_SCALED_VALUE(flow_he_pot_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_FLOW_CHAN));
 }
 
 static void aalborg_he_purge(void) {
@@ -83,7 +83,7 @@ static void aalborg_he_purge(void) {
         flow_he_purge_Addr = channels_find_by_name("he_purge_flow_v");
         first_time_he_purge = 0;
     }
-    // SET_SCALED_VALUE(flow_he_purge_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_PURGE_FLOW_CHAN));
+    SET_SCALED_VALUE(flow_he_purge_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_PURGE_FLOW_CHAN));
 }
 
 static void read_alarm_gauge(void) {
@@ -92,7 +92,7 @@ static void read_alarm_gauge(void) {
     if (first_gauge) {
         gauge_Addr = channels_find_by_name("alarm_gauge");
     }
-    SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, 3));
+    SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, ALARM_GAUGE));
 }
 
 void monitor_flow(int on) {

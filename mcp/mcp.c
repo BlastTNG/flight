@@ -375,10 +375,14 @@ static void mcp_2hz_routines(void)
 static void mcp_1hz_routines(void)
 {
     // auto_cycle_mk2();
+    // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
+    // out frame monitoring (current loops and thermistors) 1 on 0 off
     outer_frame(0);
-    relays(2);
-    highbay(1, 0, 1, 0, 1);
+    // relays arg defines found in relay.h
+    relays(ALL_RELAYS);
+    // highbay will be rewritten as all on or off when box is complete
+    highbay(1, 1, 1, 1, 1);
     // thermal_vac();
     labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
@@ -567,12 +571,17 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
+  // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
+  // last argument turns commanding on/off
+  // arguments are 1/0 0 off 1 on
+  // order is CRYO1 CRYO2 OF1 OF2 OF3
   init_labjacks(1, 1, 0, 0, 0, 1);
-  mult_labjack_networking_init(6, 84, 1);
-  // labjack_networking_init(7, 14, 1);
-  // initialize_labjack_commands(7);
+  // mult_labjack_networking_init(6, 84, 1);
+  labjack_networking_init(7, 14, 1);
+  initialize_labjack_commands(7);
+  // initializes an array of voltages for load curves
   init_array();
-  mult_initialize_labjack_commands(6);
+  // mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();
 
