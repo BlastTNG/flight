@@ -54,7 +54,7 @@ Lens::~Lens()
 void Lens::init()
 {
     find_device_period = 60.0;
-    baud_rate = 115200;
+    baud_rate = 9600;
     for (unsigned int i=0; i<num_commands; i++) {
         command_fcp_counters[i] = 0;
         command_stars_counters[i] = 0;
@@ -301,8 +301,7 @@ void Lens::send_message(string message, commands_t command, int wait_ms)
     try {
         if (port.is_open()) {
             clear_read_buffer();
-            logger.log("sending birger message (str) " + message.substr(0, message.size()-1));
-            logger.log("               message (hex) " + string_to_hex(message));
+            logger.log("sending motor command (str) " + message.substr(0, message.size()-1));
             io.reset();
             boost::asio::write(port, boost::asio::buffer(message.c_str(), message.size()));
             read_timeout.expires_from_now(boost::posix_time::milliseconds(8000));
@@ -359,8 +358,8 @@ void Lens::check_device(string device_name)
         port.open(device_name);
         port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
         if (port.is_open()) {
-            string message = "vs\r";
-            logger.log("attempting message vs");
+            string message = "/1&\r";
+            logger.log("attempting message & to motor 1");
             send_message(message, version_string);
         }
         port.close();

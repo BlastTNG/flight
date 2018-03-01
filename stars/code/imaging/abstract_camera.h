@@ -59,7 +59,6 @@ class Imaging::AbstractCamera
     unsigned short* buffers[max_num_buffers];
     unsigned int num_buffers_filled;
 
-    int last_remote_buffer_counter;
     int image_width, image_height;
 	int last_lens_requests_focus_counter;
 
