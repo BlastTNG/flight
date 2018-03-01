@@ -31,6 +31,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TRIM] = "Pointing Sensor Trims",
                                     [GRPOS_ELECT] = "Aux. Electronics",
                                     [GRPOS_BIAS] = "Bias",
+                                    [GRPOS_ROACH] = "ROACH Commands",
                                     [GRPOS_VETO] = "Pointing Sensor Vetos",
                                     [GRPOS_ACT] = "Actuators",
                                     [GRPOS_XSC_HOUSE] = "XSC Housekeeping",
@@ -47,9 +48,91 @@ const char *GroupNames[N_GROUPS] = {
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
-struct scom scommands[N_SCOMMANDS] = {
+struct scom scommands[xyzzy + 1] = {
+  {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_CRYO},
+  {COMMAND(heater_300mk_on), "turning on 300mK heater", GR_CRYO},
+  {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
+  {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
+  {COMMAND(charcoal_hs_off), "turning off charcoal hs", GR_CRYO},
+  {COMMAND(single_cal_pulse), "pulsing the cal lamp", GR_CRYO},
+  {COMMAND(lna250_on), "turning on 250 lna", GR_CRYO},
+  {COMMAND(lna250_off), "turning off 250 lna", GR_CRYO},
+  {COMMAND(lna350_on), "turning on 350 lna", GR_CRYO},
+  {COMMAND(lna350_off), "turning off 350 lna", GR_CRYO},
+  {COMMAND(lna500_on), "turning on 500 lna", GR_CRYO},
+  {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
+  {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
+  {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
+  {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
+  {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
+  {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
+  {COMMAND(heaters_off), "turning off the heater card channels", GR_CRYO},
+  {COMMAND(heater_1k_on), "turning on 1K heater", GR_CRYO},
+  {COMMAND(heater_1k_off), "turning off 1K heater", GR_CRYO},
+  {COMMAND(power_box_on), "turning on the power box", GR_CRYO},
+  {COMMAND(power_box_off), "turning off the power box", GR_CRYO},
+  {COMMAND(amp_supply_on), "turning on +5V, +/-15V", GR_CRYO},
+  {COMMAND(amp_supply_off), "turning off +5V, +/-15V", GR_CRYO},
+  {COMMAND(therm_readout_on), "turning on 12V channels", GR_CRYO},
+  {COMMAND(therm_readout_off), "turning off 12V channels", GR_CRYO},
+  {COMMAND(heater_supply_on), "turning on 40V channels", GR_CRYO},
+  {COMMAND(heater_supply_off), "turning off 40V channels", GR_CRYO},
+  {COMMAND(heater_sync), "syncing heater command channel to input", GR_CRYO},
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
+// power box OF and IF relay controls
+  {COMMAND(of_relay_1_on), "turning on OF relay 1", GR_CRYO},
+  {COMMAND(of_relay_2_on), "turning on OF relay 2", GR_CRYO},
+  {COMMAND(of_relay_3_on), "turning on OF relay 3", GR_CRYO},
+  {COMMAND(of_relay_4_on), "turning on OF relay 4", GR_CRYO},
+  {COMMAND(of_relay_5_on), "turning on OF relay 5", GR_CRYO},
+  {COMMAND(of_relay_6_on), "turning on OF relay 6", GR_CRYO},
+  {COMMAND(of_relay_7_on), "turning on OF relay 7", GR_CRYO},
+  {COMMAND(of_relay_8_on), "turning on OF relay 8", GR_CRYO},
+  {COMMAND(of_relay_9_on), "turning on OF relay 9", GR_CRYO},
+  {COMMAND(of_relay_10_on), "turning on OF relay 10", GR_CRYO},
+  {COMMAND(of_relay_11_on), "turning on OF relay 11", GR_CRYO},
+  {COMMAND(of_relay_12_on), "turning on OF relay 12", GR_CRYO},
+  {COMMAND(of_relay_13_on), "turning on OF relay 13", GR_CRYO},
+  {COMMAND(of_relay_14_on), "turning on OF relay 14", GR_CRYO},
+  {COMMAND(of_relay_15_on), "turning on OF relay 15", GR_CRYO},
+  {COMMAND(of_relay_16_on), "turning on OF relay 16", GR_CRYO},
+  {COMMAND(of_relay_1_off), "turning off OF relay 1", GR_CRYO},
+  {COMMAND(of_relay_2_off), "turning off OF relay 2", GR_CRYO},
+  {COMMAND(of_relay_3_off), "turning off OF relay 3", GR_CRYO},
+  {COMMAND(of_relay_4_off), "turning off OF relay 4", GR_CRYO},
+  {COMMAND(of_relay_5_off), "turning off OF relay 5", GR_CRYO},
+  {COMMAND(of_relay_6_off), "turning off OF relay 6", GR_CRYO},
+  {COMMAND(of_relay_7_off), "turning off OF relay 7", GR_CRYO},
+  {COMMAND(of_relay_8_off), "turning off OF relay 8", GR_CRYO},
+  {COMMAND(of_relay_9_off), "turning off OF relay 9", GR_CRYO},
+  {COMMAND(of_relay_10_off), "turning off OF relay 10", GR_CRYO},
+  {COMMAND(of_relay_11_off), "turning off OF relay 11", GR_CRYO},
+  {COMMAND(of_relay_12_off), "turning off OF relay 12", GR_CRYO},
+  {COMMAND(of_relay_13_off), "turning off OF relay 13", GR_CRYO},
+  {COMMAND(of_relay_14_off), "turning off OF relay 14", GR_CRYO},
+  {COMMAND(of_relay_15_off), "turning off OF relay 15", GR_CRYO},
+  {COMMAND(of_relay_16_off), "turning off OF relay 16", GR_CRYO},
+  {COMMAND(if_relay_1_on), "turning on IF relay 1", GR_CRYO},
+  {COMMAND(if_relay_2_on), "turning on IF relay 2", GR_CRYO},
+  {COMMAND(if_relay_3_on), "turning on IF relay 3", GR_CRYO},
+  {COMMAND(if_relay_4_on), "turning on IF relay 4", GR_CRYO},
+  {COMMAND(if_relay_5_on), "turning on IF relay 5", GR_CRYO},
+  {COMMAND(if_relay_6_on), "turning on IF relay 6", GR_CRYO},
+  {COMMAND(if_relay_7_on), "turning on IF relay 7", GR_CRYO},
+  {COMMAND(if_relay_8_on), "turning on IF relay 8", GR_CRYO},
+  {COMMAND(if_relay_9_on), "turning on IF relay 9", GR_CRYO},
+  {COMMAND(if_relay_10_on), "turning on IF relay 10", GR_CRYO},
+  {COMMAND(if_relay_1_off), "turning off IF relay 1", GR_CRYO},
+  {COMMAND(if_relay_2_off), "turning off IF relay 2", GR_CRYO},
+  {COMMAND(if_relay_3_off), "turning off IF relay 3", GR_CRYO},
+  {COMMAND(if_relay_4_off), "turning off IF relay 4", GR_CRYO},
+  {COMMAND(if_relay_5_off), "turning off IF relay 5", GR_CRYO},
+  {COMMAND(if_relay_6_off), "turning off IF relay 6", GR_CRYO},
+  {COMMAND(if_relay_7_off), "turning off IF relay 7", GR_CRYO},
+  {COMMAND(if_relay_8_off), "turning off IF relay 8", GR_CRYO},
+  {COMMAND(if_relay_9_off), "turning off IF relay 9", GR_CRYO},
+  {COMMAND(if_relay_10_off), "turning off IF relay 10", GR_CRYO},
 
   {COMMAND(xsc0_off), "turn off XSC0", GR_XSC_MODE | GR_POWER | CONFIRM},
   {COMMAND(xsc0_on), "turn on XSC0", GR_XSC_MODE | GR_POWER},
@@ -97,9 +180,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(hub232_off), "turn off the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_on), "turn on the RS-232 (serial) hub", GR_POWER},
   {COMMAND(hub232_cycle), "power cycle the RS-232 (serial) hub", GR_POWER},
-  {COMMAND(das_off), "turn off the DAS", GR_POWER},
-  {COMMAND(das_on), "turn on the DAS", GR_POWER},
-  {COMMAND(das_cycle), "power cycle the DAS", GR_POWER},
   {COMMAND(rx_off), "receiver/preamp crate Make it Not-So!", GR_POWER},
   {COMMAND(rx_on), "receiver/preamp crate Make it So!", GR_POWER},
   {COMMAND(rx_hk_off), "cryostat housekeepng Make it Not-So!", GR_POWER},
@@ -158,16 +238,6 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
-  {COMMAND(auto_jfetheat), "automatically reguate jfet heater level", GR_CRYO},
-  {COMMAND(charcoal_on), "charcoal heater on, helium fridge autocycle off", GR_CRYO},
-  {COMMAND(charcoal_off), "charcoal heater off, helium fridge autocycle off", GR_CRYO},
-  {COMMAND(hs_charcoal_on), "charcoal heat switch on, fridge autocycle off", GR_CRYO},
-  {COMMAND(hs_charcoal_off), "charcoal heat switch off, fridge autocycle off", GR_CRYO},
-  {COMMAND(auto_cycle), "activate helium fridge autocycle system", GR_CRYO},
-  {COMMAND(fridge_cycle),
-    "manually cycle helium fridge now, fridge autocycle on", GR_CRYO},
-  {COMMAND(jfet_on), "manually turn JFET heater on, auto control off", GR_CRYO},
-  {COMMAND(jfet_off), "manually turn JFET heater off, auto control off", GR_CRYO},
   {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
   {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
   {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
@@ -175,10 +245,6 @@ struct scom scommands[N_SCOMMANDS] = {
 
   {COMMAND(cal_on), "calibrator on", GR_CRYO},
   {COMMAND(cal_off), "calibrator off", GR_CRYO},
-
-  {COMMAND(level_on), "helium level sensor on", GR_CRYO},
-  {COMMAND(level_off), "helium level sensor off", GR_CRYO},
-  {COMMAND(level_pulse), "helium level sensor pulse", GR_CRYO},
   {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
@@ -188,15 +254,6 @@ struct scom scommands[N_SCOMMANDS] = {
     GR_CRYO},
   {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
     GR_CRYO},
-  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
-  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
-  {COMMAND(pot_valve_open), "set He4 pot valve direction open",
-    GR_CRYO},
-  {COMMAND(pot_valve_close), "set He4 pot valve direction close",
-    GR_CRYO},
-
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
@@ -215,12 +272,10 @@ struct scom scommands[N_SCOMMANDS] = {
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
   {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", 0},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
-  {COMMAND(balance_off),  "Turn off the balance pumps", GR_BAL},
-  {COMMAND(balance_heat_on),  "Turn on the balance pump heating card", GR_BAL},
-  {COMMAND(balance_heat_off), "Turn off the balance pump heating card", GR_BAL},
+  {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -257,9 +312,9 @@ struct scom scommands[N_SCOMMANDS] = {
  * l :  parameter is 32 bit unnormalised integer. Max is CMD_L_MAX
  * f :  parameter is 16 bit renormalised floating point
  * d :  parameter is 32 bit renormalised floating point
- * s :  parameter is 7-bit character string
+ * s :  parameter is 7-bit character string JOY: actually 32 char long
  */
-struct mcom mcommands[N_MCOMMANDS] = {
+struct mcom mcommands[plugh + 2] = {
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
     GR_TELEM, 1,
     {
@@ -343,23 +398,29 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"El Scan Speed (deg az/s)", 0,   2, 'f', "NONE"}
     }
   },
-  {COMMAND(balance_manual), "Manually set balance pump rate", GR_BAL, 1,
+  {COMMAND(balance_manual), "Manually set balance on", GR_BAL, 1,
     {
-      {"level",           -1.0, 1.0, 'f', "NONE"},
+      {"dir (pos=1, neg=-1, off=0)",           -1, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 4,
+  {COMMAND(balance_vel), "set the balance system velocity and acceleration",
+    GR_BAL, 2,
     {
-      {"Pump On Point (A)",  0, 2, 'f', "LEVEL_ON_BAL"},
-      {"Pump Off Point (A)", 0, 2, 'f', "LEVEL_OFF_BAL"},
-      {"Target (A)",        -2, 2, 'f', "LEVEL_TARGET_BAL"},
-      {"Gain",            0.01, 10, 'f', "GAIN_BAL"},
+      {"Velocity", 5, 500000, 'l', "VEL_BAL"},
+      {"Acceleration", 1, 1000, 'i', "ACC_BAL"},
     }
   },
-  {COMMAND(balance_tset), "Set balance pump minumum temperature", GR_BAL, 1,
-     {
-       {"Temperature (C)",  -273.4, 40, 'f', "T_BOX_BAL"},
-     }
+  {COMMAND(balance_i), "set the balance system currents", GR_BAL, 2,
+    {
+      {"Move current (%)", 0, 100, 'i', "I_MOVE_BAL"},
+      {"Hold current (%)", 0,  50, 'i', "I_HOLD_BAL"},
+    }
+  },
+  {COMMAND(balance_gain), "Set balance system setpoints", GR_BAL, 2,
+    {
+      {"I_El Balance On (A)",  0, 5, 'f', "I_LEVEL_ON_BAL"},
+      {"I_El Balance Off  (A)", 0, 5, 'f', "I_LEVEL_OFF_BAL"},
+    }
   },
   {COMMAND(box), "scan an az/el box centred on RA/Dec with el steps", GR_POINT, 7,
     {
@@ -397,6 +458,13 @@ struct mcom mcommands[N_MCOMMANDS] = {
     {
       {"Az Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"},
       {"El Speed (deg/s on sky)", -2.0, 2.0, 'f', "0.0"}
+    }
+  },
+  {COMMAND(cur_mode), "drive motors at constant current", GR_POINT, 3,
+    {
+      {"Pivot Current (Amps)", -20.0, 20.0, 'f', "0.0"},
+      {"RW Current (Amps)", -20.0, 20.0, 'f', "0.0"},
+      {"Elevation Current (Amps)", -20.0, 20.0, 'f', "0.0"}
     }
   },
   {COMMAND(quad), "scan a quadrilateral region in RA/Dec (corners must be ordered)", GR_POINT, 11,
@@ -722,18 +790,43 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-
-  {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_tdrss"}
+      {"Pilot Linklist", 0, 32, 's', "NONE"},
+      {"Biphase Linklist", 0, 32, 's', "NONE"},
+      {"High Rate Linklist", 0, 32, 's', "NONE"}
     }
   },
 
-  {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
+  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
     }
   },
+
+  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
+    }
+  },
+
+  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+    }
+  },
+
+  {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
+    {
+      {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
+    }
+  },
+  {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
+    {
+      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
+    }
+  },
+
 
   /****************************************/
   /*************** Misc.  *****************/
@@ -750,6 +843,80 @@ struct mcom mcommands[N_MCOMMANDS] = {
     }
   },
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+  {COMMAND(load_new_tone_amplitudes), "loads new tone amplitudes from file", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(df_calc), "Force calculation of I,Q gradient, Delta F", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"1 = Calc new ref grads & ref delta_f, 2 = calculate comparison delta_f", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Manually retune, 1 = Auto retune"}
+    }
+  },
+  {COMMAND(opt_tones), "Attempt to fine tune targ tones found by get_targ_freqs()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Default, off, 1 = Run", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
+    }
+  },
+  /***************************************/
+  /*************** ROX Bias  *************/
+  {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
+    {
+      {"ROX bias amplitude (0-64)", 0, 64, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** Bias  *****************/
   {COMMAND(bias_level_250), "bias level 250 micron", GR_BIAS, 1,
@@ -804,11 +971,6 @@ struct mcom mcommands[N_MCOMMANDS] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_pulse), "calibrator single pulse", GR_CRYO, 1,
-    {
-      {"Pulse Length (ms)", 0, 8000, 'i', "PULSE_CAL"}
-    }
-  },
   {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
     {
       {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
@@ -816,6 +978,17 @@ struct mcom mcommands[N_MCOMMANDS] = {
       {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
     }
   },
+  {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
+      {
+          {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
+      }
+  },
+
 
   /***************************************/
   /********* Cryo heat   *****************/
@@ -849,7 +1022,7 @@ struct mcom mcommands[N_MCOMMANDS] = {
         {
             {"which", 0, 2, 'i', "NONE"},
             {"exposure time_cs (cs) [default: 12]", 1, 100, 'l', "NONE"},
-            {"grace period (s) (disregards which) [default: 10.0]", 1.0, 100.0, 'f', "NONE"},
+            {"grace period (s) (disregards which) [default: 45.0]", 1.0, 100.0, 'f', "NONE"},
             {"post trigger counter_mcp share delay (cs) (disregards which) [default: 200]", 1, 1000, 'l', "NONE"},
         },
     },

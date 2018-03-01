@@ -47,6 +47,7 @@
 
 #include <blast_time.h>
 #include <calibrate.h>
+#include <command_struct.h>
 #include <ec_motors.h>
 #include <motors.h>
 #include <mcp.h>
@@ -109,8 +110,6 @@ static int32_t dummy_write_var = 0;
 /// Read words
 static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
 static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static uint32_t *enc_state[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                      (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var };
 static int16_t *motor_current[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
                                          (int16_t*) &dummy_var, (int16_t*) &dummy_var };
@@ -125,9 +124,6 @@ static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*)
                                              (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
                                               (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
-static uint16_t *network_status[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                           (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
-
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
                                          (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
@@ -169,24 +165,6 @@ int16_t piv_get_ctl_word(void)
 }
 
 /**
- * This set of functions returns the networks status word of each motor controller
- * @return uint16 network status word bitmap
- */
-uint16_t rw_get_net_status(void)
-{
-    return *network_status[rw_index];
-}
-int16_t el_get_net_status(void)
-{
-    return *network_status[el_index];
-}
-int16_t piv_get_net_status(void)
-{
-    return *network_status[piv_index];
-}
-
-
-/**
  * This set of functions return the absolute position read by each motor controller
  * @return int32 value of the position (modulo the wrap position value)
  */
@@ -198,9 +176,9 @@ int32_t el_get_position(void)
 {
     return *actual_position[el_index];
 }
-int32_t el_get_motor_position(void)
+int32_t el_get_motor_position(void) // Offsetting motor units to correspond with elevation
 {
-    return *motor_position[el_index];
+    return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
 }
 int32_t piv_get_position(void)
 {
@@ -265,23 +243,6 @@ int32_t piv_get_velocity(void)
 }
 
 /**
- * This set of functions return the state bits of the external encoder if it exists
- * @return int32 value of the velocity in counts per second
- */
-uint32_t rw_get_load_state(void)
-{
-    return *enc_state[rw_index];
-}
-uint32_t el_get_load_state(void)
-{
-    return *enc_state[el_index];
-}
-uint32_t piv_get_load_state(void)
-{
-    return *enc_state[piv_index];
-}
-
-/**
  * This set of functions returns the current in units of 0.01A
  * @return int16 value of the current
  */
@@ -291,7 +252,7 @@ int16_t rw_get_current(void)
 }
 int16_t el_get_current(void)
 {
-    return *motor_current[el_index];
+    return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
 }
 int16_t piv_get_current(void)
 {
@@ -359,7 +320,7 @@ void rw_set_current(int16_t m_cur)
 }
 void el_set_current(int16_t m_cur)
 {
-    *target_current[el_index] = m_cur;
+    *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
 }
 void piv_set_current(int16_t m_cur)
 {
@@ -389,15 +350,15 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
-    *control_word[rw_index] |= ECAT_CTL_HALT;
+    *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
 }
 void el_disable(void)
 {
-    *control_word[el_index] |= ECAT_CTL_HALT;
+    *control_word[el_index] &= (~ECAT_CTL_ENABLE);
 }
 void piv_disable(void)
 {
-    *control_word[piv_index] |= ECAT_CTL_HALT;
+    *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
 }
 
 /**
@@ -520,7 +481,6 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    /// TODO: Update find_controllers to utilize specific adapter for motor controllers (control via system)
     char name[16] = "eth1";
     int ret_init;
     int ret_config;
@@ -749,14 +709,12 @@ static void map_index_vars(int m_index)
 
     PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
     PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
-    PDO_SEARCH_LIST(ECAT_LOAD_STATUS, enc_state);
     PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
     PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
     PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
     PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
     PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
     PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-    PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status);
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
@@ -850,9 +808,7 @@ static void read_motor_data()
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
-    RWMotorData[motor_i].load_state = rw_get_load_state();
     RWMotorData[motor_i].state = rw_get_ctl_word();
-    RWMotorData[motor_i].net_status = rw_get_net_status();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -862,9 +818,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
-    ElevMotorData[motor_i].load_state = el_get_load_state();
     ElevMotorData[motor_i].state = el_get_ctl_word();
-    ElevMotorData[motor_i].net_status = el_get_net_status();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -873,9 +827,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
-    PivotMotorData[motor_i].load_state = piv_get_load_state();
     PivotMotorData[motor_i].state = piv_get_ctl_word();
-    PivotMotorData[motor_i].net_status = piv_get_net_status();
 
     motor_index = INC_INDEX(motor_index);
 }
@@ -959,11 +911,23 @@ static void* motor_control(void* arg)
      * Get the current value of each RX word to avoid stomping on the current state
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        len = 4;
-        ec_SDOread(i, ECAT_CURRENT_LOOP_CMD, false, &len, target_current[i], EC_TIMEOUTRXM);
-        len = 2;
-        ec_SDOread(i, ECAT_CTL_WORD, false, &len, control_word[i], EC_TIMEOUTRXM);
+        *target_current[i] = 0;
+        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
+
+    if (CommandData.disable_az) {
+        rw_disable();
+        piv_disable();
+    } else {
+        rw_enable();
+        piv_enable();
+    }
+    if (CommandData.disable_el) {
+        el_disable();
+    } else {
+        el_enable();
+    }
+
 
     /// Set the default current limits
     rw_init_current_limit();
@@ -997,6 +961,19 @@ static void* motor_control(void* arg)
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (CommandData.disable_az) {
+            rw_disable();
+            piv_disable();
+        } else {
+            rw_enable();
+            piv_enable();
+        }
+        if (CommandData.disable_el) {
+            el_disable();
+        } else {
+            el_enable();
+        }
 
         if (ret && ret != -EINTR) {
             blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));

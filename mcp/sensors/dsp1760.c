@@ -29,15 +29,18 @@
 #include <string.h>
 
 #include "phenom/listener.h"
-#include "phenom/serial.h"
 #include "phenom/log.h"
+#include "phenom/serial.h"
+#include "phenom/thread.h"
+#include "phenom/sysutil.h"
 
 #include "blast.h"
 #include "crc.h"
 #include "conversions.h"
 
 static ph_serial_t *gyro_comm[2] = {NULL};
-static const char gyro_port[2][16] = {"/dev/ttyS2", "/dev/ttyS3"};
+// ttyGYRO0 -> COMM3, ttyGRYO1 -> COMM4
+static const char gyro_port[2][16] = {"/dev/ttyGYRO0", "/dev/ttyGYRO1"};
 
 static const uint32_t min_backoff_sec = 1;
 static const uint32_t max_backoff_sec = 60;
@@ -95,6 +98,7 @@ typedef struct
     uint32_t        gyro_valid_packet_count[3];
     uint8_t         index;
     int16_t         temp;
+    dsp1760_std_t   last_pkt;
     float           gyro_input[3][DSP1760_NPOLES+1];
 } dsp_storage_t;
 
@@ -248,7 +252,7 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         return;
     }
 
-    if (m_why & PH_IOMASK_TIME && !(m_why & PH_IOMASK_READ)) {
+    if ((m_why & PH_IOMASK_TIME) && !(m_why & PH_IOMASK_READ)) {
         blast_err("Timeout on Gyro box %d", gyro->which);
         dsp1760_disconnect(m_serial, gyro);
         return;
@@ -266,12 +270,13 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
             return;
         }
         pkt = (dsp1760_std_t*) ph_buf_mem(buf);
+        gyro->packet_count++;
 
         crc_calc = crc32_be(crc_calc, pkt->raw_data, 36);
         if (crc_calc) {
-            blast_warn("Received invalid CRC from Gyro %d", gyro->which);
             gyro->crc_error_count++;
             invalid_data = true;
+            blast_info("Invalid packet on gyro box %d!", gyro->which);
         }
 
         pkt->x_raw = ntohl(pkt->x_raw);
@@ -294,12 +299,13 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
         }
         pkt->temp = ntohs(pkt->temp);
 
-        if (pkt->sequence != (++gyro->seq_number & 0x7F)) {
-            blast_warn("Expected Sequence %d but received %d from gyro %d", gyro->seq_number, pkt->sequence,
-                       gyro->which);
+//        blast_info("Gyro%i: x_raw=%d, y_raw=%d, z_raw=%d, reserved = %8x, status=%x, seq=%x, temp=%d, crc=%4x",
+//                  gyro->which, pkt->x_raw, pkt->y_raw, pkt->z_raw, (unsigned)pkt->reserved,
+//                  (unsigned)pkt->status, (unsigned)pkt->sequence, pkt->temp, (unsigned)pkt->crc);
+        if (!invalid_data && gyro->packet_count > 1 &&
+                pkt->sequence != (++gyro->seq_number & 0x7F)) {
             gyro->seq_error_count++;
         }
-        gyro->packet_count++;
 
         if (!invalid_data) {
             /***
@@ -324,13 +330,24 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
 
         if (!invalid_data) dsp1760_newvals(pkt, gyro);
 
+        memcpy(gyro->last_pkt.raw_data, pkt->raw_data, sizeof(dsp1760_std_t));
         ph_buf_delref(buf);
     }
 
     /// If we have accumulated the equivalent of 2
-    if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t)) {
-        blast_err("Disconnecting Gyro Box %d garbage in stream (multiple-access?)", gyro->which);
+
+    if (ph_bufq_len(m_serial->rbuf) > 2 * sizeof(dsp1760_std_t) || gyro->want_reset) {
+        if (gyro->want_reset) {
+            blast_info("Resetting Gyro Box %d due to user command", gyro->which);
+        } else {
+//            blast_info("Buffer length %i, size_of(dsp1760_std_t)=%i",
+//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
+            blast_err("Disconnecting Gyro Box %d garbage in stream (multiple-access?)", gyro->which);
+        }
         dsp1760_disconnect(m_serial, gyro);
+    } else {
+//            blast_info("OK->Buffer length %i, size_of(dsp1760_std_t)=%i-> OK",
+//                       ph_bufq_len(m_serial->rbuf), sizeof(dsp1760_std_t));
     }
 }
 
@@ -359,7 +376,7 @@ static void dsp1760_connect_gyro(ph_job_t *m_job, ph_iomask_t m_why, void *m_dat
 
 /**
  * Clears, queues for closing and resets the gyrobox
- * @param m_gyrobox why gyrobox should be reset?
+ * @param m_gyrobox which gyrobox should be reset?
  */
 void dsp1760_reset_gyro(int m_which)
 {
@@ -372,16 +389,22 @@ void dsp1760_reset_gyro(int m_which)
  */
 bool initialize_dsp1760_interface(void)
 {
+    /// Define a separate job pool for the gyro read.
+//    gyro_pool = ph_thread_pool_define("gyro_read", 4, 1);
+
     for (int i = 0; i < 2; i++) {
         activate_921k_clock(i);
         BLAST_ZERO(gyro_data[i]);
         gyro_data[i].which = i;
         gyro_data[i].backoff_sec = min_backoff_sec;
+
         ph_job_init(&(gyro_data[i].connect_job));
         gyro_data[i].connect_job.callback = dsp1760_connect_gyro;
-        gyro_data[i].connect_job.data = &gyro_data[i];
+        gyro_data[i].connect_job.data = &(gyro_data[i]);
+//        ph_job_set_pool(&(gyro_data[i].connect_job), gyro_pool);
 
-        ph_job_dispatch_now(&(gyro_data[i].connect_job));
+        // Set the dispatch to 500ms and 1000ms respectively for the gyro connect
+        ph_job_set_timer_in_ms(&(gyro_data[i].connect_job), 500 * (i+1));
     }
 
     blast_startup("Initialized gyroscope interface");

@@ -53,13 +53,14 @@
 #include "derived.h"
 
 static GHashTable *frame_table = NULL;
-static int channel_count[SRC_END][RATE_END][TYPE_END] = {{{0}}};
+static int channel_count[RATE_END][TYPE_END] = {{0}};
+int channels_count = 0;
 
-void *channel_data[SRC_END][RATE_END] = {{0}};
-size_t frame_size[SRC_END][RATE_END] = {{0}};
-static void *channel_ptr[SRC_END][RATE_END] = {{0}};
+void *channel_data[RATE_END] = {0};
+size_t frame_size[RATE_END] = {0};
+static void *channel_ptr[RATE_END] = {0};
 
-static inline size_t channel_size(channel_t *m_channel)
+size_t channel_size(channel_t *m_channel)
 {
     size_t retsize = 0;
     switch (m_channel->type) {
@@ -105,14 +106,14 @@ static void channel_map_fields(gpointer m_key, gpointer m_channel, gpointer m_us
      * We assign this location to the channel pointer, allowing us to reference the
      * individual location in the future based on a lookup in the hash table.
      */
-    if (channel->source < SRC_END && channel->rate < RATE_END) {
-        if (!channel_ptr[channel->source][channel->rate]) {
+    if (channel->rate < RATE_END) {
+        if (!channel_ptr[channel->rate]) {
             blast_fatal("Invalid Channel setup");
         }
-        channel->var = channel_ptr[channel->source][channel->rate];
-        channel_ptr[channel->source][channel->rate] += channel_size(channel);
+        channel->var = channel_ptr[channel->rate];
+        channel_ptr[channel->rate] += channel_size(channel);
     } else {
-        blast_fatal("Could not map %d and %d to source and rate!", channel->source, channel->rate);
+        blast_fatal("Could not map %d to rate!", channel->rate);
     }
 }
 
@@ -149,7 +150,6 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
         new_pkt->data[i].b_e2e = m_channel_list[i].b_e2e;
         new_pkt->data[i].type = m_channel_list[i].type;
         new_pkt->data[i].rate = m_channel_list[i].rate;
-        new_pkt->data[i].source = m_channel_list[i].source;
         memcpy(new_pkt->data[i].quantity, m_channel_list[i].quantity, UNITS_LEN);
         memcpy(new_pkt->data[i].units, m_channel_list[i].units, UNITS_LEN);
     }
@@ -218,6 +218,9 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
     }
 
     if (m_len != sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed)) {
+        blast_err(" m-Map has length %u", m_map->length);
+        blast_err("struct channelpacked has size %zu", sizeof(struct channel_packed));
+        blast_err("channel header has size %zu", sizeof(channel_header_t));
         blast_err("Length of data packet %zu does not match header data %zu",
                   m_len, sizeof(channel_header_t) + m_map->length * sizeof(struct channel_packed));
         return -1;
@@ -242,7 +245,6 @@ int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_chann
         (*m_channel_list)[channel_count].b_e2e = m_map->data[channel_count].b_e2e;
         (*m_channel_list)[channel_count].type = m_map->data[channel_count].type;
         (*m_channel_list)[channel_count].rate = m_map->data[channel_count].rate;
-        (*m_channel_list)[channel_count].source = m_map->data[channel_count].source;
         memcpy((*m_channel_list)[channel_count].quantity, m_map->data[channel_count].quantity, UNITS_LEN);
         memcpy((*m_channel_list)[channel_count].units, m_map->data[channel_count].units, UNITS_LEN);
         (*m_channel_list)[channel_count].var = NULL;
@@ -302,15 +304,25 @@ channel_t *channels_find_by_name(const char *m_name)
     return retval;
 }
 
-int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len)
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len)
 {
-	if (m_len != frame_size[m_src][m_rate]) {
-		blast_err("Size mismatch storing data for %s:%s! Got %zu bytes, expected %zu",
-		        SRC_LOOKUP_TABLE[m_src].text, RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_src][m_rate]);
+	if (m_len != frame_size[m_rate]) {
+		blast_err("Size mismatch storing data for %s! Got %zu bytes, expected %zu",
+		        RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_rate]);
+		return -1;
+	}
+    return 0;
+}
+
+int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len)
+{
+	if (m_len != frame_size[m_rate]) {
+		blast_err("Size mismatch storing data for %s! Got %zu bytes, expected %zu",
+		        RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_rate]);
 		return -1;
 	}
 
-	memcpy(channel_data[m_src][m_rate], m_data, m_len);
+	memcpy(channel_data[m_rate], m_data, m_len);
 	return 0;
 }
 
@@ -327,13 +339,13 @@ int channels_initialize(const channel_t * const m_channel_list)
 
     if (frame_table == NULL) return -1;
 
-    for (int i = 0; i < SRC_END; i++) {
-        for (int j = 0; j < RATE_END; j++) {
-            for (int k = 0; k < TYPE_END; k++) channel_count[i][j][k] = 0;
-            if (channel_data[i][j]) {
-                free(channel_data[i][j]);
-                channel_data[i][j] = NULL;
-            }
+    for (int j = 0; j < RATE_END; j++) {
+        for (int k = 0; k < TYPE_END; k++) {
+          channel_count[j][k] = 0;
+        }
+        if (channel_data[j]) {
+            free(channel_data[j]);
+            channel_data[j] = NULL;
         }
     }
 
@@ -341,49 +353,50 @@ int channels_initialize(const channel_t * const m_channel_list)
      * First Pass:  Add each entry in the channels array to a hash table for later lookup.
      * Then count each type of channel, separating by source, variable type and rate
      */
+    channels_count = 0;
     for (channel = m_channel_list; channel->field[0]; channel++) {
         g_hash_table_insert(frame_table, (gpointer)channel->field, (gpointer)channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
-            channel_count[channel->source][channel->rate][channel->type]++;
+            channel_count[channel->rate][channel->type]++;
         } else {
-            blast_fatal("Could not map %d and %d to rate and type!", channel->rate, channel->type);
+            blast_fatal("Could not map %d and %d to rate and type!, %s", channel->rate, channel->type, channel->field);
             return 1;
         }
+        channels_count++;
     }
 
     /**
      * Second Pass: Allocate a set of packed arrays representing the data frames for each source/rate.
      * We also set channel_ptr, our placeholder for the next free element in the array, to the first entry in each frame.
      */
-    for (int src = 0; src < SRC_END; src++) {
-        for (int rate = 0; rate < RATE_END; rate++) {
-            frame_size[src][rate] = (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
-                    2 * (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
-                    4 * (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32] +
-                            channel_count[src][rate][TYPE_FLOAT]) +
-                    8 * (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64] +
-                            channel_count[src][rate][TYPE_DOUBLE]);
 
-            if (frame_size[src][rate]) {
-                /**
-                 * Ensure that we can dereference the data without knowing its type by
-                 * keeping an extra 8 bytes allocated at the end
-                 */
-                channel_data[src][rate] = calloc(1, frame_size[src][rate] + sizeof(uint64_t));
-                blast_mem("Allocating %zu bytes for %u channels at %s:%s", frame_size[src][rate],
-                        (channel_count[src][rate][TYPE_INT8]+channel_count[src][rate][TYPE_UINT8]) +
-                        (channel_count[src][rate][TYPE_INT16]+channel_count[src][rate][TYPE_UINT16]) +
-                        (channel_count[src][rate][TYPE_INT32]+channel_count[src][rate][TYPE_UINT32] +
-                                channel_count[src][rate][TYPE_FLOAT]) +
-                        (channel_count[src][rate][TYPE_INT64]+channel_count[src][rate][TYPE_UINT64] +
-                                channel_count[src][rate][TYPE_DOUBLE]),
-                        SRC_LOOKUP_TABLE[src].text,
-                        RATE_LOOKUP_TABLE[rate].text);
-            } else {
-                channel_data[src][rate] = NULL;
-            }
-            channel_ptr[src][rate] = channel_data[src][rate];
+    for (int rate = 0; rate < RATE_END; rate++) {
+        frame_size[rate] = (channel_count[rate][TYPE_INT8]+channel_count[rate][TYPE_UINT8]) +
+                       2 * (channel_count[rate][TYPE_INT16]+channel_count[rate][TYPE_UINT16]) +
+                       4 * (channel_count[rate][TYPE_INT32]+channel_count[rate][TYPE_UINT32] +
+                            channel_count[rate][TYPE_FLOAT]) +
+                       8 * (channel_count[rate][TYPE_INT64]+channel_count[rate][TYPE_UINT64] +
+                            channel_count[rate][TYPE_DOUBLE]);
+
+        if (frame_size[rate]) {
+            /**
+             * Ensure that we can dereference the data without knowing its type by
+             * taking at least 8 bytes
+             */
+            size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
+            channel_data[rate] = calloc(1, allocated_size);
+            blast_info("Allocating %zu bytes for %u channels at %s", frame_size[rate],
+                    (channel_count[rate][TYPE_INT8]+channel_count[rate][TYPE_UINT8]) +
+                    (channel_count[rate][TYPE_INT16]+channel_count[rate][TYPE_UINT16]) +
+                    (channel_count[rate][TYPE_INT32]+channel_count[rate][TYPE_UINT32] +
+                            channel_count[rate][TYPE_FLOAT]) +
+                    (channel_count[rate][TYPE_INT64]+channel_count[rate][TYPE_UINT64] +
+                            channel_count[rate][TYPE_DOUBLE]),
+                    RATE_LOOKUP_TABLE[rate].text);
+        } else {
+            channel_data[rate] = NULL;
         }
+        channel_ptr[rate] = channel_data[rate];
     }
 
     /**
@@ -396,16 +409,3 @@ int channels_initialize(const channel_t * const m_channel_list)
     return 0;
 }
 
-/**
- * Returns the number of channels registered to a specific source
- */
-	size_t channels_get_count_by_source(E_SRC m_src)
-{
-	size_t retval = 0;
-	for (E_RATE rate = 0; rate < RATE_END; rate++) {
-		for (E_TYPE type = 0; type < TYPE_END; type++) {
-			retval += channel_count[m_src][rate][type];
-		}
-	}
-	return retval;
-}

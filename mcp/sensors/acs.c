@@ -29,7 +29,6 @@
 #include <blast.h>
 
 #include <channel_macros.h>
-#include <blast_sip_interface.h>
 #include <conversions.h>
 #include <channels_tng.h>
 #include <command_struct.h>
@@ -38,7 +37,7 @@
 #include <mcp.h>
 #include <pointing_struct.h>
 #include <dsp1760.h>
-
+#include "sip.h"
 #include "xsc_network.h"
 
 static const float gy_inv[64][3][6] =
@@ -149,9 +148,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00, 0.000000e+00 } },
 
         /* mask = 010101 (21) */
-        { { 1.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 1.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00, 0.000000e+00 } },
+        { { 0.99782252, 0.000000e+00, -0.080823624, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
+          { 0.080823624, 0.000000e+00, 0.99782252, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.99782252, 0.000000e+00 } },
 
         /* mask = 010110 (22) */
         { { 0.000000e+00, 1.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -254,9 +253,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 1.000000e+00 } },
 
         /* mask = 101010 (42) */
-        { { 0.000000e+00, 0.72055111, 0.000000e+00, 0.000000e+00, 0.000000e+00, -0.69340183 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, -0.72055111, 0.000000e+00, 0.000000e+00, 0.000000e+00, -0.69340183 } },
+        { { 0.000000e+00, 1.0040662, 0.000000e+00, -0.11044728, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.11044728, 0.000000e+00, 1.0040662, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, -1.0040662 } },
 
         /* mask = 101011 (43) */
         { { 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
@@ -359,9 +358,9 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01 } },
 
         /* mask = 111111 (63) */
-        { { 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01, 0.000000e+00, 0.000000e+00 },
-          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 5.000000e-01, 5.000000e-01 } }
+        { { 0.49891126, 0.50203309, -0.040411812, -0.055223640, 0.000000e+00, 0.000000e+00 },
+          { 0.040411812, 0.055223640, 0.49891126, 0.50203309, 0.000000e+00, 0.000000e+00 },
+          { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.49891126, -0.50203309 } },
         };
 // TODO(seth): Extern sched_lst after enabling sched.c
 unsigned int sched_lst; /* sched_lst */
@@ -374,39 +373,29 @@ struct ACSDataStruct ACSData;
  */
 void read_5hz_acs(void)
 {
+  static channel_t* vPssAddr[NUM_PSS][NUM_PSS_V];
   static channel_t* elRawIfClinAddr;
-  static channel_t* v11PssAddr;
-  static channel_t* v21PssAddr;
-  static channel_t* v31PssAddr;
-  static channel_t* v41PssAddr;
-  static channel_t* v12PssAddr;
-  static channel_t* v22PssAddr;
-  static channel_t* v32PssAddr;
-  static channel_t* v42PssAddr;
+  char channel_name[128] = {0};
+
+  int i, j;
 
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
+    for (i = 0; i < NUM_PSS; i++) {
+      for (j = 0; j < NUM_PSS_V; j++) {
+	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
+	vPssAddr[i][j] = channels_find_by_name(channel_name);
+	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
+      }
+    }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
-    v11PssAddr = channels_find_by_name("v1_1_pss");
-    v21PssAddr = channels_find_by_name("v2_1_pss");
-    v31PssAddr = channels_find_by_name("v3_1_pss");
-    v41PssAddr = channels_find_by_name("v4_1_pss");
-    v12PssAddr = channels_find_by_name("v1_2_pss");
-    v22PssAddr = channels_find_by_name("v2_2_pss");
-    v32PssAddr = channels_find_by_name("v3_2_pss");
-    v42PssAddr = channels_find_by_name("v4_2_pss");
   }
-
-  ACSData.pss1_i1 = GET_UINT16(v11PssAddr);
-  ACSData.pss1_i2 = GET_UINT16(v21PssAddr);
-  ACSData.pss1_i3 = GET_UINT16(v31PssAddr);
-  ACSData.pss1_i4 = GET_UINT16(v41PssAddr);
-
-  ACSData.pss2_i1 = GET_UINT16(v12PssAddr);
-  ACSData.pss2_i2 = GET_UINT16(v22PssAddr);
-  ACSData.pss2_i3 = GET_UINT16(v32PssAddr);
-  ACSData.pss2_i4 = GET_UINT16(v42PssAddr);
+  for (i = 0; i < NUM_PSS; i++) {
+    for (j = 0; j < NUM_PSS_V; j++) {
+      ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
+    }
+  }
 
   /// TODO(seth): Add PSS3-8 read functions
 
@@ -482,16 +471,16 @@ void store_200hz_acs(void)
 
     gymask = GET_UINT16(mask_gy_addr);
 
-    ifel_gy1 = dsp1760_getval(0, 0);
-    ifroll_gy1 = dsp1760_getval(0, 1);
-    ifyaw_gy1 = dsp1760_getval(0, 2);
+    ifroll_gy1 = dsp1760_getval(0, 0);
+    ifyaw_gy1 = dsp1760_getval(0, 1);
+    ifel_gy1 = dsp1760_getval(0, 2);
     SET_FLOAT(ifElgy1Addr, ifel_gy1);
     SET_FLOAT(ifRollgy1Addr, ifroll_gy1);
     SET_FLOAT(ifYawgy1Addr, ifyaw_gy1);
 
-    ifel_gy2 = dsp1760_getval(1, 0);
+    ifyaw_gy2 = dsp1760_getval(1, 0);
     ifroll_gy2 = dsp1760_getval(1, 1);
-    ifyaw_gy2 = dsp1760_getval(1, 2);
+    ifel_gy2 = dsp1760_getval(1, 2);
     SET_FLOAT(ifElgy2Addr, ifel_gy2);
     SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
     SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
@@ -550,7 +539,6 @@ void store_100hz_acs(void)
     static channel_t *vel_rw_addr;
     static channel_t *pos_rw_addr;
     static channel_t *vel_el_addr;
-    static channel_t *encstatus_el_addr;
     static channel_t *pos_el_addr;
     static channel_t *pos_motor_el_addr;
     static channel_t *vel_piv_addr;
@@ -575,7 +563,6 @@ void store_100hz_acs(void)
         pos_rw_addr = channels_find_by_name("mc_rw_pos");
 
         vel_el_addr = channels_find_by_name("mc_el_vel");
-        encstatus_el_addr = channels_find_by_name("mc_el_biss_status");
         pos_el_addr = channels_find_by_name("mc_el_pos");
         pos_motor_el_addr = channels_find_by_name("mc_el_motor_pos");
 
@@ -590,13 +577,12 @@ void store_100hz_acs(void)
 
     SET_SCALED_VALUE(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
     SET_SCALED_VALUE(sigmaEncAddr, PointingData[i_point].enc_sigma);
-    SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_el_trim));
+    SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_motor_el_trim));
     SET_SCALED_VALUE(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
     SET_INT32(vel_rw_addr, RWMotorData[i_motors].velocity);
     SET_INT32(pos_rw_addr, RWMotorData[i_motors].position);
     SET_INT32(vel_el_addr, ElevMotorData[i_motors].velocity);
-    SET_INT32(encstatus_el_addr, ElevMotorData[i_motors].load_state);
     SET_INT32(pos_el_addr, ElevMotorData[i_motors].position);
     SET_INT32(pos_motor_el_addr, ElevMotorData[i_motors].motor_position);
     SET_INT32(vel_piv_addr, PivotMotorData[i_motors].velocity);
@@ -822,7 +808,7 @@ void store_100hz_xsc(int which)
     static channel_t* address_xN_last_trig_age_cs;
     static channel_t* address_xN_last_trig_ctr_mcp;
     static channel_t* address_xN_last_trig_ctr_stars[2];
-    static channel_t* address_xN_predicted_motion_px;
+    static channel_t* address_xN_predicted_streaking_px[2];
     static channel_t* address_xN_image_blobn_x[2];
     static channel_t* address_xN_image_blobn_y[2];
     static channel_t* address_xN_image_blobn_flux[2];
@@ -835,8 +821,8 @@ void store_100hz_xsc(int which)
             address_xN_ctr_mcp                     = get_xsc_channel("ctr_mcp", 0);
             address_xN_last_trig_age_cs            = get_xsc_channel("last_trig_age_cs", 0);
             address_xN_last_trig_ctr_mcp           = get_xsc_channel("last_trig_ctr_mcp", 0);
-            address_xN_predicted_motion_px         = get_xsc_channel("predicted_motion_px", which);
         }
+        address_xN_predicted_streaking_px[which]   = get_xsc_channel("predicted_streaking_px", which);
         address_xN_ctr_stars[which]                = get_xsc_channel("ctr_stars", which);
         address_xN_image_ctr_stars[which]          = get_xsc_channel("image_ctr_stars", which);
         address_xN_image_ctr_mcp[which]            = get_xsc_channel("image_ctr_mcp", which);
@@ -851,10 +837,10 @@ void store_100hz_xsc(int which)
         SET_SCALED_VALUE(address_xN_ctr_mcp, xsc_pointing_state[which].counter_mcp);
         SET_SCALED_VALUE(address_xN_last_trig_age_cs, xsc_pointing_state[which].last_trigger.trigger_time);
         SET_SCALED_VALUE(address_xN_last_trig_ctr_mcp, xsc_pointing_state[which].last_trigger.counter_mcp);
-        SET_SCALED_VALUE(address_xN_predicted_motion_px, xsc_pointing_state[0].predicted_motion_px);
     }
 
 
+    SET_SCALED_VALUE(address_xN_predicted_streaking_px[which], xsc_pointing_state[which].predicted_streaking_px);
     SET_INT32(address_xN_ctr_stars[which], XSC_SERVER_DATA(which).channels.ctr_stars);
     SET_INT32(address_xN_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
     SET_INT32(address_xN_image_ctr_mcp[which], XSC_SERVER_DATA(which).channels.image_ctr_mcp);
@@ -985,6 +971,7 @@ void store_5hz_acs(void)
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncAddr;
+    static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagAddr;
     static channel_t *trimPssAddr;
@@ -1114,6 +1101,7 @@ void store_5hz_acs(void)
 
         trimClinAddr = channels_find_by_name("trim_clin");
         trimEncAddr = channels_find_by_name("trim_enc");
+        trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagAddr = channels_find_by_name("trim_mag");
         trimPssAddr = channels_find_by_name("trim_pss");
@@ -1209,11 +1197,10 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
-    SET_SCALED_VALUE(modeCalAddr, CommandData.Cryo.calibrator);
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
-    SET_SCALED_VALUE(periodCalAddr, CommandData.Cryo.calib_period);
 
     SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
+    SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
     SET_SCALED_VALUE(elLutClinAddr, PointingData[i_point].clin_el);

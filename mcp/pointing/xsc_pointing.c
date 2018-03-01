@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #include "blast.h"
-#include "fifo.h"
+#include "xsc_fifo.h"
 #include "framing.h"
 #include "channels_tng.h"
 #include "tx.h"
@@ -43,11 +43,11 @@
 #include "pointing_struct.h"
 #include "angles.h"
 
-bool scan_entered_snap_mode;
-bool scan_leaving_snap_mode;
+bool scan_entered_snap_mode = false;
+bool scan_leaving_snap_mode = false;
 
 static int32_t loop_counter = 0;
-static fifo_t *trigger_fifo[2] = {NULL};
+static xsc_fifo_t *trigger_fifo[2] = {NULL};
 
 typedef enum xsc_trigger_state_t
 {
@@ -70,7 +70,7 @@ static inline int xsc_initialize_gpio(void)
 {
     int fd;
     const char *gpio_name[2] = { "504", "505"};
-    const char *gpio_chip = "/sys/class/gpio/gpiochip504";
+    const char *gpio_chip = "/sys/class/gpio/export";
     const char *gpio_direction[2] = { "/sys/class/gpio/gpio504/direction",
                                       "/sys/class/gpio/gpio505/direction"};
 
@@ -123,16 +123,16 @@ static void xsc_trigger(int m_which, int m_value)
 
 xsc_last_trigger_state_t *xsc_get_trigger_data(int m_which)
 {
-    xsc_last_trigger_state_t *last = fifo_pop(trigger_fifo[m_which]);
+    xsc_last_trigger_state_t *last = xsc_fifo_pop(trigger_fifo[m_which]);
     return last;
 }
 
 static inline void xsc_store_trigger_data(int m_which, const xsc_last_trigger_state_t *m_state)
 {
-    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = fifo_new();
+    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = xsc_fifo_new();
     xsc_last_trigger_state_t *stored = malloc(sizeof(xsc_last_trigger_state_t));
     memcpy(stored, m_state, sizeof(*m_state));
-    if (!fifo_push(trigger_fifo[m_which], stored)) {
+    if (!xsc_fifo_push(trigger_fifo[m_which], stored)) {
         free(stored);
     }
 }
@@ -145,13 +145,17 @@ int32_t xsc_get_loop_counter(void)
 static void calculate_predicted_motion_px(double exposure_time)
 {
     int i_point = GETREADINDEX(point_index);
-    double standard_iplatescale = 6.680;
-    double predicted_motion_deg = 0.0;
-    predicted_motion_deg += PointingData[i_point].gy_total_vel * exposure_time;
-    predicted_motion_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
+    const double standard_iplatescale[2] = {6.66, 6.62}; // arcseconds per pixel
+    double predicted_streaking_deg = 0.0;
+    predicted_streaking_deg += PointingData[i_point].gy_total_vel * exposure_time;
+    predicted_streaking_deg += 0.5 * PointingData[i_point].gy_total_accel * exposure_time * exposure_time;
+    predicted_streaking_deg = fabs(predicted_streaking_deg);
     for (unsigned int which = 0; which < 2; which++) {
-        xsc_pointing_state[which].predicted_motion_px =
-                to_arcsec(from_degrees(predicted_motion_deg)) / standard_iplatescale;
+        xsc_pointing_state[which].predicted_streaking_px =
+                to_arcsec(from_degrees(predicted_streaking_deg)) / standard_iplatescale[which];
+        if (xsc_pointing_state[which].predicted_streaking_px > 6500.0) {
+            xsc_pointing_state[which].predicted_streaking_px = 6500.0;
+        }
     }
 }
 
@@ -160,7 +164,7 @@ static bool xsc_trigger_thresholds_satisfied()
     if (!CommandData.XSC[0].trigger.threshold.enabled) {
         return true;
     }
-    if (xsc_pointing_state[0].predicted_motion_px < CommandData.XSC[0].trigger.threshold.blob_streaking_px) {
+    if (xsc_pointing_state[0].predicted_streaking_px < CommandData.XSC[0].trigger.threshold.blob_streaking_px) {
         return true;
     }
     return false;

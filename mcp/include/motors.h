@@ -28,8 +28,10 @@
 
 #include <stdint.h>
 
-#define MIN_EL 19.5
-#define MAX_EL 55
+// TODO(laura): These elevation limits are only for testing.
+// They will need to changed back once we have sun shields and an IF baffle.
+#define MIN_EL 0.5
+#define MAX_EL 95
 
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
@@ -66,12 +68,10 @@ typedef struct
     double current;               // drive current read from controller
     int32_t position;             // Position used for calculations
     int32_t motor_position;       // Motor position
-    uint32_t load_state;          // BiSS state bits for load encoder on El
     uint32_t status;              // drive status
     uint32_t fault_reg;           // drive fault register
     uint16_t drive_info;          // motorinfo struct
     uint16_t state;               // commanded state
-    uint16_t net_status;          // Network status
     uint32_t err_count;           // count of serious serial errors
 } motor_data_t;
 

@@ -44,6 +44,9 @@
 #include <time.h>
 #include <stdbool.h>
 
+#define NUM_PSS 8
+#define NUM_PSS_V 4
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -54,14 +57,7 @@ struct ACSDataStruct {
   double mag_x;     // counts;
   double mag_y;     // counts;
   double mag_z;     // counts;
-  double pss1_i1;   // counts
-  double pss1_i2;   // counts
-  double pss1_i3;   // counts
-  double pss1_i4;   // counts
-  double pss2_i1;   // counts
-  double pss2_i2;   // counts
-  double pss2_i3;   // counts
-  double pss2_i4;   // counts
+  double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts
@@ -209,7 +205,7 @@ struct AxesModeStruct {
   unsigned int i_dith;
 };
 
-extern time_t csbf_gps_time;
+// extern time_t csbf_gps_time;
 
 typedef struct XSCLastTriggerState
 {
@@ -231,7 +227,7 @@ typedef struct XSCPointingState {
     double el;                              // XSC El
     int last_trigger_time;
     int exposure_time_cs;
-    double predicted_motion_px;
+    double predicted_streaking_px;
 } xsc_pointing_state_t;
 
 extern struct XSCPointingState xsc_pointing_state[2];

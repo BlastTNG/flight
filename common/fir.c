@@ -1,6 +1,7 @@
 /* mcp: the BLAST master control program
  *
  * This software is copyright (C) 2005-2006 University of Toronto
+ * (C) 2015-2016 University of Pennsylvania
  *
  * This file is part of mcp.
  *
@@ -23,38 +24,91 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 #include "blast.h"
 #include "fir.h"
 
-void initFir(struct FirStruct *fs, int ns)
+static double sinc(double x)
+{
+    return abs(x) <= DBL_EPSILON ? 1.0f : sin(M_PI * x) / (M_PI * x);
+}
+static double rect(double n, double N, double alpha)
+{
+    (void)alpha;
+    return n >= 0.0 && n < N ? 1.0 : 0.0;
+}
+static double hann(double n, double N, double alpha)
+{
+    (void)alpha;
+    return 0.5 * (1.0 - cos(2.0 * M_PI * n / (N - 1.0)));
+}
+static double hamming(double n, double N, double alpha)
+{
+    (void)alpha;
+    return 0.54 - 0.46 * cos(2.0 * M_PI * n / (N - 1.0));
+}
+static double lanczos(double n, double N, double alpha)
+{
+    (void)alpha;
+    return sinc(2.0 * n / (N - 1.0) - 1.0);
+}
+static double gauss(double n, double N, double o)
+{
+    return exp(- 1.0/2.0 * pow((n - (N - 1.0) / 2.0) / (o * (N - 1.0) / 2.0), 2.0));
+}
+static double blackman(double n, double N, double alpha)
+{
+    return 0.5 * (1.0 - alpha) - 0.5 * cos(2.0 * M_PI * n / (N - 1.0)) + 0.5 * alpha * cos(4.0 * M_PI * n / (N - 1.0));
+}
+static double old_blast(double n, double N, double alpha)
+{
+    (void) alpha;
+    return exp(- pow((n - N / 2.0) / (N / 4.5), 2.0));
+}
+
+typedef double (*window_fn)(double, double, double);
+static window_fn window_filt[] = {
+        [wind_oldblast] = old_blast,
+        [wind_blackman] = blackman,
+        [wind_gauss] = gauss,
+        [wind_lanczos] = lanczos,
+        [wind_hamming] = hamming,
+        [wind_hann] = hann,
+        [wind_rect] = rect
+};
+
+void init_fir(fir_t *fs, int N, int window, double alpha)
 {
     int i;
-    double x, sw = 0.0;
+    double sw = 0.0;
 
     for (i = 0; i < NSTAGE; i++) {
         fs->sum[i] = 0;
-        fs->i_w[i] = i * ns / NSTAGE;
+        fs->i_w[i] = i * N / NSTAGE;
     }
 
     fs->out = 0;
-    fs->ns = ns;
+    fs->ns = N;
 
-    fs->w = (double *) balloc(fatal, ns * sizeof(double));
+    fs->w = (double *) balloc(fatal, N * sizeof(double));
 
-    for (i = 0; i < ns; i++) {
-        x = i - ns / 2;
-        x /= ((double) ns / 4.5);
-
-        fs->w[i] = exp(-x * x);
+    if (window < wind_oldblast || window > wind_rect) window = wind_oldblast;
+    for (i = 0; i < N; i++) {
+        fs->w[i] = window_filt[window](i, N, alpha);
         sw += fs->w[i];
     }
-    for (i = 0; i < ns; i++) {
+    for (i = 0; i < N; i++) {
         fs->w[i] /= sw;
     }
 }
 
-double filter(double x, struct FirStruct *fs)
+void deinit_fir(fir_t *fs)
+{
+    bfree(err, fs->w);
+}
+
+double fir_filter(double x, fir_t *fs)
 {
     int i, i_stage;
 
@@ -81,11 +135,11 @@ int main()
     struct FirStruct fs;
     int i;
 
-    initFir(&fs, 100.0 * 30.0 * 60.0);
+    init_fir(&fs, 100.0 * 30.0 * 60.0);
 
     for (i = 0; i < 1000000; i++) {
         x = sin(2.0 * M_PI * (double) i / 4000) + sin(2.0 * M_PI * (double) i / 8000);
-        printf("%g %g\n", x, filter(x, &fs));
+        printf("%g %g\n", x, fir_filter(x, &fs));
     }
     return (0);
 }

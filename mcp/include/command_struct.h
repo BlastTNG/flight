@@ -32,6 +32,7 @@
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
+#include "roach.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -49,8 +50,41 @@
 #define P_QUAD      10
 #define P_EL_SCAN   11
 #define P_EL_BOX    12
+#define P_CURRENT   13
 
 #define MAX_ISC_SLOW_PULSE_SPEED 0.015
+
+#define XYSTAGE_PANIC  0
+#define XYSTAGE_GOTO   1
+#define XYSTAGE_JUMP   2
+#define XYSTAGE_SCAN   3
+#define XYSTAGE_RASTER 4
+
+// Defines the bits responsible for each of the heaters in
+// CommandData.uei_command.uei_of_dio_432_out.
+// TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
+// TODO(laura): move this to a separate cryo control program modeled on das.c
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_JFET            0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
+
+#define LS_CLOSED      0x0002
+#define LS_DRIVE_OFF   0x0004
+#define LS_POT_RAIL    0x0008  // now defunct
+#define LS_DRIVE_EXT   0x0010
+#define LS_DRIVE_RET   0x0020
+#define LS_DRIVE_STP   0x0040
+#define LS_DRIVE_JIG   0x0080  // now defunct
+#define LS_DRIVE_UNK   0x0100
+#define LS_EL_OK       0x0200
+#define LS_IGNORE_EL   0x0400
+#define LS_DRIVE_FORCE 0x0800
+#define LS_DRIVE_MASK  0x09F4
 
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
@@ -59,6 +93,8 @@
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
+/* Need to undef I here in for source files that utilize complex.h */
+#undef I
 struct GainStruct {
   float P;
   float I;
@@ -219,6 +255,102 @@ typedef struct XSCCommandStruct
     double el_trim;
 } XSCCommandStruct;
 
+typedef struct
+{
+    uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
+} uei_commands_t;
+
+typedef struct {
+  int16_t hwprPos;
+  int hwpr_pos_old;
+
+  uint16_t cal_length, calib_period;
+  int calib_repeats;
+  int calib_hwpr;
+  int do_cal_pulse;
+  int do_level_pulse;
+  uint16_t level_length;
+  uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+  uint16_t heater_update;
+  uint16_t heater_status;
+  uint16_t sync;
+  uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
+} cryo_cmds_t;
+
+typedef struct {
+  uint16_t of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
+  uint16_t of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
+  uint16_t of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
+  uint16_t of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
+  uint16_t if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
+  uint16_t if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
+  uint16_t if_9_on, if_9_off, if_10_on, if_10_off;
+  uint16_t rec_on, rec_off, amp_supply_on, amp_supply_off;
+  uint16_t therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
+  uint16_t update_rec, update_of, update_if;
+  uint16_t of_status, if_status, rec_status; // will have to make initialize all on
+  uint16_t labjack[5];
+} relay_cmds_t;
+
+typedef struct slinger_commanding
+{
+    unsigned int downlink_rate_bps;
+    bool highrate_active;
+    bool biphase_active;
+} slinger_commanding_t;
+
+typedef struct udp_roach
+{
+    bool store_udp;
+    bool publish_udp;
+} udp_roach_t;
+
+typedef struct roach
+{
+    unsigned int new_state;
+    unsigned int change_state;
+    unsigned int df_calc;
+    unsigned int auto_retune;
+    unsigned int opt_tones;
+    unsigned int do_sweeps;
+    unsigned int load_amps;
+    unsigned int set_rudats;
+    unsigned int set_attens;
+    unsigned int find_kids;
+} roach_status_t;
+
+typedef struct roach_params
+{
+//  Parameters input to find_kids script
+    double smoothing_scale;
+    double peak_threshold;
+    double spacing_threshold;
+//  Set attenuators
+    double in_atten;
+    double out_atten;
+} roach_params_t;
+
+typedef struct {
+    enum {bal_rest = 0, bal_manual, bal_auto} mode;
+    enum {neg = 0, no_bal, pos} bal_move_type;
+    uint32_t pos;
+    uint32_t vel;
+    uint16_t hold_i;
+    uint16_t move_i;
+    uint16_t acc;
+
+    // servo parameters
+    double i_el_on_bal;
+    double i_el_off_bal;
+    double gain_bal;
+} cmd_balance_t;
+
+typedef struct {
+    uint8_t amp;
+    int8_t status;
+} cmd_rox_bias_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -233,10 +365,24 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+  uint32_t biphase_clk_speed;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
+
+  roach_status_t roach[NUM_ROACHES];
+  udp_roach_t udp_roach[NUM_ROACHES];
+  roach_params_t roach_params[NUM_ROACHES];
+
+  uei_commands_t uei_command;
+
+  cmd_rox_bias_t rox_bias;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
@@ -330,55 +476,11 @@ struct CommandDataStruct {
     struct Step biasStep;
   } Bias;
 
-  // TODO(seth): Move Cryo cmd
-  struct {
-    uint16_t charcoalHeater;
-    uint16_t hsCharcoal;
-    uint16_t fridgeCycle;
-    uint16_t force_cycle;
+  cryo_cmds_t Cryo;
 
-    double cycle_start_temp;
-    double cycle_pot_max;
-    double cycle_charcoal_max;
-    double cycle_charcoal_settle;
-    // timeouts in minutes (NB: time will probably be in seconds)
-    double cycle_charcoal_timeout;
-    double cycle_settle_timeout;
+  relay_cmds_t Relays;
 
-    uint16_t BDAHeat;
-    uint16_t hsPot;
-    int16_t heliumLevel;
-    int he4_lev_old;
-    int16_t hwprPos;
-    int hwpr_pos_old;
-
-    uint16_t JFETHeat;
-    uint16_t autoJFETheat;
-    double JFETSetOn, JFETSetOff;
-
-    enum calmode calibrator;
-    uint16_t calib_pulse, calib_period;
-    int calib_repeats;
-    int calib_hwpr;
-
-    uint16_t potvalve_open, potvalve_on, potvalve_close;
-    uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
-  } Cryo;
-
-  struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
-
-    // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
-    double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-  } pumps;
+  cmd_balance_t balance;
 
   struct {
     int off;
@@ -449,6 +551,11 @@ struct CommandDataStruct {
 
   int pin_is_in;
 
+  struct {
+    int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
+    int force_repoll;
+  } xystage;
+
   /* sensors output: read in mcp:SensorReader() */
   uint16_t temp1, temp2, temp3;
   uint16_t df;
@@ -458,9 +565,6 @@ struct CommandDataStruct {
   struct PointingModeStruct pointing_mode; // meta mode (map, scan, etc)
   double lat;
   double lon;
-
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
 
   struct {
     int pulse_width;
@@ -474,6 +578,10 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  slinger_commanding_t packet_slinger;
+
+  uint32_t checksum;
 };
 
 void InitCommandData();

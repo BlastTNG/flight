@@ -34,8 +34,9 @@ extern channel_t *new_channels;
 extern derived_tng_t *derived_channels;
 
 pthread_t defricher_writer_init(void);
-void defricher_queue_packet(uint16_t m_source, uint16_t m_rate);
+void defricher_queue_packet(uint16_t m_rate);
 void defricher_request_new_dirfile(void);
 void defricher_request_updated_derived(void);
+bool ready_to_read(uint16_t m_rate);
 
 #endif /* DEFRICHER_WRITER_H_ */

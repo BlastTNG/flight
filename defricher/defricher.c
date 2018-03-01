@@ -59,7 +59,7 @@ static GOptionEntry cmdline_options[] =
         { "daemonize", 0, 0, G_OPTION_ARG_NONE, &rc.daemonise, "Fork to the background on startup", NULL},
         { "force", 'f', 0, G_OPTION_ARG_NONE, &rc.force_stdio, "Overwrite destination file if exists", NULL},
         { "output-dirfile", 'o', 0, G_OPTION_ARG_STRING, &rc.output_dirfile, "Use NAME as the output Dirfile name", NULL},
-        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &remaining_args, "<SOURCE> [OUTPUT DIRFILE]", NULL},
+        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &remaining_args, "<SOURCE> <TELEMETRY (lab/pilot/tdrss/biphase)> [OUTPUT DIRFILE]", NULL},
         {NULL}
 };
 
@@ -67,6 +67,8 @@ static GOptionEntry cmdline_options[] =
 /* state structs */
 struct ri_struct ri;
 struct rc_struct rc;
+
+struct Fifo fifo_data[RATE_END] = {{0}};
 
 static const double TC = 1.7;
 static pthread_t writer_thread;
@@ -152,6 +154,7 @@ static void defricher_defaults(struct rc_struct* m_rc)
 {
     asprintf(&(m_rc->dest_dir), "/data/defricher");
     asprintf(&(m_rc->source), "fc1");
+    asprintf(&(m_rc->telemetry), "lab");
     asprintf(&(m_rc->symlink_name), "/data/etc/defricher.cur");
 }
 
@@ -163,7 +166,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
     GOptionContext *context;
 
     context = g_option_context_new("");
-    g_option_context_set_summary(context, "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles");
+    g_option_context_set_summary(context, "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles\ndefricher <SOURCE> <TELEMETRY (lab/pilot/tdrss/biphase)> [OUTPUT DIRFILE]");
     g_option_context_set_description(context, "Please report any errors or bugs to <seth.hillbrand@gmail.com>");
     g_option_context_add_main_entries(context, cmdline_options, NULL);
 
@@ -183,9 +186,28 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
       asprintf(&(m_rc->source), "%s", remaining_args[0]);
 
       if (remaining_args[1]) {
-          g_debug("Dest is %s", remaining_args[1]);
+          g_debug("Telemetry is %s", remaining_args[1]);
+          char *possible_telemetries[4] = {"lab", "tdrss", "biphase", "pilot"};
+          bool valid_telemetry = false;
+          for(int i = 0; i < 4; ++i)
+          {
+               if(!strcmp(possible_telemetries[i], remaining_args[1]))
+               {
+                    free(m_rc->telemetry);
+                    asprintf(&(m_rc->telemetry), "%s", remaining_args[1]);
+                    valid_telemetry = true;
+                    break;
+               }
+          }
+          if (!valid_telemetry) {
+              g_error("Wrong argument for telemetry: %s. Please chose between lab, tdrss, pilot, or biphase", remaining_args[1]);
+          }
+      }
+
+      if (remaining_args[2]) {
+          g_debug("Dest is %s", remaining_args[2]);
           free(m_rc->dest_dir);
-          asprintf(&(m_rc->dest_dir), "%s", remaining_args[1]);
+          asprintf(&(m_rc->dest_dir), "%s", remaining_args[2]);
           if (m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] == '/') m_rc->dest_dir[strlen(m_rc->dest_dir) - 1] = '\0';
       }
   }
@@ -203,7 +225,8 @@ int main(int argc, char** argv)
 {
     struct timeval now;
     double delta;
-    double fr = 200;
+    double ofr = 200;
+    double ifr = 200;
     double nf = 0;
 
     /* Load the hard-coded defaults if not over-written by command line */
@@ -258,7 +281,7 @@ int main(int argc, char** argv)
 
     /* Spawn client/reader and writer */
     writer_thread = defricher_writer_init();
-    reader_thread = netreader_init(rc.source);
+    reader_thread = netreader_init(rc.source, rc.telemetry);
 
     /* Main status loop -- if we're in silent mode we skip this entirely and
      * just wait for the read and write threads to exit */
@@ -270,14 +293,21 @@ int main(int argc, char** argv)
                 nf = (ri.wrote - ri.lw);
                 ri.last = now;
                 ri.lw = ri.wrote;
-                fr = nf / TC + fr * (1 - delta / TC);
+                ofr = nf / TC + ofr * (1 - delta / TC);
+                nf = (ri.read - ri.lr);
+                ri.lr = ri.read;
+                ifr = nf / TC + ifr * (1 - delta / TC);
                 if (ri.frame_rate_reset) {
                     ri.frame_rate_reset = 0;
-                    fr = 200;
+                    ofr = 200;
+                    ifr = 200;
                 }
 #ifndef DEBUG
-                printf("%s R:[%i] W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
-                fflush(stdout);
+                 printf("%s R:[%i] %.*f W:[%i] %.*f Hz\r", rc.output_dirfile, ri.read,
+                 		(ifr > 100) ? 1 : (ifr > 10) ? 2 : 3, ifr,
+                 		ri.wrote,
+                 		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
+                 fflush(stdout);
 #endif
             }
             usleep(500000);
@@ -285,7 +315,7 @@ int main(int argc, char** argv)
     pthread_join(reader_thread, NULL);
     pthread_join(writer_thread, NULL);
     if (!rc.silent) {
-            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (fr > 100) ? 1 : (fr > 10) ? 2 : 3, fr);
+            bprintf(info, "%s R:[%i] W:[%i] %.*f Hz", rc.output_dirfile, ri.read, ri.wrote, (ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
     }
     return 0;
 }

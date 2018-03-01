@@ -1,0 +1,4 @@
+KERNEL=="gpiochip504", PROGRAM="/bin/sh -c '/bin/echo 504 > /sys/class/gpio/export; /bin/echo 505 > /sys/class/gpio/export'"
+
+KERNEL=="gpio504", PROGRAM="/bin/sh -c '/bin/echo out > /sys/class/gpio/gpio504/direction'"
+KERNEL=="gpio505", PROGRAM="/bin/sh -c '/bin/echo out > /sys/class/gpio/gpio505/direction'"

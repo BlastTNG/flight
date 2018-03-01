@@ -57,8 +57,10 @@ struct AxesModeStruct axes_mode = {
 
 // motor control parameters
 #define MOTORSR 200.0
-#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps
-#define MAX_I  200.0 // Maximum accumulated integral in milliamps
+#define MAX_DI_EL 20.0 // Maximum integral accumulation per step in milliamps for El motor
+#define MAX_I_EL  800.0 // Maximum accumulated integral in milliamps for El motor
+#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps for Az motors
+#define MAX_I  200.0 // Maximum accumulated integral in milliamps for Az motors
 
 #define INTEGRAL_LENGTH  5.0  // length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
@@ -159,7 +161,7 @@ static double get_elev_vel(void)
         //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
     } else if (axes_mode.el_mode == AXIS_LOCK) {
         /* for the lock, only use the elevation encoder */
-        vel = (axes_mode.el_dest - ElevMotorData[i_elev].position) * 0.64;
+        vel = (axes_mode.el_dest - ElevMotorData[i_elev].motor_position * EL_MOTOR_ENCODER_SCALING) * 0.64;
     }
 
     /* correct offset and convert to Gyro Units */
@@ -289,21 +291,18 @@ void write_motor_channels_5hz(void)
     static channel_t *stateRWAddr;
     static channel_t *ctl_word_read_rw_addr;
     static channel_t *latched_fault_rw_addr;
-    static channel_t *net_status_rw_addr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
     static channel_t *stateElAddr;
     static channel_t *ctl_word_read_el_addr;
     static channel_t *latched_fault_el_addr;
-    static channel_t *net_status_el_addr;
 
     static channel_t *tMCPivAddr;
     static channel_t *statusPivAddr;
     static channel_t *statePivAddr;
     static channel_t *ctl_word_read_piv_addr;
     static channel_t *latched_fault_piv_addr;
-    static channel_t *net_status_piv_addr;
 
     int i_motors;
 
@@ -337,21 +336,18 @@ void write_motor_channels_5hz(void)
         stateRWAddr = channels_find_by_name("state_rw");
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
-        net_status_rw_addr = channels_find_by_name("network_status_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
         stateElAddr = channels_find_by_name("state_el");
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
-        net_status_el_addr = channels_find_by_name("network_status_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
         statusPivAddr = channels_find_by_name("status_piv");
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
-        net_status_piv_addr = channels_find_by_name("network_status_piv");
     }
 
     /***************************************************/
@@ -404,21 +400,18 @@ void write_motor_channels_5hz(void)
     SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
     SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].state);
-    SET_UINT16(net_status_rw_addr, RWMotorData[i_motors].net_status);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
     SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].state);
-    SET_UINT16(net_status_el_addr, ElevMotorData[i_motors].net_status);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
     SET_UINT32(statusPivAddr, PivotMotorData[i_motors].status);
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
-    SET_UINT16(net_status_piv_addr, PivotMotorData[i_motors].net_status);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
 }
 
@@ -524,22 +517,41 @@ static void initialize_el_dither()
 static void calculate_az_mode_vel(double m_az, double m_leftbound, double m_rightbound, double m_vel,
                                   double m_az_drift_vel)
 {
+    static bool from_scan_to_turnaround = false;
+    static bool from_turnaround_to_scan = true;
     if (axes_mode.az_vel < -m_vel + m_az_drift_vel) axes_mode.az_vel = -m_vel + m_az_drift_vel;
     if (axes_mode.az_vel > m_vel + m_az_drift_vel) axes_mode.az_vel = m_vel + m_az_drift_vel;
 
-    /// TODO(seth): Update AzScanMode with XSC data
     if (m_az < m_leftbound) {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel < m_vel + m_az_drift_vel) axes_mode.az_vel += az_accel;
+        // Forced Triggering
+        if (from_scan_to_turnaround) {
+            scan_entered_snap_mode = true;
+            from_scan_to_turnaround = false;
+        }
+        from_turnaround_to_scan = true;
     } else if (m_az > m_rightbound) {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel > -m_vel + m_az_drift_vel) axes_mode.az_vel -= az_accel;
+        // Forced Triggering
+        if (from_scan_to_turnaround) {
+            scan_entered_snap_mode = true;
+            from_scan_to_turnaround = false;
+        }
+        from_turnaround_to_scan = true;
     } else {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel > 0) {
             axes_mode.az_vel = m_vel + m_az_drift_vel;
         } else {
             axes_mode.az_vel = -m_vel + m_az_drift_vel;
+        }
+        // Forced Triggering
+        from_scan_to_turnaround = true;
+        if (from_turnaround_to_scan) {
+            scan_leaving_snap_mode = true;
+            from_turnaround_to_scan = false;
         }
     }
 }
@@ -977,7 +989,6 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1167,7 +1178,6 @@ static void do_mode_el_box(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_az = (targ_az - (az - caz)) / t;
         // set targ_az for the next step
@@ -1353,7 +1363,6 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
@@ -1568,7 +1577,6 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
@@ -1669,6 +1677,12 @@ void update_axes_mode(void)
             axes_mode.az_mode = AXIS_VEL;
             axes_mode.az_vel = 0.0;
             break;
+        case P_CURRENT:
+            axes_mode.el_mode = AXIS_VEL;
+            axes_mode.el_vel = 0.0;
+            axes_mode.az_mode = AXIS_VEL;
+            axes_mode.az_vel = 0.0;
+            break;
         default:
             blast_warn("Pointing: Unknown Elevation Pointing Mode %d: " "stopping\n", CommandData.pointing_mode.mode);
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -1720,9 +1734,14 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     static double lpfilter_out[LPFILTER_POLES + 1] = { 0.0 };
     static float last_pv = 0.0;
 
-    float pv = ACSData.ifel_gy;
+    int i_point_read = GETREADINDEX(point_index);
+
+    float pv = ACSData.ifel_gy - PointingData[i_point_read].ifel_earth_gy;
 
     int16_t milliamp_return;
+    static int16_t last_milliamp = 0;
+
+    static const int16_t max_delta_mA = 5; /* Limit current increase to 5 mA/cycle or 10 A/s */
 
     if (first_time) {
         first_time = 0;
@@ -1765,8 +1784,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     if (fabsf(I_step) < I_db) I_step = 0;
 
-    if (fabsf(I_step) > MAX_DI) {
-        I_step = copysignf(MAX_DI, I_step);
+    if (fabsf(I_step) > MAX_DI_EL) {
+        I_step = copysignf(MAX_DI_EL, I_step);
     }
 
     /**
@@ -1775,8 +1794,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * is a result of accumulating excessively large I terms.
      */
     I_term += I_step;
-    if (fabsf(I_term) > MAX_I) {
-        I_term = copysignf(MAX_I, I_term);
+    if (fabsf(I_term) > MAX_I_EL) {
+        I_term = copysignf(MAX_I_EL, I_term);
     }
 
     /**
@@ -1829,10 +1848,25 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     if (milliamp_return > MAX_EL_CURRENT) milliamp_return = MAX_EL_CURRENT;
     if (milliamp_return < MIN_EL_CURRENT) milliamp_return = MIN_EL_CURRENT;
 
-    if (m_disabled) {
+    /**
+     * Limit our change in current output to be 5 mA/cycle or 10A/s
+     * NB: This needs to be disabled for feedback tuning using standard oscillation
+     * methods
+     */
+    if (milliamp_return > last_milliamp + max_delta_mA) {
+        milliamp_return = last_milliamp + max_delta_mA;
+    } else if (milliamp_return < last_milliamp - max_delta_mA) {
+        milliamp_return = last_milliamp - max_delta_mA;
+    }
+
+    if (m_disabled || (CommandData.pin_is_in && !CommandData.force_el)) {
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        last_pv = pv;
+        I_term = 0.0;
+        milliamp_return = CommandData.pointing_mode.w * 100.0;
     }
 
     SET_FLOAT(error_el_ch, error_pv);
@@ -1842,6 +1876,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
     SET_FLOAT(el_integral_ch, I_step);
     SET_FLOAT(frictTermElAddr, friction_out[1]);
     SET_FLOAT(frictTermUnfiltElAddr, friction);
+    last_milliamp = milliamp_return;
     return milliamp_return;
 }
 
@@ -1966,6 +2001,10 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        last_pv = pv;
+        I_term = 0.0;
+        milliamp_return = CommandData.pointing_mode.Y * 100.0;
     }
     last_milliamp = milliamp_return;
 
@@ -2089,6 +2128,13 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
         friction_out[0] = 0.0;
         friction_out[1] = 0.0;
         I_term = 0;
+    } else if (CommandData.pointing_mode.mode == P_CURRENT) {
+        I_term = 0.0;
+        friction_in[0] = 0.0;
+        friction_in[1] = 0.0;
+        friction_out[0] = 0.0;
+        friction_out[1] = 0.0;
+        milliamp_return = CommandData.pointing_mode.X * 100.0;
     }
     last_milliamp = milliamp_return;
 

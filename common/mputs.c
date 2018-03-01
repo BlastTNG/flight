@@ -33,9 +33,9 @@
 #include "crc.h"
 
 /* multilog! */
-#define MAX_LOGFILES 10
-static int n_logfiles = 0;
-static FILE* logfiles[10];
+#define MAX_LOGFILES 11
+static int n_logfiles = 1;
+static FILE* logfiles[11] = { 0 };
 
 /* tid to name lookup list */
 #define stringify_(x) #x
@@ -112,11 +112,14 @@ void mputs(buos_t flag, const char* message) {
   static struct timeval last_time = {0};
   static uint32_t last_crc = 0;
   static int repeat_count = 0;
-  static buos_t last_flag = 0;
   uint32_t crc;
 
   struct timeval t;
   struct tm now;
+  static const char month[12][4] = {
+                                  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  };
   static const char marker[mem + 1] = {
                                           [err] = '*',
                                           [fatal] = '!',
@@ -125,13 +128,16 @@ void mputs(buos_t flag, const char* message) {
                                           [startup] = '>',
                                           [tfatal] = '$',
                                           [warning] = '=',
-                                          [mem] = 'm',
+                                          [mem] = '@',
                                           [none] = '?'
   };
   int tid = syscall(SYS_gettid);
   int i;
 
-  if (flag == none) return;
+  /// Set this here to ensure it is correct when we write.
+  logfiles[0] = stdout;
+
+  if (flag == none || flag == mem) return;
 
   /* time */
   gettimeofday(&t, NULL);
@@ -139,11 +145,11 @@ void mputs(buos_t flag, const char* message) {
   gmtime_r(&t.tv_sec, &now);
 
   blast_tmp_sprintf(buffer,
-           "%c %04d-%02d-%02d "         // marker, Year-Month-Day
-           "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
+           "%c%3s-%02d-%02d "           // marker, Month-Day-Year
+           "%02d:%02d:%02d.%03d%c "     // Hours:Minutes:Seconds, Marker
            TID_NAME_FMT ": "            // Thread name
            "%s\n",                      // Message
-           marker[flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
+           marker[flag], month[now.tm_mon], now.tm_mday, now.tm_year - 100,
            now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
            threadNameLookup(tid),
            message);
@@ -154,30 +160,10 @@ void mputs(buos_t flag, const char* message) {
         for (i = 0; i < n_logfiles; ++i) {
             if (repeat_count) {
                 fprintf(logfiles[i],
-                        "%c %04d-%02d-%02d "         // marker, Year-Month-Day
-                        "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
-                        TID_NAME_FMT ": "            // Thread name
-                        "Last message repeats %d times\n",
-                        marker[last_flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
-                        now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
-                        "LOG", repeat_count);
+                        "%40s Last message repeats %d times\n", " ", repeat_count);
             }
             fputs(buffer, logfiles[i]);
             fflush(logfiles[i]);
-        }
-        if (n_logfiles == 0 || flag != mem) {
-            if (repeat_count) {
-                fprintf(stdout,
-                        "%c %04d-%02d-%02d "         // marker, Year-Month-Day
-                        "%02d:%02d:%02d.%03d %c "    // Hours:Minutes:Seconds, Marker
-                        TID_NAME_FMT ": "            // Thread name
-                        "Last message repeats %d times\n",
-                        marker[last_flag], now.tm_yday, now.tm_mon + 1, now.tm_mday,
-                        now.tm_hour, now.tm_min, now.tm_sec, (int)(t.tv_usec/1000), marker[flag],
-                        "", repeat_count);
-            }
-            fputs(buffer, stdout);
-            fflush(stdout);
         }
         repeat_count = 0;
 
@@ -186,9 +172,6 @@ void mputs(buos_t flag, const char* message) {
                 fputs("!! Last error is FATAL.  Cannot continue.\n", logfiles[i]);
                 fflush(logfiles[i]);
             }
-            fputs("!! Last error is FATAL.  Cannot continue.\n", stdout);
-            fflush(stdout);
-
             exit(1);
         }
 
@@ -198,10 +181,6 @@ void mputs(buos_t flag, const char* message) {
                         threadNameLookup(tid), tid);
                 fflush(logfiles[i]);
             }
-            printf("$$ Last error is THREAD FATAL.  Thread [" TID_NAME_FMT " (%5i)] exits.\n", threadNameLookup(tid),
-                   tid);
-            fflush(stdout);
-
             pthread_exit(NULL);
         }
     } else {
@@ -209,5 +188,4 @@ void mputs(buos_t flag, const char* message) {
     }
     last_crc = crc;
     last_time.tv_sec = t.tv_sec;
-    last_flag = flag;
 }

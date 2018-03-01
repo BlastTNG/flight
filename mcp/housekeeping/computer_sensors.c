@@ -55,7 +55,7 @@ void blast_store_cpu_health(void)
 {
     int sensor_err;
 
-    if (chip[0]) {
+    if (chip[CHIP_CPU]) {
         if ((sensor_err = sensors_get_value(chip[CHIP_CPU], CH_TEMP_CPU0, &computer_sensors.core0_temp))) {
             blast_err("Could not get temp CPU0 %s", sensors_strerror(sensor_err));
         }
@@ -63,7 +63,7 @@ void blast_store_cpu_health(void)
             blast_err("Could not get temp CPU1 %s", sensors_strerror(sensor_err));
         }
     }
-    if (chip[1]) {
+    if (chip[CHIP_IMANAGER]) {
         if ((sensor_err = sensors_get_value(chip[CHIP_IMANAGER], CH_VOLT_12V, &computer_sensors.volt_12V))) {
             blast_err("Could not get 12V %s", sensors_strerror(sensor_err));
         }

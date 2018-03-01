@@ -28,9 +28,14 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
+#include <poll.h>
 
 #include "ezstep.h"
 #include "blast.h"
+#include "blast_time.h"
+#include "phenom/sysutil.h"
+#include "phenom/thread.h"
+#include "phenom/buffer.h"
 
 // TODO(BLAST-Pol OK): allow multiple-motor values of who more widely
 
@@ -131,6 +136,7 @@ static inline char whoLoopMax(char who)
     else
         return '0'; // invalid who value
 }
+static ph_bufq_t *EZStep_read_buffer = {NULL};
 
 static char hidden_buffer[EZ_BUS_NAME_LEN];
 static char* stepName(struct ezbus* bus, char who)
@@ -224,6 +230,7 @@ int EZBus_Init(struct ezbus* bus, const char* tty, const char* name, int chatter
 {
     char i;
     int retval = EZ_ERR_OK;
+
     if (name[0] != '\0') {
         snprintf(bus->name, EZ_BUS_NAME_LEN, "%s: ", name);
         bus->name[EZ_BUS_NAME_LEN - 1] = '\0';
@@ -352,132 +359,145 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
 
 #define EZ_BUS_RECV_ABORT 3000000 /* state for general parsing abort */
 
+int EZBus_Read(int m_port, char *m_buf, size_t m_bytes)
+{
+    ph_buf_t *tmp_buf;
+
+    if ((tmp_buf = ph_bufq_consume_bytes(EZStep_read_buffer, m_bytes))) {
+        memcpy(m_buf, ph_buf_mem(tmp_buf), m_bytes);
+        ph_buf_delref(tmp_buf);
+        return m_bytes;
+    } else {
+        return 0;
+    }
+}
+
+// TODO(laura): Consider adding back some of the response string recovery logic from BLASTPol
 int EZBus_Recv(struct ezbus* bus)
 {
-    int fd;
-
-    unsigned char byte;
-    unsigned char checksum = 0;
-    char full_response[EZ_BUS_BUF_LEN];
-    char* ptr = bus->buffer;
-    char* fullptr = full_response;
-    char* hex_buffer;
+	char full_response[EZ_BUS_BUF_LEN] = {0};
+	char* fullptr = full_response;
+	char* endptr = full_response;
     int retval = EZ_ERR_OK;
+    int state = 0;
+	int char_count = 0;
+	int delim_found = 0;
+	int i = 0;
 
-    // TODO(seth): Fix EZBus_Recv
+    char checksum = 0;
+    const char delim = 0x03; // End of text character
+    const char start = 0x02; // '/' Character
+    const char turnaround = 0xff; // Where the new string starts
 
-    if (fd == -1) {
-        // on error, don't return immediately, allow response to be terminated
+    struct timespec current;
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC, &current);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    timespec_add_ns(&end, NSEC_PER_MSEC * EZ_BUS_TIMEOUT_MSEC);
+
+//    int fd;
+//    fd_set rfds;
+//    struct timeval timeout = {.tv_sec = 2, .tv_usec = 0};
+//    unsigned char byte;
+//    unsigned char checksum = 0;
+//    char* ptr = bus->buffer;
+//    char* fullptr = full_response;
+    char* hex_buffer;
+
+    // Check to make sure that the port is open.
+    if (bus->fd == -1) {
         if (bus->chatter >= EZ_CHAT_ERR) berror(err, "%sError waiting for input on bus", bus->name);
         retval |= EZ_ERR_TTY;
-    } else if (!fd) { /* Timeout */
-        retval |= EZ_ERR_TIMEOUT;
-    } else {
-        int state = 0;
-        int had_errors = 0;
-        int read_tries = 100;
-        int len;
+        return retval;
+    }
 
-        for (;;) {
-            len = read(bus->fd, &byte, 1);
-            if (len <= 0) {
-                if (state == 6 || state == EZ_BUS_RECV_ABORT) break;
-                if (errno == EAGAIN && read_tries > 0) {
-                    read_tries--;
-                    usleep(1000);
-                    continue;
-                } else {
-                    if (bus->chatter >= EZ_CHAT_ERR) berror(warning, "%sUnexpected out-of-data reading bus (%i)",
-                                                            bus->name, state);
-                    return EZ_ERR_OOD;
-                }
-            }
-            *(fullptr++) = byte;
-            checksum ^= byte;
+    // Read until the stop byte and checksum
+    while ((timespec_compare(&current, &end) < 0) && !state) {
+        int response_len = 0;
+        int data_len;
+        clock_gettime(CLOCK_MONOTONIC, &current);
 
-            /* The following involves a number of semi-hidden fallthroughs which
-             * attempt to recover malformed strings */
-            switch (state) {
-                case 0: /* RS-485 turnaround */
-                    if (byte == 0x00) {
-                        /*
-                         if (bus->chatter >= EZ_CHAT_ERR)
-                         blast_warn("%sdisregarding unexpected word of 0x00",
-                         bus->name);
-                         */
-                        break;
-                    }
-                    state++;
-                    if (byte != 0xFF) { /* RS-485 turnaround */
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_warn("%sRS-485 turnaround not found in response", bus->name);
-                        had_errors++;
-                    } else {
-                        break;
-                    }
-                case 1: /* start byte */
-                    state++;
-                    if (byte != 0x02) { /* STX */
-                        had_errors++;
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_warn("%sStart byte not found in response", bus->name);
-                    } else {
-                        break;
-                    }
-                case 2: /* address byte */
-                    state++;
-                    if (byte != 0x30) { /* Recipient address (should be '0') */
-                        had_errors++;
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_warn("%sFound misaddressed response", bus->name);
-                    }
-                    if (had_errors > 1) {
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_err("%sToo many errors parsing response, aborting.", bus->name);
-                        retval |= EZ_ERR_RESPONSE;
-                        state = EZ_BUS_RECV_ABORT;
-                    }
-                    break;
-                case 3: /* status byte */
-                    state++;
-                    if (byte & EZ_STATUS) {
-                        retval |= byte & (EZ_ERROR | EZ_READY);
-                    } else {
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_err("%sStatus byte malfomed in response, aborting.", bus->name);
-                        retval |= EZ_ERR_RESPONSE;
-                        state = EZ_BUS_RECV_ABORT;
-                    }
-                    break;
-                case 4: /* response */
-                    if (byte == 0x3) /* ETX */
-                        state++;
-                    else
-                        *(ptr++) = byte;
-                    break;
-                case 5: /* checksum */
-                    state++;
-                    /* Remember: the checksum here should be 0xff instead of 0 because
-                     * we've added the turnaround byte into the checksum */
-                    if (checksum != 0xff) {
-                        if (bus->chatter >= EZ_CHAT_ERR)
-                        blast_err("%sChecksum error in response (%02x).", bus->name, checksum);
-                        retval |= EZ_ERR_RESPONSE;
-                    }
-                    break;
-                case 6: /* End of string check */
-                    if (bus->chatter >= EZ_CHAT_ERR)
-                    blast_err("%sMalformed footer in response string, aborting.", bus->name);
-                    retval |= EZ_ERR_RESPONSE;
-                    state = EZ_BUS_RECV_ABORT;
-                case EZ_BUS_RECV_ABORT: /* General abort: flush input */
-                    break;
+    	response_len = read(bus->fd, full_response + char_count, EZ_BUS_BUF_LEN - char_count);
+        if (bus->chatter >= EZ_CHAT_BUS) blast_dbg("response_len= %i", response_len);
+    	if (response_len < 1) { // We haven't read anything so wait a bit
+    	    usleep(10);
+    	    continue;
+    	}
+
+        if (delim_found) state = 1; // End of response found and CRC read, so this is the last time through the loop.
+
+        if (bus->chatter >= EZ_CHAT_BUS) {
+            char hex_response[3*(response_len + char_count) + 1];
+            full_response[response_len + char_count] = 0; // Make sure the string read so far ends with 0
+            HexDump(full_response, hex_response, response_len + char_count, sizeof(hex_response));
+
+            if (bus->chatter >= EZ_CHAT_BUS) {
+                blast_info("Got EZStep response with %d bytes, total string: %s", response_len, hex_response);
+                blast_info("Total number of chars read %d", response_len + char_count);
             }
+        }
+
+
+        char_count = char_count + response_len; // Total number of characters read so far.
+
+        // Have we found the turnaround (beginning of the response)?  If not then keep reading.
+        if (!(fullptr = memchr(full_response, turnaround, char_count))) continue;
+		if (bus->chatter >= EZ_CHAT_BUS) blast_info("Found beginning of response: %x", turnaround);
+		// Have we found the end of text character?  If not then keep reading.
+        if (!(endptr = memchr(full_response, delim, char_count))) continue;
+		if (bus->chatter >= EZ_CHAT_BUS) blast_info("Found end-of-text character: %x", delim);
+
+		delim_found = 1; // Signals that we only want to read one more character (CRC)
+		if ((int)(endptr - full_response) != (char_count - 1)) state = 1; // If delim is not last char read, we're done.
+        if (!state) continue;
+
+        // If we have finished reading (state = 1) check for errors
+		if (bus->chatter >= EZ_CHAT_BUS) blast_info("fullptr[1] = %x, fullptr[2] = %x, fullptr[3] = %x",
+		    fullptr[1], fullptr[2], fullptr[3]);
+        if (fullptr[1] != start) {
+        	retval |= EZ_ERR_RESPONSE;
+        	blast_warn("%sStart byte not found in response", bus->name);
+        	}
+        if (fullptr[2] != 0x30) {
+            retval |= EZ_ERR_RESPONSE;
+            blast_warn("%sFound misaddressed response", bus->name);
+        }
+        if (!(fullptr[3] & EZ_STATUS)) {
+            retval |= EZ_ERR_RESPONSE;
+        } else {
+            retval |= fullptr[3] & (EZ_ERROR | EZ_READY);
+        }
+
+        // Calculate the checksum
+        // Ignore the first byte (turnaround) and last (checksum)
+        for (i = 1; i < (char_count-1); i++) {
+            checksum ^= full_response[i];
+        }
+		if (bus->chatter >= EZ_CHAT_BUS)
+		    blast_info("Calculated checksum = %x, response checksum = %x ", checksum, full_response[char_count-1]);
+
+        if (checksum != full_response[char_count-1]) {
+            if (bus->chatter >= EZ_CHAT_ERR)
+                blast_err("%sChecksum error in response (%02x).", bus->name, checksum);
+            retval |= EZ_ERR_RESPONSE;
+        }
+
+		if (bus->chatter >= EZ_CHAT_BUS)
+		    blast_info("data_len = %i", char_count - (fullptr - full_response) - 6);
+
+        if ((data_len = char_count - (fullptr - full_response) - 6) > 0) {
+            memcpy(bus->buffer, fullptr + 4, data_len);
+            // Terminate the string.
+            bus->buffer[data_len] = '\0';
+            break;
         }
     }
 
-    *ptr = '\0';  // terminate response string
-    *fullptr = '\0';
+    if (timespec_compare(&current, &end) > 0) {
+        if (bus->chatter >= EZ_CHAT_ERR)
+            blast_err("%sSerial read timeout", bus->name);
+        retval |= EZ_ERR_TIMEOUT;
+    }
 
     if (bus->chatter >= EZ_CHAT_BUS) {
         size_t len;
@@ -741,7 +761,10 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc)
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
 {
     char i;
+    blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
+	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
+	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
         strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }

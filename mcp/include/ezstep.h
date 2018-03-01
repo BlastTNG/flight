@@ -108,6 +108,7 @@
 #define EZ_BUS_BUF_LEN	    0x100
 #define EZ_BUS_NACT	    16
 #define EZ_BUS_COMM_RETRIES 5
+#define EZ_BUS_TIMEOUT_MSEC 1000
 
 /* Number of Communication Errors before triggering a reconnect to the serial port */
 #define EZ_ERR_MAX  5
@@ -171,7 +172,12 @@ int EZBus_IsTaken(struct ezbus* bus, char who);
  */
 int EZBus_Send(struct ezbus* bus, char who, const char* what);
 
-/* receive response from bus
+/* read bytes from a file descriptor
+ * 
+ */
+int EZBus_Read(int m_port, char *m_buf, size_t m_bytes);
+/* 
+ * receive response from bus
  */
 int EZBus_Recv(struct ezbus* bus);
 

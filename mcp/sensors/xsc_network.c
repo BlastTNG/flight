@@ -41,7 +41,6 @@
 
 #include "conversions.h"
 #include "blast.h"
-#include "blast_comms.h"
 #include "framing.h"
 #include "mcp.h"
 #include "angles.h"
@@ -151,11 +150,14 @@ void xsc_write_data(int which)
 
     /**
      * Pause here to allow STARS to get the new image from the camera.  MCP will increment
-     * its counter immediately after lowering the trigger.  We give STARS that much time again
-     * (exposure_time_cs) to allow the camera to retrieve and stamp the new image.
+     * its counter immediately after lowering the trigger.  We give STARS the
+     * exposure_time (cs) + a commandable delay) to allow the camera to retrieve and stamp the new image.
      */
-    if (get_100hz_framenum() > xsc_pointing_state[which].exposure_time_cs +
-            xsc_pointing_state[which].last_trigger_time) {
+
+    int post_trigger_counter_mcp_share_delay_cs =
+             CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs;
+    if (get_100hz_framenum() > (xsc_pointing_state[which].exposure_time_cs +
+            xsc_pointing_state[which].last_trigger_time + post_trigger_counter_mcp_share_delay_cs)) {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].counter_mcp;
     } else {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
@@ -233,7 +235,7 @@ static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     xsc_state_t *state = (xsc_state_t*)m_data;
 
     blast_info("Connecting to %s", addresses[state->which]);
-    ph_sock_resolve_and_connect(addresses[state->which], port,
+    ph_sock_resolve_and_connect(addresses[state->which], port, 0,
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM,
         connected, m_data);
 }
