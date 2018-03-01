@@ -477,7 +477,6 @@ linklist_t * parse_linklist(char *fname)
   MD5_Final(md5hash,&mdContext);
   memcpy(ll->serial,md5hash,MD5_DIGEST_LENGTH);
 
-/*
   // print result
   printf("Linklist %s:\n", ll->name);
   for (i=0;i<ll->n_entries;i++)
@@ -490,12 +489,17 @@ linklist_t * parse_linklist(char *fname)
     }
     else printf("CHECKSUM\n");
   }
+	printf("Number of data blocks: %d\n",ll->num_blocks);
+
+	for (i=0;i<ll->num_blocks;i++)
+	{
+		printf("%s == %d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].intname,ll->blocks[i].alloc_size);
+	}
 
   printf("Serial: ");
   for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
   printf("\n");
   printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
-*/
 
   return ll;
 }
