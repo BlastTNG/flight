@@ -340,17 +340,17 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
       }
       else // just a normal field 
       {
-				tlm_comp_type = tlm_le->comp_type;
-				tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
-				tlm_in_buf = buffer_in+tlm_in_start;
-				if (tlm_comp_type != NO_COMP) // compression
-				{
-					(*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-				}
-				else
-				{
-					decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
-				}
+        tlm_comp_type = tlm_le->comp_type;
+        tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
+        tlm_in_buf = buffer_in+tlm_in_start;
+        if (tlm_comp_type != NO_COMP) // compression
+        {
+          (*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
+        else
+        {
+          decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
       }
 
       // update checksum
@@ -560,6 +560,14 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 
 }
 
+// handle for openning and appending to files even if they don't exist
+FILE * fpreopenb(char *fname)
+{
+  FILE * temp = fopen(fname,"ab");
+  fclose(temp);
+  return fopen(fname,"rb+");
+}
+
 void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 {
   uint16_t id = 0;
@@ -596,8 +604,8 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     }
     if (!block->fp) { // file not open yet
       sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
-      if (!(block->fp = fopen(block->filename, "rb+"))) {
-        printf("Cannot open file %s", block->filename);
+      if (!(block->fp = fpreopenb(block->filename))) {
+        blast_err("Cannot open file %s", block->filename);
         return;
       }
       blast_info("New file \"%s\" opened\n", block->filename);
@@ -628,7 +636,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  if (block->n > 5) blast_info("Received \"%s\" packet %d of %d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  blast_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
 }
 
