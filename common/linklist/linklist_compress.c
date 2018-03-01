@@ -545,7 +545,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
-    if (block->n > 5) printf("Sent block %d/%d (id = %d, size = %d)\n",block->i+1,block->n,block->id,cpy);
+    // if (block->n > 5) printf("Sent block %d/%d (id = %d, size = %d)\n",block->i+1,block->n,block->id,cpy);
     
     block->i++;
     block->num++;
