@@ -332,27 +332,29 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
     }
     else // normal field
     {
-      tlm_out_size = tlm_le->blk_size;
-      tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
-      tlm_comp_type = tlm_le->comp_type;
-      tlm_in_buf = buffer_in+tlm_in_start;
-
-      if (tlm_le->tlm == &block_channel) // block types
+      if (tlm_le->tlm == &block_channel) // data block field
       {
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) packetize_block_raw(theblock, tlm_out_buf);
         else blast_err("Could not find block in linklist \"%s\"", ll->name);
       }
-      else if (tlm_comp_type != NO_COMP) // compression
+      else // just a normal field 
       {
-        (*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-      }
-      else
-      {
-        decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
+				tlm_comp_type = tlm_le->comp_type;
+				tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
+				tlm_in_buf = buffer_in+tlm_in_start;
+				if (tlm_comp_type != NO_COMP) // compression
+				{
+					(*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+				}
+				else
+				{
+					decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
+				}
       }
 
       // update checksum
+			tlm_out_size = tlm_le->blk_size;
       for (j=0;j<tlm_out_size;j++) crccheck(tlm_out_buf[j],&checksum,crctable);
     }
   }
@@ -481,23 +483,26 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     }
     else
     {
-      tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
-      tlm_comp_type = tlm_le->comp_type;
-      tlm_out_buf = buffer_out+tlm_out_start;
-
-      if (tlm_le->tlm->type == 'B') // block types for images
+      if (tlm_le->tlm == &block_channel) // data block channel 
       {
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
         else blast_err("Could not find block in linklist \"%s\"", ll->name);
       }
-      else if (tlm_comp_type != NO_COMP) // compression
+      else // just a normal field
       {
-        (*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-      }
-      else
-      {
-        decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
+        tlm_comp_type = tlm_le->comp_type;
+        tlm_out_buf = buffer_out+tlm_out_start;
+
+				if (tlm_comp_type != NO_COMP) // compression
+				{
+					(*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+				}
+				else
+				{
+					decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
+				}
       }
     }
   }
