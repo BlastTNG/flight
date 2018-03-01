@@ -379,7 +379,7 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
     tlm_le = &(req_ll->items[i]);
     if (tlm_le->tlm != NULL)
     { 
-      if (tlm_le->tlm->type != 'B')
+      if (tlm_le->tlm != &block_channel)
       { 
         tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
         tlm_out_skip = get_channel_skip_in_superframe(tlm_le->tlm);
@@ -495,14 +495,14 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
         tlm_comp_type = tlm_le->comp_type;
         tlm_out_buf = buffer_out+tlm_out_start;
 
-				if (tlm_comp_type != NO_COMP) // compression
-				{
-					(*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-				}
-				else
-				{
-					decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
-				}
+        if (tlm_comp_type != NO_COMP) // compression
+        {
+          (*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
+        else
+        {
+          decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
       }
     }
   }
@@ -571,7 +571,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
   // no data to read
   if (blksize == 0) return;
-  
+
   if (n == 0) { // special case of block fragment
     blast_info("Received block fragment %d (size %d)\n",i,totalsize);
     
