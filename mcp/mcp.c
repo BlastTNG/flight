@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
   initialize_watchdog(2);
   // Turns on software WD 2, which reboots the FC if not tickled
 
-  initialize_bias_tone();
+//  initialize_bias_tone();
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
