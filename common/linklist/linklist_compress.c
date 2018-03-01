@@ -151,6 +151,8 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 
   theblock->id++; // increment the block counter
 
+  blast_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
+
   return;
 }
 
@@ -533,7 +535,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     }
 
     if (block->fp) { // there is a file instead of data in a buffer
-      buffer[0] |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
+      *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
       if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
@@ -543,7 +545,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
-    //printf("Sent block %d/%d (name == %d, size = %d)\n",block->i+1,block->n,block->intname,cpy);
+    if (block->n > 5) printf("Sent block %d/%d (id = %d, size = %d)\n",block->i+1,block->n,block->id,cpy);
     
     block->i++;
     block->num++;
