@@ -31,6 +31,8 @@
 #include "linklist.h"
 
 #define ALLFRAME_SERIAL 0x42424242
+#define BLOCK_FILE_MASK 0x8000
+#define LINKLIST_FILESAVE_DIR "/data/etc/downloaded_files"
 
 #ifdef __cplusplus
 
@@ -63,6 +65,7 @@ int write_allframe(uint8_t *, uint8_t *);
 int read_allframe(uint8_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);
 void depacketize_block_raw(struct block_container * , uint8_t *);
+void send_file_to_linklist(linklist_t *, char *, char *);
 
 #ifdef __cplusplus
 }

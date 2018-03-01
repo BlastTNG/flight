@@ -97,6 +97,63 @@ int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *
   return PACKET_HEADER_SIZE;
 }
 
+void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
+{
+  if (!ll) {
+    blast_err("Invalid linklist given");
+    return;
+  }
+
+  int i = 0;
+  block_t * theblock = NULL;
+
+  // find the block
+  for (i = 0; i < ll->num_blocks; i++) {
+    if (strcmp(blockname, ll->blocks[i].name) == 0) {
+      theblock = &ll->blocks[i];
+      break;
+    }
+  }
+  if (!theblock) {
+    blast_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    return;
+  }
+
+  // check to see if the previous send is done
+  if (theblock->i != theblock->n) { // previous transfer not done
+    blast_info("Previous transfer for block \"%s\" is incomplete.", blockname);
+    return;
+  }
+ 
+  // open the file
+  FILE * fp = fopen(filename, "rb+");
+  if (!fp) {
+    blast_err("File \"%s\" not found", filename);
+    return;
+  }
+  
+  // get the size of the file
+  unsigned int filesize = 0;
+  fseek(fp, 0L, SEEK_END);
+  filesize = ftell(fp);
+  fseek(fp, 0L, SEEK_SET);
+
+  // set the block variables to initialize transfer
+  theblock->fp = fp;
+  for (i = strlen(filename)-1; i > 0; i++) {
+    if (filename[i] == '/') break;
+  }
+  strcpy(theblock->filename, filename+i+1); // copy the filename stripped of path
+  theblock->i = 0;
+  theblock->num = 0;
+  theblock->n = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  theblock->curr_size = filesize;
+
+  theblock->id++; // increment the block counter
+
+  return;
+}
+
 void define_superframe()
 {
   int rate = 0;
@@ -433,7 +490,6 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
         else blast_err("Could not find block in linklist \"%s\"", ll->name);
-        //printf("intname = %d\n",*(uint16_t *) tlm_out_buf);
       }
       else if (tlm_comp_type != NO_COMP) // compression
       {
@@ -460,23 +516,40 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
 void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 {
-  if (block->i < block->n) // packets left to be sent
-  { 
+  if (block->i < block->n) { // packets left to be sent 
     unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
-    unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE,block->curr_size-loc);
+    unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE, block->curr_size-loc);
     
-    int fsize = make_block_header(buffer,block->intname,cpy,block->i,block->n,block->curr_size);
-    memcpy(buffer+fsize,block->buffer+loc,cpy);
+    int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n, block->curr_size);
+ 
+    if (loc > block->curr_size) {
+      blast_err("Block location %d > total size %d", loc, block->curr_size);
+      return;
+    }
+
+    if (block->fp) { // there is a file instead of data in a buffer
+      buffer[0] |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
+      fseek(block->fp, loc, SEEK_SET); // go to the location in the file
+      int retval = 0;
+      if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
+        blast_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
+      }
+    } else { // there is data in the buffer
+      memcpy(buffer+fsize, block->buffer+loc, cpy);
+    }
 
     //printf("Sent block %d/%d (name == %d, size = %d)\n",block->i+1,block->n,block->intname,cpy);
     
     block->i++;
     block->num++;
-  }
-  else // no blocks left
-  {
-    memset(buffer,0,block->le->blk_size);
+  } else { // no blocks left
+    memset(buffer, 0, block->le->blk_size);
     block->i = block->n;
+    if (block->fp) { // file was open, so close it
+      fclose(block->fp);
+      block->fp = NULL;
+      block->filename[0] = 0;
+    }
     //printf("Nothing to send\n");
   }
 
@@ -484,25 +557,17 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 
 void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 {
-  uint16_t intname = 0;
+  uint16_t id = 0;
   uint16_t i = 0, n = 0;
   uint16_t blksize = 0;
   uint32_t totalsize = 0;
 
-  int fsize = read_block_header(buffer,&intname,&blksize,&i,&n,&totalsize);
+  int fsize = read_block_header(buffer,&id,&blksize,&i,&n,&totalsize);
 
   // no data to read
-  if (intname == 0) return;
+  if (blksize == 0) return;
   
-  if (intname != block->intname)
-  { 
-    blast_err("depacketize_block: block ID mismatch %d != %d\n",intname,block->intname);
-    //memset(buffer,0,blksize+fsize); // clear the bad block
-    return;
-  }
-  
-  if (n == 0) // special case of block fragment
-  { 
+  if (n == 0) { // special case of block fragment
     blast_info("Received block fragment %d (size %d)\n",i,totalsize);
     
     totalsize = blksize;
@@ -510,33 +575,56 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     
     i = 0;
     n = 0;
-  }
-  else if (i >= n)
-  { 
+  } else if (i >= n) { 
     blast_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
-  
-  // expand the buffer if necessary
-  if (totalsize > block->alloc_size)
-  { 
-    void * tp = realloc(block->buffer,totalsize);
-    block->buffer = (uint8_t *) tp;
-    block->alloc_size = totalsize;
-  }
-  
+ 
   unsigned int loc = i*(block->le->blk_size-fsize);
+
+  if (id & BLOCK_FILE_MASK) { // receiving a file
+    // a different id packet was received, so close file if that packet is open
+    if ((id != block->id) && block->fp) {
+      fclose(block->fp);
+      block->fp = NULL;
+    }
+    if (!block->fp) { // file not open yet
+      sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
+      if (!(block->fp = fopen(block->filename, "rb+"))) {
+        printf("Cannot open file %s", block->filename);
+        return;
+      }
+      blast_info("New file \"%s\" opened\n", block->filename);
+    }
+    fseek(block->fp, loc, SEEK_SET); 
+    int retval = 0;
+    if ((retval = fwrite(buffer+fsize, 1, blksize, block->fp)) != blksize) {
+      blast_err("Could only write %d/%d bytes at %d to file %s", retval, blksize, loc, block->filename);
+    }
+
+  } else { // just a normal block to be stored in memory
+    // expand the buffer if necessary
+    if (totalsize > block->alloc_size)
+    {  
+      void * tp = realloc(block->buffer,totalsize);
+      block->buffer = (uint8_t *) tp;
+      block->alloc_size = totalsize;
+    }
+    memcpy(block->buffer+loc,buffer+fsize,blksize);
+  }
+
+  // set block variables 
   block->curr_size = totalsize;
   block->i = i;
   block->n = n;
-  
+  block->id = id;  
+
   block->i++;
   block->num++;
 
   if (block->n > 5) blast_info("Received \"%s\" packet %d of %d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
-  memcpy(block->buffer+loc,buffer+fsize,blksize);
 }
 
 double datatodouble(uint8_t * data, char type)

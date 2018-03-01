@@ -70,12 +70,15 @@ struct link_entry
 struct block_container
 {
   char name[80];
-  uint16_t intname;
+  uint16_t id;
   unsigned int i, n, num;
   struct link_entry * le;
   unsigned int alloc_size;
   unsigned int curr_size;
   uint8_t * buffer;
+
+  char filename[80];
+  FILE *fp;
 };
 
 struct link_list
@@ -105,7 +108,6 @@ linklist_t * linklist_lookup_by_serial(uint32_t);
 void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
-uint16_t compute_intname(char * );
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 
 #ifdef __cplusplus
