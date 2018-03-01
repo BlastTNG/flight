@@ -267,7 +267,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
         for (j=0;j<2;j++) crccheck(tlm_out_buf[j],&checksum,crctable); // check the checksum
         if (checksum != 0) 
         {
-          printf("compress_linklist: invalid checksum generated\n");
+          blast_err("compress_linklist: invalid checksum generated\n");
         }
         //printf("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
       }
@@ -409,7 +409,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
-        printf("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        blast_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
@@ -496,14 +496,14 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   
   if (intname != block->intname)
   { 
-    printf("depacketize_block: block ID mismatch %d != %d\n",intname,block->intname);
+    blast_err("depacketize_block: block ID mismatch %d != %d\n",intname,block->intname);
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
   
   if (n == 0) // special case of block fragment
   { 
-    printf("Received block fragment %d (size %d)\n",i,totalsize);
+    blast_info("Received block fragment %d (size %d)\n",i,totalsize);
     
     totalsize = blksize;
     block->num = 1;
@@ -513,7 +513,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   }
   else if (i >= n)
   { 
-    printf("depacketize_block: index larger than total (%d > %d)\n",i,n);
+    blast_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
@@ -534,7 +534,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  if (block->n > 5) printf("Received \"%s\" packet %d of %d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  if (block->n > 5) blast_info("Received \"%s\" packet %d of %d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
   memcpy(block->buffer+loc,buffer+fsize,blksize);
 }
