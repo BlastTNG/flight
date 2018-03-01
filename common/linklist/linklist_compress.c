@@ -90,16 +90,6 @@ uint8_t * allocate_superframe()
   return ptr;
 }
 
-// assigns a superframe buffer to a particular linklist
-void assign_superframe_to_linklist(linklist_t * ll, uint8_t * superframe) {
-  ll->superframe = superframe;
-}
-
-// assigns a compressed frame buffer to a particular linklist
-void assign_compframe_to_linklist(linklist_t * ll, uint8_t * compframe) {
-  ll->compframe = compframe;
-}
-
 uint32_t get_channel_start_in_superframe(const channel_t * chan)
 {
   if (!superframe_size) define_superframe();
@@ -198,17 +188,6 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
   return frame_location[rate];
 }
 
-// returns true if all frames are ready and synced to the superframe
-// i.e. superframe is ready for compression
-int superframe_data_is_ready() {
-  int i;
-  uint8_t data_ready = 1;
-  for (i = 0; i < RATE_END; i++) {
-    data_ready &= superframe_flag[i];
-    blast_info("Frame flag: %u\n", superframe_flag[i]);
-  }
-  return data_ready;
-}
 
 /**
  * compress_linklist
@@ -216,12 +195,8 @@ int superframe_data_is_ready() {
  * Selects channels from and compresses a superframe according to the provide
  * linklist format.
  * -> buffer_out: buffer in which compressed frame will be written.
-                  If NULL, the buffer assigned to the linklist via 
-                  assign_compframe_to_linklist will be used. 
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the superframe to be compressed. If NULL
-                  the buffer assigned to the linklist via
-                  assign_superframe_to_linklist will be used.
+ * -> buffer_in: pointer to the superframe to be compressed. 
  */
 int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
@@ -237,18 +212,12 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
   // check validity of buffers
   if (!buffer_in) {
-    if (!ll->superframe) {
-      blast_err("buffer_in is NULL and no superframe assigned to linklist");
-      return 0;
-    }
-    buffer_in = ll->superframe;
+    blast_err("buffer_in is NULL and no superframe assigned to linklist");
+    return 0;
   }
   if (!buffer_out) {
-    if (!ll->compframe) {
-      blast_err("buffer_out is NULL and no compframe assigned to linklist");
-      return 0;
-    }
-    buffer_out = ll->compframe;
+    blast_err("buffer_out is NULL and no compframe assigned to linklist");
+    return 0;
   }
 
   for (i=0;i<ll->n_entries;i++)
@@ -360,12 +329,8 @@ double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buff
                   If NULL, the buffer assigned to the linklist via
                   assign_superframe_to_linklist will be used.
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the compressed frame to be decompressed. If NULL,
-                  the buffer assigned to the linklist via
-                  assign_compframe_to_linklist will be used.
+ * -> buffer_in: pointer to the compressed frame to be decompressed. 
  * -> maxsize: the maximum size of the input buffer which may be less than
-                  ll->blk_size. All data after maxsize will be assumed to
-                  be corrupt or empty.
  */
 double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize)
 {
@@ -385,18 +350,12 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
   // check validity of buffers
   if (!buffer_out) {
-    if (!ll->superframe) {
-      blast_err("buffer_out is NULL and no superframe assigned to linklist");
-      return 0;
-    }
-    buffer_out = ll->superframe;
+    blast_err("buffer_out is NULL and no superframe assigned to linklist");
+    return 0;
   }
   if (!buffer_in) {
-    if (!ll->compframe) {
-      blast_err("buffer_in is NULL and no compframe assigned to linklist");
-      return 0;
-    }
-    buffer_in = ll->compframe;
+    blast_err("buffer_in is NULL and no compframe assigned to linklist");
+    return 0;
   }
 
   if (buffer_save == NULL) buffer_save = calloc(1, superframe_size);

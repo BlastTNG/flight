@@ -87,9 +87,6 @@ struct link_list
   struct link_entry * items; // pointer to entries in the list
   struct block_container * blocks; // pointer to blocks
   unsigned int num_blocks; // number of data block fields
-  uint8_t data_ready; // indicates whether or not data can be read from the superframe/compframe
-  uint8_t * superframe; // a pointer to the superframe to/from which data is decompressed/compressed
-  uint8_t * compframe; // a pointer to the compressed from to/from which data is compressed/decompressed
 };
 
 typedef struct link_list linklist_t;
