@@ -38,6 +38,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/syscall.h>
+#include <openssl/md5.h>
 
 #include "phenom/job.h"
 #include "phenom/log.h"
@@ -65,8 +66,7 @@
 #include "bias_tone.h"
 #include "balance.h"
 #include "blast.h"
-#include "blast_comms.h"
-#include "blast_sip_interface.h"
+// #include "blast_comms.h"
 #include "blast_time.h"
 #include "computer_sensors.h"
 #include "data_sharing.h"
@@ -74,7 +74,14 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "linklist.h"
+#include "linklist_compress.h"
+#include "pilot.h"
+#include "highrate.h"
+#include "bitserver.h"
 #include "bi0.h"
+#include "biphase_hardware.h"
+#include "FIFO.h"
 #include "hwpr.h"
 #include "motors.h"
 #include "roach.h"
@@ -85,6 +92,7 @@
 #include "xsc_network.h"
 #include "xsc_pointing.h"
 #include "xystage.h"
+#include "sip.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -103,6 +111,11 @@ void StageBus(void);
 
 struct chat_buf chatter_buffer;
 struct tm start_time;
+
+linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
+linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL}; 
+uint8_t * master_superframe = NULL;
+struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -237,42 +250,6 @@ time_t mcp_systime(time_t *t) {
 //
 // #endif
 
-// #ifndef BOLOTEST
-// static void BiPhaseWriter(void)
-// {
-//  uint16_t  *frame;
-//
-//  nameThread("Bi0");
-//  bputs(startup, "Startup\n");
-//
-//  while (!biphase_is_on)
-//    usleep(10000);
-//
-//  bputs(info, "Veto has ended.  Here we go.\n");
-//
-//  while (1) {
-//    frame = PopFrameBuffer(&bi0_buffer);
-//
-//    if (!frame) {
-//      /* Death meausres how long the BiPhaseWriter has gone without receiving
-//       * any data -- an indication that we aren't receiving FSYNCs from the
-//       * BLASTBus anymore */
-//      if (InCharge && (++Death > 25)) {
-//        blast_err("Death is reaping the watchdog tickle.");
-//        pthread_cancel(watchdog_id);
-//      }
-//      usleep(10000); // 100 Hz
-//    } else {
-//      write_to_biphase(frame);
-//      if (Death > 0) {
-//        Death = 0;
-//      }
-//    }
-//  }
-// }
-//
-// #endif
-
 static void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
@@ -300,11 +277,15 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
+unsigned int superframe_counter[RATE_END] = {1};
+
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
 
     framing_publish_244hz();
+    superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
+                                       RATE_244HZ, master_superframe);
 }
 
 static void mcp_200hz_routines(void)
@@ -317,7 +298,8 @@ static void mcp_200hz_routines(void)
 
     framing_publish_200hz();
     // store_data_200hz();
-    build_biphase_frame_200hz(channel_data[RATE_200HZ]);
+    superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
+                                       RATE_200HZ, master_superframe);
 }
 static void mcp_100hz_routines(void)
 {
@@ -335,10 +317,8 @@ static void mcp_100hz_routines(void)
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     framing_publish_100hz();
     // store_data_100hz();
-    build_biphase_frame_1hz(channel_data[RATE_1HZ]);
-    build_biphase_frame_100hz(channel_data[RATE_100HZ]);
-
-    push_bi0_buffer();
+    superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
+                                       RATE_100HZ, master_superframe);
     // test_dio();
 }
 static void mcp_5hz_routines(void)
@@ -366,6 +346,8 @@ static void mcp_5hz_routines(void)
 //    cameraFields();
 
     framing_publish_5hz();
+    superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
+                                     RATE_5HZ, master_superframe);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -375,6 +357,17 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
+    // TODO(javier): make this the fastest 488Hz when the routines exist
+    int ready = !superframe_counter[RATE_244HZ];
+    // int ready = 1;
+    // int i = 0;
+    // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
+    if (ready) {
+      for (int i = 0; i < NUM_TELEMETRIES; i++) {
+         memcpy(getFifoWrite(telem_fifo[i]), master_superframe, superframe_size);
+         incrementFifo(telem_fifo[i]);
+      } 
+    }
     // rec_control();
     // of_control();
     // if_control();
@@ -391,6 +384,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(1);
     store_charge_controller_data();
     framing_publish_1hz();
+    superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
+                                     RATE_1HZ, master_superframe);
 //    store_data_1hz();
     // query_mult(0, 48);
     // query_mult(0, 49);
@@ -411,6 +406,9 @@ static void *mcp_main_loop(void *m_arg)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
+
+    // TODO(javier): make this the fastest 488Hz when the routines exist
+    superframe_counter[RATE_244HZ] = 1;
 
     while (!shutdown_mcp) {
         int ret;
@@ -464,13 +462,14 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
 
   pthread_t CommandDatacomm1;
+  pthread_t CommandDatacomm2;
+  pthread_t CommandDataFIFO;
   pthread_t DiskManagerID;
-  pthread_t biphase_writer_id;
+  pthread_t pilot_send_worker;
+  pthread_t highrate_send_worker;
+  pthread_t bi0_send_worker;
   int use_starcams = 0;
 
-#ifndef USE_FIFO_CMD
-  pthread_t CommandDatacomm2;
-#endif
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
   // pthread_t xy_id;
 #endif
@@ -491,6 +490,7 @@ int main(int argc, char *argv[])
       exit(0);
   }
   umask(0);  /* clear umask */
+
 
   ph_library_init();
   ph_nbio_init(4);
@@ -535,20 +535,17 @@ int main(int argc, char *argv[])
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
 
-  InitCommandData();
+  InitCommandData(); // This should happen before all other threads
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
 
-  initialize_blast_comms();
-// initialize_sip_interface();
+//  initialize_blast_comms();
+//  initialize_sip_interface();
   initialize_dsp1760_interface();
 
-#ifdef USE_FIFO_CMD
-  pthread_create(&CommandDatacomm1, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
-#else
+  pthread_create(&CommandDataFIFO, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-#endif
 #ifdef USE_XY_THREAD
   // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
@@ -556,11 +553,32 @@ int main(int argc, char *argv[])
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
-
   framing_init(channel_list, derived_list);
-  initialize_biphase_buffer();
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
+
+  // initialize superframe FIFO
+  define_superframe();
+  master_superframe = calloc(1, superframe_size);
+  for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
+   allocFifo(telem_fifo[i], 3, superframe_size);
+  } 
+
+  // load all the linklists
+  load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
+  linklist_generate_lookup(linklist_array);
+ 
+  // load the latest linklist into telemetry
+  telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+  telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+  telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+      linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+
+  pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
+  pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
+  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
@@ -596,13 +614,11 @@ int main(int argc, char *argv[])
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
-  pthread_create(&biphase_writer_id, NULL, (void*)&biphase_writer, NULL);
-
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  initialize_watchdog(2);
-  initialize_bias_tone();
+  // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
+  // initialize_bias_tone();
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);

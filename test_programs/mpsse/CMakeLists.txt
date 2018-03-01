@@ -25,6 +25,7 @@ function(define_file_basename_for_sources targetname)
 endfunction()
 
 project (test_biphase)
+project (test_libusb)
 
 cmake_minimum_required (VERSION 2.8.8)
 
@@ -121,9 +122,22 @@ add_executable (test_biphase
     $<TARGET_OBJECTS:crc_obj>
     ) 
 
+add_executable (test_libusb 
+    test_libusb.c
+    $<TARGET_OBJECTS:mpsse>
+    $<TARGET_OBJECTS:blast_obj>
+    $<TARGET_OBJECTS:crc_obj>
+    ) 
+
 define_file_basename_for_sources(test_biphase)
+define_file_basename_for_sources(test_libusb)
 
 target_link_libraries(test_biphase 
+    ${USB_LIBRARY}
+    ssl crypto 
+    m)
+
+target_link_libraries(test_libusb 
     ${USB_LIBRARY}
     ssl crypto 
     m)

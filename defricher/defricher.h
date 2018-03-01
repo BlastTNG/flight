@@ -70,6 +70,7 @@ struct rc_struct {
   char* dirfile;
   char* dirname;
   char* hostname;
+  char* telemetry; // lab, tdrss, biphase, pilot
 };
 
 struct ri_struct {
@@ -93,6 +94,9 @@ struct ri_struct {
 /* interthread communication */
 extern struct rc_struct rc;
 extern struct ri_struct ri;
+
+#include "FIFO.h"
+extern struct Fifo fifo_data[RATE_END];
 
 extern sigset_t signals;
 

@@ -31,6 +31,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TRIM] = "Pointing Sensor Trims",
                                     [GRPOS_ELECT] = "Aux. Electronics",
                                     [GRPOS_BIAS] = "Bias",
+                                    [GRPOS_ROACH] = "ROACH Commands",
                                     [GRPOS_VETO] = "Pointing Sensor Vetos",
                                     [GRPOS_ACT] = "Actuators",
                                     [GRPOS_XSC_HOUSE] = "XSC Housekeeping",
@@ -312,7 +313,7 @@ struct scom scommands[xyzzy + 1] = {
  * l :  parameter is 32 bit unnormalised integer. Max is CMD_L_MAX
  * f :  parameter is 16 bit renormalised floating point
  * d :  parameter is 32 bit renormalised floating point
- * s :  parameter is 7-bit character string
+ * s :  parameter is 7-bit character string JOY: actually 32 char long
  */
 struct mcom mcommands[plugh + 2] = {
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
@@ -790,18 +791,43 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-
-  {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_tdrss"}
+      {"Pilot Linklist", 0, 32, 's', "NONE"},
+      {"Biphase Linklist", 0, 32, 's', "NONE"},
+      {"High Rate Linklist", 0, 32, 's', "NONE"}
     }
   },
 
-  {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
+  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
     }
   },
+
+  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
+    }
+  },
+
+  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+    }
+  },
+
+  {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
+    {
+      {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
+    }
+  },
+  {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
+    {
+      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
+    }
+  },
+
 
   /****************************************/
   /*************** Misc.  *****************/
@@ -818,6 +844,73 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+  {COMMAND(load_new_tone_amplitudes), "loads new tone amplitudes from file", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(df_calc), "Force calculation of I,Q gradient, Delta F", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"1 = Calc new ref grads & ref delta_f, 2 = calculate comparison delta_f", 1, 2, 'i', "NONE"}
+    }
+  },
+  {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Manually retune, 1 = Auto retune"}
+    }
+  },
+  {COMMAND(opt_tones), "Attempt to fine tune targ tones found by get_targ_freqs()", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Default, off, 1 = Run", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

@@ -81,6 +81,7 @@ derived_tng_t derived_list[] = {
   BITWORD("UPLINK_SCHED", "status_mcc", 2, 1),
   BITWORD("BLAST_SUCKS", "status_mcc", 3, 1),
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
+  BITWORD("INCHARGE", "status_mcc", 7, 1),
   BITWORD("SLOT_SCHED", "status_mcc", 8, 8),
 
   BITWORD("STATUS_ISC_ETH", "status_eth", 2, 2),

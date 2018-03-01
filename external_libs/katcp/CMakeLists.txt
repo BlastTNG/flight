@@ -58,13 +58,13 @@ add_definitions(-DKATCP_TRAP_TERM)
 #add_definitions(-DKATCP_PROTOCOL_MAJOR_VERSION=5 -DKATCP_PROTOCOL_MINOR_VERSION=0)
 add_definitions(-DKATCP_PROTOCOL_MAJOR_VERSION=4 -DKATCP_PROTOCOL_MINOR_VERSION=9)
 
-add_library(libkatcp STATIC 
+add_library(katcp STATIC 
 	${KATCP_SRC}
 	${KATCP_HDR}
     )
 
 include_directories ("${PROJECT_SOURCE_DIR}")
 
-target_link_libraries(libkatcp)
+target_link_libraries(katcp)
 
-install(TARGETS libkatcp DESTINATION lib)
+#install(TARGETS libkatcp DESTINATION lib)
