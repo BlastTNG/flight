@@ -13,7 +13,7 @@ void if_control(void);
 void relays(int setting);
 #define POWER 0
 #define CRYO 1
-#define ALL_RELAYS 2
+#define ALL_RELAYS 3
 // DIO addresses LJ CRYO 2
 #define POWER_BOX_ON 2001
 #define POWER_BOX_OFF 2000

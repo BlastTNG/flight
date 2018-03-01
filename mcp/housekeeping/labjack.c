@@ -67,7 +67,7 @@ labjack_commandq_t s_labjack_command;
 static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
     PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
-        if (InCharge) {
+        if (InCharge && (state[cmd->labjack].initialized)) {
             heater_write(cmd->labjack, cmd->address, cmd->command);
         }
         PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
