@@ -428,15 +428,14 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
       tlm_comp_type = tlm_le->comp_type;
       tlm_out_buf = buffer_out+tlm_out_start;
 
-/* TODO BLOCKS
       if (tlm_le->tlm->type == 'B') // block types for images
       {
-        depacketize_block(downlinklist[linkfile_ind],tlm_le->tlm->name,tlm_in_buf);
+        block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+        if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
+        else blast_err("Could not find block in linklist \"%s\"", ll->name);
         //printf("intname = %d\n",*(uint16_t *) tlm_out_buf);
       }
-      else 
-*/
-      if (tlm_comp_type != NO_COMP) // compression
+      else if (tlm_comp_type != NO_COMP) // compression
       {
         (*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
       }
@@ -481,6 +480,63 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     //printf("Nothing to send\n");
   }
 
+}
+
+void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
+{
+  uint16_t intname = 0;
+  uint16_t i = 0, n = 0;
+  uint16_t blksize = 0;
+  uint32_t totalsize = 0;
+
+  int fsize = read_block_header(buffer,&intname,&blksize,&i,&n,&totalsize);
+
+  // no data to read
+  if (intname == 0) return;
+  
+  if (intname != block->intname)
+  { 
+    printf("depacketize_block: block ID mismatch %d != %d\n",intname,block->intname);
+    //memset(buffer,0,blksize+fsize); // clear the bad block
+    return;
+  }
+  
+  if (n == 0) // special case of block fragment
+  { 
+    printf("Received block fragment %d (size %d)\n",i,totalsize);
+    
+    totalsize = blksize;
+    block->num = 1;
+    
+    i = 0;
+    n = 0;
+  }
+  else if (i >= n)
+  { 
+    printf("depacketize_block: index larger than total (%d > %d)\n",i,n);
+    //memset(buffer,0,blksize+fsize); // clear the bad block
+    return;
+  }
+  
+  // expand the buffer if necessary
+  if (totalsize > block->alloc_size)
+  { 
+    void * tp = realloc(block->buffer,totalsize);
+    block->buffer = (uint8_t *) tp;
+    block->alloc_size = totalsize;
+  }
+  
+  unsigned int loc = i*(block->le->blk_size-fsize);
+  block->curr_size = totalsize;
+  block->i = i;
+  block->n = n;
+  
+  block->i++;
+  block->num++;
+
+  if (block->n > 5) printf("Received \"%s\" packet %d of %d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+
+  memcpy(block->buffer+loc,buffer+fsize,blksize);
 }
 
 double datatodouble(uint8_t * data, char type)
