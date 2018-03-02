@@ -335,6 +335,7 @@ void Lens::check_device(string device_name)
     try {
         port.open(device_name);
         port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
+        logger.log(format("trying device %s")%device_name.c_str());
         if (port.is_open()) {
             string message = "/1&\r";
             logger.log(format("attempting message /1& to %s") %(device_name.c_str()));

@@ -47,6 +47,7 @@
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 #include <float.h>
+#include <ctype.h>
 
 #include "blast.h"
 #include "channels_tng.h"
@@ -68,6 +69,7 @@ extern "C" {
 int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
+channel_t block_channel = {{0}}; // a dummy channel for blocks
 
 unsigned int get_spf(unsigned int rate)
 {
@@ -230,6 +232,32 @@ void update_channel_hash(MD5_CTX *mdContext, channel_t * chan)
 	MD5_Update(mdContext, &chan->rate, sizeof(chan->rate));
 }
 
+void parse_block(linklist_t * ll, char * name)
+{
+  strcpy(ll->blocks[ll->num_blocks].name, name);
+  ll->blocks[ll->num_blocks].id = 0; // use id as block send count
+  ll->blocks[ll->num_blocks].buffer = (uint8_t *) calloc(1, DEF_BLOCK_ALLOC);
+  ll->blocks[ll->num_blocks].alloc_size = DEF_BLOCK_ALLOC;
+  ll->blocks[ll->num_blocks].le = &ll->items[ll->n_entries];
+  ll->blocks[ll->num_blocks].i = 1; // inits
+  ll->blocks[ll->num_blocks].n = 1; // inits
+  ll->blocks[ll->num_blocks].num = 0; // inits
+
+  ll->blocks[ll->num_blocks].filename[0] = 0; // inits
+  ll->blocks[ll->num_blocks].fp = NULL; // inits
+
+  ll->num_blocks++;
+}
+
+block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
+{
+  int i;
+  for (i = 0; i < ll->num_blocks; i++) {
+    if (ll->blocks[i].le == le) return &ll->blocks[i];
+  }
+  return NULL;
+}
+
 /**
  * parse_linklist
  * 
@@ -252,10 +280,8 @@ linklist_t * parse_linklist(char *fname)
   if (num_compression_routines == 0)
   {
     int c = 0;
-    int d = 0;
-    while (compressFunc[c]) c++;
-    while (decompressFunc[d]) d++;
-    num_compression_routines = MIN(c,d);
+    while (strlen(compRoutine[c].name)) c++;
+    num_compression_routines = c;
   }
 
   FILE * cf = fopen(fname,"r"); 
@@ -280,6 +306,7 @@ linklist_t * parse_linklist(char *fname)
   uint32_t blk_size, num;
   uint32_t byteloc = 0;
   unsigned int chksm_count = 0;
+  uint8_t isblock = 0;
 
   char *temps[20];
 	int def_n_entries = 150;
@@ -343,19 +370,48 @@ linklist_t * parse_linklist(char *fname)
       }
       else
       {
-        channel_t * chan = channels_find_by_name(temps[0]);
-        if (!chan)
+        channel_t * chan = NULL;
+        if (strcmp(temps[1], "B") == 0) // blocks field 
         {
-          blast_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
-          continue;
+          chan = &block_channel; // dummy channel associated with block
+          comp_type = NO_COMP;
+          isblock = 1;
+        } 
+        else 
+        {
+					chan = channels_find_by_name(temps[0]);
+					isblock = 0;
+          if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
+          {
+            comp_type = atoi(temps[1]); // get compression type
+          }
+          else // normal field, string
+          {
+            for (i=0; i<NUM_COMPRESS_TYPES; i++)
+            {
+              if (strcmp(temps[1], compRoutine[i].name) == 0) break;
+            }
+            if (i != NUM_COMPRESS_TYPES)
+            {
+              comp_type = i;
+            }
+            else
+            {
+              blast_err("Could not find compression type \"%s\"", temps[1]);
+              comp_type = NO_COMP;
+            }
+          }
         }
-        update_channel_hash(&mdContext, chan);
+        num = atoi(temps[2]); // get compressed samples per frame 
+
+				if (!chan)
+				{
+					blast_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
+					continue;
+				}
+				update_channel_hash(&mdContext, chan);
 
         ll->items[ll->n_entries].tlm = chan; // connect entry to name
-
-        // read rest of the file to get compression type
-        comp_type = atoi(temps[1]); // get compression type
-        num = atoi(temps[2]); // get compressed samples per frame 
 
         // check that comp_type is within range
         if ((comp_type >= num_compression_routines) && (comp_type != NO_COMP))
@@ -369,31 +425,27 @@ linklist_t * parse_linklist(char *fname)
         ll->items[ll->n_entries].start = byteloc;
         ll->items[ll->n_entries].num = num;
 
-/*  TODO(javier): blocks
-        if (ll->items[ll->n_entries].tlm->type == 'B') // data block field
+        if (isblock) // data block field
         {
           if (ll->num_blocks < MAX_DATA_BLOCKS)
           {
-						parse_block(ll);
+						parse_block(ll, temps[0]);
             blk_size = num; // blocks have size per sample of 1 byte
           }
           else
           {
             blast_err("parse_linklist: max number of data blocks (%d) reached\n",MAX_DATA_BLOCKS);
           }
-
         }
-
-        else 
-*/
-        if (comp_type != NO_COMP) // normal compressed field
+        else if (comp_type != NO_COMP) // normal compressed field
         {
-          blk_size = (*compressFunc[comp_type])(NULL,&ll->items[ll->n_entries],NULL);
+          blk_size = (*compRoutine[comp_type].compressFunc)(NULL,&ll->items[ll->n_entries],NULL);
         }
         else // no compression, so identical field to telemlist, but with decimation
         {
           blk_size = num*channel_size(ll->items[ll->n_entries].tlm);
         }
+
         if (blk_size > 0) ll->items[ll->n_entries].blk_size = blk_size;
         else
         {
@@ -402,7 +454,6 @@ linklist_t * parse_linklist(char *fname)
       }
 
       // update the serial
-      //MD5_Update(&mdContext, &ll->items[ll->n_entries], sizeof(struct link_entry)-sizeof(struct telem_entry *));
 			update_linklist_hash(&mdContext,&ll->items[ll->n_entries]);
       byteloc += blk_size;
       chksm_count += blk_size;
@@ -426,9 +477,6 @@ linklist_t * parse_linklist(char *fname)
   ll->n_entries++;
 
   ll->blk_size = byteloc;
-  ll->superframe = NULL; // pointer initialized to NULL 
-  ll->compframe = NULL; // pointer initialized to NULL
-  ll->data_ready = 0; // set the data ready flag to none ready
 
   // add the linklist name
   for (i = strlen(fname)-1; i > 0; i--) {
@@ -462,13 +510,18 @@ linklist_t * parse_linklist(char *fname)
     }
     else printf("CHECKSUM\n");
   }
+	printf("Number of data blocks: %d\n",ll->num_blocks);
+
+	for (i=0;i<ll->num_blocks;i++)
+	{
+		printf("%s == %d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].id, ll->blocks[i].alloc_size);
+	}
 
   printf("Serial: ");
   for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
   printf("\n");
   printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
 */
-
   return ll;
 }
 
@@ -516,53 +569,6 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
   int ind = linktable[*((uint16_t *) &serial)];
   if (ind < 0) return NULL;
   return ll_list[ind];
-}
-
-void linklist_set_superframe_ready(linklist_t * ll) {
-  if (ll) ll->data_ready |= SUPERFRAME_READY;
-}
-void linklist_set_compframe_ready(linklist_t * ll) {
-  if (ll) ll->data_ready |= COMPFRAME_READY;
-}
-void set_all_linklist_superframe_ready(linklist_t ** ll_list) {
-  if (ll_list) {
-    linklist_t * ll = ll_list[0];
-    int i = 0;
-    while (ll) {
-      linklist_set_superframe_ready(ll);
-      ll = ll_list[++i];
-    }
-  }
-}
-void set_all_linklist_compframe_ready(linklist_t ** ll_list) {
-  if (ll_list) {
-    linklist_t * ll = ll_list[0];
-    int i = 0;
-    while (ll) {
-      linklist_set_compframe_ready(ll);
-      ll = ll_list[++i];
-    }
-  }
-}
-void assign_all_linklist_superframe(linklist_t ** ll_list, uint8_t * superframe) {
-  if (ll_list) {
-    linklist_t * ll = ll_list[0];
-    int i = 0;
-    while (ll) {
-      assign_superframe_to_linklist(ll, superframe);
-      ll = ll_list[++i]; 
-    }
-  }
-}
-void assign_all_linklist_compframe(linklist_t ** ll_list, uint8_t * compframe) {
-  if (ll_list) {
-    linklist_t * ll = ll_list[0];
-    int i = 0;
-    while (ll) {
-      assign_compframe_to_linklist(ll, compframe);
-      ll = ll_list[++i]; 
-    }
-  }
 }
 
 #ifdef _TESTING

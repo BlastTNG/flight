@@ -70,12 +70,15 @@ struct link_entry
 struct block_container
 {
   char name[80];
-  uint16_t intname;
+  uint16_t id;
   unsigned int i, n, num;
   struct link_entry * le;
   unsigned int alloc_size;
   unsigned int curr_size;
   uint8_t * buffer;
+
+  char filename[80];
+  FILE *fp;
 };
 
 struct link_list
@@ -87,13 +90,13 @@ struct link_list
   struct link_entry * items; // pointer to entries in the list
   struct block_container * blocks; // pointer to blocks
   unsigned int num_blocks; // number of data block fields
-  uint8_t data_ready; // indicates whether or not data can be read from the superframe/compframe
-  uint8_t * superframe; // a pointer to the superframe to/from which data is decompressed/compressed
-  uint8_t * compframe; // a pointer to the compressed from to/from which data is compressed/decompressed
 };
 
 typedef struct link_list linklist_t;
 typedef struct link_entry linkentry_t;
+typedef struct block_container block_t;
+
+extern channel_t block_channel;
 
 linklist_t * parse_linklist(char *);
 unsigned int get_channel_size(const channel_t *);
@@ -102,22 +105,13 @@ unsigned int get_spf(unsigned int);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
-void linklist_set_superframe_ready(linklist_t *);
-void linklist_set_compframe_ready(linklist_t *);
-void set_all_linklist_superframe_ready(linklist_t **);
-void set_all_linklist_compframe_ready(linklist_t **);
-void assign_all_linklist_superframe(linklist_t **, uint8_t *);
-void assign_all_linklist_compframe(linklist_t **, uint8_t *);
 void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
+block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* LINKLIST_H_ */
-
-
-
-

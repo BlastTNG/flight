@@ -31,6 +31,8 @@
 #include "linklist.h"
 
 #define ALLFRAME_SERIAL 0x42424242
+#define BLOCK_FILE_MASK 0x8000
+#define LINKLIST_FILESAVE_DIR "/data/etc/downloaded_files"
 
 #ifdef __cplusplus
 
@@ -38,8 +40,27 @@ extern "C"{
 
 #endif
 
-extern int (*compressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
-extern int (*decompressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
+
+enum dataCompressTypes {
+  FIXED_PT_16BIT, // fixed point 16 bit compression
+  FIXED_PT_32BIT, // fixed point 32 bit compression
+  MEAN_FLOAT_DELTA_8BIT, // 8 bit derivative compression
+  MEAN_FLOAT_8BIT, // 8 bit moving average compression
+
+  NUM_COMPRESS_TYPES
+};
+
+struct dataCompressor {
+  int id;
+  char name[80];
+  int (*compressFunc) (uint8_t *, struct link_entry *, uint8_t *);
+  int (*decompressFunc) (uint8_t *, struct link_entry *, uint8_t *);
+};
+
+extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
+
+#define COMPRESS(x) (int)x, #x
+
 extern uint32_t superframe_offset[RATE_END];
 extern uint32_t superframe_skip[RATE_END];
 extern uint32_t superframe_size;
@@ -61,6 +82,9 @@ void assign_superframe_to_linklist(linklist_t *, uint8_t *);
 void assign_compframe_to_linklist(linklist_t *, uint8_t *);
 int write_allframe(uint8_t *, uint8_t *);
 int read_allframe(uint8_t *, uint8_t *);
+void packetize_block_raw(struct block_container * , uint8_t *);
+void depacketize_block_raw(struct block_container * , uint8_t *);
+void send_file_to_linklist(linklist_t *, char *, char *);
 
 #ifdef __cplusplus
 }
