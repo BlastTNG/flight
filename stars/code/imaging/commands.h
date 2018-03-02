@@ -19,13 +19,17 @@ enum commands_t {
     get_focus,
     set_focus,
     set_focus_incremental,
+    load_focus,
+    save_focus,
     init_aperture,
     get_aperture,
     set_aperture,
+    load_aperture,
+    save_aperture,
     version_string,
     clearing_read_buffer
 };
-static const unsigned int num_commands = 9;
+static const unsigned int num_commands = 13;
 
     }
 }
