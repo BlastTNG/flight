@@ -362,6 +362,7 @@ typedef struct {
 typedef struct {
     uint8_t amp;
     int8_t status;
+    bool reset;
 } cmd_rox_bias_t;
 
 struct CommandDataStruct {

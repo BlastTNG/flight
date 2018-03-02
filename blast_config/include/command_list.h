@@ -140,7 +140,7 @@ enum singleCommand {
   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
-  heater_supply_off, reboot_ljcryo1,
+  heater_supply_off, reboot_ljcryo1, bias_reset_rox,
     cycle_hd_pv, cycle_eth_switch, cycle_fc1, cycle_xsc1, cycle_fc2,
     cycle_xsc0, cycle_gyros, cycle_data_transmit, cycle_el_mot, cycle_pivot,
     cycle_magnetometer, cycle_rw_mot, cycle_steppers, cycle_clinometers, cycle_of_15,

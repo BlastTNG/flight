@@ -68,6 +68,7 @@ static struct async_private_data data;
 static snd_async_handler_t *ahandler;
 int bias_tone_shutting_down = 0;
 
+#define BIAS_WAIT_BEFORE_RECONNECTING 10000000
 
 static void generate_sine(const snd_pcm_channel_area_t *areas,
                           snd_pcm_uframes_t offset,
@@ -311,6 +312,13 @@ static void bias_tone_callback(snd_async_handler_t *ahandler)
     }
 }
 
+int reset_rox_bias(snd_pcm_t* handle) {
+    shutdown_bias_tone();
+// Commenting this out for now because I need to finish writing the function.
+//    usleep(BIAS_WAIT_BEFORE_RECONNECTING);
+// TODO(laura): Figure out a way to monitor the whether the bias has actually shut down.
+}
+
 void *bias_monitor(void *param)
 {
 	snd_pcm_state_t state;
@@ -320,6 +328,7 @@ void *bias_monitor(void *param)
     int err;
     int first_time = 1;
     uint16_t bias_state = 0;
+    uint8_t reset_counter = 0;
     static channel_t *bias_alsa_state_rox_channel;
 	char *channel_name = "bias_alsa_state_rox";
     bias_alsa_state_rox_channel = channels_find_by_name(channel_name);
@@ -395,6 +404,9 @@ void *bias_monitor(void *param)
 
         SET_SCALED_VALUE(bias_alsa_state_rox_channel, bias_state);
 
+        if (CommandData.rox_bias.reset) {
+            ret = reset_rox_bias(handle);
+        }
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 

@@ -600,10 +600,11 @@ int main(int argc, char *argv[])
   // last argument turns commanding on/off
   // arguments are 1/0 0 off 1 on
   // order is CRYO1 CRYO2 OF1 OF2 OF3
-  init_labjacks(1, 1, 0, 0, 0, 1);
-  // mult_labjack_networking_init(6, 84, 1);
-  labjack_networking_init(7, 14, 1);
-  initialize_labjack_commands(7);
+  init_labjacks(0, 0, 1, 1, 1, 1);
+  mult_labjack_networking_init(6, 84, 1);
+  // 7 is for highbay labjack
+  // labjack_networking_init(7, 14, 1);
+  // initialize_labjack_commands(7);
   // initializes an array of voltages for load curves
   init_array();
   // mult_initialize_labjack_commands(6);
@@ -625,8 +626,11 @@ int main(int argc, char *argv[])
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
   initialize_data_sharing();
-  // initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
-  // initialize_bias_tone();
+
+//  Turns on software WD 2, which reboots the FC if not tickled
+//  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
+
+//  initialize_bias_tone();
   startChrgCtrl(0);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
