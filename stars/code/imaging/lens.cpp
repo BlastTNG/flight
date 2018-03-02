@@ -341,18 +341,16 @@ void Lens::check_device(string device_name)
         }
         port.close();
         if (shared_fcp_results.device_found) {
+            logger.log("Joy: hey i am in device_found");
             shared_fcp_results.device_found = true;
             shared_stars_results.device_found = true;
-            string message = "/1e1R\r";
-            send_message(message, load_aperture);
-            message = "/2e1R\r";
-            send_message(message, load_focus);
             shared_fcp_results.device_name = device_name;
             shared_stars_results.device_name = device_name;
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
         }
     } catch (boost::system::system_error&) {}
+    logger.log("check_device: did not catch an error");
     find_device_timer.start();
 }
 
@@ -368,6 +366,7 @@ void Lens::find_device()
 void Lens::connect()
 {
     port.open(shared_fcp_results.device_name);
+    logger.log("Joy: I am in connect and about to open the port for real stuff");
     port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
     if (init_on_startup) {
         shared_stars_write_requests.commands[init_focus].counter++;
