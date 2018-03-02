@@ -47,6 +47,7 @@
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 #include <float.h>
+#include <ctype.h>
 
 #include "blast.h"
 #include "channels_tng.h"
@@ -279,10 +280,8 @@ linklist_t * parse_linklist(char *fname)
   if (num_compression_routines == 0)
   {
     int c = 0;
-    int d = 0;
-    while (compressFunc[c]) c++;
-    while (decompressFunc[d]) d++;
-    num_compression_routines = MIN(c,d);
+    while (strlen(compRoutine[c].name)) c++;
+    num_compression_routines = c;
   }
 
   FILE * cf = fopen(fname,"r"); 
@@ -377,12 +376,31 @@ linklist_t * parse_linklist(char *fname)
           chan = &block_channel; // dummy channel associated with block
           comp_type = NO_COMP;
           isblock = 1;
-        }
-        else // normal field
+        } 
+        else 
         {
 					chan = channels_find_by_name(temps[0]);
-          comp_type = atoi(temps[1]); // get compression type
 					isblock = 0;
+          if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
+          {
+            comp_type = atoi(temps[1]); // get compression type
+          }
+          else // normal field, string
+          {
+            for (i=0; i<NUM_COMPRESS_TYPES; i++)
+            {
+              if (strcmp(temps[1], compRoutine[i].name) == 0) break;
+            }
+            if (i != NUM_COMPRESS_TYPES)
+            {
+              comp_type = i;
+            }
+            else
+            {
+              blast_err("Could not find compression type \"%s\"", temps[1]);
+              comp_type = NO_COMP;
+            }
+          }
         }
         num = atoi(temps[2]); // get compressed samples per frame 
 
@@ -421,7 +439,7 @@ linklist_t * parse_linklist(char *fname)
         }
         else if (comp_type != NO_COMP) // normal compressed field
         {
-          blk_size = (*compressFunc[comp_type])(NULL,&ll->items[ll->n_entries],NULL);
+          blk_size = (*compRoutine[comp_type].compressFunc)(NULL,&ll->items[ll->n_entries],NULL);
         }
         else // no compression, so identical field to telemlist, but with decimation
         {
@@ -479,6 +497,7 @@ linklist_t * parse_linklist(char *fname)
   MD5_Final(md5hash,&mdContext);
   memcpy(ll->serial,md5hash,MD5_DIGEST_LENGTH);
 
+/*
   // print result
   printf("Linklist %s:\n", ll->name);
   for (i=0;i<ll->n_entries;i++)
@@ -502,7 +521,7 @@ linklist_t * parse_linklist(char *fname)
   for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
   printf("\n");
   printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
-
+*/
   return ll;
 }
 

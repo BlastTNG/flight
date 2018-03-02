@@ -347,7 +347,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
         tlm_in_buf = buffer_in+tlm_in_start;
         if (tlm_comp_type != NO_COMP) // compression
         {
-          (*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+          (*compRoutine[tlm_comp_type].compressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
         }
         else
         {
@@ -499,7 +499,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
         if (tlm_comp_type != NO_COMP) // compression
         {
-          (*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
+          (*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
         }
         else
         {
@@ -1274,18 +1274,15 @@ int decimationDecompress(uint8_t * data_out, struct link_entry *le, uint8_t * da
 
 }
 
-int (*compressFunc[]) (uint8_t *, struct link_entry *, uint8_t *) = {
-  // ** THESE TWO FUNCTIONS MUST BE FIRSt **/
-  stream16bitFixedPtComp,   stream32bitFixedPtComp,   
-  stream8bitDeltaComp,     stream8bitComp,
-  NULL    
-};
 
-int (*decompressFunc[]) (uint8_t *, struct link_entry *, uint8_t *) = {
-  // ** THESE TWO FUNCTIONS MUST BE FIRSt **/
-  stream16bitFixedPtDecomp,  stream32bitFixedPtDecomp,  
-  stream8bitDeltaDecomp,   stream8bitDecomp,
-  NULL
+struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1] = {
+  {COMPRESS(FIXED_PT_16BIT), stream16bitFixedPtComp, stream16bitFixedPtDecomp},
+  {COMPRESS(FIXED_PT_32BIT), stream32bitFixedPtComp, stream32bitFixedPtDecomp},
+  {COMPRESS(MEAN_FLOAT_DELTA_8BIT), stream8bitDeltaComp, stream8bitDeltaDecomp},
+  {COMPRESS(MEAN_FLOAT_8BIT), stream8bitComp, stream8bitDecomp},
+ 
+  // terminator
+  {0}
 };
 
 #ifdef __cplusplus

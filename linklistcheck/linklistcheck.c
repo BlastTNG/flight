@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
     	{
 
       	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %d\n",
-         ll->items[i].tlm->field, ll->items[i].start, ll->items[i].blk_size, ll->items[i].num,
-         ll->items[i].comp_type);
+         (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
+         ll->items[i].blk_size, ll->items[i].num, ll->items[i].comp_type);
 				runningsum += ll->items[i].blk_size;
     	}
     	else 

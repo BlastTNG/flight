@@ -40,8 +40,27 @@ extern "C"{
 
 #endif
 
-extern int (*compressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
-extern int (*decompressFunc[]) (uint8_t *, struct link_entry *, uint8_t *);
+
+enum dataCompressTypes {
+  FIXED_PT_16BIT, // fixed point 16 bit compression
+  FIXED_PT_32BIT, // fixed point 32 bit compression
+  MEAN_FLOAT_DELTA_8BIT, // 8 bit derivative compression
+  MEAN_FLOAT_8BIT, // 8 bit moving average compression
+
+  NUM_COMPRESS_TYPES
+};
+
+struct dataCompressor {
+  int id;
+  char name[80];
+  int (*compressFunc) (uint8_t *, struct link_entry *, uint8_t *);
+  int (*decompressFunc) (uint8_t *, struct link_entry *, uint8_t *);
+};
+
+extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
+
+#define COMPRESS(x) (int)x, #x
+
 extern uint32_t superframe_offset[RATE_END];
 extern uint32_t superframe_skip[RATE_END];
 extern uint32_t superframe_size;
