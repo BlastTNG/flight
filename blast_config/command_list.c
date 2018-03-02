@@ -875,9 +875,10 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 1,
+  {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 2,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"}
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Atten step (dB)", 0.5, 6.0, 'f', "NONE"}
     }
   },
   {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,

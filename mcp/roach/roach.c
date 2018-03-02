@@ -97,7 +97,6 @@
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
 #define TARG_SWEEP_SPAN 150.0e3 /* Target sweep span = 200 kHz */
-#define NCAL_POINTS 5 /* Number of points to use for cal sweep */
 #define NCOEFF 12 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Netcat port on Pi for FC1 */
@@ -121,9 +120,10 @@
 #define ADC_RMS_RANGE 5 /* mV */
 #define ATTEN_STEP 0.5 /* dB */
 #define OUTPUT_ATTEN_VNA 6 /* dB, for VNA sweep */
-#define OUTPUT_ATTEN_TARG 12 /* dB, initial level for TARG sweep */
+#define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
 #define EXT_REF 1 /* Valon external ref (10 MHz) */
+#define NCAL_POINTS 21 /* Number of points to use for cal sweep */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
 
 extern int16_t InCharge; /* See mcp.c */
@@ -172,11 +172,12 @@ char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char valon_init_pi_extref[] = "python /home/pi/device_control/init_valon_ext.py";
 char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 /* For testing, use detector data from Feb, 2018 cooldown */
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Tue_Feb_27_14_18_57_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Mar__2_15_42_18_2018";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Mon_Feb_19_15_56_01_2018";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Feb_16_13_52_53_2018";
 
-// char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Sat_May_13_19_04_02_2017";
+char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
+
 char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
@@ -1772,6 +1773,8 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
         return SWEEP_INTERRUPT;
     }
     pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
+    struct stat dir_stat;
+    int stat_return;
     char *lo_command; /* Pi command */
     char *save_bbfreqs_command;
     char *sweep_freq_fname;
@@ -1782,7 +1785,8 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
         m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
     }
     // If doesn't exist, create cal sweep parent directory
-    if (!m_roach->last_cal_path) {
+    stat_return = stat(m_roach->last_cal_path, &dir_stat);
+    if (stat_return != 0) {
         if (create_sweepdir(m_roach, CAL_AMPS)) {
             blast_info("ROACH%d, CAL sweeps will be saved in %s",
                            m_roach->which, m_roach->last_cal_path);
@@ -1887,18 +1891,20 @@ int cal_sweep_amps(roach_state_t *m_roach, double **sweep_buffer)
 int cal_sweep_attens(roach_state_t *m_roach, int ncycles)
 {
     if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
-        // This buffer holds sweep mags for each channel, for a single sweep
+        double atten_step = CommandData.roach_params[m_roach->which - 1].atten_step;
+        double start_atten = (double)OUTPUT_ATTEN_TARG - (ncycles*atten_step);
         int count = 1;
         char *subdir;
         blast_info("ROACH%d, running tone amp cal for %d cycles", m_roach->which, ncycles);
         while (count < ncycles + 1) {
             blast_info("Count = %d", count);
-            blast_tmp_sprintf(subdir, "%d", count);
+            blast_tmp_sprintf(subdir, "%4f", start_atten + (count*atten_step));
             int status = cal_sweep(m_roach, subdir);
             if (status == SWEEP_SUCCESS) {
                 blast_info("ROACH%d, CAL sweep %d complete, stepping output atten", m_roach->which, count);
-                if (set_output_atten(m_roach, OUTPUT_ATTEN_TARG + count) < 0) {
+                if (set_output_atten(m_roach, start_atten + (count*atten_step)) < 0) {
                     blast_info("ROACH%d: Failed to set RUDATs...", m_roach->which);
+                    free(m_roach->last_cal_path);
                     return SWEEP_FAIL;
                 }
             } else if ((status == SWEEP_INTERRUPT)) {
@@ -1906,19 +1912,70 @@ int cal_sweep_attens(roach_state_t *m_roach, int ncycles)
                 m_roach->status = ROACH_STATUS_ACQUIRING;
                 m_roach->desired_status = ROACH_STATUS_ACQUIRING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+                free(m_roach->last_cal_path);
                 return SWEEP_INTERRUPT;
             } else {
                 blast_info("ROACH%d, Cal sweep failed, will reattempt", m_roach->which);
                 m_roach->status = ROACH_STATUS_ACQUIRING;
                 m_roach->desired_status = ROACH_STATUS_ACQUIRING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+                free(m_roach->last_cal_path);
                 return SWEEP_FAIL;
             }
         count += 1;
         }
     }
     CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
+    free(m_roach->last_cal_path);
     return SWEEP_SUCCESS;
+}
+
+int calc_grad_freqs(roach_state_t *m_roach, char* m_targ_path)
+{
+    if (!m_targ_path) {
+        blast_info("Roach%d, NO TARG PATH FOUND, using TARG SEARCH PATH:%s instead",
+                m_roach->which, targ_search_path);
+        blast_tmp_sprintf(m_targ_path, targ_search_path);
+    }
+    char *calc_freqs_command;
+    char *m_targ_freq_path;
+    double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
+    blast_tmp_sprintf(calc_freqs_command,
+           "python /data/etc/blast/roachPython/calc_targ_freqs.py %s %g",
+           m_targ_path,
+           m_roach->lo_centerfreq);
+    blast_info("%s", calc_freqs_command);
+    system(calc_freqs_command);
+    sleep(6);
+    blast_tmp_sprintf(m_targ_freq_path, "%s/gradient_freqs.dat", m_targ_path);
+    blast_info("Opening gradient freqs for reading...");
+    FILE *fd;
+    fd = fopen(m_targ_freq_path, "r");
+    if (!fd) {
+        blast_strerror("Could not open %s for reading", m_targ_freq_path);
+        return -1;
+    }
+    for (size_t m_index = 0; m_index < m_roach->num_kids; m_index++) {
+        if (fscanf(fd, "%lg\n", &m_temp_freqs[m_index]) == EOF) break;
+    }
+    fclose(fd);
+    /* while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
+            && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
+    }*/
+    /* for (size_t j = 0; j < m_roach->num_kids; j++) {
+        blast_info("temp_freqs: %lg", m_temp_freqs[j]);
+    } */
+    blast_info("populating targ_tones...");
+    for (size_t j = 0; j < m_roach->num_kids; j++) {
+        m_roach->targ_tones[j] = m_temp_freqs[j] - m_roach->lo_centerfreq;
+        blast_info("%g", m_roach->targ_tones[j]);
+    }
+    blast_info("Uploading TARGET comb...");
+    roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
+    blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which);
+    cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
+    return 0;
 }
 
 int cal_indiv_amps(roach_state_t *m_roach, int ncycles)
@@ -2396,12 +2453,6 @@ void *roach_cmd_loop(void* ind)
                          roach_state_table[i].last_targ_path)) < 0) {
                    blast_info("ROACH%d: Failed to find kids", i + 1);
                }
-            // CommandData.roach[i].load_targ_amps = 1;
-            blast_info("FIND KIDS called");
-            /* if ((get_targ_freqs(&roach_state_table[i], vna_search_path,
-                         roach_state_table[i].last_targ_path)) < 0) {
-                blast_info("ROACH%d: Failed to find kids", i + 1);
-            } */
             CommandData.roach[i].find_kids = 0;
         }
         if (CommandData.roach[i].set_attens) {
@@ -2421,7 +2472,7 @@ void *roach_cmd_loop(void* ind)
         }
         if ((CommandData.roach[i].opt_tones) &&
                              (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
-            if (optimize_targ_tones(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
+            if (calc_grad_freqs(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
                 blast_info("ROACH%d: Opt tones success", i + 1);
             } else {
                  blast_info("ROACH%d: Failed to optimize target tones", i + 1);
@@ -2665,11 +2716,11 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].vna_amps_path[1],
                       "/home/fc1user/sam_tests/sweeps/roach%d/vna_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].vna_amps_path[0],
-                      "/home/fc1user/sam_tests/roach2%d_default_amps.dat", ind + 1);
+                      "/home/fc1user/sam_tests/roach%d_default_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[0],
                       "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[1],
-                      "/home/fc1user/sam_tests/roach%d_targ_amps.dat", ind + 1);
+                      "/home/fc1user/sam_tests/roach%d_default_targ_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].qdr_log,
                       "/home/fc1user/sam_tests/roach%d_qdr_cal.log", ind + 1);
     asprintf(&roach_state_table[ind].find_kids_log,
@@ -2678,42 +2729,42 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
     if ((ind == 0)) {
         roach_state_table[ind].lo_centerfreq = 828.0e6;
-	roach_state_table[ind].vna_comb_len = 1000;
-	roach_state_table[ind].p_max_freq = 246.001234e6;
-	roach_state_table[ind].p_min_freq = 1.02342e6;
-	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 1)) {
-	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	roach_state_table[ind].vna_comb_len = 1000;
-	roach_state_table[ind].p_max_freq = 246.001234e6;
-	roach_state_table[ind].p_min_freq = 1.02342e6;
-	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 2)) {
-	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	roach_state_table[ind].vna_comb_len = 1000;
-	roach_state_table[ind].p_max_freq = 246.001234e6;
-	roach_state_table[ind].p_min_freq = 1.02342e6;
-	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-	roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 3)) {
-	roach_state_table[ind].lo_centerfreq = 828.0e6;
-	roach_state_table[ind].vna_comb_len = 1000;
-	roach_state_table[ind].p_max_freq = 246.001234e6;
-	roach_state_table[ind].p_min_freq = 1.02342e6;
-	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 4)) {
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
-	roach_state_table[ind].p_max_freq = 246.001234e6;
-	roach_state_table[ind].p_min_freq = 1.02342e6;
-	roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     roach_state_table[ind].which = ind + 1;

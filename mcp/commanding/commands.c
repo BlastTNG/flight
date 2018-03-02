@@ -1790,6 +1790,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case cal_sweeps:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_cal_sweeps = 1;
+          CommandData.roach_params[ivalues[0]-1].atten_step = rvalues[1];
       }
       break;
     case targ_sweep:
@@ -2720,6 +2721,7 @@ void InitCommandData()
         CommandData.roach_params[i].in_atten = 29;
         CommandData.roach_params[i].out_atten = 16;
         CommandData.roach_params[i].test_freq = 10.0125e6;
+        CommandData.roach_params[i].atten_step = 1;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
