@@ -148,7 +148,8 @@ void tdrss_receive(void *arg) {
 
       // decompress the linklist
       if (!read_allframe(local_superframe, compressed_buffer)) {
-          blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
+          blast_info("%s Received linklist \"%s\"", source_str, ll->name);
+          // blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
           if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
               continue;
           }
