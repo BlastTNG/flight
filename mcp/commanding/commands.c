@@ -2078,6 +2078,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
+        case xsc_get_focus:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    CommandData.XSC[which].net.set_focus_value = ivalues[1];
+                    xsc_activate_command(which, xC_get_focus);
+                }
+            }
+            break;
+        }
         case xsc_set_focus:
         {
             for (unsigned int which = 0; which < 2; which++) {

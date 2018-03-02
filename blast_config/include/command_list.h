@@ -210,6 +210,7 @@ enum multiCommand {
   xsc_display_zoom,
   xsc_image_client,
   xsc_init_focus,
+  xsc_get_focus,
   xsc_set_focus,
   xsc_set_focus_incremental,
   xsc_run_autofocus,
