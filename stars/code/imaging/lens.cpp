@@ -81,10 +81,13 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     using std::stringstream;
 
     int int0 = 0;
+    string line;
 
-	logger.log("received from port: " + full_line);
-    string line = full_line.substr(4, string::npos);
-	logger.log("after stripping, line is: " + line);
+    if (full_line.size() > 4) {
+        line = full_line.substr(4, string::npos);
+    } else {
+        line = full_line;
+    }
 
 	string message;
 
@@ -179,7 +182,6 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             {
                 vector<string> words;
                 boost::split(words, line, boost::is_any_of(" "));
-                logger.log(format("We are in version string: size=%d, words[0]=%s")%(words.size())%(words[0]));
                 if (words.size() == 6) {
                     if (words[0].compare("EZStepper") == 0) {
                         logger.log("device found");
@@ -333,15 +335,13 @@ void Lens::check_device(string device_name)
     try {
         port.open(device_name);
         port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
-		logger.log(format("Trying device %s") % (device_name.c_str()));
         if (port.is_open()) {
             string message = "/1&\r";
-            logger.log("attempting message & to motor 1");
+            logger.log(format("attempting message /1& to %s") %(device_name.c_str()));
             send_message(message, version_string);
         }
         port.close();
         if (shared_fcp_results.device_found) {
-            logger.log("Joy: hey i am in device_found");
             shared_fcp_results.device_found = true;
             shared_stars_results.device_found = true;
             shared_fcp_results.device_name = device_name;
@@ -350,7 +350,6 @@ void Lens::check_device(string device_name)
             Shared::Lens::stars_results_lens_to_camera.share();
         }
     } catch (boost::system::system_error&) {}
-    logger.log("check_device: did not catch an error");
     find_device_timer.start();
 }
 
@@ -366,7 +365,6 @@ void Lens::find_device()
 void Lens::connect()
 {
     port.open(shared_fcp_results.device_name);
-    logger.log("Joy: I am in connect and about to open the port for real stuff");
     port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
     if (init_on_startup) {
         shared_stars_write_requests.commands[init_focus].counter++;
