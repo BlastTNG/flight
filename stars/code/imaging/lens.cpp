@@ -82,7 +82,8 @@ void Lens::parse_birger_result(string full_line, commands_t command)
 
     int int0 = 0;
 
-    string line = full_line.subtring(4, string::npos);
+    string line = full_line.substr(4, string::npos);
+	string message;
 
     logger.log(format("recieved birger message for command callback %i")%command);
     logger.log(       "                message (str) " + line);
@@ -103,7 +104,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                 vector<string> words;
                 boost::split(words, line, boost::is_any_of(" :\t\r\n"));
                 if (words.size() == 1) {
-                    int0 = atoi(words[0].c_str()) 
+					int0 = atoi(words[0].c_str());
                     shared_fcp_results.focus_value = int0;
                     shared_fcp_results.focus_found = true;
                     shared_stars_results.focus_value = int0;
@@ -113,7 +114,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = format("/2s1z%dR\n", shared_stars_results.focus_value);
+            message = (format("/2s1z%iR\n")%(shared_stars_results.focus_value)).str();
             send_message(message, save_focus);
             break;
         case init_focus:
@@ -146,7 +147,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                 boost::split(words, line, boost::is_any_of(" :\t\r\n"));
                 if (words.size() == 1) {
                     logger.log(format("aperture found: %i")%(int0));
-                    int0 = atoi(words[0].c_str()) 
+					int0 = atoi(words[0].c_str());
                     shared_fcp_results.aperture_value = int0;
                     shared_fcp_results.aperture_found = true;
                     shared_stars_results.aperture_value = int0;
@@ -155,7 +156,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = format("/1s1z%dR\n", shared_stars_results.focus_aperture);
+            message = (format("/1s1z%iR\n")%(shared_stars_results.aperture_value)).str();
             send_message(message, save_focus);
             break;
         case init_aperture:
@@ -338,7 +339,7 @@ void Lens::check_device(string device_name)
             shared_stars_results.device_found = true;
             string message = "/1e1R\n";
             send_message(message, load_aperture);
-            string message = "/2e1R\n";
+            message = "/2e1R\n";
             send_message(message, load_focus);
             shared_fcp_results.device_name = device_name;
             shared_stars_results.device_name = device_name;
