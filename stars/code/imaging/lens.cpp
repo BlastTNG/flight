@@ -88,6 +88,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     logger.log(format("recieved birger message for command callback %i")%command);
     logger.log(       "                message (str) " + line);
     logger.log(       "                message (hex) " + string_to_hex(line));
+    logger.log(       "I am done printing the hex ");
     switch (command) {
         case flush_birger:
             break;
@@ -175,6 +176,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             {
                 vector<string> words;
                 boost::split(words, line, boost::is_any_of(" "));
+                logger.log(format("We are in version string: size=%d, words[0]=%s")%(words.size())%(words[0]));
                 if (words.size() == 5) {
                     if (words[0].compare("EZStepper") == 0) {
                         logger.log("device found");
