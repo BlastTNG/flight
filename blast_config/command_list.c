@@ -62,8 +62,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna350_off), "turning off 350 lna", GR_CRYO},
   {COMMAND(lna500_on), "turning on 500 lna", GR_CRYO},
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
-  {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
-  {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
+  // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
+  // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
   {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
   {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
@@ -265,22 +265,22 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
-  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
-  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
-  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
-  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO},
+  // {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
+  // {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
+  // {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
+  // {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO},
 
-  {COMMAND(cal_on), "calibrator on", GR_CRYO},
-  {COMMAND(cal_off), "calibrator off", GR_CRYO},
+  // {COMMAND(cal_on), "calibrator on", GR_CRYO},
+  // {COMMAND(cal_off), "calibrator off", GR_CRYO},
   {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
-  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
-  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
-  {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-    GR_CRYO},
-  {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-    GR_CRYO},
+  // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
+  // {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
+  //{COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
+  //  GR_CRYO},
+  // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
+  //   GR_CRYO},
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
@@ -857,18 +857,18 @@ struct mcom mcommands[plugh + 2] = {
 
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
-      {"Derivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
-    }
-  },
-  {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
-    }
-  },
+  // {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
+  //   {
+  //     {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
+  //     {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
+  //     {"Derivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
+  //   }
+  // },
+  // {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
+  //   {
+  //     {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
+  //   }
+  // },
 
 // *****************************************
 // ROACH Commands
@@ -971,14 +971,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Array (250, 350, 500, 0=all)", 0, 32767, 'i', "step_array_bias"},
     }
   },
-  {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
-    {
-      {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
-      {"End", 0, 32767, 'i', "STEP_END_PHASE"},
-      {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
-      {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
-    }
-  },
+  // {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
+  //   {
+  //     {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
+  //     {"End", 0, 32767, 'i', "STEP_END_PHASE"},
+  //     {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
+  //     {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
+  //   }
+  // },
   {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "AMPL_ROX_BIAS"}
@@ -998,13 +998,13 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
-    {
-      {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
-      {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
-    }
-  },
+  // {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
+  //   {
+  //     {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
+  //     {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
+  //     {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
+  //   }
+  // },
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
           {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
@@ -1025,23 +1025,23 @@ struct mcom mcommands[plugh + 2] = {
       {"Labjack - not 1", 0, 4, 'i', "LABJACK"}
       }
   },
-  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
-    {
-      {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
-      {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
-    }
-  },
+  // {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
+  //   {
+  //     {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
+  //     {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
+  //   }
+  // },
 
-  {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO, 6,
-    {
-      {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
-      {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
-      {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
-      {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
-      {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
-      {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
-    }
-  },
+  // {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO, 6,
+  //   {
+  //     {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
+  //     {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
+  //     {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
+  //     {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
+  //     {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
+  //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
+  //   }
+  // },
 
 //  <!-- XSC general -->
 
@@ -1092,6 +1092,16 @@ struct mcom mcommands[plugh + 2] = {
             {"zoom [default: 1.0]", 1.0, 4.0, 'f', "NONE"},
         },
     },
+
+//    {COMMAND(xsc_network_reset), "Reset the xsc network", GR_XSC_PARAM, 4,
+//        {
+//            {"which", 0, 2, 'i', "NONE"},
+//            {"reset now?", 0, 1, 'i', "NONE"},
+//            {"enable lull?", 0, 1, 'i', "NONE"},
+//            {"lull delay", 0.0, 30.0, 'f', "NONE"},
+//        },
+//    },
+
 
 
 ////  <!-- XSC imaging (lens, camera, fake sky, masking) -->

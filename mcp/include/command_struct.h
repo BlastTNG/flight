@@ -28,7 +28,6 @@
 #include <time.h>
 
 #include <xsc_protocol.h>
-#include "isc_protocol.h"
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
