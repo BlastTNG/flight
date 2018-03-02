@@ -82,7 +82,10 @@ void Lens::parse_birger_result(string full_line, commands_t command)
 
     int int0 = 0;
 
+	logger.log("received from port: " + full_line);
     string line = full_line.substr(4, string::npos);
+	logger.log("after stripping, line is: " + line);
+
 	string message;
 
     logger.log(format("recieved birger message for command callback %i")%command);
@@ -103,7 +106,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
             {
                 vector<string> words;
-                boost::split(words, line, boost::is_any_of(" :\t\r\n"));
+                boost::split(words, line, boost::is_any_of(" :\t\r"));
                 if (words.size() == 1) {
 					int0 = atoi(words[0].c_str());
                     shared_fcp_results.focus_value = int0;
@@ -115,7 +118,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = (format("/2s1z%iR\n")%(shared_stars_results.focus_value)).str();
+            message = (format("/2s1z%iR\r")%(shared_stars_results.focus_value)).str();
             send_message(message, save_focus);
             break;
         case init_focus:
@@ -145,7 +148,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
             {
                 vector<string> words;
-                boost::split(words, line, boost::is_any_of(" :\t\r\n"));
+                boost::split(words, line, boost::is_any_of(" :\t\r"));
                 if (words.size() == 1) {
                     logger.log(format("aperture found: %i")%(int0));
 					int0 = atoi(words[0].c_str());
@@ -157,7 +160,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = (format("/1s1z%iR\n")%(shared_stars_results.aperture_value)).str();
+            message = (format("/1s1z%iR\r")%(shared_stars_results.aperture_value)).str();
             send_message(message, save_focus);
             break;
         case init_aperture:
@@ -177,7 +180,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                 vector<string> words;
                 boost::split(words, line, boost::is_any_of(" "));
                 logger.log(format("We are in version string: size=%d, words[0]=%s")%(words.size())%(words[0]));
-                if (words.size() == 5) {
+                if (words.size() == 6) {
                     if (words[0].compare("EZStepper") == 0) {
                         logger.log("device found");
                         shared_fcp_results.device_found = true;
@@ -259,14 +262,14 @@ void Lens::process_request(commands_t command, string message,
 
 void Lens::process_requests()
 {
-    process_request(flush_birger, "\n", false, false);
-    process_request(init_focus, "\n", true, false);
-    process_request(get_focus, "/2?8\n", false, false);
-    process_request(set_focus, "/2A%dR\n", true, false, true);
-    process_request(set_focus_incremental, "/2P%dR\n", true, false, true);
-    process_request(init_aperture, "\n", false, true);
-    process_request(get_aperture, "/1?8\n", false, false);
-    process_request(set_aperture, "/1A%dR\n", false, true, true);
+    process_request(flush_birger, "\r", false, false);
+    process_request(init_focus, "\r", true, false);
+    process_request(get_focus, "/2?8\r", false, false);
+    process_request(set_focus, "/2A%dR\r", true, false, true);
+    process_request(set_focus_incremental, "/2P%dR\r", true, false, true);
+    process_request(init_aperture, "\r", false, true);
+    process_request(get_aperture, "/1?8\r", false, false);
+    process_request(set_aperture, "/1A%dR\r", false, true, true);
 }
 
 void Lens::send_message(string message, commands_t command, int wait_ms)
@@ -330,9 +333,9 @@ void Lens::check_device(string device_name)
     try {
         port.open(device_name);
         port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
-        logger.log(format("Trying device %s")%(device_name.c_str()))
+		logger.log(format("Trying device %s") % (device_name.c_str()));
         if (port.is_open()) {
-            string message = "/1&\n";
+            string message = "/1&\r";
             logger.log("attempting message & to motor 1");
             send_message(message, version_string);
         }
@@ -340,9 +343,9 @@ void Lens::check_device(string device_name)
         if (shared_fcp_results.device_found) {
             shared_fcp_results.device_found = true;
             shared_stars_results.device_found = true;
-            string message = "/1e1R\n";
+            string message = "/1e1R\r";
             send_message(message, load_aperture);
-            message = "/2e1R\n";
+            message = "/2e1R\r";
             send_message(message, load_focus);
             shared_fcp_results.device_name = device_name;
             shared_stars_results.device_name = device_name;
@@ -370,9 +373,9 @@ void Lens::connect()
         shared_stars_write_requests.commands[init_focus].counter++;
         shared_stars_write_requests.commands[init_aperture].counter++;
     } else {
-        string message = "/1e1R\n";
+        string message = "/1e1R\r";
         send_message(message, load_aperture);
-        message = "/2e1R\n";
+        message = "/2e1R\r";
         send_message(message, load_focus);
         shared_stars_write_requests.commands[get_focus].counter++;
         shared_stars_write_requests.commands[get_aperture].counter++;
