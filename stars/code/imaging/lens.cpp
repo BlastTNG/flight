@@ -75,7 +75,7 @@ void Lens::init()
     device_names.push_back("/dev/ttyUSB2");
 }
 
-void Lens::parse_birger_result(string line, commands_t command)
+void Lens::parse_birger_result(string full_line, commands_t command)
 {
     using std::vector;
     using std::stringstream;
@@ -83,6 +83,8 @@ void Lens::parse_birger_result(string line, commands_t command)
     int fmin = 0;
     int fmax = 0;
     int int0 = 0;
+
+    string line = full_line.subtring(4, string::npos);
 
     logger.log(format("recieved birger message for command callback %i")%command);
     logger.log(       "                message (str) " + line);
@@ -220,9 +222,9 @@ void Lens::parse_birger_result(string line, commands_t command)
         case version_string:
             {
                 vector<string> words;
-                boost::split(words, line, boost::is_any_of(":"));
-                if (words.size() == 2) {
-                    if (words[0].compare("s") == 0) {
+                boost::split(words, line, boost::is_any_of(" "));
+                if (words.size() == 5) {
+                    if (words[0].compare("EZStepper") == 0) {
                         logger.log("device found");
                         shared_fcp_results.device_found = true;
                         shared_stars_results.device_found = true;
@@ -286,11 +288,12 @@ void Lens::process_request(commands_t command, string message,
 
 void Lens::process_requests()
 {
-    process_request(flush_birger, "\r", false, false);
-    process_request(init_focus, "la\r", true, false);
-    process_request(get_focus, "fp\r", false, false);
-    process_request(set_focus, "fa%d\r", false, false, true);
-    process_request(set_focus_incremental, "mf%d\r", true, false, true);
+    process_request(flush_birger, "\n", false, false);
+    process_request(init_focus, "\n", true, false);
+    process_request(get_focus, "/2?8\n", false, false);
+    process_request(set_focus, "/2A%dR\n", false, false, true);
+    process_request(set_focus_incremental, "/2P%d\n", true, false, true);
+    process_request(set_focus_decremental, "/2D%d\n", true, false, true);
     process_request(init_aperture, "in\r", false, true);
     process_request(get_aperture, "pa\r", false, false);
     process_request(set_aperture, "ma%d\r", false, false, true);
