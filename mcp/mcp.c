@@ -606,10 +606,10 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGPIPE, SIG_IGN);
 
 //  InitSched();
-  initialize_motors();
-  init_labjacks(0, 0, 1, 1, 1, 0);
+  // initialize_motors();
+  // init_labjacks(0, 0, 1, 1, 1, 0);
   // mult_labjack_networking_init(6, 84, 1);
-  init_array();
+  // init_array();
   // mult_initialize_labjack_commands(6);
 
   initialize_CPU_sensors();

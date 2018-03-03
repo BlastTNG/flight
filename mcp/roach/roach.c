@@ -1769,19 +1769,22 @@ void cal_get_mags(roach_state_t *m_roach, uint32_t m_sweep_freq,
 */
 int cal_sweep(roach_state_t *m_roach, char *subdir)
 {
+    blast_info("CAL SWEEP CALLED");
     if (!CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
         return SWEEP_INTERRUPT;
     }
+    int npoints = CommandData.roach_params[m_roach->which - 1].npoints;
+    blast_info("NPOINTS = %d", npoints);
     pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
     struct stat dir_stat;
     int stat_return;
     char *lo_command; /* Pi command */
     char *save_bbfreqs_command;
     char *sweep_freq_fname;
-    double m_sweep_freqs[NCAL_POINTS];
-    double span = ((double)NCAL_POINTS - 1.0)/2.0;
+    double m_sweep_freqs[npoints];
+    double span = ((double)npoints - 1.0)/2.0;
     m_sweep_freqs[0] = m_roach->lo_centerfreq - span*LO_STEP;
-    for (size_t i = 1; i < NCAL_POINTS; i++) {
+    for (size_t i = 1; i < npoints; i++) {
         m_sweep_freqs[i] = m_sweep_freqs[i - 1] + LO_STEP;
     }
     // If doesn't exist, create cal sweep parent directory
@@ -1813,9 +1816,9 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
     }
     // Save sweep freqs in cal subdir
     blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_cal_path);
-    save_sweep_freqs(m_roach, sweep_freq_fname, m_sweep_freqs, NCAL_POINTS);
+    save_sweep_freqs(m_roach, sweep_freq_fname, m_sweep_freqs, npoints);
     // Do a series of sweeps while recalculating amplitudes
-    for (size_t i = 0; i < NCAL_POINTS; i++) {
+    for (size_t i = 0; i < npoints; i++) {
         if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
@@ -1888,10 +1891,17 @@ int cal_sweep_amps(roach_state_t *m_roach, double **sweep_buffer)
     return SWEEP_SUCCESS;
 }
 
-int cal_sweep_attens(roach_state_t *m_roach, int ncycles)
+int cal_sweep_attens(roach_state_t *m_roach)
 {
     if (CommandData.roach[m_roach->which - 1].do_cal_sweeps) {
-        double atten_step = CommandData.roach_params[m_roach->which - 1].atten_step;
+        double atten_step;
+        uint32_t npoints, ncycles;
+        atten_step = CommandData.roach_params[m_roach->which - 1].atten_step;
+        ncycles = (uint32_t)CommandData.roach_params[m_roach->which - 1].ncycles;
+        npoints = (uint32_t)CommandData.roach_params[m_roach->which - 1].npoints;
+        blast_info("NCYCLES = %u", ncycles);
+        blast_info("ATTEN STEP = %f", atten_step);
+        blast_info("NPOINTS = %u", npoints);
         double start_atten = (double)OUTPUT_ATTEN_TARG - (ncycles*atten_step);
         int count = 1;
         char *subdir;
@@ -2427,6 +2437,9 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].do_cal_sweeps &&
                 roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS) {
             roach_state_table[i].desired_status = ROACH_STATUS_CAL_AMPS;
+            blast_info("NCYCLES = %f", CommandData.roach_params[i].ncycles);
+            blast_info("NPOINTS = %f", CommandData.roach_params[i].npoints);
+            blast_info("ATTEN STEP = %f", CommandData.roach_params[i].atten_step);
         }
         /* if (CommandData.roach[i].do_sweeps == 0) {
             roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
@@ -2667,7 +2680,7 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS &&
               roach_state_table[i].desired_status == ROACH_STATUS_CAL_AMPS) {
             blast_info("ROACH%d, Starting CAL sweeps...", i + 1);
-            status = cal_sweep_attens(&roach_state_table[i], N_CAL_CYCLES);
+            status = cal_sweep_attens(&roach_state_table[i]);
             if ((status == SWEEP_SUCCESS)) {
                 // Save the paths to last sweeps for data analysis
                 system("python /home/fc1user/sam_builds/sweep_list.py cal");

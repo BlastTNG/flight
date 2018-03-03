@@ -354,6 +354,8 @@ typedef struct roach_params
     double new_out_atten;
     double test_freq;
     double atten_step;
+    double npoints;
+    double ncycles;
 } roach_params_t;
 
 typedef struct {
