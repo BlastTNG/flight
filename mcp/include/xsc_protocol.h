@@ -159,6 +159,8 @@ enum
     xC_get_focus,
     xC_set_focus,
     xC_set_focus_incremental,
+    xC_define_focus,
+    xC_define_aperture,
     xC_run_autofocus,
     xC_set_autofocus_range,
     xC_abort_autofocus,
@@ -310,6 +312,7 @@ typedef struct XSCClientData
 
     int set_focus_value;
     int set_focus_incremental_value;
+    int define_focus_value;
     int autofocus_search_min;
     int autofocus_search_max;
     int autofocus_search_step;
@@ -317,6 +320,7 @@ typedef struct XSCClientData
     xsc_autofocus_display_mode_t autofocus_display_mode;
     int set_aperture_value;
     double set_gain_value;
+    int define_aperture_value;
 
     XSCBrightness     brightness;
     XSCSolver         solver;

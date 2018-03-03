@@ -102,10 +102,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case get_focus:
             shared_fcp_results.command_counters[init_focus] = shared_fcp_requests.commands[init_focus].counter;
             shared_fcp_results.command_counters[get_focus] = shared_fcp_requests.commands[get_focus].counter;
+            shared_fcp_results.command_counters[define_focus] = shared_fcp_requests.commands[define_focus].counter;
             shared_fcp_results.command_counters[set_focus] = shared_fcp_requests.commands[set_focus].counter;
             shared_fcp_results.command_counters[set_focus_incremental] = shared_fcp_requests.commands[set_focus_incremental].counter;
             shared_stars_results.command_counters[init_focus] = shared_stars_requests.commands[init_focus].counter;
             shared_stars_results.command_counters[get_focus] = shared_stars_requests.commands[get_focus].counter;
+            shared_stars_results.command_counters[define_focus] = shared_stars_requests.commands[define_focus].counter;
             shared_stars_results.command_counters[set_focus] = shared_stars_requests.commands[set_focus].counter;
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
             {
@@ -129,10 +131,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case set_focus:
             shared_fcp_results.command_counters[init_focus] = shared_fcp_requests.commands[init_focus].counter;
             shared_fcp_results.command_counters[get_focus] = shared_fcp_requests.commands[get_focus].counter;
+            shared_fcp_results.command_counters[define_focus] = shared_fcp_requests.commands[define_focus].counter;
             shared_fcp_results.command_counters[set_focus] = shared_fcp_requests.commands[set_focus].counter;
             shared_fcp_results.command_counters[set_focus_incremental] = shared_fcp_requests.commands[set_focus_incremental].counter;
             shared_stars_results.command_counters[init_focus] = shared_stars_requests.commands[init_focus].counter;
             shared_stars_results.command_counters[get_focus] = shared_stars_requests.commands[get_focus].counter;
+            shared_stars_results.command_counters[define_focus] = shared_stars_requests.commands[define_focus].counter;
             shared_stars_results.command_counters[set_focus] = shared_stars_requests.commands[set_focus].counter;
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
             Shared::Lens::fcp_results_lens_to_camera.share();
@@ -146,9 +150,11 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_fcp_results.command_counters[init_aperture] = shared_fcp_requests.commands[init_aperture].counter;
             shared_fcp_results.command_counters[get_aperture] = shared_fcp_requests.commands[get_aperture].counter;
             shared_fcp_results.command_counters[set_aperture] = shared_fcp_requests.commands[set_aperture].counter;
+            shared_fcp_results.command_counters[define_aperture] = shared_fcp_requests.commands[define_aperture].counter;
             shared_stars_results.command_counters[init_aperture] = shared_stars_requests.commands[init_aperture].counter;
             shared_stars_results.command_counters[get_aperture] = shared_stars_requests.commands[get_aperture].counter;
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
+            shared_stars_results.command_counters[define_aperture] = shared_stars_requests.commands[define_aperture].counter;
             {
                 string found_value = line.substr(0, line.length() - 2);
                 if (found_value.length() > 0) {
@@ -170,9 +176,11 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_fcp_results.command_counters[init_aperture] = shared_fcp_requests.commands[init_aperture].counter;
             shared_fcp_results.command_counters[get_aperture] = shared_fcp_requests.commands[get_aperture].counter;
             shared_fcp_results.command_counters[set_aperture] = shared_fcp_requests.commands[set_aperture].counter;
+            shared_fcp_results.command_counters[define_aperture] = shared_fcp_requests.commands[define_aperture].counter;
             shared_stars_results.command_counters[init_aperture] = shared_stars_requests.commands[init_aperture].counter;
             shared_stars_results.command_counters[get_aperture] = shared_stars_requests.commands[get_aperture].counter;
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
+            shared_stars_results.command_counters[define_aperture] = shared_stars_requests.commands[define_aperture].counter;
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
             break;

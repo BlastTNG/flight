@@ -1269,7 +1269,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xsc_set_focus), "Set the absolute focus position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Absolute focus position", 0, 10000, 'i', "NONE"},
+              {"Absolute focus position", 0, 5000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_define_focus), "Define the value of the focus at the current position", GR_XSC_MODE, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Focus value", 0, 5000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC_MODE, 2,
@@ -1286,7 +1292,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Absolute aperture position", 0, 10000, 'i', "NONE"},
+              {"Absolute aperture position", 0, 1000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_define_aperture), "Define the value of the aperture at the current position", GR_XSC_MODE, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Aperture value", 0, 1000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_solver_general), "Solver parameter settings", GR_XSC_PARAM, 3,

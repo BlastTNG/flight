@@ -2097,6 +2097,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
+        case xsc_define_focus:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    CommandData.XSC[which].net.define_focus_value = ivalues[1];
+                    xsc_activate_command(which, xC_define_focus);
+                }
+            }
+            break;
+        }
         case xsc_set_focus_incremental:
         {
             for (unsigned int which = 0; which < 2; which++) {
@@ -2167,6 +2177,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                 if (xsc_command_applies_to(which, ivalues[0])) {
                     CommandData.XSC[which].net.set_aperture_value = ivalues[1];
                     xsc_activate_command(which, xC_set_aperture);
+                }
+            }
+            break;
+        }
+        case xsc_define_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    CommandData.XSC[which].net.define_aperture_value = ivalues[1];
+                    xsc_activate_command(which, xC_define_aperture);
                 }
             }
             break;
