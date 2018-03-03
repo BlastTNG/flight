@@ -208,6 +208,11 @@ void Lens::parse_birger_result(string full_line, commands_t command)
 void Lens::process_request(commands_t command, string message,
     bool initiate_get_focus, bool initiate_get_aperture)
 {
+
+    if (command == get_focus) {
+        logger.log(format("I am process request, and the shared_fcp_requests.commands[get_focus].counter is %d")%shared_fcp_requests.commands[command].counter);
+        logger.log(format("I am process request, and the command_fcp_counters[command] is %d")%command_fcp_counters[command]);
+    }
     if (command_fcp_counters[command] != shared_fcp_requests.commands[command].counter ||
         command_stars_counters[command] != shared_stars_requests.commands[command].counter)
     {

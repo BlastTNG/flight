@@ -57,6 +57,8 @@ bool Connection::check_command(unsigned int command_index)
             {
                 local_command_admins[command_index].counter = client_data.command_admins[command_index].counter;
                 logger.log(format("network unloading: received command %i") % command_index);
+                logger.log(format("in check_command, local_command_admins[command_index].counter is %d")%local_command_admins[command_index].counter);
+                logger.log(format("in check_command, client_data.command_admins[command_index].counter is %d")%client_data.command_admins[command_index].counter);
                 return true;
             }
         }
@@ -85,6 +87,7 @@ void Connection::unload_client_data_lens_and_camera()
     if (check_command(xC_get_focus)) {
         shared_lens_requests.commands[get_focus].counter = client_data.command_admins[xC_get_focus].counter;
         passed_something = true;
+        logger.log(format("shared_lens_requests.commands[get_focus].counter after getting get_focus command: %d")%shared_lens_requests.commands[get_focus].counter);
     }
     if (check_command(xC_set_focus)) {
         shared_lens_requests.commands[set_focus].counter = client_data.command_admins[xC_set_focus].counter;
