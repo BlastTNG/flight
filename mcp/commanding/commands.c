@@ -2181,6 +2181,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
+        case xsc_get_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_get_aperture);
+                }
+            }
+            break;
+        }
         case xsc_define_aperture:
         {
             for (unsigned int which = 0; which < 2; which++) {

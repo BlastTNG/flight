@@ -1289,6 +1289,11 @@ struct mcom mcommands[plugh + 2] = {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
+  {COMMAND(xsc_get_aperture), "Get Aperture", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
   {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},

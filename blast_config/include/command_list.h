@@ -229,6 +229,7 @@ enum multiCommand {
   xsc_abort_autofocus,
   xsc_autofocus_display_mode,
   xsc_init_aperture,
+  xsc_get_aperture,
   xsc_set_aperture,
   xsc_define_aperture,
   xsc_get_gain,
