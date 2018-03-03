@@ -82,6 +82,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
 
     int int0 = 0;
     string line;
+    string found_value;
 
     if (full_line.size() > 4) {
         line = full_line.substr(4, string::npos);
@@ -89,7 +90,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         line = full_line;
     }
 
-	string message;
+    string message;
 
     logger.log(format("recieved birger message for command callback %i")%command);
     logger.log(       "                message (str) " + line);
@@ -108,21 +109,20 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_stars_results.command_counters[set_focus] = shared_stars_requests.commands[set_focus].counter;
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
             {
-                vector<string> words;
-                boost::split(words, line, boost::is_any_of(" :\t\r"));
-                if (words.size() == 1) {
-					int0 = atoi(words[0].c_str());
+
+                found_value = line.substr(0, line.length()-2);
+                if (found_value.length() > 0) {
+                    int0 = atoi(found_value.c_str());
                     shared_fcp_results.focus_value = int0;
                     shared_fcp_results.focus_found = true;
                     shared_stars_results.focus_value = int0;
                     shared_stars_results.focus_found = true;
                     logger.log(format("focus found: %i")%(int0));
+                    shared_stars_requests.commands[save_focus].value = shared_stars_results.focus_value;
                 }
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = (format("/2s1z%iR\r")%(shared_stars_results.focus_value)).str();
-            send_message(message, save_focus);
             break;
         case init_focus:
             break;
@@ -150,21 +150,19 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             shared_stars_results.command_counters[get_aperture] = shared_stars_requests.commands[get_aperture].counter;
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
             {
-                vector<string> words;
-                boost::split(words, line, boost::is_any_of(" :\t\r"));
-                if (words.size() == 1) {
-                    logger.log(format("aperture found: %i")%(int0));
-					int0 = atoi(words[0].c_str());
+                string found_value = line.substr(0, line.length() - 2);
+                if (found_value.length() > 0) {
+                    int0 = atoi(found_value.c_str());
+                    logger.log(format("aperture found: %i") % (int0));
                     shared_fcp_results.aperture_value = int0;
                     shared_fcp_results.aperture_found = true;
                     shared_stars_results.aperture_value = int0;
                     shared_stars_results.aperture_found = true;
+                    shared_stars_requests.commands[save_aperture].value = shared_stars_results.aperture_value;
                 }
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
             Shared::Lens::stars_results_lens_to_camera.share();
-            message = (format("/1s1z%iR\r")%(shared_stars_results.aperture_value)).str();
-            send_message(message, save_focus);
             break;
         case init_aperture:
             break;
@@ -208,11 +206,6 @@ void Lens::parse_birger_result(string full_line, commands_t command)
 void Lens::process_request(commands_t command, string message,
     bool initiate_get_focus, bool initiate_get_aperture)
 {
-
-    if (command == get_focus) {
-        logger.log(format("I am process request, and the shared_fcp_requests.commands[get_focus].counter is %d")%shared_fcp_requests.commands[command].counter);
-        logger.log(format("I am process request, and the command_fcp_counters[command] is %d")%command_fcp_counters[command]);
-    }
     if (command_fcp_counters[command] != shared_fcp_requests.commands[command].counter ||
         command_stars_counters[command] != shared_stars_requests.commands[command].counter)
     {
@@ -228,6 +221,14 @@ void Lens::process_request(commands_t command, string message,
         }
         if (initiate_get_aperture) {
             shared_stars_write_requests.commands[get_aperture].counter++;
+            Shared::Lens::stars_requests_lens_to_main.share();
+        }
+        if (command == get_focus) {
+            shared_stars_write_requests.commands[save_focus].counter++;
+            Shared::Lens::stars_requests_lens_to_main.share();
+        }
+        if (command == get_aperture) {
+            shared_stars_write_requests.commands[save_aperture].counter++;
             Shared::Lens::stars_requests_lens_to_main.share();
         }
         // TODO (Javier) : figure out the right wait_ms delay for each command
@@ -277,6 +278,8 @@ void Lens::process_requests()
     process_request(init_aperture, "\r", false, true);
     process_request(get_aperture, "/1?8\r", false, false);
     process_request(set_aperture, "/1A%dR\r", false, true, true);
+    process_request(save_aperture, "/1s1z%dR\r", false, false, true);
+    process_request(save_focus, "/2s1z%dR\r", false, false, true);
 }
 
 void Lens::send_message(string message, commands_t command, int wait_ms)
