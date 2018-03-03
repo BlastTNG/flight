@@ -1281,7 +1281,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Incremental focus steps", -10000, 10000, 'i', "NONE"},
+              {"Incremental focus steps", -5000, 5000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC_MODE, 1,
