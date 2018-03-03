@@ -1118,9 +1118,9 @@ struct mcom mcommands[plugh + 2] = {
     {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
-            {"focus_search_min", 1, 10000, 'l', "NONE"},
-            {"focus_search_max", 2, 10000, 'l', "NONE"},
-            {"focus_search_step", 2, 1000, 'l', "NONE"},
+            {"focus_search_min", 0, 5000, 'l', "NONE"},
+            {"focus_search_max", 0, 5000, 'l', "NONE"},
+            {"focus_search_step", 1, 1000, 'l', "NONE"},
         },
     },
 
@@ -1281,10 +1281,15 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Incremental focus steps", -10000, 10000, 'i', "NONE"},
+              {"Incremental focus steps", -5000, 5000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_get_aperture), "Get Aperture", GR_XSC_MODE, 1,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
