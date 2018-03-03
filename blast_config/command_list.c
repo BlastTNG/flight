@@ -1118,9 +1118,9 @@ struct mcom mcommands[plugh + 2] = {
     {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
-            {"focus_search_min", 1, 10000, 'l', "NONE"},
-            {"focus_search_max", 2, 10000, 'l', "NONE"},
-            {"focus_search_step", 2, 1000, 'l', "NONE"},
+            {"focus_search_min", 0, 5000, 'l', "NONE"},
+            {"focus_search_max", 0, 5000, 'l', "NONE"},
+            {"focus_search_step", 1, 1000, 'l', "NONE"},
         },
     },
 
