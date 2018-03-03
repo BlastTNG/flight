@@ -198,6 +198,10 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                 logger.log(format("clearing read buffer returned %d characters")%line.size());
             }
             break;
+        case define_focus:
+            break;
+        case define_aperture:
+            break;
         default:
             break;
     }
@@ -280,6 +284,8 @@ void Lens::process_requests()
     process_request(set_aperture, "/1A%dR\r", false, true, true);
     process_request(save_aperture, "/1s1z%dR\r", false, false, true);
     process_request(save_focus, "/2s1z%dR\r", false, false, true);
+    process_request(define_focus, "/2z%dR\r", true, false, true);
+    process_request(define_aperture, "/1z%dR\r", false, true, true);
 }
 
 void Lens::send_message(string message, commands_t command, int wait_ms)

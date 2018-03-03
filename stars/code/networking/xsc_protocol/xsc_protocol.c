@@ -156,6 +156,7 @@ void xsc_clear_client_data(XSCClientData* client_data)
 
     client_data->set_focus_value = 0;
     client_data->set_focus_incremental_value = 0;
+    client_data->define_focus_value = 0;
     client_data->autofocus_search_min = 2300;
     client_data->autofocus_search_max = 3300;
     client_data->autofocus_search_step = 10;
@@ -163,6 +164,7 @@ void xsc_clear_client_data(XSCClientData* client_data)
     client_data->autofocus_display_mode = xC_autofocus_display_mode_auto;
     client_data->set_aperture_value = 0;
     client_data->set_gain_value = 0.0;
+    client_data->define_aperture_value = 0;
 
     xsc_clear_brightness(&client_data->brightness);
 
