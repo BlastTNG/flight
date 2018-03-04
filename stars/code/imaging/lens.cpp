@@ -373,13 +373,16 @@ void Lens::handle_read_timeout(const boost::system::error_code& error)
 
 void Lens::handle_read(commands_t command, const boost::system::error_code& error, size_t size)
 {
+	logger.log(format("I am in handle_read and the boost error is %s, and the size is %d") % error.message().c_str() %size);
     if (!error && size) {
         std::istream is(&instream);
         string line = "";
         bool end_of_file = false;
         while (!end_of_file) {
             end_of_file = getline(is, line).eof();
+			logger.log(format("I got end of file and it's %d") % end_of_file);
             parse_birger_result(line, command);
+			logger.log("this should be afer parse_burger_result");
         }
         read_timeout.cancel();
     }
@@ -404,6 +407,11 @@ void Lens::check_device(string device_name)
     try {
         port.open(device_name);
         port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
+		port.set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port::flow_control::none));
+		port.set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port::parity::none));
+		port.set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port::stop_bits::one));
+		port.set_option(boost::asio::serial_port_base::character_size(8));
+
         logger.log(format("trying device %s")%device_name.c_str());
         if (port.is_open()) {
             string message = "/1&\r";
@@ -436,6 +444,10 @@ void Lens::connect()
 {
     port.open(shared_fcp_results.device_name);
     port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
+	port.set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port::flow_control::none));
+	port.set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port::parity::none));
+	port.set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port::stop_bits::one));
+	port.set_option(boost::asio::serial_port_base::character_size(8));
     if (init_on_startup) {
         shared_stars_write_requests.commands[init_focus].counter++;
         shared_stars_write_requests.commands[init_aperture].counter++;
