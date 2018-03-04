@@ -244,9 +244,11 @@ void Lens::process_request(commands_t command, string message,
             Shared::Lens::stars_requests_lens_to_main.share();
         }
         // TODO (Javier) : figure out the right wait_ms delay for each command
-        if ((command == set_focus) || (command == set_aperture)) {
-            send_message(message, command, 8000);
-        } else {
+		if  ((command == init_focus) || (command == init_aperture)) {
+			send_message(message, command, 16000);
+		} else if ((command == set_focus) || (command == set_aperture)) {
+			send_message(message, command, 8000);
+		} else {
             send_message(message, command);
         }
         logger.log("send_message returned");
@@ -283,11 +285,11 @@ void Lens::process_request(commands_t command, string message,
 void Lens::process_requests()
 {
     process_request(flush_birger, "\r", false, false);
-    process_request(init_focus, "\r", true, false);
+    process_request(init_focus, "/2z4000D4000M8000z0R\r", true, false);
     process_request(get_focus, "/2?8\r", false, false);
     process_request(set_focus, "/2A%dR\r", true, false, true);
     process_request(set_focus_incremental, "/2P%dR\r", true, false, true);
-    process_request(init_aperture, "\r", false, true);
+    process_request(init_aperture, "/1z650D650M8000z0R\r", false, true);
     process_request(get_aperture, "/1?8\r", false, false);
     process_request(set_aperture, "/1A%dR\r", false, true, true);
     process_request(save_aperture, "/1s1z%dR\r", false, false, true);
