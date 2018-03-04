@@ -9,6 +9,7 @@
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <vector>
+#include <math.h>
 #include "../parameters/manager.h"
 #include "../shared/update.h"
 #include "../shared/lens/requests.h"
@@ -24,6 +25,13 @@ using Lensing::logger;
 #define shared_stars_write_requests (*(Shared::Lens::stars_requests_lens_to_main.w))
 #define shared_stars_requests (*(Shared::Lens::stars_requests_camera_to_lens.r))
 #define shared_stars_results (*(Shared::Lens::stars_results_lens_to_camera.w))
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define FOCUS_MAX_WAIT_FOR_MOVE 55000 // maximum wait time [ms] for focus over entire range
+#define FOCUS_MAX_RANGE_FOR_MOVE 3500 // maximum range of focus
+#define APERTURE_MAX_WAIT_FOR_MOVE 8000 // maximum wait time [ms] for aperture over entire range
+#define APERTURE_MAX_RANGE_FOR_MOVE 650 // maximum range of aperture
 
 string string_to_hex(string instring)
 {
@@ -120,7 +128,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                     shared_stars_results.focus_value = int0;
                     shared_stars_results.focus_found = true;
                     logger.log(format("focus found: %i")%(int0));
-                    shared_stars_requests.commands[save_focus].value = shared_stars_results.focus_value;
+                    shared_stars_write_requests.commands[save_focus].value = shared_stars_results.focus_value;
                 }
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
@@ -143,7 +151,11 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             Shared::Lens::stars_results_lens_to_camera.share();
             break;
         case save_focus:
-            break;
+		case save_aperture:
+			shared_fcp_results.command_counters[command] = shared_fcp_requests.commands[command].counter;
+			shared_stars_results.command_counters[command] = shared_stars_requests.commands[command].counter;
+			Shared::Lens::fcp_results_lens_to_camera.share();
+			Shared::Lens::stars_results_lens_to_camera.share();
         case set_focus_incremental:
             break;
         case get_aperture:
@@ -164,7 +176,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
                     shared_fcp_results.aperture_found = true;
                     shared_stars_results.aperture_value = int0;
                     shared_stars_results.aperture_found = true;
-                    shared_stars_requests.commands[save_aperture].value = shared_stars_results.aperture_value;
+                    shared_stars_write_requests.commands[save_aperture].value = shared_stars_results.aperture_value;
                 }
             }
             Shared::Lens::fcp_results_lens_to_camera.share();
@@ -215,6 +227,37 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     }
 }
 
+int Lens::get_wait_ms(commands_t command)
+{
+	double wait_ms = 2000;
+
+	if ((command == init_aperture)) {
+		return APERTURE_MAX_WAIT_FOR_MOVE * 2;
+	}
+	else if ((command == init_focus)) {
+		return FOCUS_MAX_WAIT_FOR_MOVE * 2;
+	}
+	else if ((command == set_aperture)) {
+		wait_ms = (shared_stars_results.aperture_value -
+			shared_stars_requests.commands[command].value) *
+			APERTURE_MAX_WAIT_FOR_MOVE / APERTURE_MAX_RANGE_FOR_MOVE;
+		return (int) ((wait_ms > 0) ? wait_ms : -wait_ms);
+	}
+	else if ((command == set_focus)) {
+		wait_ms = (shared_stars_results.focus_value -
+			shared_stars_requests.commands[command].value) *
+			FOCUS_MAX_WAIT_FOR_MOVE / FOCUS_MAX_RANGE_FOR_MOVE;
+		return (int) ((wait_ms > 0) ? wait_ms : -wait_ms);
+	}
+	else if ((command == set_focus_incremental)) {
+		wait_ms = shared_stars_requests.commands[command].value *
+			FOCUS_MAX_WAIT_FOR_MOVE / FOCUS_MAX_RANGE_FOR_MOVE;
+		return (int) ((wait_ms < 0) ? wait_ms : -wait_ms);
+	} else {
+		return (int) wait_ms;
+	}
+}
+
 void Lens::process_request(commands_t command, string message,
     bool initiate_get_focus, bool initiate_get_aperture)
 {
@@ -235,30 +278,18 @@ void Lens::process_request(commands_t command, string message,
             shared_stars_write_requests.commands[get_aperture].counter++;
             Shared::Lens::stars_requests_lens_to_main.share();
         }
-        if (command == get_focus) {
-            shared_stars_write_requests.commands[save_focus].counter++;
-            Shared::Lens::stars_requests_lens_to_main.share();
-        }
-        if (command == get_aperture) {
-            shared_stars_write_requests.commands[save_aperture].counter++;
-            Shared::Lens::stars_requests_lens_to_main.share();
-        }
-		if  ((command == init_aperture)) {
-			send_message(message, command, 16000);
-		} else if ((command == init_focus)) {
-			send_message(message, command, 110000);
-		} else if ((command == set_aperture)) {
-			send_message(message, command, 8000);
-		} else if ((command == set_focus)) {
-			send_message(message, command, 55000);
+        send_message(message, command, get_wait_ms(command));
+
+		if (command == get_focus) {
+			shared_stars_write_requests.commands[save_focus].counter++;
+			Shared::Lens::stars_requests_lens_to_main.share();
 		}
-		else if ((command == set_focus_incremental)) {
-			double wait_ms = shared_stars_requests.commands[command].value * 55000 / 3300;
-			if (wait_ms < 0) wait_ms = -wait_ms;
-			send_message(message, command, wait_ms);
-		} else {
-            send_message(message, command);
-        }
+		if (command == get_aperture) {
+			shared_stars_write_requests.commands[save_aperture].counter++;
+			Shared::Lens::stars_requests_lens_to_main.share();
+		}
+
+
         logger.log("send_message returned");
     }
 }
@@ -293,11 +324,17 @@ void Lens::process_request(commands_t command, string message,
 void Lens::process_requests()
 {
     process_request(flush_birger, "\r", false, false);
-    process_request(init_focus, "/2z3500D3500M55000z0R\r", true, false);
+    process_request(init_focus, "/2z" STR(FOCUS_MAX_RANGE_FOR_MOVE) // define max position 
+                                  "D" STR(FOCUS_MAX_RANGE_FOR_MOVE) // decrement to zero
+                                  "M" STR(FOCUS_MAX_WAIT_FOR_MOVE) // wait to move
+                                  "z0R\r", true, false); // define zero position
     process_request(get_focus, "/2?8\r", false, false);
     process_request(set_focus, "/2A%dR\r", true, false, true);
     process_request(set_focus_incremental, "/2P%dR\r", true, false, true);
-    process_request(init_aperture, "/1z650D650M8000z0R\r", false, true);
+    process_request(init_aperture, "/1z" STR(APERTURE_MAX_RANGE_FOR_MOVE) // define max position
+                                     "D" STR(APERTURE_MAX_RANGE_FOR_MOVE) // decrement to zero
+                                     "M" STR(APERTURE_MAX_WAIT_FOR_MOVE) // wait to move
+                                     "z0R\r", false, true); // define zero position
     process_request(get_aperture, "/1?8\r", false, false);
     process_request(set_aperture, "/1A%dR\r", false, true, true);
     process_request(save_aperture, "/1s1z%dR\r", false, false, true);
