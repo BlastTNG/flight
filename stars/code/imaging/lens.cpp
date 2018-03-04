@@ -288,8 +288,6 @@ void Lens::process_request(commands_t command, string message,
 			shared_stars_write_requests.commands[save_aperture].counter++;
 			Shared::Lens::stars_requests_lens_to_main.share();
 		}
-
-
         logger.log("send_message returned");
     }
 }
@@ -373,16 +371,13 @@ void Lens::handle_read_timeout(const boost::system::error_code& error)
 
 void Lens::handle_read(commands_t command, const boost::system::error_code& error, size_t size)
 {
-	logger.log(format("I am in handle_read and the boost error is %s, and the size is %d") % error.message().c_str() %size);
     if (!error && size) {
         std::istream is(&instream);
         string line = "";
         bool end_of_file = false;
         while (!end_of_file) {
             end_of_file = getline(is, line).eof();
-			logger.log(format("I got end of file and it's %d") % end_of_file);
             parse_birger_result(line, command);
-			logger.log("this should be afer parse_burger_result");
         }
         read_timeout.cancel();
     }
