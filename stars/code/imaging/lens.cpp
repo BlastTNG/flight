@@ -111,11 +111,13 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case get_focus:
             shared_fcp_results.command_counters[init_focus] = shared_fcp_requests.commands[init_focus].counter;
             shared_fcp_results.command_counters[get_focus] = shared_fcp_requests.commands[get_focus].counter;
+            shared_fcp_results.command_counters[stop_focus] = shared_fcp_requests.commands[stop_focus].counter;
             shared_fcp_results.command_counters[define_focus] = shared_fcp_requests.commands[define_focus].counter;
             shared_fcp_results.command_counters[set_focus] = shared_fcp_requests.commands[set_focus].counter;
             shared_fcp_results.command_counters[set_focus_incremental] = shared_fcp_requests.commands[set_focus_incremental].counter;
             shared_stars_results.command_counters[init_focus] = shared_stars_requests.commands[init_focus].counter;
             shared_stars_results.command_counters[get_focus] = shared_stars_requests.commands[get_focus].counter;
+            shared_stars_results.command_counters[stop_focus] = shared_stars_requests.commands[stop_focus].counter;
             shared_stars_results.command_counters[define_focus] = shared_stars_requests.commands[define_focus].counter;
             shared_stars_results.command_counters[set_focus] = shared_stars_requests.commands[set_focus].counter;
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
@@ -140,11 +142,13 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case set_focus:
             shared_fcp_results.command_counters[init_focus] = shared_fcp_requests.commands[init_focus].counter;
             shared_fcp_results.command_counters[get_focus] = shared_fcp_requests.commands[get_focus].counter;
+            shared_fcp_results.command_counters[stop_focus] = shared_fcp_requests.commands[stop_focus].counter;
             shared_fcp_results.command_counters[define_focus] = shared_fcp_requests.commands[define_focus].counter;
             shared_fcp_results.command_counters[set_focus] = shared_fcp_requests.commands[set_focus].counter;
             shared_fcp_results.command_counters[set_focus_incremental] = shared_fcp_requests.commands[set_focus_incremental].counter;
             shared_stars_results.command_counters[init_focus] = shared_stars_requests.commands[init_focus].counter;
             shared_stars_results.command_counters[get_focus] = shared_stars_requests.commands[get_focus].counter;
+            shared_stars_results.command_counters[stop_focus] = shared_stars_requests.commands[stop_focus].counter;
             shared_stars_results.command_counters[define_focus] = shared_stars_requests.commands[define_focus].counter;
             shared_stars_results.command_counters[set_focus] = shared_stars_requests.commands[set_focus].counter;
             shared_stars_results.command_counters[set_focus_incremental] = shared_stars_requests.commands[set_focus_incremental].counter;
@@ -162,10 +166,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case get_aperture:
             shared_fcp_results.command_counters[init_aperture] = shared_fcp_requests.commands[init_aperture].counter;
             shared_fcp_results.command_counters[get_aperture] = shared_fcp_requests.commands[get_aperture].counter;
+            shared_fcp_results.command_counters[stop_aperture] = shared_fcp_requests.commands[stop_aperture].counter;
             shared_fcp_results.command_counters[set_aperture] = shared_fcp_requests.commands[set_aperture].counter;
             shared_fcp_results.command_counters[define_aperture] = shared_fcp_requests.commands[define_aperture].counter;
             shared_stars_results.command_counters[init_aperture] = shared_stars_requests.commands[init_aperture].counter;
             shared_stars_results.command_counters[get_aperture] = shared_stars_requests.commands[get_aperture].counter;
+            shared_stars_results.command_counters[stop_aperture] = shared_stars_requests.commands[stop_aperture].counter;
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
             shared_stars_results.command_counters[define_aperture] = shared_stars_requests.commands[define_aperture].counter;
             {
@@ -188,10 +194,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case set_aperture:
             shared_fcp_results.command_counters[init_aperture] = shared_fcp_requests.commands[init_aperture].counter;
             shared_fcp_results.command_counters[get_aperture] = shared_fcp_requests.commands[get_aperture].counter;
+            shared_fcp_results.command_counters[stop_aperture] = shared_fcp_requests.commands[stop_aperture].counter;
             shared_fcp_results.command_counters[set_aperture] = shared_fcp_requests.commands[set_aperture].counter;
             shared_fcp_results.command_counters[define_aperture] = shared_fcp_requests.commands[define_aperture].counter;
             shared_stars_results.command_counters[init_aperture] = shared_stars_requests.commands[init_aperture].counter;
             shared_stars_results.command_counters[get_aperture] = shared_stars_requests.commands[get_aperture].counter;
+            shared_stars_results.command_counters[stop_aperture] = shared_stars_requests.commands[stop_aperture].counter;
             shared_stars_results.command_counters[set_aperture] = shared_stars_requests.commands[set_aperture].counter;
             shared_stars_results.command_counters[define_aperture] = shared_stars_requests.commands[define_aperture].counter;
             Shared::Lens::fcp_results_lens_to_camera.share();
@@ -348,7 +356,7 @@ void Lens::process_requests()
                                   "z0R\r", true, false); // define zero position
     process_request(get_focus, "/2?8\r", false, false);
     process_request(set_focus, "/2A%dR\r", true, false, true);
-    process_request(stop_focus, "/2T\r", true, false);
+    process_request(stop_focus, "/2TR\r", true, false);
     process_request(set_focus_incremental, "/2P%dR\r", true, false, true);
     process_request(init_aperture, "/1z" STR(APERTURE_MAX_RANGE_FOR_MOVE) // define max position
                                      "D" STR(APERTURE_MAX_RANGE_FOR_MOVE) // decrement to zero
@@ -356,7 +364,7 @@ void Lens::process_requests()
                                      "z0R\r", false, true); // define zero position
     process_request(get_aperture, "/1?8\r", false, false);
     process_request(set_aperture, "/1A%dR\r", false, true, true);
-    process_request(stop_aperture, "/1T\r", false, true);
+    process_request(stop_aperture, "/1TR\r", false, true);
     process_request(save_aperture, "/1s1z%dR\r", false, false, true);
     process_request(save_focus, "/2s1z%dR\r", false, false, true);
     process_request(define_focus, "/2z%dR\r", true, false, true);
