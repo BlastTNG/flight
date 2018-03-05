@@ -53,6 +53,7 @@ Lens::Lens(Parameters::Manager& params): port(io), read_timeout(io),
     thread(boost::bind(&Lens::run, this))
     #pragma warning(pop)
 {
+	which_sensor.assign(params.general.try_get("main.which_sensor", std::string("(sensor name)")));
 }
 
 Lens::~Lens()
@@ -221,6 +222,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case define_focus:
             break;
         case define_aperture:
+            break;
+        case set_aperture_velocity:
+            break;
+        case set_focus_velocity:
+            break;
+        case set_aperture_current:
             break;
         default:
             break;
@@ -437,6 +444,7 @@ void Lens::find_device()
 
 void Lens::connect()
 {
+    string message;
     port.open(shared_fcp_results.device_name);
     port.set_option(boost::asio::serial_port_base::baud_rate(baud_rate));
 	port.set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port::flow_control::none));
@@ -447,10 +455,19 @@ void Lens::connect()
         shared_stars_write_requests.commands[init_focus].counter++;
         shared_stars_write_requests.commands[init_aperture].counter++;
     } else {
-        string message = "/1e1R\r";
+        message = "1/V50R\r";
+        send_message(message, set_aperture_velocity);
+        message = "2/V50R\r";
+        send_message(message, set_focus_velocity);
+        message = "/1e1R\r";
         send_message(message, load_aperture);
         message = "/2e1R\r";
         send_message(message, load_focus);
+        if (which_sensor.compare("xsc1") == 0) {
+            logger.log("Setting higher current for xsc1 aperture");
+            message = "/1m70R\r";
+            send_message(message, set_aperture_current);
+        }
         shared_stars_write_requests.commands[get_focus].counter++;
         shared_stars_write_requests.commands[get_aperture].counter++;
     }

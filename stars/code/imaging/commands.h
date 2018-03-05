@@ -29,6 +29,9 @@ enum commands_t {
     version_string,
     define_aperture,
     define_focus,
+    set_aperture_velocity,
+    set_focus_velocity,
+    set_aperture_current,
 	clearing_read_buffer // This needs to be the last command
 };
 static const unsigned int num_commands = 15;

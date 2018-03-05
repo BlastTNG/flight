@@ -88,6 +88,7 @@ class Imaging::Lens
     boost::asio::deadline_timer read_timeout;
     bool enabled;
     bool init_on_startup;
+    std::string which_sensor;
     Tools::Timer find_device_timer;
     double find_device_period;
     std::vector<std::string> device_names;
