@@ -1272,6 +1272,11 @@ struct mcom mcommands[plugh + 2] = {
               {"Absolute focus position", 0, 5000, 'i', "NONE"},
       }
   },
+  {COMMAND(xsc_stop_focus), "Stop all motion on the focus actuator", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
   {COMMAND(xsc_define_focus), "Define the value of the focus at the current position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
@@ -1298,6 +1303,11 @@ struct mcom mcommands[plugh + 2] = {
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Absolute aperture position", 0, 1000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_stop_aperture), "Stop all motion on the aperture actuator", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_define_aperture), "Define the value of the aperture at the current position", GR_XSC_MODE, 2,

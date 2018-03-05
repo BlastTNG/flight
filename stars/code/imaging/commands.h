@@ -29,6 +29,8 @@ enum commands_t {
     version_string,
     define_aperture,
     define_focus,
+    stop_aperture,
+    stop_focus,
     set_aperture_velocity,
     set_focus_velocity,
     set_aperture_current,

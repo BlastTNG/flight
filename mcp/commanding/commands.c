@@ -2097,6 +2097,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
+        case xsc_stop_focus:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_stop_focus);
+                }
+            }
+            break;
+        }
         case xsc_define_focus:
         {
             for (unsigned int which = 0; which < 2; which++) {
@@ -2109,11 +2118,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         }
         case xsc_set_focus_incremental:
         {
-            for (unsigned int which = 0; which < 2; which++) {
-                if (xsc_command_applies_to(which, ivalues[0])) {
-                    CommandData.XSC[which].net.set_focus_incremental_value = ivalues[1];
-                    xsc_activate_command(which, xC_set_focus_incremental);
-                }
+            if (ivalues[0]) {
+								for (unsigned int which = 0; which < 2; which++) {
+										if (xsc_command_applies_to(which, ivalues[0])) {
+												CommandData.XSC[which].net.set_focus_incremental_value = ivalues[1];
+												xsc_activate_command(which, xC_set_focus_incremental);
+										}
+								}
+            } else {
+                blast_err("Commands: must provide non-zero incremental value\n");
             }
             break;
         }
@@ -2186,6 +2199,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             for (unsigned int which = 0; which < 2; which++) {
                 if (xsc_command_applies_to(which, ivalues[0])) {
                     xsc_activate_command(which, xC_get_aperture);
+                }
+            }
+            break;
+        }
+        case xsc_stop_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_stop_aperture);
                 }
             }
             break;

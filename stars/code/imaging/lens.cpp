@@ -152,7 +152,7 @@ void Lens::parse_birger_result(string full_line, commands_t command)
             Shared::Lens::stars_results_lens_to_camera.share();
             break;
         case save_focus:
-		case save_aperture:
+		    case save_aperture:
 			shared_fcp_results.command_counters[command] = shared_fcp_requests.commands[command].counter;
 			shared_stars_results.command_counters[command] = shared_stars_requests.commands[command].counter;
 			Shared::Lens::fcp_results_lens_to_camera.share();
@@ -222,6 +222,10 @@ void Lens::parse_birger_result(string full_line, commands_t command)
         case define_focus:
             break;
         case define_aperture:
+            break;
+        case stop_focus:
+            break;
+        case stop_aperture:
             break;
         case set_aperture_velocity:
             break;
@@ -344,6 +348,7 @@ void Lens::process_requests()
                                   "z0R\r", true, false); // define zero position
     process_request(get_focus, "/2?8\r", false, false);
     process_request(set_focus, "/2A%dR\r", true, false, true);
+    process_request(stop_focus, "/2T\r", true, false);
     process_request(set_focus_incremental, "/2P%dR\r", true, false, true);
     process_request(init_aperture, "/1z" STR(APERTURE_MAX_RANGE_FOR_MOVE) // define max position
                                      "D" STR(APERTURE_MAX_RANGE_FOR_MOVE) // decrement to zero
@@ -351,6 +356,7 @@ void Lens::process_requests()
                                      "z0R\r", false, true); // define zero position
     process_request(get_aperture, "/1?8\r", false, false);
     process_request(set_aperture, "/1A%dR\r", false, true, true);
+    process_request(stop_aperture, "/1T\r", false, true);
     process_request(save_aperture, "/1s1z%dR\r", false, false, true);
     process_request(save_focus, "/2s1z%dR\r", false, false, true);
     process_request(define_focus, "/2z%dR\r", true, false, true);
