@@ -43,6 +43,7 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
     Measurement measurement;
     string type = "";
     measurement.channel = channel_num;
+	logger.log("I am in add_channel");
     if (map.count(field_name)) {
         measurement.name = map[field_name].as<string>();
     } else {
@@ -63,6 +64,7 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
         }
     }
     measurements.push_back(measurement);
+
 }
 
 void Housekeeper::update_shared()
@@ -113,11 +115,17 @@ void Housekeeper::update()
 				string logerror = "";
 
 				ad_card->dmm_scan(values);
+				if (false) {
+					string val_log = "Value: ";
+					for (int i = 0; i < 16; i++) {
+						val_log += std::to_string(values[i]) + " ";
+					}
+					logger.log(val_log);
+				}
 
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;
-					measurements[i].add_value(values[i]);
-					logdata += (format(" %s %.03d") % measurements[i].name % values[i]).str();
+					measurements[i].add_value(values[channel]);
                 }
                 if (write_temps_counter == 0) {
                     logger.log(logdata);
