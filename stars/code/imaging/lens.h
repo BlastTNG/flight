@@ -78,7 +78,7 @@ class Imaging::Lens
     void update();
     void run();
     void wait_for_quit();
-	int get_wait_ms(commands_t command);
+    int get_wait_ms(commands_t command, int command_value);
 
   private:
     Autofocuser autofocuser;

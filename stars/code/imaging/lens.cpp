@@ -28,10 +28,10 @@ using Lensing::logger;
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define FOCUS_MAX_WAIT_FOR_MOVE 55000 // maximum wait time [ms] for focus over entire range
-#define FOCUS_MAX_RANGE_FOR_MOVE 3500 // maximum range of focus
-#define APERTURE_MAX_WAIT_FOR_MOVE 8000 // maximum wait time [ms] for aperture over entire range
-#define APERTURE_MAX_RANGE_FOR_MOVE 650 // maximum range of aperture
+#define FOCUS_MAX_WAIT_FOR_MOVE 70000.0 // maximum wait time [ms] for focus over entire range
+#define FOCUS_MAX_RANGE_FOR_MOVE 3500.0 // maximum range of focus
+#define APERTURE_MAX_WAIT_FOR_MOVE 12000.0 // maximum wait time [ms] for aperture over entire range
+#define APERTURE_MAX_RANGE_FOR_MOVE 650.0 // maximum range of aperture
 
 string string_to_hex(string instring)
 {
@@ -234,46 +234,54 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     }
 }
 
-int Lens::get_wait_ms(commands_t command)
+int Lens::get_wait_ms(commands_t command, int command_value)
 {
 	double wait_ms = 2000;
 
 	if ((command == init_aperture)) {
-		return APERTURE_MAX_WAIT_FOR_MOVE * 2;
+		wait_ms = APERTURE_MAX_WAIT_FOR_MOVE * 2;
 	}
 	else if ((command == init_focus)) {
-		return FOCUS_MAX_WAIT_FOR_MOVE * 2;
+		wait_ms = FOCUS_MAX_WAIT_FOR_MOVE * 2;
 	}
 	else if ((command == set_aperture)) {
-		wait_ms = (shared_stars_results.aperture_value -
-			shared_stars_requests.commands[command].value) *
+		wait_ms = (shared_stars_results.aperture_value - command_value) *
 			APERTURE_MAX_WAIT_FOR_MOVE / APERTURE_MAX_RANGE_FOR_MOVE;
-		return (int) ((wait_ms > 0) ? wait_ms : -wait_ms);
 	}
 	else if ((command == set_focus)) {
-		wait_ms = (shared_stars_results.focus_value -
-			shared_stars_requests.commands[command].value) *
+		wait_ms = (shared_stars_results.focus_value - command_value) *
 			FOCUS_MAX_WAIT_FOR_MOVE / FOCUS_MAX_RANGE_FOR_MOVE;
-		return (int) ((wait_ms > 0) ? wait_ms : -wait_ms);
 	}
 	else if ((command == set_focus_incremental)) {
-		wait_ms = shared_stars_requests.commands[command].value *
-			FOCUS_MAX_WAIT_FOR_MOVE / FOCUS_MAX_RANGE_FOR_MOVE;
-		return (int) ((wait_ms < 0) ? wait_ms : -wait_ms);
-	} else {
-		return (int) wait_ms;
+		wait_ms = command_value * FOCUS_MAX_WAIT_FOR_MOVE / FOCUS_MAX_RANGE_FOR_MOVE;
 	}
+	wait_ms = (int)((wait_ms > 0) ? wait_ms : -wait_ms);
+	logger.log(format("choosing wait_ms = %d ms for command %d") % wait_ms % command);
+	return wait_ms;
 }
 
 void Lens::process_request(commands_t command, string message,
     bool initiate_get_focus, bool initiate_get_aperture)
 {
+    int command_value = 0;
+
     if (command_fcp_counters[command] != shared_fcp_requests.commands[command].counter ||
         command_stars_counters[command] != shared_stars_requests.commands[command].counter)
     {
         logger.log(format("initiating lens request (%i) because counters don't match:") % command);
         logger.log(format("      (fcp counters) %i %i") % command_fcp_counters[command] % shared_fcp_requests.commands[command].counter);
         logger.log(format("    (stars counters) %i %i") % command_stars_counters[command] % shared_stars_requests.commands[command].counter);
+
+		if (command_fcp_counters[command] != shared_fcp_requests.commands[command].counter) {
+			command_value = shared_fcp_requests.commands[command].value;
+		}
+		else if (command_stars_counters[command] != shared_stars_requests.commands[command].counter) {
+			command_value = shared_stars_requests.commands[command].value;
+		}
+		else {
+			logger.log("Counters are inconsistent so command_value set to 0");
+			command_value = 0;
+		}
 
         command_fcp_counters[command] = shared_fcp_requests.commands[command].counter;
         command_stars_counters[command] = shared_stars_requests.commands[command].counter;
@@ -285,7 +293,8 @@ void Lens::process_request(commands_t command, string message,
             shared_stars_write_requests.commands[get_aperture].counter++;
             Shared::Lens::stars_requests_lens_to_main.share();
         }
-        send_message(message, command, get_wait_ms(command));
+
+        send_message(message, command, get_wait_ms(command, command_value));
 
 		if (command == get_focus) {
 			shared_stars_write_requests.commands[save_focus].counter++;
