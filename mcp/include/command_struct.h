@@ -387,7 +387,7 @@ struct CommandDataStruct {
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
 
-  enum {vtx_isc, vtx_osc} vtx_sel[2];
+  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
@@ -464,7 +464,7 @@ struct CommandDataStruct {
   double autotrim_rate;      // degrees/s
   time_t autotrim_time;      // in seconds
   time_t autotrim_xsc0_last_bad;
-  time_t autotrim_osc_last_bad;
+  time_t autotrim_xsc1_last_bad;
 
   double cal_xmax_mag;
   double cal_xmin_mag;
