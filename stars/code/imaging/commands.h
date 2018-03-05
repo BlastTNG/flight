@@ -36,7 +36,7 @@ enum commands_t {
     set_aperture_current,
 	clearing_read_buffer // This needs to be the last command
 };
-static const unsigned int num_commands = 15;
+static const unsigned int num_commands = 22;
 
     }
 }
