@@ -115,13 +115,6 @@ void Housekeeper::update()
 				string logerror = "";
 
 				ad_card->dmm_scan(values);
-				if (false) {
-					string val_log = "Value: ";
-					for (int i = 0; i < 16; i++) {
-						val_log += std::to_string(values[i]) + " ";
-					}
-					logger.log(val_log);
-				}
 
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;
