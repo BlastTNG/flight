@@ -455,9 +455,9 @@ void Lens::connect()
         shared_stars_write_requests.commands[init_focus].counter++;
         shared_stars_write_requests.commands[init_aperture].counter++;
     } else {
-        message = "1/V50R\r";
+        message = "/1V50R\r";
         send_message(message, set_aperture_velocity);
-        message = "2/V50R\r";
+        message = "/2V50R\r";
         send_message(message, set_focus_velocity);
         message = "/1e1R\r";
         send_message(message, load_aperture);
