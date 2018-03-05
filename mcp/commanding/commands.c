@@ -62,7 +62,7 @@
 #define NUM_LOCK_POS 10
 static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34.88, 44.86, 54.83, 64.81, 74.80, 89.78};
 
-/* based on isc_protocol.h */
+/* based on xsc0.h */
 #define ISC_SHUTDOWN_NONE     0
 #define ISC_SHUTDOWN_HALT     1
 #define ISC_SHUTDOWN_REBOOT   2
@@ -617,20 +617,20 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.pointing_mode.h = 0;
             break;
 
-        case trim_to_isc:
+        case trim_to_xsc0:
             CommandData.autotrim_enable = 0;
             CommandData.autotrim_rate = 0.0;
             SetTrimToSC(0);
             break;
-        case trim_to_osc:
+        case trim_to_xsc1:
             CommandData.autotrim_enable = 0;
             CommandData.autotrim_rate = 0.0;
             SetTrimToSC(1);
             break;
-        case trim_osc_to_isc:
+        case trim_xsc1_to_xsc0:
             trim_xsc(0);
             break;
-        case trim_isc_to_osc:
+        case trim_xsc0_to_xsc1:
             trim_xsc(1);
             break;
         case reset_trims:
@@ -1078,17 +1078,17 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case not_at_float:
             CommandData.at_float = 0;
             break;
-        case vtx1_isc:
-            CommandData.vtx_sel[0] = vtx_isc;
+        case vtx1_xsc0:
+            CommandData.vtx_sel[0] = vtx_xsc0;
             break;
-        case vtx1_osc:
-            CommandData.vtx_sel[0] = vtx_osc;
+        case vtx1_xsc1:
+            CommandData.vtx_sel[0] = vtx_xsc1;
             break;
-        case vtx2_isc:
-            CommandData.vtx_sel[1] = vtx_isc;
+        case vtx2_xsc0:
+            CommandData.vtx_sel[1] = vtx_xsc0;
             break;
-        case vtx2_osc:
-            CommandData.vtx_sel[1] = vtx_osc;
+        case vtx2_xsc1:
+            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
@@ -1405,7 +1405,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.autotrim_time = ivalues[1];
       CommandData.autotrim_rate = rvalues[2];
       CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
-      CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
+      CommandData.autotrim_xsc1_last_bad = CommandData.autotrim_xsc0_last_bad;
       CommandData.autotrim_enable = 1;
       break;
     case az_gyro_offset:
@@ -2531,7 +2531,7 @@ void InitCommandData()
 
     /* force autotrim to reset its wait time on restart */
     CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
-    CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
+    CommandData.autotrim_xsc1_last_bad = CommandData.autotrim_xsc0_last_bad;
 
     CommandData.reset_rw = 0;
     CommandData.reset_piv = 0;
@@ -2685,8 +2685,8 @@ void InitCommandData()
     copysvalue(CommandData.pilot_linklist_name, "test.ll");
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
-    CommandData.vtx_sel[0] = vtx_isc;
-    CommandData.vtx_sel[1] = vtx_osc;
+    CommandData.vtx_sel[0] = vtx_xsc0;
+    CommandData.vtx_sel[1] = vtx_xsc1;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 

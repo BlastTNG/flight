@@ -955,12 +955,12 @@ static void AutoTrimToSC()
         CommandData.autotrim_xsc0_last_bad = t;
     }
     if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_osc_last_bad = t;
+        CommandData.autotrim_xsc1_last_bad = t;
     }
 
     if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
         isc_good = 1;
-    if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
+    if (t - CommandData.autotrim_xsc1_last_bad > CommandData.autotrim_time)
         osc_good = 1;
 
     // sticky choice
