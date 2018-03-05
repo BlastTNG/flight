@@ -18,33 +18,40 @@ Curve::Curve()
 
 bool Curve::get_peak(double& focus, double& value)
 {
-    if (points.size() < 5) {
-        focus = 0.0;
-        value = 0.0;
-        return false;
-    }
+	if (points.size() < 5) {
+		focus = 0.0;
+		value = 0.0;
+		return false;
+	}
 
-    unsigned int best_index = 0;
-    double best_focus = points[0].focus;
-    double best_value = points[0].value;
-    for (unsigned int i=0; i<points.size(); i++) {
-        if (points[i].value > best_value)
-        {
-            best_value = points[i].value;
-            best_focus = points[i].focus;
-            best_index = i;
-        }
-    }
+	unsigned int best_index = 0;
+	double best_focus = points[0].focus;
+	double best_value = points[0].value;
+	for (unsigned int i = 0; i<points.size(); i++) {
+		if (points[i].value > best_value)
+		{
+			best_value = points[i].value;
+			best_focus = points[i].focus;
+			best_index = i;
+		}
+	}
 
-    // check that the point is not on the edge in order to check that it's a local maximum
-    if (best_index > 0 && best_index < points.size()-1) {
-        focus = best_focus;
-        value = best_value;
-        return true;
-    }
-    focus = 0.0;
-    value = 0.0;
-    return false;
+	focus = best_focus;
+	value = best_value;
+	return true;
+
+	if (false) {
+		// Decided that it was better to end up at something that is a max rather than at the last focus tried
+	    // check that the point is not on the edge in order to check that it's a local maximum
+    	if (best_index > 0 && best_index < points.size() - 1) {
+    		focus = best_focus;
+	    	value = best_value;
+	    	return true;
+    	}
+	    focus = 0.0;
+	    value = 0.0;
+	    return false;
+	}
 }
 
 void Curve::log(Logging::Logger& logger)
