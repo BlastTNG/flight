@@ -1761,12 +1761,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 // ROACH Commands
 // *****************************************
     case load_new_vna_amps:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].load_vna_amps = ivalues[1];
       }
       break;
     case load_new_targ_amps:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
       }
       break;
@@ -1782,10 +1782,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case vna_sweep:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_STREAMING;
           CommandData.roach[ivalues[0]-1].change_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
+	  CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
       }
       break;
     case cal_sweeps:

@@ -122,7 +122,7 @@
 #define OUTPUT_ATTEN_VNA 6 /* dB, for VNA sweep */
 #define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
-#define EXT_REF 1 /* Valon external ref (10 MHz) */
+#define EXT_REF 0 /* Valon external ref (10 MHz) */
 #define NCAL_POINTS 21 /* Number of points to use for cal sweep */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
 
@@ -459,10 +459,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         if (!fd) {
             blast_strerror("Could not open %s for reading", amps_path);
             fclose(fd);
-            blast_info("ROACH%d, using all 1 as tone amps", m_roach->which);
-            for (size_t i = 0; i < m_freqlen; i++) {
-                amps[i] = 1.0;
-            }
         } else {
             blast_info("Opened %s", amps_path);
             for (size_t i = 0; i < m_freqlen; i++) {
@@ -1617,9 +1613,9 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     if ((sweep_type == VNA)) {
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA)) {
-            // TODO(Sam) for testing, m_span = VNA_SWEEP_SPAN
-            m_span = m_roach->vna_sweep_span;
-            // m_span = VNA_SWEEP_SPAN;
+            // TODO(Sam) for short sweep, m_span = VNA_SWEEP_SPAN
+            // m_span = m_roach->vna_sweep_span;
+            m_span = VNA_SWEEP_SPAN;
             blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
             blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
             if (save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len) < 0) {
@@ -2390,7 +2386,7 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].roach_desired_state);
             CommandData.roach[i].roach_state = 0;
         }
-        if (CommandData.roach[i].load_vna_amps) {
+        if (CommandData.roach[i].load_vna_amps && !CommandData.roach[i].do_sweeps) {
             if (roach_state_table[i].status >= ROACH_STATUS_CALIBRATED) {
                 blast_info("ROACH%d, Generating search comb", i + 1);
                 roach_vna_comb(&roach_state_table[i]);
@@ -2403,7 +2399,7 @@ void *roach_cmd_loop(void* ind)
                 blast_info("ROACH%d, Cannot load vna amps", i + 1);
             }
         }
-        if (CommandData.roach[i].load_targ_amps) {
+        if (CommandData.roach[i].load_targ_amps && !CommandData.roach[i].do_sweeps) {
             blast_info("%d", CommandData.roach[i].load_targ_amps);
             if (roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS) {
                 roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
@@ -2444,10 +2440,6 @@ void *roach_cmd_loop(void* ind)
         /* if (CommandData.roach[i].do_sweeps == 0) {
             roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
         } */
-        /* if ((CommandData.roach[i].do_sweeps == 1) &&
-                    (roach_state_table[i].status >= ROACH_STATUS_STREAMING)) {
-            roach_state_table[i].desired_status = ROACH_STATUS_VNA;
-        }*/
         // TODO(Sam) Add error checking
         /* if ((CommandData.roach[i].df_calc > 0) &&
                   (roach_state_table[i].status >= ROACH_STATUS_TARG)) {
@@ -2730,9 +2722,9 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/sweeps/roach%d/vna_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].vna_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_amps.dat", ind + 1);
-    asprintf(&roach_state_table[ind].targ_amps_path[0],
-                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[1],
+                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
+    asprintf(&roach_state_table[ind].targ_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_targ_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].qdr_log,
                       "/home/fc1user/sam_tests/roach%d_qdr_cal.log", ind + 1);
