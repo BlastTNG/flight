@@ -43,6 +43,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_LOCK] = "Lock Motor",
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
+                                    [GRPOS_FOCUS] = "Focus"
   };
 
 // echoes as string; makes enum name the command name string
