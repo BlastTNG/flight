@@ -139,6 +139,7 @@ enum singleCommand {
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   heater_supply_off, reboot_ljcryo1,
   pump_valve_open, pump_valve_close, fill_valve_open, fill_valve_close,
+  ln_valve_on, ln_valve_off, pot_valve_on, pot_valve_off, pot_valve_open, pot_valve_close,
     of_relay_1_on, of_relay_1_off, of_relay_2_on, of_relay_2_off,
     of_relay_3_on, of_relay_3_off, of_relay_4_on, of_relay_4_off,
     of_relay_5_on, of_relay_5_off, of_relay_6_on, of_relay_6_off,
