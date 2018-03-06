@@ -55,7 +55,7 @@
 #define MPSSE_WRITE_TMS 0x40   /* Write TMS/CS */
 
 /*DEBUG FLAG*/
-//#define _DEBUG_JTAG_IO_ 1
+// #define _DEBUG_JTAG_IO_ 1
 
 enum ftdi_chip_type {
 	TYPE_FT2232C,
@@ -64,13 +64,36 @@ enum ftdi_chip_type {
 	TYPE_FT232H,
 };
 
-struct mpsse_ctx;
+struct mpsse_ctx {
+	struct libusb_context *usb_ctx;
+	struct libusb_device_handle *usb_dev;
+	unsigned int usb_write_timeout;
+	unsigned int usb_read_timeout;
+	uint8_t in_ep;
+	uint8_t out_ep;
+	uint16_t max_packet_size;
+	uint16_t index;
+	uint8_t interface;
+	enum ftdi_chip_type type;
+	uint8_t *write_buffer;
+	unsigned write_size;  // size in bytes
+	unsigned write_count; // size in bytes
+	uint8_t *read_buffer;
+	unsigned read_size;
+	unsigned read_count;
+	uint8_t *read_chunk;
+	unsigned read_chunk_size;
+	struct bit_copy_queue read_queue;
+	int retval;
+};
 
 /* Device handling */
 struct mpsse_ctx *mpsse_open(const uint16_t *vid, const uint16_t *pid, const char *description,
 	const char *serial, int channel);
 void mpsse_close(struct mpsse_ctx *ctx);
 bool mpsse_is_high_speed(struct mpsse_ctx *ctx);
+
+void mpsse_reset_purge_close(struct mpsse_ctx *ctx);
 
 /* Command queuing. These correspond to the MPSSE commands with the same names, but no need to care
  * about bit/byte transfer or data length limitation. Read data is guaranteed to be available only
@@ -99,8 +122,10 @@ int mpsse_set_frequency(struct mpsse_ctx *ctx, int frequency);
 int mpsse_flush(struct mpsse_ctx *ctx);
 void mpsse_purge(struct mpsse_ctx *ctx);
 
+
 /* Biphase specific routines */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint8_t *out, uint32_t out_offset, uint32_t length);
-void mpsse_watchdog_ping(struct mpsse_ctx *ctx, const uint8_t bit);
+void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length);
+void mpsse_watchdog_ping(struct mpsse_ctx *ctx);
 int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx);
+
 #endif /* MPSSE_H_ */

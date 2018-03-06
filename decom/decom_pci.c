@@ -21,14 +21,11 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/ioport.h>
-//#include <linux/jiffies.h>//
 #include <linux/pci.h>
 #include <linux/delay.h>
-//#include <linux/kobject.h>//
-#include <linux/sysfs.h>//
-#include <linux/string.h>//
-#include <linux/cdev.h>//
-#include <linux/poll.h>	    //fixes struct file_operations
+#include <linux/device.h>
+#include <linux/err.h>
+#include <linux/fs.h>
 
 #include <asm/io.h>
 #include <asm/atomic.h>
@@ -37,11 +34,10 @@
 #include "decom_pci.h"
 
 #define DRV_NAME    "decom_pci"
-#define DRV_VERSION "1.1"
+#define DRV_VERSION "1.0"
 #define DRV_RELDATE ""
 
-#define DECOM_MAJOR 251	  //no longer used (dynamically allocate instead)
-#define DECOM_MINOR 0
+#define DECOM_MAJOR 251
 
 #ifndef VERSION_CODE
 #  define VERSION_CODE(vers,rel,seq) ( ((vers)<<16) | ((rel)<<8) | (seq) )
@@ -50,22 +46,22 @@
 #if LINUX_VERSION_CODE < VERSION_CODE(2,6,0)
 # error "This kernel is too old and is not supported" 
 #endif
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
-# error "This kernel version is not supported"
-#endif
-//incompatible API change, may have changed defore 2.6.27
-#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,27)
-#define USE_NEWER_DEVICE_CREATE
-#endif
+//#if LINUX_VERSION_CODE >= VERSION_CODE(2,7,0)
+//# error "This kernel version is not supported"
+//#endif
 
 
-static int decom_major = DECOM_MAJOR;
+int decom_major = 0;
 
 static struct pci_device_id decom_pci_tbl[] = {
  {0x5045, 0x4244, (PCI_ANY_ID), (PCI_ANY_ID), 0, 0, 0},
   {0,}
 };
 MODULE_DEVICE_TABLE(pci, decom_pci_tbl);
+
+#if LINUX_VERSION_CODE >= VERSION_CODE(2,6,15)
+static struct class *decom_class;
+#endif
 
 /*******************************************************************/
 /* Definitions                                                     */
@@ -88,8 +84,6 @@ static struct {
 
   int use_count;
   int timer_on;
-
-  struct cdev decom_cdev;
 } decom_drv;
 
 #define DECOM_WFIFO_SIZE (RX_BUFFER_SIZE)
@@ -101,11 +95,7 @@ static struct {
   atomic_t n;
 } decom_wfifo;
 
-static struct class *decom_pci_class;
-struct device *decom_pci_d;
 
-static int decom_pci_start_sysfs(void);
-static void decom_pci_remove_sysfs(void);
 
 static void timer_callback(unsigned long dummy)
 {
@@ -195,7 +185,11 @@ static ssize_t decom_write(struct file *filp, const char __user *buf,
   return 0;
 }
 
+#ifdef HAVE_UNLOCKED_IOCTL
+static long decom_ioctl(struct file *filp,
+#else
 static int decom_ioctl(struct inode *inode, struct file *filp,
+#endif
                      unsigned int cmd, unsigned long arg)
 {
   int ret = 0;
@@ -286,144 +280,156 @@ static struct file_operations decom_fops = {
   owner:          THIS_MODULE,
   read:           decom_read,
   write:          decom_write,
-  ioctl:          decom_ioctl,
-  open:           decom_open,
-  release:        decom_release
-};
-
-
-/* *********************************************************************** */
-/* *** control the sysfs                                                *** */
-/* *********************************************************************** */
-struct device_attribute *da_list_decom_pci[] = {
-  NULL
-};
-
-static int decom_pci_start_sysfs() {
-  struct device_attribute *dap, **dapp;
-  dev_t devnum;
-
-  decom_pci_class = class_create(THIS_MODULE, "decom_pci");
-  if (IS_ERR(decom_pci_class)) return 0;
-
-  devnum = decom_drv.decom_cdev.dev;
-#ifndef USE_NEWER_DEVICE_CREATE
-  decom_pci_d = device_create(decom_pci_class, NULL, devnum, "decom_pci");
+#ifdef HAVE_UNLOCKED_IOCTL
+  unlocked_ioctl: decom_ioctl,
 #else
-  decom_pci_d = device_create(decom_pci_class, NULL, devnum, NULL, "decom_pci");
+  ioctl:          decom_ioctl,
 #endif
-  if (IS_ERR(decom_pci_d)) return 0;
+  open:           decom_open,
+  release:        decom_release,
+  llseek:		  no_llseek
+};
 
-  for (dapp = da_list_decom_pci; *dapp; dapp++) {
-    dap = *dapp;
-    if (device_create_file(decom_pci_d, dap))
-      printk(KERN_ERR DRV_NAME " device_create_file failed\n");
-  }
-
-  return 0;
-}
-
-static void decom_pci_remove_sysfs() {
-  struct device_attribute *dap, **dapp;
-  dev_t devnum;
-
-  for (dapp = da_list_decom_pci; *dapp; dapp++) {
-    dap = *dapp;
-    device_remove_file(decom_pci_d, dap);
-  }
-
-  devnum = decom_drv.decom_cdev.dev;
-  if (devnum && !IS_ERR(decom_pci_d))
-    device_destroy(decom_pci_class, devnum);
-  class_destroy(decom_pci_class);
-}
 
 /* *********************************************************************** */
 /* *** this defines the pci layer                                       *** */
 /* *********************************************************************** */
 
-static int __devinit decom_pci_init_one(struct pci_dev *pdev, 
-				      const struct pci_device_id *ent)
+static int decom_pci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
-  int ret;
-  dev_t devnum;
- 
-  ret = pci_enable_device (pdev);
-  if(ret) return ret;
+	int ret;
+# if LINUX_VERSION_CODE >= VERSION_CODE(2,6,15)
+	BBC_DEVICE *class_err;
+# endif
 
-  decom_drv.mem_base_raw = pci_resource_start(pdev, 0);
-  decom_drv.flags        = pci_resource_flags(pdev, 0);
-  decom_drv.len          = pci_resource_len(pdev, 0);
-  
-  if(!decom_drv.mem_base_raw || ((decom_drv.flags & IORESOURCE_MEM)==0)) {
-    printk(KERN_ERR "%s: no I/O resource at PCI BAR #0\n", DRV_NAME);
-    return -ENODEV;
-  }
+	ret = pci_enable_device(pdev);
+	if (ret)
+		return ret;
 
-  
-  if (!request_mem_region(decom_drv.mem_base_raw, decom_drv.len, DRV_NAME)) {
-    printk(KERN_WARNING "%s: memory already in use\n", DRV_NAME);
-    return -EBUSY;
-  }
+	decom_drv.mem_base_raw = pci_resource_start(pdev, 0);
+	decom_drv.flags = pci_resource_flags(pdev, 0);
+	decom_drv.len = pci_resource_len(pdev, 0);
 
-  decom_drv.mem_base = ioremap_nocache(decom_drv.mem_base_raw, decom_drv.len);
+	if (!pci_resource_len(pdev, 0) || !(pci_resource_flags(pdev, 0) & IORESOURCE_MEM))
+	{
+		printk(KERN_ERR "%s: no I/O resource at PCI BAR #0\n", DRV_NAME);
+		ret = -ENODEV;
+		goto out_enable;
+	}
 
-  // Register this as a character device
-  ret = alloc_chrdev_region(&devnum, DECOM_MINOR, 1, DRV_NAME);
-  if (ret < 0) {
-    printk(KERN_WARNING DRV_NAME " can't allocate major\n");
-    return ret;
-  }
-  printk(KERN_DEBUG DRV_NAME " major: %d minor: %d dev: %d\n",
-      MAJOR(devnum), DECOM_MINOR, devnum);
+	/* Register the I/O memory regions for the device given by the DRV_NAME parameter (the device name). */
+	if (pci_request_regions(pdev, DRV_NAME))
+	{
+		printk(KERN_ERR "%s: io resource busy\n", DRV_NAME);
+		ret = -EAGAIN;
+		goto out_enable;
+	}
 
-  cdev_init(&decom_drv.decom_cdev, &decom_fops);
-  decom_drv.decom_cdev.owner = THIS_MODULE;
-  ret = cdev_add(&decom_drv.decom_cdev, devnum, 1);
-  if (ret < 0)
-    printk(KERN_WARNING DRV_NAME " failed to register decom_pci device\n");
-  
-  decom_drv.timer_on = 0;
-  decom_drv.use_count = 0;
-  decom_wfifo.status = FIFO_DISABLED;
+	decom_drv.mem_base = ioremap_nocache(decom_drv.mem_base_raw, decom_drv.len);
+	if (decom_drv.mem_base == NULL)
+	{
+		ret = -ENOMEM;
+		printk(KERN_ERR "%s: Could not map memory from card\n", DRV_NAME);
+		goto out_request;
+	}
 
-  decom_pci_start_sysfs();
+	// Interface with SYSFS/udev
+# if LINUX_VERSION_CODE >= VERSION_CODE(2,6,15)
+	class_err = BBC_DEVICE_CREATE(decom_class, NULL, MKDEV(decom_major, 0), NULL, "decom_pci");
+	if (IS_ERR(class_err))
+	{
+		ret = PTR_ERR(class_err);
+		goto out_class;
+	}
+# endif
 
-  printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
-  
-  return 0;
+	decom_drv.timer_on = 0;
+	decom_drv.use_count = 0;
+	decom_wfifo.status = FIFO_DISABLED;
+
+	printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
+
+	ret = 0;
+	goto out;
+
+# if LINUX_VERSION_CODE >= VERSION_CODE(2,6,15)
+out_class:
+	BBC_DEVICE_DESTROY(decom_class, MKDEV(decom_major, 0));
+# endif
+	iounmap(decom_drv.mem_base);
+
+out_request:
+	pci_release_regions(pdev);
+out_enable:
+	pci_disable_device(pdev);
+out:
+	return ret;
 }
 
-static void __devexit decom_pci_remove_one(struct pci_dev *pdev)
+static void decom_pci_remove_one(struct pci_dev *pdev)
 {
-  decom_pci_remove_sysfs();
+# if LINUX_VERSION_CODE >= VERSION_CODE(2,6,15)
+	BBC_DEVICE_DESTROY(decom_class, MKDEV(decom_major, 0));
+# endif
 
-  iounmap(decom_drv.mem_base);
-  release_mem_region(decom_drv.mem_base_raw, decom_drv.len);
-  
-  cdev_del(&decom_drv.decom_cdev);
-  unregister_chrdev(decom_major, DRV_NAME);
-
-  pci_disable_device(pdev);
-  printk(KERN_NOTICE "%s: driver removed\n", DRV_NAME); 
+	pci_iounmap(pdev, decom_drv.mem_base);
+	pci_release_regions(pdev);
+	pci_disable_device(pdev);
 }
 
 static struct pci_driver decom_driver = {
   .name     = DRV_NAME,
   .probe    = decom_pci_init_one,
-  .remove   = __devexit_p(decom_pci_remove_one),
+  .remove   = decom_pci_remove_one,
   .id_table = decom_pci_tbl,
 };
 
 static int __init decom_pci_init(void)
 {
-  return pci_register_driver(&decom_driver);
-  //return pci_module_init(&decom_driver);
+	int error;
+
+	/* Register this as a character device. */
+	if((decom_major = register_chrdev(0, DRV_NAME, &decom_fops)) < 0)
+	{
+		printk(KERN_WARNING "%s: unable to get major device\n", DRV_NAME);
+		error = decom_major;
+		goto out;
+	}
+
+	decom_class = class_create(THIS_MODULE, DRV_NAME);
+	if (IS_ERR(decom_class))
+	{
+		printk(KERN_ERR "%s: failed to create sysfs class\n", DRV_NAME);
+		error = PTR_ERR(decom_class);
+		goto chr_remove;
+	}
+
+	/* Register the PCI driver functions */
+	error =	pci_register_driver(&decom_driver);
+	if (error)
+	{
+		printk(KERN_ERR "%s: unable to register driver\n", DRV_NAME);
+		goto class_destroy;
+	}
+
+
+	printk(KERN_NOTICE "%s: driver initialized\n", DRV_NAME);
+	return 0;
+
+class_destroy:
+	class_destroy(decom_class);
+chr_remove:
+	unregister_chrdev(decom_major, DRV_NAME);
+out:
+	return error;
 }
 
 static void __exit decom_pci_cleanup(void)
 {
-  pci_unregister_driver(&decom_driver);
+	pci_unregister_driver(&decom_driver);
+	unregister_chrdev(decom_major, DRV_NAME);
+	class_destroy(decom_class);
+	printk(KERN_NOTICE "%s: driver removed\n", DRV_NAME);
 }
 
 
@@ -432,17 +438,10 @@ module_init(decom_pci_init);
 module_exit(decom_pci_cleanup);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Blast 2004");
+MODULE_AUTHOR("Blast 2004, EBEX 2011");
 MODULE_DESCRIPTION("decom_pci: a driver for the pci dcom card");
-MODULE_ALIAS_CHARDEV_MAJOR(DECOM_MAJOR);
 MODULE_ALIAS("/dev/decom_pci");
 
-#ifdef module_param
-module_param(decom_major, int, S_IRUGO);
-#elif defined MODULE_PARM
-MODULE_PARM(decom_major, "i");
-#else
-#error "Your kernel is way too old"
-#endif
+module_param(decom_major, int, 0444);
 
 MODULE_PARM_DESC(decom_major, " decom major number");

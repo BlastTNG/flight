@@ -175,16 +175,14 @@ void WriteAux(void)
     InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
 
     if (InCharge != incharge && InCharge) {
+        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
         blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
         CommandData.actbus.force_repoll = 1;
     } else if (InCharge != incharge) {
         blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
+        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
     }
 
-    if (CommandData.Cryo.heliumLevel)
-        GET_VALUE(he4LevReadAddr, CommandData.Cryo.heliumLevel);
-
-    SET_VALUE(he4LevOldAddr, CommandData.Cryo.he4_lev_old);
 
     incharge = InCharge;
 

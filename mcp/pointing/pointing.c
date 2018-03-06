@@ -34,7 +34,7 @@
 #include <ctype.h>
 #include <pthread.h>
 
-// Include gsl package for the old sun sensor
+// Include gsl package for PSS array
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_blas.h>
@@ -307,21 +307,13 @@ static int MagConvert(double *mag_az, double *m_el) {
 // PSSConvert versions added 12 June 2010 -GST
 // PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
 #define  PSS_L  10.     // 10 mm = effective length of active area
-#define  PSS1_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS2_D  10.     // 10 mm = Distance between pinhole and sensor
-#define  PSS3_D 10.5
-#define  PSS4_D 10.34
+#define  PSS_D  {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}     // 10 mm = Distance between pinhole and sensor
 #define  PSS_IMAX  8192.  // Maximum current (place holder for now)
 #define  PSS_XSTRETCH  1.  // 0.995
 #define  PSS_YSTRETCH  1.  // 1.008
-#define  PSS1_BETA  (-PSS1_ALIGNMENT)
-#define  PSS2_BETA  (-PSS2_ALIGNMENT)
-#define  PSS3_BETA  (-PSS3_ALIGNMENT)
-#define  PSS4_BETA  (-PSS4_ALIGNMENT)
-#define  PSS1_ALPHA   25.
-#define  PSS2_ALPHA 24.3  // This angle should be 25 degrees.  Boom bent?
-#define  PSS3_ALPHA   25.
-#define  PSS4_ALPHA   25.
+#define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
+PSS6_ALIGNMENT, PSS7_ALIGNMENT, PSS8_ALIGNMENT}
+#define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
 #define  PSS1_PSI    -15.5
 #define  PSS2_PSI   11.
 #define  PSS3_PSI   0
@@ -623,24 +615,53 @@ int possible_solution(double az, double el, int i_point) {
 static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
 {
     xsc_last_trigger_state_t *trig_state = NULL;
-    // The latest solution isn't good
-    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) return NULL;
-    // The camera system has just started
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0)
-        return NULL;
-    // The solution has already been processed
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter)
-        return NULL;
 
+    // The latest solution isn't good
+    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) {
+        return NULL;
+    }
+
+    // The camera system has just started
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0) {
+        return NULL;
+    }
+
+    // The solution has already been processed
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
+        return NULL;
+    }
+
+    /* Joy is commenting this out, replacing with previous EBEX logic
     while ((trig_state = xsc_get_trigger_data(which))) {
         if (XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
             break;
-
+        blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
+        free(trig_state);
+    } 
+    */
+    while ((trig_state = xsc_get_trigger_data(which))) {
+        if ((XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
+          & (XSC_SERVER_DATA(which).channels.image_ctr_stars == trig_state->counter_stars)) {
+            break;
+        }
         blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
         free(trig_state);
     }
+    /*
+    trig_state = xsc_get_trigger_data(which);
+    if (XSC_SERVER_DATA(which).channels.image_ctr_stars != trig_state->counter_stars) {
+        free(trig_state);
+        return NULL;
+    }
+    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != trig_state->counter_mcp) {
+        free(trig_state);
+        return NULL;
+    }
+    */
+
     return trig_state;
 }
+
 
 static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruct *a, gyro_reading_t *m_rg,
                               gyro_history_t *m_hs, double old_el, int which)

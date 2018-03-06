@@ -86,7 +86,7 @@ static unsigned int valve_check = 0;
 #define DRIVE_TIMEOUT 3000	    /* 30 seconds */
 int lock_timeout = -1;
 
-#define LOCK_MIN_POT 2500 // actual min stop: ~2500 (fully extended)
+#define LOCK_MIN_POT 3000 // actual min stop: ~2500 (fully extended)
 #define LOCK_MAX_POT 15000    // max stop at saturation: 16368 (fully retracted)
 #define LOCK_POT_RANGE 500
 
@@ -834,7 +834,7 @@ static void GetLockData()
     if (EZBus_IsTaken(&bus, id[LOCKNUM]) != EZ_ERR_OK && counter++ < LOCK_MOTOR_DATA_TIMER) return;
     counter = 0;
 
-    EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
+    // EZBus_ReadInt(&bus, id[LOCKNUM], "?0", &lock_data.pos);
     EZBus_Comm(&bus, id[LOCKNUM], "?aa");
     sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &lock_data.adc[0], &lock_data.adc[1], &lock_data.adc[2], &lock_data.adc[3]);
 }
@@ -1477,7 +1477,7 @@ void *ActuatorBus(void *param)
         EZBus_Add(&bus, id[i], name[i]);
         if (i == BALANCENUM) {
             EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
-        } else if (i == LOCKNUM) {
+	} else if (i == LOCKNUM) {
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
         } else if (i == SHUTTERNUM) {
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);

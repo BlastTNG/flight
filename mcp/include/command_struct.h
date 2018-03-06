@@ -260,41 +260,43 @@ typedef struct
 typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
 
 typedef struct {
-  uint16_t charcoalHeater;
-  uint16_t hsCharcoal;
-  uint16_t fridgeCycle;
-  uint16_t force_cycle;
-
-  double cycle_start_temp;
-  double cycle_pot_max;
-  double cycle_charcoal_max;
-  double cycle_charcoal_settle;
-  // timeouts in minutes (NB: time will probably be in seconds)
-  double cycle_charcoal_timeout;
-  double cycle_settle_timeout;
-
-  uint16_t BDAHeat;
-  uint16_t hsPot;
-  int16_t heliumLevel;
-  int he4_lev_old;
   int16_t hwprPos;
   int hwpr_pos_old;
 
-  uint16_t JFETHeat;
-  uint16_t autoJFETheat;
-  double JFETSetOn, JFETSetOff;
-
-  enum calmode calibrator;
-  uint16_t calib_pulse, calib_period;
+  uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
-
   valve_state_t potvalve_goal;
   uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
   valve_state_t valve_goals[2];
   uint16_t valve_vel, valve_current;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+  int do_cal_pulse;
+  int do_level_pulse;
+  uint16_t level_length;
+  uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+  uint16_t heater_update;
+  uint16_t heater_status;
+  uint16_t sync;
+  uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
 } cryo_cmds_t;
+
+typedef struct {
+  uint16_t of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
+  uint16_t of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
+  uint16_t of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
+  uint16_t of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
+  uint16_t if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
+  uint16_t if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
+  uint16_t if_9_on, if_9_off, if_10_on, if_10_off;
+  uint16_t rec_on, rec_off, amp_supply_on, amp_supply_off;
+  uint16_t therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
+  uint16_t update_rec, update_of, update_if;
+  uint16_t of_status, if_status, rec_status; // will have to make initialize all on
+  uint16_t labjack[5];
+} relay_cmds_t;
 
 typedef struct slinger_commanding
 {
@@ -305,10 +307,9 @@ typedef struct slinger_commanding
 
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
-    // enum {pos = 0, neg} bal_move_type;
-    enum {neg = 0, no_man, pos} bal_move_type;
+    enum {neg = 0, no_bal, pos} bal_move_type;
     uint32_t pos;
-    uint16_t vel;
+    uint32_t vel;
     uint16_t hold_i;
     uint16_t move_i;
     uint16_t acc;
@@ -318,6 +319,11 @@ typedef struct {
     double i_el_off_bal;
     double gain_bal;
 } cmd_balance_t;
+
+typedef struct {
+    uint8_t amp;
+    int8_t status;
+} cmd_rox_bias_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -338,6 +344,8 @@ struct CommandDataStruct {
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
   uei_commands_t uei_command;
+
+  cmd_rox_bias_t rox_bias;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
@@ -432,6 +440,8 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+
+  relay_cmds_t Relays;
 
   cmd_balance_t balance;
 

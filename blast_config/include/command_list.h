@@ -84,14 +84,13 @@ enum singleCommand {
   xsc0_veto,        xsc0_allow,
   xsc1_veto,        xsc1_allow,
   mag_allow,        mag_veto,
-  pin_in,           pot_valve_close,    pot_valve_off,    pot_valve_on,
-  pot_valve_open,   ramp,               reset_trims,
+  pin_in,  ramp,               reset_trims,
   stop,             pss_veto,		    trim_isc_to_osc,
   pss_allow,        trim_osc_to_isc,    autotrim_off,
   trim_to_isc,      unlock,             lock_off,
-  force_el_on,      auto_cycle,
+  force_el_on,
   actbus_cycle,
-          hub232_cycle,     das_cycle,
+          hub232_cycle,
 
   xsc0_off,         xsc0_on,            xsc0_cycle,
   xsc1_off,         xsc1_on,            xsc1_cycle,
@@ -100,7 +99,6 @@ enum singleCommand {
   elmot_off,	    elmot_on,           elmot_cycle,
   vtx_off,	        vtx_on,
   bi0_off,	        bi0_on,
-  das_off,	        das_on,
   rx_off,		    rx_on,
   rx_hk_off,        rx_hk_on,
   rx_amps_off,	    rx_amps_on,
@@ -115,11 +113,11 @@ enum singleCommand {
   ifroll_1_gy_cycle, ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
   ifel_1_gy_cycle,  ifel_2_gy_cycle,    gybox_off,        gybox_on,
   hub232_off,      hub232_on,
-  gybox_cycle,      ln_valve_on,      ln_valve_off,
+  gybox_cycle,
             reap_north,       reap_south,
   xy_panic,
   trim_to_osc,      antisun,            blast_rocks,      blast_sucks,
-  fridge_cycle,     at_float,           not_at_float,     el_auto_gyro,
+  at_float,           not_at_float,     el_auto_gyro,
   repoll,           autofocus_allow,
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      restore_piv,
@@ -134,7 +132,7 @@ enum singleCommand {
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
-  charcoal_hs_on,   charcoal_hs_off,    callamp_on,       callamp_off,
+  charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
   level_sensor_on,  level_sensor_off,   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
@@ -154,6 +152,7 @@ enum singleCommand {
     if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
+    level_sensor_pulse, single_cal_pulse, heaters_off,
   xyzzy
 };
 
@@ -164,7 +163,7 @@ enum multiCommand {
   balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
   bias_level_x,      fridge_cycle_params,  box,
-  cal_pulse,         cal_repeat,        cap,              cur_mode,
+  cal_repeat,        cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
   inner_level,       hwpr_jump,         hwpr_goto_i,
   autotrim_to_sc,
@@ -228,7 +227,10 @@ enum multiCommand {
   xsc_filter_el,
   xsc_filter_eq_location,
   xsc_filter_matching,
-
+  set_rox_bias_amp,
+  cal_length,
+  level_length,
+  heater_sync,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

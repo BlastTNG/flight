@@ -7,6 +7,7 @@ set(HOUSEKEEPING_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/cryostat.c
     ${CMAKE_CURRENT_SOURCE_DIR}/data_sharing.c
     ${CMAKE_CURRENT_SOURCE_DIR}/labjack.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/labjack_functions.c
     ${CMAKE_CURRENT_SOURCE_DIR}/multiplexed_labjack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/outer_frame.c
     ${CMAKE_CURRENT_SOURCE_DIR}/relay_control.c
@@ -23,6 +24,7 @@ set(HOUSEKEEPING_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/cryostat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/data_sharing.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/labjack.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/labjack_functions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/multiplexed_labjack.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/outer_frame.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/relay_control.h
