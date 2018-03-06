@@ -98,7 +98,8 @@ void DoValves(struct ezbus* bus, int index, int addr)
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
 
-	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit)); //?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
+	// ?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
+	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit));
 	valve_data[index].ready = !(EZBus_IsBusy(bus, valve_data[index].addr));
 
 	if ((CommandData.Cryo.valve_goals[index] == opened) && (valve_data[index].limit != 11)) {
@@ -244,7 +245,7 @@ void GetPotValvePos(struct ezbus bus)
 {
 	// EZBus_ReadInt(&bus, potvalve_data.addr, "?0", &potvalve_data.pos);
 	EZBus_Comm(&bus, potvalve_data.addr, "?aa");
-	sscanf(bus.buffer, "%hi,%hi,%hi,%hi", &potvalve_data.adc[0], &potvalve_data.adc[1],
+	sscanf(bus.buffer, "%i,%i,%i,%i", &potvalve_data.adc[0], &potvalve_data.adc[1],
 		&potvalve_data.adc[2], &potvalve_data.adc[3]);
 }
 
