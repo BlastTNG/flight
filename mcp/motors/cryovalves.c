@@ -98,7 +98,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
 
-	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit));
+	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit)); //?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
 	valve_data[index].ready = !(EZBus_IsBusy(bus, valve_data[index].addr));
 
 	if ((CommandData.Cryo.valve_goals[index] == opened) && (valve_data[index].limit != 11)) {
