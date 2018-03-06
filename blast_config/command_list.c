@@ -821,9 +821,9 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
     {
-      {"Pilot Linklist", 0, 32, 's', "NONE"},
-      {"Biphase Linklist", 0, 32, 's', "NONE"},
-      {"High Rate Linklist", 0, 32, 's', "NONE"}
+      {"Pilot Linklist", 0, 32, 's', ""},
+      {"Biphase Linklist", 0, 32, 's', ""},
+      {"High Rate Linklist", 0, 32, 's', ""}
     }
   },
 
