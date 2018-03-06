@@ -28,10 +28,10 @@ using Lensing::logger;
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
-#define FOCUS_MAX_WAIT_FOR_MOVE 70000.0 // maximum wait time [ms] for focus over entire range
-#define FOCUS_MAX_RANGE_FOR_MOVE 3500.0 // maximum range of focus
-#define APERTURE_MAX_WAIT_FOR_MOVE 12000.0 // maximum wait time [ms] for aperture over entire range
-#define APERTURE_MAX_RANGE_FOR_MOVE 650.0 // maximum range of aperture
+#define FOCUS_MAX_WAIT_FOR_MOVE 70000 // maximum wait time [ms] for focus over entire range
+#define FOCUS_MAX_RANGE_FOR_MOVE 3500 // maximum range of focus
+#define APERTURE_MAX_WAIT_FOR_MOVE 12000 // maximum wait time [ms] for aperture over entire range
+#define APERTURE_MAX_RANGE_FOR_MOVE 650 // maximum range of aperture
 
 string string_to_hex(string instring)
 {
