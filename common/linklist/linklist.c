@@ -183,8 +183,8 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
       num++;
     }
   }
-  ll_array[n] = linklist_all_telemetry(); // last linklist contains all the telemetry items
-  ll_array[n+1] = NULL; // null terminate the list
+  ll_array[num] = linklist_all_telemetry(); // last linklist contains all the telemetry items
+  ll_array[num+1] = NULL; // null terminate the list
 
   blast_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
 
@@ -585,7 +585,7 @@ linklist_t * linklist_all_telemetry()
   unsigned int chksm_count = 0;
 
   unsigned int extra_chksm = (!no_auto_min_checksum) ? superframe_size/MIN_CHKSM_SPACING : 0;
-  extra_chksm += 2;
+  extra_chksm += 5;
 
   // MD5 hash
   MD5_CTX mdContext;
