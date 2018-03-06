@@ -51,6 +51,28 @@
 // TODO(IAN): write cal_length to the frame, add periodic option
 // write level length, do_cal_pulse, everything!
 
+
+extern int16_t InCharge;
+
+
+float voltage_array[13];
+
+void init_array() {
+    voltage_array[0] = 0;
+    voltage_array[1] = 1.0607;
+    voltage_array[2] = 1.5001;
+    voltage_array[3] = 1.8373;
+    voltage_array[4] = 2.1215;
+    voltage_array[5] = 2.5983;
+    voltage_array[6] = 3.0003;
+    voltage_array[7] = 3.3544;
+    voltage_array[8] = 3.6746;
+    voltage_array[9] = 3.9690;
+    voltage_array[10] = 4.2431;
+    voltage_array[11] = 4.5005;
+    voltage_array[12] = 4.7439;
+}
+
 typedef struct { // structure to read commands for level and cal pulses
     uint16_t cal_length;
     uint16_t level_length;
@@ -83,11 +105,10 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     uint16_t tmin_charcoal; // minimum during burnoff
 } cycle_control_t;
 
+heater_control_t heater_state;
+cryo_control_t cryo_state;
 cycle_control_t cycle_state;
 
-heater_control_t heater_state;
-
-cryo_control_t cryo_state;
 // pulls data for heater state writing
 static void update_heater_values(void) {
     heater_state.heater_300mk = CommandData.Cryo.heater_300mk;
@@ -110,13 +131,13 @@ void heater_all_off(void) {
     CommandData.Cryo.heater_1k = 0;
     CommandData.Cryo.heater_status = 0;
     update_heater_values();
-    heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
-    heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
-    heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
-    heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
-    heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
-    heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
-    heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+    labjack_queue_command(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+    labjack_queue_command(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+    labjack_queue_command(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+    labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+    labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
 }
 // function that runs in the MCP loop to control heaters
 void heater_control(void) {
@@ -126,60 +147,73 @@ void heater_control(void) {
         heater_status_Addr = channels_find_by_name("heater_status_write");
         // read in the heater channels and update accordingly here
     }
-    if (CommandData.Cryo.heater_update == 1) {
-        CommandData.Cryo.heater_update = 0;
-        update_heater_values();
-        heater_write(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
-        heater_write(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
-        heater_write(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
-        heater_write(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
-        heater_write(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
-        heater_write(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
-        heater_write(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
-        SET_SCALED_VALUE(heater_status_Addr, CommandData.Cryo.heater_status);
+    if (InCharge == 1) {
+        if (CommandData.Cryo.heater_update == 1) {
+            CommandData.Cryo.heater_update = 0;
+            update_heater_values();
+            labjack_queue_command(LABJACK_CRYO_1, HEATER_300MK_COMMAND, heater_state.heater_300mk);
+            labjack_queue_command(LABJACK_CRYO_1, HEATER_1K_COMMAND, heater_state.heater_1k);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_250_COMMAND, heater_state.lna_250);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_350_COMMAND, heater_state.lna_350);
+            labjack_queue_command(LABJACK_CRYO_1, LNA_500_COMMAND, heater_state.lna_500);
+            labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_COMMAND, heater_state.charcoal);
+            labjack_queue_command(LABJACK_CRYO_1, CHARCOAL_HS_COMMAND, heater_state.charcoal_hs);
+            SET_SCALED_VALUE(heater_status_Addr, CommandData.Cryo.heater_status);
+        }
     }
 }
+
+void load_curve_300mk(void) {
+    static int i = 0;
+    static int counter = 0;
+    if (CommandData.Cryo.load_curve == 1) {
+        labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
+        counter++;
+        if (counter == 600) {
+            i++;
+            blast_info("voltage set to %f", voltage_array[i]);
+            blast_info("voltage set to %f", voltage_array[i]);
+            blast_info("voltage set to %f", voltage_array[i]);
+            if (i == 13) {
+                i = 0;
+                CommandData.Cryo.load_curve = 0;
+                blast_info("Stopping Load Curve NOW");
+            }
+            counter = 0;
+        }
+    }
+}
+
+void set_dac(void) {
+    int labjack;
+    float value;
+    if (CommandData.Cryo.send_dac == 1) {
+        labjack = CommandData.Cryo.labjack;
+        value = CommandData.Cryo.dac_value;
+        blast_info("voltage = %f, labjack = %d", value, labjack);
+        CommandData.Cryo.send_dac = 0;
+        labjack_queue_command(labjack, 1000, value);
+    }
+}
+
 // function that runs in MCP loop to read in the heater status bits
 void heater_read(void) {
     static int first_time_read = 1;
-    static channel_t* heater_read_Addr;
-    static channel_t* h300mk_Addr;
-    static channel_t* heaterstatus_Addr;
-    double h300mk = 0;
-    uint16_t read_field;
+    static channel_t* heater_300mk_status_Addr;
+    static channel_t* cal_lamp_status_Addr;
+    // queues up all the reads from labjack cryo 2
+    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
+    labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
     if (first_time_read == 1) {
-        heater_read_Addr = channels_find_by_name("heater_status_read");
-        h300mk_Addr = channels_find_by_name("HEATER_300MK_READ");
-        heaterstatus_Addr = channels_find_by_name("heater_status_write");
-    }
-    // below resets the read field and gets all information from the inputs
-    read_field = 0;
-    GET_VALUE(h300mk_Addr, h300mk);
-    if (h300mk < -0.1) { // may need to be changed in the future
-        read_field += 1;
-    }
-    read_field += 2*labjack_get_value(LABJACK_CRYO_2, READ_1K_HEATER);
-    read_field += 4*labjack_get_value(LABJACK_CRYO_2, READ_250LNA);
-    read_field += 8*labjack_get_value(LABJACK_CRYO_2, READ_350LNA);
-    read_field += 16*labjack_get_value(LABJACK_CRYO_2, READ_500LNA);
-    read_field += 32*labjack_get_value(LABJACK_CRYO_2, READ_CHARCOAL);
-    read_field += 64*labjack_get_value(LABJACK_CRYO_2, READ_CHARCOAL_HS);
-    SET_SCALED_VALUE(heater_read_Addr, read_field);
-    if (CommandData.Cryo.sync == 1) {
-        CommandData.Cryo.sync = 0;
-        SET_SCALED_VALUE(heaterstatus_Addr, read_field);
+        first_time_read == 0;
+        heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
+        cal_lamp_status_Addr = channels_find_by_name("status_cal_lamp");
     }
 }
-/*
-Heater status bits
-1 = heater 300mk
-2 = heater 1k
-4 = lna 250
-8 = lna 350
-16 = lna 500
-32 = charcoal
-64 = charcoal_hs
-*/
 
 // function that creates cal lamp pulses via the mcp loop
 // utilizes the cryo control structure
@@ -188,17 +222,28 @@ void cal_control(void) {
         cryo_state.cal_length = CommandData.Cryo.cal_length;
         CommandData.Cryo.do_cal_pulse = 0;
     }
+    if (CommandData.Cryo.do_cal_pulse) {
+        cryo_state.cal_length = CommandData.Cryo.cal_length;
+        CommandData.Cryo.do_cal_pulse = 0;
+    }
     static int pulsed = 0;
     if (cryo_state.cal_length > 0) {
         if (!pulsed) {
             pulsed = 1;
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+            labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
         }
-        cryo_state.cal_length--;
-    } else {
-        if (pulsed) {
-            heater_write(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
-            pulsed = 0;
+        static int pulsed = 0;
+        if (cryo_state.cal_length > 0) {
+            if (!pulsed) {
+                pulsed = 1;
+                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+            }
+            cryo_state.cal_length--;
+        } else {
+            if (pulsed) {
+                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+                pulsed = 0;
+            }
         }
     }
 }
@@ -206,21 +251,34 @@ void cal_control(void) {
 // function that creates level sensor pulses via the mcp loop
 // utilizes the cryo control structure
 void level_control(void) {
-    if (CommandData.Cryo.do_level_pulse) {
-        cryo_state.level_length = CommandData.Cryo.level_length;
-        CommandData.Cryo.do_level_pulse = 0;
-    }
-    static int l_pulsed = 0;
-    if (cryo_state.level_length > 0) {
-        if (!l_pulsed) {
-            l_pulsed = 1;
-            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+    if (InCharge) {
+        if (CommandData.Cryo.do_level_pulse) {
+            cryo_state.level_length = CommandData.Cryo.level_length;
+            CommandData.Cryo.do_level_pulse = 0;
         }
-        cryo_state.level_length--;
-    } else {
-        if (l_pulsed) {
-            heater_write(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
-            l_pulsed = 0;
+        static int l_pulsed = 0;
+        if (cryo_state.level_length > 0) {
+            if (!l_pulsed) {
+                l_pulsed = 1;
+                labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 1);
+            }
+            cryo_state.level_length--;
+        } else {
+            if (l_pulsed) {
+                labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, 0);
+                l_pulsed = 0;
+            }
+        }
+    }
+}
+
+void level_toggle(void) {
+    if (InCharge) {
+        static int level_state = 1;
+        if (CommandData.Cryo.do_level_pulse) {
+            CommandData.Cryo.do_level_pulse = 0;
+            labjack_queue_command(LABJACK_CRYO_1, LEVEL_SENSOR_COMMAND, level_state);
+            level_state = !level_state;
         }
     }
 }
@@ -287,7 +345,6 @@ void test_read(void) { // labjack dio reads 1 when open, 0 when shorted to gnd.
     // blast_warn("Fio0 on LABJACK 1 value is %u", labjack_read_dio(LABJACK_CRYO_1, 2000));
     SET_SCALED_VALUE(reader, labjack_read_dio(LABJACK_CRYO_1, 2000));
 }
-
 
 // this function sets all the addresses for the thermometry on the cryostat
 // then runs in the MCP main loop updating the temperatures at 1hz
@@ -358,37 +415,38 @@ void read_thermometers(void) {
         heater_300mk_Addr = channels_find_by_name("heater_300mk_read");
         firsttime_therm = 0;
     }
-
-    SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS));
-    SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_FILT));
-    SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_250FPA));
-    SET_SCALED_VALUE(diode_hwp_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_HWP));
-    SET_SCALED_VALUE(diode_vcs1_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_HX));
-    SET_SCALED_VALUE(diode_1k_fridge_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_1K_FRIDGE));
-    SET_SCALED_VALUE(diode_4k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, DIODE_4K_PLATE));
-    SET_SCALED_VALUE(diode_vcs1_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_FILT));
-    SET_SCALED_VALUE(diode_m3_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_M3));
-    SET_SCALED_VALUE(diode_charcoal_Addr, labjack_get_value(LABJACK_CRYO_2, DIODE_CHARCOAL));
-    SET_SCALED_VALUE(diode_ob_filter_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_OB_FILTER));
-    SET_SCALED_VALUE(diode_vcs2_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_PLATE));
-    SET_SCALED_VALUE(diode_m4_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_M4));
-    SET_SCALED_VALUE(diode_4k_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_4K_FILT));
-    SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
-    SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
-    // above are the diodes, below, the ROXes
-    SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
-    SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_250_FPA));
-    SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_1K_STRAP));
-    SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_300MK_STRAP));
-    SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_350_FPA));
-    SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE4_POT));
-    SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE3_FRIDGE));
-    SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_500_FPA));
-    SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
-    // below are the random cryo labjack channels
-    SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
-    SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ));
-    SET_SCALED_VALUE(heater_300mk_Addr, labjack_get_value(LABJACK_CRYO_2, HEATER_300MK_READ));
+    if (InCharge == 1) {
+        SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS));
+        SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_FILT));
+        SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_250FPA));
+        SET_SCALED_VALUE(diode_hwp_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_HWP));
+        SET_SCALED_VALUE(diode_vcs1_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_HX));
+        SET_SCALED_VALUE(diode_1k_fridge_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_1K_FRIDGE));
+        SET_SCALED_VALUE(diode_4k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, DIODE_4K_PLATE));
+        SET_SCALED_VALUE(diode_vcs1_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_FILT));
+        SET_SCALED_VALUE(diode_m3_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_M3));
+        SET_SCALED_VALUE(diode_charcoal_Addr, labjack_get_value(LABJACK_CRYO_2, DIODE_CHARCOAL));
+        SET_SCALED_VALUE(diode_ob_filter_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_OB_FILTER));
+        SET_SCALED_VALUE(diode_vcs2_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_PLATE));
+        SET_SCALED_VALUE(diode_m4_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_M4));
+        SET_SCALED_VALUE(diode_4k_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_4K_FILT));
+        SET_SCALED_VALUE(diode_vcs2_hx_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_HX));
+        SET_SCALED_VALUE(diode_vcs1_plate_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS1_PLATE));
+        // above are the diodes, below, the ROXes
+        SET_SCALED_VALUE(rox_fpa_1k_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_FPA_1K));
+        SET_SCALED_VALUE(rox_250_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_250_FPA));
+        SET_SCALED_VALUE(rox_1k_plate_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_1K_STRAP));
+        SET_SCALED_VALUE(rox_300mk_strap_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_300MK_STRAP));
+        SET_SCALED_VALUE(rox_350_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_350_FPA));
+        SET_SCALED_VALUE(rox_he4_pot_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE4_POT));
+        SET_SCALED_VALUE(rox_he3_fridge_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_HE3_FRIDGE));
+        SET_SCALED_VALUE(rox_500_fpa_Addr, labjack_get_value(LABJACK_CRYO_2, ROX_500_FPA));
+        SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
+        // below are the random cryo labjack channels
+        SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
+        SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ)); // mve to 200 hz
+        SET_SCALED_VALUE(heater_300mk_Addr, labjack_get_value(LABJACK_CRYO_2, HEATER_300MK_READ));
+    }
 }
 
 void read_chopper(void)
@@ -405,7 +463,9 @@ void read_chopper(void)
 		firsttime = 0;
 		stage_chopper_Addr = channels_find_by_name("stage_chopper");
 	}
-    SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(1, 12));
+    if (InCharge == 1) {
+        SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(1, 12));
+    }
 }
 
 // test read for a channel written from the thermometry function
@@ -431,13 +491,17 @@ static void init_cycle_channels(void) {
 }
 
 static void init_cycle_values(void) {
-    cycle_state.standby = 0;
-    cycle_state.cooling = 0;
-    cycle_state.burning_off = 0;
-    cycle_state.heating = 0;
+    // states
+    cycle_state.standby = 0; // waiting
+    cycle_state.cooling = 0; // cooling to operation temp
+    cycle_state.burning_off = 0; // cooking the charcoal
+    cycle_state.heating = 0; // heating the charcoal
+    // counter for HS cooling
     cycle_state.heat_delay = 0;
+    // temperatures of the charcoal
     cycle_state.tcharcoal = 0;
     cycle_state.tcharcoal_old = 0;
+    // array temps
     cycle_state.t250 = 0;
     cycle_state.t350 = 0;
     cycle_state.t500 = 0;
@@ -491,13 +555,16 @@ static void standby_cycle(void) {
         cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
         cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
         cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        // checks each array sequentially to see if the temperature is over the acceptable temp
         if (cycle_state.t250 > cycle_state.tcrit_fpa) {
             cycle_state.standby = 0;
             cycle_state.heating = 1;
+            blast_info("moving on to the heating phase");
         } else {
             if (cycle_state.t350 > cycle_state.tcrit_fpa) {
                 cycle_state.standby = 0;
                 cycle_state.heating = 1;
+                blast_info("moving on to the heating phase");
             } else {
                 if (cycle_state.t500 > cycle_state.tcrit_fpa) {
                     cycle_state.standby = 0;
@@ -635,28 +702,74 @@ static void output_cycle(void) {
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
-    if (first_time == 1) {
-        blast_info("initalizing");
-        init_cycle_channels();
-        init_cycle_values();
-        first_time = 0;
-        blast_info("first time done");
+    if (InCharge == 1) {
+        if (first_time == 1) {
+            blast_info("initalizing");
+            init_cycle_channels();
+            init_cycle_values();
+            first_time = 0;
+            blast_info("first time done");
+        }
+        if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
+            forced();
+            blast_info("STARTING FRIDGE CYCLE NOW");
+        }
+        start_cycle();
+        standby_cycle();
+        heating_cycle();
+        burnoff_cycle();
+        cooling_cycle();
+        output_cycle();
     }
-    if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
-        forced();
-        blast_info("STARTING FRIDGE CYCLE NOW");
-    }
-    start_cycle();
-    standby_cycle();
-    heating_cycle();
-    burnoff_cycle();
-    cooling_cycle();
-    output_cycle();
+}
+void force_incharge(void) {
+    InCharge = 1;
+    // used for the test cryostat without watchdog board
 }
 
+void cryo_1hz(int setting_1hz) {
+    if (setting_1hz == 1) {
+        heater_control();
+        heater_read();
+        load_curve_300mk();
+    }
+}
 
+void cryo_200hz(int setting_200hz) {
+    if (setting_200hz == 1) {
+        cal_control();
+        read_thermometers();
+    }
+    if (setting_200hz == 2) {
+        read_chopper();
+        read_thermometers();
+    }
+}
 
-
+void thermal_vac(void) {
+    static int first_time_vac = 1;
+    static channel_t* of_1_0_Addr;
+    static channel_t* of_1_13_Addr;
+    static channel_t* of_2_0_Addr;
+    static channel_t* of_2_13_Addr;
+    static channel_t* of_3_0_Addr;
+    static channel_t* of_3_13_Addr;
+    if (first_time_vac) {
+        first_time_vac = 0;
+        of_1_0_Addr = channels_find_by_name("vac_test_1");
+        of_1_13_Addr = channels_find_by_name("vac_test_2");
+        of_2_0_Addr = channels_find_by_name("vac_test_3");
+        of_2_13_Addr = channels_find_by_name("vac_test_4");
+        of_3_0_Addr = channels_find_by_name("vac_test_5");
+        of_3_13_Addr = channels_find_by_name("vac_test_6");
+    }
+    SET_SCALED_VALUE(of_1_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_1_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+}
 
 
 

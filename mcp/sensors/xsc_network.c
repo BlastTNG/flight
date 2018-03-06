@@ -41,7 +41,6 @@
 
 #include "conversions.h"
 #include "blast.h"
-#include "blast_comms.h"
 #include "framing.h"
 #include "mcp.h"
 #include "angles.h"

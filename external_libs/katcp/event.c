@@ -32,7 +32,7 @@ struct katcp_event{
 void destroy_event_katcp(struct katcp_dispatch *d, struct katcp_event *e)
 {
   unsigned int i;
-  struct katcp_interest *ki;
+  struct katcp_interest *ki __attribute__((unused));
 
   if(e == NULL){
     return;

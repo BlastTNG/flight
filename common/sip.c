@@ -43,6 +43,7 @@
 #include "blast.h"
 #include "command_common.h"
 #include "command_struct.h"
+#include "commands.h"
 #include "mcp.h"
 
 #define REQ_POSITION    0x50
@@ -84,7 +85,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled); // commands.c
 
 
-#ifdef USE_SIP_CMD
 int sip_setserial(const char *input_tty)
 {
   int fd;
@@ -117,9 +117,7 @@ int sip_setserial(const char *input_tty)
 
   return fd;
 }
-#endif    // USE_SIP_CMD
 
-#ifdef USE_SIP_CMD
 static float ParseGPS(unsigned char *data)
 {
   char exponent;
@@ -170,7 +168,6 @@ static void SendRequest(int req, char tty_fd)
   if (write(tty_fd, buffer, 3) < 0)
     berror(warning, "error sending SIP request\n");
 }
-#endif    // USE_SIP_CMD
 
 
 
@@ -273,7 +270,6 @@ static void SetParameters(enum multiCommand command, uint16_t *dataq, double* rv
     }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSPosition(unsigned char *indata)
 {
     double lat;
@@ -289,10 +285,9 @@ static void GPSPosition(unsigned char *indata)
 
         SIPData.GPSpos.alt = ParseGPS(indata + 8);
 
-        WritePrevStatus();
+//        WritePrevStatus();
     }
 }
-#endif    // USE_SIP_CMD
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
@@ -329,7 +324,6 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSTime(unsigned char *indata)
 {
   float GPStime, offset;
@@ -346,7 +340,7 @@ static void GPSTime(unsigned char *indata)
     SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 static void MKSAltitude(unsigned char *indata)
@@ -355,7 +349,7 @@ static void MKSAltitude(unsigned char *indata)
   SIPData.MKSalt.med = ((uint16_t *)indata)[1];;
   SIPData.MKSalt.lo = ((uint16_t *)indata)[2];;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 /* Send TDRSS Low Rate Packet */
@@ -364,15 +358,15 @@ static void SendDownData(char tty_fd)
 {
   unsigned char buffer[3 + SLOWDL_LEN + 1];
 
-//  buffer[0] = SLOWDL_DLE;
-//  buffer[1] = SLOWDL_SYNC;
-//  buffer[2] = SLOWDL_LEN;
+  buffer[0] = SLOWDL_DLE;
+  buffer[1] = SLOWDL_SYNC;
+  buffer[2] = SLOWDL_LEN;
 //  fillDLData(buffer+3, SLOWDL_LEN);
 //
-//  buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
-//  if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {
-//    berror(warning, "Error writing to SlowDL\n");
-//  }
+  buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
+  if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {
+    berror(warning, "Error writing to SlowDL\n");
+  }
 }
 
 /* compute the size of the data queue for the given command */
@@ -389,10 +383,7 @@ static int DataQSize(int index)
 
   return size;
 }
-#endif    // USE_SIP_CMD
 
-
-#ifdef USE_FIFO_CMD
 void WatchFIFO(void* void_other_ip)
 {
     unsigned char buf[1];
@@ -451,12 +442,14 @@ void WatchFIFO(void* void_other_ip)
                 reballoc(tfatal, mcommand_data[mcommand_count], pindex + 2);
 
                 strncpy(mcommand_data[mcommand_count++], pbuf, pindex + 1);
+                blast_info("mcommand_count = %d, mcommand_data[mcommand_count] = %s",
+                    mcommand_count - 1, mcommand_data[mcommand_count-1]);
                 pindex = 0;
             } else {
                 pbuf[pindex++] = command[index];
             }
         }while (command[index++] != 0);
-//        blast_info("%i parameters found.\n", mcommand_count);
+        blast_info("%i parameters found.\n", mcommand_count);
 
         pthread_mutex_lock(&mutex);
 
@@ -482,9 +475,7 @@ void WatchFIFO(void* void_other_ip)
         pthread_mutex_unlock(&mutex);
     }
 }
-#endif  // USE_FIFO_CMD
 
-#ifdef USE_SIP_CMD
 
 struct LibraryStruct
 {
@@ -597,7 +588,7 @@ void ProcessUplinkSched(unsigned char *extdat)
 
 void WatchPort(void* parameter)
 {
-    const char *COMM[] = { "/dev/ttyS0", "/dev/ttyS1" };
+    const char *COMM[] = { "/dev/ttyCOMM1", "/dev/ttyCOMM2" };
     const unsigned char route[2] = { 0x09, 0x0c };
 
     unsigned char buf;
@@ -625,7 +616,7 @@ void WatchPort(void* parameter)
     unsigned char extdat[256];
 
     char tname[6];
-    snprintf(tname, sizeof(tname), "COMM%1d", port + 1);
+    snprintf(tname, sizeof(tname), "COMM%1d", (int) (port + 1));
     nameThread(tname);
     // blast_startup("WatchPort startup\n");
 
@@ -748,7 +739,8 @@ void WatchPort(void* parameter)
                             mcommand = indata[0];
                             mcommand_count = 0;
                             dataqsize = DataQSize(MIndex(mcommand));
-                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n", MName(mcommand), mcommand);
+                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
+                                        MName(mcommand), mcommand);
 
                             /* The time of sending, a "unique" number shared by the first */
                             /* and last packed of a multi-command */
@@ -864,4 +856,3 @@ void WatchPort(void* parameter)
     }
 }
 
-#endif    // USE_SIP_CMD

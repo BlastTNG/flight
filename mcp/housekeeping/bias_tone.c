@@ -68,6 +68,7 @@ static struct async_private_data data;
 static snd_async_handler_t *ahandler;
 int bias_tone_shutting_down = 0;
 
+#define BIAS_WAIT_BEFORE_RECONNECTING 10000000
 
 static void generate_sine(const snd_pcm_channel_area_t *areas,
                           snd_pcm_uframes_t offset,
@@ -311,13 +312,23 @@ static void bias_tone_callback(snd_async_handler_t *ahandler)
     }
 }
 
+int reset_rox_bias(snd_pcm_t* handle) {
+    shutdown_bias_tone();
+// Commenting this out for now because I need to finish writing the function.
+//    usleep(BIAS_WAIT_BEFORE_RECONNECTING);
+// TODO(laura): Figure out a way to monitor the whether the bias has actually shut down.
+}
+
 void *bias_monitor(void *param)
 {
 	snd_pcm_state_t state;
-	int have_warned = 0;
+	snd_pcm_status_t* 	status;
+	int have_warned, have_warned_status = 0;
     int ret = 0;
+    int err;
     int first_time = 1;
     uint16_t bias_state = 0;
+    uint8_t reset_counter = 0;
     static channel_t *bias_alsa_state_rox_channel;
 	char *channel_name = "bias_alsa_state_rox";
     bias_alsa_state_rox_channel = channels_find_by_name(channel_name);
@@ -328,6 +339,7 @@ void *bias_monitor(void *param)
     nameThread("BiasMonitor");
     blast_info("BiasMonitor thread startup.");
     clock_gettime(CLOCK_REALTIME, &ts);
+    snd_pcm_status_alloca(&status);
 
     while (!bias_tone_shutting_down) {
         bias_state = 0;
@@ -385,7 +397,16 @@ void *bias_monitor(void *param)
             blast_info("bias_state = %i.", bias_state);
             first_time = 0;
         }
+        if (((err = snd_pcm_status(handle, status)) < 0) && !have_warned_status) {
+                blast_info("Stream status error: %s\n", snd_strerror(err));
+                have_warned_status = 1;
+        }
+
         SET_SCALED_VALUE(bias_alsa_state_rox_channel, bias_state);
+
+        if (CommandData.rox_bias.reset) {
+            ret = reset_rox_bias(handle);
+        }
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
@@ -517,6 +538,13 @@ init_err:
     return -1;
 }
 
+/* 
+Bias signal monitoring thread.
+void *bias_monitor_thread(void *m_arg)
+{
+    
+}
+ */
 int set_rox_bias() {
     int retval;
     if ((retval = set_mixer_params()) < 0) {

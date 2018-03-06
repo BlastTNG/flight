@@ -86,6 +86,10 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[get_focus].counter = client_data.command_admins[xC_get_focus].counter;
         passed_something = true;
     }
+    if (check_command(xC_stop_focus)) {
+        shared_lens_requests.commands[stop_focus].counter = client_data.command_admins[xC_stop_focus].counter;
+        passed_something = true;
+    }
     if (check_command(xC_set_focus)) {
         shared_lens_requests.commands[set_focus].counter = client_data.command_admins[xC_set_focus].counter;
         shared_lens_requests.commands[set_focus].value = client_data.set_focus_value;
@@ -96,6 +100,11 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[set_focus_incremental].value = client_data.set_focus_incremental_value;
         passed_something = true;
     }
+    if (check_command(xC_define_focus)) {
+        shared_lens_requests.commands[define_focus].counter = client_data.command_admins[xC_define_focus].counter;
+        shared_lens_requests.commands[define_focus].value = client_data.define_focus_value;
+        passed_something = true;
+    }
     if (check_command(xC_init_aperture)) {
         shared_lens_requests.commands[init_aperture].counter = client_data.command_admins[xC_init_aperture].counter;
         passed_something = true;
@@ -104,9 +113,18 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[get_aperture].counter = client_data.command_admins[xC_get_aperture].counter;
         passed_something = true;
     }
+    if (check_command(xC_stop_aperture)) {
+        shared_lens_requests.commands[stop_aperture].counter = client_data.command_admins[xC_stop_aperture].counter;
+        passed_something = true;
+    }
     if (check_command(xC_set_aperture)) {
         shared_lens_requests.commands[set_aperture].counter = client_data.command_admins[xC_set_aperture].counter;
         shared_lens_requests.commands[set_aperture].value = client_data.set_aperture_value;
+        passed_something = true;
+    }
+    if (check_command(xC_define_aperture)) {
+        shared_lens_requests.commands[define_aperture].counter = client_data.command_admins[xC_define_aperture].counter;
+        shared_lens_requests.commands[define_aperture].value = client_data.define_aperture_value;
         passed_something = true;
     }
     if (passed_something) {

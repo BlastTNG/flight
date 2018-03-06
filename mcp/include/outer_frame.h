@@ -10,4 +10,5 @@
 
 void update_thermistors(void);
 void update_current_sensors(void);
+void outer_frame(int setting);
 #endif /* outer_frame_h */

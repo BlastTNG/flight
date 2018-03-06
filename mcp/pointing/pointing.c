@@ -59,9 +59,8 @@
 #include "conversions.h"
 #include "time_lst.h"
 #include "utilities_pointing.h"
-#include "blast_sip_interface.h"
 #include "magnetometer.h"
-
+#include "sip.h"
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
@@ -956,12 +955,12 @@ static void AutoTrimToSC()
         CommandData.autotrim_xsc0_last_bad = t;
     }
     if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_osc_last_bad = t;
+        CommandData.autotrim_xsc1_last_bad = t;
     }
 
     if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
         isc_good = 1;
-    if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
+    if (t - CommandData.autotrim_xsc1_last_bad > CommandData.autotrim_time)
         osc_good = 1;
 
     // sticky choice
