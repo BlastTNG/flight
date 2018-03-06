@@ -39,6 +39,7 @@
 #define ALL_FRAME_SERIAL 0x42424242
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
+#define ALL_TELEMETRY_NAME "all_telemetry.ll"
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -109,6 +110,7 @@ void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
+linklist_t * linklist_all_telemetry();
 
 #ifdef __cplusplus
 }
