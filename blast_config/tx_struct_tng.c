@@ -571,7 +571,7 @@ channel_t channel_list[] =
     { "goal_0_act",           SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "goal_1_act",           SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "goal_2_act",           SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-
+    // PSS Channels
     { "ok_pss",               SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "sigma_pss",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "cal_imin_pss",         40.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_V_V, 0 },
