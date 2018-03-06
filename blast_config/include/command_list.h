@@ -81,7 +81,7 @@ enum singleCommand {
   hwpr_panic,   el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,
-  // l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
+  l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
   xsc0_veto,        xsc0_allow,
   xsc1_veto,        xsc1_allow,

@@ -975,32 +975,32 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case hwpr_enc_pulse:
             CommandData.Cryo.hwprPos = 50;
             break;
-        case auto_cycle:
-            CommandData.Cryo.fridgeCycle = 1;
-            CommandData.Cryo.force_cycle = 0;
-            break;
-        case fridge_cycle:
-            CommandData.Cryo.fridgeCycle = 1;
-            CommandData.Cryo.force_cycle = 1;
-            break;
-        case cal_on:
-            CommandData.Cryo.calibrator = on;
-            break;
-        case cal_off:
-            CommandData.Cryo.calibrator = off;
-            break;
-        case hs_pot_on:
-            CommandData.Cryo.hsPot = 1;
-            break;
-        case hs_pot_off:
-            CommandData.Cryo.hsPot = 0;
-            break;
-        case bda_on:
-            CommandData.Cryo.BDAHeat = 1;
-            break;
-        case bda_off:
-            CommandData.Cryo.BDAHeat = 0;
-            break;
+        // case auto_cycle:
+            // CommandData.Cryo.fridgeCycle = 1;
+            // CommandData.Cryo.force_cycle = 0;
+            // break;
+        // case fridge_cycle:
+            // CommandData.Cryo.fridgeCycle = 1;
+            // CommandData.Cryo.force_cycle = 1;
+            // break;
+        // case cal_on:
+            // CommandData.Cryo.calibrator = on;
+            // break;
+        // case cal_off:
+            // CommandData.Cryo.calibrator = off;
+            // break;
+        // case hs_pot_on:
+            // CommandData.Cryo.hsPot = 1;
+            // break;
+        // case hs_pot_off:
+            // CommandData.Cryo.hsPot = 0;
+            // break;
+        // case bda_on:
+            // CommandData.Cryo.BDAHeat = 1;
+            // break;
+        // case bda_off:
+            // CommandData.Cryo.BDAHeat = 0;
+            // break;
         case pot_valve_open:
             CommandData.Cryo.potvalve_goal = opened;
             break;
@@ -2611,7 +2611,7 @@ void InitCommandData()
     CommandData.power.gyro_off[5] = 0;
     CommandData.power.hub232_off = 0;
 
-    CommandData.Cryo.BDAHeat = 0;
+    // CommandData.Cryo.BDAHeat = 0;
 
     // CommandData.Cryo.potvalve_on = 0;
     // CommandData.Cryo.potvalve_open = 0;
