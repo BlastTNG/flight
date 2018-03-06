@@ -333,14 +333,17 @@ void piv_set_current(int16_t m_cur)
  */
 void rw_enable(void)
 {
+    blast_info("Enabling reaction wheel.");
     *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
 }
 void el_enable(void)
 {
+    blast_info("Enabling elevation drive.");
     *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
 }
 void piv_enable(void)
 {
+    blast_info("Enabling pivot motor.");
     *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
 }
 
@@ -350,14 +353,17 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
+    blast_info("Disabling reaction wheel.");
     *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
 }
 void el_disable(void)
 {
+    blast_info("Disabling elevation drive.");
     *control_word[el_index] &= (~ECAT_CTL_ENABLE);
 }
 void piv_disable(void)
 {
+    blast_info("Disabling pivot motor.");
     *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
 }
 
