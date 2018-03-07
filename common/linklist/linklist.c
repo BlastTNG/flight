@@ -619,6 +619,7 @@ linklist_t * linklist_all_telemetry()
     ll->items[ll->n_entries].num = get_channel_spf(&channel_list[i]);
     ll->items[ll->n_entries].tlm = &channel_list[i];
     ll->items[ll->n_entries].blk_size = blk_size;
+    ll->items[ll->n_entries].start = byteloc;
 
     update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
     byteloc += blk_size;
