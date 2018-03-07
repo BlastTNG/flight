@@ -28,7 +28,7 @@
 
 #include "ezstep.h"
 
-/* Index of the balance motor in the Actbus structures */
+/* Index of the cyrostat valve motors in the Actbus structures */
 #define POTVALVE_NUM 7
 #define PUMPVALVE_NUM 8
 #define FILLVALVE_NUM 9

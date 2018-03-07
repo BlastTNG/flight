@@ -153,7 +153,7 @@ static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
 
-/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c */
+/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c, cryovalves.c */
 int GetActAddr(int ind) {
     return id[ind];
 }
