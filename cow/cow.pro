@@ -1,5 +1,14 @@
+TARGET   = cow
+TEMPLATE = app
+
 unix:!mac {
-  target.path=\"\\\"/usr/local/bin\\\"\"
+  target.path=/usr/local/bin
+  desktopfile.path = /usr/share/applications
+  desktopfile.files += cow.desktop
+  INSTALLS += desktopfile
+  iconfile.path = /usr/share/icons/hicolor/scalable/apps
+  iconfile.files = cow.svg
+  INSTALLS += iconfile
 }
 mac {
   target.path=\"/Applications\"
@@ -9,19 +18,20 @@ mac {
 }
 DEFINES += DATA_ETC_COW_DIR=\\\"/data/etc/cow\\\"
 DEFINES += COW_SVN_REVISION=\"\\\"${SVN_REVISION}\\\"\"
+DEFINES += PRAGMAPACK
 log.path = /data/etc/cow
-log.files = data/prev_status data/log.txt
+log.files = data/prev_status data/log.txt data/blast.herd
 
 ######################################################
 
 QT += gui 
+QT += widgets
+
 QMAKE_INSTALL_FILE = install -m 666 -p 
 INSTALLS += target log 
-INCLUDEPATH += ../common/include/ /usr/local/include
+INCLUDEPATH += ../common/include/
 
-CONFIG += link_pkgconfig
-PKGCONFIG += getdata
-
+CONFIG += qt
 HEADERS += \ 
 src/cow.h \ 
 ../common/include/netcmd.h \ 

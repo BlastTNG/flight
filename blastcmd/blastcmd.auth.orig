@@ -1,8 +1,16 @@
-# blastcmd_auth.txt
-# blastcmd checks this file for IP addresses that are allowed to send commands
-# (this can be disabled by building with ./configure --disable-authentication)
+# blastcmd.auth
+#
+# This file contains a list of network nodes which are allowed to connect to
+# the blastcmd daemon.
 
-# to allow all hosts, specify the following line, without '#'
-INADDR_ANY
+# To allow all hosts, uncomment the following line:
+#INADDR_ANY
 
-# otherwise specify IPv4 addresses in numbers-and-dots notation
+# otherwise specify allowed IPv4 addresses in dotted quad notation:
+#
+#    127.0.0.1
+#
+# or else whole networks using CIDR notation:
+#
+#    192.168.1.1/24
+#

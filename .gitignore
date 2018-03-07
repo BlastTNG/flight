@@ -47,3 +47,4 @@ decom/decom_pci.mod.c
 decom/modules.order
 
 test_programs/synclink/support/test_biphase
+linklistcheck/linklistcheck

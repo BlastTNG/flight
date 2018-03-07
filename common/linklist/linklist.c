@@ -183,7 +183,8 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
       num++;
     }
   }
-  ll_array[n] = NULL; // null terminate the list
+  ll_array[num] = linklist_all_telemetry(); // last linklist contains all the telemetry items
+  ll_array[num+1] = NULL; // null terminate the list
 
   blast_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
 
@@ -569,6 +570,79 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
   int ind = linktable[*((uint16_t *) &serial)];
   if (ind < 0) return NULL;
   return ll_list[ind];
+}
+
+linklist_t * linklist_all_telemetry()
+{
+  if (channel_list == NULL) {
+    blast_err("No channel list loaded");
+    return NULL;
+  }
+
+  int i;
+  unsigned int byteloc = 0;
+  unsigned int blk_size = 0;
+  unsigned int chksm_count = 0;
+
+  unsigned int extra_chksm = (!no_auto_min_checksum) ? superframe_size/MIN_CHKSM_SPACING : 0;
+  extra_chksm += 5;
+
+  // MD5 hash
+  MD5_CTX mdContext;
+  uint8_t md5hash[MD5_DIGEST_LENGTH] = {0};
+  MD5_Init(&mdContext); // initialize hash
+
+  linklist_t * ll = (linklist_t *) calloc(1, sizeof(linklist_t));
+  ll->items = (linkentry_t *) calloc(channels_count+extra_chksm, sizeof(linkentry_t));
+  ll->blocks = NULL;
+  ll->n_entries = 0;
+
+  // add initial checksum
+  blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
+  update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
+  byteloc += blk_size;
+  ll->n_entries++;
+
+  // add all telemetry entries
+  for (i = 0; i < channels_count; i++) {
+    if ((chksm_count >= MIN_CHKSM_SPACING) && !no_auto_min_checksum) {
+      blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
+      update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
+      byteloc += blk_size;
+      ll->n_entries++;
+      chksm_count = 0;
+    }
+
+    blk_size = channel_size(&channel_list[i])*get_channel_spf(&channel_list[i]); 
+
+    ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
+    ll->items[ll->n_entries].num = get_channel_spf(&channel_list[i]);
+    ll->items[ll->n_entries].tlm = &channel_list[i];
+
+    update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
+    byteloc += blk_size;
+    ll->n_entries++;
+    chksm_count += blk_size;
+  }
+
+  // final checksum
+  blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
+  update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
+  byteloc += blk_size;
+  ll->n_entries++;
+
+  ll->blk_size = byteloc;
+  strcpy(ll->name, ALL_TELEMETRY_NAME);
+
+  MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
+  MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
+  MD5_Update(&mdContext, ll->name, strlen(ll->name));
+
+  // generate serial
+  MD5_Final(md5hash, &mdContext);
+  memcpy(ll->serial, md5hash, MD5_DIGEST_LENGTH);
+ 
+  return ll;
 }
 
 #ifdef _TESTING

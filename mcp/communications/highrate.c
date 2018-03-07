@@ -54,8 +54,6 @@ void highrate_compress_and_send(void *arg) {
   unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
 
   comms_serial_t * serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, HIGHRATE_PORT);
-  comms_serial_setspeed(serial, B115200);
 
   uint8_t * csbf_header = calloc(1, CSBF_HEADER_SIZE);
   uint8_t csbf_checksum = 0;
@@ -64,10 +62,19 @@ void highrate_compress_and_send(void *arg) {
   int allframe_count = 0;
   uint32_t bandwidth = 0, transmit_size = 0;
   int i;
+  int get_serial_fd = 1;
 
   nameThread("Highrate");
 
   while (true) {
+    while (get_serial_fd) {
+      if ((comms_serial_connect(serial, HIGHRATE_PORT) == NETSOCK_OK) &&
+           comms_serial_setspeed(serial, B115200)) {
+        break;
+      }
+      sleep(5);
+    }
+    get_serial_fd = 0;
 
     // get the current pointer to the pilot linklist
     ll = ll_array[HIGHRATE_TELEMETRY_INDEX];
@@ -113,16 +120,22 @@ void highrate_compress_and_send(void *arg) {
       // have packet header serials match the linklist serials
       writeHeader(header_buffer, *(uint32_t *) ll->serial, transmit_size, 0, 1);
 
+      // assume a new fd is required unless all serial writes succeed
+      get_serial_fd = 1;
+
       // comms_serial_write(serial, header_buffer, PACKET_HEADER_SIZE);
-      write(serial->sock->fd, csbf_header, CSBF_HEADER_SIZE); // send csbf header 
-      write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE); // send our header
+      if (write(serial->sock->fd, csbf_header, CSBF_HEADER_SIZE) < 0) continue; // send csbf header 
+      if (write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE) < 0) continue; // send our header
 
       // send the data to the ground station via ttyHighRate
       // comms_serial_write(serial, compressed_buffer, ll->blk_size);
-      write(serial->sock->fd, compressed_buffer, transmit_size);
+      if (write(serial->sock->fd, compressed_buffer, transmit_size) < 0) continue;
 
       // send the checksum as the last byte
-      write(serial->sock->fd, &csbf_checksum, 1);
+      if (write(serial->sock->fd, &csbf_checksum, 1) < 0) continue;
+
+      // all serial writes have succeeded
+      get_serial_fd = 0;
 
       memset(compressed_buffer, 0, HIGHRATE_MAX_SIZE);
       allframe_count = (allframe_count + 1) % HIGHRATE_ALLFRAME_PERIOD;

@@ -15,6 +15,7 @@
 
 #include "netcmd.h"
 #define CMDDEFSFILE "/data/etc/blastcmd/cmddefs.txt"
+#define MAX_N_CMD 10000000 /* ten million is probably good */
 
 struct cmdListStruct {
     char cmd[SIZE_CMDPARNAME];
@@ -52,15 +53,25 @@ void readCommands() {
   if (fp == NULL) {
     n_cmd = 0;
   } else {
-    fgets(instr, SIZE_CMDPARNAME+40, fp);
-    sscanf(instr, "%d", &n_cmd);
+    if (fgets(instr, SIZE_CMDPARNAME+40, fp) == NULL)
+      n_cmd = 0;
+    else {
+      sscanf(instr, "%d", &n_cmd);
+
+      /* truncate if too long */
+      if (n_cmd > MAX_N_CMD)
+        n_cmd = MAX_N_CMD;
+    }
   }
+
   n_cmd_alloc = n_cmd + 10;
   cmd_list = realloc(cmd_list, n_cmd_alloc*sizeof(struct cmdListStruct));
 
   for (i=0; i<n_cmd; i++) {
-    fgets(instr, SIZE_CMDPARNAME+40, fp);
-    sscanf(instr, "%s %lg", cmd_list[i].cmd, &cmd_list[i].d);
+    if (fgets(instr, SIZE_CMDPARNAME+40, fp))
+      sscanf(instr, "%s %lg", cmd_list[i].cmd, &cmd_list[i].d);
+    else
+      memset(cmd_list + i, 0, sizeof(cmd_list[i]));
   }
   if (fp !=NULL) {
     fclose(fp);
@@ -81,8 +92,9 @@ void fixSpaces(char *cmd) {
 void setDefault(char *cmd_in, double D) {
   int i;
 
-  char cmd[SIZE_CMDPARNAME];
+  char cmd[SIZE_CMDPARNAME + 1];
   strncpy(cmd, cmd_in, SIZE_CMDPARNAME);
+  cmd[SIZE_CMDPARNAME] = 0;
 
   fixSpaces(cmd);
 
@@ -116,8 +128,9 @@ void setDefault(char *cmd_in, double D) {
 
 double getDefault(char *cmd_in) {
   int i;
-  char cmd[SIZE_CMDPARNAME];
+  char cmd[SIZE_CMDPARNAME + 1];
   strncpy(cmd, cmd_in, SIZE_CMDPARNAME);
+  cmd[SIZE_CMDPARNAME] = 0;
 
   fixSpaces(cmd);
 
