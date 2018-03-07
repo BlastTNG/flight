@@ -23,25 +23,11 @@
 #ifndef ELOG_H
 #define ELOG_H
 
-//remove this to disable use of elog (or don't unclude this header)
-#define ENABLE_ELOG
-
-#if defined __BLAST__
-#define ELOG_HOST   "elog.blastpol.com"
-#define ELOG_PORT   "8000"
-#define ELOG_LOG    "blastcmd2012"
-#define ELOG_AUTH   "blastcmd-daemon"
-#elif defined __SPIDER__
-#define ELOG_HOST   "someplace.update.me"
-#define ELOG_PORT   "8080"
-#define ELOG_LOG    "LogName"
-#define ELOG_AUTH   "spidercmd-daemon"
+#ifdef __MINI__
+#undef ENABLE_ELOG
 #endif
 
-#if defined ENABLE_ELOG && defined ELOG_HOST
-#define ELOG_CMD "/usr/local/bin/elog -h " ELOG_HOST " -p " ELOG_PORT \
- " -l " ELOG_LOG " -a Author=" ELOG_AUTH " -a Source=blastcmd "
-#endif
-
+void ElogBeforeRoute(const char *buffer, const char *user);
+void ElogAfterRoute(int result, int last_sock);
 
 #endif
