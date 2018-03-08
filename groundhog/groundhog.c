@@ -136,6 +136,9 @@ int main(int argc, char * argv[]) {
   if (false) {
     daemonize();
   }
+
+  // initialize the framing mutex for MQQT
+  framing_init_mutex();
  
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
