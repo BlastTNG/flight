@@ -1008,10 +1008,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Cryo.potvalve_goal = closed;
             break;
         case pot_valve_on:
-            // CommandData.Cryo.potvalve_on = 1;
+            CommandData.Cryo.potvalve_on = 1;
             break;
         case pot_valve_off:
-            // CommandData.Cryo.potvalve_on = 0;
+            CommandData.Cryo.potvalve_on = 0;
             break;
         case pump_valve_open:
 	    CommandData.Cryo.valve_goals[0] = opened;
@@ -2613,9 +2613,11 @@ void InitCommandData()
 
     // CommandData.Cryo.BDAHeat = 0;
 
-    // CommandData.Cryo.potvalve_on = 0;
-    // CommandData.Cryo.potvalve_open = 0;
-    // CommandData.Cryo.potvalve_close = 0;
+    CommandData.Cryo.potvalve_on = 0;
+    CommandData.Cryo.potvalve_open = 0;
+    CommandData.Cryo.potvalve_close = 0;
+    CommandData.Cryo.valve_goals[0] = intermed;
+    CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
     CommandData.Cryo.lhevalve_on = 0;
     CommandData.Cryo.lvalve_open = 0;
