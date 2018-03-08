@@ -268,7 +268,7 @@ typedef struct {
   uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
-  int pot_valve_on;
+  int potvalve_on;
   valve_state_t potvalve_goal;
   uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
   valve_state_t valve_goals[2];

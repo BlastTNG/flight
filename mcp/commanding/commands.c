@@ -2614,8 +2614,6 @@ void InitCommandData()
     // CommandData.Cryo.BDAHeat = 0;
 
     CommandData.Cryo.potvalve_on = 0;
-    CommandData.Cryo.potvalve_open = 0;
-    CommandData.Cryo.potvalve_close = 0;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
