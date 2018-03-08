@@ -119,7 +119,7 @@
 #define ADC_TARG_RMS_250 100 /* mV, For 250 micron array TARG sweep */
 #define ADC_RMS_RANGE 5 /* mV */
 #define ATTEN_STEP 0.5 /* dB */
-#define OUTPUT_ATTEN_VNA 6 /* dB, for VNA sweep */
+#define OUTPUT_ATTEN_VNA 1 /* dB, for VNA sweep */
 #define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
 #define EXT_REF 0 /* Valon external ref (10 MHz) */
@@ -1451,7 +1451,7 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
     char m_line[READ_LINE];
     blast_info("Calling Python script...");
     blast_tmp_sprintf(py_command,
-            "python /data/etc/blast/roachPython/find_kids_250.py %d %s %g %g %g %g %g > %s",
+            "python /data/etc/blast/roachPython/find_kids_350.py %d %s %g %g %g %g %g > %s",
         m_roach->which,
         m_vna_path,
         // m_roach->last_targ_path,
@@ -1614,8 +1614,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA)) {
             // TODO(Sam) for short sweep, m_span = VNA_SWEEP_SPAN
-            // m_span = m_roach->vna_sweep_span;
-            m_span = VNA_SWEEP_SPAN;
+            m_span = m_roach->vna_sweep_span;
+            // m_span = VNA_SWEEP_SPAN;
             blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_vna_path);
             blast_tmp_sprintf(vna_freq_fname, "%s/vna_freqs.dat", m_roach->last_vna_path);
             if (save_freqs(m_roach, vna_freq_fname, m_roach->vna_comb, m_roach->vna_comb_len) < 0) {
@@ -2590,7 +2590,7 @@ void *roach_cmd_loop(void* ind)
         }
         if (roach_state_table[i].status == ROACH_STATUS_TONE &&
                roach_state_table[i].desired_status >= ROACH_STATUS_STREAMING) {
-            if (i == 1) {
+            if (i <= 1) {
                 blast_info("ROACH%d, Calibrating ADC rms voltages...", i + 1);
                 cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
             }
@@ -2733,7 +2733,7 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].opt_tones_log,
                       "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
     if ((ind == 0)) {
-        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].lo_centerfreq = 850.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
