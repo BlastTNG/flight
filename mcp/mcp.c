@@ -113,7 +113,7 @@ struct chat_buf chatter_buffer;
 struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
-linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL}; 
+linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
@@ -390,7 +390,7 @@ static void mcp_1hz_routines(void)
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
          memcpy(getFifoWrite(telem_fifo[i]), master_superframe, superframe_size);
          incrementFifo(telem_fifo[i]);
-      } 
+      }
     }
     // auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
@@ -588,8 +588,8 @@ int main(int argc, char *argv[])
   define_superframe();
   master_superframe = calloc(1, superframe_size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
-   allocFifo(telem_fifo[i], 3, superframe_size);
-  } 
+    allocFifo(telem_fifo[i], 3, superframe_size);
+  }
 
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
@@ -598,11 +598,11 @@ int main(int argc, char *argv[])
   send_file_to_linklist(linklist_find_by_name("test_files.ll", linklist_array), "file_block", "testfile.png");
 
   // load the latest linklist into telemetry
-  telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+  telemetries_linklist[PILOT_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
-  telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+  telemetries_linklist[BI0_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
-  telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+  telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
 
 // LJ THREAD
   ph_thread_spawn(lj_connection_handler, NULL);
-    
+
   initialize_CPU_sensors();
 
   // force incharge for test cryo

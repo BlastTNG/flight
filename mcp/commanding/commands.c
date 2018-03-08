@@ -1736,15 +1736,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      break;
     case set_linklists:
       copysvalue(CommandData.pilot_linklist_name, svalues[0]);
-      telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+      telemetries_linklist[PILOT_TELEMETRY_INDEX] =
           linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
 
       copysvalue(CommandData.bi0_linklist_name, svalues[1]);
-      telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+      telemetries_linklist[BI0_TELEMETRY_INDEX] =
           linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
 
       copysvalue(CommandData.highrate_linklist_name, svalues[2]);
-      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
           linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
 
     case timeout:        // Set timeout
