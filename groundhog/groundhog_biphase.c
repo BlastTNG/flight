@@ -176,6 +176,7 @@ void biphase_receive(void *args)
           i_word = (i_word % BI0_FRAME_SIZE);
           //printf("%04x ", raw_word_in);
       }
+      usleep(100);
   }
 }
 

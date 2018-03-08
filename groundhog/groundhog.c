@@ -22,7 +22,7 @@
 #include "channels_tng.h"
 #include "groundhog.h"
 
-
+char datestring[80] = {0};
 int system_idled = 0;
 sigset_t signals;
 
@@ -119,35 +119,73 @@ int main(int argc, char * argv[]) {
   load_all_linklists(DEFAULT_LINKLIST_DIR, ll_list);
   linklist_generate_lookup(ll_list);  
 
+  int pilot_on = 1;
+  int bi0_on = 1;
+  int highrate_on = 1;
+
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-no_pilot") == 0) pilot_on = 0;
+    else if (strcmp(argv[i], "-no_bi0") == 0) bi0_on = 0;
+    else if (strcmp(argv[i], "-no_highrate") == 0) highrate_on = 0;
+    else {
+      blast_err("Unrecognized option \"%s\"", argv[i]);
+      exit(1);
+    }
+  }
+
   if (false) {
     daemonize();
   }
+
+  // initialize the framing mutex for MQQT
+  framing_init_mutex();
+
+  // get the date string for file saving
+  time_t now = time(0);
+  struct tm * tm_t = localtime(&now);
+  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
   pthread_t biphase_receive_worker;
   pthread_t tdrss_receive_worker;
 
-  pthread_create(&pilot_receive_worker, NULL, (void *) &pilot_receive, NULL);
-  pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
-  pthread_create(&tdrss_receive_worker, NULL, (void *) &tdrss_receive, NULL);
-
   // Publishing data to MSQT
   pthread_t pilot_publish_worker;
   pthread_t biphase_publish_worker;
   pthread_t tdrss_publish_worker;
 
-  pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
-  pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
-  pthread_create(&tdrss_publish_worker, NULL, (void *) &tdrss_publish, NULL);
+  if (pilot_on) {
+    pthread_create(&pilot_receive_worker, NULL, (void *) &pilot_receive, NULL);
+    pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
+  }
+
+  if (bi0_on) {
+    pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
+    pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+  }
+
+  if (highrate_on) {
+    pthread_create(&tdrss_receive_worker, NULL, (void *) &tdrss_receive, NULL);
+    pthread_create(&tdrss_publish_worker, NULL, (void *) &tdrss_publish, NULL);
+  }
+
 
   // Joining
-  pthread_join(pilot_receive_worker, NULL);
-  pthread_join(biphase_receive_worker, NULL);
-  pthread_join(tdrss_receive_worker, NULL);
-  pthread_join(pilot_publish_worker, NULL);
-  pthread_join(biphase_publish_worker, NULL);
-  pthread_join(tdrss_publish_worker, NULL);
+  if (pilot_on) {
+    pthread_join(pilot_receive_worker, NULL);
+    pthread_join(pilot_publish_worker, NULL);
+  }
+
+  if (bi0_on) {
+    pthread_join(biphase_receive_worker, NULL);
+    pthread_join(biphase_publish_worker, NULL);
+  }
+
+  if (highrate_on) {
+    pthread_join(tdrss_receive_worker, NULL);
+    pthread_join(tdrss_publish_worker, NULL);
+  }
 
   return 0;
 }
