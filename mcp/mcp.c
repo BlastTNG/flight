@@ -378,7 +378,7 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(0);
+    outer_frame(1);
     // relays arg defines found in relay.h
     relays(ALL_RELAYS);
     // highbay will be rewritten as all on or off when box is complete

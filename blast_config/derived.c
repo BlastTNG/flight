@@ -527,7 +527,7 @@ derived_tng_t derived_list[] = {
     COMMENT("Highbay stuff"), // raw calibration only -- warning!
     LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
     LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
-    LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", -1, 0),
+    LINCOM("He_Pot_Flow", "HE_POT_FLOW_V", 1, 0),
     LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", 200, 0), // in mL/min
     LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
 

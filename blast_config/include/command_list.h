@@ -158,6 +158,7 @@ enum singleCommand {
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
     level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
+    heater_sync,
   xyzzy
 };
 
@@ -233,7 +234,6 @@ enum multiCommand {
   set_rox_bias_amp,
   cal_length,
   level_length,
-  heater_sync,
   send_dac,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
