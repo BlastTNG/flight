@@ -277,6 +277,27 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
+void lj_connection_handler(void *arg) {
+    while (!InCharge) {
+        sleep(1);
+    }
+    // LABJACKS
+    blast_info("I am now in charge, initializing LJs");
+    // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
+    // last argument turns commanding on/off
+    // arguments are 1/0 0 off 1 on
+    // order is CRYO1 CRYO2 OF1 OF2 OF3
+    init_labjacks(0, 0, 1, 1, 1, 1);
+    mult_labjack_networking_init(6, 84, 1);
+    // 7 is for highbay labjack
+    // labjack_networking_init(7, 14, 1);
+    // initialize_labjack_commands(7);
+    // initializes an array of voltages for load curves
+    init_array();
+    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
+    ph_thread_join(cmd_thread, NULL);
+}
+
 unsigned int superframe_counter[RATE_END] = {1};
 
 static void mcp_244hz_routines(void)
@@ -294,7 +315,7 @@ static void mcp_200hz_routines(void)
     command_motors();
     write_motor_channels_200hz();
     // read_chopper();
-    // cal_control();
+    cal_control();
 
     framing_publish_200hz();
     // store_data_200hz();
@@ -379,7 +400,7 @@ static void mcp_1hz_routines(void)
     // relays arg defines found in relay.h
     relays(ALL_RELAYS);
     // highbay will be rewritten as all on or off when box is complete
-    highbay(1, 1, 1, 1, 1);
+    highbay(1);
     // thermal_vac();
     labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
@@ -472,6 +493,7 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
+  pthread_t lj_init_thread;
   // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -594,23 +616,14 @@ int main(int argc, char *argv[])
 
 //  InitSched();
   initialize_motors();
-  // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
-  // last argument turns commanding on/off
-  // arguments are 1/0 0 off 1 on
-  // order is CRYO1 CRYO2 OF1 OF2 OF3
-  init_labjacks(0, 0, 1, 1, 1, 1);
-  mult_labjack_networking_init(6, 84, 1);
-  // 7 is for highbay labjack
-  // labjack_networking_init(7, 14, 1);
-  // initialize_labjack_commands(7);
-  // initializes an array of voltages for load curves
-  init_array();
-  // mult_initialize_labjack_commands(6);
 
+// LJ THREAD
+  ph_thread_spawn(lj_connection_handler, NULL);
+    
   initialize_CPU_sensors();
 
   // force incharge for test cryo
-  force_incharge();
+  // force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);
