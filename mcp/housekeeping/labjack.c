@@ -44,6 +44,9 @@
 #include "labjack_functions.h"
 #include "labjack.h"
 
+extern int16_t InCharge;
+extern labjack_state_t state[NUM_LABJACKS];
+
 #define NUM_LABJACK_AIN 14
 extern labjack_state_t state[NUM_LABJACKS];
 extern int16_t InCharge;
@@ -463,8 +466,30 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
+static int initialized(void) {
+    if (state[0].initialized) {
+        return 1;
+    }
+    if (state[1].initialized) {
+        return 1;
+    }
+    if (state[2].initialized) {
+        return 1;
+    }
+    if (state[3].initialized) {
+        return 1;
+    }
+    if (state[4].initialized) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void labjack_choose_execute(void) {
-    if (CommandData.Labjack_Queue.set_q == 1) {
+    int init = initialized();
+    if (CommandData.Labjack_Queue.set_q == 1 && init) {
+        blast_info("setting cmd queue executor");
         if (CommandData.Relays.labjack[0] == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;

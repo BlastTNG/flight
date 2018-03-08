@@ -42,6 +42,8 @@
 #include "multiplexed_labjack.h"
 #include "relay_control.h"
 
+extern int16_t InCharge;
+extern labjack_state_t state[NUM_LABJACKS];
 /*
 sets of bit values for the different channels
 REC:
@@ -651,17 +653,21 @@ void if_control(void) {
 }
 
 void relays(int setting) {
-    if (setting == 1) {
-        if_control();
-        of_control();
-    }
-    if (setting == 2) {
-        rec_control();
-    }
-    if (setting == 3) {
-        if_control();
-        of_control();
-        rec_control();
+    if (state[3].initialized && state[2].initialized && state[4].initialized) {
+        if (setting == 1) {
+            if_control();
+            of_control();
+        }
+        if (setting == 2) {
+            rec_control();
+        }
+        if (setting == 3) {
+            if_control();
+            of_control();
+            if (state[1].initialized) {
+                rec_control();
+            }
+        }
     }
 }
 

@@ -404,10 +404,10 @@ void *mult_labjack_cmd_thread(void *m_lj) {
  * Called by mcp during startup.
  */
 
-void mult_initialize_labjack_commands(int m_which)
+ph_thread_t* mult_initialize_labjack_commands(int m_which)
 {
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-    ph_thread_spawn(mult_labjack_cmd_thread, (void*) &state[m_which]);
+    return ph_thread_spawn(mult_labjack_cmd_thread, (void*) &state[m_which]);
 }
 
 /**
