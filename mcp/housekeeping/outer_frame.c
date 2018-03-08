@@ -181,8 +181,8 @@ void update_current_sensors(void) {
         current_loop_9_Addr = channels_find_by_name("current_hd_pv");
         current_loop_10_Addr = channels_find_by_name("current_gyros");
     }
-    blast_info("Current Loops: Relay #4 = %f, Relay #8 = %f",
-    			labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
+//    blast_info("Current Loops: Relay #4 = %f, Relay #8 = %f",
+//    			labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
     SET_SCALED_VALUE(current_loop_1_Addr, labjack_get_value(LABJACK_OF_3, 0)*CURLOOP_CONV);
     SET_SCALED_VALUE(current_loop_2_Addr, labjack_get_value(LABJACK_OF_3, 1)*CURLOOP_CONV);
     SET_SCALED_VALUE(current_loop_3_Addr, labjack_get_value(LABJACK_OF_3, 2)*CURLOOP_CONV);
