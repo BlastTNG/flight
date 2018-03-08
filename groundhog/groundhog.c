@@ -22,7 +22,7 @@
 #include "channels_tng.h"
 #include "groundhog.h"
 
-
+char datestring[80] = {0};
 int system_idled = 0;
 sigset_t signals;
 
@@ -139,6 +139,11 @@ int main(int argc, char * argv[]) {
 
   // initialize the framing mutex for MQQT
   framing_init_mutex();
+
+  // get the date string for file saving
+  time_t now = time(0);
+  struct tm * tm_t = localtime(&now);
+  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
