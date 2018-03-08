@@ -32,6 +32,7 @@
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
+#include "roach.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -92,6 +93,8 @@
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
+/* Need to undef I here in for source files that utilize complex.h */
+#undef I
 struct GainStruct {
   float P;
   float I;
@@ -311,11 +314,42 @@ typedef struct slinger_commanding
     bool biphase_active;
 } slinger_commanding_t;
 
+typedef struct udp_roach
+{
+    bool store_udp;
+    bool publish_udp;
+} udp_roach_t;
+
+typedef struct roach
+{
+    unsigned int new_state;
+    unsigned int change_state;
+    unsigned int df_calc;
+    unsigned int auto_retune;
+    unsigned int opt_tones;
+    unsigned int do_sweeps;
+    unsigned int load_amps;
+    unsigned int set_rudats;
+    unsigned int set_attens;
+    unsigned int find_kids;
+} roach_status_t;
+
+typedef struct roach_params
+{
+//  Parameters input to find_kids script
+    double smoothing_scale;
+    double peak_threshold;
+    double spacing_threshold;
+//  Set attenuators
+    double in_atten;
+    double out_atten;
+} roach_params_t;
+
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
-    enum {pos = 0, neg} bal_move_type;
+    enum {neg = 0, no_bal, pos} bal_move_type;
     uint32_t pos;
-    uint16_t vel;
+    uint32_t vel;
     uint16_t hold_i;
     uint16_t move_i;
     uint16_t acc;
@@ -344,10 +378,20 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+  uint32_t biphase_clk_speed;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
+
+  roach_status_t roach[NUM_ROACHES];
+  udp_roach_t udp_roach[NUM_ROACHES];
+  roach_params_t roach_params[NUM_ROACHES];
 
   uei_commands_t uei_command;
 

@@ -27,6 +27,8 @@
  *
  */
 
+#if 0
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -536,3 +538,5 @@ static uint16_t unpack_short(const uint8_t *bytes)
 {
     return (((uint16_t)bytes[0]) << 8) + bytes[1];
 }
+
+#endif

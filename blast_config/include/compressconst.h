@@ -1,2 +1,0 @@
-#define N_OTH_SETS 1
-#define MAX_OTH_STREAM_FIELDS 500

@@ -42,7 +42,6 @@
 #include <sys/time.h>
 
 #include <conversions.h>
-#include <blast_sip_interface.h>
 #include <computer_sensors.h>
 
 #include "channels_tng.h"
@@ -96,8 +95,10 @@ void WriteAux(void)
 {
     static channel_t* timeAddr;
     static channel_t* timeUSecAddr;
-    static channel_t* rateTdrssAddr;
-    static channel_t* rateIridiumAddr;
+    static channel_t* rateHighrateAddr;
+    static channel_t* rateBiphaseAddr;
+    static channel_t* ratePilotAddr;
+    static channel_t* rateMPSSEClockAddr;
 
     static channel_t* statusMCCAddr;
     static channel_t* ploverAddr;
@@ -132,7 +133,6 @@ void WriteAux(void)
         _ch[1] = channels_find_by_name(buf); \
     })
 
-    static int incharge = -1;
     time_t t;
     int i_point;
     struct timeval tv;
@@ -150,8 +150,10 @@ void WriteAux(void)
 
         timeAddr = channels_find_by_name("time");
         timeUSecAddr = channels_find_by_name("time_usec");
-        rateTdrssAddr = channels_find_by_name("rate_tdrss");
-        rateIridiumAddr = channels_find_by_name("rate_iridium");
+        rateHighrateAddr = channels_find_by_name("rate_highrate");
+        rateBiphaseAddr = channels_find_by_name("rate_biphase");
+        ratePilotAddr = channels_find_by_name("rate_pilot");
+        rateMPSSEClockAddr = channels_find_by_name("mpsse_clock_speed");
 
         ploverAddr = channels_find_by_name("plover");
         statusEthAddr = channels_find_by_name("status_eth");
@@ -171,20 +173,6 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
-
-    // InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
-
-    if (InCharge != incharge && InCharge) {
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-        blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
-        CommandData.actbus.force_repoll = 1;
-    } else if (InCharge != incharge) {
-        blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-    }
-
-
-    incharge = InCharge;
 
     gettimeofday(&tv, &tz);
 
@@ -245,8 +233,11 @@ void WriteAux(void)
     SET_VALUE(timeout_addr[1], shared_data[1].timeout);
 
     SET_VALUE(ploverAddr, CommandData.plover);
-    SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
-    SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
+    SET_VALUE(rateHighrateAddr, CommandData.highrate_bw); // Bps
+    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw); // Bps
+    SET_VALUE(ratePilotAddr, CommandData.pilot_bw); // Bps
+
+    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));
@@ -255,6 +246,7 @@ void WriteAux(void)
             (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
             (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
             (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
+            (InCharge ? 0x80 : 0x00) +               // 0x80
 //            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
             ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00
 
@@ -383,5 +375,3 @@ double ReadCalData(channel_t *m_ch)
     GET_VALUE(m_ch, retval);
     return (retval * m_ch->m_c2e + m_ch->b_e2e);
 }
-
-

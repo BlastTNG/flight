@@ -46,6 +46,7 @@
 #define GRPOS_TELEM 15
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
+#define GRPOS_ROACH 18
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -65,7 +66,7 @@
 #define GR_TELEM        (1 << GRPOS_TELEM)
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
-
+#define GR_ROACH        (1 << GRPOS_ROACH)
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -177,7 +178,8 @@ enum multiCommand {
   pivot_gain,        ra_dec_goto,      ra_dec_set,
   pos_set,
   roll_gain,         az_scan_accel,
-  t_gyro_set,        tdrss_bw,         iridium_bw,
+  t_gyro_set,        highrate_bw,       pilot_bw,         biphase_bw,
+  biphase_clk_speed, highrate_through_tdrss,              set_linklists,
   t_gyro_gain,       timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
   hwpr_set_overshoot,
@@ -231,6 +233,17 @@ enum multiCommand {
   xsc_filter_el,
   xsc_filter_eq_location,
   xsc_filter_matching,
+  vna_sweep,
+  targ_sweep,
+  reset_roach,
+  df_calc,
+  opt_tones,
+  auto_retune,
+  end_sweep,
+  load_new_tone_amplitudes,
+  cal_attens,
+  set_attens,
+  find_kids,
   set_rox_bias_amp,
   cal_length,
   level_length,

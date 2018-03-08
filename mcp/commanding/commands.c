@@ -36,7 +36,6 @@
 #include <conversions.h>
 #include <crc.h>
 #include <pointing.h>
-#include <blast_sip_interface.h>
 #include <ec_motors.h>
 
 #include "command_list.h"
@@ -48,9 +47,11 @@
 #include "channels_tng.h"
 #include "labjack.h"
 #include "labjack_functions.h"
+#include "linklist.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
+#include "sip.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -83,6 +84,9 @@ void NormalizeAngle(double*);
 int LoadUplinkFile(int slot); /*sched.c */
 
 extern int doing_schedule; /* sched.c */
+
+extern linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES];
+extern linklist_t * telemetries_linklist[NUM_TELEMETRIES];
 
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
@@ -1057,6 +1061,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+
 #ifndef BOLOTEST
         case blast_rocks:
             CommandData.sucks = 0;
@@ -1709,7 +1714,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.balance.gain_bal = rvalues[3];
       break;
     case balance_manual:
-      CommandData.balance.bal_move_type = rvalues[0];
+      CommandData.balance.bal_move_type = ((int)(0 < ivalues[0]) - (int)(ivalues[0] < 0)) + 1;
       CommandData.balance.mode = bal_manual;
       break;
     case balance_vel:
@@ -1729,14 +1734,60 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
+    case set_linklists:
+      copysvalue(CommandData.pilot_linklist_name, svalues[0]);
+      telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+
+      copysvalue(CommandData.bi0_linklist_name, svalues[1]);
+      telemetries_linklist[BI0_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+
+      copysvalue(CommandData.highrate_linklist_name, svalues[2]);
+      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
+          linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+
     case timeout:        // Set timeout
       CommandData.timeout = rvalues[0];
       break;
-    case tdrss_bw:
-      CommandData.tdrss_bw = rvalues[0];
+    case highrate_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
       break;
-    case iridium_bw:
-      CommandData.iridium_bw = rvalues[0];
+    case highrate_through_tdrss:
+      if (ivalues[0]) {
+        CommandData.highrate_through_tdrss = true;
+      } else {
+        CommandData.highrate_through_tdrss = false;
+      }
+    case pilot_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
+      break;
+    case biphase_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+      break;
+    case biphase_clk_speed:
+      // Value entered by user in kbps but stored in bps
+      if (ivalues[0] == 100) {
+        CommandData.biphase_clk_speed = 100000;
+      } else if (ivalues[0] == 500) {
+        CommandData.biphase_clk_speed = 500000;
+      } else if (ivalues[0] == 1000) {
+        CommandData.biphase_clk_speed = 1000000;
+      } else {
+        char *str;
+        char *str2;
+        char str3[1000];
+        asprintf(&str, "Biphase clk_speed : %d kbps is not allowed (try 100, 500 or 1000).\n", ivalues[0]);
+        asprintf(&str2, "Biphase clk_speed has not been changed, it\'s %d bps", CommandData.biphase_clk_speed);
+        snprintf(str3, sizeof(str3), "%s %s", str, str2);
+        blast_warn("%s", str3);
+      }
       break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
@@ -1756,6 +1807,75 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 #endif
 
+// *****************************************
+// ROACH Commands
+// *****************************************
+    case load_new_tone_amplitudes:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].load_amps = ivalues[1];
+      }
+      break;
+    case cal_attens:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].set_rudats = 0;
+      }
+      break;
+    case end_sweep:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_sweeps = 0;
+      }
+      break;
+    case vna_sweep:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_CALIBRATED;
+          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
+      }
+      break;
+    case targ_sweep:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_ARRAY_FREQS;
+          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
+      }
+      break;
+    case reset_roach:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_BOOT;
+          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
+      }
+      break;
+    case df_calc:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].df_calc = ivalues[1];
+      }
+      break;
+    case auto_retune:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].auto_retune = ivalues[1];
+      }
+      break;
+    case opt_tones:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].opt_tones = ivalues[1];
+      }
+      break;
+    case set_attens:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] < 30)) {
+          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
+	  CommandData.roach[ivalues[0]-1].set_attens = 1;
+      }
+      break;
+    case find_kids:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
+	  CommandData.roach[ivalues[0]-1].find_kids = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2256,7 +2376,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 void InitCommandData()
 {
     int fp, n_read = 0, junk, extra = 0;
-    int is_valid = 0;
+    int is_valid = 0, i = 0;
     uint32_t prev_crc;
 
     if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {
@@ -2286,6 +2406,18 @@ void InitCommandData()
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
+
+	for (i = 0; i < NUM_ROACHES; i++) {
+		CommandData.roach[i].set_rudats = 0;
+		CommandData.roach[i].set_attens = 0;
+		CommandData.roach[i].df_calc = 0; // Sets reference gradients
+		CommandData.roach[i].auto_retune = 0;
+		CommandData.roach[i].do_sweeps = 1;
+		CommandData.roach[i].new_state = 0;
+		CommandData.roach[i].change_state = 0;
+		CommandData.roach[i].find_kids = 0;
+		CommandData.roach[i].opt_tones = 0;
+	}
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -2348,6 +2480,9 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
+    for (i = 0; i < NUM_ROACHES - 1; i++) {
+    	CommandData.roach[i].load_amps = 1;
+	}
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
@@ -2482,8 +2617,14 @@ void InitCommandData()
     CommandData.at_float = 0;
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
-    CommandData.tdrss_bw = 6000;
-    CommandData.iridium_bw = 2000;
+    CommandData.highrate_bw = 6000/8.0; /* Bps */
+    CommandData.pilot_bw = 2000/8.0; /* Bps */
+    CommandData.biphase_bw = 1000000/8.0; /* Bps */
+    CommandData.biphase_clk_speed = 1000000; /* bps */
+    CommandData.highrate_through_tdrss = true;
+    copysvalue(CommandData.pilot_linklist_name, "test.ll");
+    copysvalue(CommandData.bi0_linklist_name, "test2.ll");
+    copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     CommandData.vtx_sel[0] = vtx_isc;
     CommandData.vtx_sel[1] = vtx_osc;
 
@@ -2585,10 +2726,24 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
+    for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.udp_roach[i].store_udp = 1;
+        CommandData.udp_roach[i].publish_udp = 1;
+        // find_kids
+        CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
+        CommandData.roach_params[i].peak_threshold = 3; // dB
+        CommandData.roach_params[i].spacing_threshold = 1.0e3; // kHz
+        // set_attens
+        CommandData.roach_params[i].in_atten = 1;
+        CommandData.roach_params[i].out_atten = 1;
+    }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
     CommandData.balance.mode = bal_rest;
 
+    CommandData.rox_bias.amp = 56;
+    CommandData.rox_bias.status = 0;
+    // TODO(laura): These are for the BLASTPol detector biasing and should be removed.
     CommandData.Bias.bias[0] = 12470;   // 500um
     CommandData.Bias.bias[1] = 11690;   // 350um
     CommandData.Bias.bias[2] = 13940;   // 250um
@@ -2693,6 +2848,8 @@ void InitCommandData()
     CommandData.ISCControl[1].fast_pulse_width = 8; /* 80.00 msec */
 
     for (int which = 0; which < 2; which++) {
+        CommandData.XSC[which].is_new_window_period_cs = 1500;
+
         CommandData.XSC[which].heaters.mode = xsc_heater_auto;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
