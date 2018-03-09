@@ -32,6 +32,6 @@
 #define LABJACK_OF_NCHAN 84 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_OF_SPP 1 // Number of scans to readout per streaming packet
 void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
-void mult_initialize_labjack_commands(int m_which);
+ph_thread_t* mult_initialize_labjack_commands(int m_which);
 
 #endif /* MULTIPLEXED_LABJACK_H_ */

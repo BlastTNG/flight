@@ -24,6 +24,7 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "pilot.h"
+#include "groundhog.h"
 #include "groundhog_framing.h"
 
 superframes_list_t pilot_superframes;
@@ -32,10 +33,13 @@ void pilot_receive(void *arg) {
 
   struct BITRecver pilotrecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0;
+  uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
   uint32_t transmit_size = 0;
+
+  // open a file to save all the raw linklist data
+  FILE * rawsave = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
   uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
@@ -55,6 +59,29 @@ void pilot_receive(void *arg) {
         break;
       }
     } while (true);
+
+#if 0
+    if (serial != prev_serial) {
+      char fname[80] = {0}, basename[80] = {0};
+
+      if (rawsave) {
+        fclose(rawsave);
+        rawsave = NULL;
+      }
+      sprintf(basename, "%s/pilot/%s_%s", FILE_SAVE_DIR, datestring, ll->name);
+
+      // open a new file to write raw linklist data to
+      sprintf(fname, "%s.gnddata", basename);
+      blast_info("Opening file \"%s\"", fname);
+      rawsave = fpreopenb(fname);
+      if (!rawsave) blast_err("Failed to open file");
+      
+      // copy linklist file to the directory
+      blast_info("Generating linklist format file to \"%s\"", basename);
+      linklist_to_file(ll, basename);
+    }
+#endif
+    prev_serial = serial;
 
     // set the linklist serial
     setBITRecverSerial(&pilotrecver, serial);
@@ -79,6 +106,14 @@ void pilot_receive(void *arg) {
     if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
       blast_info("[Pilot] Received linklist \"%s\"", ll->name);
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
+
+      // write the linklist data to disk
+      if (rawsave) {
+        fwrite(compbuffer, 1, ll->blk_size, rawsave);
+        fflush(rawsave); 
+      }
+
+      // decompress
       if (!decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size)) { 
         continue;
       }

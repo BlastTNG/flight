@@ -680,7 +680,7 @@ void WatchPort(void* parameter)
                 pthread_mutex_unlock(&mutex);
                 timer = 0;
             }
-         
+
             // serial connection has been lost, so break out of the loop
             if (get_serial_fd) break;
 

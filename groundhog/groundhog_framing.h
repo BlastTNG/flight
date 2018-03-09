@@ -55,5 +55,6 @@ void framing_publish_200hz(void* m_frame, char *telemetry);
 void framing_publish_100hz(void* m_frame, char *telemetry);
 void framing_publish_5hz(void* m_frame, char *telemetry);
 void framing_publish_1hz(void* m_frame, char *telemetry);
+void framing_init_mutex();
 
 #endif /* INCLUDE_FRAMING_H_ */

@@ -28,6 +28,6 @@
 #ifndef INCLUDE_HIGHBAY_H_
 #define INCLUDE_HIGHBAY_H_
 void monitor_flow(int on);
-void highbay(int n2, int he_pot, int he_blow, int he_purge, int);
+void highbay(int);
 #endif /* HIGHBAY_H_ */
 

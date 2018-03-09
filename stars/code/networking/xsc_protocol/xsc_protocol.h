@@ -49,11 +49,11 @@ typedef struct
 
     uint32_t stars_run_time;
 
-    uint16_t hk_temp_lens;
-    uint16_t hk_temp_comp;
-    uint16_t hk_temp_plate;
-    uint16_t hk_temp_flange;
-    uint16_t hk_pressure;
+    float hk_temp_lens;
+    float hk_temp_comp;
+    float hk_temp_plate;
+    float hk_temp_flange;
+    float hk_pressure;
     uint32_t hk_disk;
 
     uint8_t cam_gain_valid;
@@ -313,6 +313,8 @@ typedef struct XSCClientData
     xsc_command_admin_t command_admins[xC_num_command_admins];
 
     unsigned int xsc_protocol_version;
+
+	unsigned int heater_state;
 }
 XSCClientData;
 

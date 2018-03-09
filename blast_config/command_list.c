@@ -279,7 +279,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
   // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
   // {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
-  //{COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
+  // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
   //  GR_CRYO},
   // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
   //   GR_CRYO},

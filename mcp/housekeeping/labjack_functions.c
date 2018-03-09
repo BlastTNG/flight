@@ -290,7 +290,7 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
     int ret;
     for (int i = 0; i < n_data; i++) {
         if (raw_data->data[i] == 0xffff) {
-            blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
+            // blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
         } else {
             ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }

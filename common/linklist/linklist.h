@@ -111,6 +111,7 @@ int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 linklist_t * linklist_all_telemetry();
+void linklist_to_file(linklist_t *, char *);
 
 #ifdef __cplusplus
 }

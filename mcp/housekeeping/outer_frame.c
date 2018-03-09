@@ -42,6 +42,8 @@
 #include "multiplexed_labjack.h"
 #include "calibrate.h"
 
+extern int16_t InCharge;
+extern labjack_state_t state[NUM_LABJACKS];
 
 // Add clinometer channels and also add the derived channels when we get to testing.
 // this function is called to update the thermometry on the outside of the IF and OF
@@ -196,7 +198,7 @@ void update_current_sensors(void) {
 }
 
 void outer_frame(int setting) {
-    if (setting == 1) {
+    if (setting == 1 && state[2].initialized && state[3].initialized && state[4].initialized) {
         update_current_sensors();
         update_thermistors();
         // update_clinometers();
