@@ -128,10 +128,21 @@ void Housekeeper::update()
                     channel = measurements[i].channel;
 					measurements[i].add_value(values[channel]);
                 }
-                if (write_temps_counter == 0) {
-                    logger.log(logdata);
-                }
-                write_temps_counter = (write_temps_counter+1)%10;
+               
+
+				int heater_state = shared_housekeeper.heater_state;
+				if (heater_state > 0) {
+					ad_card->heat_camera(true);
+					logdata += "Heating";
+				}
+				else {
+					ad_card->heat_camera(false);
+					logdata += "Not Heating";
+				}
+				if (write_temps_counter == 0) {
+					logger.log(logdata);
+				}
+				write_temps_counter = (write_temps_counter + 1) % 10;
             } catch (...) {
             }
         #else

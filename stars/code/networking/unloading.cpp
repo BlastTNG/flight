@@ -34,7 +34,7 @@
 #define shared_packets (*(Shared::Network::packets.w))
 #define shared_image_client1_settings (*(Shared::Network::image_client_settings1.w))
 #define shared_image_client2_settings (*(Shared::Network::image_client_settings2.w))
-#define shared_housekeeper (*(Shared::Housekeeping::housekeeper.r))
+#define shared_housekeeper (*(Shared::Housekeeping::housekeeper_for_camera.w))
 #define shared_camera_requests (*(Shared::Camera::requests_for_main.w))
 #define shared_camera_results (*(Shared::Camera::results_for_network.r))
 #define shared_filters (*(Shared::Solving::filters_net_to_main.w))
@@ -352,10 +352,11 @@ void Connection::unload_client_data()
 	static int heater_state = -1;
 
 	if (client_data.heater_state != heater_state) {
-		logger.log("Heater state is " + std::to_string(heater_state));
+		logger.log("Heater state is " + std::to_string(client_data.heater_state));
 	}
 
 	heater_state = client_data.heater_state;
+	shared_housekeeper.heater_state = heater_state;
 
 }
 
