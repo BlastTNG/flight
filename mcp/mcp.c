@@ -493,11 +493,8 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
-<<<<<<< HEAD
   pthread_t mag_thread;
-=======
   pthread_t lj_init_thread;
->>>>>>> 76bfdf0266c01fedc4addfb6ce320562f14a015f
   // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
