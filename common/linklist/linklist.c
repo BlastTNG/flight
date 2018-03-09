@@ -660,7 +660,7 @@ linklist_t * linklist_all_telemetry()
 
   MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
   MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
-  MD5_Update(&mdContext, ll->name, strlen(ll->name));
+  //MD5_Update(&mdContext, ll->name, (strlen(ll->name)/4)*4);
 
   // generate serial
   MD5_Final(md5hash, &mdContext);

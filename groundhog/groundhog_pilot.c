@@ -58,6 +58,7 @@ void pilot_receive(void *arg) {
       } else {
         break;
       }
+      printf("Hellow 0x%x!\n", serial);
     } while (true);
 
 #if 0
