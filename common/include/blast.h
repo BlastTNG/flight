@@ -145,6 +145,20 @@ void *_memdup(buos_t l, const void *m_src, size_t n, const char* m_func, int m_l
         snprintf(ptr, bytes, format, ##__VA_ARGS__);        \
         bytes;                                              \
     })
+
+/**
+ * Allocates a temporary, formated string on the stack.  This memory will be automatically freed
+ * when the function exits, so do not call free or any variant on the pointer
+ */
+#define blast_tmp_vsprintf(ptr, format, ...)                 \
+    ({                                                       \
+        int bytes;                                           \
+                                                             \
+        bytes = vsnprintf(NULL, 0, format, ##__VA_ARGS__)+1; \
+        ptr = alloca(bytes * sizeof(char));                  \
+        vsnprintf(ptr, bytes, format, ##__VA_ARGS__);        \
+        bytes;                                               \
+    })
 #endif
 
 #define BLAST_SWAP(_x, _y)          \

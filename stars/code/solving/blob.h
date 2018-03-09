@@ -34,6 +34,10 @@ class Solving::Blob
     {
         return first.flux_confidence > second.flux_confidence;
     }
+    static bool sort_by_flux(Blob first, Blob second)
+    {
+        return first.flux > second.flux;
+    }
 
     // stage 1, found while searching cells for peaks
     int u; // ccd pixel indices

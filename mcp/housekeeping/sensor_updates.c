@@ -30,9 +30,12 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
+
+extern labjack_state_t state[NUM_LABJACKS];
 
 void update_sun_sensors(void) {
     static int firsttime = 1;
@@ -119,44 +122,46 @@ void update_sun_sensors(void) {
         v4_8_Addr = channels_find_by_name("v4_8_pss");
         v5_8_Addr = channels_find_by_name("v5_8_pss");
     }
-    SET_SCALED_VALUE(v1_1_Addr, mult_labjack_get_value(0, 4));
-    SET_SCALED_VALUE(v2_1_Addr, mult_labjack_get_value(0, 5));
-    SET_SCALED_VALUE(v3_1_Addr, mult_labjack_get_value(0, 6));
-    SET_SCALED_VALUE(v4_1_Addr, mult_labjack_get_value(0, 7));
-    SET_SCALED_VALUE(v5_1_Addr, mult_labjack_get_value(0, 8));
-    SET_SCALED_VALUE(v1_2_Addr, mult_labjack_get_value(0, 9));
-    SET_SCALED_VALUE(v2_2_Addr, mult_labjack_get_value(0, 10));
-    SET_SCALED_VALUE(v3_2_Addr, mult_labjack_get_value(0, 11));
-    SET_SCALED_VALUE(v4_2_Addr, mult_labjack_get_value(0, 12));
-    SET_SCALED_VALUE(v5_2_Addr, mult_labjack_get_value(0, 13));
-    SET_SCALED_VALUE(v1_3_Addr, mult_labjack_get_value(0, 14));
-    SET_SCALED_VALUE(v2_3_Addr, mult_labjack_get_value(0, 15));
-    SET_SCALED_VALUE(v3_3_Addr, mult_labjack_get_value(0, 16));
-    SET_SCALED_VALUE(v4_3_Addr, mult_labjack_get_value(0, 17));
-    SET_SCALED_VALUE(v5_3_Addr, mult_labjack_get_value(0, 18));
-    SET_SCALED_VALUE(v1_4_Addr, mult_labjack_get_value(0, 19));
-    SET_SCALED_VALUE(v2_4_Addr, mult_labjack_get_value(0, 20));
-    SET_SCALED_VALUE(v3_4_Addr, mult_labjack_get_value(0, 21));
-    SET_SCALED_VALUE(v4_4_Addr, mult_labjack_get_value(0, 22));
-    SET_SCALED_VALUE(v5_4_Addr, mult_labjack_get_value(0, 23));
-    SET_SCALED_VALUE(v1_5_Addr, mult_labjack_get_value(0, 24));
-    SET_SCALED_VALUE(v2_5_Addr, mult_labjack_get_value(0, 25));
-    SET_SCALED_VALUE(v3_5_Addr, mult_labjack_get_value(0, 26));
-    SET_SCALED_VALUE(v4_5_Addr, mult_labjack_get_value(0, 27));
-    SET_SCALED_VALUE(v5_5_Addr, mult_labjack_get_value(0, 28));
-    SET_SCALED_VALUE(v1_6_Addr, mult_labjack_get_value(0, 29));
-    SET_SCALED_VALUE(v2_6_Addr, mult_labjack_get_value(0, 30));
-    SET_SCALED_VALUE(v3_6_Addr, mult_labjack_get_value(0, 31));
-    SET_SCALED_VALUE(v4_6_Addr, mult_labjack_get_value(0, 32));
-    SET_SCALED_VALUE(v5_6_Addr, mult_labjack_get_value(0, 33));
-    SET_SCALED_VALUE(v1_7_Addr, mult_labjack_get_value(0, 34));
-    SET_SCALED_VALUE(v2_7_Addr, mult_labjack_get_value(0, 35));
-    SET_SCALED_VALUE(v3_7_Addr, mult_labjack_get_value(0, 36));
-    SET_SCALED_VALUE(v4_7_Addr, mult_labjack_get_value(0, 37));
-    SET_SCALED_VALUE(v5_7_Addr, mult_labjack_get_value(0, 38));
-    SET_SCALED_VALUE(v1_8_Addr, mult_labjack_get_value(0, 39));
-    SET_SCALED_VALUE(v2_8_Addr, mult_labjack_get_value(0, 40));
-    SET_SCALED_VALUE(v3_8_Addr, mult_labjack_get_value(0, 41));
-    SET_SCALED_VALUE(v4_8_Addr, mult_labjack_get_value(0, 42));
-    SET_SCALED_VALUE(v5_8_Addr, mult_labjack_get_value(0, 43));
+    if (state[5].initialized) {
+        SET_SCALED_VALUE(v1_1_Addr, labjack_get_value(5, 4));
+        SET_SCALED_VALUE(v2_1_Addr, labjack_get_value(5, 5));
+        SET_SCALED_VALUE(v3_1_Addr, labjack_get_value(5, 6));
+        SET_SCALED_VALUE(v4_1_Addr, labjack_get_value(5, 7));
+        SET_SCALED_VALUE(v5_1_Addr, labjack_get_value(5, 8));
+        SET_SCALED_VALUE(v1_2_Addr, labjack_get_value(5, 9));
+        SET_SCALED_VALUE(v2_2_Addr, labjack_get_value(5, 10));
+        SET_SCALED_VALUE(v3_2_Addr, labjack_get_value(5, 11));
+        SET_SCALED_VALUE(v4_2_Addr, labjack_get_value(5, 12));
+        SET_SCALED_VALUE(v5_2_Addr, labjack_get_value(5, 13));
+        SET_SCALED_VALUE(v1_3_Addr, labjack_get_value(5, 14));
+        SET_SCALED_VALUE(v2_3_Addr, labjack_get_value(5, 15));
+        SET_SCALED_VALUE(v3_3_Addr, labjack_get_value(5, 16));
+        SET_SCALED_VALUE(v4_3_Addr, labjack_get_value(5, 17));
+        SET_SCALED_VALUE(v5_3_Addr, labjack_get_value(5, 18));
+        SET_SCALED_VALUE(v1_4_Addr, labjack_get_value(5, 19));
+        SET_SCALED_VALUE(v2_4_Addr, labjack_get_value(5, 20));
+        SET_SCALED_VALUE(v3_4_Addr, labjack_get_value(5, 21));
+        SET_SCALED_VALUE(v4_4_Addr, labjack_get_value(5, 22));
+        SET_SCALED_VALUE(v5_4_Addr, labjack_get_value(5, 23));
+        SET_SCALED_VALUE(v1_5_Addr, labjack_get_value(5, 24));
+        SET_SCALED_VALUE(v2_5_Addr, labjack_get_value(5, 25));
+        SET_SCALED_VALUE(v3_5_Addr, labjack_get_value(5, 26));
+        SET_SCALED_VALUE(v4_5_Addr, labjack_get_value(5, 27));
+        SET_SCALED_VALUE(v5_5_Addr, labjack_get_value(5, 28));
+        SET_SCALED_VALUE(v1_6_Addr, labjack_get_value(5, 29));
+        SET_SCALED_VALUE(v2_6_Addr, labjack_get_value(5, 30));
+        SET_SCALED_VALUE(v3_6_Addr, labjack_get_value(5, 31));
+        SET_SCALED_VALUE(v4_6_Addr, labjack_get_value(5, 32));
+        SET_SCALED_VALUE(v5_6_Addr, labjack_get_value(5, 33));
+        SET_SCALED_VALUE(v1_7_Addr, labjack_get_value(5, 34));
+        SET_SCALED_VALUE(v2_7_Addr, labjack_get_value(5, 35));
+        SET_SCALED_VALUE(v3_7_Addr, labjack_get_value(5, 36));
+        SET_SCALED_VALUE(v4_7_Addr, labjack_get_value(5, 37));
+        SET_SCALED_VALUE(v5_7_Addr, labjack_get_value(5, 38));
+        SET_SCALED_VALUE(v1_8_Addr, labjack_get_value(5, 39));
+        SET_SCALED_VALUE(v2_8_Addr, labjack_get_value(5, 40));
+        SET_SCALED_VALUE(v3_8_Addr, labjack_get_value(5, 41));
+        SET_SCALED_VALUE(v4_8_Addr, labjack_get_value(5, 42));
+        SET_SCALED_VALUE(v5_8_Addr, labjack_get_value(5, 43));
+    }
 }

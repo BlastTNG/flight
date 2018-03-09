@@ -33,7 +33,18 @@
 #include <linux/types.h>
 #include <linux/watchdog.h>
 
+#include "watchdog.h"
+#include "biphase_hardware.h"
 #include "blast.h"
+#include "channels_tng.h"
+#include "mputs.h"
+#include "command_struct.h"
+
+#define BI0_INCHARGE_CALL_PERIOD 250000 // Number of microseconds between in charge calls.
+#define WATCHDOG_CTRL_INIT_TIMEOUT 10   // Wait 10 calls before we actually decide whether we are in charge.
+
+extern int16_t SouthIAm;
+extern int16_t InCharge;
 
 static const char watchdog_magic = 'V';
 
@@ -84,7 +95,7 @@ int initialize_watchdog(int m_timeout)
 {
     if (watchdog_fd > 0) close(watchdog_fd);
 
-    if ((watchdog_fd = open("/dev/watchdog", O_WRONLY)) < 0) {
+    if ((watchdog_fd = open("/dev/watchdog1", O_WRONLY)) < 0) {
         blast_strerror("Could not open Watchdog");
         return -1;
     }
@@ -92,4 +103,45 @@ int initialize_watchdog(int m_timeout)
     ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &m_timeout);
     watchdog_ping();
     return 0;
+}
+
+/******* In Charge Functions *********/
+
+void set_incharge(int in_charge_from_wd) {
+    static int first_call = 1;
+    int in_charge=-1;
+    static int incharge_old=-1;
+    static int init_timeout = WATCHDOG_CTRL_INIT_TIMEOUT;
+    if (first_call == 1) {
+        blast_info("Called set_incharge for the first time");
+        first_call = 0;
+    } else if (init_timeout > 0) {
+        init_timeout--;
+    } else {
+        in_charge = in_charge_from_wd;
+        // blast_warn("in_charge = %d, incharge_old = %d, SouthIAm = %d", in_charge, incharge_old, SouthIAm);
+        if (in_charge == SouthIAm) {
+            // We're in charge!
+            // set incharge here to 1 if the && comes true
+            InCharge = 1;
+            if (incharge_old != in_charge) {
+                if (SouthIAm == 1) {
+                    blast_info("I, South, have now gained control");
+                } else {
+                    blast_info("I, North, have now gained control");
+                }
+                CommandData.actbus.force_repoll = 1;
+            }
+        } else {
+            InCharge = 0;
+            if (incharge_old != in_charge) {
+                if (SouthIAm == 1) {
+                    blast_info("I, South, have lost control");
+                } else {
+                    blast_info("I, North, have lost control");
+                }
+            }
+        }
+    }
+    incharge_old = in_charge;
 }

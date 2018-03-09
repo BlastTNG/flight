@@ -30,10 +30,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <alsa/asoundlib.h>
+#include "phenom/job.h"
+#include "phenom/log.h"
+#include "phenom/sysutil.h"
 
+#include "bias_tone.h"
 #include "blast.h"
 #include "blast_time.h"
 #include "command_struct.h"
+#include "mcp.h"
+
+void nameThread(const char*);		/* mcp.c */
 
 static char *device = "plughw:0,0";                     /* playback device */
 static char *card = "default";                          /* sound card for mixer */
@@ -59,7 +66,9 @@ struct async_private_data {
 };
 static struct async_private_data data;
 static snd_async_handler_t *ahandler;
+int bias_tone_shutting_down = 0;
 
+#define BIAS_WAIT_BEFORE_RECONNECTING 10000000
 
 static void generate_sine(const snd_pcm_channel_area_t *areas,
                           snd_pcm_uframes_t offset,
@@ -303,8 +312,114 @@ static void bias_tone_callback(snd_async_handler_t *ahandler)
     }
 }
 
+int reset_rox_bias(snd_pcm_t* handle) {
+    shutdown_bias_tone();
+// Commenting this out for now because I need to finish writing the function.
+//    usleep(BIAS_WAIT_BEFORE_RECONNECTING);
+// TODO(laura): Figure out a way to monitor the whether the bias has actually shut down.
+}
+
+void *bias_monitor(void *param)
+{
+	snd_pcm_state_t state;
+	snd_pcm_status_t* 	status;
+	int have_warned, have_warned_status = 0;
+    int ret = 0;
+    int err;
+    int first_time = 1;
+    uint16_t bias_state = 0;
+    uint8_t reset_counter = 0;
+    static channel_t *bias_alsa_state_rox_channel;
+	char *channel_name = "bias_alsa_state_rox";
+    bias_alsa_state_rox_channel = channels_find_by_name(channel_name);
+    struct timespec ts;
+    struct timespec interval_ts = { .tv_sec = 1,
+                                    .tv_nsec = 0}; /// 1HZ interval
+
+    nameThread("BiasMonitor");
+    blast_info("BiasMonitor thread startup.");
+    clock_gettime(CLOCK_REALTIME, &ts);
+    snd_pcm_status_alloca(&status);
+
+    while (!bias_tone_shutting_down) {
+        bias_state = 0;
+        state = snd_pcm_state(handle);
+        if (first_time) {
+            blast_info("Attempting to read bias pcm state.");
+        }
+        switch (state) {
+            // The PCM device is in the open state.
+            // After the snd_pcm_open() open call, the device is in this state.
+            case SND_PCM_STATE_OPEN:
+               bias_state = BIAS_PCM_STATE_OPEN;
+               have_warned = 0;
+               break;
+            case SND_PCM_STATE_SETUP:
+               bias_state = BIAS_PCM_STATE_SETUP;
+               have_warned = 0;
+               break;
+            case SND_PCM_STATE_PREPARED:
+               bias_state = BIAS_PCM_STATE_PREPARED;
+               have_warned = 0;
+               break;
+            case SND_PCM_STATE_RUNNING:
+               bias_state = BIAS_PCM_STATE_RUNNING;
+               have_warned = 0;
+               break;
+            case SND_PCM_STATE_XRUN:
+               bias_state = BIAS_PCM_STATE_XRUN;
+               break;
+            case SND_PCM_STATE_DRAINING:
+               bias_state = BIAS_PCM_STATE_DRAINING;
+               have_warned = 0;
+               break;
+            case SND_PCM_STATE_PAUSED:
+               bias_state = BIAS_PCM_STATE_PAUSED;
+               if (!have_warned) blast_warn("bias pcm state is paused.");
+               have_warned = 1;
+               break;
+            case SND_PCM_STATE_SUSPENDED:
+               bias_state = BIAS_PCM_STATE_SUSPENDED;
+               if (!have_warned) blast_err("bias pcm state is suspended!");
+               have_warned = 1;
+               break;
+            case SND_PCM_STATE_DISCONNECTED:
+               blast_err("Steam status error received: %s",  snd_strerror(err));
+               bias_state = BIAS_PCM_STATE_DISCONNECTED;
+               if (!have_warned) blast_warn("bias pcm state is disconnected!");
+               have_warned = 1;
+               break;
+            default:
+               blast_err("Could not parse the snd_pcm_state return value: %s",  snd_strerror(err));
+               have_warned = 1;
+        }
+        if (first_time) {
+            blast_info("bias_state = %i.", bias_state);
+            first_time = 0;
+        }
+        if (((err = snd_pcm_status(handle, status)) < 0) && !have_warned_status) {
+                blast_info("Stream status error: %s\n", snd_strerror(err));
+                have_warned_status = 1;
+        }
+
+        SET_SCALED_VALUE(bias_alsa_state_rox_channel, bias_state);
+
+        if (CommandData.rox_bias.reset) {
+            ret = reset_rox_bias(handle);
+        }
+        ts = timespec_add(ts, interval_ts);
+        ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (ret && ret != -EINTR) {
+            blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
+            break;
+        }
+    }
+}
+
 void shutdown_bias_tone(void)
 {
+    bias_tone_shutting_down = 1;
     BLAST_SAFE_FREE(data.areas);
     BLAST_SAFE_FREE(data.samples);
     if (handle) snd_pcm_close(handle);
@@ -314,6 +429,7 @@ void shutdown_bias_tone(void)
 int initialize_bias_tone(void)
 {
     int retval;
+    ph_thread_t *bias_thread = NULL;
 
     retval = snd_output_stdio_attach(&output, stdout, 0);
     if (retval < 0) {
@@ -412,10 +528,30 @@ int initialize_bias_tone(void)
     }
     blast_startup("Mixer parameters sent!");
 
+    bias_thread = ph_thread_spawn(bias_monitor, NULL);
+
     return 0;
 
 init_err:
+    blast_warn("Initialization error!");
     shutdown_bias_tone();
     return -1;
 }
 
+/* 
+Bias signal monitoring thread.
+void *bias_monitor_thread(void *m_arg)
+{
+    
+}
+ */
+int set_rox_bias() {
+    int retval;
+    if ((retval = set_mixer_params()) < 0) {
+        blast_err("Could not send mixer parameters.: %s", snd_strerror(retval));
+        return -1;
+    }
+    blast_startup("Mixer parameters re-sent!");
+
+    return 0;
+}

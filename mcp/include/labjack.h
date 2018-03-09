@@ -34,6 +34,7 @@
 #define LABJACK_OF_1 2
 #define LABJACK_OF_2 3
 #define LABJACK_OF_3 4
+#define LABJACK_HIGHBAY 7
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
@@ -99,15 +100,25 @@
 #define READ_350LNA 2015
 #define READ_500LNA 2016
 
+// DACS
+#define DAC0 1000
+#define DAC1 1002
+
 // These defines specify with AIN voltage on the cyro labjack reads out which diode or ROX channel
 
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 float labjack_get_value(int m_labjack, int m_channel);
 void initialize_labjack_commands(int m_which);
 void store_labjack_data(void);
+void labjack_test_dac(float v_value, int m_labjack);
 int labjack_dio(int m_labjack, int address, int command);
-void heater_write(int m_labjack, int address, int command);
+void heater_write(int m_labjack, int address, float command);
 uint16_t labjack_read_dio(int m_labjack, int address);
 void labjack_reboot(int m_labjack);
+void labjack_queue_command(int, int, float);
 void query_time(int m_labjack);
+void initialize_labjack_queue(void);
+void labjack_choose_execute(void);
+void init_labjack_digital(void);
+void init_labjacks(int set_1, int set_2, int set_3, int set_4, int set_5, int q_set);
 #endif /* LABJACK_H_ */

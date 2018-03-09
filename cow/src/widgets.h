@@ -195,7 +195,7 @@ public:
     void SetType(char t)
     {
         Q_ASSERT(t!='s');
-        setDecimals(((t=='i' || t=='l')?0:4));
+        setDecimals(((t=='i' || t=='l') ? 0 : 5));
         type = t;
     }
 

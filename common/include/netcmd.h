@@ -29,12 +29,11 @@
 #endif
 #endif
 #include <sys/types.h>
-#include <stdint.h>
 
 /*
  * Definition of command structures (formerly in command_list.h)
  */
-#define MAX_N_PARAMS 12     /* narsil REALLY likes this to be even */
+#define MAX_N_PARAMS 14     /* narsil REALLY likes this to be even */
 #define CMD_STRING_LEN 32     /* max length of command string */
 #define SIZE_NAME 80     /* max length for command name, */
 #define SIZE_ABOUT 80     /* ... description, */
@@ -93,8 +92,8 @@ struct mcom {
 #define CMD_LIMT 8
 #define CMD_SENT 9
 
-extern uint16_t  client_n_scommands;
-extern uint16_t  client_n_mcommands;
+extern unsigned short client_n_scommands;
+extern unsigned short client_n_mcommands;
 extern struct scom *client_scommands;
 extern struct mcom *client_mcommands;
 extern char client_command_list_serial[1024];
@@ -110,7 +109,7 @@ int  NetCmdSendAndReceive(const char*, int, size_t, char*);
 int  NetCmdGetCmdList(void);
 int  NetCmdGetGroupNames(void);
 int  NetCmdTakeConn(int);
-double NetCmdGetDefault(char *cmdstr);
+int NetCmdGetDefault(double *val, const char *cmdstr);
 const char* NetCmdBanner(void);
 int  NetCmdPing(void);
 #endif

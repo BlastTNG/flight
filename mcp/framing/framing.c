@@ -34,10 +34,11 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
-#include <command_struct.h>
 #include <crc.h>
 #include <derived.h>
 #include <mputs.h>
+
+#include <command_struct.h>
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
@@ -45,6 +46,7 @@ static struct mosquitto *mosq_other = NULL;
 extern int16_t SouthIAm;
 extern int16_t InCharge;
 
+static int32_t mcp_488hz_framenum = -1;
 static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
 static int32_t mcp_100hz_framenum = -1;
@@ -93,9 +95,11 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
 void framing_publish_1hz(void)
 {
     static channel_t *mcp_1hz_framenum_addr = NULL;
+    static channel_t *mcp_1hz_framenum_dl_addr = NULL;
     static char frame_name[32];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+        mcp_1hz_framenum_dl_addr = channels_find_by_name("mcp_1hz_framecount_dl");
         snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/1Hz", SouthIAm + 1);
     }
 
@@ -103,6 +107,7 @@ void framing_publish_1hz(void)
 
     mcp_1hz_framenum++;
     SET_INT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
+    SET_INT32(mcp_1hz_framenum_dl_addr, mcp_1hz_framenum);
     if (frame_size[RATE_1HZ]) {
         if (1) {
             // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));
@@ -199,6 +204,26 @@ void framing_publish_244hz(void)
         }
         mosquitto_publish(mosq, NULL, frame_name,
                 frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
+    }
+}
+
+void framing_publish_488hz(void)
+{
+    static channel_t *mcp_488hz_framenum_addr = NULL;
+    static char frame_name[32];
+
+    if (mcp_488hz_framenum_addr == NULL) {
+        mcp_488hz_framenum_addr = channels_find_by_name("mcp_488hz_framecount");
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/488Hz", SouthIAm + 1);
+    }
+
+    if (frame_stop) return;
+
+    mcp_488hz_framenum++;
+    SET_INT32(mcp_488hz_framenum_addr, mcp_488hz_framenum);
+    if (frame_size[RATE_488HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[RATE_488HZ], channel_data[RATE_488HZ], 0, false);
     }
 }
 

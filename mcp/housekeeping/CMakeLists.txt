@@ -6,13 +6,16 @@ set(HOUSEKEEPING_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/computer_sensors.c
     ${CMAKE_CURRENT_SOURCE_DIR}/cryostat.c
     ${CMAKE_CURRENT_SOURCE_DIR}/data_sharing.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/highbay.c
     ${CMAKE_CURRENT_SOURCE_DIR}/labjack.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/labjack_functions.c
     ${CMAKE_CURRENT_SOURCE_DIR}/multiplexed_labjack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/outer_frame.c
     ${CMAKE_CURRENT_SOURCE_DIR}/relay_control.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sensor_updates.c
     ${CMAKE_CURRENT_SOURCE_DIR}/therm_heater.c
     ${CMAKE_CURRENT_SOURCE_DIR}/watchdog.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/data_sharing.c
     PARENT_SCOPE
 )
 set(HOUSEKEEPING_HEADERS
@@ -22,12 +25,15 @@ set(HOUSEKEEPING_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/computer_sensors.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/cryostat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/data_sharing.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/highbay.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/labjack.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/labjack_functions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/multiplexed_labjack.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/outer_frame.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/relay_control.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/sensor_updates.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/therm_heater.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/watchdog.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/data_sharing.h
    PARENT_SCOPE
 )

@@ -37,9 +37,17 @@
 #include "tx.h"
 #include "command_struct.h"
 #include "labjack.h"
+#include "labjack_functions.h"
 #include "blast.h"
 #include "multiplexed_labjack.h"
+#include "calibrate.h"
 
+extern int16_t InCharge;
+extern labjack_state_t state[NUM_LABJACKS];
+
+// Add clinometer channels and also add the derived channels when we get to testing.
+// this function is called to update the thermometry on the outside of the IF and OF
+// same build as the read thermometers code
 void update_thermistors(void) {
     static int first_time_therm = 1;
     static channel_t* thermistor_1_Addr;
@@ -70,10 +78,6 @@ void update_thermistors(void) {
     static channel_t* thermistor_26_Addr;
     static channel_t* thermistor_27_Addr;
     static channel_t* thermistor_28_Addr;
-    static channel_t* thermistor_29_Addr;
-    static channel_t* thermistor_30_Addr;
-    static channel_t* thermistor_31_Addr;
-    static channel_t* thermistor_32_Addr;
     if (first_time_therm == 1) {
         thermistor_1_Addr = channels_find_by_name("thermistor_1");
         thermistor_2_Addr = channels_find_by_name("thermistor_2");
@@ -103,46 +107,57 @@ void update_thermistors(void) {
         thermistor_26_Addr = channels_find_by_name("thermistor_26");
         thermistor_27_Addr = channels_find_by_name("thermistor_27");
         thermistor_28_Addr = channels_find_by_name("thermistor_28");
-        thermistor_29_Addr = channels_find_by_name("thermistor_29");
-        thermistor_30_Addr = channels_find_by_name("thermistor_30");
-        thermistor_31_Addr = channels_find_by_name("thermistor_31");
-        thermistor_31_Addr = channels_find_by_name("thermistor_32");
         first_time_therm = 0;
     }
-    SET_SCALED_VALUE(thermistor_1_Addr, labjack_get_value(LABJACK_OF_1, 10));
-    SET_SCALED_VALUE(thermistor_2_Addr, labjack_get_value(LABJACK_OF_1, 11));
-    SET_SCALED_VALUE(thermistor_3_Addr, labjack_get_value(LABJACK_OF_1, 12));
-    SET_SCALED_VALUE(thermistor_4_Addr, labjack_get_value(LABJACK_OF_1, 13));
-    SET_SCALED_VALUE(thermistor_5_Addr, labjack_get_value(LABJACK_OF_2, 0));
-    SET_SCALED_VALUE(thermistor_6_Addr, labjack_get_value(LABJACK_OF_2, 1));
-    SET_SCALED_VALUE(thermistor_7_Addr, labjack_get_value(LABJACK_OF_2, 2));
-    SET_SCALED_VALUE(thermistor_8_Addr, labjack_get_value(LABJACK_OF_2, 3));
-    SET_SCALED_VALUE(thermistor_9_Addr, labjack_get_value(LABJACK_OF_2, 4));
-    SET_SCALED_VALUE(thermistor_10_Addr, labjack_get_value(LABJACK_OF_2, 5));
-    SET_SCALED_VALUE(thermistor_11_Addr, labjack_get_value(LABJACK_OF_2, 6));
-    SET_SCALED_VALUE(thermistor_12_Addr, labjack_get_value(LABJACK_OF_2, 7));
-    SET_SCALED_VALUE(thermistor_13_Addr, labjack_get_value(LABJACK_OF_2, 8));
-    SET_SCALED_VALUE(thermistor_14_Addr, labjack_get_value(LABJACK_OF_2, 9));
-    SET_SCALED_VALUE(thermistor_15_Addr, labjack_get_value(LABJACK_OF_2, 10));
-    SET_SCALED_VALUE(thermistor_16_Addr, labjack_get_value(LABJACK_OF_2, 11));
-    SET_SCALED_VALUE(thermistor_17_Addr, labjack_get_value(LABJACK_OF_2, 12));
-    SET_SCALED_VALUE(thermistor_18_Addr, labjack_get_value(LABJACK_OF_2, 13));
-    SET_SCALED_VALUE(thermistor_19_Addr, labjack_get_value(LABJACK_OF_3, 0));
-    SET_SCALED_VALUE(thermistor_20_Addr, labjack_get_value(LABJACK_OF_3, 1));
-    SET_SCALED_VALUE(thermistor_21_Addr, labjack_get_value(LABJACK_OF_3, 2));
-    SET_SCALED_VALUE(thermistor_22_Addr, labjack_get_value(LABJACK_OF_3, 3));
-    SET_SCALED_VALUE(thermistor_23_Addr, labjack_get_value(LABJACK_OF_3, 4));
-    SET_SCALED_VALUE(thermistor_24_Addr, labjack_get_value(LABJACK_OF_3, 5));
-    SET_SCALED_VALUE(thermistor_25_Addr, labjack_get_value(LABJACK_OF_3, 6));
-    SET_SCALED_VALUE(thermistor_26_Addr, labjack_get_value(LABJACK_OF_3, 7));
-    SET_SCALED_VALUE(thermistor_27_Addr, labjack_get_value(LABJACK_OF_3, 8));
-    SET_SCALED_VALUE(thermistor_28_Addr, labjack_get_value(LABJACK_OF_3, 9));
-    SET_SCALED_VALUE(thermistor_29_Addr, labjack_get_value(LABJACK_OF_3, 10));
-    SET_SCALED_VALUE(thermistor_30_Addr, labjack_get_value(LABJACK_OF_3, 11));
-    SET_SCALED_VALUE(thermistor_31_Addr, labjack_get_value(LABJACK_OF_3, 12));
-    SET_SCALED_VALUE(thermistor_32_Addr, labjack_get_value(LABJACK_OF_3, 13));
+    SET_SCALED_VALUE(thermistor_1_Addr, labjack_get_value(LABJACK_OF_2, 0));
+    SET_SCALED_VALUE(thermistor_2_Addr, labjack_get_value(LABJACK_OF_2, 1));
+    SET_SCALED_VALUE(thermistor_3_Addr, labjack_get_value(LABJACK_OF_2, 2));
+    SET_SCALED_VALUE(thermistor_4_Addr, labjack_get_value(LABJACK_OF_2, 3));
+    SET_SCALED_VALUE(thermistor_5_Addr, labjack_get_value(LABJACK_OF_2, 4));
+    SET_SCALED_VALUE(thermistor_6_Addr, labjack_get_value(LABJACK_OF_2, 5));
+    SET_SCALED_VALUE(thermistor_7_Addr, labjack_get_value(LABJACK_OF_2, 6));
+    SET_SCALED_VALUE(thermistor_8_Addr, labjack_get_value(LABJACK_OF_2, 7));
+    SET_SCALED_VALUE(thermistor_9_Addr, labjack_get_value(LABJACK_OF_2, 8));
+    SET_SCALED_VALUE(thermistor_10_Addr, labjack_get_value(LABJACK_OF_2, 9));
+    SET_SCALED_VALUE(thermistor_11_Addr, labjack_get_value(LABJACK_OF_2, 10));
+    SET_SCALED_VALUE(thermistor_12_Addr, labjack_get_value(LABJACK_OF_2, 11));
+    SET_SCALED_VALUE(thermistor_13_Addr, labjack_get_value(LABJACK_OF_2, 12));
+    SET_SCALED_VALUE(thermistor_14_Addr, labjack_get_value(LABJACK_OF_2, 13));
+    SET_SCALED_VALUE(thermistor_15_Addr, labjack_get_value(LABJACK_OF_1, 0));
+    SET_SCALED_VALUE(thermistor_16_Addr, labjack_get_value(LABJACK_OF_1, 1));
+    SET_SCALED_VALUE(thermistor_17_Addr, labjack_get_value(LABJACK_OF_1, 2));
+    SET_SCALED_VALUE(thermistor_18_Addr, labjack_get_value(LABJACK_OF_1, 3));
+    SET_SCALED_VALUE(thermistor_19_Addr, labjack_get_value(LABJACK_OF_1, 4));
+    SET_SCALED_VALUE(thermistor_20_Addr, labjack_get_value(LABJACK_OF_1, 5));
+    SET_SCALED_VALUE(thermistor_21_Addr, labjack_get_value(LABJACK_OF_1, 6));
+    SET_SCALED_VALUE(thermistor_22_Addr, labjack_get_value(LABJACK_OF_1, 7));
+    SET_SCALED_VALUE(thermistor_23_Addr, labjack_get_value(LABJACK_OF_1, 8));
+    SET_SCALED_VALUE(thermistor_24_Addr, labjack_get_value(LABJACK_OF_1, 9));
+    SET_SCALED_VALUE(thermistor_25_Addr, labjack_get_value(LABJACK_OF_1, 10));
+    SET_SCALED_VALUE(thermistor_26_Addr, labjack_get_value(LABJACK_OF_1, 11));
+    SET_SCALED_VALUE(thermistor_27_Addr, labjack_get_value(LABJACK_OF_1, 12));
+    SET_SCALED_VALUE(thermistor_28_Addr, labjack_get_value(LABJACK_OF_1, 13));
 }
-
+// updates clinometers instead of thermometers
+void update_clinometer(void) {
+    static int first_time_clin = 1;
+    static channel_t* clin_1_x_Addr;
+    static channel_t* clin_1_y_Addr;
+    static channel_t* clin_2_x_Addr;
+    static channel_t* clin_2_y_Addr;
+    if (first_time_clin == 1) {
+        first_time_clin = 0;
+        clin_1_x_Addr = channels_find_by_name("clin_1_x");
+        clin_1_y_Addr = channels_find_by_name("clin_1_y");
+        clin_2_x_Addr = channels_find_by_name("clin_2_x");
+        clin_2_y_Addr = channels_find_by_name("clin_2_y");
+    }
+    SET_SCALED_VALUE(clin_1_x_Addr, labjack_get_value(LABJACK_OF_3, 10));
+    SET_SCALED_VALUE(clin_1_y_Addr, labjack_get_value(LABJACK_OF_3, 11));
+    SET_SCALED_VALUE(clin_2_x_Addr, labjack_get_value(LABJACK_OF_3, 12));
+    SET_SCALED_VALUE(clin_2_y_Addr, labjack_get_value(LABJACK_OF_3, 13));
+}
+// same deal for current sensors
 void update_current_sensors(void) {
     static int first_time_current = 1;
     static channel_t* current_loop_1_Addr;
@@ -157,27 +172,37 @@ void update_current_sensors(void) {
     static channel_t* current_loop_10_Addr;
     if (first_time_current == 1) {
         first_time_current = 0;
-        current_loop_1_Addr = channels_find_by_name("current_loop_1");
-        current_loop_2_Addr = channels_find_by_name("current_loop_2");
-        current_loop_3_Addr = channels_find_by_name("current_loop_3");
-        current_loop_4_Addr = channels_find_by_name("current_loop_4");
-        current_loop_5_Addr = channels_find_by_name("current_loop_5");
-        current_loop_6_Addr = channels_find_by_name("current_loop_6");
-        current_loop_7_Addr = channels_find_by_name("current_loop_7");
-        current_loop_8_Addr = channels_find_by_name("current_loop_8");
-        current_loop_9_Addr = channels_find_by_name("current_loop_9");
-        current_loop_10_Addr = channels_find_by_name("current_loop_10");
+        current_loop_1_Addr = channels_find_by_name("current_eth_switch");
+        current_loop_2_Addr = channels_find_by_name("current_fc1");
+        current_loop_3_Addr = channels_find_by_name("current_xsc1");
+        current_loop_4_Addr = channels_find_by_name("current_fc2");
+        current_loop_5_Addr = channels_find_by_name("current_xsc0");
+        current_loop_6_Addr = channels_find_by_name("current_ele_mot");
+        current_loop_7_Addr = channels_find_by_name("current_pivot");
+        current_loop_8_Addr = channels_find_by_name("current_rw_mot");
+        current_loop_9_Addr = channels_find_by_name("current_hd_pv");
+        current_loop_10_Addr = channels_find_by_name("current_gyros");
     }
-    SET_SCALED_VALUE(current_loop_1_Addr, labjack_get_value(LABJACK_OF_1, 0));
-    SET_SCALED_VALUE(current_loop_2_Addr, labjack_get_value(LABJACK_OF_1, 1));
-    SET_SCALED_VALUE(current_loop_3_Addr, labjack_get_value(LABJACK_OF_1, 2));
-    SET_SCALED_VALUE(current_loop_4_Addr, labjack_get_value(LABJACK_OF_1, 3));
-    SET_SCALED_VALUE(current_loop_5_Addr, labjack_get_value(LABJACK_OF_1, 4));
-    SET_SCALED_VALUE(current_loop_6_Addr, labjack_get_value(LABJACK_OF_1, 5));
-    SET_SCALED_VALUE(current_loop_7_Addr, labjack_get_value(LABJACK_OF_1, 6));
-    SET_SCALED_VALUE(current_loop_8_Addr, labjack_get_value(LABJACK_OF_1, 7));
-    SET_SCALED_VALUE(current_loop_9_Addr, labjack_get_value(LABJACK_OF_1, 8));
-    SET_SCALED_VALUE(current_loop_10_Addr, labjack_get_value(LABJACK_OF_1, 9));
+//    blast_info("Current Loops: Relay #4 = %f, Relay #8 = %f",
+//    			labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_1_Addr, labjack_get_value(LABJACK_OF_3, 0)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_2_Addr, labjack_get_value(LABJACK_OF_3, 1)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_3_Addr, labjack_get_value(LABJACK_OF_3, 2)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_4_Addr, labjack_get_value(LABJACK_OF_3, 3)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_5_Addr, labjack_get_value(LABJACK_OF_3, 4)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_6_Addr, labjack_get_value(LABJACK_OF_3, 5)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_7_Addr, labjack_get_value(LABJACK_OF_3, 6)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_8_Addr, labjack_get_value(LABJACK_OF_3, 7)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_9_Addr, labjack_get_value(LABJACK_OF_3, 8)*CURLOOP_CONV);
+    SET_SCALED_VALUE(current_loop_10_Addr, labjack_get_value(LABJACK_OF_3, 9)*CURLOOP_CONV);
+}
+
+void outer_frame(int setting) {
+    if (setting == 1 && state[2].initialized && state[3].initialized && state[4].initialized) {
+        update_current_sensors();
+        update_thermistors();
+        // update_clinometers();
+    }
 }
 
 

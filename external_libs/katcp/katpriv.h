@@ -1054,6 +1054,7 @@ int add_parameter_parse_katcl(struct katcl_parse *pd, int flags, struct katcl_pa
 int add_parameter_parse_katcl(struct katcl_parse *pd, int flags, struct katcl_parse *ps, unsigned int index);
 int add_trailing_parse_katcl(struct katcl_parse *pd, int flags, struct katcl_parse *ps, unsigned int start);
 int add_end_parse_katcl(struct katcl_parse *p);
+int append_end_katcp(struct katcp_dispatch *d);
 
 int buffer_from_parse_katcl(struct katcl_parse *p, char *buffer, unsigned int len);
 

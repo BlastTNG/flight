@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h> 
 #include <string.h>
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
         }
       } 
       if (syncstate == SYNC_LEN) {  //full sync word detected
-        printf("** %zd bytes read since last sync word (expected %zd) **\n", bytes_read_since_last_sync, BI0_FRAME_SIZE*2);
+        printf("** %zd bytes read since last sync word (expected %d) **\n", bytes_read_since_last_sync, BI0_FRAME_SIZE*2);
         printf("** %s%s **\n", sync_pol ? "Inverted " : "", "Sync Word");
 	printf("\tcounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
 	printf("\tlocked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));

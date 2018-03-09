@@ -69,11 +69,11 @@ typedef struct
 
     uint32_t stars_run_time;
 
-    uint16_t hk_temp_lens;
-    uint16_t hk_temp_comp;
-    uint16_t hk_temp_plate;
-    uint16_t hk_temp_flange;
-    uint16_t hk_pressure;
+    float hk_temp_lens;
+    float hk_temp_comp;
+    float hk_temp_plate;
+    float hk_temp_flange;
+    float hk_pressure;
     uint32_t hk_disk;
 
     uint8_t cam_gain_valid;
@@ -158,7 +158,10 @@ enum
     xC_init_focus,
     xC_get_focus,
     xC_set_focus,
+    xC_stop_focus,
     xC_set_focus_incremental,
+    xC_define_focus,
+    xC_define_aperture,
     xC_run_autofocus,
     xC_set_autofocus_range,
     xC_abort_autofocus,
@@ -166,6 +169,7 @@ enum
     xC_init_aperture,
     xC_get_aperture,
     xC_set_aperture,
+    xC_stop_aperture,
     xC_get_gain,
     xC_set_gain,
     xC_brightness,
@@ -310,6 +314,7 @@ typedef struct XSCClientData
 
     int set_focus_value;
     int set_focus_incremental_value;
+    int define_focus_value;
     int autofocus_search_min;
     int autofocus_search_max;
     int autofocus_search_step;
@@ -317,6 +322,7 @@ typedef struct XSCClientData
     xsc_autofocus_display_mode_t autofocus_display_mode;
     int set_aperture_value;
     double set_gain_value;
+    int define_aperture_value;
 
     XSCBrightness     brightness;
     XSCSolver         solver;
@@ -325,6 +331,8 @@ typedef struct XSCClientData
     xsc_command_admin_t command_admins[xC_num_command_admins];
 
     unsigned int xsc_protocol_version;
+
+    unsigned int heater_state;
 }
 XSCClientData;
 
