@@ -58,7 +58,6 @@ void pilot_receive(void *arg) {
       } else {
         break;
       }
-      printf("Hellow 0x%x!\n", serial);
     } while (true);
 
 #if 0
@@ -82,6 +81,7 @@ void pilot_receive(void *arg) {
       linklist_to_file(ll, basename);
     }
 #endif
+
     prev_serial = serial;
 
     // set the linklist serial
