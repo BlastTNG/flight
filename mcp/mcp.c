@@ -472,6 +472,7 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
+  pthread_t mag_thread;
   // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -619,6 +620,7 @@ int main(int argc, char *argv[])
       xsc_networking_init(1);
   }
   initialize_magnetometer();
+  mag_thread = ph_thread_spawn(&monitor_magnetometer, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);

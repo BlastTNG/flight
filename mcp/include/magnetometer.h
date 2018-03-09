@@ -27,7 +27,10 @@
 #ifndef INCLUDE_MAGNETOMETER_H_
 #define INCLUDE_MAGNETOMETER_H_
 
+#define DEBUG_MAGNETOMETER
+
 void initialize_magnetometer(void);
+void *monitor_magnetometer(void *m_arg);
 
 // TODO(anyone): Characterize Magnetometer
 #define MAGX_B 0.0
