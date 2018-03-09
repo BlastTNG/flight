@@ -34,6 +34,7 @@
 
 #include "blast.h"
 #include "channels_tng.h"
+#include "magnetometer.h"
 #include "mcp.h"
 #include "pointing_struct.h"
 #include <errno.h>
@@ -199,10 +200,6 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     	    // Try to restart the sequence.
     	    ph_stm_printf(serial->stream, "\e\r");
             ph_stm_flush(serial->stream);
-            do {
-                ph_buf_delref(buf);
-                buf = ph_serial_read_record(serial, "\r", 1);
-            } while (buf);
         }
     	if (!(mag_state.error_warned)) {
     		blast_err("Error reading from the magnetometer! %s", strerror(errno));
