@@ -331,6 +331,8 @@ typedef struct XSCClientData
     xsc_command_admin_t command_admins[xC_num_command_admins];
 
     unsigned int xsc_protocol_version;
+
+    unsigned int heater_state;
 }
 XSCClientData;
 

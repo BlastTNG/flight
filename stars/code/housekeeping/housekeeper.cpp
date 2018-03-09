@@ -52,12 +52,16 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
     if (map.count(field_type)) {
         type = map[field_type].as<string>();
         if (type == "temperature" && map.count(field_resistor_value)) {
-            measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
-            measurement.offset = -273.15;
-            measurement.units = " C";
+            // measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
+            // measurement.offset = -273.15;
+			measurement.scale = 1;
+			measurement.offset = 0;
+			measurement.units = " C";
         } else if (type == "pressure" && map.count(field_voltage)) {
-            measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
-            measurement.offset = 0.04 / (0.004 * 101.325);
+            // measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
+            // measurement.offset = 0.04 / (0.004 * 101.325);
+			measurement.scale = 1;
+			measurement.offset = 0;
             measurement.units = " a";
         } else {
             return;
@@ -111,10 +115,14 @@ void Housekeeper::update()
 			try {
 				double values[16] = { 0.0 };
 				int channel;
-                string logdata = "temps";
+                string logdata = "temps=> ";
 				string logerror = "";
 
 				ad_card->dmm_scan(values);
+
+				for (unsigned int i = 0; i < 16; i++) {
+					logdata += std::to_string(i) + ": " + std::to_string(values[i]) + " ";
+				}
 
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;

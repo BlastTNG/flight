@@ -349,6 +349,13 @@ void Connection::unload_client_data()
         shared_network_reset.reset_on_lull_delay = client_data.network_reset.reset_on_lull_delay;
         Shared::General::network_reset_for_net_reset.share();
     }
+	static int heater_state = -1;
+
+	if (client_data.heater_state != heater_state) {
+		logger.log("Heater state is " + std::to_string(heater_state));
+	}
+
+	heater_state = client_data.heater_state;
 
 }
 
