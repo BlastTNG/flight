@@ -827,21 +827,21 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
+  {COMMAND(highrate_bw), "Highrate bandwidth", GR_TELEM, 1,
     {
       {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
     }
   },
 
-  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
+  {COMMAND(biphase_bw), "biphase bandwidth", GR_TELEM, 1,
     {
       {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
     }
   },
 
-  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
+  {COMMAND(pilot_bw), "pilot bandwidth", GR_TELEM, 1,
     {
-      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+      {"Bandwidth (kbps)", 0, 80000, 'f', "rate_pilot"}
     }
   },
 

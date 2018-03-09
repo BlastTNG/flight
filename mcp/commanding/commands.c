@@ -2678,7 +2678,7 @@ void InitCommandData()
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
     CommandData.highrate_bw = 6000/8.0; /* Bps */
-    CommandData.pilot_bw = 2000/8.0; /* Bps */
+    CommandData.pilot_bw = 70000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.highrate_through_tdrss = true;
