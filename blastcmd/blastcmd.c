@@ -660,7 +660,7 @@ int main(int argc, char *argv[]) {
   char t_link, t_route;
   int i;
   int daemon_route = 0, daemon_fork = 0, daemon_port = SOCK_PORT;
-  char daemon_fw[2048];
+  char daemon_fw[2048] = {0};
   char *daemon_pilot[2] = {daemon_fw, NULL};
   int daemonise = 0;
   char* command[200];
