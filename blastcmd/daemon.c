@@ -60,7 +60,7 @@ struct auth_addr {
   struct auth_addr* next;
 };
 
-static char *pilot_host[2] = { "payload.spidercmb.com:42250", "payload.spidercmb.com:42251" };
+static char *pilot_host[2] = { "192.168.1.3:41414", "192.168.1.4:41414" };
 
 #define BUF_SIZE (30 * 1024)
 
@@ -667,8 +667,11 @@ void Daemonise(int route, int no_fork, int port, char *daemon_pilot[2])
   ReadAuth();	/*read authorized IPs (mainly to check file at this point) */
 #endif
 
-  pilot_host[0] = daemon_pilot[0];
-  pilot_host[1] = daemon_pilot[1];
+  // transfer hosts for forwarding
+  if (strlen(daemon_pilot[0]) > 0) {
+    pilot_host[0] = daemon_pilot[0];
+    pilot_host[1] = daemon_pilot[1];
+  }
 
   /* for forward management */
   setenv("USER", "blastcmd", 1);
