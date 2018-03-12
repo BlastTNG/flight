@@ -51,7 +51,7 @@ const char *GroupNames[N_GROUPS] = {
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
 const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",  
                                 "test_files.ll",  "test.ll",
-                                "all_telemetry", 0};
+                                "all_telemetry.ll", "no linklist", 0};
 
 
 // echoes as string; makes enum name the command name string

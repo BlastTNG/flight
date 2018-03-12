@@ -1737,15 +1737,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      break;
     case set_linklists:
       if (ivalues[0] == 0) {
-        copysvalue(CommandData.pilot_linklist_name, svalues[1]);
+        copysvalue(CommandData.pilot_linklist_name, linklist_names[ivalues[1]]);
         telemetries_linklist[PILOT_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
       } else if (ivalues[0] == 1) {
-        copysvalue(CommandData.bi0_linklist_name, svalues[1]);
+        copysvalue(CommandData.bi0_linklist_name, linklist_names[ivalues[1]]);
         telemetries_linklist[BI0_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
       } else if (ivalues[0] == 2) {
-        copysvalue(CommandData.highrate_linklist_name, svalues[1]);
+        copysvalue(CommandData.highrate_linklist_name, linklist_names[ivalues[1]]);
         telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
       } else {
@@ -1756,8 +1756,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       i = 0;
       while (linklist_names[i]) i++;
       if (ivalues[0] < i) {
-        send_file_to_linklist((char *) linklist_find_by_name(linklist_names[ivalues[0]], linklist_array), 
-                                "file_block", svalues[1]);      
+        send_file_to_linklist(linklist_find_by_name(
+            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);      
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
