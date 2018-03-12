@@ -830,7 +830,7 @@ struct mcom mcommands[plugh + 2] = {
       {"PIlot Linklist", 0, 32, 's', ""},
     }
   },
-  {COMMAND(set_bi0_linklist), "change linklists for highrate", GR_TELEM, 2,
+  {COMMAND(set_highrate_linklist), "change linklists for highrate", GR_TELEM, 2,
     {
       {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"},
       {"High Rate Linklist", 0, 32, 's', ""}
