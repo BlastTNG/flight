@@ -819,10 +819,20 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
+  {COMMAND(set_bi0_linklist), "change linklists for bi0", GR_TELEM, 2,
     {
-      {"Pilot Linklist", 0, 32, 's', ""},
-      {"Biphase Linklist", 0, 32, 's', ""},
+      {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"},
+      {"Bi0 Linklist", 0, 32, 's', ""}
+    }
+  },
+  {COMMAND(set_pilot_linklist), "change linklists for pilot", GR_TELEM, 1,
+    {
+      {"PIlot Linklist", 0, 32, 's', ""},
+    }
+  },
+  {COMMAND(set_bi0_linklist), "change linklists for highrate", GR_TELEM, 2,
+    {
+      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"},
       {"High Rate Linklist", 0, 32, 's', ""}
     }
   },
@@ -842,17 +852,6 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pilot_bw), "pilot bandwidth", GR_TELEM, 1,
     {
       {"Bandwidth (kbps)", 0, 80000, 'f', "rate_pilot"}
-    }
-  },
-
-  {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
-    {
-      {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
-    }
-  },
-  {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
-    {
-      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
     }
   },
 
