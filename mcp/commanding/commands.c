@@ -1761,6 +1761,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
+      break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
       if (ivalues[0] == 100) {
