@@ -824,7 +824,7 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
-      {"Downlink", 0, 2, 'i', "NONE", downlink_names},
+      {"Downlink", 0, 2, 'i', "NONE", {downlink_names}},
       {"Linklist", 0, 32, 's', ""}
     }
   },
