@@ -46,7 +46,13 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_FOCUS] = "Focus"
   };
 
+#define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
+
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
+const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",  
+                                "test_files.ll",  "test.ll",
+                                "all_telemetry", 0};
+
 
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
@@ -825,7 +831,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
       {"Downlink", 0, 2, 'i', "NONE", {downlink_names}},
-      {"Linklist", 0, 32, 's', ""}
+      {LINKLIST_SELECT}
+    }
+  },
+
+  {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
+    {
+      {LINKLIST_SELECT},
+      {"Absolute file path", 0, 64, 's', ""}
     }
   },
 

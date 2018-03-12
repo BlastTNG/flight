@@ -595,8 +595,6 @@ int main(int argc, char *argv[])
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
   linklist_generate_lookup(linklist_array);
-  // FIXME(javier): this is just for testing linklist files
-  send_file_to_linklist(linklist_find_by_name("test_files.ll", linklist_array), "file_block", "testfile.png");
 
   // load the latest linklist into telemetry
   telemetries_linklist[PILOT_TELEMETRY_INDEX] =

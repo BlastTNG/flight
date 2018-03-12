@@ -48,6 +48,7 @@
 #include "labjack.h"
 #include "labjack_functions.h"
 #include "linklist.h"
+#include "linklist_compress.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
@@ -1751,6 +1752,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         blast_err("Unknown downlink index %d", ivalues[0]);
       }
       break;
+    case request_file:
+      i = 0;
+      while (linklist_names[i]) i++;
+      if (ivalues[0] < i) {
+        send_file_to_linklist((char *) linklist_find_by_name(linklist_names[ivalues[0]], linklist_array), 
+                                "file_block", svalues[1]);      
+      } else {
+        blast_err("Index %d is outside linklist name range", ivalues[0]);
+      }
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
       if (ivalues[0] == 100) {
