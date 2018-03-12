@@ -1734,12 +1734,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //    case gyro_on:
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
-    case set_pilot_linklist:
-      copysvalue(CommandData.pilot_linklist_name, svalues[0]);
-      telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-          linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+    case set_linklists:
+      if (ivalues[0] == 0) {
+        copysvalue(CommandData.pilot_linklist_name, svalues[1]);
+        telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+      } else if (ivalues[0] == 1) {
+        copysvalue(CommandData.bi0_linklist_name, svalues[1]);
+        telemetries_linklist[BI0_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+      } else if (ivalues[0] == 2) {
+        copysvalue(CommandData.highrate_linklist_name, svalues[1]);
+        telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+      } else {
+        blast_err("Unknown downlink index %d", ivalues[0]);
+      }
       break;
-    case set_bi0_linklist:
+    case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
       if (ivalues[0] == 100) {
         CommandData.biphase_clk_speed = 100000;
@@ -1756,22 +1768,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         snprintf(str3, sizeof(str3), "%s %s", str, str2);
         blast_warn("%s", str3);
       }
-      copysvalue(CommandData.bi0_linklist_name, svalues[1]);
-      telemetries_linklist[BI0_TELEMETRY_INDEX] =
-          linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
-
       break;
-    case set_highrate_linklist:
+    case highrate_through_tdrss:
       // route through tdrss or otherwise
       if (ivalues[0]) {
         CommandData.highrate_through_tdrss = true;
       } else {
         CommandData.highrate_through_tdrss = false;
       }
-      copysvalue(CommandData.highrate_linklist_name, svalues[1]);
-      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
-          linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
-
       break;
     case timeout:        // Set timeout
       CommandData.timeout = rvalues[0];
@@ -1790,8 +1794,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       // Value entered by user in kbps but stored in Bps
       CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
       blast_info("Changed biphase bw to %f kbps", rvalues[0]);
-      break;
-    case biphase_clk_speed:
       break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
