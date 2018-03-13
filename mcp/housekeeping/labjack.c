@@ -603,10 +603,10 @@ void *labjack_cmd_thread(void *m_lj) {
   * Called by mcp during startup.
   */
 
-void initialize_labjack_commands(int m_which)
+ph_thread_t* initialize_labjack_commands(int m_which)
 {
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-    ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+    return ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
 void initialize_labjack_queue(void) {

@@ -263,6 +263,8 @@ enum multiCommand {
   cal_length,
   level_length,
   send_dac,
+  // Sam Grab these
+  periodic_cal,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
