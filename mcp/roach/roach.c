@@ -96,7 +96,7 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 150.0e3 /* Target sweep span = 200 kHz */
+#define TARG_SWEEP_SPAN 120.0e3 /* Target sweep span = 200 kHz */
 #define NCOEFF 12 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Netcat port on Pi for FC1 */
@@ -120,11 +120,13 @@
 #define ADC_RMS_RANGE 5 /* mV */
 #define ATTEN_STEP 0.5 /* dB */
 #define OUTPUT_ATTEN_VNA 1 /* dB, for VNA sweep */
-#define OUTPUT_ATTEN_TARG 18 /* dB, initial level for TARG sweep */
+#define OUTPUT_ATTEN_TARG 20 /* dB, initial level for TARG sweep */
 #define READ_DATA_MS_TIMEOUT 10000 /* ms, timeout for roach_read_data */
 #define EXT_REF 0 /* Valon external ref (10 MHz) */
 #define NCAL_POINTS 21 /* Number of points to use for cal sweep */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
+/* If 1, phase centers will be calculated and applied after TARG sweep */
+#define CENTER_PHASE 1
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -172,13 +174,17 @@ char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char valon_init_pi_extref[] = "python /home/pi/device_control/init_valon_ext.py";
 char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 /* For testing, use detector data from Feb, 2018 cooldown */
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Mar__2_15_42_18_2018";
-// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Mon_Feb_19_15_56_01_2018";
-// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Feb_16_13_52_53_2018";
 
-char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
+// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Mar__2_15_42_18_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Tue_Mar_13_17_12_35_2018";
+
+// char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
+char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Tue_Mar_13_18_23_52_2018";
 
 char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
+char find_kids_250[] = "/data/etc/blast/roachPython/find_kids_250.py";
+char find_kids_350[] = "/data/etc/blast/roachPython/find_kids_350.py";
+char center_phase_script[] = "/data/etc/blast/roachPython/center_phase.py";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
@@ -447,8 +453,68 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
 {
     size_t comb_fft_len;
     double amps[m_freqlen];
+    double phases[m_freqlen];
     for (size_t i = 0; i < m_freqlen; i++) {
         amps[i] = 1.0;
+    }
+    // Load random phases (static file for testing)
+    blast_info("Roach%d, Loading tone phases", m_roach->which);
+    char *phase_path = m_roach->random_phase_path;
+    char *center_phase_command;
+    blast_info("Phase file = %s", phase_path);
+    FILE *fd = fopen(phase_path, "r");
+    if (!fd) {
+        blast_strerror("Could not open %s for reading", phase_path);
+    } else {
+        blast_info("Opened %s", phase_path);
+        for (size_t i = 0; i < m_freqlen; i++) {
+            if (fscanf(fd, "%lg\n", &phases[i]) != EOF) {
+                // blast_info("Roach%d tone phase: %g", m_roach->which, phases[i]);
+            } else {
+                break;
+            }
+        }
+        fclose(fd);
+    }
+    if (CENTER_PHASE && (m_freqlen < m_roach->vna_comb_len)) {
+        char *targ_path;
+	struct stat dir_stat;
+        int stat_return;
+        stat_return = stat(m_roach->last_targ_path, &dir_stat);
+        if (stat_return != 0) {
+            blast_info("ROACH%d: NO TARG PATH FOUND, USING TARG SEARCH PATH INSTEAD", m_roach->which);
+            blast_tmp_sprintf(targ_path, targ_search_path);
+	} else {
+            blast_tmp_sprintf(targ_path, m_roach->last_targ_path);
+	}
+	double phase_centers[m_freqlen];
+        double centered_phases[m_freqlen];
+	blast_tmp_sprintf(center_phase_command, "python %s %d %s",
+	              center_phase_script, m_roach->which, targ_path);
+        blast_info("%s", center_phase_command);
+        // Calculate phase centers from last TARG sweep, and write file to disk
+	system(center_phase_command);
+	// Load phase centers and subtract from original phases
+	char *phase_centers_path = m_roach->phase_centers_path;
+        FILE *centers_file = fopen(phase_centers_path, "r");
+        if (!centers_file) {
+            blast_strerror("Could not open %s for reading", phase_centers_path);
+        } else {
+            blast_info("Opened %s", phase_centers_path);
+            for (size_t i = 0; i < m_freqlen; i++) {
+                if (fscanf(fd, "%lg\n", &phase_centers[i]) != EOF) {
+                    blast_info("Roach%d phase_centers: %g", m_roach->which, phase_centers[i]);
+                } else {
+                    break;
+                }
+            }
+            fclose(centers_file);
+        }
+    // Subtract phase centers from original tone phases
+        for (size_t i = 0; i < m_freqlen; i++) {
+            centered_phases[i] = phases[i] - phase_centers[i];
+            blast_info("Roach%d centered phase: %g", m_roach->which, phase_centers[i]);
+        }
     }
     // TODO(Sam) Combine vna and targ cases into one?
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
@@ -458,7 +524,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         FILE *fd = fopen(amps_path, "r");
         if (!fd) {
             blast_strerror("Could not open %s for reading", amps_path);
-            fclose(fd);
         } else {
             blast_info("Opened %s", amps_path);
             for (size_t i = 0; i < m_freqlen; i++) {
@@ -480,7 +545,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         FILE *fd = fopen(amps_path, "r");
         if (!fd) {
             blast_strerror("Could not open %s for reading", amps_path);
-            fclose(fd);
         } else {
             blast_info("Opened %s", amps_path);
             for (size_t i = 0; i < m_freqlen; i++) {
@@ -504,7 +568,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     comb_fft_len = LUT_BUFFER_LEN;
     complex double *spec = calloc(comb_fft_len, sizeof(complex double));
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
-    double alpha;
+    // double phi;
     double max_val = 0.0;
     srand48(time(NULL));
     for (size_t i = 0; i < m_freqlen; i++) {
@@ -512,8 +576,9 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         if (bin < 0) {
             bin += comb_fft_len;
         }
-        alpha = drand48() * 2.0 * M_PI;
-        spec[bin] = amps[i]*cexp(_Complex_I * alpha);
+        /* phi = drand48() * 2.0 * M_PI;
+        spec[bin] = amps[i]*cexp(_Complex_I * phi); */
+        spec[bin] = amps[i]*cexp(_Complex_I * phases[i]);
         // blast_info("bin = %d, r(spec[bin]) = %f, im(spec[bin]) = %f",
         // bin, creal(spec[bin]), cimag(spec[bin]));
     }
@@ -1447,12 +1512,18 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
     }
     char *py_command;
     char *m_targ_freq_path;
+    char *find_kids_script;
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[READ_LINE];
+    if (m_roach->which == 1) {
+        blast_tmp_sprintf(find_kids_script, find_kids_350);
+    } else {
+        blast_tmp_sprintf(find_kids_script, find_kids_250);
+    }
     blast_info("Calling Python script...");
-    blast_tmp_sprintf(py_command,
-            "python /data/etc/blast/roachPython/find_kids_350.py %d %s %g %g %g %g %g > %s",
-        m_roach->which,
+    blast_tmp_sprintf(py_command, "python %s %d %s %g %g %g %g %g > %s",
+        find_kids_script,
+	m_roach->which,
         m_vna_path,
         // m_roach->last_targ_path,
         CommandData.roach_params[m_roach->which - 1].smoothing_scale,
@@ -1899,7 +1970,7 @@ int cal_sweep_attens(roach_state_t *m_roach)
         blast_info("ATTEN STEP = %f", atten_step);
         blast_info("NPOINTS = %u", npoints);
         double start_atten = (double)OUTPUT_ATTEN_TARG - (ncycles*atten_step);
-        int count = 1;
+        int count = 0;
         char *subdir;
         blast_info("ROACH%d, running tone amp cal for %d cycles", m_roach->which, ncycles);
         while (count < ncycles + 1) {
@@ -2590,7 +2661,7 @@ void *roach_cmd_loop(void* ind)
         }
         if (roach_state_table[i].status == ROACH_STATUS_TONE &&
                roach_state_table[i].desired_status >= ROACH_STATUS_STREAMING) {
-            if (i <= 1) {
+            if (i < 1) {
                 blast_info("ROACH%d, Calibrating ADC rms voltages...", i + 1);
                 cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
             }
@@ -2732,6 +2803,10 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/roach%d_find_kids.log", ind + 1);
     asprintf(&roach_state_table[ind].opt_tones_log,
                       "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
+    asprintf(&roach_state_table[ind].random_phase_path,
+                      "/home/fc1user/sam_tests/random_phases.dat");
+    asprintf(&roach_state_table[ind].phase_centers_path,
+                      "/home/fc1user/sam_tests/sweeps/roach%d/phase_centers.dat", ind + 1);
     if ((ind == 0)) {
         roach_state_table[ind].lo_centerfreq = 850.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
