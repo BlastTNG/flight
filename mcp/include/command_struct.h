@@ -279,6 +279,7 @@ typedef struct {
   uint16_t forced;
   int labjack, send_dac, load_curve;
   float dac_value;
+  uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
 typedef struct {

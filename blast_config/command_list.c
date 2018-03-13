@@ -1029,8 +1029,13 @@ struct mcom mcommands[plugh + 2] = {
           {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
       }
   },
-
-
+  {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
+        {
+	  {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+	  {"Separation (in 5ms steps)", 1, 1000, 'i', "SEPARATION"},
+	  {"Length of Pulse (in 5ms steps)", 1, 1000, 'i', "LENGTH_PULSE"},
+	}
+  },
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",

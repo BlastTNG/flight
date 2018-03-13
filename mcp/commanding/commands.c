@@ -1694,6 +1694,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    case periodic_cal:
+      CommandData.Cryo.periodic_pulse = 1;
+      CommandData.Cryo.num_pulse = ivalues[0];
+      CommandData.Cryo.separation = ivalues[1];
+      CommandData.Cryo.length = ivalues[2];
+      break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
       CommandData.Cryo.labjack = ivalues[0];
@@ -2486,6 +2492,11 @@ void InitCommandData()
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
 
+    /* Added for triggering cal lamp */
+    CommandData.Cryo.num_pulse = 1;
+    CommandData.Cryo.separation = 1;
+    CommandData.Cryo.periodic_pulse = 0;
+    CommandData.Cryo.length = 1;
     /* relays should always be set to zero when starting MCP */
     /* relays */
     CommandData.Relays.cycle_of_1 = 0;

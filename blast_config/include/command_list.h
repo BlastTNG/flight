@@ -254,6 +254,7 @@ enum multiCommand {
   plugh,                // plugh should be at the end of the list
   new_output_atten,
   cal_sweeps,
+  periodic_cal,
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
 
