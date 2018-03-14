@@ -53,7 +53,7 @@
 
 
 extern int16_t InCharge;
-
+extern labjack_state_t state[NUM_LABJACKS];
 
 float voltage_array[13];
 
@@ -77,6 +77,10 @@ typedef struct { // structure to read commands for level and cal pulses
     uint16_t cal_length;
     uint16_t level_length;
 } cryo_control_t;
+
+typedef struct {
+    uint16_t num_pulse, separation, length;
+} periodi_cal_t;
 
 typedef struct { // structure that contains data about heater commands
     uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
@@ -108,6 +112,8 @@ typedef struct { // structure that contains all of the fridge cycling informatio
 heater_control_t heater_state;
 cryo_control_t cryo_state;
 cycle_control_t cycle_state;
+
+periodi_cal_t cal_state;
 
 // pulls data for heater state writing
 static void update_heater_values(void) {
@@ -243,6 +249,61 @@ void cal_control(void) {
             if (pulsed) {
                 labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
                 pulsed = 0;
+            }
+        }
+    }
+}
+
+void periodic_cal_control(void) {
+    static int length, pulsed, down, separation;
+    if (state[0].initialized) {
+        if (CommandData.Cryo.periodic_pulse) {
+            // blast_info("Asked to Pulse");
+            cal_state.length = CommandData.Cryo.length;
+            cal_state.num_pulse = CommandData.Cryo.num_pulse;
+            cal_state.separation = CommandData.Cryo.separation;
+            CommandData.Cryo.periodic_pulse = 0;
+            length = cal_state.length;
+            pulsed = 0;
+            down = 0;
+            separation = cal_state.separation;
+        }
+        // checks to see if the number of pulses is > 0
+        if (cal_state.num_pulse > 0) {
+            // turns on the cal lamp or decrements the length if on
+            if (length > 0) {
+                if (!pulsed) {
+                    pulsed = 1;
+                    // blast_info("%d pulses left", cal_state.num_pulse);
+                    // blast_info("turning on lamp");
+                    labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+                }
+                length--;
+            }
+            if (length == 0) {
+                // turns off the lamp and sets it to wait
+                if (pulsed) {
+                    // blast_info("turning off lamp");
+                    labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+                    down = 1;
+                }
+            }
+            if (down) {
+                // decrements the wait time if waiting
+                if (separation > 0) {
+                    separation--;
+                } else {
+                // restarts the pulse at the end of the wait.
+                    length = cal_state.length;
+                    pulsed = 0;
+                    down = 0;
+                    separation = cal_state.separation;
+                    cal_state.num_pulse--;
+                    // blast_info("Next pulse!");
+                }
+            }
+            if (cal_state.num_pulse == 0) {
+                // blast_info("All out of pulses, sorry");
             }
         }
     }

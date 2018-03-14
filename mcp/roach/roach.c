@@ -1850,13 +1850,16 @@ void save_timestream(roach_state_t *m_roach)
     blast_info("ROACH%d, saving %d points for chan%d over %f sec", m_roach->which, npoints, chan, nsec);
     FILE *fd = fopen(filename, "w");
     for (int i = 0; i < npoints; i++) {
+        blast_info("i = %d", i);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
             I = m_packet.Ival[chan];
             Q = m_packet.Qval[chan];
-	    fprintf(fd, "%g\t %g\n", I, Q);
+            fprintf(fd, "%g\t %g\n", I, Q);
+            blast_info("I, Q: %g\t %g", I, Q);
             m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
         }
     }
