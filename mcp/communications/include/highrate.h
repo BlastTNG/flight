@@ -28,6 +28,7 @@
 #define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
 #define CSBF_HEADER_SIZE 6
+#define HIGHRATE_DATA_PACKET_SIZE 2041
 #define HIGHRATE_SYNC1 0xfa
 #define HIGHRATE_TDRSS_SYNC2 0xff
 #define HIGHRATE_IRIDIUM_SYNC2 0xfd

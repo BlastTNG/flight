@@ -477,6 +477,7 @@ void WatchFIFO(void* void_other_ip)
         } else {
             mcommand = MCommand(command);
 //            bputs(info, "Multi word command received\n");
+            printf("%s\n", command);
             if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
                 SetParametersFifo(mcommand, (uint16_t*)mcommand_data, rvalues,
                         ivalues, svalues);
