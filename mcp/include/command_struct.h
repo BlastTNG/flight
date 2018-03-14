@@ -342,6 +342,8 @@ typedef struct roach
     unsigned int roach_desired_state;
     unsigned int do_cal_sweeps;
     unsigned int get_phase_centers;
+    unsigned int get_timestream;
+    unsigned int chan;
 } roach_status_t;
 
 typedef struct roach_params
@@ -358,6 +360,7 @@ typedef struct roach_params
     double atten_step;
     double npoints;
     double ncycles;
+    double num_sec;
 } roach_params_t;
 
 typedef struct {

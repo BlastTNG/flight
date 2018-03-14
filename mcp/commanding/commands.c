@@ -1882,6 +1882,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].get_phase_centers = 1;
       }
       break;
+    case timestream:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1000)
+                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
+          CommandData.roach[ivalues[0]-1].get_timestream = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2431,6 +2439,7 @@ void InitCommandData()
         CommandData.roach[i].load_vna_amps = 0;
         CommandData.roach[i].load_targ_amps = 0;
         CommandData.roach[i].get_phase_centers = 1;
+        CommandData.roach[i].get_timestream = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2750,6 +2759,8 @@ void InitCommandData()
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
         CommandData.roach_params[i].ncycles = 3;
+        // For saving short timestream
+	CommandData.roach_params[i].num_sec = 1.0;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

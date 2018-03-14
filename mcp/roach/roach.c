@@ -92,7 +92,7 @@
 #define DAC_SAMP_FREQ 512.0e6 /* MUSIC board clock rate, from Valon Synth */
 #define DAC_FULL_SCALE (1 << 15) - 1 /* Full scale value of the 16b DAC */
 #define FPGA_SAMP_FREQ (DAC_SAMP_FREQ/2) /* FPGA clock rate */
-/* Freq resolution of DAC tones = 488.2815 Hz */
+/* Freq resolution of DAC tones = 488.28125 Hz */
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
@@ -177,7 +177,7 @@ char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Tue_Mar_13_17_12_35_2018";
 
 // char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
-char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Tue_Mar_13_18_23_52_2018";
+char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Tue_Mar_13_21_40_45_2018";
 
 char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
 char find_kids_250[] = "/data/etc/blast/roachPython/find_kids_250.py";
@@ -1831,6 +1831,39 @@ void cal_get_mags(roach_state_t *m_roach, uint32_t m_sweep_freq,
     free(Q_avg);
 }
 
+// Save short timestreams for single channel (using for cal lamp tests outside of KST)
+void save_timestream(roach_state_t *m_roach)
+{
+    int chan = CommandData.roach[m_roach->which - 1].chan;
+    double nsec = CommandData.roach_params[m_roach->which - 1].num_sec;
+    blast_info("chan, nsec: %d, %f", chan, nsec);
+    char *savepath;
+    char filename[] = "/home/fc1user/sam_tests/timestream.dat";
+    double I;
+    double Q;
+    int m_num_received = 0;
+    int npoints = round(nsec * (double)DAC_FREQ_RES);
+    int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    uint8_t i_udp_read;
+    blast_tmp_sprintf(savepath, filename);
+    // open file for writing
+    blast_info("ROACH%d, saving %d points for chan%d over %f sec", m_roach->which, npoints, chan, nsec);
+    FILE *fd = fopen(filename, "w");
+    for (int i = 0; i < npoints; i++) {
+        if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
+            m_num_received++;
+            i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
+            data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
+            I = m_packet.Ival[chan];
+            Q = m_packet.Qval[chan];
+	    fprintf(fd, "%g\t %g\n", I, Q);
+            m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+        }
+    }
+    fclose(fd);
+    CommandData.roach[m_roach->which - 1].get_timestream = 0;
+}
+
 /* Function: cal_sweep
  * ----------------------------
  * Performs a calibration sweep
@@ -2453,6 +2486,10 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
+	if (CommandData.roach[i].get_timestream) {
+            blast_info("Save timestream called");
+            save_timestream(&roach_state_table[i]);
+	}
         if (CommandData.roach[i].roach_state) {
             roach_state_table[i].status = CommandData.roach[i].roach_new_state;
             roach_state_table[i].desired_status = CommandData.roach[i].roach_desired_state;
