@@ -19,6 +19,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "FIFO.h"
 #include "bitserver.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
@@ -50,7 +51,9 @@ void tdrss_receive(void *arg) {
   linklist_t * ll = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compressed_buffer = calloc(1, HIGHRATE_MAX_SIZE);
+  uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
+  uint8_t *compressed_buffer = calloc(1, ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize);
+  uint8_t *data_buffer = calloc(1, datasize+1);
 
   uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
   uint8_t *csbf_header = calloc(1, CSBF_HEADER_SIZE);
@@ -72,8 +75,12 @@ void tdrss_receive(void *arg) {
   uint8_t csbf_origin = 0;
   uint8_t csbf_sync2 = 0;
   uint16_t csbf_size = 0;
+  uint8_t csbf_checksum = 0;
+  uint8_t checksum = 0;
   int byte_pos = 0;
   char source_str[32] = {0};
+  int retval = 0;
+  uint32_t recv_size = 0;
 
   while (true) {
       // perform a search for a valid serial
@@ -132,30 +139,52 @@ void tdrss_receive(void *arg) {
 
       // read the rest of the header
       blocking_read(fd, header_buffer+4, PACKET_HEADER_SIZE-4);
-    
-      readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
- 
-      // hijack frame number for transmit size
-      transmit_size = *frame_number;
-      if (transmit_size > ll->blk_size) {
-          blast_err("Transmit size larger than assigned linklist");
-          transmit_size = ll->blk_size;
-      }
+      blocking_read(fd, data_buffer, datasize+1); // +1 for the crc footer
+      csbf_checksum = data_buffer[datasize]; // grab the received checksum
 
+      // compute checksum
+      checksum = 0;
+      for (int i = 2; i < CSBF_HEADER_SIZE; i++) checksum += csbf_header[i];
+      for (int i = 0; i < PACKET_HEADER_SIZE; i++) checksum += header_buffer[i];
+      for (int i = 0; i < datasize; i++) checksum += data_buffer[i];
+
+      if (checksum != csbf_checksum) {
+        blast_info("Checksum error %d != %d", checksum, csbf_checksum);
+      }
+      if (csbf_size != datasize) {
+        blast_info("Data size error %d != %d", datasize, csbf_size);
+      }
       //blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d", transmit_size, ll->blk_size, csbf_size);
 
-      blocking_read(fd, compressed_buffer, transmit_size+1); // +1 for the crc footer
+      readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
+      retval = depacketizeBuffer(compressed_buffer, &recv_size, 
+                               HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE,
+                               i_pkt, n_pkt, data_buffer);
 
-      // decompress the linklist
-      if (!read_allframe(local_superframe, compressed_buffer)) {
-          blast_info("%s Received linklist \"%s\"", source_str, ll->name);
-          // blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-          if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
-              continue;
-          }
-          push_superframe(local_superframe, &tdrss_superframes);
-      } else {
-          blast_info("[TDRSS HGA] Received an allframe :)\n");
+      if ((retval == 0) && (ll != NULL))
+      {
+ 
+        // hijack frame number for transmit size
+        transmit_size = *frame_number;
+        if (transmit_size > ll->blk_size) {
+            blast_err("Transmit size larger than assigned linklist");
+            transmit_size = ll->blk_size;
+        }
+
+
+        // decompress the linklist
+        if (!read_allframe(local_superframe, compressed_buffer)) {
+            blast_info("%s Received linklist \"%s\"", source_str, ll->name);
+            // blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
+            if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
+                continue;
+            }
+            push_superframe(local_superframe, &tdrss_superframes);
+        } else {
+            blast_info("[TDRSS HGA] Received an allframe :)\n");
+        }
+        memset(compressed_buffer, 0, recv_size);
+        recv_size = 0;
       }
       memset(header_buffer, 0, PACKET_HEADER_SIZE);
   }
