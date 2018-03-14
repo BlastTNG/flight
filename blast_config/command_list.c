@@ -951,6 +951,11 @@ struct mcom mcommands[plugh + 2] = {
     {"ROACH desired status", 0, 11, 'i', "NONE"},
   }
   },
+  {COMMAND(calc_phase_centers), "Calculate channel phase centers from TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

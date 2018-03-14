@@ -125,8 +125,6 @@
 #define EXT_REF 0 /* Valon external ref (10 MHz) */
 #define NCAL_POINTS 21 /* Number of points to use for cal sweep */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
-/* If 1, phase centers will be calculated and applied after TARG sweep */
-#define CENTER_PHASE 1
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -460,7 +458,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     // Load random phases (static file for testing)
     blast_info("Roach%d, Loading tone phases", m_roach->which);
     char *phase_path = m_roach->random_phase_path;
-    char *center_phase_command;
     blast_info("Phase file = %s", phase_path);
     FILE *fd = fopen(phase_path, "r");
     if (!fd) {
@@ -475,46 +472,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
             }
         }
         fclose(fd);
-    }
-    if (CENTER_PHASE && (m_freqlen < m_roach->vna_comb_len)) {
-        char *targ_path;
-	struct stat dir_stat;
-        int stat_return;
-        stat_return = stat(m_roach->last_targ_path, &dir_stat);
-        if (stat_return != 0) {
-            blast_info("ROACH%d: NO TARG PATH FOUND, USING TARG SEARCH PATH INSTEAD", m_roach->which);
-            blast_tmp_sprintf(targ_path, targ_search_path);
-	} else {
-            blast_tmp_sprintf(targ_path, m_roach->last_targ_path);
-	}
-	double phase_centers[m_freqlen];
-        double centered_phases[m_freqlen];
-	blast_tmp_sprintf(center_phase_command, "python %s %d %s",
-	              center_phase_script, m_roach->which, targ_path);
-        blast_info("%s", center_phase_command);
-        // Calculate phase centers from last TARG sweep, and write file to disk
-	system(center_phase_command);
-	// Load phase centers and subtract from original phases
-	char *phase_centers_path = m_roach->phase_centers_path;
-        FILE *centers_file = fopen(phase_centers_path, "r");
-        if (!centers_file) {
-            blast_strerror("Could not open %s for reading", phase_centers_path);
-        } else {
-            blast_info("Opened %s", phase_centers_path);
-            for (size_t i = 0; i < m_freqlen; i++) {
-                if (fscanf(fd, "%lg\n", &phase_centers[i]) != EOF) {
-                    blast_info("Roach%d phase_centers: %g", m_roach->which, phase_centers[i]);
-                } else {
-                    break;
-                }
-            }
-            fclose(centers_file);
-        }
-    // Subtract phase centers from original tone phases
-        for (size_t i = 0; i < m_freqlen; i++) {
-            centered_phases[i] = phases[i] - phase_centers[i];
-            blast_info("Roach%d centered phase: %g", m_roach->which, phase_centers[i]);
-        }
     }
     // TODO(Sam) Combine vna and targ cases into one?
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
@@ -652,7 +609,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
  *
 */
 static int roach_ddc_comb(roach_state_t *m_roach, double m_freq, size_t m_freqlen,
-                            int m_samp_freq, int m_bin, double *m_I, double *m_Q)
+                            double m_phase, int m_samp_freq, int m_bin, double *m_I, double *m_Q)
 {
     size_t comb_fft_len;
     fftw_plan comb_plan;
@@ -660,7 +617,7 @@ static int roach_ddc_comb(roach_state_t *m_roach, double m_freq, size_t m_freqle
     complex double *spec = calloc(comb_fft_len, sizeof(complex double));
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
     double max_val = 0.0;
-    spec[m_bin] = cexp(_Complex_I * 0.);
+    spec[m_bin] = cexp(_Complex_I * m_phase);
     // blast_info("DDC spec = %f, %f", creal(spec[m_bin]), cimag(spec[m_bin]));
     pthread_mutex_lock(&fft_mutex);
     comb_plan = fftw_plan_dft_1d(comb_fft_len, spec, wave, FFTW_BACKWARD, FFTW_ESTIMATE);
@@ -869,6 +826,35 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
         m_roach->DDC.len = LUT_BUFFER_LEN;
     }
 
+    double phases[m_freqlen];
+    for (size_t i = 0; i < m_freqlen; i++) {
+        phases[i] = 0.0;
+    }
+    if (CommandData.roach[m_roach->which - 1].get_phase_centers &&
+                        (m_freqlen < m_roach->vna_comb_len)) {
+	double phase_centers[m_freqlen];
+	// Load phase centers and subtract from original phases
+	char *phase_centers_path = m_roach->phase_centers_path;
+        FILE *centers_file = fopen(phase_centers_path, "r");
+        if (!centers_file) {
+            blast_strerror("Could not open %s for reading", phase_centers_path);
+        } else {
+            blast_info("Opened %s", phase_centers_path);
+            for (size_t i = 0; i < m_freqlen; i++) {
+                if (fscanf(centers_file, "%lg\n", &phase_centers[i]) != EOF) {
+                    blast_info("Roach%d phase_centers: %g", m_roach->which, phase_centers[i]);
+                } else {
+                    break;
+                }
+            }
+            fclose(centers_file);
+        }
+        for (size_t i = 0; i < m_freqlen; i++) {
+            phases[i] = phase_centers[i];
+        }
+    // CommandData.roach[m_roach->which - 1].get_phase_centers = 0;
+    }
+
     for (size_t i = 0; i < m_freqlen; i++) {
 	double Ival[2 * fft_len];
     	double Qval[2 * fft_len];
@@ -877,7 +863,7 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
 	if (bin < 0) {
 	    bin += 2048;
 	}
-	roach_ddc_comb(m_roach, m_roach->freq_residuals[i], m_freqlen,
+	roach_ddc_comb(m_roach, m_roach->freq_residuals[i], m_freqlen, phases[i],
                         FPGA_SAMP_FREQ / (fft_len / 2), bin, Ival, Qval);
         for (int j = i, k = 0; k < 2*fft_len; j += fft_len, k++) {
 	    m_roach->DDC.Ival[j] = Ival[k];
@@ -1655,6 +1641,21 @@ int recenter_lo(roach_state_t *m_roach)
     return 0;
 }
 
+void phase_centers(roach_state_t *m_roach, char *m_targ_path)
+{
+    if (!m_targ_path) {
+        blast_info("Roach%d, NO TARG PATH FOUND, using TARG SEARCH PATH:%s instead",
+                m_roach->which, targ_search_path);
+        blast_tmp_sprintf(m_targ_path, targ_search_path);
+    }
+    char *center_phase_command;
+    blast_tmp_sprintf(center_phase_command, "python %s %d %s",
+                  center_phase_script, m_roach->which, m_targ_path);
+    blast_info("%s", center_phase_command);
+    // Calculate phase centers from last TARG sweep, and write file to disk
+    system(center_phase_command);
+}
+
 // TODO(Sam) add cal and grad sweeps as sweep types
 /* Function: roach_do_sweep
  * ----------------------------
@@ -1681,7 +1682,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     size_t comb_len;
     // struct stat dir_stat;
     // int stat_return;
-    if ((sweep_type == VNA)) {
+    if (sweep_type == VNA) {
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA)) {
             // TODO(Sam) for short sweep, m_span = VNA_SWEEP_SPAN
@@ -1703,7 +1704,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
              return SWEEP_FAIL;
          }
     }
-    if ((sweep_type == TARG)) {
+    if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
         // stat_return = stat(m_roach->last_targ_path, &dir_stat);
         // if (stat_return != 0) {
@@ -1788,6 +1789,9 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     }
     free(m_sweep_freqs);
     CommandData.roach[ind].do_sweeps = 0;
+    if (sweep_type == TARG) {
+        phase_centers(m_roach, m_roach->last_targ_path);
+    }
     return SWEEP_SUCCESS;
 }
 
@@ -2007,7 +2011,7 @@ int cal_sweep_attens(roach_state_t *m_roach)
     return SWEEP_SUCCESS;
 }
 
-int calc_grad_freqs(roach_state_t *m_roach, char* m_targ_path)
+int calc_grad_freqs(roach_state_t *m_roach, char *m_targ_path)
 {
     if (!m_targ_path) {
         blast_info("Roach%d, NO TARG PATH FOUND, using TARG SEARCH PATH:%s instead",

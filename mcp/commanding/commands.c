@@ -1877,6 +1877,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].roach_state = 1;
       }
       break;
+    case calc_phase_centers:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].get_phase_centers = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2425,6 +2430,7 @@ void InitCommandData()
         CommandData.roach[i].new_atten = 0;
         CommandData.roach[i].load_vna_amps = 0;
         CommandData.roach[i].load_targ_amps = 0;
+        CommandData.roach[i].get_phase_centers = 1;
     }
 
     CommandData.Bias.biasRamp = 0;
