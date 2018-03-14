@@ -1704,6 +1704,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.num_pulse = ivalues[0];
       CommandData.Cryo.separation = ivalues[1];
       CommandData.Cryo.length = ivalues[2];
+      break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
       CommandData.Cryo.labjack = ivalues[0];
