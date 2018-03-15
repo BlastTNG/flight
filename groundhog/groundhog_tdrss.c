@@ -36,7 +36,7 @@ int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
 {
     int i = 0;
     while (1) { 
-        if (read(fd, buffer+i, 1)) {
+        if (read(fd, buffer+i, 1) > 0) {
             i++;
         } else {
             usleep(1000);
@@ -52,7 +52,8 @@ void tdrss_receive(void *arg) {
 
   uint8_t *local_superframe = allocate_superframe();
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
-  uint8_t *compressed_buffer = calloc(1, ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize);
+  uint32_t buffer_size = ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize;
+  uint8_t *compressed_buffer = calloc(1, buffer_size);
   uint8_t *data_buffer = calloc(1, datasize+1);
 
   uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
@@ -91,12 +92,12 @@ void tdrss_receive(void *arg) {
               if (byte_pos == 0) { // check first sync byte
                   if (byte == HIGHRATE_SYNC1) { // check first sync byte
                       csbf_header[byte_pos++] = byte;
-                      //printf("Tentative 1\n");
+                      // printf("Tentative 1\n");
                   }
               } else if (byte_pos == 1) { // check 2nd sync byte
                   if ((byte == HIGHRATE_TDRSS_SYNC2) || (byte == HIGHRATE_IRIDIUM_SYNC2)) { 
                   csbf_header[byte_pos++] = byte;
-                  //printf("Definite 0\n");
+                  // printf("Definite 0\n");
                   } else { // false alarm, lost sync
                       byte_pos = 0;
                   }
@@ -149,23 +150,26 @@ void tdrss_receive(void *arg) {
       for (int i = 0; i < datasize; i++) checksum += data_buffer[i];
 
       if (checksum != csbf_checksum) {
-        blast_info("Checksum error %d != %d", checksum, csbf_checksum);
+        blast_info("Checksum error 0x%.2x != 0x%.2x", checksum, csbf_checksum);
       }
-      if (csbf_size != datasize) {
+      if (csbf_size != (datasize+PACKET_HEADER_SIZE)) {
         blast_info("Data size error %d != %d", datasize, csbf_size);
       }
-      //blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d", transmit_size, ll->blk_size, csbf_size);
-
       readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
+      transmit_size = *frame_number;
+
+      // blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d, datasize=%d, i=%d, n=%d", transmit_size, ll->blk_size, csbf_size, datasize, *i_pkt, *n_pkt);
+
       retval = depacketizeBuffer(compressed_buffer, &recv_size, 
                                HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE,
                                i_pkt, n_pkt, data_buffer);
+
+      memset(data_buffer, 0, datasize+1);
 
       if ((retval == 0) && (ll != NULL))
       {
  
         // hijack frame number for transmit size
-        transmit_size = *frame_number;
         if (transmit_size > ll->blk_size) {
             blast_err("Transmit size larger than assigned linklist");
             transmit_size = ll->blk_size;
@@ -183,7 +187,7 @@ void tdrss_receive(void *arg) {
         } else {
             blast_info("[TDRSS HGA] Received an allframe :)\n");
         }
-        memset(compressed_buffer, 0, recv_size);
+        memset(compressed_buffer, 0, buffer_size);
         recv_size = 0;
       }
       memset(header_buffer, 0, PACKET_HEADER_SIZE);
