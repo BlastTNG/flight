@@ -50,16 +50,19 @@ void highrate_compress_and_send(void *arg) {
 
   linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
-
-  unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
-
   comms_serial_t * serial = comms_serial_new(NULL);
 
-  uint8_t * csbf_header = calloc(1, CSBF_HEADER_SIZE);
-  uint8_t csbf_checksum = 0;
-  uint8_t * header_buffer = calloc(1, PACKET_HEADER_SIZE);
+  unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
+  unsigned int csbf_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
-  unsigned int buffer_size =  ((fifosize-1)/datasize+1)*datasize;
+  unsigned int buffer_size = ((fifosize-1)/datasize+1)*datasize;
+
+  uint8_t * csbf_packet = calloc(1, csbf_packet_size);
+  uint8_t * csbf_header = csbf_packet+0;
+  uint8_t * header_buffer = csbf_header+CSBF_HEADER_SIZE;
+  uint8_t * data_buffer = header_buffer+PACKET_HEADER_SIZE;
+  uint8_t * csbf_checksum = header_buffer+HIGHRATE_DATA_PACKET_SIZE;
+
   uint8_t * compressed_buffer = calloc(1, buffer_size);
   int allframe_count = 0;
   uint32_t bandwidth = 0, transmit_size = 0;
@@ -129,33 +132,26 @@ void highrate_compress_and_send(void *arg) {
         // have packet header serials match the linklist serials
         writeHeader(header_buffer, *(uint32_t *) ll->serial, transmit_size, i_pkt, n_pkt);
 
+        // copy the data to the csbf packet
+        memcpy(data_buffer, chunk, datasize); 
+
         // compute checksum
-        csbf_checksum = 0;
-        for (i = 2; i < CSBF_HEADER_SIZE; i++) csbf_checksum += csbf_header[i];
-        for (i = 0; i < PACKET_HEADER_SIZE; i++) csbf_checksum += header_buffer[i];
-        for (i = 0; i < datasize; i++) csbf_checksum += chunk[i];
+        *csbf_checksum = 0;
+        for (i = 2; i < CSBF_HEADER_SIZE; i++) *csbf_checksum += csbf_header[i];
+        for (i = 0; i < PACKET_HEADER_SIZE; i++) *csbf_checksum += header_buffer[i];
+        for (i = 0; i < datasize; i++) *csbf_checksum += chunk[i];
 
-        // send the headers
-        if (write(serial->sock->fd, csbf_header, CSBF_HEADER_SIZE) < 0) { // send csbf header 
-          get_serial_fd = 1;
-          break;
-        }
-        if (write(serial->sock->fd, header_buffer, PACKET_HEADER_SIZE) < 0) { // send our header
-          get_serial_fd = 1;
-          break;
-        }
+        // blast_info("Transmit size %d, datasize %d, i %d, n %d, csbf_packet_size %d, checksum 0x%x", transmit_size, datasize, i_pkt, n_pkt, csbf_packet_size, *csbf_checksum); 
 
-        // send the data to the ground station via ttyHighRate
-        if (write(serial->sock->fd, chunk, datasize) < 0) {
+        // send the full packet 
+        unsigned int wrote = write(serial->sock->fd, csbf_packet, csbf_packet_size);
+        if (wrote < 0) { // send csbf header 
           get_serial_fd = 1;
           break;
+        } else if (wrote != csbf_packet_size) {
+          blast_err("Could only send %d/%d bytes\n", wrote, csbf_packet_size);
         }
-
-        // send the checksum as the last byte
-        if (write(serial->sock->fd, &csbf_checksum, 1) < 0) {
-          get_serial_fd = 1;
-          break;
-        }
+        memset(data_buffer, 0, HIGHRATE_DATA_PACKET_SIZE);
 
         i_pkt++;
         usleep(1000);
