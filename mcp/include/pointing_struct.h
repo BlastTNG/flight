@@ -205,7 +205,7 @@ struct AxesModeStruct {
   unsigned int i_dith;
 };
 
-extern time_t csbf_gps_time;
+// extern time_t csbf_gps_time;
 
 typedef struct XSCLastTriggerState
 {

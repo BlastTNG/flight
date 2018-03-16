@@ -81,6 +81,7 @@ derived_tng_t derived_list[] = {
   BITWORD("UPLINK_SCHED", "status_mcc", 2, 1),
   BITWORD("BLAST_SUCKS", "status_mcc", 3, 1),
   BITWORD("SCHEDULE", "status_mcc", 4, 3),
+  BITWORD("INCHARGE", "status_mcc", 7, 1),
   BITWORD("SLOT_SCHED", "status_mcc", 8, 8),
 
   BITWORD("STATUS_ISC_ETH", "status_eth", 2, 2),
@@ -524,6 +525,14 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_vcs2_hx", "TD_VCS2_HX_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs1_plate", "TD_VCS1_PLATE_INT", LUT_DIR "dt670_orig.text"),
 
+    COMMENT("Highbay stuff"), // raw calibration only -- warning!
+    LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
+    LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
+    LINCOM("He_Pot_Hi_Flow", "HE_POT_HI_FLOW_V", 1, 0),
+    LINCOM("He_Pot_Hi_Flow", "HE_POT_LO_FLOW_V", 20, 0),
+    LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", 200, 0), // in mL/min
+    LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
+
 
   COMMENT("ROXes"), // raw calibration only -- warning!
     LINCOM("TR_FPA_1K_INT", "TR_FPA_1K", -1, 0),
@@ -536,7 +545,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TR_500_FPA_INT", "TR_500_FPA", -1, 0),
     LINCOM("ROX_BIAS_INT", "ROX_BIAS", -1, 0),
     LINTERP("NOMINAL_BIAS", "ROX_BIAS_INT", LUT_DIR "Vbias_LUT.txt"),
-    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.42763512, 0),
+    LINCOM("ROX_BIAS_COMPARE", "ROX_BIAS_INT", 3.296602587, 0),
     DIVIDE("TR_FPA_1K_CORRECTED", "TR_FPA_1K_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_250_FPA_CORRECTED", "TR_250_FPA_INT", "ROX_BIAS_COMPARE"),
     DIVIDE("TR_1K_PLATE_CORRECTED", "TR_1K_PLATE_INT", "ROX_BIAS_COMPARE"),
@@ -572,7 +581,7 @@ derived_tng_t derived_list[] = {
     // cryo labjack stuff below
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
-    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", .0809, 2.0218),
+    LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),

@@ -35,13 +35,6 @@ if (USE_CLANG)
     SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 endif(USE_CLANG)
 
-option(NO_KIDS_TEST "do not write kids data or call roach fns" OFF)
-
-if (NO_KIDS_TEST)
-    add_definitions(-DNO_KIDS_TEST)
-endif(NO_KIDS_TEST)
-
-
 SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99 -mcx16")
 SET (CMAKE_C_FLAGS_DEBUG            "-O0 -fno-omit-frame-pointer -ggdb")
 SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
@@ -173,26 +166,6 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
-# add katcp library
-set(KATCP_LIBRARY ${PROJECT_BINARY_DIR}/katcp/libkatcp.a)
-ExternalProject_Add(katcp 
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/katcp 
-    BINARY_DIR ${PROJECT_BINARY_DIR}/katcp 
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/katcp
-    INSTALL_COMMAND "")
-
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/katcp)
-
-# build socat
-ExternalProject_Add(socat
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/socat
-    BINARY_DIR ${PROJECT_BINARY_DIR}/socat
-    URL ${PROJECT_SOURCE_DIR}/../external_libs/socat
-    CONFIGURE_COMMAND ./src/socat/configure 
-    #BUILD_IN_SOURCE 1
-    BUILD_COMMAND make
-    INSTALL_COMMAND "")
-
 # add our version of libphenom
 ExternalProject_Add(phenomproj
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/phenom
@@ -245,25 +218,6 @@ ENDIF()
 include_directories(${MODBUS_INCLUDE_DIR})
 
 
-# Find fftw
-pkg_check_modules(PC_FFTW3 QUIET fftw3)
-set(FFTW3_DEFINITIONS ${PC_FFTW3_CFLAGS_OTHER})
-
-find_path(FFTW3_INCLUDE_DIR fftw3.h
-          HINTS ${PC_FFTW3_INCLUDEDIR} ${PC_FFTW3_INCLUDE_DIRS}
-          REQUIRED)
-
-find_library(FFTW3_LIBRARY NAMES libfftw3 fftw3
-            HINTS ${PC_FFTW3_LIBDIR} ${PC_FFTW3_LIBRARY_DIRS} REQUIRED)
-IF(NOT FFTW3_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find fftw3.h.  Is libfftw3-dev installed?")
-ENDIF()
-IF(NOT FFTW3_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libfftw3.  Please install this using apt-get.")
-ENDIF()
-include_directories(${FFTW3_INCLUDE_DIR})
-
-
 # Find libusb    
 pkg_check_modules(PC_USB QUIET libusb-1.0)
 set(USB_DEFINITIONS ${PC_USB_CFLAGS_OTHER})
@@ -295,7 +249,9 @@ set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
-set(SOCAT_DIR "${PROJECT_SOURCE_DIR}/../external_libs/socat")
+set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
+set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/communications/")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -305,7 +261,10 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
+    "${COMMUNICATIONS_DIR}/include"
     "${MPSSE_DIR}"
+    "${SYNCLINK_DIR}"
+    "${LINKLIST_DIR}"
     )
 
 # add commanding objects
@@ -345,8 +304,8 @@ add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 # add MPSSE Files
 add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
 
-# add SOCAT Files
-add_subdirectory(${SOCAT_DIR} "${PROJECT_BINARY_DIR}/socat")
+#add linklists files
+add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklists")
 
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
@@ -356,8 +315,8 @@ add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 define_file_basename_for_sources(sensors)
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 define_file_basename_for_sources(commanding)
-add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
-define_file_basename_for_sources(mcp_comms)
+add_library (communications OBJECT ${MCP_COMMUNICATIONS_SRCS} ${MCP_COMMUNICATIONS_HEADERS})
+define_file_basename_for_sources(communications)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 define_file_basename_for_sources(housekeeping)
 add_library (diskmanager OBJECT ${DISKMANAGER_SRCS} ${DISKMANAGER_HEADERS})
@@ -371,6 +330,8 @@ add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
 define_file_basename_for_sources(mpsse)
+add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
+define_file_basename_for_sources(linklist)
 
 add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
 define_file_basename_for_sources(roach)
@@ -388,7 +349,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:housekeeping>
     $<TARGET_OBJECTS:diskmanager>
     $<TARGET_OBJECTS:commanding>
-    $<TARGET_OBJECTS:mcp_comms>
+    $<TARGET_OBJECTS:communications>
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>
@@ -398,6 +359,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
+    $<TARGET_OBJECTS:linklist>
     ) 
 
 add_dependencies(mcp soem phenomproj)
@@ -407,11 +369,9 @@ define_file_basename_for_sources(mcp)
 target_link_libraries(mcp 
 	${ALSA_LIBRARY}
 	${MODBUS_LIBRARY}
-	${FFTW3_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
-    ${MOSQ_LIBRARY}  
-    ${GLIB_LIBRARY}  
-    ${KATCP_LIBRARY} 
+    ${MOSQ_LIBRARY}
+    ${GLIB_LIBRARY}
     ${ECAT_LIBRARY}
     ${CK_LIBRARY}
     ${PH_LIBRARY}
@@ -424,10 +384,10 @@ target_link_libraries(mcp
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
 		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
-		mcp.c tx.c
+		mcp.c tx.c ${PROJECT_SOURCE_DIR}/../common/linklist/bitserver.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
-		${ROACH_HEADERS}
+		${ROACH_HEADERS} 
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)
@@ -436,7 +396,7 @@ string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_
 
 add_custom_command(TARGET mcp PRE_BUILD
 	#COMMAND /bin/echo ${check_files}
-	COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
+	#COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	COMMENT "Checking Code Style"
 	VERBATIM

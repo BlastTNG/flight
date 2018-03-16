@@ -53,7 +53,7 @@
 
 
 extern int16_t InCharge;
-
+extern labjack_state_t state[NUM_LABJACKS];
 
 float voltage_array[13];
 
@@ -99,7 +99,8 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     int burning_counter;
     int reheating;
     // change these to the 16bit values. (uint16_t)
-    uint16_t tcrit_fpa; // this will likely get changed in the future
+    uint16_t tcrit_fpa; // this will likely get changed in the future (around 300mK)
+    // 30170 or so
     // likely have 3 different t crit
     uint16_t tcrit_charcoal; // temp of charcoal
     uint16_t tmin_charcoal; // minimum during burnoff
@@ -147,7 +148,7 @@ void heater_control(void) {
         heater_status_Addr = channels_find_by_name("heater_status_write");
         // read in the heater channels and update accordingly here
     }
-    if (InCharge == 1) {
+    if (state[0].initialized) {
         if (CommandData.Cryo.heater_update == 1) {
             CommandData.Cryo.heater_update = 0;
             update_heater_values();
@@ -209,7 +210,7 @@ void heater_read(void) {
     labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
     labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
     if (first_time_read == 1) {
-        first_time_read == 0;
+        first_time_read = 0;
         heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
         cal_lamp_status_Addr = channels_find_by_name("status_cal_lamp");
     }
@@ -218,40 +219,31 @@ void heater_read(void) {
 // function that creates cal lamp pulses via the mcp loop
 // utilizes the cryo control structure
 void cal_control(void) {
-    if (CommandData.Cryo.do_cal_pulse) {
-        cryo_state.cal_length = CommandData.Cryo.cal_length;
-        CommandData.Cryo.do_cal_pulse = 0;
-    }
-    if (CommandData.Cryo.do_cal_pulse) {
-        cryo_state.cal_length = CommandData.Cryo.cal_length;
-        CommandData.Cryo.do_cal_pulse = 0;
-    }
-    static int pulsed = 0;
-    if (cryo_state.cal_length > 0) {
-        if (!pulsed) {
-            pulsed = 1;
-            labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+    if (state[0].initialized) {
+        if (CommandData.Cryo.do_cal_pulse) {
+            cryo_state.cal_length = CommandData.Cryo.cal_length;
+            CommandData.Cryo.do_cal_pulse = 0;
         }
         static int pulsed = 0;
-        if (cryo_state.cal_length > 0) {
-            if (!pulsed) {
-                pulsed = 1;
-                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
-            }
-            cryo_state.cal_length--;
-        } else {
-            if (pulsed) {
-                labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
-                pulsed = 0;
+            if (cryo_state.cal_length > 0) {
+                if (!pulsed) {
+                    pulsed = 1;
+                    labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 1);
+                }
+                cryo_state.cal_length--;
+            } else {
+                if (pulsed) {
+                    labjack_queue_command(LABJACK_CRYO_1, CALLAMP_COMMAND, 0);
+                    pulsed = 0;
+                }
             }
         }
     }
-}
 
 // function that creates level sensor pulses via the mcp loop
 // utilizes the cryo control structure
 void level_control(void) {
-    if (InCharge) {
+    if (state[0].initialized) {
         if (CommandData.Cryo.do_level_pulse) {
             cryo_state.level_length = CommandData.Cryo.level_length;
             CommandData.Cryo.do_level_pulse = 0;
@@ -273,7 +265,7 @@ void level_control(void) {
 }
 
 void level_toggle(void) {
-    if (InCharge) {
+    if (state[0].initialized) {
         static int level_state = 1;
         if (CommandData.Cryo.do_level_pulse) {
             CommandData.Cryo.do_level_pulse = 0;
@@ -415,7 +407,7 @@ void read_thermometers(void) {
         heater_300mk_Addr = channels_find_by_name("heater_300mk_read");
         firsttime_therm = 0;
     }
-    if (InCharge == 1) {
+    if (state[0].initialized && state[1].initialized) {
         SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS));
         SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_FILT));
         SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_250FPA));
@@ -444,18 +436,9 @@ void read_thermometers(void) {
         SET_SCALED_VALUE(rox_bias_Addr, labjack_get_value(LABJACK_CRYO_2, BIAS));
         // below are the random cryo labjack channels
         SET_SCALED_VALUE(level_sensor_read_Addr, labjack_get_value(LABJACK_CRYO_2, LEVEL_SENSOR_READ));
-        SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ));
+        SET_SCALED_VALUE(cal_lamp_Addr, labjack_get_value(LABJACK_CRYO_2, CAL_LAMP_READ)); // mve to 200 hz
         SET_SCALED_VALUE(heater_300mk_Addr, labjack_get_value(LABJACK_CRYO_2, HEATER_300MK_READ));
     }
-}
-
-void read_alarm_gauge(void) {
-    static int first_gauge = 1;
-    static channel_t* gauge_Addr;
-    if (first_gauge) {
-        gauge_Addr = channels_find_by_name("alarm_gauge");
-    }
-    SET_SCALED_VALUE(gauge_Addr, labjack_get_value(LABJACK_HIGHBAY, 0));
 }
 
 void read_chopper(void)
@@ -472,7 +455,7 @@ void read_chopper(void)
 		firsttime = 0;
 		stage_chopper_Addr = channels_find_by_name("stage_chopper");
 	}
-    if (InCharge == 1) {
+    if (state[1].initialized) {
         SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(1, 12));
     }
 }
@@ -500,13 +483,17 @@ static void init_cycle_channels(void) {
 }
 
 static void init_cycle_values(void) {
-    cycle_state.standby = 0;
-    cycle_state.cooling = 0;
-    cycle_state.burning_off = 0;
-    cycle_state.heating = 0;
+    // states
+    cycle_state.standby = 0; // waiting
+    cycle_state.cooling = 0; // cooling to operation temp
+    cycle_state.burning_off = 0; // cooking the charcoal
+    cycle_state.heating = 0; // heating the charcoal
+    // counter for HS cooling
     cycle_state.heat_delay = 0;
+    // temperatures of the charcoal
     cycle_state.tcharcoal = 0;
     cycle_state.tcharcoal_old = 0;
+    // array temps
     cycle_state.t250 = 0;
     cycle_state.t350 = 0;
     cycle_state.t500 = 0;
@@ -560,13 +547,16 @@ static void standby_cycle(void) {
         cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
         cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
         cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        // checks each array sequentially to see if the temperature is over the acceptable temp
         if (cycle_state.t250 > cycle_state.tcrit_fpa) {
             cycle_state.standby = 0;
             cycle_state.heating = 1;
+            blast_info("moving on to the heating phase");
         } else {
             if (cycle_state.t350 > cycle_state.tcrit_fpa) {
                 cycle_state.standby = 0;
                 cycle_state.heating = 1;
+                blast_info("moving on to the heating phase");
             } else {
                 if (cycle_state.t500 > cycle_state.tcrit_fpa) {
                     cycle_state.standby = 0;
@@ -704,7 +694,7 @@ static void output_cycle(void) {
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
-    if (InCharge == 1) {
+    if (state[0].initialized && state[1].initialized) {
         if (first_time == 1) {
             blast_info("initalizing");
             init_cycle_channels();
@@ -730,20 +720,21 @@ void force_incharge(void) {
 }
 
 void cryo_1hz(int setting_1hz) {
-    if (setting_1hz == 1) {
+    if (setting_1hz == 1 && state[0].initialized && state[1].initialized) {
         heater_control();
         heater_read();
         load_curve_300mk();
-        read_thermometers();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
-    if (setting_200hz == 1) {
+    if (setting_200hz == 1 && state[0].initialized && state[1].initialized) {
         cal_control();
+        read_thermometers();
     }
-    if (setting_200hz == 2) {
+    if (setting_200hz == 2 && state[0].initialized && state[1].initialized) {
         read_chopper();
+        read_thermometers();
     }
 }
 

@@ -43,6 +43,7 @@
 #include "blast.h"
 #include "command_common.h"
 #include "command_struct.h"
+#include "commands.h"
 #include "mcp.h"
 
 #define REQ_POSITION    0x50
@@ -84,17 +85,21 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled); // commands.c
 
 
-#ifdef USE_SIP_CMD
 int sip_setserial(const char *input_tty)
 {
   int fd;
   struct termios term;
 
-  if ((fd = open(input_tty, O_RDWR)) < 0)
-    berror(tfatal, "Unable to open serial port");
+  blast_info("Connecting to sip port %s...", input_tty);
 
-  if (tcgetattr(fd, &term))
-    berror(tfatal, "Unable to get serial device attributes");
+  if ((fd = open(input_tty, O_RDWR)) < 0) {
+    blast_err("Unable to open serial port");
+    return -1;
+  }
+  if (tcgetattr(fd, &term)) {
+    blast_err("Unable to get serial device attributes");
+    return -1;
+  }
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -106,20 +111,26 @@ int sip_setserial(const char *input_tty)
   term.c_oflag &= ~(OPOST);
   term.c_cflag |= CS8;
 
-  if (cfsetospeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Error setting serial output speed");
+  if (cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial output speed");
+    if (fd >= 0) fclose(fd);
+    return -1;
+  }
 
-  if (cfsetispeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Error setting serial input speed");
+  if (cfsetispeed(&term, B1200)) {         /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial input speed");
+    if (fd >= 0) fclose(fd);
+    return -1;
+  }
 
-  if (tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "Unable to set serial attributes");
-
+  if (tcsetattr(fd, TCSANOW, &term)) {
+    blast_err("Unable to set serial attributes");
+    if (fd >= 0) fclose(fd);
+    return -1;
+  }
   return fd;
 }
-#endif    // USE_SIP_CMD
 
-#ifdef USE_SIP_CMD
 static float ParseGPS(unsigned char *data)
 {
   char exponent;
@@ -154,7 +165,7 @@ static float ParseGPS(unsigned char *data)
   return((mantissa + 1) * pow(2, exponent) * sign);
 }
 
-static void SendRequest(int req, char tty_fd)
+int SendRequest(int req, char tty_fd)
 {
   unsigned char buffer[3];
 
@@ -167,10 +178,12 @@ static void SendRequest(int req, char tty_fd)
       buffer[0], buffer[1], buffer[2]);
 #endif
 
-  if (write(tty_fd, buffer, 3) < 0)
+  if (write(tty_fd, buffer, 3) < 0) {
     berror(warning, "error sending SIP request\n");
+    return 0;
+  }
+  return 1;
 }
-#endif    // USE_SIP_CMD
 
 
 
@@ -273,7 +286,6 @@ static void SetParameters(enum multiCommand command, uint16_t *dataq, double* rv
     }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSPosition(unsigned char *indata)
 {
     double lat;
@@ -289,10 +301,9 @@ static void GPSPosition(unsigned char *indata)
 
         SIPData.GPSpos.alt = ParseGPS(indata + 8);
 
-        WritePrevStatus();
+//        WritePrevStatus();
     }
 }
-#endif    // USE_SIP_CMD
 
 void ScheduledCommand(struct ScheduleEvent *event)
 {
@@ -329,7 +340,6 @@ void ScheduledCommand(struct ScheduleEvent *event)
   }
 }
 
-#ifdef USE_SIP_CMD
 static void GPSTime(unsigned char *indata)
 {
   float GPStime, offset;
@@ -346,7 +356,7 @@ static void GPSTime(unsigned char *indata)
     SUN_JAN_6_1980;
   SIPData.GPStime.CPU = CPUtime;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 static void MKSAltitude(unsigned char *indata)
@@ -355,7 +365,7 @@ static void MKSAltitude(unsigned char *indata)
   SIPData.MKSalt.med = ((uint16_t *)indata)[1];;
   SIPData.MKSalt.lo = ((uint16_t *)indata)[2];;
 
-  WritePrevStatus();
+//  WritePrevStatus();
 }
 
 /* Send TDRSS Low Rate Packet */
@@ -364,15 +374,15 @@ static void SendDownData(char tty_fd)
 {
   unsigned char buffer[3 + SLOWDL_LEN + 1];
 
-//  buffer[0] = SLOWDL_DLE;
-//  buffer[1] = SLOWDL_SYNC;
-//  buffer[2] = SLOWDL_LEN;
+  buffer[0] = SLOWDL_DLE;
+  buffer[1] = SLOWDL_SYNC;
+  buffer[2] = SLOWDL_LEN;
 //  fillDLData(buffer+3, SLOWDL_LEN);
 //
-//  buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
-//  if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {
-//    berror(warning, "Error writing to SlowDL\n");
-//  }
+  buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
+  if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {
+    berror(warning, "Error writing to SlowDL\n");
+  }
 }
 
 /* compute the size of the data queue for the given command */
@@ -389,10 +399,7 @@ static int DataQSize(int index)
 
   return size;
 }
-#endif    // USE_SIP_CMD
 
-
-#ifdef USE_FIFO_CMD
 void WatchFIFO(void* void_other_ip)
 {
     unsigned char buf[1];
@@ -484,9 +491,7 @@ void WatchFIFO(void* void_other_ip)
         pthread_mutex_unlock(&mutex);
     }
 }
-#endif  // USE_FIFO_CMD
 
-#ifdef USE_SIP_CMD
 
 struct LibraryStruct
 {
@@ -599,7 +604,7 @@ void ProcessUplinkSched(unsigned char *extdat)
 
 void WatchPort(void* parameter)
 {
-    const char *COMM[] = { "/dev/ttyS0", "/dev/ttyS1" };
+    const char *COMM[] = { "/dev/ttyCOMM1", "/dev/ttyCOMM2" };
     const unsigned char route[2] = { 0x09, 0x0c };
 
     unsigned char buf;
@@ -627,46 +632,70 @@ void WatchPort(void* parameter)
     unsigned char extdat[256];
 
     char tname[6];
-    snprintf(tname, sizeof(tname), "COMM%1d", port + 1);
+    snprintf(tname, sizeof(tname), "COMM%1d", (int) (port + 1));
     nameThread(tname);
     // blast_startup("WatchPort startup\n");
-
-    tty_fd = sip_setserial(COMM[port]);
+    int get_serial_fd = 1;
 
     for (;;) {
+        // wait for a valid file descriptor
+    		while (get_serial_fd) {
+            if ((tty_fd = sip_setserial(COMM[port])) >= 0) {
+                break;
+            }
+            sleep(5);
+        }
+        get_serial_fd = 0;
+
         /* Loop until data come in */
         while (read(tty_fd, &buf, 1) <= 0) {
             timer++;
             /** Request updated info every 50 seconds */
             if (timer == 800) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_POSITION, tty_fd);
+                if (!SendRequest(REQ_POSITION, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Position\n");
 #endif
                 pthread_mutex_unlock(&mutex);
             } else if (timer == 1700) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_TIME, tty_fd);
+                if (!SendRequest(REQ_TIME, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Time\n");
 #endif
                 pthread_mutex_unlock(&mutex);
             } else if (timer > 2500) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_ALTITUDE, tty_fd);
+                if (!SendRequest(REQ_ALTITUDE, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Altitude\n");
 #endif
                 pthread_mutex_unlock(&mutex);
                 timer = 0;
             }
+
+            // serial connection has been lost, so break out of the loop
+            if (get_serial_fd) break;
+
             usleep(10000); /* sleep for 10ms */
         }
+
+        // catch io errors due to bad file descriptor
+        if (get_serial_fd) {
+            blast_err("Serial connection on %s lost\n", COMM[port]);
+            continue;
+        }
+
 #ifdef VERBOSE_SIP_CHATTER
         blast_info("read SIP byte %02x\n", buf);
 #endif
-
         /* Take control of memory */
         pthread_mutex_lock(&mutex);
 
@@ -750,7 +779,8 @@ void WatchPort(void* parameter)
                             mcommand = indata[0];
                             mcommand_count = 0;
                             dataqsize = DataQSize(MIndex(mcommand));
-                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n", MName(mcommand), mcommand);
+                            blast_info("UNSUPPORTED: Multi word command %s (%d) started\n",
+                                        MName(mcommand), mcommand);
 
                             /* The time of sending, a "unique" number shared by the first */
                             /* and last packed of a multi-command */
@@ -866,4 +896,3 @@ void WatchPort(void* parameter)
     }
 }
 
-#endif    // USE_SIP_CMD

@@ -1,8 +1,9 @@
 [Desktop Entry]
 Type=Application
 Exec=cow
-Icon=cow
+Icon=/usr/share/icons/hicolor/scalable/apps/cow.svg
 MimeType=application/x-cow;
 Categories=Qt;Science;
 Name=Cow
 GenericName=Command Operations Window
+

@@ -34,9 +34,13 @@
 
 #include "blast.h"
 #include "channels_tng.h"
+#include "magnetometer.h"
+#include "mcp.h"
 #include "pointing_struct.h"
+#include <errno.h>
 
 #define MAGCOM "/dev/ttyMAG"
+#define MAG_ERR_THRESHOLD 400
 
 ph_serial_t	*mag_comm = NULL;
 
@@ -55,6 +59,23 @@ typedef struct {
 	char resp[16];
 } mag_state_cmd_t;
 
+typedef enum {
+    MAG_BOOT = 0,
+    MAG_INIT,
+    MAG_READING,
+    MAG_ERROR,
+    MAG_RESET
+} e_mag_status_t;
+
+typedef struct {
+	e_mag_state cmd_state;
+	e_mag_status_t status;
+	uint16_t err_count;
+	uint16_t error_warned;
+} mag_state_t;
+
+mag_state_t mag_state = {0, 0, 0};
+
 static mag_state_cmd_t state_cmd[MAG_END] = {
 		[MAG_WE_BIN] = { "*99WE", "OK" },
 		[MAG_BIN] = { "*99B", "BINARY ON" },
@@ -62,7 +83,6 @@ static mag_state_cmd_t state_cmd[MAG_END] = {
 		[MAG_RATE] = { "*99R=100", "OK" },
 		[MAG_CONT] = { "*99C" },
 };
-static int cur_state = 0;
 
 static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
 {
@@ -105,30 +125,38 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
 
     ph_buf_t *buf;
 
+#ifdef DEBUG_MAGNETOMETER
+    blast_info("Magnetometer callback for reason %u, mag_state.cmd_state = %u, status = %u", (uint8_t) why, (uint8_t) mag_state.cmd_state, (uint8_t) mag_state.status);
+#endif
+
     /**
      * If we timeout, then the assumption is that we need to re-initialize the
      * magnetometer stream
      */
-    if (why & PH_IOMASK_TIME) {
-        cur_state = 0;
-        blast_info("Sending CMD '%s' to the MAG", state_cmd[cur_state].cmd);
-        ph_stm_printf(serial->stream, "%s\r", state_cmd[cur_state].cmd);
+    if ((why & PH_IOMASK_TIME) || (mag_state.status == MAG_RESET)) {
+        mag_state.cmd_state = 0;
+        blast_info("Sending CMD '%s' to the MAG", state_cmd[mag_state.cmd_state].cmd);
+        ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
         return;
     }
 
     if (why & PH_IOMASK_READ) {
+#ifdef DEBUG_MAGNETOMETER
+    	blast_info("Reading mag data!");
+#endif
         buf = ph_serial_read_record(serial, "\r", 1);
         if (!buf) return;
-
+		mag_state.status = MAG_READING;
         /**
          * Handle the initial handshaking and setup with the magnetometer
          */
-        if (cur_state < MAG_CONT) {
-            if ((ph_buf_len(buf) - 1) == strlen(state_cmd[cur_state].resp)) {
-                if (!memcmp(ph_buf_mem(buf), state_cmd[cur_state].resp, strlen(state_cmd[cur_state].resp))) {
-                    cur_state++;
-                    ph_stm_printf(serial->stream, "%s\r", state_cmd[cur_state].cmd);
+        if (mag_state.cmd_state < MAG_CONT) {
+            if ((ph_buf_len(buf) - 1) == strlen(state_cmd[mag_state.cmd_state].resp)) {
+                if (!memcmp(ph_buf_mem(buf), state_cmd[mag_state.cmd_state].resp, strlen(state_cmd[mag_state.cmd_state].resp))) {
+                    mag_state.cmd_state++;
+                    blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
+                    ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_flush(serial->stream);
 
                     ph_buf_delref(buf);
@@ -138,7 +166,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                  * If we don't receive the length response that we expect, try to interrupt whatever
                  * is happening and reset our initialization to the beginning.
                  */
-                cur_state = 0;
+                blast_info("We didn't receive the appropriate length.  Resetting...");
+                mag_state.cmd_state = 0;
                 ph_stm_printf(serial->stream, "\e\r");
                 ph_stm_flush(serial->stream);
                 do {
@@ -161,8 +190,31 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
 
         mag_set_framedata(mag_reading->mag_x, mag_reading->mag_y, mag_reading->mag_z);
         ph_buf_delref(buf);
+        mag_state.error_warned = 0;
+    }
+
+    if (why & PH_IOMASK_ERR) {
+    	if (mag_state.status != MAG_RESET) {
+    	    mag_state.status = MAG_ERROR;
+    	    mag_state.err_count++;
+    	    // Try to restart the sequence.
+    	    ph_stm_printf(serial->stream, "\e\r");
+            ph_stm_flush(serial->stream);
+        }
+    	if (!(mag_state.error_warned)) {
+    		blast_err("Error reading from the magnetometer! %s", strerror(errno));
+    		mag_state.error_warned = 1;
+    	}
+    	if (mag_state.err_count > MAG_ERR_THRESHOLD) {
+    		blast_err("Too many errors reading the magnetometer...attempting to reset.");
+    		mag_state.status = MAG_RESET;
+    		mag_state.err_count = 0;
+    		mag_state.error_warned = 0;
+    		mag_state.cmd_state = 0;
+    	}
     }
 }
+
 /**
  * This initialization function can be called at anytime to close, re-open and initialize the magnetometer.
  */
@@ -175,16 +227,35 @@ void initialize_magnetometer(void)
     if (!mag_comm) {
     	blast_err("Could not open Magnetometer port %s", MAGCOM);
     	return;
+    } else {
+    	blast_info("Successfully opened Magnetometer port %s", MAGCOM);
     }
 
     mag_comm->callback = mag_process_data;
     mag_comm->timeout_duration.tv_sec = 1;
 
     ph_serial_setspeed(mag_comm, B9600);
-    ph_serial_enable(mag_comm, true);
-    ph_stm_printf(mag_comm->stream, "%s\r", state_cmd[cur_state].cmd);
+    ph_stm_printf(mag_comm->stream, "\e");
     ph_stm_flush(mag_comm->stream);
+    ph_stm_printf(mag_comm->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
+    ph_stm_flush(mag_comm->stream);
+    ph_serial_enable(mag_comm, true);
 
-
+    mag_state.status = MAG_INIT;
     blast_startup("Initialized Magnetometer");
+}
+
+void *monitor_magnetometer(void *m_arg)
+{
+    while(!shutdown_mcp) {
+    	if (mag_state.status == MAG_RESET) {
+    		blast_info("Received a request to reset the magnetometer communications.");
+    	    ph_stm_printf(mag_comm->stream, "\e");
+            ph_stm_flush(mag_comm->stream);
+            usleep(1000);
+            initialize_magnetometer();
+     		blast_info("Magnetometer reset complete.");
+   	}
+        usleep(1000); 
+    }
 }

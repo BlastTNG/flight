@@ -37,6 +37,7 @@ class Housekeeping::Housekeeper
     void update_shared();
     void get_disk();
     void update();
+	void heat_camera();
 
   private:
     Tools::Timer last_temps_measurement_timer;
