@@ -1,5 +1,6 @@
 set(MCP_COMMON_SRCS
     ${MCP_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/bitserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
@@ -15,6 +16,7 @@ set(MCP_COMMON_SRCS
 )
 set(MCP_COMMON_HEADERS
    ${MCP_COMMON_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/bitserver.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_packet_format.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h

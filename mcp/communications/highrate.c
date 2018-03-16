@@ -140,8 +140,15 @@ void highrate_compress_and_send(void *arg) {
         for (i = 2; i < CSBF_HEADER_SIZE; i++) *csbf_checksum += csbf_header[i];
         for (i = 0; i < PACKET_HEADER_SIZE; i++) *csbf_checksum += header_buffer[i];
         for (i = 0; i < datasize; i++) *csbf_checksum += chunk[i];
+/*
+        for (i = 0; i < csbf_packet_size; i++) {
+          if (i % 32 == 0) printf("\n");
+          printf("0x%.2x ", csbf_packet[i]);
+        }
+        printf("\n");
 
-        // blast_info("Transmit size %d, datasize %d, i %d, n %d, csbf_packet_size %d, checksum 0x%x", transmit_size, datasize, i_pkt, n_pkt, csbf_packet_size, *csbf_checksum); 
+        blast_info("Transmit size %d, datasize %d, i %d, n %d, csbf_packet_size %d, checksum 0x%x", transmit_size, datasize, i_pkt, n_pkt, csbf_packet_size, *csbf_checksum); 
+*/
 
         // send the full packet 
         unsigned int wrote = write(serial->sock->fd, csbf_packet, csbf_packet_size);

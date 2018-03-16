@@ -69,7 +69,6 @@
 // #include "blast_comms.h"
 #include "blast_time.h"
 #include "computer_sensors.h"
-#include "data_sharing.h"
 #include "diskmanager_tng.h"
 #include "dsp1760.h"
 #include "ec_motors.h"
@@ -81,6 +80,7 @@
 #include "bitserver.h"
 #include "bi0.h"
 #include "biphase_hardware.h"
+#include "data_sharing_server.h"
 #include "FIFO.h"
 #include "hwpr.h"
 #include "motors.h"
@@ -277,7 +277,7 @@ static int AmISouth(int *not_cryo_corner)
     return ((buffer[0] == 'f') && (buffer[1] == 'c') && (buffer[2] == '2')) ? 1 : 0;
 }
 
-void lj_connection_handler(void *arg) {
+void * lj_connection_handler(void *arg) {
     while (!InCharge) {
         sleep(1);
     }
@@ -296,6 +296,8 @@ void lj_connection_handler(void *arg) {
     init_array();
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
+  
+    return NULL;
 }
 
 unsigned int superframe_counter[RATE_END] = {1};
@@ -410,6 +412,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     store_charge_controller_data();
+    pull_shared_data(RATE_1HZ);
     framing_publish_1hz();
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
                                      RATE_1HZ, master_superframe);
@@ -418,10 +421,6 @@ static void mcp_1hz_routines(void)
 
 static void *mcp_main_loop(void *m_arg)
 {
-#define MCP_FREQ 24400
-#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
-
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -485,6 +484,8 @@ int main(int argc, char *argv[])
 {
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
+  ph_thread_t *mag_thread = NULL;
+	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t CommandDatacomm2;
@@ -493,8 +494,7 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
-  pthread_t mag_thread;
-  pthread_t lj_init_thread;
+  pthread_t DataSharingServer;
   // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -567,6 +567,7 @@ int main(int argc, char *argv[])
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
 
+
 //  initialize_blast_comms();
 //  initialize_sip_interface();
   initialize_dsp1760_interface();
@@ -619,7 +620,7 @@ int main(int argc, char *argv[])
   initialize_motors();
 
 // LJ THREAD
-  ph_thread_spawn(lj_connection_handler, NULL);
+  lj_init_thread = ph_thread_spawn(lj_connection_handler, NULL);
 
   initialize_CPU_sensors();
 
@@ -631,20 +632,21 @@ int main(int argc, char *argv[])
       xsc_networking_init(1);
   }
   initialize_magnetometer();
-  mag_thread = ph_thread_spawn(&monitor_magnetometer, NULL);
+  mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
-  initialize_data_sharing();
-
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
 //  initialize_bias_tone();
   startChrgCtrl(0);
+
+//  start the data sharing server
+  pthread_create(&DataSharingServer, NULL, (void *) data_sharing_routine, NULL);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD
