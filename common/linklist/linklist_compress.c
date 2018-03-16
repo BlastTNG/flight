@@ -512,7 +512,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
   if (!prechecksum) // all the checksums were zero; must be blank frame
   {
     fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
-    ret = 0;
+    // ret = 0;
   }
   // save the data
   memcpy(buffer_save, buffer_out, superframe_size);
