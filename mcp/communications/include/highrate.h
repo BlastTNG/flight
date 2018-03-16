@@ -28,8 +28,10 @@
 #define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
 #define CSBF_HEADER_SIZE 6
-#define HIGHRATE_DATA_PACKET_SIZE 700 // 2034 
+#define HIGHRATE_DATA_PACKET_SIZE 1000 //2041 
 #define HIGHRATE_SYNC1 0xfa
+#define LOWRATE_COMM1_SYNC2 0xfa
+#define LOWRATE_COMM2_SYNC2 0xfb
 #define HIGHRATE_TDRSS_SYNC2 0xff
 #define HIGHRATE_IRIDIUM_SYNC2 0xfd
 #define HIGHRATE_ORIGIN_COMM1 0x02
