@@ -174,7 +174,9 @@ char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 /* For testing, use detector data from Feb, 2018 cooldown */
 
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Fri_Mar__2_15_42_18_2018";
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Tue_Mar_13_17_12_35_2018";
+// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Tue_Mar_13_17_12_35_2018";
+// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Wed_Mar_14_19_51_43_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Thu_Mar_15_13_21_45_2018";
 
 // char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Tue_Mar_13_21_40_45_2018";
@@ -388,6 +390,25 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register,
                              sizeof(sendval), m_offset, WRITE_INT_TIMEOUT);
 }
 
+void roach_read_file(roach_state_t *m_roach, char *m_file_path, double *m_buffer, size_t m_freqlen)
+{
+    blast_info("ROACH%d, file = %s", m_roach->which, m_file_path);
+    FILE *fd = fopen(m_file_path, "r");
+    if (!fd) {
+        blast_strerror("Could not open %s for reading", m_file_path);
+    } else {
+        blast_info("Opened %s", m_file_path);
+        for (size_t i = 0; i < m_freqlen; i++) {
+            if (fscanf(fd, "%lg\n", &m_buffer[i]) != EOF) {
+                // blast_info("Roach%d loaded vals: %g", m_roach->which, m_buffer[i]);
+            } else {
+                break;
+            }
+        }
+        fclose(fd);
+    }
+}
+
 /* Function: roach_init_LUT
  * ----------------------------
  * Allocates memory for Roach freq comb LUT
@@ -458,61 +479,19 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     // Load random phases (static file for testing)
     blast_info("Roach%d, Loading tone phases", m_roach->which);
     char *phase_path = m_roach->random_phase_path;
-    blast_info("Phase file = %s", phase_path);
-    FILE *fd = fopen(phase_path, "r");
-    if (!fd) {
-        blast_strerror("Could not open %s for reading", phase_path);
-    } else {
-        blast_info("Opened %s", phase_path);
-        for (size_t i = 0; i < m_freqlen; i++) {
-            if (fscanf(fd, "%lg\n", &phases[i]) != EOF) {
-                // blast_info("Roach%d tone phase: %g", m_roach->which, phases[i]);
-            } else {
-                break;
-            }
-        }
-        fclose(fd);
-    }
-    // TODO(Sam) Combine vna and targ cases into one?
+    roach_read_file(m_roach, phase_path, phases, m_freqlen);
+
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
         blast_info("Roach%d, Loading VNA AMPS", m_roach->which);
         char *amps_path = m_roach->vna_amps_path[CommandData.roach[m_roach->which - 1].load_vna_amps - 1];
-        blast_info("Amps file = %s", amps_path);
-        FILE *fd = fopen(amps_path, "r");
-        if (!fd) {
-            blast_strerror("Could not open %s for reading", amps_path);
-        } else {
-            blast_info("Opened %s", amps_path);
-            for (size_t i = 0; i < m_freqlen; i++) {
-                if (fscanf(fd, "%lg\n", &amps[i]) != EOF) {
-                    // blast_info("Roach%d tone amps: %g", m_roach->which, amps[i]);
-                } else {
-                    break;
-                }
-            }
-            fclose(fd);
-        }
+        roach_read_file(m_roach, amps_path, amps, m_freqlen);
     CommandData.roach[m_roach->which - 1].load_vna_amps = 0;
     }
 
     if (CommandData.roach[m_roach->which - 1].load_targ_amps) {
         blast_info("Roach%d, Loading TARG AMPS", m_roach->which);
         char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
-        blast_info("Amps file = %s", amps_path);
-        FILE *fd = fopen(amps_path, "r");
-        if (!fd) {
-            blast_strerror("Could not open %s for reading", amps_path);
-        } else {
-            blast_info("Opened %s", amps_path);
-            for (size_t i = 0; i < m_freqlen; i++) {
-                if (fscanf(fd, "%lg\n", &amps[i]) != EOF) {
-                    // blast_info("Roach%d tone amps: %g", m_roach->which, amps[i]);
-                } else {
-                    break;
-                }
-            }
-            fclose(fd);
-        }
+        roach_read_file(m_roach, amps_path, amps, m_freqlen);
     CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
     }
 
@@ -704,15 +683,16 @@ void roach_vna_comb(roach_state_t *m_roach)
     }*/
 }
 
-/* Function: roach_vna_comb
- * ----------------------------
- * Saves a list of VNA or TARG frequencies to disk
- *
- * @param m_roach a roach state structure
- * @param m_save_path absolute save path
- * @param m_freqs frequencies to save
- * @param m_freqlen number of m_freqs
-*/
+void get_amps(roach_state_t *m_roach)
+{
+    double *amps = malloc(sizeof(double) * m_roach->num_kids);
+    roach_read_file(m_roach, m_roach->targ_amps_path[1], amps, m_roach->num_kids);
+    for (int i = 0; i < m_roach->num_kids; i++) {
+        blast_info("ROACH%d, amps = %g", m_roach->which, amps[i]);
+    // free(amps);
+    }
+}
+
 int save_freqs(roach_state_t *m_roach, char *m_save_path, double *m_freqs, size_t m_freqlen)
 {
     FILE *fd = fopen(m_save_path, "w");
@@ -832,9 +812,9 @@ void roach_define_DDC_LUT(roach_state_t *m_roach, double *m_freqs, size_t m_freq
     }
     if (CommandData.roach[m_roach->which - 1].get_phase_centers &&
                         (m_freqlen < m_roach->vna_comb_len)) {
-	double phase_centers[m_freqlen];
-	// Load phase centers and subtract from original phases
-	char *phase_centers_path = m_roach->phase_centers_path;
+        double phase_centers[m_freqlen];
+        // Load phase centers and subtract from original phases
+        char *phase_centers_path = m_roach->phase_centers_path;
         FILE *centers_file = fopen(phase_centers_path, "r");
         if (!centers_file) {
             blast_strerror("Could not open %s for reading", phase_centers_path);
@@ -2837,10 +2817,12 @@ int init_roach(uint16_t ind)
                       "/home/fc1user/sam_tests/sweeps/roach%d/vna_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].vna_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_amps.dat", ind + 1);
-    asprintf(&roach_state_table[ind].targ_amps_path[1],
-                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_targ_amps.dat", ind + 1);
+    asprintf(&roach_state_table[ind].targ_amps_path[1],
+                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
+    asprintf(&roach_state_table[ind].targ_amps_path[2],
+                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].qdr_log,
                       "/home/fc1user/sam_tests/roach%d_qdr_cal.log", ind + 1);
     asprintf(&roach_state_table[ind].find_kids_log,

@@ -1878,13 +1878,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case calc_phase_centers:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].get_phase_centers = 1;
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].get_phase_centers = ivalues[1];
       }
       break;
     case timestream:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1000)
-                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
+                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 300.0)) {
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
           CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
           CommandData.roach[ivalues[0]-1].get_timestream = 1;
@@ -2438,7 +2438,7 @@ void InitCommandData()
         CommandData.roach[i].new_atten = 0;
         CommandData.roach[i].load_vna_amps = 0;
         CommandData.roach[i].load_targ_amps = 0;
-        CommandData.roach[i].get_phase_centers = 1;
+        CommandData.roach[i].get_phase_centers = 0;
         CommandData.roach[i].get_timestream = 0;
     }
 
