@@ -106,6 +106,7 @@ void data_sharing_routine(void *arg) {
       memcpy(cmddata, &CommandData, sizeof(struct CommandDataStruct));
 
       sendToBITSender(&data_sender, recv_buffer, packet_size, 0);
+      blast_info("Sending shared data\n");
     } else {
       usleep(100000);
     }
@@ -123,7 +124,7 @@ void share_superframe(uint8_t * superframe) {
       decrementFifo(&shared_data_fifo);
     }
     if (!fifoIsEmpty(&shared_cmddata_fifo)) { 
-      memcpy(&CommandData, getFifoRead(&shared_cmddata_fifo), sizeof(struct CommandDataStruct));
+      // memcpy(&CommandData, getFifoRead(&shared_cmddata_fifo), sizeof(struct CommandDataStruct));
       decrementFifo(&shared_cmddata_fifo);
     }
   }
@@ -148,6 +149,7 @@ void share_data(E_RATE rate) {
     data_loc = buffer+get_channel_start_in_superframe(chan)+superframe_skip[rate]*frame_location[rate];
     memcpy(chan->var, data_loc, channel_size(chan));
 
+    blast_info("Copying shared data \"%s\"=%x", chan->field, *(uint16_t *) chan->var);
   }
   // increment the frame location
   frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);

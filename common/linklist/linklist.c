@@ -382,13 +382,13 @@ linklist_t * parse_linklist(char *fname)
         {
           chan = channels_find_by_name(temps[0]);
           isblock = 0;
-          if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
-          {
-            comp_type = atoi(temps[1]); // get compression type
-          }
-          else if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0))
+          if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0))
           {
             comp_type = NO_COMP;
+          }
+          else if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
+          {
+            comp_type = atoi(temps[1]); // get compression type
           }
           else // normal field, string
           {
