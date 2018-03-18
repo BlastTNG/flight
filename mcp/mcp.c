@@ -393,7 +393,7 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       } 
     }
-    // auto_cycle_mk2();
+    auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
