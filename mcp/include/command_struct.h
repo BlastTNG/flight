@@ -603,6 +603,7 @@ void InitCommandData();
 double LockPosition(double);
 int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
+void WritePrevStatus();
 
 extern struct CommandDataStruct CommandData;
 

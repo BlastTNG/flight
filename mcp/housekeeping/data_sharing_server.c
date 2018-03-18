@@ -126,6 +126,8 @@ void data_sharing_routine(void *arg) {
 void share_superframe(uint8_t * superframe) {
   if (!shared_ll) return;
 
+  static int write_prevstatus_counter = 0;
+
   if (InCharge) { // in charge, so send data to not in charge computer
     memcpy(getFifoWrite(&shared_data_fifo), superframe, superframe_size);
     incrementFifo(&shared_data_fifo);
@@ -136,8 +138,13 @@ void share_superframe(uint8_t * superframe) {
     if (!fifoIsEmpty(&shared_cmddata_fifo)) { 
       memcpy(&CommandData, getFifoRead(&shared_cmddata_fifo), sizeof(struct CommandDataStruct));
       decrementFifo(&shared_cmddata_fifo);
+      if (write_prevstatus_counter%10 == 0) {
+        WritePrevStatus();
+        write_prevstatus_counter = 0;
+      }
     }
   }
+  write_prevstatus_counter++;
 }
 
 // grabs shared data from the fifo for the specified field at the specified rate
@@ -161,7 +168,7 @@ void share_data(E_RATE rate) {
     data_loc = buffer+get_channel_start_in_superframe(chan)+superframe_skip[rate]*frame_location[rate];
     memcpy(chan->var, data_loc, channel_size(chan));
 
-    // blast_info("Copying shared data \"%s\"=%x", chan->field, *(uint16_t *) chan->var);
+    // blast_info("Copying shared data \"%s\"=%.4x", chan->field, *(uint16_t *) chan->var);
   }
   // increment the frame location
   frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);

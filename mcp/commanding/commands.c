@@ -98,7 +98,7 @@ struct CommandDataStruct CommandData;
 const char* SName(enum singleCommand command); // share/sip.c
 
 /** Write the Previous Status: called whenever anything changes */
-static void WritePrevStatus()
+void WritePrevStatus()
 {
   int fp, n;
 
