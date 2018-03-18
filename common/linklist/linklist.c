@@ -386,6 +386,10 @@ linklist_t * parse_linklist(char *fname)
           {
             comp_type = atoi(temps[1]); // get compression type
           }
+          else if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0))
+          {
+            comp_type = NO_COMP;
+          }
           else // normal field, string
           {
             for (i=0; i<NUM_COMPRESS_TYPES; i++)
@@ -403,13 +407,24 @@ linklist_t * parse_linklist(char *fname)
             }
           }
         }
-        num = atoi(temps[2]); // get compressed samples per frame 
+
 
         if (!chan)
         {
           blast_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
           continue;
         }
+
+        // get compressed samples per frame
+        if ((strcmp(temps[2], "NONE") == 0) || (strlen(temps[2]) == 0))
+        {
+          num = get_channel_spf(&channel_list[i]);
+        }
+        else
+        {
+          num = atoi(temps[2]); // get compressed samples per frame 
+        }
+
         update_channel_hash(&mdContext, chan);
 
         ll->items[ll->n_entries].tlm = chan; // connect entry to name

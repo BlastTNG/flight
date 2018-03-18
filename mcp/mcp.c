@@ -371,6 +371,7 @@ static void mcp_5hz_routines(void)
 //    VideoTx();
 //    cameraFields();
 
+    share_data(RATE_5HZ);
     framing_publish_5hz();
     superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
                                      RATE_5HZ, master_superframe);
@@ -394,6 +395,8 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       }
     }
+    share_superframe(master_superframe);
+
     // auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
@@ -412,7 +415,7 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     store_charge_controller_data();
-    pull_shared_data(RATE_1HZ);
+    share_data(RATE_1HZ);
     framing_publish_1hz();
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
                                      RATE_1HZ, master_superframe);
