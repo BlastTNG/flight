@@ -185,6 +185,7 @@ char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
 char find_kids_250[] = "/data/etc/blast/roachPython/find_kids_250.py";
 char find_kids_350[] = "/data/etc/blast/roachPython/find_kids_350.py";
 char center_phase_script[] = "/data/etc/blast/roachPython/center_phase.py";
+char chop_snr_script[] = "/data/etc/blast/roachPython/fit_mcp_chop.py";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
@@ -503,8 +504,10 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         roach_read_1D_file(m_roach, amps_path, amps, m_freqlen);
     CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
     }
-
+    // save amps to m_roach->last_targ_amps
+    m_roach->last_amps = calloc(m_freqlen, sizeof(double));
     for (size_t i = 0; i < m_freqlen; i++) {
+        m_roach->last_amps[i] = amps[i];
         m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
         // blast_info("m_freq = %g", m_freqs[i]);
     }
@@ -1860,19 +1863,54 @@ void save_timestream(roach_state_t *m_roach)
     CommandData.roach[m_roach->which - 1].get_timestream = 0;
 }
 
-int change_targ_amps(roach_state_t *m_roach)
+// get the chop_snr for the timestream saved in save_timestream
+int chop_snr(roach_state_t *m_roach, double *m_buffer)
 {
     int retval = -1;
-    double amps[m_roach->num_kids];
-    if (CommandData.roach[m_roach->which - 1].load_targ_amps) {
-        blast_info("Roach%d, Loading TARG AMPS", m_roach->which);
-        char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
-        if ((roach_read_1D_file(m_roach, amps_path, amps, m_roach->num_kids) < 0)) {
-            return retval;
-        }
-    CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
+    char chop_snr_log[] = "/home/fc1user/sam_tests/chop_snr.log";
+    char *py_command;
+    blast_tmp_sprintf(py_command, "python %s > %s", chop_snr_script, chop_snr_log);
+    // Call fit_mcp_chop.py and read response from log
+    system(py_command);
+    FILE *fd = fopen(chop_snr_log, "r");
+    if (!fd) {
+        blast_err("Error opening file");
+        return retval;
+    }
+    if (!fscanf(fd, "%lg\n", m_buffer)) {
+        blast_err("Error reading chop log file");
+    } else {
+        retval = 0;
     }
     return retval;
+}
+
+int change_targ_amps(roach_state_t *m_roach, double *m_delta_amps, int *m_channels, size_t m_len)
+{
+    int retval = -1;
+    /* double amps[m_roach->num_kids];
+    char *amps_path = m_roach->targ_amps_path[2];
+    if ((roach_read_1D_file(m_roach, amps_path, amps, m_roach->num_kids) < 0)) {
+        return retval;
+    } */
+    for (size_t i = 0; i < m_len; i++) {
+        m_roach->last_amps[m_channels[i]] += m_delta_amps[i];
+    }
+    /* if ((roach_save_1D_file(m_roach, amps_path, amps, m_roach->num_kids) < 0)) {
+        return retval;
+    } */
+    return retval;
+}
+
+// tune tone amplitude according to chop snr
+void chop_tune(roach_state_t *m_roach)
+{
+    double snr;
+    // get the timestream (save to file for now)
+    save_timestream(m_roach);
+    // fit the snr
+    chop_snr(m_roach, &snr);
+    blast_info("ROACH%d, chop SNR = %g", m_roach->which, snr);
 }
 
 /* Function: cal_sweep
