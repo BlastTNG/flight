@@ -302,10 +302,21 @@ void * lj_connection_handler(void *arg) {
 
 unsigned int superframe_counter[RATE_END] = {1};
 
+static void mcp_488hz_routines(void)
+{
+//    write_roach_channels_244hz();
+
+    share_data(RATE_488HZ);
+    framing_publish_488hz();
+    superframe_counter[RATE_488HZ] = add_frame_to_superframe(channel_data[RATE_488HZ],
+                                       RATE_488HZ, master_superframe);
+}
+
 static void mcp_244hz_routines(void)
 {
 //    write_roach_channels_244hz();
 
+    share_data(RATE_244HZ);
     framing_publish_244hz();
     superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
                                        RATE_244HZ, master_superframe);
@@ -319,6 +330,7 @@ static void mcp_200hz_routines(void)
     // read_chopper();
     cal_control();
 
+    share_data(RATE_200HZ);
     framing_publish_200hz();
     // store_data_200hz();
     superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
@@ -339,6 +351,7 @@ static void mcp_100hz_routines(void)
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
+    share_data(RATE_100HZ);
     framing_publish_100hz();
     // store_data_100hz();
     superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
@@ -384,8 +397,7 @@ static void mcp_2hz_routines(void)
 }
 static void mcp_1hz_routines(void)
 {
-    // TODO(javier): make this the fastest 488Hz when the routines exist
-    int ready = !superframe_counter[RATE_244HZ];
+    int ready = !superframe_counter[RATE_488HZ];
     // int ready = 1;
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
@@ -424,6 +436,7 @@ static void mcp_1hz_routines(void)
 
 static void *mcp_main_loop(void *m_arg)
 {
+    int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
     int counter_100hz = 1;
@@ -434,8 +447,7 @@ static void *mcp_main_loop(void *m_arg)
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
 
-    // TODO(javier): make this the fastest 488Hz when the routines exist
-    superframe_counter[RATE_244HZ] = 1;
+    superframe_counter[RATE_488HZ] = 1;
 
     while (!shutdown_mcp) {
         int ret;
@@ -477,6 +489,10 @@ static void *mcp_main_loop(void *m_arg)
         if (!--counter_244hz) {
             counter_244hz = HZ_COUNTER(244);
             mcp_244hz_routines();
+        }
+        if (!--counter_488hz) {
+            counter_488hz = HZ_COUNTER(488);
+            mcp_488hz_routines();
         }
     }
 
