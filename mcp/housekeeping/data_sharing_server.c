@@ -49,13 +49,20 @@ linklist_t * shared_ll = NULL;
 void data_sharing_routine(void *arg) {
   struct BITSender data_sender = {0};
   struct BITRecver data_recver = {0};
+  linklist_t ** ll_array = (linklist_t **) arg;
 
   nameThread("DataShare");
 
-  shared_ll = parse_linklist(DATA_SHARING_LINKLIST);
-  unsigned int packet_size = shared_ll->blk_size+sizeof(struct CommandDataStruct);
+  linklist_t * temp_ll = linklist_find_by_name("shared.ll",ll_array);
+
+  if (!temp_ll) {
+    blast_err("Cannot find shared.ll for data sharing");
+    return;
+  }
+
+  unsigned int packet_size = temp_ll->blk_size+sizeof(struct CommandDataStruct);
   uint8_t * recv_buffer = calloc(1, packet_size);
-  uint8_t * cmddata = recv_buffer+shared_ll->blk_size;
+  uint8_t * cmddata = recv_buffer+temp_ll->blk_size;
 
   // allocate fifos
   allocFifo(&shared_data_fifo, 3, superframe_size);
@@ -67,12 +74,13 @@ void data_sharing_routine(void *arg) {
   initBITRecver(&data_recver, (SouthIAm) ? SOUTH_IP : NORTH_IP, DATA_SHARING_PORT, 3, 
                   packet_size, packet_size);
 
-  setBITSenderSerial(&data_sender, *(uint32_t *) shared_ll->serial);
-  setBITRecverSerial(&data_recver, *(uint32_t *) shared_ll->serial);
+  setBITSenderSerial(&data_sender, *(uint32_t *) temp_ll->serial);
+  setBITRecverSerial(&data_recver, *(uint32_t *) temp_ll->serial);
 
   int recv_size = 0;
- 
-  sleep(1);
+
+  sleep(4);
+  shared_ll = temp_ll;
 
   // if not in charge, receive data from the InCharge computer
   while (!InCharge) {
@@ -106,7 +114,7 @@ void data_sharing_routine(void *arg) {
       memcpy(cmddata, &CommandData, sizeof(struct CommandDataStruct));
 
       sendToBITSender(&data_sender, recv_buffer, packet_size, 0);
-      blast_info("Sending shared data\n");
+      // blast_info("Sending shared data\n");
     } else {
       usleep(100000);
     }
@@ -116,6 +124,8 @@ void data_sharing_routine(void *arg) {
 }
 
 void share_superframe(uint8_t * superframe) {
+  if (!shared_ll) return;
+
   if (InCharge) { // in charge, so send data to not in charge computer
     memcpy(getFifoWrite(&shared_data_fifo), superframe, superframe_size);
     incrementFifo(&shared_data_fifo);
@@ -124,7 +134,7 @@ void share_superframe(uint8_t * superframe) {
       decrementFifo(&shared_data_fifo);
     }
     if (!fifoIsEmpty(&shared_cmddata_fifo)) { 
-      // memcpy(&CommandData, getFifoRead(&shared_cmddata_fifo), sizeof(struct CommandDataStruct));
+      memcpy(&CommandData, getFifoRead(&shared_cmddata_fifo), sizeof(struct CommandDataStruct));
       decrementFifo(&shared_cmddata_fifo);
     }
   }
@@ -133,6 +143,7 @@ void share_superframe(uint8_t * superframe) {
 // grabs shared data from the fifo for the specified field at the specified rate
 void share_data(E_RATE rate) {
   if (!shared_ll) return;  
+  if (InCharge) return;
 
   static unsigned int frame_location[RATE_END] = {0};
 
@@ -142,14 +153,15 @@ void share_data(E_RATE rate) {
   uint8_t * buffer = getFifoRead(&shared_data_fifo);
 
   for (i = 0; i < shared_ll->n_entries; i++) {
-    if (shared_ll->items[i].tlm->rate != rate) continue;
     chan = shared_ll->items[i].tlm;
+
     if (!chan) continue; 
+    if (chan->rate != rate) continue;
 
     data_loc = buffer+get_channel_start_in_superframe(chan)+superframe_skip[rate]*frame_location[rate];
     memcpy(chan->var, data_loc, channel_size(chan));
 
-    blast_info("Copying shared data \"%s\"=%x", chan->field, *(uint16_t *) chan->var);
+    // blast_info("Copying shared data \"%s\"=%x", chan->field, *(uint16_t *) chan->var);
   }
   // increment the frame location
   frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
