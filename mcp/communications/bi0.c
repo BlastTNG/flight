@@ -398,6 +398,7 @@ void biphase_writer(void * arg)
             setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
             setBITSenderFramenum(&bi0lossender, transmit_size);
             sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
+            blast_info("Sending data to BI0 LOS");
 
             // set initialization for packetization
             i_pkt = 0;
