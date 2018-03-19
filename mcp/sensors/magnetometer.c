@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include <endian.h>
+#include <errno.h>
 
 #include "phenom/defs.h"
 #include "phenom/listener.h"
@@ -37,7 +38,6 @@
 #include "magnetometer.h"
 #include "mcp.h"
 #include "pointing_struct.h"
-#include <errno.h>
 
 #define MAGCOM "/dev/ttyMAG"
 #define MAG_ERR_THRESHOLD 400
@@ -126,7 +126,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     ph_buf_t *buf;
 
 #ifdef DEBUG_MAGNETOMETER
-    blast_info("Magnetometer callback for reason %u, mag_state.cmd_state = %u, status = %u", (uint8_t) why, (uint8_t) mag_state.cmd_state, (uint8_t) mag_state.status);
+    blast_info("Magnetometer callback for reason %u, mag_state.cmd_state = %u, status = %u",
+                 (uint8_t) why, (uint8_t) mag_state.cmd_state, (uint8_t) mag_state.status);
 #endif
 
     /**
@@ -153,7 +154,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
          */
         if (mag_state.cmd_state < MAG_CONT) {
             if ((ph_buf_len(buf) - 1) == strlen(state_cmd[mag_state.cmd_state].resp)) {
-                if (!memcmp(ph_buf_mem(buf), state_cmd[mag_state.cmd_state].resp, strlen(state_cmd[mag_state.cmd_state].resp))) {
+                if (!memcmp(ph_buf_mem(buf), state_cmd[mag_state.cmd_state].resp,
+                                      strlen(state_cmd[mag_state.cmd_state].resp))) {
                     mag_state.cmd_state++;
                     blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
@@ -247,15 +249,15 @@ void initialize_magnetometer(void)
 
 void *monitor_magnetometer(void *m_arg)
 {
-    while(!shutdown_mcp) {
-    	if (mag_state.status == MAG_RESET) {
-    		blast_info("Received a request to reset the magnetometer communications.");
-    	    ph_stm_printf(mag_comm->stream, "\e");
-            ph_stm_flush(mag_comm->stream);
-            usleep(1000);
-            initialize_magnetometer();
-     		blast_info("Magnetometer reset complete.");
-   	}
-        usleep(1000); 
+  while (!shutdown_mcp) {
+    if (mag_state.status == MAG_RESET) {
+      blast_info("Received a request to reset the magnetometer communications.");
+      ph_stm_printf(mag_comm->stream, "\e");
+      ph_stm_flush(mag_comm->stream);
+      usleep(1000);
+      initialize_magnetometer();
+      blast_info("Magnetometer reset complete.");
     }
+    usleep(1000);
+  }
 }

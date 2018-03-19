@@ -287,9 +287,8 @@ void periodic_cal_control(void) {
                 // decrements the wait time if waiting
                 if (separation > 0) {
                     separation--;
-                }
                 // restarts the pulse at the end of the wait.
-                else {
+                } else {
                     length = cal_state.length;
                     pulsed = 0;
                     down = 0;
