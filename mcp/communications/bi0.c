@@ -395,6 +395,7 @@ void biphase_writer(void * arg)
             transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
 
             // send of BI0-LOS
+            memset(compbuffer, 0xaa, transmit_size);
             setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
             setBITSenderFramenum(&bi0lossender, transmit_size);
             sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
