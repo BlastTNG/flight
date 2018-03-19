@@ -90,6 +90,8 @@ void share_superframe(uint8_t * superframe) {
   memcpy(shared_cmddata, &CommandData, sizeof(struct CommandDataStruct));
   retval = sendToBITSender(&shared_data_sender, shared_recv_buffer, shared_packet_size, 0);
 
+  // blast_info("Sending shared data");
+
   if (retval != shared_packet_size) {
     blast_err("Could only send %d/%d bytes of shared data", retval, shared_packet_size);
   }
@@ -108,13 +110,13 @@ void share_superframe(uint8_t * superframe) {
     // overwrite command data if not in charge
 		if (!InCharge) {
       memcpy(&CommandData, shared_cmddata, sizeof(struct CommandDataStruct));
-      blast_info("Overwriting command data");
+      // blast_info("Overwriting command data");
 
       // save command data to prev_status file
-		  if (write_prevstatus_counter%10 >= 0) {
+		  if (write_prevstatus_counter%10 == 0) {
 			  WritePrevStatus();
 			  write_prevstatus_counter = 0;
-        blast_info("Saving recvd command data to disk");
+        // blast_info("Saving recvd command data to disk");
 	 	  }
       write_prevstatus_counter++;
     }    
@@ -155,7 +157,7 @@ void share_data(E_RATE rate) {
       // overwrite data with shared data
       data_loc = shared_superframe+get_channel_start_in_superframe(chan)+superframe_skip[rate]*frame_location[rate];
       memcpy(chan->var, data_loc, channel_size(chan));
-      blast_info("Copying shared data \"%s\"=%.4x", chan->field, *(uint16_t *) chan->var);
+     //  if (!frame_location[rate]) blast_info("Copying shared data \"%s\"=%.4x", chan->field, *(uint16_t *) chan->var);
     }
   }
   // increment the frame location
