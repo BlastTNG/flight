@@ -31,6 +31,8 @@ superframes_list_t pilot_superframes;
 
 void pilot_receive(void *arg) {
 
+  struct UDPSetup * udpsetup = (struct UDPSetup *) arg;
+
   struct BITRecver pilotrecver = {0};
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0, prev_serial = 0;
@@ -45,7 +47,7 @@ void pilot_receive(void *arg) {
   uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
 
   // initialize UDP connection via bitserver/BITRecver
-  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
+  initBITRecver(&pilotrecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
   initialize_circular_superframes(&pilot_superframes);
 
   while (true) {
@@ -105,7 +107,7 @@ void pilot_receive(void *arg) {
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
     if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
-      blast_info("[Pilot] Received linklist \"%s\"", ll->name);
+      blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
       // write the linklist data to disk
@@ -126,7 +128,7 @@ void pilot_receive(void *arg) {
       */
       push_superframe(local_superframe, &pilot_superframes);
     } else {
-      blast_info("[Pilot] Received an allframe :)\n");
+      blast_info("[%s] Received an allframe :)\n", udpsetup->name);
     }
   }
 }
