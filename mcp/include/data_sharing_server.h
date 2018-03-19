@@ -32,7 +32,7 @@
 #define DATA_SHARING_PORT 42224
 #define DATA_SHARING_LINKLIST "/data/etc/linklists/shared.ll"
 
-void data_sharing_routine(void *);
+void data_sharing_init(linklist_t **);
 void share_data(E_RATE);
 void share_superframe(uint8_t *);
 

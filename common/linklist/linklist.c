@@ -418,7 +418,7 @@ linklist_t * parse_linklist(char *fname)
         // get compressed samples per frame
         if ((strcmp(temps[2], "NONE") == 0) || (strlen(temps[2]) == 0))
         {
-          num = get_channel_spf(&channel_list[i]);
+          num = get_channel_spf(chan);
         }
         else
         {

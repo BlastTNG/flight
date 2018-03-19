@@ -513,7 +513,6 @@ int main(int argc, char *argv[])
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   pthread_t bi0_send_worker;
-  pthread_t DataSharingThread;
   // pthread_t biphase_writer_id;
   int use_starcams = 0;
 
@@ -664,8 +663,8 @@ int main(int argc, char *argv[])
 //  initialize_bias_tone();
   startChrgCtrl(0);
 
-//  start the data sharing server
-  pthread_create(&DataSharingThread, NULL, (void *) data_sharing_routine, (void *) linklist_array);
+//  initialize the data sharing server
+  data_sharing_init(linklist_array);
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD

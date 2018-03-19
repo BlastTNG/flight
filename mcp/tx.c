@@ -141,6 +141,8 @@ void WriteAux(void)
     static int firsttime = 1;
     if (firsttime) {
         firsttime = 0;
+
+        // status and housekeeping information
         statusMCCAddr = channels_find_by_name("status_mcc");
 
         he4LevOldAddr = channels_find_by_name("he4_lev_old");
@@ -158,6 +160,9 @@ void WriteAux(void)
         partsSchedAddr = channels_find_by_name("parts_sched");
         upslotSchedAddr = channels_find_by_name("upslot_sched");
 
+        // housekeeping info to be shared with other flight computer
+        // North/South specific (denoted ***_n or ***_s)
+        // names are automatically aliased with the correct computer
         ASSIGN_BOTH_FLC(tcpu0_flc_addr, "t_cpu0_flc");
         ASSIGN_BOTH_FLC(tcpu1_flc_addr, "t_cpu1_flc");
         ASSIGN_BOTH_FLC(v12_flc_addr, "v_12v_flc");
