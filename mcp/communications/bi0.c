@@ -322,6 +322,10 @@ void biphase_writer(void * arg)
     int allframe_count = 0;
     uint32_t bandwidth = 0, transmit_size = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE); 
+
+    // BI0-LOS variables
+    struct BITSender bi0lossender = {0};
+    initBITSender(&bi0lossender, BI0LOS_FLC_ADDR, BI0LOS_FLC_PORT, 10, BI0_MAX_BUFFER_SIZE, BI0LOS_MAX_PACKET_SIZE);
  
     // packetization variables
     uint16_t i_pkt = 0;
@@ -390,6 +394,11 @@ void biphase_writer(void * arg)
             // compute the transmit size based on bandwidth
             transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
 
+            // send of BI0-LOS
+            setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
+            setBITSenderFramenum(&bi0lossender, transmit_size);
+            sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
+
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -417,3 +426,4 @@ void biphase_writer(void * arg)
         }
     }
 }
+
