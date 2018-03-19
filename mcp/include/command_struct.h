@@ -396,8 +396,14 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+  uint32_t biphase_clk_speed;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 

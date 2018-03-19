@@ -19,6 +19,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+<<<<<<< HEAD
  *  Last edited: December 15, 2017
  *      Author: sam + laura + seth
  */

@@ -82,54 +82,54 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 // power box OF and IF relay controls
-  {COMMAND(cycle_of_1), "powercycling OF relay 1", GR_CRYO},
-  {COMMAND(cycle_of_2), "powercycling OF relay 2", GR_CRYO},
-  {COMMAND(cycle_of_3), "powercycling OF relay 3", GR_CRYO},
-  {COMMAND(cycle_of_4), "powercycling OF relay 4", GR_CRYO},
-  {COMMAND(cycle_of_5), "powercycling OF relay 5", GR_CRYO},
-  {COMMAND(cycle_of_6), "powercycling OF relay 6", GR_CRYO},
-  {COMMAND(cycle_of_7), "powercycling OF relay 7", GR_CRYO},
-  {COMMAND(cycle_of_8), "powercycling OF relay 8", GR_CRYO},
-  {COMMAND(cycle_of_9), "powercycling OF relay 9", GR_CRYO},
-  {COMMAND(cycle_of_10), "powercycling OF relay 10", GR_CRYO},
-  {COMMAND(cycle_of_11), "powercycling OF relay 11", GR_CRYO},
-  {COMMAND(cycle_of_12), "powercycling OF relay 12", GR_CRYO},
-  {COMMAND(cycle_of_13), "powercycling OF relay 13", GR_CRYO},
-  {COMMAND(cycle_of_14), "powercycling OF relay 14", GR_CRYO},
+  {COMMAND(cycle_hd_pv), "powercycling HD PV", GR_CRYO},
+  {COMMAND(cycle_eth_switch), "powercycling Eth Switch", GR_CRYO},
+  {COMMAND(cycle_fc1), "powercycling FC1", GR_CRYO},
+  {COMMAND(cycle_xsc1), "powercycling XSC1", GR_CRYO},
+  {COMMAND(cycle_fc2), "powercycling FC2", GR_CRYO},
+  {COMMAND(cycle_xsc0), "powercycling XSC0", GR_CRYO},
+  {COMMAND(cycle_gyros), "powercycling gyros", GR_CRYO},
+  {COMMAND(cycle_data_transmit), "powercycling Data Transmit", GR_CRYO},
+  {COMMAND(cycle_el_mot), "powercycling El Motor", GR_CRYO},
+  {COMMAND(cycle_pivot), "powercycling pivot", GR_CRYO},
+  {COMMAND(cycle_magnetometer), "powercycling magnetometer", GR_CRYO},
+  {COMMAND(cycle_rw_mot), "powercycling RW Motor", GR_CRYO},
+  {COMMAND(cycle_steppers), "powercycling steppers", GR_CRYO},
+  {COMMAND(cycle_clinometers), "powercycling clinometers", GR_CRYO},
   {COMMAND(cycle_of_15), "powercycling OF relay 15", GR_CRYO},
-  {COMMAND(cycle_of_16), "powercycling OF relay 16", GR_CRYO},
-  {COMMAND(of_relay_1_on), "turning on OF relay 1", GR_CRYO},
-  {COMMAND(of_relay_2_on), "turning on OF relay 2", GR_CRYO},
-  {COMMAND(of_relay_3_on), "turning on OF relay 3", GR_CRYO},
-  {COMMAND(of_relay_4_on), "turning on OF relay 4", GR_CRYO},
-  {COMMAND(of_relay_5_on), "turning on OF relay 5", GR_CRYO},
-  {COMMAND(of_relay_6_on), "turning on OF relay 6", GR_CRYO},
-  {COMMAND(of_relay_7_on), "turning on OF relay 7", GR_CRYO},
-  {COMMAND(of_relay_8_on), "turning on OF relay 8", GR_CRYO},
-  {COMMAND(of_relay_9_on), "turning on OF relay 9", GR_CRYO},
-  {COMMAND(of_relay_10_on), "turning on OF relay 10", GR_CRYO},
-  {COMMAND(of_relay_11_on), "turning on OF relay 11", GR_CRYO},
-  {COMMAND(of_relay_12_on), "turning on OF relay 12", GR_CRYO},
-  {COMMAND(of_relay_13_on), "turning on OF relay 13", GR_CRYO},
-  {COMMAND(of_relay_14_on), "turning on OF relay 14", GR_CRYO},
+  {COMMAND(cycle_gps_timing), "powercycling gps timing", GR_CRYO},
+  {COMMAND(hd_pv_on), "turning on HD PV", GR_CRYO},
+  {COMMAND(eth_switch_on), "turning on Eth Switch", GR_CRYO},
+  {COMMAND(fc1_on), "turning on FC1", GR_CRYO},
+  {COMMAND(xsc1_acs_on), "turning on XSC1", GR_CRYO},
+  {COMMAND(fc2_on), "turning on FC2", GR_CRYO},
+  {COMMAND(xsc0_acs_on), "turning on XSC0", GR_CRYO},
+  {COMMAND(gyros_on), "turning on OF gyros", GR_CRYO},
+  {COMMAND(data_transmit_on), "turning on Data Transmit", GR_CRYO},
+  {COMMAND(el_mot_on), "turning on El Motor", GR_CRYO},
+  {COMMAND(pivot_on), "turning on pivot", GR_CRYO},
+  {COMMAND(magnetometer_on), "turning on magnetometer", GR_CRYO},
+  {COMMAND(rw_mot_on), "turning on RW Motor", GR_CRYO},
+  {COMMAND(steppers_on), "turning on steppers", GR_CRYO},
+  {COMMAND(clinometers_on), "turning on clinometers", GR_CRYO},
   {COMMAND(of_relay_15_on), "turning on OF relay 15", GR_CRYO},
-  {COMMAND(of_relay_16_on), "turning on OF relay 16", GR_CRYO},
-  {COMMAND(of_relay_1_off), "turning off OF relay 1", GR_CRYO},
-  {COMMAND(of_relay_2_off), "turning off OF relay 2", GR_CRYO},
-  {COMMAND(of_relay_3_off), "turning off OF relay 3", GR_CRYO},
-  {COMMAND(of_relay_4_off), "turning off OF relay 4", GR_CRYO},
-  {COMMAND(of_relay_5_off), "turning off OF relay 5", GR_CRYO},
-  {COMMAND(of_relay_6_off), "turning off OF relay 6", GR_CRYO},
-  {COMMAND(of_relay_7_off), "turning off OF relay 7", GR_CRYO},
-  {COMMAND(of_relay_8_off), "turning off OF relay 8", GR_CRYO},
-  {COMMAND(of_relay_9_off), "turning off OF relay 9", GR_CRYO},
-  {COMMAND(of_relay_10_off), "turning off OF relay 10", GR_CRYO},
-  {COMMAND(of_relay_11_off), "turning off OF relay 11", GR_CRYO},
-  {COMMAND(of_relay_12_off), "turning off OF relay 12", GR_CRYO},
-  {COMMAND(of_relay_13_off), "turning off OF relay 13", GR_CRYO},
-  {COMMAND(of_relay_14_off), "turning off OF relay 14", GR_CRYO},
+  {COMMAND(gps_timing_on), "turning on gps timing", GR_CRYO},
+  {COMMAND(hd_pv_off), "turning off HD PV", GR_CRYO},
+  {COMMAND(eth_switch_off), "turning off Eth Switch", GR_CRYO},
+  {COMMAND(fc1_off), "turning off FC1", GR_CRYO},
+  {COMMAND(xsc1_acs_off), "turning off XSC1", GR_CRYO},
+  {COMMAND(fc2_off), "turning off FC2", GR_CRYO},
+  {COMMAND(xsc0_acs_off), "turning off XSC0", GR_CRYO},
+  {COMMAND(gyros_off), "turning off OF gyros", GR_CRYO},
+  {COMMAND(data_transmit_off), "turning off Data Transmit", GR_CRYO},
+  {COMMAND(el_mot_off), "turning off El Motor", GR_CRYO},
+  {COMMAND(pivot_off), "turning off pivot", GR_CRYO},
+  {COMMAND(magnetometer_off), "turning off magnetometer", GR_CRYO},
+  {COMMAND(rw_mot_off), "turning off RW Motor", GR_CRYO},
+  {COMMAND(steppers_off), "turning off steppers", GR_CRYO},
+  {COMMAND(clinometers_off), "turning off clinometers", GR_CRYO},
   {COMMAND(of_relay_15_off), "turning off OF relay 15", GR_CRYO},
-  {COMMAND(of_relay_16_off), "turning off OF relay 16", GR_CRYO},
+  {COMMAND(gps_timing_off), "turning off gps timing", GR_CRYO},
   {COMMAND(cycle_if_1), "powercycling if relay 1", GR_CRYO},
   {COMMAND(cycle_if_2), "powercycling if relay 2", GR_CRYO},
   {COMMAND(cycle_if_3), "powercycling if relay 3", GR_CRYO},
@@ -339,7 +339,7 @@ struct scom scommands[xyzzy + 1] = {
  * l :  parameter is 32 bit unnormalised integer. Max is CMD_L_MAX
  * f :  parameter is 16 bit renormalised floating point
  * d :  parameter is 32 bit renormalised floating point
- * s :  parameter is 7-bit character string
+ * s :  parameter is 7-bit character string JOY: actually 32 char long
  */
 struct mcom mcommands[plugh + 2] = {
   {COMMAND(slot_sched), "set uplinked slot to use for schedule file",
@@ -817,18 +817,43 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-
-  {COMMAND(tdrss_bw), "tdrss omni bandwith", GR_TELEM, 1,
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_tdrss"}
+      {"Pilot Linklist", 0, 32, 's', "NONE"},
+      {"Biphase Linklist", 0, 32, 's', "NONE"},
+      {"High Rate Linklist", 0, 32, 's', "NONE"}
     }
   },
 
-  {COMMAND(iridium_bw), "iridium dialup bandwith", GR_TELEM, 1,
+  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
     {
-      {"Bandwidth (bps)", 100, 75000, 'f', "rate_iridium"}
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
     }
   },
+
+  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
+    }
+  },
+
+  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+    }
+  },
+
+  {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
+    {
+      {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
+    }
+  },
+  {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
+    {
+      {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
+    }
+  },
+
 
   /****************************************/
   /*************** Misc.  *****************/
@@ -967,7 +992,7 @@ struct mcom mcommands[plugh + 2] = {
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
     {
-      {"ROX bias amplitude (0-100)", 0, 100, 'i', "NONE"}
+      {"ROX bias amplitude (0-64)", 0, 64, 'i', "NONE"}
     }
   },
   /***************************************/
@@ -1042,11 +1067,11 @@ struct mcom mcommands[plugh + 2] = {
       }
   },
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
-        {
-	  {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
-	  {"Separation (in 5ms steps)", 1, 1000, 'i', "SEPARATION"},
-	  {"Length of Pulse (in 5ms steps)", 1, 1000, 'i', "LENGTH_PULSE"},
-	}
+      {
+          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 2, 30000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
+      }
   },
   /***************************************/
   /********* Cryo heat   *****************/

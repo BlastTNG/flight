@@ -44,6 +44,9 @@
 #include "labjack_functions.h"
 #include "labjack.h"
 
+extern int16_t InCharge;
+extern labjack_state_t state[NUM_LABJACKS];
+
 #define NUM_LABJACK_AIN 14
 extern labjack_state_t state[NUM_LABJACKS];
 extern int16_t InCharge;
@@ -67,7 +70,7 @@ labjack_commandq_t s_labjack_command;
 static void labjack_execute_command_queue(void) {
     labjack_command_t *cmd, *tcmd;
     PH_STAILQ_FOREACH_SAFE(cmd, &s_labjack_command, q, tcmd) {
-        if (InCharge) {
+        if (InCharge && (state[cmd->labjack].initialized)) {
             heater_write(cmd->labjack, cmd->address, cmd->command);
         }
         PH_STAILQ_REMOVE_HEAD(&s_labjack_command, q);
@@ -185,7 +188,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     unsigned int autoTarget = STREAM_TARGET_ETHERNET;
     unsigned int numScans = 0; // 0 = Run continuously.
     unsigned int scanListAddresses[MAX_NUM_ADDRESSES] = {0};
-    uint16_t nChanList[MAX_NUM_ADDRESSES] = {0};
+    uint16_t nChanList[1] = {0};
     float rangeList[MAX_NUM_ADDRESSES];
 
 	blast_info("Attempting to set registers for labjack%02d streaming.", m_state->which);
@@ -303,7 +306,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     // stream scan and configure the analog input settings.
     for (int i = 0; i < numAddresses; i++) {
         scanListAddresses[i] = i*2; // AIN(i) (Modbus address i*2)
-        nChanList[i] = 199; // Negative channel is 199 (single ended)
+        nChanList[0] = 199; // Negative channel is 199 (single ended)
         // rangeList[i] = 10.0; // 0.0 = +/-10V, 10.0 = +/-10V, 1.0 = +/-1V, 0.1 = +/-0.1V, or 0.01 = +/-0.01V.
 	    labjack_set_short(scanListAddresses[i], data);
         m_state_number = m_state->which;
@@ -361,17 +364,16 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
             return;
         } else {
         }
-        if ((ret = modbus_write_registers(m_state->cmd_mb, AIN0_NEGATIVE_CH_ADDR + i, 1, nChanList+i)) < 0) {
-            ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
-            if (!m_state->have_warned_write_reg) {
-                blast_err("Could not set %d-th AIN negative channel: %s. Data sent %d",
-                    i, modbus_strerror(errno), nChanList[i]);
-                if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
-            }
-            m_state->has_comm_stream_error = 1;
-            m_state->have_warned_write_reg = 1;
-            return;
+    }
+    if ((ret = modbus_write_registers(m_state->cmd_mb, 43902, 1, nChanList)) < 0) {
+        ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
+        if (!m_state->have_warned_write_reg) {
+            blast_err("Could not set AIN negative channel: %s. Data sent %d", modbus_strerror(errno), nChanList[0]);
+            if (ret > 0) blast_err("Specific labjack error code is: %d)", err_data[0]);
         }
+        m_state->has_comm_stream_error = 1;
+        m_state->have_warned_write_reg = 1;
+        return;
     }
 	blast_info("Attempting to enable streaming for labjack%02d.", m_state->which);
 
@@ -464,8 +466,30 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
 
+static int initialized(void) {
+    if (state[0].initialized) {
+        return 1;
+    }
+    if (state[1].initialized) {
+        return 1;
+    }
+    if (state[2].initialized) {
+        return 1;
+    }
+    if (state[3].initialized) {
+        return 1;
+    }
+    if (state[4].initialized) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void labjack_choose_execute(void) {
-    if (CommandData.Labjack_Queue.set_q == 1) {
+    int init = initialized();
+    if (CommandData.Labjack_Queue.set_q == 1 && init) {
+        blast_info("setting cmd queue executor");
         if (CommandData.Relays.labjack[0] == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;
@@ -579,10 +603,10 @@ void *labjack_cmd_thread(void *m_lj) {
   * Called by mcp during startup.
   */
 
-void initialize_labjack_commands(int m_which)
+ph_thread_t* initialize_labjack_commands(int m_which)
 {
     blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
-    ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
+    return ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
 void initialize_labjack_queue(void) {

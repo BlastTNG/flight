@@ -93,6 +93,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -230,7 +231,6 @@
     <ClCompile Include="..\..\code\shared\simulations\brightness.cpp" />
     <ClCompile Include="..\..\code\shared\solving\filters.cpp" />
     <ClCompile Include="..\..\code\shared\solving\mask.cpp" />
-    <ClCompile Include="..\..\code\shared\solving\motion_psf.cpp" />
     <ClCompile Include="..\..\code\shared\solving\settings.cpp" />
     <ClCompile Include="..\..\code\shared\update.cpp" />
     <ClCompile Include="..\..\code\solving\attitude.cpp" />
@@ -373,7 +373,6 @@
     <ClInclude Include="..\..\code\shared\simulations\brightness.h" />
     <ClInclude Include="..\..\code\shared\solving\filters.h" />
     <ClInclude Include="..\..\code\shared\solving\mask.h" />
-    <ClInclude Include="..\..\code\shared\solving\motion_psf.h" />
     <ClInclude Include="..\..\code\shared\solving\settings.h" />
     <ClInclude Include="..\..\code\shared\thread_names.h" />
     <ClInclude Include="..\..\code\shared\update.h" />

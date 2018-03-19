@@ -210,24 +210,25 @@ void PublishFrames(void)
             // 200 Hz
             memcpy(channel_data[RATE_200HZ], frames.framelist[write_frame], frame_size[RATE_200HZ]);
             framing_publish_200hz(channel_data[RATE_200HZ]);
-            counter_200hz = GET_UINT32(frame_200hz_counter_Addr);
-            // blast_info("Counter 200hz is %d", counter_200hz);
+            counter_200hz = GET_INT32(frame_200hz_counter_Addr);
+            blast_info("Counter 200hz is %d", counter_200hz);
             frame_offset = frame_size[RATE_200HZ];
             memcpy(channel_data[RATE_200HZ], frames.framelist[write_frame]+frame_offset, frame_size[RATE_200HZ]);
-            counter_200hz = GET_UINT32(frame_200hz_counter_Addr);
-            // blast_info("Counter 200hz is %d", counter_200hz);
+            counter_200hz = GET_INT32(frame_200hz_counter_Addr);
+            blast_info("Counter 200hz is %d", counter_200hz);
             framing_publish_200hz(channel_data[RATE_200HZ]);
             // 100 Hz
             frame_offset = 2*frame_size[RATE_200HZ];
             memcpy(channel_data[RATE_100HZ], frames.framelist[write_frame]+frame_offset, frame_size[RATE_100HZ]);
             framing_publish_100hz(channel_data[RATE_100HZ]);
-            counter_100hz = GET_UINT32(frame_100hz_counter_Addr);
+            counter_100hz = GET_INT32(frame_100hz_counter_Addr);
             blast_info("Counter 100hz is %d", counter_100hz);
             // 1 Hz
             frame_offset = 2*frame_size[RATE_200HZ] + frame_size[RATE_100HZ];
             sub_counter_1hz = GET_UINT8(subframe_1hz_Addr);
             if (sub_counter_1hz < sub_previous_counter_1hz) {
-                counter_1hz = GET_UINT32(frame_1hz_counter_dl_Addr);
+                counter_1hz = GET_INT32(frame_1hz_counter_dl_Addr);
+                blast_info("Counter 1hz is %d", counter_1hz);
                 if (false) {
                     if (previous_counter_1hz == counter_1hz) {
                         SET_INT32(frame_1hz_counter_dl_Addr, (counter_100hz/100 - 1)); // Publishing the previous frame
@@ -269,7 +270,7 @@ int main(void) {
 
     /* Initialise Decom */
     ioctl(decom_fp, DECOM_IOC_RESET);
-    ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
+    ioctl(decom_fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
 
     /* set up our outputs */
     openlog("decomd", LOG_PID, LOG_DAEMON);

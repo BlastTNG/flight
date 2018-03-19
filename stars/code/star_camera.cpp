@@ -65,7 +65,7 @@ void StarCamera::update_framerate()
         framerate_counter++;
         if (framerate_timer.time() > 5.0) {
             double framerate = double(framerate_counter) / framerate_timer.time();
-            logger.log(format("framerate is %d")%framerate);
+            //logger.log(format("framerate is %d")%framerate);
             framerate_timer.start();
             framerate_counter = 0;
         }
