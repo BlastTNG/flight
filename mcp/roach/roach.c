@@ -19,8 +19,7 @@
  * along with mcp; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
-<<<<<<< HEAD
- *  Last edited: December 15, 2017
+ *  Last edited: March, 2018
  *      Author: sam + laura + seth
  */
 
@@ -55,6 +54,7 @@
 // include "portable_endian.h"
 #include <fftw3.h>
 #include "mcp.h"
+#include "cryostat.h"
 #include "katcp.h"
 #include "katcl.h"
 #include "blast.h"
@@ -126,6 +126,7 @@
 #define EXT_REF 0 /* Valon external ref (10 MHz) */
 #define NCAL_POINTS 21 /* Number of points to use for cal sweep */
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
+#define DELTA_AMP 0.02 /* A change in tone amplitude (used for optical calibration */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1829,22 +1830,20 @@ void cal_get_mags(roach_state_t *m_roach, uint32_t m_sweep_freq,
 }
 
 // Save short timestreams for single channel (using for cal lamp tests outside of KST)
-void save_timestream(roach_state_t *m_roach)
+void save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
 {
-    int chan = CommandData.roach[m_roach->which - 1].chan;
-    double nsec = CommandData.roach_params[m_roach->which - 1].num_sec;
-    blast_info("chan, nsec: %d, %f", chan, nsec);
+    blast_info("chan, nsec: %d, %f", m_chan, m_nsec);
     char *savepath;
     char filename[] = "/home/fc1user/sam_tests/timestream.dat";
     double I;
     double Q;
     int m_num_received = 0;
-    int npoints = round(nsec * (double)DAC_FREQ_RES);
+    int npoints = round(m_nsec * (double)DAC_FREQ_RES);
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     uint8_t i_udp_read;
     blast_tmp_sprintf(savepath, filename);
     // open file for writing
-    blast_info("ROACH%d, saving %d points for chan%d over %f sec", m_roach->which, npoints, chan, nsec);
+    blast_info("ROACH%d, saving %d points for chan%d over %f sec", m_roach->which, npoints, m_chan, m_nsec);
     FILE *fd = fopen(filename, "w");
     for (int i = 0; i < npoints; i++) {
         blast_info("i = %d", i);
@@ -1853,8 +1852,8 @@ void save_timestream(roach_state_t *m_roach)
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
-            I = m_packet.Ival[chan];
-            Q = m_packet.Qval[chan];
+            I = m_packet.Ival[m_chan];
+            Q = m_packet.Qval[m_chan];
             fprintf(fd, "%g\t %g\n", I, Q);
             blast_info("I, Q: %g\t %g", I, Q);
             m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
@@ -1903,15 +1902,18 @@ int change_targ_amps(roach_state_t *m_roach, double *m_delta_amps, int *m_channe
     return retval;
 }
 
-// tune tone amplitude according to chop snr
-void chop_tune(roach_state_t *m_roach)
+// Do a lamp chop and save timestream
+void chop_and_save(roach_state_t *m_roach, int m_chan, int m_num_pulse,
+                   int m_length, int m_separation, double m_nsec)
 {
-    double snr;
+    // chop the lamp
+    CommandData.Cryo.periodic_pulse = 1;
+    CommandData.Cryo.num_pulse = m_num_pulse;
+    CommandData.Cryo.separation = m_separation;
+    CommandData.Cryo.length = m_length;
+    periodic_cal_control();
     // get the timestream (save to file for now)
-    save_timestream(m_roach);
-    // fit the snr
-    chop_snr(m_roach, &snr);
-    blast_info("ROACH%d, chop SNR = %g", m_roach->which, snr);
+    save_timestream(m_roach, m_chan, m_nsec);
 }
 
 /* Function: cal_sweep
@@ -2092,6 +2094,62 @@ int cal_sweep_attens(roach_state_t *m_roach)
     CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
     free(m_roach->last_cal_path);
     return SWEEP_SUCCESS;
+}
+
+// refit resonant frequency by doing a cal sweep and calling Python
+void cal_fit_res(roach_state_t *m_roach)
+{
+    CommandData.roach[m_roach->which - 1].do_cal_sweeps = 1;
+    CommandData.roach_params[m_roach->which - 1].ncycles = 1;
+    CommandData.roach_params[m_roach->which - 1].npoints = 20;
+    cal_sweep_attens(m_roach);
+    // fit res and rewrite tones
+}
+
+// tune tone amplitude according to chop snr (starting with single channel)
+// m_nsec is the length of the timestream
+void chop_tune(roach_state_t *m_roach, int m_chan, double m_nsec)
+{
+    if (CommandData.roach[m_roach->which - 1].tune_chan) {
+        int ncycles = 3; // Move to this CommandData
+        double snr;
+        double current_snr;
+        // start with this delta_amp for now
+        double delta_amps = DELTA_AMP;
+        // chop parameters
+        int num_pulse = 10;
+        int separation = 200;
+        int length = 200;
+        // chop and save timstream
+        chop_and_save(m_roach, m_chan, num_pulse, length, separation, m_nsec);
+        // fit the snr
+        chop_snr(m_roach, &snr);
+        blast_info("ROACH%d, chop SNR = %g", m_roach->which, snr);
+        // Start the cycle
+        int count = 0;
+        while (count < ncycles) {
+            blast_info("ROACH%d, starting chop tune on chan %d", m_roach->which, m_chan);
+            // increase tone amplitude by a small amount
+            change_targ_amps(m_roach, &delta_amps, &m_chan, 1);
+            // TODO(Sam) refit resonant frequency by doing a cal sweep and calling Python
+            cal_fit_res(m_roach);
+            // chop and save again
+            chop_and_save(m_roach, m_chan, num_pulse, length, separation, m_nsec);
+            // fit the snr
+            chop_snr(m_roach, &current_snr);
+            blast_info("ROACH%d, new chop SNR = %g", m_roach->which, current_snr);
+            // Compare new snr to old
+            if (current_snr < snr) {
+                // if current snr < snr, change delta direction
+                blast_info("ROACH%d, changing delta amp sign", m_roach->which);
+                delta_amps *= -1.0;
+                // if current snr > snr
+            }
+            snr = current_snr;
+            count += 1;
+        }
+        CommandData.roach[m_roach->which - 1].tune_chan = 0;
+    }
 }
 
 int calc_grad_freqs(roach_state_t *m_roach, char *m_targ_path)
@@ -2536,10 +2594,16 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
-	if (CommandData.roach[i].get_timestream) {
+        if (CommandData.roach[i].get_timestream) {
             blast_info("Save timestream called");
-            save_timestream(&roach_state_table[i]);
-	}
+            save_timestream(&roach_state_table[i], CommandData.roach[i].chan,
+                          CommandData.roach_params[i].num_sec);
+        }
+        if (CommandData.roach[i].tune_chan) {
+            blast_info("Chop_tune_chan called");
+            chop_tune(&roach_state_table[i], CommandData.roach[i].chan,
+                          CommandData.roach_params[i].num_sec);
+        }
         if (CommandData.roach[i].roach_state) {
             roach_state_table[i].status = CommandData.roach[i].roach_new_state;
             roach_state_table[i].desired_status = CommandData.roach[i].roach_desired_state;

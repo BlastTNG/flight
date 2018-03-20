@@ -1842,7 +1842,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_STREAMING;
           CommandData.roach[ivalues[0]-1].change_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
-	  CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
+          CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
       }
       break;
     case cal_sweeps:
@@ -1938,6 +1938,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
           CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
           CommandData.roach[ivalues[0]-1].get_timestream = 1;
+      }
+      break;
+    case chop_tune_chan:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+                     ((ivalues[1] >= 0) && ivalues[1] <= 1000) &&
+                     ((rvalues[1] >= 0) && rvalues[1] <= 10)) {
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach[ivalues[0]-1].tune_chan = 1;
       }
       break;
       /*************************************
@@ -2490,6 +2499,7 @@ void InitCommandData()
         CommandData.roach[i].load_targ_amps = 0;
         CommandData.roach[i].get_phase_centers = 0;
         CommandData.roach[i].get_timestream = 0;
+        CommandData.roach[i].tune_chan = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
