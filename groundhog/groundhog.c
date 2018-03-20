@@ -149,12 +149,12 @@ int main(int argc, char * argv[]) {
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
   pthread_t biphase_receive_worker;
-  pthread_t tdrss_receive_worker;
+  pthread_t highrate_receive_worker;
 
   // Publishing data to MSQT
   pthread_t pilot_publish_worker;
   pthread_t biphase_publish_worker;
-  pthread_t tdrss_publish_worker;
+  pthread_t highrate_publish_worker;
 
   if (pilot_on) {
     pthread_create(&pilot_receive_worker, NULL, (void *) &pilot_receive, NULL);
@@ -167,8 +167,8 @@ int main(int argc, char * argv[]) {
   }
 
   if (highrate_on) {
-    pthread_create(&tdrss_receive_worker, NULL, (void *) &tdrss_receive, NULL);
-    pthread_create(&tdrss_publish_worker, NULL, (void *) &tdrss_publish, NULL);
+    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
+    pthread_create(&highrate_publish_worker, NULL, (void *) &highrate_publish, NULL);
   }
 
 
@@ -184,8 +184,8 @@ int main(int argc, char * argv[]) {
   }
 
   if (highrate_on) {
-    pthread_join(tdrss_receive_worker, NULL);
-    pthread_join(tdrss_publish_worker, NULL);
+    pthread_join(highrate_receive_worker, NULL);
+    pthread_join(highrate_publish_worker, NULL);
   }
 
   return 0;

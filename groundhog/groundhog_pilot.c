@@ -104,7 +104,9 @@ void pilot_receive(void *arg) {
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
+    if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
+      blast_info("[Pilot] Received an allframe :)\n");
+    } else {
       blast_info("[Pilot] Received linklist \"%s\"", ll->name);
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
@@ -115,9 +117,7 @@ void pilot_receive(void *arg) {
       }
 
       // decompress
-      if (!decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size)) { 
-        continue;
-      }
+      decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
       /*
       printf("Start\n");
       for (int i = 0; i < 5; i++) {
@@ -125,8 +125,6 @@ void pilot_receive(void *arg) {
       }
       */
       push_superframe(local_superframe, &pilot_superframes);
-    } else {
-      blast_info("[Pilot] Received an allframe :)\n");
     }
   }
 }
