@@ -1,5 +1,6 @@
 set(MCP_COMMON_SRCS
     ${MCP_COMMON_SRCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/bitserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
@@ -15,6 +16,7 @@ set(MCP_COMMON_SRCS
 )
 set(MCP_COMMON_HEADERS
    ${MCP_COMMON_HEADERS}
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/bitserver.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_packet_format.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
@@ -36,6 +38,7 @@ set(MCP_COMMON_HEADERS
 set(GROUNDHOG_COMMON_SRCS
     ${GROUNDHOG_COMMON_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bitserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/FIFO.c
@@ -47,6 +50,7 @@ set(GROUNDHOG_COMMON_HEADERS
    ${GROUNDHOG_COMMON_HEADERS}
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/bitserver.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h

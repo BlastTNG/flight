@@ -81,6 +81,7 @@ void pilot_receive(void *arg) {
       linklist_to_file(ll, basename);
     }
 #endif
+
     prev_serial = serial;
 
     // set the linklist serial

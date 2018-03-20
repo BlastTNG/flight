@@ -382,7 +382,11 @@ linklist_t * parse_linklist(char *fname)
         {
           chan = channels_find_by_name(temps[0]);
           isblock = 0;
-          if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
+          if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0))
+          {
+            comp_type = NO_COMP;
+          }
+          else if (strspn(temps[1], "0123456789") == strlen(temps[1])) // normal field, number
           {
             comp_type = atoi(temps[1]); // get compression type
           }
@@ -403,13 +407,24 @@ linklist_t * parse_linklist(char *fname)
             }
           }
         }
-        num = atoi(temps[2]); // get compressed samples per frame 
+
 
         if (!chan)
         {
           blast_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
           continue;
         }
+
+        // get compressed samples per frame
+        if ((strcmp(temps[2], "NONE") == 0) || (strlen(temps[2]) == 0))
+        {
+          num = get_channel_spf(chan);
+        }
+        else
+        {
+          num = atoi(temps[2]); // get compressed samples per frame 
+        }
+
         update_channel_hash(&mdContext, chan);
 
         ll->items[ll->n_entries].tlm = chan; // connect entry to name
@@ -660,7 +675,7 @@ linklist_t * linklist_all_telemetry()
 
   MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
   MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
-  MD5_Update(&mdContext, ll->name, strlen(ll->name));
+  //MD5_Update(&mdContext, ll->name, (strlen(ll->name)/4)*4);
 
   // generate serial
   MD5_Final(md5hash, &mdContext);

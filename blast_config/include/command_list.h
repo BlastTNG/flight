@@ -71,6 +71,8 @@
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
+extern const char *linklist_names[];
+extern const char *downlink_names[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
@@ -185,7 +187,9 @@ enum multiCommand {
   az_scan_accel,
   // t_gyro_set,
   highrate_bw,       pilot_bw,         biphase_bw,
-  biphase_clk_speed, highrate_through_tdrss,              set_linklists,
+  biphase_clk_speed, highrate_through_tdrss,   set_linklists,
+  request_file,
+
   // t_gyro_gain,
   timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
@@ -263,6 +267,8 @@ enum multiCommand {
   cal_length,
   level_length,
   send_dac,
+  // Sam Grab these
+  periodic_cal,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

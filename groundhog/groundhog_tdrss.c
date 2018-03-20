@@ -19,6 +19,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "FIFO.h"
 #include "bitserver.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
@@ -35,7 +36,7 @@ int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
 {
     int i = 0;
     while (1) { 
-        if (read(fd, buffer+i, 1)) {
+        if (read(fd, buffer+i, 1) > 0) {
             i++;
         } else {
             usleep(1000);
@@ -50,10 +51,17 @@ void tdrss_receive(void *arg) {
   linklist_t * ll = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compressed_buffer = calloc(1, HIGHRATE_MAX_SIZE);
+  uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
+  uint32_t buffer_size = ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize;
+  unsigned int csbf_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
 
-  uint8_t *header_buffer = calloc(1, PACKET_HEADER_SIZE);
-  uint8_t *csbf_header = calloc(1, CSBF_HEADER_SIZE);
+  uint8_t *compressed_buffer = calloc(1, buffer_size);
+  uint8_t *csbf_packet = calloc(1, csbf_packet_size);
+  uint8_t *csbf_header = csbf_packet+0;
+  uint8_t *header_buffer = csbf_header+CSBF_HEADER_SIZE;
+  uint8_t *data_buffer = header_buffer+PACKET_HEADER_SIZE;
+  uint8_t *csbf_checksum = header_buffer+HIGHRATE_DATA_PACKET_SIZE;
+
 
   uint32_t *serial_number = 0;
   uint16_t *i_pkt, *n_pkt;
@@ -72,8 +80,42 @@ void tdrss_receive(void *arg) {
   uint8_t csbf_origin = 0;
   uint8_t csbf_sync2 = 0;
   uint16_t csbf_size = 0;
+  uint8_t checksum = 0;
   int byte_pos = 0;
   char source_str[32] = {0};
+  int retval = 0;
+  uint32_t recv_size = 0;
+
+/*
+  int counter = 0;
+  int timer = 0;
+  while (true) {
+    if (read(fd, local_superframe+counter, 1) > 0) {
+      counter++;
+      timer = 0;
+    } else if (timer > 1000) {
+      if (counter > 4096) {
+        printf("End of message (count = %d)\n", counter);
+
+        for (int i = 0; i < 8; i++) {
+          if (i % 32 == 0) printf("\n");
+          printf("0x%.2x ", local_superframe[i]);
+        }
+        printf("\n");
+  
+        for (int i = 4095; i < counter; i++) {
+          if (i % 32 == 0) printf("\n");
+          printf("0x%.2x ", local_superframe[i]);
+        }
+        printf("\n");
+      }
+      counter = 0;
+      timer = 0;
+    }
+    timer++;
+    usleep(100);
+  }
+*/
 
   while (true) {
       // perform a search for a valid serial
@@ -84,14 +126,22 @@ void tdrss_receive(void *arg) {
               if (byte_pos == 0) { // check first sync byte
                   if (byte == HIGHRATE_SYNC1) { // check first sync byte
                       csbf_header[byte_pos++] = byte;
-                      //printf("Tentative 1\n");
+                      // printf("Tentative 1\n");
                   }
               } else if (byte_pos == 1) { // check 2nd sync byte
-                  if ((byte == HIGHRATE_TDRSS_SYNC2) || (byte == HIGHRATE_IRIDIUM_SYNC2)) { 
-                  csbf_header[byte_pos++] = byte;
-                  //printf("Definite 0\n");
-                  } else { // false alarm, lost sync
-                      byte_pos = 0;
+                  switch (byte) {
+                      case LOWRATE_COMM1_SYNC2 :
+                      case LOWRATE_COMM2_SYNC2 :
+                          blast_info("Received 255 byte house keeping packet\n"); 
+                          byte_pos = 0;
+                          break; 
+                     case HIGHRATE_TDRSS_SYNC2 :
+                      case HIGHRATE_IRIDIUM_SYNC2 :
+                          // printf("Definite 0\n");
+                          csbf_header[byte_pos++] = byte;
+                          break;
+                      default :
+                          byte_pos = 0;
                   }
               } else if (byte_pos < CSBF_HEADER_SIZE) { // fill the CSBF header
                   //printf("Filling csbf header %d 0x%x\n", byte_pos, byte);
@@ -132,32 +182,63 @@ void tdrss_receive(void *arg) {
 
       // read the rest of the header
       blocking_read(fd, header_buffer+4, PACKET_HEADER_SIZE-4);
-    
+      blocking_read(fd, data_buffer, csbf_size-PACKET_HEADER_SIZE+1); // +1 for the crc footer
+      *csbf_checksum = data_buffer[csbf_size-PACKET_HEADER_SIZE]; // grab the received checksum
+
+      for (int i = 0; i < csbf_packet_size; i++) {
+        if (i % 32 == 0) printf("\n");
+        printf("0x%.2x ", csbf_packet[i]);
+      }
+      printf("\n");
+
+      // compute checksum
+      checksum = 0;
+      for (int i = 2; i < CSBF_HEADER_SIZE; i++) checksum += csbf_header[i];
+      for (int i = 0; i < PACKET_HEADER_SIZE; i++) checksum += header_buffer[i];
+      for (int i = 0; i < datasize; i++) checksum += data_buffer[i];
+
+      if (checksum != *csbf_checksum) {
+        blast_info("Checksum error 0x%.2x != 0x%.2x", checksum, *csbf_checksum);
+      }
+      if (csbf_size != (datasize+PACKET_HEADER_SIZE)) {
+        blast_info("Data size error %d != %d", datasize, csbf_size);
+      }
       readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
- 
-      // hijack frame number for transmit size
       transmit_size = *frame_number;
-      if (transmit_size > ll->blk_size) {
-          blast_err("Transmit size larger than assigned linklist");
-          transmit_size = ll->blk_size;
+
+      // blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d, datasize=%d, i=%d, n=%d", transmit_size, ll->blk_size, csbf_size, datasize, *i_pkt, *n_pkt);
+
+      retval = depacketizeBuffer(compressed_buffer, &recv_size, 
+                               HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE,
+                               i_pkt, n_pkt, data_buffer);
+
+      memset(csbf_packet, 0, csbf_packet_size);
+
+      if ((retval == 0) && (ll != NULL))
+      {
+ 
+        // hijack frame number for transmit size
+        if (transmit_size > ll->blk_size) {
+            blast_err("Transmit size larger than assigned linklist");
+            transmit_size = ll->blk_size;
+        }
+
+
+        // decompress the linklist
+        if (!read_allframe(local_superframe, compressed_buffer)) {
+            blast_info("%s Received linklist \"%s\"", source_str, ll->name);
+            // blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
+            if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
+                continue;
+            }
+            printf("Pushed superframe\n");
+            push_superframe(local_superframe, &tdrss_superframes);
+        } else {
+            blast_info("[TDRSS HGA] Received an allframe :)\n");
+        }
+        memset(compressed_buffer, 0, buffer_size);
+        recv_size = 0;
       }
-
-      //blast_info("Transmit size=%d, blk_size=%d, csbf_size=%d", transmit_size, ll->blk_size, csbf_size);
-
-      blocking_read(fd, compressed_buffer, transmit_size+1); // +1 for the crc footer
-
-      // decompress the linklist
-      if (!read_allframe(local_superframe, compressed_buffer)) {
-          blast_info("%s Received linklist \"%s\"", source_str, ll->name);
-          // blast_info("%s Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-          if (!decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size)) { 
-              continue;
-          }
-          push_superframe(local_superframe, &tdrss_superframes);
-      } else {
-          blast_info("[TDRSS HGA] Received an allframe :)\n");
-      }
-      memset(header_buffer, 0, PACKET_HEADER_SIZE);
   }
 }
 

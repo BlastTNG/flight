@@ -1,6 +1,5 @@
 set(LINKLIST_SRCS
     ${LINKLIST_SRCS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/bitserver.c
     ${CMAKE_CURRENT_SOURCE_DIR}/CRC.c
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist.c
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist_compress.c
@@ -8,7 +7,6 @@ set(LINKLIST_SRCS
 )
 set(LINKLIST_HEADERS
     ${LINKLIST_HEADERS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/bitserver.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CRC.h
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist.h
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist_compress.h
