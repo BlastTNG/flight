@@ -166,6 +166,16 @@ include_directories(${PROJECT_SOURCE_DIR}/../external_libs/soem/soem
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/osal
     ${PROJECT_SOURCE_DIR}/../external_libs/soem/oshw)
 
+# add katcp library
+set(KATCP_LIBRARY ${PROJECT_BINARY_DIR}/katcp/libkatcp.a)
+ExternalProject_Add(katcp 
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/katcp 
+    BINARY_DIR ${PROJECT_BINARY_DIR}/katcp 
+    URL ${PROJECT_SOURCE_DIR}/../external_libs/katcp
+    INSTALL_COMMAND "")
+
+include_directories(${PROJECT_SOURCE_DIR}/../external_libs/katcp)
+
 # add our version of libphenom
 ExternalProject_Add(phenomproj
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/phenom
@@ -217,6 +227,23 @@ IF(NOT MODBUS_LIBRARY)
 ENDIF()
 include_directories(${MODBUS_INCLUDE_DIR})
 
+# Find fftw
+pkg_check_modules(PC_FFTW3 QUIET fftw3)
+set(FFTW3_DEFINITIONS ${PC_FFTW3_CFLAGS_OTHER})
+
+find_path(FFTW3_INCLUDE_DIR fftw3.h
+          HINTS ${PC_FFTW3_INCLUDEDIR} ${PC_FFTW3_INCLUDE_DIRS}
+          REQUIRED)
+
+find_library(FFTW3_LIBRARY NAMES libfftw3 fftw3
+            HINTS ${PC_FFTW3_LIBDIR} ${PC_FFTW3_LIBRARY_DIRS} REQUIRED)
+IF(NOT FFTW3_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find fftw3.h.  Is libfftw3-dev installed?")
+ENDIF()
+IF(NOT FFTW3_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libfftw3.  Please install this using apt-get.")
+ENDIF()
+include_directories(${FFTW3_INCLUDE_DIR})
 
 # Find libusb    
 pkg_check_modules(PC_USB QUIET libusb-1.0)
@@ -344,7 +371,7 @@ add_library(mcp_obj OBJECT
     ${PROJECT_SOURCE_DIR}/include/tx.h
     )
 define_file_basename_for_sources(mcp_obj)
-	
+
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
     $<TARGET_OBJECTS:diskmanager>
@@ -373,6 +400,7 @@ target_link_libraries(mcp
     ${MOSQ_LIBRARY}
     ${GLIB_LIBRARY}
     ${ECAT_LIBRARY}
+    ${KATCP_LIBRARY}
     ${CK_LIBRARY}
     ${PH_LIBRARY}
     ${SENSORS_LIBRARY}
