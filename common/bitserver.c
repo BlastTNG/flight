@@ -184,8 +184,6 @@ void * sendDataThread(void *arg) {
           // memset(header+PACKET_HEADER_SIZE, 0, packet_size); // clear data
 
 #endif
-        // usleep(10000/n_packets); // don't overflow udp sendto buffer
-          usleep(2000);
         }
       }
       decrementFifo(server->send_fifo);

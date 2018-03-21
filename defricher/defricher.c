@@ -308,6 +308,7 @@ int main(int argc, char** argv)
                  		ri.wrote,
                  		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
                  fflush(stdout);
+                 usleep(1000);
 #endif
             }
             usleep(500000);
