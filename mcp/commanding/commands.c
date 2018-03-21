@@ -1943,15 +1943,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case chop_tune_chan:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
                      ((ivalues[1] >= 0) && ivalues[1] <= 1000) &&
-                     ((rvalues[1] >= 0) && rvalues[1] <= 10)) {
+                     ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
           CommandData.roach[ivalues[0]-1].tune_chan = 1;
       }
       break;
     case refit_freqs:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+      }
+      break;
+    case change_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
       }
       break;
       /*************************************
@@ -2506,6 +2511,7 @@ void InitCommandData()
         CommandData.roach[i].get_timestream = 0;
         CommandData.roach[i].tune_chan = 0;
         CommandData.roach[i].refit_res_freqs = 0;
+        CommandData.roach[i].change_tone_amps = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
