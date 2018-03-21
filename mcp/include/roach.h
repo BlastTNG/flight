@@ -146,6 +146,7 @@ typedef struct roach_state {
     double vna_sweep_span;
     size_t vna_comb_len;
     char *vna_path_root;
+    char *chop_path_root;
     double p_max_freq;
     double p_min_freq;
     double n_max_freq;

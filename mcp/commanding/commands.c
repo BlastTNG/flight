@@ -1949,6 +1949,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].tune_chan = 1;
       }
       break;
+    case refit_freqs:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2500,6 +2505,7 @@ void InitCommandData()
         CommandData.roach[i].get_phase_centers = 0;
         CommandData.roach[i].get_timestream = 0;
         CommandData.roach[i].tune_chan = 0;
+        CommandData.roach[i].refit_res_freqs = 0;
     }
 
     CommandData.Bias.biasRamp = 0;

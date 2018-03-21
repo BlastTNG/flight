@@ -995,6 +995,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 10, 'f', "NONE"},
     }
   },
+  {COMMAND(refit_freqs), "Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

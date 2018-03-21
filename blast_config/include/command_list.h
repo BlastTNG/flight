@@ -258,6 +258,7 @@ enum multiCommand {
   calc_phase_centers,
   timestream,
   chop_tune_chan,
+  refit_freqs,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

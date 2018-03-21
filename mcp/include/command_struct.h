@@ -345,6 +345,7 @@ typedef struct roach
     unsigned int get_timestream;
     unsigned int chan;
     unsigned int tune_chan;
+    unsigned int refit_res_freqs;
 } roach_status_t;
 
 typedef struct roach_params

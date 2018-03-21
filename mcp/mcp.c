@@ -394,7 +394,7 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       }
     }
-    auto_cycle_mk2();
+    // auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
@@ -589,8 +589,8 @@ int main(int argc, char *argv[])
 #ifndef NO_KIDS_TEST
   blast_info("Initializing ROACHes from MCP...");
   roach_udp_networking_init();
-  init_roach(0);
-  // init_roach(1);
+  // init_roach(0);
+  init_roach(1);
   // init_roach(2);
   // init_roach(3);
   // init_roach(4);
