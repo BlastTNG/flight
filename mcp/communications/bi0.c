@@ -319,6 +319,15 @@ void * customSendDataThread(void *arg) {
     return NULL;
   }
 
+/*
+  struct timeval tv;
+  tv.tv_sec = 2;
+  tv.tv_usec = 500000;
+  if (setsockopt(status_sck, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+      perror("Error");
+  }
+*/
+
   bzero(&my_addr, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
   my_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
@@ -335,6 +344,8 @@ void * customSendDataThread(void *arg) {
   memcpy(&recv_addr.sin_addr.s_addr, the_target->h_addr, the_target->h_length);
 
   header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize, 1);
+
+  uint8_t buffer_status = 0;
 
   while (1) {
     if (!fifoIsEmpty(server->send_fifo)) { // something in the buffer
@@ -368,10 +379,10 @@ void * customSendDataThread(void *arg) {
           writeHeader(header, serial, frame_num, i++, n_packets);
 
           // query the UDP-LOS card to see if there is a buffer available
-          uint8_t buffer_status = 0;
           char recv_status[9] = {0};
           socklen_t slen = sizeof(recv_addr);
-          do {
+
+          while (!buffer_status) {
             slen = sizeof(recv_addr);
             if (sendto(status_sck, &buffer_status, 1, MSG_NOSIGNAL, 
                          (struct sockaddr *) &(recv_addr), slen) < 0) {
@@ -379,10 +390,11 @@ void * customSendDataThread(void *arg) {
             }
             if (recvfrom(status_sck, recv_status, 8, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
               blast_err("Could not receive buffer status\n");
+              buffer_status = 0;
             }
             buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
-            // blast_info("Buffer status = %d == %c\n", buffer_status, recv_status[7]);
-          } while (buffer_status == 0);
+            // blast_info("%d Buffer status = %d == %c\n", i, buffer_status, recv_status[7]);
+          }
 
           // add header to packet (adds due to MSG_MORE flag)
           if (sendto(server->sck, header, PACKET_HEADER_SIZE,
@@ -390,14 +402,15 @@ void * customSendDataThread(void *arg) {
             (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) {
               blast_err("sendTo failed (errno %d)", errno);
-            }
+          }
 
           // add data to packet and send
           if (sendto(server->sck, pkt_buffer, packet_size,
             MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) {
               blast_err("sendTo failed (errno %d)", errno);
-            }
+          }
+          if (buffer_status > 0) buffer_status = 0;
         }
       }
       decrementFifo(server->send_fifo);

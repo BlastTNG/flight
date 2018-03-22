@@ -30,7 +30,7 @@
 #define BI0_FRAME_BUFLEN (1 << BI0_FRAME_BUFBITS)
 #define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
 
-#define BI0_MAX_BUFFER_SIZE 250000 // maximum frame size at 1 Hz (i.e. 2 Mbits)
+#define BI0_MAX_BUFFER_SIZE (2*superframe_size) // maximum frame size at 1 Hz (i.e. 2 Mbits)
 #define BI0_ZERO_PADDING 250 // number of bytes =0 to pad at the end of every packet sent 
 
 #define BI0LOS_FLC_ADDR "192.168.1.200"
