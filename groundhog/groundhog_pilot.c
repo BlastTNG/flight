@@ -118,7 +118,7 @@ void pilot_receive(void *arg) {
 
       // decompress
       if (!decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size)) { 
-        continue;
+      //  continue;
       }
       /*
       printf("Start\n");

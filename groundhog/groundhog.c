@@ -170,7 +170,8 @@ int main(int argc, char * argv[]) {
   if (bi0_on) {
     // pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
     pthread_create(&biphase_receive_worker, NULL, (void *) &pilot_receive, (void *) &udplos_setup);
-    pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+    // pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
+    pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
   }
 
   if (highrate_on) {
