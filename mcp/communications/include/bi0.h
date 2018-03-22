@@ -35,9 +35,11 @@
 
 #define BI0LOS_FLC_ADDR "192.168.1.200"
 #define BI0LOS_FLC_PORT 50000
+#define BI0LOS_BUFFER_PORT 50100
 #define BI0LOS_GND_ADDR "192.168.1.201"
 #define BI0LOS_GND_PORT 51515
 #define BI0LOS_MAX_PACKET_SIZE 1388
+
 
 extern struct Fifo bi0_fifo;
 

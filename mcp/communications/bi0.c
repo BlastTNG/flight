@@ -312,7 +312,7 @@ void * customSendDataThread(void *arg) {
   // buffer check socket
   int status_sck;
   struct sockaddr_in recv_addr, my_addr;
-  struct hostent * the_target = gethostbyname("192.168.1.200");
+  struct hostent * the_target = gethostbyname(BI0LOS_FLC_ADDR);
 
   if ((status_sck = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
     blast_err("socket() unsuccessful");
@@ -321,7 +321,7 @@ void * customSendDataThread(void *arg) {
 
   bzero(&my_addr, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
-  my_addr.sin_port = htons(50100);
+  my_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
   my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(status_sck, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
@@ -331,7 +331,7 @@ void * customSendDataThread(void *arg) {
 
   bzero(&recv_addr, sizeof(recv_addr));
   recv_addr.sin_family = AF_INET;
-  recv_addr.sin_port = htons(50100);
+  recv_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
   memcpy(&recv_addr.sin_addr.s_addr, the_target->h_addr, the_target->h_length);
 
   header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize, 1);
@@ -381,7 +381,7 @@ void * customSendDataThread(void *arg) {
               blast_err("Could not receive buffer status\n");
             }
             buffer_status = atoi(recv_status+7);
-            //printf("Buffer status = %d == %c\n", buffer_status, recv_status[7]);
+            // blast_info("Buffer status = %d == %c\n", buffer_status, recv_status[7]);
           } while (buffer_status == 0);
 
           // add header to packet (adds due to MSG_MORE flag)
@@ -393,7 +393,6 @@ void * customSendDataThread(void *arg) {
             }
 
           // add data to packet and send
-          // if (sendto(server->sck, buffer+(i*packet_maxsize), packet_size,
           if (sendto(server->sck, pkt_buffer, packet_size,
             MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
             server->slen) < 0) {
@@ -440,7 +439,6 @@ void biphase_writer(void * arg)
     struct BITSender bi0lossender = {0};
     initBITSender(&bi0lossender, BI0LOS_FLC_ADDR, BI0LOS_FLC_PORT, 10, BI0_MAX_BUFFER_SIZE, BI0LOS_MAX_PACKET_SIZE);
     pthread_cancel(bi0lossender.send_thread); 
-
     pthread_create(&bi0lossender.send_thread, NULL, customSendDataThread, (void *) &bi0lossender);
 
     // packetization variables
