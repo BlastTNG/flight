@@ -43,7 +43,7 @@
 #include <float.h>
 
 #include "blast.h"
-#include "CRC.h"
+#include "CRC_func.h"
 #include "channels_tng.h"
 #include "channel_macros.h"
 #include "linklist.h"

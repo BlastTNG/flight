@@ -32,55 +32,50 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "CRC.h" // CRC checks and generators for message validation
+#include "CRC_func.h" // CRC checks and generators for message validation
 
 #ifdef __cplusplus
-
-extern "C"{
-
+extern "C" {
 #endif
 
-unsigned short *crctable = NULL;
+uint16_t *crctable = NULL;
 
 // generates and returns a CRC table for serial validation of DPRALTE
-unsigned short *mk_crctable(unsigned short poly, unsigned short (*crcfn) (unsigned short, unsigned short, unsigned short))
+uint16_t *mk_crctable(uint16_t poly, uint16_t (*crcfn)(uint16_t, uint16_t, uint16_t))
 {
-	unsigned short *crctable;
+	uint16_t *crctable;
 	int i;
-	if((crctable = (unsigned short *)malloc(256*sizeof(unsigned))) == NULL)
-	{
+	if ((crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
 		return NULL;
 	}
-	for(i=0; i < 256; i++)
-	{
-		crctable[i] = (*crcfn)(i,poly,0);
+	for (i = 0; i < 256; i++) {
+		crctable[i] = (*crcfn)(i, poly, 0);
 	}
 	return crctable;
 }
 
 // generator for CRC table
-unsigned short crchware(unsigned short data, unsigned short genpoly, unsigned short accum)
+uint16_t crchware(uint16_t data, uint16_t genpoly, uint16_t accum)
 {
 	static int i;
 	data <<= 8;
-	for(i = 8; i > 0; i--)
-	{
-	if((data ^ accum) & 0x8000)
-		accum = (accum << 1 ) ^ genpoly;
-	else
-		accum <<=1;
-	data <<=1;
+	for (i = 8; i > 0; i--) {
+	  if ((data ^ accum) & 0x8000) {
+      accum = (accum << 1) ^ genpoly;
+	  } else {
+      accum <<= 1;
+    }
+	  data <<= 1;
 	}
 	return accum;
 }
 
 // checks/generates a CRC value for received/sent message
-void crccheck(unsigned short data, unsigned short *accumulator, unsigned short *crctable)
+void crccheck(uint16_t data, uint16_t *accumulator, uint16_t *crctable)
 {
-	*accumulator = ( *accumulator << 8 ) ^ crctable[( *accumulator >> 8) ^ data];
+	*accumulator = (*accumulator << 8) ^ crctable[(*accumulator >> 8) ^ data];
 }
+
 #ifdef __cplusplus
-
 }
-
 #endif

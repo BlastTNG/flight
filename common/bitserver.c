@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 #include "FIFO.h"
-#include "CRC.h"
+#include "CRC_func.h"
 #include "bitserver.h"
 #include "blast.h"
 
