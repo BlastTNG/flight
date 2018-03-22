@@ -1699,6 +1699,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    // Sam Grab these (just this 1 case)
+    case periodic_cal:
+      CommandData.Cryo.periodic_pulse = 1;
+      CommandData.Cryo.num_pulse = ivalues[0];
+      CommandData.Cryo.separation = ivalues[1];
+      CommandData.Cryo.length = ivalues[2];
+      break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
       CommandData.Cryo.labjack = ivalues[0];
@@ -1757,7 +1764,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       while (linklist_names[i]) i++;
       if (ivalues[0] < i) {
         send_file_to_linklist(linklist_find_by_name(
-            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);      
+            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
@@ -2563,6 +2570,11 @@ void InitCommandData()
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
+    // Sam Grab these
+    CommandData.Cryo.num_pulse = 1;
+    CommandData.Cryo.separation = 1;
+    CommandData.Cryo.periodic_pulse = 0;
+    CommandData.Cryo.length = 1;
 
     /* relays should always be set to zero when starting MCP */
     /* relays */

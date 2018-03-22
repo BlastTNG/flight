@@ -51,7 +51,7 @@
 
 #include "blast.h"
 #include "channels_tng.h"
-#include "CRC.h"
+#include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 

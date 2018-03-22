@@ -25,31 +25,28 @@
  */
 
 
-#ifndef CRC_FUNC_H_
-#define CRC_FUNC_H_
+#ifndef INCLUDE_CRC_FUNC_H
+#define INCLUDE_CRC_FUNC_H
 
 #define CRC_POLY 0x1021		// polynomial basis for CRC generation
 
 #ifdef __cplusplus
-
 extern "C" {
-
 #endif
 
 
 // define some global variables
-extern unsigned short *crctable;
+extern uint16_t *crctable;
 
 // define some function prototypes
 
-unsigned short *mk_crctable(unsigned short , unsigned short (*crcfn) (unsigned short, unsigned short, unsigned short));
-unsigned short crchware(unsigned short , unsigned short , unsigned short );
-void crccheck(unsigned short , unsigned short * , unsigned short * );
+uint16_t *mk_crctable(uint16_t, uint16_t (*crcfn)(uint16_t, uint16_t, uint16_t));
+uint16_t crchware(uint16_t, uint16_t, uint16_t);
+void crccheck(uint16_t, uint16_t *, uint16_t *);
 
 #ifdef __cplusplus
-
 }
 
 #endif
 
-#endif /* CRC_FUNC_H_ */
+#endif /* INCLUDE_CRC_FUNC_H */

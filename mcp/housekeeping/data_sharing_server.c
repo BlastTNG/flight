@@ -65,9 +65,9 @@ void data_sharing_init(linklist_t ** ll_array) {
   shared_superframe = calloc(1, superframe_size);
 
   // initialize bitserver
-  initBITSender(&shared_data_sender, (SouthIAm) ? NORTH_IP : SOUTH_IP, DATA_SHARING_PORT, 3, 
+  initBITSender(&shared_data_sender, (SouthIAm) ? NORTH_IP : SOUTH_IP, DATA_SHARING_PORT, 3,
                   shared_packet_size, shared_packet_size);
-  initBITRecver(&shared_data_recver, (SouthIAm) ? SOUTH_IP : NORTH_IP, DATA_SHARING_PORT, 3, 
+  initBITRecver(&shared_data_recver, (SouthIAm) ? SOUTH_IP : NORTH_IP, DATA_SHARING_PORT, 3,
                   shared_packet_size, shared_packet_size);
 
   setBITSenderSerial(&shared_data_sender, *(uint32_t *) temp_ll->serial);
@@ -104,7 +104,7 @@ void share_superframe(uint8_t * superframe) {
       return;
     }
 
-    // have valid data, so decompress to superframe 
+    // have valid data, so decompress to superframe
     decompress_linklist(shared_superframe, shared_ll, shared_recv_buffer);
 
     // overwrite command data if not in charge
@@ -119,7 +119,7 @@ void share_superframe(uint8_t * superframe) {
         // blast_info("Saving recvd command data to disk");
 	 	  }
       write_prevstatus_counter++;
-    }    
+    }
 
     // set the flag that fresh shared data has been received
     shared_data_recvd = 1;
@@ -130,7 +130,7 @@ void share_superframe(uint8_t * superframe) {
 void share_data(E_RATE rate) {
   static unsigned int frame_location[RATE_END] = {0};
 
-  if (!shared_ll || !shared_data_recvd) return;  
+  if (!shared_ll || !shared_data_recvd) return;
 
   int i;
   channel_t * chan = NULL;
@@ -141,7 +141,7 @@ void share_data(E_RATE rate) {
     chan = shared_ll->items[i].tlm;
 
     // don't process null channels or channels not at this rate
-    if (!chan) continue; 
+    if (!chan) continue;
     if (chan->rate != rate) continue;
 
     // logic for flc specified channels
@@ -150,7 +150,7 @@ void share_data(E_RATE rate) {
     bool this_flc = swi && (chan->field[len-1] == which_flc[SouthIAm]);
     bool that_flc = swi && (chan->field[len-1] == which_flc[!SouthIAm]);
 
-    // only overwrite data if:
+    // only overwrite data if
     // a) I am not in charge and the channel is not specific to this flc OR
     // b) The channel is specific to the other flc
     if ((!InCharge && !this_flc) || that_flc) {

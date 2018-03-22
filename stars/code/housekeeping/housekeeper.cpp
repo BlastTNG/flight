@@ -130,7 +130,9 @@ void Housekeeper::update()
                 }
                
 
-				int heater_state = shared_housekeeper.heater_state;
+				// int heater_state = shared_housekeeper.heater_state;
+				// TODO(javier): remove for flight
+				int heater_state = 0;
 				if (heater_state > 0) {
 					ad_card->heat_camera(true);
 					logdata += "Heating";
