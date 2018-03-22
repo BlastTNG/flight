@@ -182,7 +182,7 @@ int framing_init(void)
     int keepalive = 60;
     bool clean_session = true;
 
-    struct telemetries m_telemetries = {3, {"biphase", "pilot", "tdrss"}};
+    struct telemetries m_telemetries = {3, {"biphase", "pilot", "highrate"}};
 
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);
