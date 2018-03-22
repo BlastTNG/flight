@@ -80,36 +80,6 @@ void highrate_receive(void *arg) {
   int retval = 0;
   uint32_t recv_size = 0;
 
-/*
-  int counter = 0;
-  int timer = 0;
-  while (true) {
-    if (read(fd, local_superframe+counter, 1) > 0) {
-      counter++;
-      timer = 0;
-    } else if (timer > 1000) {
-      if (counter > 4096) {
-        printf("End of message (count = %d)\n", counter);
-
-        for (int i = 0; i < 8; i++) {
-          if (i % 32 == 0) printf("\n");
-          printf("0x%.2x ", local_superframe[i]);
-        }
-        printf("\n");
-  
-        for (int i = 4095; i < counter; i++) {
-          if (i % 32 == 0) printf("\n");
-          printf("0x%.2x ", local_superframe[i]);
-        }
-        printf("\n");
-      }
-      counter = 0;
-      timer = 0;
-    }
-    timer++;
-    usleep(100);
-  }
-*/
   unsigned int lock = 0;
   unsigned int sync = 0;
   unsigned int syncswitch = 0; // 0 = gse, 1 = payload
@@ -173,7 +143,10 @@ void highrate_receive(void *arg) {
 
           if (gse_read == gse_size) { // got all the bytes from the gse
               // check the checksum
-              printf("Received all %d bytes from gse (0x%.2x == 0x%.2x)\n", gse_read, byte, *csbf_checksum);
+              //printf("Received all %d bytes from gse (0x%.2x == 0x%.2x)\n", gse_read, byte, *csbf_checksum);
+              if (gse_size == 255) { 
+                  blast_info("Got 255 byte hk packet");
+              }
               *csbf_checksum = 0; 
               gse_read = 0;
               lock = 0;
@@ -184,6 +157,7 @@ void highrate_receive(void *arg) {
               csbf_packet[payload_read++] = byte;
               *csbf_checksum += byte;
               gse_read++;
+              if (gse_size == 255) payload_read--;
           }
 
           if ((payload_read == (payload_size+CSBF_HEADER_SIZE)) && // got all the bytes from the payload
