@@ -367,6 +367,7 @@ void * customSendDataThread(void *arg) {
                                                  (uint16_t *) &i, (uint16_t *) &n_packets);
           writeHeader(header, serial, frame_num, i++, n_packets);
 
+          // query the UDP-LOS card to see if there is a buffer available
           uint8_t buffer_status = 0;
           char recv_status[9] = {0};
           socklen_t slen = sizeof(recv_addr);
@@ -376,11 +377,10 @@ void * customSendDataThread(void *arg) {
                          (struct sockaddr *) &(recv_addr), slen) < 0) {
               blast_err("Could not request buffer status\n");
             }
-            if (recvfrom(status_sck, recv_status, 8, 0, (struct sockaddr *) &(recv_addr), 
-                           &slen) < 0) {
+            if (recvfrom(status_sck, recv_status, 8, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
               blast_err("Could not receive buffer status\n");
             }
-            buffer_status = atoi(recv_status+7);
+            buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
             // blast_info("Buffer status = %d == %c\n", buffer_status, recv_status[7]);
           } while (buffer_status == 0);
 
