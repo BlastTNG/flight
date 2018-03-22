@@ -122,7 +122,7 @@ void highrate_compress_and_send(void *arg) {
       csbf_header[0] = HIGHRATE_SYNC1;
       csbf_header[1] = (CommandData.highrate_through_tdrss) ? HIGHRATE_TDRSS_SYNC2 : HIGHRATE_IRIDIUM_SYNC2;
       csbf_header[2] = HIGHRATE_ORIGIN_COMM1; // TODO(javier): check if this needs to be commanded 
-      csbf_header[3] = 0x00; // zero
+      csbf_header[3] = 0x69; // zero
       csbf_header[4] = ((datasize+PACKET_HEADER_SIZE) >> 8) & 0xff; // msb of size
       csbf_header[5] = (datasize+PACKET_HEADER_SIZE) & 0xff;  // lsb of size
 

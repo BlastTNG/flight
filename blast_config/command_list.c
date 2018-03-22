@@ -49,7 +49,7 @@ const char *GroupNames[N_GROUPS] = {
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
-const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",  
+const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",
                                 "test_files.ll",  "test.ll",
                                 "all_telemetry.ll", "no linklist", 0};
 
@@ -1031,6 +1031,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
       {
           {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
+      }
+  },
+  // Sam Grab these
+  {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
+      {
+          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 1, 1000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 1, 1000, 'i', "LENGTH_PULSE"},
       }
   },
 
