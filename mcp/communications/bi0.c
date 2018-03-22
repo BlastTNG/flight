@@ -496,7 +496,7 @@ void biphase_writer(void * arg)
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so
-        if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 
+        if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
             // send allframe if necessary
             if (!allframe_count) {
                 //  write_allframe(compbuffer, getFifoRead(&bi0_fifo));
@@ -516,6 +516,8 @@ void biphase_writer(void * arg)
             setBITSenderFramenum(&bi0lossender, transmit_size);
             sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
 
+/*
+// commented out since new UDP-LOS devices work
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -538,6 +540,7 @@ void biphase_writer(void * arg)
                 //printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
+*/
         } else { // sleep until the next superframe
             usleep(10000);
         }
