@@ -149,8 +149,19 @@ int main(int argc, char * argv[]) {
   strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // setup pilot receive udp struct
-  struct UDPSetup pilot_setup = {"Pilot", PILOT_ADDR, PILOT_PORT, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE};
-  struct UDPSetup udplos_setup = {"BI0-LOS", BI0LOS_GND_ADDR, BI0LOS_GND_PORT, BI0_MAX_BUFFER_SIZE, BI0LOS_MAX_PACKET_SIZE};
+  struct UDPSetup pilot_setup = {"Pilot", 
+                                 PILOT_ADDR, 
+                                 PILOT_PORT, 
+                                 PILOT_MAX_SIZE, 
+                                 PILOT_MAX_PACKET_SIZE,
+                                 &pilot_superframes};
+
+  struct UDPSetup udplos_setup = {"BI0-LOS", 
+                                  BI0LOS_GND_ADDR, 
+                                  BI0LOS_GND_PORT, 
+                                  BI0_MAX_BUFFER_SIZE, 
+                                  BI0LOS_MAX_PACKET_SIZE,
+                                  &biphase_superframes};
 
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
@@ -163,15 +174,14 @@ int main(int argc, char * argv[]) {
   pthread_t highrate_publish_worker;
 
   if (pilot_on) {
-    pthread_create(&pilot_receive_worker, NULL, (void *) &pilot_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
     pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
   }
 
   if (bi0_on) {
     // pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
-    pthread_create(&biphase_receive_worker, NULL, (void *) &pilot_receive, (void *) &udplos_setup);
-    // pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
-    pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
+    pthread_create(&biphase_receive_worker, NULL, (void *) &udp_receive, (void *) &udplos_setup);
+    pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
   }
 
   if (highrate_on) {

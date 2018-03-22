@@ -29,11 +29,11 @@
 
 superframes_list_t pilot_superframes;
 
-void pilot_receive(void *arg) {
+void udp_receive(void *arg) {
 
   struct UDPSetup * udpsetup = (struct UDPSetup *) arg;
 
-  struct BITRecver pilotrecver = {0};
+  struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
@@ -44,19 +44,19 @@ void pilot_receive(void *arg) {
   FILE * rawsave = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
+  uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
-  initBITRecver(&pilotrecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
-  initialize_circular_superframes(&pilot_superframes);
+  initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
+  initialize_circular_superframes(udpsetup->sf);
 
   while (true) {
     do {
       // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
+      recvbuffer = getBITRecverAddr(&udprecver, &blk_size);
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
-        removeBITRecverAddr(&pilotrecver);
+        removeBITRecverAddr(&udprecver);
       } else {
         break;
       }
@@ -70,7 +70,8 @@ void pilot_receive(void *arg) {
         fclose(rawsave);
         rawsave = NULL;
       }
-      sprintf(basename, "%s/pilot/%s_%s", FILE_SAVE_DIR, datestring, ll->name);
+      TODO(javier): fix directory tree for file saves
+      sprintf(basename, "%s/%s/%s_%s", FILE_SAVE_DIR, udpsetup->sf, datestring, ll->name);
 
       // open a new file to write raw linklist data to
       sprintf(fname, "%s.gnddata", basename);
@@ -87,13 +88,13 @@ void pilot_receive(void *arg) {
     prev_serial = serial;
 
     // set the linklist serial
-    setBITRecverSerial(&pilotrecver, serial);
+    setBITRecverSerial(&udprecver, serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_SIZE, 0);
+    blk_size = recvFromBITRecver(&udprecver, compbuffer, PILOT_MAX_SIZE, 0);
 
     // hijacking frame number for transmit size
-    transmit_size = pilotrecver.frame_num; 
+    transmit_size = udprecver.frame_num; 
 
     // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
  
@@ -126,7 +127,7 @@ void pilot_receive(void *arg) {
         printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
       }
       */
-      push_superframe(local_superframe, &pilot_superframes);
+      push_superframe(local_superframe, udpsetup->sf);
     }
   }
 }

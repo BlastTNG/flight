@@ -29,7 +29,6 @@
 #include "highrate.h"
 #include "comms_serial.h"
 
-
 superframes_list_t highrate_superframes;
 
 int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
