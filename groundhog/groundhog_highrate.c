@@ -220,6 +220,8 @@ void highrate_receive(void *arg) {
 
                       // process the packet
                       readHeader(header_buffer, &serial_number, &frame_number, &i_pkt, &n_pkt);
+
+                      // hijack frame number for transmit size
                       transmit_size = *frame_number;
 
                       if (!(ll = linklist_lookup_by_serial(*serial_number))) {
@@ -238,16 +240,14 @@ void highrate_receive(void *arg) {
                       // the packet is complete, so decompress
                       if ((retval == 0) && (ll != NULL))
                       {
-                          // hijack frame number for transmit size
-                          if (transmit_size > ll->blk_size) {
-                              blast_err("Transmit size larger than assigned linklist");
-                              transmit_size = ll->blk_size;
-                          }
-
                           // decompress the linklist
                           if (read_allframe(local_superframe, compressed_buffer)) {
                               blast_info("[%s] Received an allframe :)\n", source_str);
                           } else {
+                              if (transmit_size > ll->blk_size) {
+                                  blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, allframe_size);
+                                  transmit_size = ll->blk_size;
+                              }
                               blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size);
