@@ -116,10 +116,19 @@ void read_gse_sync_frame(int fd, uint8_t * buffer, struct CSBFHeader * header) {
               if (bytes_read < header->size) { // keep reading to the buffer 
                   buffer[bytes_read++] = byte;
                   header->checksum += byte;
-              } else { // done reading 
-                  // printf("Received gse packet size %d (0x%x == 0x%x)\n", header->size, byte, header->checksum); 
-                  return;
+              } else {
+                  if (header->checksum == byte) { // done reading 
+                      // printf("Received gse packet size %d (0x%x == 0x%x)\n", header->size, byte, header->checksum); 
+                      return;
+                  } else {
+                      blast_info("[%s] Bad checksum 0x%.2x != 0x%.2x", header->namestr, header->checksum, byte);
+                  }
+                  bytes_read = 0;
+                  memset(header, 0, sizeof(struct CSBFHeader));
               }
+          } else { // payload packet, so ignore
+              bytes_read = 0;
+              memset(header, 0, sizeof(struct CSBFHeader));
           }
       } else { // nothing read
           usleep(1000);
