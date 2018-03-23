@@ -1358,12 +1358,33 @@ void get_time(char *time_buffer)
 */
 void roach_timestamp_init(uint16_t ind)
 {
-    time_t seconds;
-    seconds = time(NULL);
-    if (roach_state_table[ind].write_flag || !roach_state_table[ind].rpc_conn) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    char *sec;
+    char *nsec;
+    char sec_truncated[2];
+    char nsec_truncated[2];
+    char *timestamp;
+    blast_tmp_sprintf(sec, "%ld", ts.tv_sec);
+    blast_tmp_sprintf(nsec, "%ld", ts.tv_nsec);
+    strncpy(sec_truncated, sec+4, 8);
+    strncpy(nsec_truncated, nsec, 3);
+    sec_truncated[6] = '\0';
+    nsec_truncated[3] = '\0';
+    /* blast_info("%s", sec);
+    blast_info("%s", sec_truncated);
+    blast_info("%s", nsec);
+    blast_info("%s", nsec_truncated);
+    */
+    blast_tmp_sprintf(timestamp, "%s%s", sec_truncated, nsec_truncated);
+    // blast_info("%s", timestamp);
+    // blast_info("%u", atoi(timestamp));
+    if (roach_state_table[ind].write_flag || !roach_state_table[ind].katcp_fd
+                  || roach_state_table[ind].status < ROACH_STATUS_TONE) {
         return;
     } else {
-        roach_write_int(&roach_state_table[ind], "GbE_ctime", seconds, 0);
+        roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0);
+	// sleep(1);
         // roach_read_int(&roach_state_table[ind], "GbE_ctime");
         return;
     }
