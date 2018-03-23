@@ -88,7 +88,7 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
       } else if (header->route == HIGHRATE_IRIDIUM_SYNC2) {
           if ((header->origin & 0x03) == 0x01) {
               header->mode = IRID_SLOW;
-              sprintf(header->namestr, "Iridium Slow");
+              sprintf(header->namestr, "Iridium HK");
           } else if ((header->origin & 0x03) == 0x02) {
               header->mode = IRID_OMNI;
               sprintf(header->namestr, "Iridium Omni");
@@ -173,6 +173,7 @@ void highrate_receive(void *arg) {
   int retval = 0;
   uint32_t recv_size = 0;
 
+  char * source_str = NULL;
 
   while (true) {
       // printf("-------------START (lock = %d)---------\n", payload_packet_lock);
@@ -180,6 +181,7 @@ void highrate_receive(void *arg) {
       // get the sync frame from the gse
       read_gse_sync_frame(fd, gse_packet, &gse_packet_header);
       gse_read = 0;
+      source_str = gse_packet_header.namestr;
 /* 
       for (int i = 0; i < gse_packet_header.size; i++) {
           if (i%32 == 0) printf("\n%.3d : ", i/32);
@@ -257,7 +259,8 @@ void highrate_receive(void *arg) {
               }    
      
           } else { // housekeeping packet
-              blast_info(" Received packet from HK stack size=%d\n", gse_packet_header.size);
+              // TODO(javier): deal with housekeeping packets
+              blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
               gse_read += gse_packet_header.size;
           }
       }
