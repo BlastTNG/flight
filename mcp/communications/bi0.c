@@ -511,22 +511,22 @@ void biphase_writer(void * arg)
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
             // send allframe if necessary
             if (!allframe_count) {
-                //  write_allframe(compbuffer, getFifoRead(&bi0_fifo));
-                //  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+                transmit_size = write_allframe(compbuffer, getFifoRead(&bi0_fifo));
+            } else {
+                // compress the linklist to compbuffer
+                compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
+                decrementFifo(&bi0_fifo);
+                transmit_size = ll->blk_size;  
             }
-
-            // compress the linklist to compbuffer
-            compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
-            decrementFifo(&bi0_fifo);
-
-            // compute the transmit size based on bandwidth
-            transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+            // bandwidth limit; frames are 1 Hz, so bandwidth == size
+            transmit_size = MIN(transmit_size, bandwidth);
 
             // send of BI0-LOS
             // memset(compbuffer, 0xaa, transmit_size);
             setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
             setBITSenderFramenum(&bi0lossender, transmit_size);
             sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
+
 
 /*
 // commented out since new UDP-LOS devices work
@@ -553,6 +553,7 @@ void biphase_writer(void * arg)
                 usleep(1000);
             }
 */
+            allframe_count = (allframe_count + 1) % BI0_ALLFRAME_PERIOD;
         } else { // sleep until the next superframe
             usleep(10000);
         }

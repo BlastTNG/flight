@@ -99,18 +99,16 @@ void highrate_compress_and_send(void *arg) {
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
       if (!allframe_count) {
-      //  write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
-      //  sendToBITSender(&pilotsender, compressed_buffer, allframe_size, 0);
+          transmit_size = write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
+      } else {
+				// compress the linklist
+				compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
+				decrementFifo(&highrate_fifo);
+        transmit_size = ll->blk_size;
       }
 
-      // compress the linklist
-      int retval = compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
-      decrementFifo(&highrate_fifo);
-
-      if (!retval) continue;
-
-      // compute the transmite size based on bandwidth
-      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+      // bandwidth limit; frames are 1 Hz, so bandwidth == size
+      transmit_size = MIN(transmit_size, bandwidth); 
 
       // set initialization for packetization
       uint8_t * chunk = NULL;
