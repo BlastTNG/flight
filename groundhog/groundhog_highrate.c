@@ -31,6 +31,7 @@
 
 superframes_list_t highrate_superframes;
 
+
 int blocking_read(int fd, uint8_t * buffer, unsigned int num_bytes)
 {
     int i = 0;
@@ -49,7 +50,8 @@ void highrate_receive(void *arg) {
   linklist_t * ll = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
-  unsigned int payload_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
+  // unsigned int payload_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
+  unsigned int payload_packet_size = superframe_size;
 
   uint8_t *csbf_packet = calloc(1, payload_packet_size);
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
@@ -104,6 +106,7 @@ void highrate_receive(void *arg) {
                   case LOWRATE_COMM2_SYNC2 :
                   case HIGHRATE_TDRSS_SYNC2 :
                   case HIGHRATE_IRIDIUM_SYNC2 :
+                      csbf_sync2 = byte;
                       sync++;
                       break;
                   default :
@@ -117,7 +120,7 @@ void highrate_receive(void *arg) {
                   payload_read = 3; // start of a new csbf payload packet
                   syncswitch = 1;
               } else {
-                  *csbf_checksum = byte+csbf_origin;
+                  checksum = byte+csbf_origin;
                   syncswitch = 0;
               }
               sync++;
@@ -133,7 +136,7 @@ void highrate_receive(void *arg) {
               if (syncswitch) {
                   // printf("Have a sync from payload (read = %d, gse_read = %d)\n", payload_read, gse_read);
               } else {
-                  //printf("\nHave a sync from gse (size = %d)\n", gse_size);
+                  printf("Have a sync from gse (size = %d, origin = 0x%x, sync2 = 0x%x)\n", gse_size, csbf_origin, csbf_sync2);
                   payload_read = (payload_read+payload_packet_size-6)%payload_packet_size; // overwrite the header
                   gse_read = 0; // reset the number of bytes read since last syncword
                   lock = 1; // locked onto a gse packet
@@ -143,11 +146,11 @@ void highrate_receive(void *arg) {
 
           if (gse_read == gse_size) { // got all the bytes from the gse
               // check the checksum
-              //printf("Received all %d bytes from gse (0x%.2x == 0x%.2x)\n", gse_read, byte, *csbf_checksum);
+              //printf("Received all %d bytes from gse (0x%.2x == 0x%.2x)\n", gse_read, byte, checksum);
               if (gse_size == 255) { 
-                  blast_info("Got 255 byte hk packet");
+                  blast_info("Got 255 byte hk packet (origin = 0x%x, sync2 = 0x%x)", csbf_origin, csbf_sync2);
               }
-              *csbf_checksum = 0; 
+              checksum = 0; 
               gse_read = 0;
               lock = 0;
           }
@@ -155,9 +158,15 @@ void highrate_receive(void *arg) {
           // add byte to the packet
           if (lock || sync) {
               csbf_packet[payload_read++] = byte;
-              *csbf_checksum += byte;
+              checksum += byte;
               gse_read++;
               if (gse_size == 255) payload_read--;
+          }
+
+          if (payload_read == (payload_size+CSBF_HEADER_SIZE+1)) {
+              if (!(ll = linklist_lookup_by_serial(*(uint32_t *) header_buffer))) {
+                  printf("Unrecognized linklist serial 0x%.4x\n", *(uint32_t *) header_buffer);
+              }
           }
 
           if ((payload_read == (payload_size+CSBF_HEADER_SIZE)) && // got all the bytes from the payload
@@ -201,6 +210,7 @@ void highrate_receive(void *arg) {
           }
 
           if (payload_read >= payload_packet_size) { // somehow read more than the max packet size
+             blast_err("Overflow receive buffer!");
              payload_read = 0;
           }
 
