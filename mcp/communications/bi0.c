@@ -319,14 +319,12 @@ void * customSendDataThread(void *arg) {
     return NULL;
   }
 
-/*
   struct timeval tv;
-  tv.tv_sec = 2;
-  tv.tv_usec = 500000;
+  tv.tv_sec = 0;
+  tv.tv_usec = 100000;
   if (setsockopt(status_sck, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
       perror("Error");
   }
-*/
 
   bzero(&my_addr, sizeof(my_addr));
   my_addr.sin_family = AF_INET;
@@ -388,12 +386,14 @@ void * customSendDataThread(void *arg) {
                          (struct sockaddr *) &(recv_addr), slen) < 0) {
               blast_err("Could not request buffer status\n");
             }
-            if (recvfrom(status_sck, recv_status, 8, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
+
+            if (recvfrom(status_sck, recv_status, 10, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
               blast_err("Could not receive buffer status\n");
               buffer_status = 0;
+            } else {
+              buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
+              // blast_info("%d Buffer status = %d == %c\n", i, buffer_status, recv_status[7]);
             }
-            buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
-            // blast_info("%d Buffer status = %d == %c\n", i, buffer_status, recv_status[7]);
           }
 
           // add header to packet (adds due to MSG_MORE flag)
@@ -410,6 +410,7 @@ void * customSendDataThread(void *arg) {
             server->slen) < 0) {
               blast_err("sendTo failed (errno %d)", errno);
           }
+          //if (buffer_status > 0) buffer_status--;
           if (buffer_status > 0) buffer_status = 0;
         }
       }
