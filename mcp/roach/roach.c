@@ -86,6 +86,7 @@
 #define VNA 0 /* Sweep type */
 #define TARG 1 /* Sweep type */
 #define CAL_AMPS 2 /* Sweep type */
+#define CHOP 3
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -950,7 +951,7 @@ void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen
     roach_write_QDR(m_roach);
     roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0);
     usleep(1000);
-    roach_read_int(m_roach, "read_comb_len");
+    m_roach->current_ntones = m_freqlen;
     m_roach->write_flag = 0;
 }
 
@@ -1470,6 +1471,7 @@ static int mkdir_recursive(char *m_directory)
  *    0 = VNA
  *    1 = TARG
  *    2 = CAL_AMPS
+ *    3 = CHOP
 */
 int create_sweepdir(roach_state_t *m_roach, int sweep_type)
 {
@@ -1486,6 +1488,9 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
     } else if ((sweep_type == CAL_AMPS)) {
         path_root = m_roach->cal_path_root;
         type = "CAL_AMPS";
+    } else if ((sweep_type == CHOP)) {
+        path_root = m_roach->chop_path_root;
+        type = "CHOP";
     }
     new_path = get_path(m_roach, path_root);
     if (sweep_type == VNA) {
@@ -1494,8 +1499,10 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
         asprintf(&m_roach->last_targ_path, new_path);
     } else if (sweep_type == CAL_AMPS) {
         asprintf(&m_roach->last_cal_path, new_path);
+    } else if (sweep_type == CHOP) {
+        asprintf(&m_roach->last_chop_path, new_path);
     }
-    blast_info("ROACH%d, New %s sweep will be saved in %s", m_roach->which, type, new_path);
+    blast_info("ROACH%d, %s files will be saved in %s", m_roach->which, type, new_path);
     if (mkdir_recursive(new_path)) {
         retval = 1;
     } else {
@@ -1906,6 +1913,76 @@ void save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     CommandData.roach[m_roach->which - 1].get_timestream = 0;
 }
 
+// saves timestreams for all channels
+int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
+{
+    struct stat dir_stat;
+    int stat_return;
+    char *file_out;
+    // create new chop directory, if doesn't exist
+    stat_return = stat(m_roach->last_chop_path, &dir_stat);
+    if (stat_return != 0) {
+        if (create_sweepdir(m_roach, CHOP)) {
+            blast_info("ROACH%d, CHOPS will be saved in %s",
+                           m_roach->which, m_roach->last_chop_path);
+        } else {
+            blast_err("Could not create new chop directory");
+            CommandData.roach[m_roach->which - 1].get_timestream = 0;
+            return -1;
+        }
+    }
+    // allocate memory to hold timestreams before saving to file
+    int npoints = round(m_nsec * (double)DAC_FREQ_RES);
+    int rows = m_roach->current_ntones;
+    int cols = npoints;
+    float *I[rows];
+    float *Q[rows];
+    for (int i = 0; i < rows; i++) {
+         I[i] = (float *)malloc(cols * sizeof(float));
+         Q[i] = (float *)malloc(cols * sizeof(float));
+    }
+    int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    uint8_t i_udp_read;
+    blast_info("Getting data...");
+    for (int i = 0; i < npoints; i++) {
+        usleep(3000);
+        if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
+            i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
+            data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
+            m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+            for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
+                I[chan][i] = m_packet.Ival[chan];
+                Q[chan][i] = m_packet.Qval[chan];
+            }
+        }
+    }
+    blast_info("Data acquired...");
+    // open file for writing
+    blast_info("current ntones = %zd", m_roach->current_ntones);
+    for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
+        // blast_info("Chan = %zd", chan);
+        blast_tmp_sprintf(file_out, "%s/%zd.dat", m_roach->last_chop_path, chan);
+        // blast_info("Saving %s", file_out);
+        FILE *fd = fopen(file_out, "wb");
+        for (int j = 0; j < npoints; j++) {
+            // write a 4 byte I value
+            fwrite(&I[chan][j], 4, 1, fd);
+            // write a 4 byte value
+            fwrite(&Q[chan][j], 4, 1, fd);
+        }
+        fclose(fd);
+    }
+    // Save last chop path
+    system("python /home/fc1user/sam_builds/chop_list.py");
+    blast_info("ROACH%d, timestream saved", m_roach->which);
+    CommandData.roach[m_roach->which - 1].get_timestream = 0;
+    for (int i = 0; i < rows; i++) {
+        free(I[i]);
+        free(Q[i]);
+    }
+    return 0;
+}
+
 // get the chop_snr for the timestream saved in save_timestream
 int chop_snr(roach_state_t *m_roach, double *m_buffer)
 {
@@ -2200,6 +2277,53 @@ void cal_fit_res(roach_state_t *m_roach, char *m_subdir)
     CommandData.roach_params[m_roach->which - 1].npoints = 20;
     cal_sweep(m_roach, m_subdir);
     // fit res and rewrite tones
+}
+
+void chop_all(roach_state_t *m_roach)
+{
+}
+
+// Load data saved by chop_all, and average together to create master chop
+int master_chop(roach_state_t *m_roach, double m_nsec)
+{
+    int retval = -1;
+    char *file_in;
+    struct stat dir_stat;
+    int stat_return;
+    // check to see if directory exists
+    stat_return = stat(m_roach->last_chop_path, &dir_stat);
+    if (stat_return != 0) {
+        blast_err("Could not find chop directory");
+        return retval;
+    } else {
+        retval = 0;
+    }
+    int npoints = round(m_nsec * (double)DAC_FREQ_RES);
+    int rows = m_roach->current_ntones;
+    int cols = npoints;
+    float *I[rows];
+    float *Q[rows];
+    for (int i = 0; i < rows; i++) {
+         I[i] = (float *)malloc(cols * sizeof(float));
+         Q[i] = (float *)malloc(cols * sizeof(float));
+    }
+    for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
+        blast_tmp_sprintf(file_in, "%s/%zd.dat", m_roach->last_chop_path, chan);
+        FILE *fd = fopen(file_in, "rb");
+        for (int i = 0; i < npoints; i++) {
+            // write a 4 byte I value
+            fread(&I[chan][i], 4, 1, fd);
+            // write a 4 byte value
+            fread(&Q[chan][i], 4, 1, fd);
+        }
+        fclose(fd);
+    }
+    for (int i = 0; i < rows; i++) {
+        free(I[i]);
+        free(Q[i]);
+    }
+    CommandData.roach[m_roach->which - 1].do_master_chop = 0;
+    return retval;
 }
 
 // tune tone amplitude according to chop snr (starting with single channel)
@@ -2695,10 +2819,18 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].refit_res_freqs) {
             roach_refit_freqs(&roach_state_table[i]);
         }
-        if (CommandData.roach[i].get_timestream) {
+        if (CommandData.roach[i].get_timestream == 1) {
             blast_info("Save timestream called");
             save_timestream(&roach_state_table[i], CommandData.roach[i].chan,
                           CommandData.roach_params[i].num_sec);
+        }
+        if (CommandData.roach[i].get_timestream == 2) {
+            blast_info("Saving all timestreams");
+            save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
+        }
+        if (CommandData.roach[i].do_master_chop) {
+            blast_info("Creating chop template");
+            master_chop(&roach_state_table[i], CommandData.roach_params[i].num_sec);
         }
         if (CommandData.roach[i].tune_chan &&
                   roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS) {

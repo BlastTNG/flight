@@ -257,9 +257,11 @@ enum multiCommand {
   periodic_cal,
   calc_phase_centers,
   timestream,
+  all_timestreams,
   chop_tune_chan,
   refit_freqs,
   change_amps,
+  chop_template,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

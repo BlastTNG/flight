@@ -132,6 +132,7 @@ typedef struct roach_state {
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
+    size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
@@ -166,6 +167,8 @@ typedef struct roach_state {
     double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
     double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
     char *last_cal_path;
+    // path to the last master chop directory
+    char *last_chop_path;
     char *cal_path_root;
     // array of tone amplitudes used for calibration
     double cal_amps[MAX_CHANNELS_PER_ROACH][5];

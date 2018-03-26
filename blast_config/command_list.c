@@ -985,7 +985,13 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel no", 0, 1000, 'i', "NONE"},
-      {"Number of sec to stream", 0, 10, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(all_timestreams), "Save IQ timestreams for all channels", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
   {COMMAND(chop_tune_chan), "Tune channel responsivity with optical chop", GR_ROACH, 3,
@@ -1001,6 +1007,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(chop_template), "Saves timestreams for all channel and calculates avg chop", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }

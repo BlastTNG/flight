@@ -347,6 +347,7 @@ typedef struct roach
     unsigned int tune_chan;
     unsigned int refit_res_freqs;
     unsigned int change_tone_amps;
+    unsigned int do_master_chop;
 } roach_status_t;
 
 typedef struct roach_params
