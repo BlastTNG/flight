@@ -41,7 +41,6 @@ if (NO_KIDS_TEST)
     add_definitions(-DNO_KIDS_TEST)
 endif(NO_KIDS_TEST)
 
-
 SET (CMAKE_C_FLAGS                  "-Wall -std=gnu99 -mcx16")
 SET (CMAKE_C_FLAGS_DEBUG            "-O0 -fno-omit-frame-pointer -ggdb")
 SET (CMAKE_C_FLAGS_MINSIZEREL       "-Os -DNDEBUG")
@@ -295,6 +294,9 @@ set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
+set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
+set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/communications/")
 set(SOCAT_DIR "${PROJECT_SOURCE_DIR}/../external_libs/socat")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
@@ -305,7 +307,10 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
+    "${COMMUNICATIONS_DIR}/include"
     "${MPSSE_DIR}"
+    "${SYNCLINK_DIR}"
+    "${LINKLIST_DIR}"
     )
 
 # add commanding objects
@@ -348,6 +353,9 @@ add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
 # add SOCAT Files
 add_subdirectory(${SOCAT_DIR} "${PROJECT_BINARY_DIR}/socat")
 
+#add linklists files
+add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklists")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
@@ -356,8 +364,8 @@ add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 define_file_basename_for_sources(sensors)
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 define_file_basename_for_sources(commanding)
-add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
-define_file_basename_for_sources(mcp_comms)
+add_library (communications OBJECT ${MCP_COMMUNICATIONS_SRCS} ${MCP_COMMUNICATIONS_HEADERS})
+define_file_basename_for_sources(communications)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 define_file_basename_for_sources(housekeeping)
 add_library (diskmanager OBJECT ${DISKMANAGER_SRCS} ${DISKMANAGER_HEADERS})
@@ -371,6 +379,8 @@ add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
 define_file_basename_for_sources(mpsse)
+add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
+define_file_basename_for_sources(linklist)
 
 add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
 define_file_basename_for_sources(roach)
@@ -382,13 +392,14 @@ add_library(mcp_obj OBJECT
     ${PROJECT_SOURCE_DIR}/include/mcp.h
     ${PROJECT_SOURCE_DIR}/include/tx.h
     )
+
 define_file_basename_for_sources(mcp_obj)
 	
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
     $<TARGET_OBJECTS:diskmanager>
     $<TARGET_OBJECTS:commanding>
-    $<TARGET_OBJECTS:mcp_comms>
+    $<TARGET_OBJECTS:communications>
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>
@@ -398,6 +409,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
+    $<TARGET_OBJECTS:linklist>
     ) 
 
 add_dependencies(mcp soem phenomproj)
@@ -409,8 +421,8 @@ target_link_libraries(mcp
 	${MODBUS_LIBRARY}
 	${FFTW3_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
-    ${MOSQ_LIBRARY}  
-    ${GLIB_LIBRARY}  
+    ${MOSQ_LIBRARY}
+    ${GLIB_LIBRARY}
     ${KATCP_LIBRARY} 
     ${ECAT_LIBRARY}
     ${CK_LIBRARY}
@@ -424,10 +436,10 @@ target_link_libraries(mcp
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
 		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
-		mcp.c tx.c
+		mcp.c tx.c ${PROJECT_SOURCE_DIR}/../common/linklist/bitserver.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
-		${ROACH_HEADERS}
+		${ROACH_HEADERS} 
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)

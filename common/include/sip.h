@@ -32,6 +32,8 @@
 /*  Purpose: Store data from the SIP          */
 /*   Source: Commands thread (commands.c)     */
 /*     Used: Main thread                      */
+// TODO(lmf): These structure definitions have been moved to /git/flight/mcp/include/blast_sip_interface.h
+// if not needed delete these lines.
 struct GPSposStruct {
   double lat;   // probably degrees
   double lon;   // probably degrees
@@ -64,5 +66,7 @@ struct SIPDataStruct {
 };
 
 extern struct SIPDataStruct SIPData;
+
+void WatchPort(void* parameter);
 
 #endif

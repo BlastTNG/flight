@@ -127,7 +127,7 @@ extern "C" {
 #define CRYO_A2_M ( 4.805248E-9)
 #define CRYO_A2_B (-1.032198E1 )
 /* Cryo Diode Voltage Calibration */
-/* Modified by Jeff @ Penn, October 6 2009 */
+/* Modified by Ian Summer 2017 */
 #define CRYO_D_M ( 10.8/32768)
 #define CRYO_D_B (-10.8)
 /* M3 was not measured (spider cable broken) so is an estimate */
@@ -136,6 +136,12 @@ extern "C" {
 /* Current ranges +/-15 Amps*/
 #define CUR15_M (15/32768.0)
 #define CUR15_B (-15.0)
+
+#define CURLOOP_CONV (50.0/8.0) /* 50 Amps = 8.0V */
+/* Current sensor ranges +/-67.5 Amps*/
+#define CURLOOP_D_M (10.8/32768.0*50.0/8.0)
+#define CURLOOP_D_B (-67.5)
+
 
 // Conversion factors for the rotated/calibrated gyros
 // (GY_IFEL, GY_IFYAW, GY_IFROLL).

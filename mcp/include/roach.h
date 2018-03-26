@@ -78,6 +78,7 @@ typedef enum {
     ROACH_STATUS_ARRAY_FREQS,
     ROACH_STATUS_TARG,
     ROACH_STATUS_POP_LUTS,
+    ROACH_STATUS_CAL_AMPS,
     ROACH_STATUS_ACQUIRING,
 } e_roach_status;
 
@@ -133,14 +134,15 @@ typedef struct roach_state {
     double *targ_tones_LUT0; // freqs for LUT0
     double *targ_tones_LUT1; // freqs for LUT1
     double lo_freq_req;
+    size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
     // First two LUTs are for building
-    roach_lut_t DDC0;
-    roach_lut_t DAC0;
-    roach_lut_t DDC1;
-    roach_lut_t DAC1;
+    roach_lut_t ddc0;
+    roach_lut_t dac0;
+    roach_lut_t ddc1;
+    roach_lut_t dac1;
     // This LUT is what gets written
     int lut_idx;
     // If one, writing is occuring. Don't switch LUTs while high
@@ -153,6 +155,7 @@ typedef struct roach_state {
     double vna_sweep_span;
     size_t vna_comb_len;
     char *vna_path_root;
+    char *chop_path_root;
     double p_max_freq;
     double p_min_freq;
     double n_max_freq;
@@ -180,7 +183,11 @@ typedef struct roach_state {
     double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
     double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
     char *last_cal_path;
+    // path to the last master chop directory
+    char *last_chop_path;
     char *cal_path_root;
+    // array of tone amplitudes used for calibration
+    double cal_amps[MAX_CHANNELS_PER_ROACH][5];
     // Python logs (for saving/reading response)
     char *qdr_log;
     char *find_kids_log;
@@ -189,6 +196,11 @@ typedef struct roach_state {
     uint32_t src_ip;
     // Path to tone amplitudes file
     char *amps_path[2];
+    double *last_amps;
+    char *vna_amps_path[2];
+    char *targ_amps_path[2];
+    char *random_phase_path;
+    char *phase_centers_path;
     fftw_plan comb_plan;
 
     // PPC link

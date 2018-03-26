@@ -122,8 +122,8 @@ bool CameraWindows::init_camera()
 
 	set_trigger_mode();
 
-	QCam_SetStreaming(camhandle, 1);
-	logger.log(format("Setting streaming on handle %u\n") % camhandle);
+	QCam_SetStreaming(camhandle, 0);
+	logger.log(format("Setting streaming off handle %u\n") % camhandle);
 	return true;
 }
 
@@ -168,6 +168,8 @@ void CameraWindows::set_trigger_mode()
     if (internal_triggering) {
         trigger_mode = qcTriggerFreerun;
 		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, unsigned long(mode6interval));
+		camerror = QCam_SetParam64((QCam_Settings*)&settings, qprm64Exposure, unsigned long(internal_exposure_time*1000000000.0));
+		logger.log(format("set exposure time %fs (%d)") % internal_exposure_time % camerror);
     } else {
 		trigger_mode = qcTriggerStrobeLow;
 		QCam_SetParam((QCam_Settings*)&settings, qprmTriggerDelay, 0);
@@ -175,8 +177,6 @@ void CameraWindows::set_trigger_mode()
 
 	//camerror = QCam_SetParam((QCam_Settings*)&settings, qprmExposure, unsigned long(internal_exposure_time*1000000.0));
 	
-	camerror = QCam_SetParam64((QCam_Settings*)&settings, qprm64Exposure, unsigned long(internal_exposure_time*1000000000.0));
-	logger.log(format("set exposure time %fs (%d)") % internal_exposure_time % camerror);
 	camerror = QCam_SetParam((QCam_Settings*)&settings, qprmTriggerType, trigger_mode);
 
 	camerror = QCam_SendSettingsToCam(camhandle, (QCam_Settings*)&settings);
@@ -245,6 +245,7 @@ void CameraWindows::read_image_if_available()
 
 				memcpy(shared_image.separate_buffers[i], buffers[i], sizeof(unsigned short)*shared_image.width*shared_image.height);
 			}
+			update();
 			fill_general_admin();
 			fill_real_camera_admin(timestamp, multiple_triggers);
 			logger.log(format("sharing image with counter_stars %d") % shared_image.counter_stars);
@@ -339,7 +340,6 @@ void CameraWindows::thread_function()
 				}
 			}
         }
-		last_remote_buffer_counter++;
     }
 	logger.log("Cleaning up camera");
     clean_up_camera();

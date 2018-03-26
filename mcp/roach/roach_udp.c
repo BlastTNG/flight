@@ -67,7 +67,8 @@
 #define ROACH_CHECKSUM 42
 #define HEADER_LEN 42
 /* Number of Roach channels for each module that will be published to the server */
-const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
+// const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
+const uint16_t n_publish_roaches[5] = {1016, 0, 0, 0, 0};
 /* The shared UDP socket file descriptor */
 extern int roach_sock_fd;
 
@@ -238,7 +239,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
 {
     parse_udp_packet(m_packet);
     uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
-    store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
+    // store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
     if (udperr > 0) return;
     udp_store_to_structure(m_roach_udp, m_packet);
     m_roach_udp->have_warned = 0;
@@ -275,8 +276,8 @@ void poll_socket(void)
                 uint64_t bytes_read = recv(roach_sock_fd, m_packet.rcv_buffer,
                 ROACH_UDP_LEN, 0);
                 m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
-			+ sizeof(struct ethhdr)
-			+ sizeof(struct iphdr));
+                    + sizeof(struct ethhdr)
+                    + sizeof(struct iphdr));
                 /* Filter destination address */
 		// blast_info("Before filt: R%d\t%d\t%d", m_roach_udp->which,
                           // m_roach_udp->port, ntohs(m_packet.udp_header->dest));

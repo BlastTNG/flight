@@ -279,6 +279,7 @@ typedef struct {
   uint16_t forced;
   int labjack, send_dac, load_curve;
   float dac_value;
+  uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
 typedef struct {
@@ -328,8 +329,10 @@ typedef struct roach
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
-    unsigned int load_amps;
-    unsigned int set_rudats;
+    unsigned int new_atten;
+    unsigned int load_vna_amps;
+    unsigned int load_targ_amps;
+    unsigned int calibrate_adc;
     unsigned int set_attens;
     unsigned int find_kids;
     unsigned int roach_state;
@@ -338,6 +341,14 @@ typedef struct roach
     unsigned int switch_period;
     unsigned int adc_rms;
     unsigned int test_tone;
+    unsigned int do_cal_sweeps;
+    unsigned int get_phase_centers;
+    unsigned int get_timestream;
+    unsigned int chan;
+    unsigned int tune_chan;
+    unsigned int refit_res_freqs;
+    unsigned int change_tone_amps;
+    unsigned int do_master_chop;
 } roach_status_t;
 
 typedef struct roach_params
@@ -351,7 +362,12 @@ typedef struct roach_params
     double out_atten;
 //  Switch period
     unsigned int period;
+    double new_out_atten;
     double test_freq;
+    double atten_step;
+    double npoints;
+    double ncycles;
+    double num_sec;
 } roach_params_t;
 
 typedef struct {
@@ -387,8 +403,14 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+  uint32_t biphase_clk_speed;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
   enum {vtx_isc, vtx_osc} vtx_sel[2];
 
