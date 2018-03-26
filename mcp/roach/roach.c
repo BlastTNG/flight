@@ -1876,33 +1876,43 @@ void cal_get_mags(roach_state_t *m_roach, uint32_t m_sweep_freq,
 }
 
 // Save short timestreams for single channel (using for cal lamp tests outside of KST)
-void save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
+int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
 {
-    char *new_path;
-    new_path = get_path(m_roach, m_roach->chop_path_root);
-    char *dat_path;
-    blast_tmp_sprintf(dat_path, "%s%s", new_path, ".dat");
+    struct stat dir_stat;
+    int stat_return;
+    char *file_out;
+    // create new chop directory, if doesn't exist
+    stat_return = stat(m_roach->last_chop_path, &dir_stat);
+    if (stat_return != 0) {
+        if (create_sweepdir(m_roach, CHOP)) {
+            blast_info("ROACH%d, CHOPS will be saved in %s",
+                           m_roach->which, m_roach->last_chop_path);
+        } else {
+            blast_err("Could not create new chop directory");
+            CommandData.roach[m_roach->which - 1].get_timestream = 0;
+            return -1;
+        }
+    }
+    blast_tmp_sprintf(file_out, "%s/%d.dat", m_roach->last_chop_path, m_chan);
     blast_info("chan, nsec: %d, %f", m_chan, m_nsec);
-    double I;
-    double Q;
-    int m_num_received = 0;
     int npoints = round(m_nsec * (double)DAC_FREQ_RES);
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     uint8_t i_udp_read;
     // open file for writing
     blast_info("ROACH%d, saving %d points for chan%d over %f sec", m_roach->which, npoints, m_chan, m_nsec);
-    FILE *fd = fopen(dat_path, "w");
+    FILE *fd = fopen(file_out, "wb");
     for (int i = 0; i < npoints; i++) {
         // blast_info("i = %d", i);
         usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
-            m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
-            I = m_packet.Ival[m_chan];
-            Q = m_packet.Qval[m_chan];
-            fprintf(fd, "%g\t %g\n", I, Q);
-            // blast_info("I, Q: %g\t %g", I, Q);
+            float I = m_packet.Ival[m_chan];
+            float Q = m_packet.Qval[m_chan];
+            // write a 4 byte I value
+            fwrite(&I, 4, 1, fd);
+            // write a 4 byte Q value
+            fwrite(&Q, 4, 1, fd);
             m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
         }
     }
@@ -1911,6 +1921,7 @@ void save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     system("python /home/fc1user/sam_builds/chop_list.py");
     blast_info("ROACH%d, timestream saved", m_roach->which);
     CommandData.roach[m_roach->which - 1].get_timestream = 0;
+    return 0;
 }
 
 // saves timestreams for all channels
