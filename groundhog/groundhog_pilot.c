@@ -27,11 +27,11 @@
 #include "groundhog.h"
 #include "groundhog_framing.h"
 
-superframes_list_t pilot_superframes;
-
 void udp_receive(void *arg) {
 
   struct UDPSetup * udpsetup = (struct UDPSetup *) arg;
+
+  int id = udpsetup->downlink_index;
 
   struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
@@ -44,11 +44,12 @@ void udp_receive(void *arg) {
   FILE * rawsave = NULL;
 
   uint8_t *local_superframe = allocate_superframe();
+  struct Fifo *local_fifo = &downlink[id].fifo; 
+
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
   initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
-  initialize_circular_superframes(udpsetup->sf);
 
   while (true) {
     do {
@@ -105,7 +106,9 @@ void udp_receive(void *arg) {
       blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
     }
 
-    // TODO(javier): deal with blk_size < ll->blk_size
+    // get superframe from the fifo
+    local_superframe = getFifoWrite(local_fifo);
+
     // decompress the linklist
     if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
       blast_info("[%s] Received an allframe :)\n", udpsetup->name);
@@ -127,101 +130,9 @@ void udp_receive(void *arg) {
         printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
       }
       */
-      push_superframe(local_superframe, udpsetup->sf);
+
+      incrementFifo(local_fifo);
     }
   }
-}
-
-#define MCP_FREQ 24400
-#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
-void pilot_publish(void *arg) {
-
-    static char frame_name[RATE_END][32];
-    void *pilot_data[RATE_END] = {0};
-
-    uint16_t    read_frame;
-    uint16_t    write_frame;
-
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    for (int rate = 0; rate < RATE_END; rate++) {
-        size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
-        pilot_data[rate] = calloc(1, allocated_size);
-    }
- 
-    for (int rate = 0; rate < RATE_END; rate++) {
-        char rate_name[16];
-        strcpy(rate_name, RATE_LOOKUP_TABLE[rate].text);
-        rate_name[strlen(rate_name)-1] = 'z';
-        snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/pilot/%s", rate_name);
-        blast_info("there will be a topic with name %s", frame_name[rate]);
-    }
-
-    while (true) {
-        write_frame = pilot_superframes.i_out;
-        read_frame = pilot_superframes.i_in;
-
-        if (read_frame == write_frame) {
-            usleep(100);
-            continue;
-        }
-        while (read_frame != write_frame) {
-            int counter_488hz = 1;
-            int counter_244hz = 1;
-            int counter_200hz = 1;
-            int counter_100hz = 1;
-            int counter_5hz = 1;
-            int counter_1hz = 1;
-            int frame_488_counter = 0;
-
-            while(frame_488_counter < 488) {
-                const struct timespec interval_ts = {.tv_sec = 0, .tv_nsec = MCP_NS_PERIOD};
-                ts = timespec_add(ts, interval_ts);
-                clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
-
-                if (!--counter_1hz) {
-                    counter_1hz = HZ_COUNTER(1);
-                    extract_frame_from_superframe(pilot_data[RATE_1HZ], RATE_1HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_1HZ], "pilot", RATE_1HZ);
-                    //printf("1Hz\n");
-                }
-                  if (!--counter_5hz) {
-                    counter_5hz = HZ_COUNTER(5);
-                    extract_frame_from_superframe(pilot_data[RATE_5HZ], RATE_5HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_5HZ], "pilot", RATE_5HZ);
-                    //printf("5Hz\n");
-                }
-                if (!--counter_100hz) {
-                    counter_100hz = HZ_COUNTER(100);
-                    extract_frame_from_superframe(pilot_data[RATE_100HZ], RATE_100HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_100HZ], "pilot", RATE_100HZ);
-                    //printf("100Hz\n");
-                }
-                if (!--counter_200hz) {
-                    counter_200hz = HZ_COUNTER(200);
-                    extract_frame_from_superframe(pilot_data[RATE_200HZ], RATE_200HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_200HZ], "pilot", RATE_200HZ);
-                    //printf("200Hz\n");
-                }
-                if (!--counter_244hz) {
-                    counter_244hz = HZ_COUNTER(244);
-                    extract_frame_from_superframe(pilot_data[RATE_244HZ], RATE_244HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_244HZ], "pilot", RATE_244HZ);
-                    //printf("244Hz\n");
-                }
-                if (!--counter_488hz) {
-                    counter_488hz = HZ_COUNTER(488);
-                    extract_frame_from_superframe(pilot_data[RATE_488HZ], RATE_488HZ, pilot_superframes.framelist[write_frame]);
-                    framing_publish(pilot_data[RATE_488HZ], "pilot", RATE_488HZ);
-                    frame_488_counter++;
-                    //printf("488Hz\n");
-                }
-            }
-            write_frame = (write_frame + 1) & (NUM_FRAMES-1);
-            pilot_superframes.i_out = write_frame;
-        }
-    }
 }
 
