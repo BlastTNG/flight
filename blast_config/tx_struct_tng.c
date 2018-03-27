@@ -71,7 +71,7 @@ channel_t channel_list[] =
     { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    
+
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },

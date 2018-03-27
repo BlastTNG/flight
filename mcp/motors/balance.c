@@ -35,7 +35,6 @@
 #include "tx.h" /* InCharge */
 #include "balance.h"
 #include "motors.h"
-#include "unistd.h"
 
 #define BAL_EL_FILTER_LEN 150 // 30 seconds
 #define BAL_SLEEP 1000000
@@ -207,9 +206,9 @@ void DoBalance(struct ezbus* bus)
 
 // TODO(laura): Add checking to make sure that the motor commands actually went through
 // updating the status variables.
-	
-	// get (relative) position on the rail and read limit switches
-    EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
+
+        // get (relative) position on the rail and read limit switches
+	// EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);
 
     if ((balance_state.do_move) && (!balance_state.moving)) {
