@@ -384,11 +384,11 @@ void * customSendDataThread(void *arg) {
             slen = sizeof(recv_addr);
             if (sendto(status_sck, &buffer_status, 1, MSG_NOSIGNAL, 
                          (struct sockaddr *) &(recv_addr), slen) < 0) {
-              blast_err("Could not request buffer status\n");
+              // blast_err("Could not request buffer status\n");
             }
 
             if (recvfrom(status_sck, recv_status, 10, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
-              blast_err("Could not receive buffer status\n");
+              // blast_err("Could not receive buffer status\n");
               buffer_status = 0;
             } else {
               buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
