@@ -120,7 +120,7 @@
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
 #define LUT_FREQ_OFFSET 3000 /* Hz, Frequency offset (+/-) of LUT0 and LUT1 from f0 */
 #define DF_THRESHOLD 100000 /* Hz, Delta F threshold for retuning */
-#define DEFAULT_SWITCH_PERIOD 3 /* Seconds, default switching period*/
+#define DEFAULT_SWITCH_PERIOD 1 /* Seconds, default switching period*/
 #define ADC_CAL_NTRIES 100
 #define ADC_TARG_RMS_VNA 100 /* mV, Same for all Roaches */
 #define ADC_TARG_RMS_250 100 /* mV, For 250 micron array TARG sweep */
@@ -215,23 +215,29 @@ int get_roach_status(uint16_t ind)
 
 void enable_qdr_switch(roach_state_t *m_roach, int enable)
 {
+    blast_info("ROACH%d, enabling LUT switch", m_roach->which);
     roach_write_int(m_roach, "switch_enable", enable, 0);
 }
 
-void roach_switch_LUT(uint16_t ind)
+int roach_switch_LUT(uint16_t ind)
 {
     // This line switches to next LUT pair (If 0, goes to 1, visa versa)
-    roach_state_t m_roach = roach_state_table[ind];
-    m_roach.lut_idx = m_roach.lut_idx ^ 1;
-    if (m_roach.write_flag) {
-        return;
+    int lut_idx;
+    if (roach_state_table[ind].write_flag) {
+        return -1;
     } else {
-        if (m_roach.status >= ROACH_STATUS_POP_LUTS) {
-            roach_write_int(&m_roach, "qdr_switch", m_roach.lut_idx, 0);
+        // blast_info("LUT IDX = %d", roach_state_table[ind].lut_idx);
+        lut_idx = 1 - roach_state_table[ind].lut_idx;
+        if (roach_state_table[ind].status >= ROACH_STATUS_POP_LUTS &&
+                 !roach_state_table[ind].write_flag) {
+            // blast_info("switching to LUT%d", lut_idx);
+            roach_write_int(&roach_state_table[ind], "qdr_switch", lut_idx, 0);
             usleep(1000);
-            int result = roach_read_int(&m_roach, "qdr_switch");
-            blast_info("lut idx = %d", result);
+            int new_idx = roach_read_int(&roach_state_table[ind], "qdr_switch");
+            roach_state_table[ind].lut_idx = new_idx;
+            blast_info("lut idx = %d", roach_state_table[ind].lut_idx);
         }
+        return 0;
     }
 }
 
@@ -387,7 +393,7 @@ int roach_read_int(roach_state_t *m_roach, const char *m_register)
                                           sizeof(m_data), READ_DATA_MS_TIMEOUT);
     m_data = ntohl(m_data);
     blast_info("%s = %d", m_register, m_data);
-    return 0;
+    return m_data;
 }
 
 /* Function: roach_write_data
@@ -1064,7 +1070,7 @@ void roach_write_QDR(roach_state_t *m_roach)
 void roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
     m_roach->write_flag = 1;
-    if (!m_roach->rpc_conn) {
+    if (!m_roach->katcp_fd) {
         blast_info("KATCP read collision");
     } else  {
         m_roach->lut_idx = roach_read_int(m_roach, "qdr_switch");
@@ -1890,8 +1896,8 @@ void phase_centers(roach_state_t *m_roach, char *m_targ_path)
 */
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
-    blast_info("ROACH%d, disabling LUT switch", m_roach->which - 1);
-    enable_qdr_switch(m_roach, 0);
+    // blast_info("ROACH%d, disabling LUT switch", m_roach->which - 1);
+    // enable_qdr_switch(m_roach, 0);
     int ind = m_roach->which - 1;
     if (!CommandData.roach[ind].do_sweeps) {
         return SWEEP_INTERRUPT;
@@ -2785,19 +2791,21 @@ void roach_check_retune(roach_state_t *m_roach)
 {
     // Retune if nflags exceeds nflags_threshold
     // TODO(Sam) determine threshold
-    blast_info("ROACH%d, calculating DF...", m_roach->which);
-    roach_calc_df(m_roach);
-    blast_info("ROACH%d: Checking for retune...", m_roach->which);
-    int nflags = 0;
-    for (int chan = 0; chan < m_roach->num_kids; chan++) {
-        if ((m_roach->df[chan] > DF_THRESHOLD)) {
-            m_roach->retune_mask[chan] = 1;
-            nflags++;
-        } else { m_roach->retune_mask[chan] = 0;}
-    }
-    if (nflags > FLAG_THRESH) {
-        m_roach->retune_flag = 1;
-        blast_info("ROACH%d: %d above threshold, RETUNE RECOMMENDED", m_roach->which, nflags);
+    if (!m_roach->write_flag) {
+        blast_info("ROACH%d, calculating DF...", m_roach->which);
+        roach_calc_df(m_roach);
+        blast_info("ROACH%d: Checking for retune...", m_roach->which);
+        int nflags = 0;
+        for (int chan = 0; chan < m_roach->num_kids; chan++) {
+            if ((m_roach->df[chan] > DF_THRESHOLD)) {
+                m_roach->retune_mask[chan] = 1;
+                nflags++;
+            } else { m_roach->retune_mask[chan] = 0;}
+        }
+        if (nflags > FLAG_THRESH) {
+            m_roach->retune_flag = 1;
+            blast_info("ROACH%d: %d above threshold, RETUNE RECOMMENDED", m_roach->which, nflags);
+        }
     }
 }
 
@@ -3301,6 +3309,7 @@ void *roach_cmd_loop(void* ind)
                 blast_err("ROACH%d data streaming error. Reboot Roach?", i + 1);
             } else {
                 blast_info("ROACH%d, streaming SUCCESS", i + 1);
+                enable_qdr_switch(&roach_state_table[i], 1);
                 roach_state_table[i].status = ROACH_STATUS_STREAMING;
                 roach_state_table[i].desired_status = ROACH_STATUS_VNA;
             }
@@ -3310,8 +3319,8 @@ void *roach_cmd_loop(void* ind)
             roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);
             usleep(3000);
             blast_info("ROACH%d, Initializing VNA sweep", i + 1);
-            blast_info("ROACH%d, disabling LUT switch", i + 1);
-            enable_qdr_switch(&roach_state_table[i], 0);
+            /* blast_info("ROACH%d, disabling LUT switch", i + 1);
+            enable_qdr_switch(&roach_state_table[i], 0);*/
             blast_info("ROACH%d, Starting VNA sweep...", i + 1);
             status = roach_do_sweep(&roach_state_table[i], VNA);
             if ((status == SWEEP_SUCCESS)) {
@@ -3323,6 +3332,7 @@ void *roach_cmd_loop(void* ind)
                 blast_info("ROACH%d, VNA sweep interrupted by blastcmd", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
+                enable_qdr_switch(&roach_state_table[i], 1);
             } else { blast_info("ROACH%d, VNA sweep failed, will reattempt", i + 1);}
         }
         if (roach_state_table[i].status == ROACH_STATUS_VNA &&

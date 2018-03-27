@@ -302,7 +302,7 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
-void roach_switch_LUT(uint16_t ind);
+int roach_switch_LUT(uint16_t ind);
 void roach_retune_counter(uint16_t ind, int retune_period);
 int roach_read_int(roach_state_t *m_roach, const char *m_register);
 
