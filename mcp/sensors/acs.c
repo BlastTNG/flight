@@ -934,6 +934,7 @@ void store_5hz_acs(void)
     static channel_t* latAddr;
     static channel_t* lonAddr;
     static channel_t* lstAddr;
+    static channel_t* azNullAddr;
     static channel_t* azMagAddr;
     static channel_t* azRawMagAddr;
     static channel_t* declinationMagAddr;
@@ -1054,6 +1055,7 @@ void store_5hz_acs(void)
         calDPss4Addr = channels_find_by_name("cal_d_pss4");
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagAddr = channels_find_by_name("sigma_mag");
+        azNullAddr = channels_find_by_name("az_null");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
         sigmaPssAddr = channels_find_by_name("sigma_pss");
@@ -1196,6 +1198,8 @@ void store_5hz_acs(void)
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
+
+    SET_SCALED_VALUE(azNullAddr, PointingData[i_point].null_az);
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
 

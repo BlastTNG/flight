@@ -1370,6 +1370,8 @@ void Pointing(void)
     PointingData[point_index].mag_el = MagEl.angle;
     PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
 
+    PointingData[point_index].null_az = NullAz.angle;
+
     // Added 22 June 2010 GT
     PointingData[point_index].pss_az = PSSAz.angle;
     PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
