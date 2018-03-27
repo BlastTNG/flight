@@ -113,6 +113,8 @@ typedef struct
     double image_hor_iplate;
     uint16_t image_num_blobs_found;
     uint16_t image_num_blobs_matched;
+
+    uint32_t timestamp;
 } xsc_channels_t;
 
 typedef struct XSCServerData

@@ -644,6 +644,9 @@ static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
             break;
         }
         blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
+        blast_dbg("Discarding trigger data with image_ctr_mcp %d", XSC_SERVER_DATA(which).channels.image_ctr_mcp);
+        blast_dbg("Discarding trigger data with counter_stars %d", trig_state->counter_stars);
+        blast_dbg("Discarding trigger data with image_ctr_stars %d", XSC_SERVER_DATA(which).channels.image_ctr_stars);
         free(trig_state);
     }
     /*
