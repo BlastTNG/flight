@@ -788,8 +788,8 @@ void store_1hz_xsc(int m_which)
     /// TODO(seth): Re-add local image saving
 //    SET_SCALED_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
     if (m_which == 0) {
-        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat*DEG2LI);
-        SET_SCALED_VALUE(address_xN_last_trig_lst       , xsc_pointing_state[m_which].last_trigger.lst);
+        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat);
+        SET_VALUE(address_xN_last_trig_lst              , xsc_pointing_state[m_which].last_trigger.lst);
     }
 }
 
