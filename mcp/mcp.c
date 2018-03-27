@@ -472,13 +472,13 @@ static void *mcp_main_loop(void *m_arg)
         if (!--counter_1hz) {
             counter_1hz = HZ_COUNTER(1);
             mcp_1hz_routines();
- 
+
             // only break out of main loop after all data has been written to mqtt
             if (shutdown_mcp) {
                 ready_to_close = true;
                 blast_info("Main loop is ready for shutdown\n");
                 break;
-            } 
+            }
         }
         if (!--counter_2hz) {
             counter_2hz = HZ_COUNTER(2);
