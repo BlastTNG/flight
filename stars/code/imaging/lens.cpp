@@ -98,13 +98,46 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     } else {
         line = full_line;
     }
-
+    uint8_t status_byte = ((uint8_t) full_line[3]) & 0xf;
     string message;
 
     logger.log(format("recieved birger message for command callback %i")%command);
     logger.log(       "                message (str) " + line);
     logger.log(       "                message (hex) " + string_to_hex(line));
     logger.log(       "I am done printing the hex ");
+
+    switch (status_byte) {
+        case 0: // no error
+            break;
+        case 1: // init error
+            logger.log("[EZ Stepper] Initialization error");
+            break;
+        case 2: // bad command
+            logger.log("[EZ Stepper] Bad command");
+            break;
+        case 3: // bad operand
+            logger.log("[EZ Stepper] Bad operand");
+            break;
+        case 5: // communications error
+            logger.log("[EZ Stepper] Communications error");
+            break;
+        case 7: // not initialized
+            logger.log("[EZ Stepper] Not initialized");
+            break;
+        case 9: // overload error
+            logger.log("[EZ Stepper] Overload error");
+            break;
+        case 11: // move not allowed
+            logger.log("[EZ Stepper] Move not allowed");
+            break;
+        case 15: // command overflow
+            logger.log("[EZ Stepper] Command overflow");
+            break;
+        default: // unknown error
+            logger.log(format("[EZ Stepper] Unknown error code %d") % status_byte);
+ 
+    }
+
     switch (command) {
         case flush_birger:
             break;

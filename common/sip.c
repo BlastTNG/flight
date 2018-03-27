@@ -90,11 +90,16 @@ int sip_setserial(const char *input_tty)
   int fd;
   struct termios term;
 
-  if ((fd = open(input_tty, O_RDWR)) < 0)
-    berror(tfatal, "Unable to open serial port");
+  blast_info("Connecting to sip port %s...", input_tty);
 
-  if (tcgetattr(fd, &term))
-    berror(tfatal, "Unable to get serial device attributes");
+  if ((fd = open(input_tty, O_RDWR)) < 0) {
+    blast_err("Unable to open serial port");
+    return -1;
+  }
+  if (tcgetattr(fd, &term)) {
+    blast_err("Unable to get serial device attributes");
+    return -1;
+  }
 
   term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -106,15 +111,23 @@ int sip_setserial(const char *input_tty)
   term.c_oflag &= ~(OPOST);
   term.c_cflag |= CS8;
 
-  if (cfsetospeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Error setting serial output speed");
+  if (cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial output speed");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
 
-  if (cfsetispeed(&term, B1200))          /*  <======= SET THE SPEED HERE */
-    berror(tfatal, "Error setting serial input speed");
+  if (cfsetispeed(&term, B1200)) {         /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial input speed");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
 
-  if (tcsetattr(fd, TCSANOW, &term) )
-    berror(tfatal, "Unable to set serial attributes");
-
+  if (tcsetattr(fd, TCSANOW, &term)) {
+    blast_err("Unable to set serial attributes");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
   return fd;
 }
 
@@ -152,7 +165,7 @@ static float ParseGPS(unsigned char *data)
   return((mantissa + 1) * pow(2, exponent) * sign);
 }
 
-static void SendRequest(int req, char tty_fd)
+int SendRequest(int req, char tty_fd)
 {
   unsigned char buffer[3];
 
@@ -165,8 +178,11 @@ static void SendRequest(int req, char tty_fd)
       buffer[0], buffer[1], buffer[2]);
 #endif
 
-  if (write(tty_fd, buffer, 3) < 0)
+  if (write(tty_fd, buffer, 3) < 0) {
     berror(warning, "error sending SIP request\n");
+    return 0;
+  }
+  return 1;
 }
 
 
@@ -461,6 +477,7 @@ void WatchFIFO(void* void_other_ip)
         } else {
             mcommand = MCommand(command);
 //            bputs(info, "Multi word command received\n");
+            printf("%s\n", command);
             if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
                 SetParametersFifo(mcommand, (uint16_t*)mcommand_data, rvalues,
                         ivalues, svalues);
@@ -619,43 +636,67 @@ void WatchPort(void* parameter)
     snprintf(tname, sizeof(tname), "COMM%1d", (int) (port + 1));
     nameThread(tname);
     // blast_startup("WatchPort startup\n");
-
-    tty_fd = sip_setserial(COMM[port]);
+    int get_serial_fd = 1;
 
     for (;;) {
+        // wait for a valid file descriptor
+    		while (get_serial_fd) {
+            if ((tty_fd = sip_setserial(COMM[port])) >= 0) {
+                break;
+            }
+            sleep(5);
+        }
+        get_serial_fd = 0;
+
         /* Loop until data come in */
         while (read(tty_fd, &buf, 1) <= 0) {
             timer++;
             /** Request updated info every 50 seconds */
             if (timer == 800) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_POSITION, tty_fd);
+                if (!SendRequest(REQ_POSITION, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Position\n");
 #endif
                 pthread_mutex_unlock(&mutex);
             } else if (timer == 1700) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_TIME, tty_fd);
+                if (!SendRequest(REQ_TIME, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Time\n");
 #endif
                 pthread_mutex_unlock(&mutex);
             } else if (timer > 2500) {
                 pthread_mutex_lock(&mutex);
-                SendRequest(REQ_ALTITUDE, tty_fd);
+                if (!SendRequest(REQ_ALTITUDE, tty_fd)) {
+                    get_serial_fd = 1;
+                }
 #ifdef SIP_CHATTER
                 blast_info("Request SIP Altitude\n");
 #endif
                 pthread_mutex_unlock(&mutex);
                 timer = 0;
             }
+
+            // serial connection has been lost, so break out of the loop
+            if (get_serial_fd) break;
+
             usleep(10000); /* sleep for 10ms */
         }
+
+        // catch io errors due to bad file descriptor
+        if (get_serial_fd) {
+            blast_err("Serial connection on %s lost\n", COMM[port]);
+            continue;
+        }
+
 #ifdef VERBOSE_SIP_CHATTER
         blast_info("read SIP byte %02x\n", buf);
 #endif
-
         /* Take control of memory */
         pthread_mutex_lock(&mutex);
 

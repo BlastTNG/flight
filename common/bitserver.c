@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 #include "FIFO.h"
-#include "CRC.h"
+#include "CRC_func.h"
 #include "bitserver.h"
 #include "blast.h"
 
@@ -184,7 +184,6 @@ void * sendDataThread(void *arg) {
           // memset(header+PACKET_HEADER_SIZE, 0, packet_size); // clear data
 
 #endif
-        // usleep(10000/n_packets); // don't overflow udp sendto buffer
         }
       }
       decrementFifo(server->send_fifo);

@@ -71,12 +71,14 @@
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
+extern const char *linklist_names[];
+extern const char *downlink_names[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
-  balance_auto,     balance_off,        
+  balance_auto,     balance_off,
   // cal_off,          cal_on,
   hwpr_panic,   el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
@@ -124,8 +126,8 @@ enum singleCommand {
   autofocus_veto,   north_halt,         south_halt,       actbus_on,
   actbus_off,       actuator_stop,      restore_piv,
   reset_rw,         reset_piv,
-  reset_elev,         
-  // hs_pot_on,        hs_pot_off,       bda_on,             bda_off, 
+  reset_elev,
+  // hs_pot_on,        hs_pot_off,       bda_on,             bda_off,
   hwpr_enc_on,
   hwpr_enc_off,     hwpr_enc_pulse,
   vtx1_xsc0,	    vtx1_xsc1,		vtx2_xsc0,
@@ -136,7 +138,7 @@ enum singleCommand {
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
   charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
-  // level_sensor_on,  level_sensor_off,   
+  // level_sensor_on,  level_sensor_off,
   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
@@ -173,10 +175,10 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,      
-  // fridge_cycle_params,  
+  bias_level_x,
+  // fridge_cycle_params,
   box,
-  // cal_repeat,        
+  // cal_repeat,
   cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
   hwpr_jump,         hwpr_goto_i,
@@ -185,14 +187,16 @@ enum multiCommand {
   pivot_gain,        ra_dec_goto,      ra_dec_set,
   pos_set,
   az_scan_accel,
-  // t_gyro_set,        
+  // t_gyro_set,
   highrate_bw,       pilot_bw,         biphase_bw,
-  biphase_clk_speed, highrate_through_tdrss,              set_linklists,
-  // t_gyro_gain,       
+  biphase_clk_speed, highrate_through_tdrss,   set_linklists,
+  request_file,
+
+  // t_gyro_gain,
   timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
   hwpr_set_overshoot,
-  // jfet_set,          
+  // jfet_set,
   hwpr_vel,          hwpr_i,
   gyro_off,	         quad,
   el_gyro_offset,    general,           slew_veto,        set_secondary,
@@ -200,8 +204,8 @@ enum multiCommand {
   xy_jump,           xy_xscan,          xy_yscan,         xy_raster,
   actuator_i,        lock_vel,          lock_i,           actuator_delta,
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
-  motors_verbose,    bias_step,         
-  // phase_step,  
+  motors_verbose,    bias_step,
+  // phase_step,
   hwpr_repeat,      hwpr_define_pos,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
@@ -267,6 +271,8 @@ enum multiCommand {
   cal_length,
   level_length,
   send_dac,
+  // Sam Grab these
+  periodic_cal,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

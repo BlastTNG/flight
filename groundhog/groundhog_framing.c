@@ -43,7 +43,7 @@
 
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
-
+pthread_mutex_t mqqt_lock;
 
 void initialize_circular_superframes(superframes_list_t *superframes)
 {
@@ -71,8 +71,18 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
-void framing_publish(void *m_frame, char *telemetry, E_RATE m_rate)
+void framing_init_mutex()
 {
+    if (pthread_mutex_init(&mqqt_lock, NULL) != 0) {
+        blast_fatal("Unable to initialized mutex to MQQT server");
+        exit(2);
+    }
+}
+
+void framing_publish(void *m_frame, char *telemetry, E_RATE m_rate)
+{    
+    pthread_mutex_lock(&mqqt_lock); 
+
     static char frame_name[32];
     char rate_name[16];
     strcpy(rate_name, RATE_LOOKUP_TABLE[m_rate].text);
@@ -83,6 +93,8 @@ void framing_publish(void *m_frame, char *telemetry, E_RATE m_rate)
         mosquitto_publish(mosq, NULL, frame_name,
                           frame_size[m_rate], m_frame, 0, false);
     }
+  
+    pthread_mutex_unlock(&mqqt_lock);
 }
 
 void framing_publish_1hz(void *m_frame, char *telemetry)
@@ -170,7 +182,7 @@ int framing_init(void)
     int keepalive = 60;
     bool clean_session = true;
 
-    struct telemetries m_telemetries = {3, {"biphase", "pilot", "tdrss"}};
+    struct telemetries m_telemetries = {3, {"biphase", "pilot", "highrate"}};
 
     mosquitto_lib_init();
     mosq = mosquitto_new(id, clean_session, NULL);

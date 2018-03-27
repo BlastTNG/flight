@@ -46,6 +46,14 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_FOCUS] = "Focus"
   };
 
+#define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
+
+const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
+const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",
+                                "test_files.ll",  "test.ll",
+                                "all_telemetry.ll", "no linklist", 0};
+
+
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
 
@@ -277,21 +285,19 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
-  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
-  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
-  {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-    GR_CRYO},
-  {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-    GR_CRYO},
 
-  {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
-  {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
+  // Old commands, should we delete? PAW 03/27/2018
+  // {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
+  // {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
+  // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
+  // {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
+  // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
+  // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
+
   {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
   {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
-  {COMMAND(pot_valve_open), "set He4 pot valve direction open",
-    GR_CRYO},
-  {COMMAND(pot_valve_close), "set He4 pot valve direction close",
-    GR_CRYO},
+  {COMMAND(pot_valve_open), "set He4 pot valve direction open", GR_CRYO},
+  {COMMAND(pot_valve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
   {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
@@ -833,29 +839,18 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
+
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
-      {"Pilot Linklist", 0, 32, 's', ""},
-      {"Biphase Linklist", 0, 32, 's', ""},
-      {"High Rate Linklist", 0, 32, 's', ""}
+      {"Downlink", 0, 2, 'i', "NONE", {downlink_names}},
+      {LINKLIST_SELECT}
     }
   },
 
-  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
+  {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
     {
-      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
-    }
-  },
-
-  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
-    {
-      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
-    }
-  },
-
-  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
-    {
-      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+      {LINKLIST_SELECT},
+      {"Absolute file path", 0, 64, 's', ""}
     }
   },
 
@@ -864,9 +859,28 @@ struct mcom mcommands[plugh + 2] = {
       {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
     }
   },
+
   {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
     {
       {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
+    }
+  },
+
+  {COMMAND(highrate_bw), "Highrate bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
+    }
+  },
+
+  {COMMAND(biphase_bw), "biphase bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
+    }
+  },
+
+  {COMMAND(pilot_bw), "pilot bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 80000, 'f', "rate_pilot"}
     }
   },
 
@@ -1029,6 +1043,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,
       {
           {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
+      }
+  },
+  // Sam Grab these
+  {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
+      {
+          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 1, 1000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 1, 1000, 'i', "LENGTH_PULSE"},
       }
   },
 

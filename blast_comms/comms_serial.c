@@ -204,7 +204,7 @@ int comms_serial_connect(comms_serial_t *m_serial, const char *m_terminal)
 
     if (m_serial->sock->fd != INVALID_SOCK) comms_serial_close(m_serial);
 
-    if ((m_serial->sock->fd = open(m_terminal, O_NOCTTY | O_RDWR | O_NONBLOCK)) == INVALID_SOCK) {
+    if ((m_serial->sock->fd = open(m_terminal, O_NOCTTY | O_RDWR)) == INVALID_SOCK) {
         blast_strerror("Could not open terminal '%s'", m_terminal);
         log_leave("Open Error");
         return NETSOCK_ERR;

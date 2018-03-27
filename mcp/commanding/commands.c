@@ -48,6 +48,7 @@
 #include "labjack.h"
 #include "labjack_functions.h"
 #include "linklist.h"
+#include "linklist_compress.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
@@ -97,7 +98,7 @@ struct CommandDataStruct CommandData;
 const char* SName(enum singleCommand command); // share/sip.c
 
 /** Write the Previous Status: called whenever anything changes */
-static void WritePrevStatus()
+void WritePrevStatus()
 {
   int fp, n;
 
@@ -1783,6 +1784,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    // Sam Grab these (just this 1 case)
+    case periodic_cal:
+      CommandData.Cryo.periodic_pulse = 1;
+      CommandData.Cryo.num_pulse = ivalues[0];
+      CommandData.Cryo.separation = ivalues[1];
+      CommandData.Cryo.length = ivalues[2];
+      break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
       CommandData.Cryo.labjack = ivalues[0];
@@ -1820,41 +1828,31 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
     case set_linklists:
-      copysvalue(CommandData.pilot_linklist_name, svalues[0]);
-      telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
-
-      copysvalue(CommandData.bi0_linklist_name, svalues[1]);
-      telemetries_linklist[BI0_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
-
-      copysvalue(CommandData.highrate_linklist_name, svalues[2]);
-      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
-
-    case timeout:        // Set timeout
-      CommandData.timeout = rvalues[0];
-      break;
-    case highrate_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
-      break;
-    case highrate_through_tdrss:
-      if (ivalues[0]) {
-        CommandData.highrate_through_tdrss = true;
+      if (ivalues[0] == 0) {
+        copysvalue(CommandData.pilot_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+      } else if (ivalues[0] == 1) {
+        copysvalue(CommandData.bi0_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[BI0_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+      } else if (ivalues[0] == 2) {
+        copysvalue(CommandData.highrate_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
       } else {
-        CommandData.highrate_through_tdrss = false;
+        blast_err("Unknown downlink index %d", ivalues[0]);
       }
-    case pilot_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
       break;
-    case biphase_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+    case request_file:
+      i = 0;
+      while (linklist_names[i]) i++;
+      if (ivalues[0] < i) {
+        send_file_to_linklist(linklist_find_by_name(
+            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);
+      } else {
+        blast_err("Index %d is outside linklist name range", ivalues[0]);
+      }
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
@@ -1873,6 +1871,32 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         snprintf(str3, sizeof(str3), "%s %s", str, str2);
         blast_warn("%s", str3);
       }
+      break;
+    case highrate_through_tdrss:
+      // route through tdrss or otherwise
+      if (ivalues[0]) {
+        CommandData.highrate_through_tdrss = true;
+      } else {
+        CommandData.highrate_through_tdrss = false;
+      }
+      break;
+    case timeout:        // Set timeout
+      CommandData.timeout = rvalues[0];
+      break;
+    case highrate_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
+      break;
+    case pilot_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
+      break;
+    case biphase_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
       break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
@@ -2646,6 +2670,11 @@ void InitCommandData()
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
+    // Sam Grab these
+    CommandData.Cryo.num_pulse = 1;
+    CommandData.Cryo.separation = 1;
+    CommandData.Cryo.periodic_pulse = 0;
+    CommandData.Cryo.length = 1;
 
     /* relays should always be set to zero when starting MCP */
     /* relays */
@@ -2778,7 +2807,7 @@ void InitCommandData()
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
     CommandData.highrate_bw = 6000/8.0; /* Bps */
-    CommandData.pilot_bw = 2000/8.0; /* Bps */
+    CommandData.pilot_bw = 70000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.highrate_through_tdrss = true;

@@ -159,7 +159,9 @@ void biphase_receive(void *args)
 
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
 
-                  if (!read_allframe(local_superframe, compressed_linklist)) {
+                  if (read_allframe(local_superframe, compressed_linklist)) {
+                      printf("[Biphase] Received an allframe :)\n");
+                  } else {
                       // The compressed linklist has been fully reconstructed
                       blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
@@ -167,15 +169,14 @@ void biphase_receive(void *args)
                       push_superframe(local_superframe, &biphase_superframes);
                       memset(compressed_linklist, 0, BI0_MAX_BUFFER_SIZE);
                       compressed_linklist_size = 0;
-                  } else {
-                      printf("[Biphase] Received an allframe :)\n");
-                  }
+                  } 
               }
           }
           i_word++;
           i_word = (i_word % BI0_FRAME_SIZE);
           //printf("%04x ", raw_word_in);
       }
+      usleep(100);
   }
 }
 

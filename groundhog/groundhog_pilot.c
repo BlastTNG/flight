@@ -24,46 +24,77 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "pilot.h"
+#include "groundhog.h"
 #include "groundhog_framing.h"
 
 superframes_list_t pilot_superframes;
 
-void pilot_receive(void *arg) {
+void udp_receive(void *arg) {
 
-  struct BITRecver pilotrecver = {0};
+  struct UDPSetup * udpsetup = (struct UDPSetup *) arg;
+
+  struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0;
+  uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   uint32_t blk_size = 0;
   uint32_t transmit_size = 0;
 
+  // open a file to save all the raw linklist data
+  FILE * rawsave = NULL;
+
   uint8_t *local_superframe = allocate_superframe();
-  uint8_t *compbuffer = calloc(1, PILOT_MAX_SIZE);
+  uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
-  initBITRecver(&pilotrecver, PILOT_ADDR, PILOT_PORT, 10, PILOT_MAX_SIZE, PILOT_MAX_PACKET_SIZE);
-  initialize_circular_superframes(&pilot_superframes);
+  initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
+  initialize_circular_superframes(udpsetup->sf);
 
   while (true) {
     do {
       // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&pilotrecver, &blk_size);
+      recvbuffer = getBITRecverAddr(&udprecver, &blk_size);
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
-        removeBITRecverAddr(&pilotrecver);
+        removeBITRecverAddr(&udprecver);
       } else {
         break;
       }
     } while (true);
 
+#if 0
+    if (serial != prev_serial) {
+      char fname[80] = {0}, basename[80] = {0};
+
+      if (rawsave) {
+        fclose(rawsave);
+        rawsave = NULL;
+      }
+      TODO(javier): fix directory tree for file saves
+      sprintf(basename, "%s/%s/%s_%s", FILE_SAVE_DIR, udpsetup->sf, datestring, ll->name);
+
+      // open a new file to write raw linklist data to
+      sprintf(fname, "%s.gnddata", basename);
+      blast_info("Opening file \"%s\"", fname);
+      rawsave = fpreopenb(fname);
+      if (!rawsave) blast_err("Failed to open file");
+      
+      // copy linklist file to the directory
+      blast_info("Generating linklist format file to \"%s\"", basename);
+      linklist_to_file(ll, basename);
+    }
+#endif
+
+    prev_serial = serial;
+
     // set the linklist serial
-    setBITRecverSerial(&pilotrecver, serial);
+    setBITRecverSerial(&udprecver, serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&pilotrecver, compbuffer, PILOT_MAX_SIZE, 0);
+    blk_size = recvFromBITRecver(&udprecver, compbuffer, PILOT_MAX_SIZE, 0);
 
     // hijacking frame number for transmit size
-    transmit_size = pilotrecver.frame_num; 
+    transmit_size = udprecver.frame_num; 
 
     // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
  
@@ -76,21 +107,27 @@ void pilot_receive(void *arg) {
 
     // TODO(javier): deal with blk_size < ll->blk_size
     // decompress the linklist
-    if (!read_allframe(local_superframe, compbuffer)) { // just a regular frame
-      blast_info("[Pilot] Received linklist \"%s\"", ll->name);
+    if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
+      blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+    } else {
+      blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
-      if (!decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size)) { 
-        continue;
+
+      // write the linklist data to disk
+      if (rawsave) {
+        fwrite(compbuffer, 1, ll->blk_size, rawsave);
+        fflush(rawsave); 
       }
+
+      // decompress
+      decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
       /*
       printf("Start\n");
       for (int i = 0; i < 5; i++) {
         printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
       }
       */
-      push_superframe(local_superframe, &pilot_superframes);
-    } else {
-      blast_info("[Pilot] Received an allframe :)\n");
+      push_superframe(local_superframe, udpsetup->sf);
     }
   }
 }

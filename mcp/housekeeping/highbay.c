@@ -42,9 +42,12 @@
 
 #define N2_FLOW_CHAN 0
 #define HE_BLOW_CHAN 1
-#define HE_POT_FLOW_CHAN 2 // low flow
-#define HE_PURGE_FLOW_CHAN 3 // hi flow
+#define HE_POT_HI_FLOW_CHAN 3 // hi flow
+#define HE_PURGE_FLOW_CHAN 5 // purge flow
 #define ALARM_GAUGE 4
+#define HE_POT_LO_FLOW_CHAN 2 // lo flow
+
+extern labjack_state_t state[NUM_LABJACKS];
 
 static void aalborg_n2(void) {
     static channel_t* flow_n2_Addr;
@@ -66,14 +69,24 @@ static void aalborg_he_blow(void) {
     SET_SCALED_VALUE(he_blow_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_BLOW_CHAN));
 }
 
-static void aalborg_he_pot(void) {
-    static channel_t* flow_he_pot_Addr;
-    static int first_time_he_pot = 1;
-    if (first_time_he_pot) {
-        flow_he_pot_Addr = channels_find_by_name("he_pot_flow_v");
-        first_time_he_pot = 0;
+static void aalborg_he_pot_hi(void) {
+    static channel_t* flow_he_pot_hi_Addr;
+    static int first_time_he_pot_hi = 1;
+    if (first_time_he_pot_hi) {
+        flow_he_pot_hi_Addr = channels_find_by_name("he_pot_hi_flow_v");
+        first_time_he_pot_hi = 0;
     }
-    SET_SCALED_VALUE(flow_he_pot_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_FLOW_CHAN));
+    SET_SCALED_VALUE(flow_he_pot_hi_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_HI_FLOW_CHAN));
+}
+
+static void aalborg_he_pot_lo(void) {
+    static channel_t* flow_he_pot_lo_Addr;
+    static int first_time_he_pot_lo = 1;
+    if (first_time_he_pot_lo) {
+        flow_he_pot_lo_Addr = channels_find_by_name("he_pot_lo_flow_v");
+        first_time_he_pot_lo = 0;
+    }
+    SET_SCALED_VALUE(flow_he_pot_lo_Addr, labjack_get_value(LABJACK_HIGHBAY, HE_POT_LO_FLOW_CHAN));
 }
 
 static void aalborg_he_purge(void) {
@@ -122,20 +135,13 @@ void monitor_flow(int on) {
 }
 
 
-void highbay(int n2, int he_pot, int he_blow, int he_purge, int alarm) {
-    if (n2) {
+void highbay(int on) {
+    if (on && state[7].initialized) {
         aalborg_n2();
-    }
-    if (he_pot) {
-        aalborg_he_pot();
-    }
-    if (he_blow) {
+        aalborg_he_pot_hi();
         aalborg_he_blow();
-    }
-    if (he_purge) {
         aalborg_he_purge();
-    }
-    if (alarm) {
         read_alarm_gauge();
+        aalborg_he_pot_lo();
     }
 }
