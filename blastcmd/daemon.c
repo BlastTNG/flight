@@ -673,6 +673,8 @@ void Daemonise(int route, int no_fork, int port, char *daemon_pilot[2])
     pilot_host[1] = daemon_pilot[1];
   }
 
+  printf("HOSTS %s %s\n", pilot_host[0], pilot_host[1]);
+
   /* for forward management */
   setenv("USER", "blastcmd", 1);
 

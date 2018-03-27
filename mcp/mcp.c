@@ -102,6 +102,7 @@ int16_t InCharge = 0;
 int16_t InChargeSet = 0;
 
 bool shutdown_mcp = false;
+bool ready_to_close = false;
 
 void Pointing();
 void WatchFIFO(void*);          // commands.c
@@ -254,6 +255,7 @@ static void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
+    while (!ready_to_close) usleep(10000);
     watchdog_close();
     shutdown_bias_tone();
     diskmanager_shutdown();
@@ -287,15 +289,15 @@ void * lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(1, 1, 0, 0, 0, 1);
-    // mult_labjack_networking_init(6, 84, 1);
+    init_labjacks(0, 0, 1, 1, 1, 1);
+    mult_labjack_networking_init(6, 84, 1);
     // 7 is for highbay labjack
-    labjack_networking_init(7, 14, 1);
-    ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    // labjack_networking_init(7, 14, 1);
+    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // switch to this thread for flight
-    // ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
+    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
     return NULL;
@@ -450,7 +452,7 @@ static void *mcp_main_loop(void *m_arg)
 
     superframe_counter[RATE_488HZ] = 1;
 
-    while (!shutdown_mcp) {
+    while (true) {
         int ret;
         const struct timespec interval_ts = { .tv_sec = 0,
                                         .tv_nsec = MCP_NS_PERIOD}; /// 200HZ interval
@@ -470,6 +472,13 @@ static void *mcp_main_loop(void *m_arg)
         if (!--counter_1hz) {
             counter_1hz = HZ_COUNTER(1);
             mcp_1hz_routines();
+ 
+            // only break out of main loop after all data has been written to mqtt
+            if (shutdown_mcp) {
+                ready_to_close = true;
+                blast_info("Main loop is ready for shutdown\n");
+                break;
+            } 
         }
         if (!--counter_2hz) {
             counter_2hz = HZ_COUNTER(2);
@@ -644,7 +653,7 @@ int main(int argc, char *argv[])
   initialize_CPU_sensors();
 
   // force incharge for test cryo
-  force_incharge();
+  // force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);

@@ -99,18 +99,16 @@ void highrate_compress_and_send(void *arg) {
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
       if (!allframe_count) {
-      //  write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
-      //  sendToBITSender(&pilotsender, compressed_buffer, allframe_size, 0);
+          transmit_size = write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
+      } else {
+				// compress the linklist
+				compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
+				decrementFifo(&highrate_fifo);
+        transmit_size = ll->blk_size;
       }
 
-      // compress the linklist
-      int retval = compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
-      decrementFifo(&highrate_fifo);
-
-      if (!retval) continue;
-
-      // compute the transmite size based on bandwidth
-      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+      // bandwidth limit; frames are 1 Hz, so bandwidth == size
+      transmit_size = MIN(transmit_size, bandwidth); 
 
       // set initialization for packetization
       uint8_t * chunk = NULL;
@@ -122,24 +120,27 @@ void highrate_compress_and_send(void *arg) {
       csbf_header[0] = HIGHRATE_SYNC1;
       csbf_header[1] = (CommandData.highrate_through_tdrss) ? HIGHRATE_TDRSS_SYNC2 : HIGHRATE_IRIDIUM_SYNC2;
       csbf_header[2] = HIGHRATE_ORIGIN_COMM1; // TODO(javier): check if this needs to be commanded 
-      csbf_header[3] = 0x00; // zero
-      csbf_header[4] = ((datasize+PACKET_HEADER_SIZE) >> 8) & 0xff; // msb of size
-      csbf_header[5] = (datasize+PACKET_HEADER_SIZE) & 0xff;  // lsb of size
+      csbf_header[3] = 0x69; // !zero
 
       while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compressed_buffer, transmit_size,
                                     &chunksize, &i_pkt, &n_pkt))) {
+
+        // set the size for the csbf header
+        csbf_header[4] = ((chunksize+PACKET_HEADER_SIZE) >> 8) & 0xff; // msb of size
+        csbf_header[5] = (chunksize+PACKET_HEADER_SIZE) & 0xff;  // lsb of size
 
         // have packet header serials match the linklist serials
         writeHeader(header_buffer, *(uint32_t *) ll->serial, transmit_size, i_pkt, n_pkt);
 
         // copy the data to the csbf packet
-        memcpy(data_buffer, chunk, datasize); 
+        memcpy(data_buffer, chunk, chunksize); 
 
         // compute checksum
+        csbf_checksum = data_buffer+chunksize;
         *csbf_checksum = 0;
         for (i = 2; i < CSBF_HEADER_SIZE; i++) *csbf_checksum += csbf_header[i];
         for (i = 0; i < PACKET_HEADER_SIZE; i++) *csbf_checksum += header_buffer[i];
-        for (i = 0; i < datasize; i++) *csbf_checksum += chunk[i];
+        for (i = 0; i < chunksize; i++) *csbf_checksum += chunk[i];
 /*
         for (i = 0; i < csbf_packet_size; i++) {
           if (i % 32 == 0) printf("\n");
@@ -151,12 +152,13 @@ void highrate_compress_and_send(void *arg) {
 */
 
         // send the full packet 
-        unsigned int wrote = write(serial->sock->fd, csbf_packet, csbf_packet_size);
+        unsigned int sendsize = chunksize+CSBF_HEADER_SIZE+PACKET_HEADER_SIZE+1;
+        unsigned int wrote = write(serial->sock->fd, csbf_packet, sendsize);
         if (wrote < 0) { // send csbf header 
           get_serial_fd = 1;
           break;
-        } else if (wrote != csbf_packet_size) {
-          blast_err("Could only send %d/%d bytes\n", wrote, csbf_packet_size);
+        } else if (wrote != sendsize) {
+          blast_err("Could only send %d/%d bytes\n", wrote, sendsize);
         }
         memset(data_buffer, 0, HIGHRATE_DATA_PACKET_SIZE);
 
