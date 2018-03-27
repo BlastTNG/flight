@@ -29,8 +29,6 @@
 #include "highrate.h"
 #include "comms_serial.h"
 
-superframes_list_t highrate_superframes;
-
 enum HeaderType{NONE, IRID_OMNI, TD_OMNI, IRID_SLOW, PAYLOAD};
 
 struct CSBFHeader {
@@ -165,9 +163,8 @@ void highrate_receive(void *arg) {
   uint32_t transmit_size;
   uint8_t *compressed_buffer = calloc(1, buffer_size);
 
-  // superframe allocations
-  uint8_t *local_superframe = allocate_superframe();
-  initialize_circular_superframes(&highrate_superframes);
+  uint8_t *local_superframe = NULL;
+  struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
   uint8_t * gse_packet = calloc(1, 2048);
@@ -240,6 +237,9 @@ void highrate_receive(void *arg) {
                       // the packet is complete, so decompress
                       if ((retval == 0) && (ll != NULL))
                       {
+                          // get superframe from the fifo
+                          local_superframe = getFifoWrite(local_fifo);                          
+
                           // decompress the linklist
                           if (read_allframe(local_superframe, compressed_buffer)) {
                               blast_info("[%s] Received an allframe :)\n", source_str);
@@ -251,7 +251,7 @@ void highrate_receive(void *arg) {
                               blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size);
-                              push_superframe(local_superframe, &highrate_superframes);
+                              incrementFifo(local_fifo);
                           }
                           memset(compressed_buffer, 0, buffer_size);
                           recv_size = 0;
@@ -274,98 +274,5 @@ void highrate_receive(void *arg) {
           }
       }
   }
-}
-
-#define MCP_FREQ 24400
-#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
-void highrate_publish(void *arg) {
-
-    static char frame_name[RATE_END][32];
-    void *highrate_data[RATE_END] = {0};
-
-    uint16_t    read_frame;
-    uint16_t    write_frame;
-
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    for (int rate = 0; rate < RATE_END; rate++) {
-        size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
-        highrate_data[rate] = calloc(1, allocated_size);
-    }
- 
-    for (int rate = 0; rate < RATE_END; rate++) {
-        char rate_name[16];
-        strcpy(rate_name, RATE_LOOKUP_TABLE[rate].text);
-        rate_name[strlen(rate_name)-1] = 'z';
-        snprintf(frame_name[rate], sizeof(frame_name[rate]), "frames/highrate/%s", rate_name);
-        blast_info("there will be a topic with name %s", frame_name[rate]);
-    }
-
-    while (true) {
-        write_frame = highrate_superframes.i_out;
-        read_frame = highrate_superframes.i_in;
-
-        if (read_frame == write_frame) {
-            usleep(100);
-            continue;
-        }
-        while (read_frame != write_frame) {
-            int counter_488hz = 1;
-            int counter_244hz = 1;
-            int counter_200hz = 1;
-            int counter_100hz = 1;
-            int counter_5hz = 1;
-            int counter_1hz = 1;
-            int frame_488_counter = 0;
-
-            while(frame_488_counter < 488) {
-                const struct timespec interval_ts = {.tv_sec = 0, .tv_nsec = MCP_NS_PERIOD};
-                ts = timespec_add(ts, interval_ts);
-                clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
-
-                if (!--counter_1hz) {
-                    counter_1hz = HZ_COUNTER(1);
-                    extract_frame_from_superframe(highrate_data[RATE_1HZ], RATE_1HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_1HZ], "highrate", RATE_1HZ);
-                    //printf("1Hz\n");
-                }
-                  if (!--counter_5hz) {
-                    counter_5hz = HZ_COUNTER(5);
-                    extract_frame_from_superframe(highrate_data[RATE_5HZ], RATE_5HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_5HZ], "highrate", RATE_5HZ);
-                    //printf("5Hz\n");
-                }
-                if (!--counter_100hz) {
-                    counter_100hz = HZ_COUNTER(100);
-                    extract_frame_from_superframe(highrate_data[RATE_100HZ], RATE_100HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_100HZ], "highrate", RATE_100HZ);
-                    //printf("100Hz\n");
-                }
-                if (!--counter_200hz) {
-                    counter_200hz = HZ_COUNTER(200);
-                    extract_frame_from_superframe(highrate_data[RATE_200HZ], RATE_200HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_200HZ], "highrate", RATE_200HZ);
-                    //printf("200Hz\n");
-                }
-                if (!--counter_244hz) {
-                    counter_244hz = HZ_COUNTER(244);
-                    extract_frame_from_superframe(highrate_data[RATE_244HZ], RATE_244HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_244HZ], "highrate", RATE_244HZ);
-                    //printf("244Hz\n");
-                }
-                if (!--counter_488hz) {
-                    counter_488hz = HZ_COUNTER(488);
-                    extract_frame_from_superframe(highrate_data[RATE_488HZ], RATE_488HZ, highrate_superframes.framelist[write_frame]);
-                    framing_publish(highrate_data[RATE_488HZ], "highrate", RATE_488HZ);
-                    frame_488_counter++;
-                    //printf("488Hz\n");
-                }
-            }
-            write_frame = (write_frame + 1) & (NUM_FRAMES-1);
-            highrate_superframes.i_out = write_frame;
-        }
-    }
 }
 

@@ -27,23 +27,17 @@
 #define INCLUDE_FRAMING_H_
 
 #define NUM_FRAMES 20 
+#include "FIFO.h"
 
-struct telemetries {
-    uint8_t number;
-    const char *types[3];
+struct DownLinkStruct {
+    char name[32];
+    char frame_name[RATE_END][32];
+    struct Fifo fifo;
+    void *data[RATE_END];
 };
 
-typedef struct
-{
-    int i_in;
-    int i_out;
-    uint8_t *framelist[NUM_FRAMES];
-    size_t framesize[NUM_FRAMES];
-} superframes_list_t;
-
-
-void initialize_circular_superframes(superframes_list_t *superframes);
-void push_superframe(const void *m_frame, superframes_list_t *superframes);
+enum DownLinkTypes {PILOT, BI0, HIGHRATE, 
+                      NUM_DOWNLINKS};
 
 // int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
 int framing_init(void);
@@ -55,6 +49,9 @@ void framing_publish_200hz(void* m_frame, char *telemetry);
 void framing_publish_100hz(void* m_frame, char *telemetry);
 void framing_publish_5hz(void* m_frame, char *telemetry);
 void framing_publish_1hz(void* m_frame, char *telemetry);
-void framing_init_mutex();
+
+void groundhog_publish(void *);
+
+extern struct DownLinkStruct downlink[NUM_DOWNLINKS];
 
 #endif /* INCLUDE_FRAMING_H_ */

@@ -112,9 +112,11 @@ void daemonize()
     pthread_sigmask(SIG_BLOCK, &signals, NULL);
 }
 
+
 int main(int argc, char * argv[]) {
 
   channels_initialize(channel_list);
+  define_superframe();
   framing_init();
 
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
@@ -140,9 +142,6 @@ int main(int argc, char * argv[]) {
     daemonize();
   }
 
-  // initialize the framing mutex for MQQT
-  framing_init_mutex();
-
   // get the date string for file saving
   time_t now = time(0);
   struct tm * tm_t = localtime(&now);
@@ -154,56 +153,52 @@ int main(int argc, char * argv[]) {
                                  PILOT_PORT, 
                                  PILOT_MAX_SIZE, 
                                  PILOT_MAX_PACKET_SIZE,
-                                 &pilot_superframes};
+                                 PILOT};
 
   struct UDPSetup udplos_setup = {"BI0-LOS", 
                                   BI0LOS_GND_ADDR, 
                                   BI0LOS_GND_PORT, 
                                   BI0_MAX_BUFFER_SIZE, 
                                   BI0LOS_MAX_PACKET_SIZE,
-                                  &biphase_superframes};
+                                  BI0};
+
+  // Publishing data to MSQT
+  pthread_t groundhog_publish_worker;
 
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
 
-  // Publishing data to MSQT
-  pthread_t pilot_publish_worker;
-  pthread_t biphase_publish_worker;
-  pthread_t highrate_publish_worker;
+  // publishing thread; handles all telemetry publishing to mosquitto
+  pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
   if (pilot_on) {
     pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
-    pthread_create(&pilot_publish_worker, NULL, (void *) &pilot_publish, NULL);
   }
 
   if (bi0_on) {
     // pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
     pthread_create(&biphase_receive_worker, NULL, (void *) &udp_receive, (void *) &udplos_setup);
-    pthread_create(&biphase_publish_worker, NULL, (void *) &biphase_publish, NULL);
   }
 
   if (highrate_on) {
     pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
-    pthread_create(&highrate_publish_worker, NULL, (void *) &highrate_publish, NULL);
   }
 
+  // The Joining
+  pthread_join(groundhog_publish_worker, NULL);
 
-  // Joining
   if (pilot_on) {
     pthread_join(pilot_receive_worker, NULL);
-    pthread_join(pilot_publish_worker, NULL);
   }
 
   if (bi0_on) {
     pthread_join(biphase_receive_worker, NULL);
-    pthread_join(biphase_publish_worker, NULL);
   }
 
   if (highrate_on) {
     pthread_join(highrate_receive_worker, NULL);
-    pthread_join(highrate_publish_worker, NULL);
   }
 
   return 0;
