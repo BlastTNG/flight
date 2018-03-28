@@ -145,3 +145,223 @@ void highbay(int on) {
         aalborg_he_pot_lo();
     }
 }
+
+static void write_to_mux(int value) {
+    switch (value) {
+        case 1:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 2:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 3:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 4:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 5:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 6:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 7:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 8:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 9:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 10:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 11:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 12:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 13:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 14:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 15:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 16:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 1);
+            labjack_queue_command(8, 2002, 1);
+            labjack_queue_command(8, 2003, 1);
+            labjack_queue_command(8, 2004, 0);
+            break;
+        case 17:
+            labjack_queue_command(8, 2000, 0);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 1);
+            break;
+        case 18:
+            labjack_queue_command(8, 2000, 1);
+            labjack_queue_command(8, 2001, 0);
+            labjack_queue_command(8, 2002, 0);
+            labjack_queue_command(8, 2003, 0);
+            labjack_queue_command(8, 2004, 1);
+            break;
+        default:
+            break;
+    }
+}
+
+static void setup_write(void) { // sets the mux pins to s1 0, s2 1, w1 0, w2 0
+    labjack_queue_command(8, 2005, 0);
+    labjack_queue_command(8, 2006, 0);
+    labjack_queue_command(8, 2007, 0);
+    labjack_queue_command(8, 2020, 1);
+}
+
+static void write_1(void) {
+    labjack_queue_command(8, 2005, 1);
+    labjack_queue_command(8, 2006, 1);
+    labjack_queue_command(8, 2020, 0);
+}
+
+static void write_2(void) {
+    labjack_queue_command(8, 2007, 1);
+    labjack_queue_command(8, 2020, 1);
+}
+
+static void choose_volts(int polarity, float voltage) {
+    if (polarity == 1) { // polarity 1 grounds 2 and writes to 1
+        labjack_queue_command(8, 1000, voltage);
+        labjack_queue_command(8, 1001, 0);
+    }
+    if (polarity == -1) { // polarity -1 grounds 1 and writes to 2
+        labjack_queue_command(8, 1001, voltage);
+        labjack_queue_command(8, 1000, 0);
+    }
+}
+
+
+void mapper_command(int mux1, int mux2, int polarity, float voltage) {
+    if (mux1 == mux2) {
+        blast_info("Error can't send current in and out on same line");
+    } else {
+    if (state[8].initialized == 1) {
+        choose_volts(polarity, voltage);
+        setup_write();
+        write_to_mux(mux1);
+        write_1();
+        write_to_mux(mux1);
+        write_2();
+        blast_info("wrote %d to mux1, %d to mux2, with polarity %d, and voltage %f", mux1, mux2, polarity, voltage);
+    }
+    }
+}
+
+void all_map_5v(void) {
+    static int polarity = 1;
+    static int mux1 = 1;
+    static int mux2 = 1;
+    static float voltage = 5.0;
+    if (polarity == 1) {
+        if (mux1 < 19) {
+            if (mux2 < 19 && mux2 != mux1) {
+                // mapper_command(mux1, mux2, polarity, voltage);
+                mux2++;
+            }
+            if (mux2 == 19) {
+                mux2 = 1;
+                mux1++;
+            }
+        }
+        if (mux1 == 19) {
+            mux1 = 1;
+            mux2 = 1;
+            polarity = -1;
+        }
+    }
+    if (polarity == -1) {
+        blast_info("failed");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
