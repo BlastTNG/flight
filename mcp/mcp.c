@@ -620,15 +620,9 @@ int main(int argc, char *argv[])
   define_superframe();
   master_superframe = calloc(1, superframe_size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
-<<<<<<< HEAD
     allocFifo(telem_fifo[i], 3, superframe_size);
   }
 
-=======
-   allocFifo(telem_fifo[i], 3, superframe_size);
-  } 
-/*
->>>>>>> labjack
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
   linklist_generate_lookup(linklist_array);
@@ -644,11 +638,7 @@ int main(int argc, char *argv[])
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
-<<<<<<< HEAD
 
-=======
-*/
->>>>>>> labjack
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
