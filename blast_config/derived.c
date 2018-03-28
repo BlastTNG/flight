@@ -586,10 +586,10 @@ derived_tng_t derived_list[] = {
     // clinometer channels
     LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
     LINCOM("Clin_of_y", "CLIN_OF_Y", 10, 0),
-    LINCOM("Clin_of_t", "CLIN_OF_T", 100, 0),
+    LINCOM("Clin_of_t", "CLIN_OF_T", 100, 273.15),
     LINCOM("Clin_if_x", "CLIN_IF_X", 10, 0),
     LINCOM("Clin_if_y", "CLIN_IF_Y", 10, 0),
-    LINCOM("Clin_if_t", "CLIN_IF_T", 100, 0),
+    LINCOM("Clin_if_t", "CLIN_IF_T", 100, 273.15),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
