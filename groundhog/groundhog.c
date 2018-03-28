@@ -24,6 +24,8 @@
 #include "pilot.h"
 #include "bi0.h"
 
+#define GROUNDHOG_LOG "/data/etc/groundhog.log"
+
 char datestring[80] = {0};
 int system_idled = 0;
 sigset_t signals;
@@ -31,37 +33,6 @@ sigset_t signals;
 void clean_up(void) {
     unlink("/var/run/groundhog.pid");
     // closelog();
-}
-
-void signal_action(int signo) {
-
-    if (system_idled) {
-        bprintf(info, "caught signal %i while system idle", signo);
-    }
-    else {
-        bprintf(info, "caught signal %i; going down to idle", signo);
-        // ShutdownFrameFile();
-        system_idled = 1;
-        // needs_join = 1;
-    }
-
-    if (signo == SIGINT) { /* idle */
-        ;
-    } else if (signo == SIGHUP) { /* cycle */
-        bprintf(info, "system idle, bringing system back up");
-        // InitialiseFrameFile(FILE_SUFFIX);
-        /* block signals */
-        pthread_sigmask(SIG_BLOCK, &signals, NULL);
-        // pthread_create(&framefile_thread, NULL, (void*)&FrameFileWriter, NULL);
-        /* unblock signals */
-        pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
-        system_idled = 0;
-    } else { /* terminate */
-        bprintf(info, "system idle, terminating");
-        clean_up();
-        signal(signo, SIG_DFL);
-        raise(signo);
-    }
 }
 
 void daemonize()
@@ -91,33 +62,15 @@ void daemonize()
     /* Daemonise */
     chdir("/");
     freopen("/dev/null", "r", stdin);
-    freopen("/dev/null", "w", stdout);
+    freopen(GROUNDHOG_LOG, "a", stdout);
     freopen("/dev/null", "w", stderr);
     setsid();
-
-    /* set up signal masks */
-    sigemptyset(&signals);
-    sigaddset(&signals, SIGHUP);
-    sigaddset(&signals, SIGINT);
-    sigaddset(&signals, SIGTERM);
-
-    /* set up signal handlers */
-    action.sa_handler = signal_action;
-    action.sa_mask = signals;
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGHUP, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
-
-    /* block signals */
-    pthread_sigmask(SIG_BLOCK, &signals, NULL);
 }
 
 
 int main(int argc, char * argv[]) {
-
   channels_initialize(channel_list);
   define_superframe();
-  framing_init();
 
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
   load_all_linklists(DEFAULT_LINKLIST_DIR, ll_list);
@@ -127,20 +80,28 @@ int main(int argc, char * argv[]) {
   int pilot_on = 1;
   int bi0_on = 1;
   int highrate_on = 1;
+  int daemon = 0;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-no_pilot") == 0) pilot_on = 0;
     else if (strcmp(argv[i], "-no_bi0") == 0) bi0_on = 0;
     else if (strcmp(argv[i], "-no_highrate") == 0) highrate_on = 0;
+    else if (strcmp(argv[i], "-pilot_only") == 0) bi0_on = highrate_on = 0;
+    else if (strcmp(argv[i], "-bi0_only") == 0) highrate_on = pilot_on = 0;
+    else if (strcmp(argv[i], "-highrate_only") == 0) pilot_on = bi0_on = 0;
+    else if (strcmp(argv[i], "-d") == 0) daemon = 1;
     else {
       blast_err("Unrecognized option \"%s\"", argv[i]);
       exit(1);
     }
   }
 
-  if (false) {
+  if (daemon) {
     daemonize();
   }
+
+  // initialize framing
+  framing_init();
 
   // get the date string for file saving
   time_t now = time(0);
