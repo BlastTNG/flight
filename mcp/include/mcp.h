@@ -46,19 +46,22 @@ struct chat_buf {
 
 extern struct tm start_time;
 
+#define MCP_FREQ 24400
+#define MCP_NS_PERIOD (1000000000 / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+
+// telemetry defines
+#define NUM_TELEMETRIES 3
+#define PILOT_TELEMETRY_INDEX 0
+#define BI0_TELEMETRY_INDEX 1
+#define HIGHRATE_TELEMETRY_INDEX 2
+
 // Max Slew Veto
 #define VETO_MAX 60000
 
 #define TEMPORAL_OFFSET 0
 
 #define MAX_LINE_LENGTH 1024
-
-#define USE_FIFO_CMD
-
-// preserve use of FIFO or SIP, not both
-#ifndef USE_FIFO_CMD
-#define USE_SIP_CMD
-#endif
 
 // #define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
 #endif

@@ -58,6 +58,27 @@ void Connection::load_server_data_camera_and_lens()
     server_data.channels.lens_aperture = shared_lens_results.aperture_value;
 }
 
+int gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+	// until 00:00:00 January 1, 1970 
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+	SYSTEMTIME  system_time;
+	FILETIME    file_time;
+	uint64_t    time;
+
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+	return 0;
+}
+
 void Connection::load_server_data_image()
 {
     server_data.channels.image_ctr_stars = shared_image_status.counter_stars;
@@ -111,8 +132,13 @@ void Connection::load_server_data_image()
         server_data.channels.image_hor_iplate = shared_image_solution.horizontal.iplatescale;
 
         server_data.channels.image_num_blobs_found = shared_image_solution.num_blobs_total;
-        server_data.channels.image_num_blobs_matched = shared_image_solution.num_blobs_matched;
-    }
+		server_data.channels.image_num_blobs_matched = shared_image_solution.num_blobs_matched;
+
+		struct timeval tv = { 0 };
+		gettimeofday(&tv, NULL);
+		server_data.channels.timestamp_s = tv.tv_sec;
+		server_data.channels.timestamp_us = tv.tv_usec;
+	}
 
     server_data.blobs.counter_stars = shared_image_blobs.counter_stars;
     server_data.blobs.num_blobs = 0;

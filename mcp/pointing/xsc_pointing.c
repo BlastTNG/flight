@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #include "blast.h"
-#include "fifo.h"
+#include "xsc_fifo.h"
 #include "framing.h"
 #include "channels_tng.h"
 #include "tx.h"
@@ -47,7 +47,7 @@ bool scan_entered_snap_mode = false;
 bool scan_leaving_snap_mode = false;
 
 static int32_t loop_counter = 0;
-static fifo_t *trigger_fifo[2] = {NULL};
+static xsc_fifo_t *trigger_fifo[2] = {NULL};
 
 typedef enum xsc_trigger_state_t
 {
@@ -123,16 +123,16 @@ static void xsc_trigger(int m_which, int m_value)
 
 xsc_last_trigger_state_t *xsc_get_trigger_data(int m_which)
 {
-    xsc_last_trigger_state_t *last = fifo_pop(trigger_fifo[m_which]);
+    xsc_last_trigger_state_t *last = xsc_fifo_pop(trigger_fifo[m_which]);
     return last;
 }
 
 static inline void xsc_store_trigger_data(int m_which, const xsc_last_trigger_state_t *m_state)
 {
-    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = fifo_new();
+    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = xsc_fifo_new();
     xsc_last_trigger_state_t *stored = malloc(sizeof(xsc_last_trigger_state_t));
     memcpy(stored, m_state, sizeof(*m_state));
-    if (!fifo_push(trigger_fifo[m_which], stored)) {
+    if (!xsc_fifo_push(trigger_fifo[m_which], stored)) {
         free(stored);
     }
 }
@@ -377,8 +377,10 @@ void xsc_control_heaters(void)
 
         if (heater_on) {
             SET_VALUE(address[which], 0x2);
+            CommandData.XSC[which].net.heater_state = 0x2;
         } else {
             SET_VALUE(address[which], 0x0);
+            CommandData.XSC[which].net.heater_state = 0x0;
         }
     }
 }

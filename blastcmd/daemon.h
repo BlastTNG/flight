@@ -24,15 +24,18 @@
 #define DAEMON_H
 
 #define LINK_DEFAULT      0x01    /* Default link is TDRSS */
-#define ROUTING_DEFAULT      0x09 /* Default routing is COM1 */
 #define LINK_DEFAULT_CHAR 'T'     /* Default link is TDRSS */
+
+#define ROUTING_DEFAULT      0x09 /* Default routing is COM1 */
 #define ROUTING_DEFAULT_CHAR '1'  /* Default routing is COM1 */
 
 int  bc_setserial(void);
-void Daemonise(int, int);
+void Daemonise(int, int, int, char *[2]);
 void SendMcommand(int, int, int, int, char *[], int, unsigned int *);
 void SendScommand(int, int, int, int, unsigned int*);
-void WriteLogFile(int, char *[], unsigned int);
+void WriteLogFile(int, const char *[], int);
+
+extern int link_disabled[256][2];
 
 #define ERR_MESSAGE_LEN 1024
 extern char err_message[ERR_MESSAGE_LEN];

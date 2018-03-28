@@ -109,13 +109,16 @@ extern void *channel_data[RATE_END];
 extern size_t frame_size[RATE_END];
 extern channel_t channel_list[];
 extern derived_tng_t derived_list[];
+extern int channels_count;
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len);
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
 channel_header_t *channels_create_rate_map(channel_t *m_channel_list, E_RATE m_rate);
+size_t channel_size(channel_t *);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);

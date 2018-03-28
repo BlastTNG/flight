@@ -118,6 +118,8 @@ struct PointingDataStruct {
   double offset_ifrollmag_gy;
   double offset_ifyawmag_gy;
 
+  double null_az; // degrees
+
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
 
@@ -205,7 +207,7 @@ struct AxesModeStruct {
   unsigned int i_dith;
 };
 
-extern time_t csbf_gps_time;
+// extern time_t csbf_gps_time;
 
 typedef struct XSCLastTriggerState
 {

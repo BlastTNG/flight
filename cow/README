@@ -7,6 +7,7 @@
 | D. V. Wiebe, 21 October 2004     -- automatic command list version checking
 | D. V. Wiebe, 14 July 2006        -- add NARSIL_HOST environment
 | Joshua Netterfield, 25 July 2011 -- updated to qt4, added awesome bar, changed to use QSettings
+| Barth Netterfield, Summer 2017   -- updated to qt5, added support for herd files, cow butt
 |
 ----------------------------------------------------------------------------
 
@@ -19,3 +20,9 @@ the blastcmd daemon.
 
 Cow no longer uses the kstfile class from kst, but the actual getdata 
 library.  
+
+Dependencies
+============
+
+Cow depends on getdata and QT5. On Ubuntu:
+  apt install libgetdata-dev qt5-default

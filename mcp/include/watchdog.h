@@ -25,10 +25,12 @@
 #ifndef INCLUDE_WATCHDOG_H_
 #define INCLUDE_WATCHDOG_H_
 
-
 void watchdog_ping();
 int watchdog_get_tickle(void);
 void watchdog_close(void);
 int initialize_watchdog(int m_timeout);
+void watchdog_ping_and_set_in_charge(void);
+void set_incharge(int in_charge_from_wd);
+
 
 #endif /* INCLUDE_WATCHDOG_H_ */

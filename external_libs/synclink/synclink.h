@@ -14,8 +14,8 @@
 #include <linux/types.h>
 
 #define BOOLEAN int
-#define TRUE 1
-#define FALSE 0
+// #define TRUE 1 // Joy commented this out cause it conflicts with gmacros.h
+// #define FALSE 0 // Joy commented this out cause it conflicts with gmacros.h
 
 #define BIT0	0x0001
 #define BIT1	0x0002

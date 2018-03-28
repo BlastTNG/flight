@@ -14,6 +14,7 @@
 #include "../shared/autofocus/latest_image.h"
 #include "../shared/autofocus/results.h"
 #include "../shared/lens/requests.h"
+#include "../shared/lens/results.h"
 
 using namespace Imaging;
 using namespace Shared::Autofocus;
@@ -22,6 +23,7 @@ using Lensing::logger;
 #define shared_requests (*(requests_main_to_lens.r))
 #define shared_latest_image (*(latest_image.r))
 #define shared_results (*(results_lens_to_solver.w))
+#define shared_lens_results (*(Shared::Lens::stars_results_camera_to_main.r))
 #define shared_lens_requests (*(Shared::Lens::stars_requests_lens_to_main.w))
 
 Autofocuser::Autofocuser()
@@ -123,16 +125,19 @@ void Autofocuser::update()
     if (shared_results.mode == Results::mode_running) {
 
         // if the camera just received a new image
-        if (shared_latest_image.counter_stars != last_counter_stars) {
+        if ((shared_latest_image.counter_stars != last_counter_stars) || (!waiting_for_image_since_focus_change)) {
             last_counter_stars = shared_latest_image.counter_stars;
             waiting_for_image_since_focus_change = false;
 
-            // take a focus step if we're not at the max focus
-            if (shared_results.current_focus_requested < shared_requests.focus_search_max) {
-                shared_results.current_focus_requested += shared_requests.focus_search_step;
-                results_lens_to_solver.share();
-                make_focus_request();
-            }
+			// make sure we moved to the previous position
+			if (shared_lens_results.focus_value == shared_results.current_focus_requested) {
+				// take a focus step if we're not at the max focus
+				if (shared_results.current_focus_requested < shared_requests.focus_search_max) {
+					shared_results.current_focus_requested += shared_requests.focus_search_step;
+					results_lens_to_solver.share();
+					make_focus_request();
+				}
+			}
         }
 
         // end the run if we're at the max focus and we're not waiting for an image

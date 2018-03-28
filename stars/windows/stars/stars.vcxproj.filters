@@ -160,6 +160,9 @@
     <Filter Include="Source Files\networking\xsc_protocol">
       <UniqueIdentifier>{e463ac84-55de-4785-bf74-559f0f4aa0fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\solving\finding_new">
+      <UniqueIdentifier>{5313c14f-28b8-4e0c-98a0-2d6f3aa646a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -443,9 +446,6 @@
     </ClCompile>
     <ClCompile Include="..\..\code\tools\correlate.cpp">
       <Filter>Source Files\tools</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\code\shared\solving\motion_psf.cpp">
-      <Filter>Source Files\shared\solving</Filter>
     </ClCompile>
     <ClCompile Include="..\..\code\shared\general\shutdown.cpp">
       <Filter>Source Files\shared\general</Filter>
@@ -796,9 +796,6 @@
     </ClInclude>
     <ClInclude Include="..\..\code\tools\psf.h">
       <Filter>Header Files\tools</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\code\shared\solving\motion_psf.h">
-      <Filter>Header Files\shared\solving</Filter>
     </ClInclude>
     <ClInclude Include="..\..\code\shared\general\shutdown.h">
       <Filter>Header Files\shared\general</Filter>

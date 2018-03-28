@@ -48,7 +48,8 @@ bool Results::is_focus_valid(Requests& requests)
     if (command_counters[init_focus] == requests.commands[init_focus].counter &&
         command_counters[get_focus] == requests.commands[get_focus].counter &&
         command_counters[set_focus] == requests.commands[set_focus].counter &&
-        command_counters[set_focus_incremental] == requests.commands[set_focus_incremental].counter)
+        command_counters[set_focus_incremental] == requests.commands[set_focus_incremental].counter &&
+        command_counters[define_focus] == requests.commands[define_focus].counter)
     {
         return true;
     }
@@ -63,6 +64,7 @@ bool Results::is_aperture_valid(Requests& requests)
     using namespace Imaging::LensCommands;
     if (command_counters[init_aperture] == requests.commands[init_aperture].counter &&
         command_counters[get_aperture] == requests.commands[get_aperture].counter &&
+        command_counters[define_aperture] == requests.commands[define_aperture].counter &&
         command_counters[set_aperture] == requests.commands[set_aperture].counter)
     {
         return true;

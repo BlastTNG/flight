@@ -24,6 +24,12 @@
 #  include "config.h"
 #endif
 
+#ifdef __SPIDER__
+#define  PROGNAME   "spidercmd"
+#else
+#define  PROGNAME   "blastcmd"
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +43,7 @@
 #include <time.h>
 #include <signal.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include "daemon.h"
 #include "netcmd.h"
@@ -50,8 +57,6 @@ double round(double x);
 #  define DATA_ETC_DIR "/data/etc/blastcmd"
 #endif
 
-#define ACK_COUNT 18
-
 #define INPUT_TTY "/dev/ttyCMD"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
@@ -59,8 +64,12 @@ char err_message[ERR_MESSAGE_LEN];
 
 int silent = 0;
 
+/* If non-zero the selected link is disabled */
+int link_disabled[256][2];
+
 char host[1024] = "localhost";
 
+#define ACK_COUNT 21
 char *ack[ACK_COUNT] = {
   "Command transmitted.", /* 0 */
   "Unrecognised command.", /* 1 */
@@ -80,38 +89,48 @@ char *ack[ACK_COUNT] = {
   "Unable to start daemon.", /* 15 */
   "Connexion refused by daemon.", /* 16 */
   "Command parameter validation failed", /* 17 */
+  "Error forwarding command", /* 18 */
+  "Protocol error", /* 19 */
+  "Channel disabled by command server", /* 20 */
 };
 
 void USAGE(int flag) {
   int i;
   
-  printf("blastcmd [@host] [-v] [-f] [-s] [-los|-tdrss|-hf|-iridium] "
-      "[-com1|-com2] \\\n"
-      "         command [param00 [param01 [param02 [ ... ]]]]\n"
-      "blastcmd [-l|-lg|-lc group_num]\n"
-      "blastcmd -d [-nf] [-fifo|-null]\n"
-      "blastcmd --version\n\n"
+  printf(PROGNAME " [@host[:port]] [-v] [-f] [-s] "
+      "[-los|-tdrss|-hf|-iridium|-pilot] \\\n"
+      "                       [-com1|-com2] [-noelog] \\\n"
+      "                       command [param00 [param01 [param02 [ ... ]]]]\n"
+      PROGNAME " [-l|-lg|-lc group_num]\n"
+      PROGNAME " -d [-nf] [-p port] [-fifo|-null] [-no LINK]...\\\n"
+      "                       [-fw host1[:port1],host2[:port2]]\n"
+      PROGNAME " --version\n\n"
       "Options:\n"
-      "    @host   Connect to the blastcmd daemon running on host "
-      "(default localhost).\n"
-      "       -f   Unused.  For backwards compatibility.\n"
-      "       -s   Silent.\n"
-      "       -v   Unused.  For backwards compatibility.\n"
-      "     -los   Set link to Line of Sight.\n"
-      "   -tdrss   Set link to TDRSS.\n"
-      " -iridium   Set link to Iridium.\n"
-      "      -hf   A synonym for -iridium.  For backwards compatibility.\n"
-      "    -com1   Set routing to COMM1.\n"
-      "    -com2   Set routing to COMM2.\n"
-      "       -l   List valid commands and parameters and exit.\n"
-      "      -lg   List all command groups in order.\n"
-      "      -lc   List all commands in group number given.\n"
-      "       -d   Start the blastcmd daemon.\n"
-      "      -nf   Don't fork into the background when daemonizing.\n"
-      "    -fifo   Route all commands through the local fifo.\n"
-      "    -null   Route all commands through /dev/null.\n"
-      "--version   Show version and license information and exit.\n\n"
-      );
+      "@host[:port]   Connect to the blastcmd daemon running on host\n"
+      "                     (default localhost).\n"
+      "          -f   Unused.  For backwards compatibility.\n"
+      "          -s   Silent.\n"
+      "          -v   Unused.  For backwards compatibility.\n"
+      "        -los   Set link to Line of Sight.\n"
+      "      -tdrss   Set link to TDRSS.\n"
+      "    -iridium   Set link to Iridium packet.\n"
+      "      -pilot   Set link to Iridium pilot.\n"
+      "         -hf   A synonym for -iridium.  For backwards compatibility.\n"
+      "       -com1   Set routing to COMM1.\n"
+      "       -com2   Set routing to COMM2.\n"
+      "     -noelog   Don't log this command to elog.\n"
+      "          -l   List valid commands and parameters and exit.\n"
+      "         -lg   List all command groups in order.\n"
+      "         -lc   List all commands in group number given.\n"
+      "          -d   Start the blastcmd daemon.\n"
+      "         -nf   Don't fork into the background when daemonizing.\n"
+      "         -fw   Use the specified hosts for command forwarding (Pilot)\n"
+      "         -no   Disable a link/routing pair (specify L1, I2, P1, &c.)\n"
+      "          -p   Listen on the specified port, instead of the default %i\n"
+      "       -fifo   Route all commands through the local fifo.\n"
+      "       -null   Route all commands through /dev/null.\n"
+      "   --version   Show version and license information and exit.\n\n",
+    SOCK_PORT);
 
     printf("Exit codes:\n"
         "    -1  Unexpected internal error.\n");
@@ -120,11 +139,11 @@ void USAGE(int flag) {
       if (ack[i][0])
         printf("    %2i  %s\n", i, ack[i]);
 
-    printf("\nFor a list of valid commands use `blastcmd -l'\n");
+    printf("\nFor a list of valid commands use: " PROGNAME " -l\n");
     exit(11);
 }
 
-static const char *const ParamTypeName(char c)
+static const char *ParamTypeName(char c)
 {
   switch (c) {
     case 'i':
@@ -132,9 +151,9 @@ static const char *const ParamTypeName(char c)
     case 'l':
       return "32-bit integer";
     case 'f':
-      return "single precision float";
+      return "16-bit float";
     case 'd':
-      return "double precision float";
+      return "32-bit float";
     case 's':
       return "string";
   }
@@ -185,7 +204,6 @@ void CommandGroupList(void)
   NetCmdGetCmdList();
 
   printf("Valid (and ordered) group names:\n");
-  printf("#\tName\n");
 
   for (i = 0; i < N_GROUPS; i++)
   {
@@ -318,9 +336,13 @@ void ConfirmSend() {
 
   printf("Send this command? [Y, n] ");
 
-  strcpy(tmp, fgets(tmp, 5, stdin));
+  if (fgets(tmp, 5, stdin) == NULL && ! feof(stdin)) {
+    perror("fgets");
+    printf("\nError reading response.\nCommand aborted.\n\n");
+    exit(1);
+  }
 
-  if (strlen(tmp) == 1 || tmp[0] == 'Y' || tmp[0] == 'y')
+  if (tmp[1] == 0 || tmp[0] == 'Y' || tmp[0] == 'y')
     printf("\n");
   else {
     printf("\nCommand aborted.\n\n");
@@ -351,7 +373,7 @@ void ConfirmMultiSend(int i_cmd, char *params[], int np) {
 }
 
 void McommandUSAGE(int mcmd) {
-  printf("blastcmd: Error in multiword command parameter.\n\n");
+  printf(PROGNAME ": Error in multiword command parameter.\n\n");
 
   PrintMCommand(mcmd);
   exit(11);
@@ -376,8 +398,8 @@ void SendScommand(int sock, int i_cmd, int t_link, int t_route,
   buffer[1] = t_link;
   buffer[2] = t_route;
   buffer[3] = 2;
-  buffer[4] = scommands[i_cmd].command;
-  buffer[5] = 0xa0;
+  buffer[4] = scommands[i_cmd].command & 0xff;
+  buffer[5] = 0xa0 | ((scommands[i_cmd].command >> 8) & 0x0f);
   buffer[6] = 0x03;
 
   if ((tty_fd = bc_setserial()) < 0) {
@@ -402,7 +424,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   unsigned char buffer[255];
   unsigned short *dataqbuffer;
   int i;
-  time_t t;
+
   char output[1024];
   int tty_fd;
 
@@ -550,8 +572,6 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   for (;dataqsize<11; dataqsize++)
     dataq[dataqsize] = 0;
   
-  time(&t);
-
   /* Initialize buffer */
   buffer[0] = 0x10;
   buffer[1] = t_link;
@@ -564,9 +584,8 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   }
 
   /* Send command */
-  buffer[4] = mcommands[i_cmd].command;
-  /* t gives unique sync number to this multi command */
-  buffer[5] = 0x80 | (unsigned char)(t & 0x1F);
+  buffer[4] = (mcommands[i_cmd].command & 0xff);
+  buffer[5] = 0x80 | ((unsigned char)(mcommands[i_cmd].command>>8) & 0x0f);
 
   /* Send parameters */
   for (i = 0; i < dataqsize; i++) {
@@ -578,7 +597,7 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
 
   /* Send command footer */
   buffer[packet_length++] = mcommands[i_cmd].command;
-  buffer[packet_length++] = 0xc0 | (unsigned char)(t & 0x1F);
+  buffer[packet_length++] = 0xc0;
   buffer[packet_length++] = 0x3;
   buffer[3] = packet_length - 5;
 
@@ -587,26 +606,30 @@ void SendMcommand(int sock, int i_cmd, int t_link, int t_route, char *parms[],
   close(tty_fd);
 }
 
-void WriteLogFile(int count, char *token[], unsigned int i_ack)
+void WriteLogFile(int count, const char *token[], int i_ack)
 {
   FILE *f;
   time_t t;
   int n;
 
-  t = time(NULL);
   f = fopen(LOGFILE, "a");
-
   if (f == NULL) {
-    printf("blastcmd: could not open log file %s\n", LOGFILE);
+    printf(PROGNAME ": could not open log file %s\n", LOGFILE);
     return;
   }
 
-  fprintf(f, "%s", ctime(&t));
 
-  for(n = 0; n < count; n++)
-    fprintf(f, "Sent: %s\n", token[n]);
+  if (count > 0) {
+    t = time(NULL);
+    fprintf(f, "%s", ctime(&t));
 
-  fprintf(f, "Ack: (0x%02x) %s\n", i_ack, ack[i_ack]);
+    for(n = 0; n < count; n++)
+      fprintf(f, "Sent: %s\n", token[n]);
+  }
+
+  if (i_ack >= 0) {
+    fprintf(f, "Ack: (0x%02x) %s\n", i_ack, ack[i_ack]);
+  }
 
   if (err_message[0]) /* parameter validation failed */
     fprintf(f, "Error: %s\n", err_message);
@@ -620,7 +643,7 @@ void WriteLogFile(int count, char *token[], unsigned int i_ack)
 
 void PrintVersion(void)
 {
-  printf("blastcmd " VERSION "  (C) 2002-2013 D. V. Wiebe and others\n"
+  printf(PROGNAME " " VERSION "  (C) 2002-2014 D. V. Wiebe and many others\n"
       "Compiled on " __DATE__ " at " __TIME__ ".\n\n"
       "Local command list serial: %s\n\n"
       "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
@@ -636,12 +659,15 @@ void PrintVersion(void)
 int main(int argc, char *argv[]) {
   char t_link, t_route;
   int i;
-  int daemon_route = 0, daemon_fork = 0;
+  int daemon_route = 0, daemon_fork = 0, daemon_port = SOCK_PORT;
+  char daemon_fw[2048] = {0};
+  char *daemon_pilot[2] = {daemon_fw, NULL};
   int daemonise = 0;
   char* command[200];
   int nc = 0;
   int group = -1;
   char request[1024];
+  int no_elog = 0;
 
   t_link = LINK_DEFAULT_CHAR;
   t_route = ROUTING_DEFAULT_CHAR;
@@ -656,10 +682,14 @@ int main(int argc, char *argv[]) {
       t_link = 'I';
     else if (strcmp(argv[i], "-iridium") == 0)
       t_link = 'I';
+    else if (strcmp(argv[i], "-pilot") == 0)
+      t_link = 'P';
     else if (strcmp(argv[i], "-com1") == 0)
       t_route = '1';
     else if (strcmp(argv[i], "-com2") == 0)
       t_route = '2';
+    else if  (strcmp(argv[i], "-noelog") == 0)
+      no_elog = 1;
     else if (strcmp(argv[i], "-v") == 0)
       ; /* unused */
     else if (strcmp(argv[i], "-f") == 0)
@@ -687,7 +717,43 @@ int main(int argc, char *argv[]) {
       daemon_route = 2;
     else if (strcmp(argv[i], "-nf") == 0)
       daemon_fork = 1;
-    else if (strcmp(argv[i], "--version") == 0)
+    else if (strcmp(argv[i], "-no") == 0) {
+      if (i < (argc - 1)) {
+        int link = argv[i + 1][0];
+        int route = argv[i + 1][1];
+        if ((link == 'T' || link == 'I' || link == 'P' || link == 'L')
+            && (route == '1' || route == '2'))
+        {
+          link_disabled[link][route - '1'] = 1;
+        } else
+          USAGE(0);
+      } else
+        USAGE(0);
+    } else if (strcmp(argv[i], "-fw") == 0) {
+      if (i < (argc - 1)) {
+        char *ptr;
+        strcpy(daemon_fw, argv[i + 1]);
+        for (ptr = daemon_fw; *ptr; ++ptr) {
+          if (*ptr == ',') {
+            *ptr = 0;
+            daemon_pilot[1] = ptr + 1;
+            break;
+          }
+        }
+        if (daemon_pilot[1] == NULL)
+          USAGE(0);
+        i++;
+      } else
+        USAGE(0);
+    } else if (strcmp(argv[i], "-p") == 0) {
+      if (i < (argc - 1)) {
+        daemon_port = atoi(argv[i + 1]);
+        i++;
+        if (daemon_port <= 0 || daemon_port > 65535)
+          USAGE(0);
+      } else
+        USAGE(0);
+    } else if (strcmp(argv[i], "--version") == 0)
       PrintVersion();
     else if (argv[i][0] == '@')
       strcpy(host, &argv[i][1]);
@@ -699,14 +765,19 @@ int main(int argc, char *argv[]) {
   }
 
   if (daemonise)
-    Daemonise(daemon_route, daemon_fork);
+    Daemonise(daemon_route, daemon_fork, daemon_port, daemon_pilot);
 
-  if (daemon_route || daemon_fork)
+  if (daemon_route || daemon_fork || daemon_pilot[1] ||
+      daemon_port != SOCK_PORT)
+  {
     USAGE(0);
+  }
 
   /* command given on comannd line */
   if (nc) {
-    NetCmdConnect(host, silent, silent);
+    int ret = NetCmdConnect(host, silent, silent);
+    if (ret)
+      return ret;
 
     if (strcmp(command[0], "-l") == 0)
       CommandList();
@@ -717,6 +788,10 @@ int main(int argc, char *argv[]) {
     if (strcmp(command[0], "-lc") == 0)
       CommandGroupListCommands(group);
 
+    if (no_elog) { // encode 'no elog' in caps/small state of t_link.
+      t_link = tolower(t_link);
+    }
+    
     //normal command
     //TODO check CONFIRM for commands
     request[0] = t_link;
@@ -748,7 +823,8 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Unable to take the conn.\n");
       return 14;
     }
-  } else USAGE(0);
+  } else
+    USAGE(0);
 
   fprintf(stderr, "Unexpected trap in main. Stop.\n");
   return -1;
