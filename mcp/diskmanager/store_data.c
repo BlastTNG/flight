@@ -33,11 +33,8 @@
 #include <derived.h>
 #include <mputs.h>
 #include <command_struct.h>
-<<<<<<< HEAD
-=======
 #include <roach.h>
 #include <store_data.h>
->>>>>>> origin/master
 #include <diskmanager_tng.h>
 #include <mcp.h>
 #include <crc.h>

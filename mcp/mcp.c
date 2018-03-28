@@ -692,16 +692,10 @@ int main(int argc, char *argv[])
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 
-<<<<<<< HEAD
-  initialize_data_sharing();
-  // initialize_watchdog(2);
-  // initialize_bias_tone();
-=======
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
 //  initialize_bias_tone();
->>>>>>> origin/master
   startChrgCtrl(0);
 
 //  initialize the data sharing server
