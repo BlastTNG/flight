@@ -39,8 +39,13 @@ typedef struct {
     E_RATE rate;
     uint16_t nrate;
     char file_name[MAX_NUM_FILENAME_CHARS];
+    char chlist_name[MAX_NUM_FILENAME_CHARS];
     char type[12];
     fileentry_t *fp;
     channel_t *mcp_framenum_addr;
     channel_header_t *channels_pkg;
 } store_file_info_t;
+void store_data_200hz(void);
+void store_data_100hz(void);
+void store_data_5hz(void);
+void store_data_1hz(void);

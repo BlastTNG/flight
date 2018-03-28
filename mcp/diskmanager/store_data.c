@@ -59,7 +59,7 @@ int store_disks_ready() {
     }
 }
 
-void get_write_file_name(char* fname, char* type, uint32_t index)
+void get_write_file_name(char* fname, char* chlist, char* type, uint32_t index)
 {
     static uint16_t extra_tag = 0;
     static int first_time = 1;
@@ -72,6 +72,9 @@ void get_write_file_name(char* fname, char* type, uint32_t index)
     snprintf(fname, MAX_NUM_FILENAME_CHARS, "rawdir/mcp_%02d-%02d-%02d_%02d:%02d_%2x/%s/%u_%s",
              start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
              start_time.tm_hour, start_time.tm_min, extra_tag, type, index, type);
+    snprintf(chlist, MAX_NUM_FILENAME_CHARS, "rawdir/mcp_%02d-%02d-%02d_%02d:%02d/channel_list.dat",
+    		 start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
+             start_time.tm_hour, start_time.tm_min);
 //    blast_info("Will store next %s frame to %s", type, fname);
 }
 
@@ -98,15 +101,31 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
 void store_rate_data(store_file_info_t *m_storage) {
     // Checks the s_ready flag in diskmanager.
     uint16_t bytes_written = 0;
+    static bool first_time = 1;
+    channel_header_t *channels_pkg = NULL;
+    fileentry_t *fp_chlist;
     if (!store_disks_ready() && !(m_storage->have_warned)) {
         blast_info("store_disks_ready is returning false!");
         m_storage->have_warned = true;
         return;
     }
+
     m_storage->mcp_framenum = GET_INT32(m_storage->mcp_framenum_addr);
+    // Once we have initialized write out the entire frame structure so that defricher can reconstruct the dirfile.
+    if (first_time) {
+        if (!(channels_pkg = channels_create_map(channel_list))) {
+        	blast_err("Exiting framing routine because we cannot get the channel list");
+        	return;
+    	}
+    	get_write_file_name(m_storage->file_name, m_storage->chlist_name, m_storage->type, m_storage->mcp_framenum);
+    	fp_chlist = file_open(m_storage->chlist_name, "w+");
+    	bytes_written = file_write(fp_chlist, (void*) channels_pkg, sizeof(channels_pkg));
+    	file_close(fp_chlist);
+    	first_time = 0;
+    }
     if (frame_size[m_storage->rate]) {
         if (!(m_storage->fp)) {
-            get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
+            get_write_file_name(m_storage->file_name, m_storage->chlist_name, m_storage->type, m_storage->mcp_framenum);
 		    blast_info("Opening %s", m_storage->file_name);
             m_storage->fp = file_open(m_storage->file_name, "w+");
             m_storage->header_written = false;
@@ -120,7 +139,8 @@ void store_rate_data(store_file_info_t *m_storage) {
                 file_close(m_storage->fp);
                 m_storage->header_written = false;
                 m_storage->crc = BLAST_MAGIC32;
-                get_write_file_name(m_storage->file_name, m_storage->type, m_storage->mcp_framenum);
+                get_write_file_name(m_storage->file_name, m_storage->chlist_name,
+                                    m_storage->type, m_storage->mcp_framenum);
 		        blast_info("Opening %s", m_storage->file_name);
                 m_storage->fp = file_open(m_storage->file_name, "w+");
                 (m_storage->frames_stored) = 0;
