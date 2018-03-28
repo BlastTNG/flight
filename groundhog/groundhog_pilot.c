@@ -43,7 +43,7 @@ void udp_receive(void *arg) {
   // open a file to save all the raw linklist data
   FILE * rawsave = NULL;
 
-  uint8_t *local_superframe = allocate_superframe();
+  uint8_t *local_superframe = calloc(1, superframe_size);
   struct Fifo *local_fifo = &downlink[id].fifo; 
 
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
@@ -106,9 +106,6 @@ void udp_receive(void *arg) {
       blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
     }
 
-    // get superframe from the fifo
-    local_superframe = getFifoWrite(local_fifo);
-
     // decompress the linklist
     if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
       blast_info("[%s] Received an allframe :)\n", udpsetup->name);
@@ -124,6 +121,7 @@ void udp_receive(void *arg) {
 
       // decompress
       decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
+      memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
       /*
       printf("Start\n");
       for (int i = 0; i < 5; i++) {

@@ -163,7 +163,7 @@ void highrate_receive(void *arg) {
   uint32_t transmit_size;
   uint8_t *compressed_buffer = calloc(1, buffer_size);
 
-  uint8_t *local_superframe = NULL;
+  uint8_t *local_superframe = calloc(1, superframe_size);
   struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
@@ -237,9 +237,6 @@ void highrate_receive(void *arg) {
                       // the packet is complete, so decompress
                       if ((retval == 0) && (ll != NULL))
                       {
-                          // get superframe from the fifo
-                          local_superframe = getFifoWrite(local_fifo);                          
-
                           // decompress the linklist
                           if (read_allframe(local_superframe, compressed_buffer)) {
                               blast_info("[%s] Received an allframe :)\n", source_str);
@@ -251,6 +248,8 @@ void highrate_receive(void *arg) {
                               blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size);
+                              memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+
                               incrementFifo(local_fifo);
                           }
                           memset(compressed_buffer, 0, buffer_size);

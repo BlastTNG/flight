@@ -255,7 +255,7 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
 unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
   if (!superframe)
-	{
+  {
     blast_err("Superframe is not allocated. Fix!");
     return 0;
   }
@@ -468,7 +468,6 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
         // blast_info("Block %d is beyond the max size of %d", sumcount, maxsize);
-        break;
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
         blast_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);

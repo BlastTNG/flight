@@ -43,13 +43,7 @@ enum DownLinkTypes {PILOT, BI0, HIGHRATE,
 int framing_init(void);
 void framing_shutdown(void);
 
-void framing_publish(void* m_frame, char *telemetry, E_RATE rate);
-void framing_publish_244hz(void* m_frame, char *telemetry);
-void framing_publish_200hz(void* m_frame, char *telemetry);
-void framing_publish_100hz(void* m_frame, char *telemetry);
-void framing_publish_5hz(void* m_frame, char *telemetry);
-void framing_publish_1hz(void* m_frame, char *telemetry);
-
+void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE rate);
 void groundhog_publish(void *);
 
 extern struct DownLinkStruct downlink[NUM_DOWNLINKS];
