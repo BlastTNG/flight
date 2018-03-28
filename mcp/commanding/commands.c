@@ -2710,6 +2710,7 @@ void InitCommandData()
     CommandData.pilot_bw = 70000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
+    CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;
     copysvalue(CommandData.pilot_linklist_name, "test.ll");
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");

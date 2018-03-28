@@ -156,6 +156,19 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
   return;
 }
 
+// randomizes/unrandomizes a buffer of a given size using a given seed
+uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int seed)
+{
+  srand(seed);
+  int i = 0;
+  unsigned int sum = 0;
+  for (i = 0; i < bufsize; i++) {
+    buffer[i] ^= rand();
+    sum ^= buffer[i];
+  }
+  return sum;
+}
+
 void define_superframe()
 {
   int rate = 0;

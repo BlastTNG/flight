@@ -41,7 +41,7 @@
 #define BI0LOS_GND_ADDR "192.168.1.201"
 #define BI0LOS_GND_PORT 51515
 #define BI0LOS_MAX_PACKET_SIZE 1388
-
+#define BI0LOS_RNRZ_SEED 0xeb90146f
 
 extern struct Fifo bi0_fifo;
 

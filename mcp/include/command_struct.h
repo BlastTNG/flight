@@ -384,6 +384,7 @@ struct CommandDataStruct {
   uint32_t pilot_bw;
   uint32_t biphase_bw;
   uint32_t biphase_clk_speed;
+  bool biphase_rnrz;
   bool highrate_through_tdrss;
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
