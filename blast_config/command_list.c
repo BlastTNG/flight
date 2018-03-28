@@ -107,7 +107,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(cycle_steppers), "powercycling steppers", GR_CRYO},
   {COMMAND(cycle_clinometers), "powercycling clinometers", GR_CRYO},
   {COMMAND(cycle_of_15), "powercycling OF relay 15", GR_CRYO},
-  {COMMAND(cycle_of_16), "powercycling OF relay 16", GR_CRYO},
+  {COMMAND(cycle_gps_timing), "powercycling gps timing", GR_CRYO},
   {COMMAND(hd_pv_on), "turning on HD PV", GR_CRYO},
   {COMMAND(eth_switch_on), "turning on Eth Switch", GR_CRYO},
   {COMMAND(fc1_on), "turning on FC1", GR_CRYO},
@@ -123,7 +123,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(steppers_on), "turning on steppers", GR_CRYO},
   {COMMAND(clinometers_on), "turning on clinometers", GR_CRYO},
   {COMMAND(of_relay_15_on), "turning on OF relay 15", GR_CRYO},
-  {COMMAND(of_relay_16_on), "turning on OF relay 16", GR_CRYO},
+  {COMMAND(gps_timing_on), "turning on gps timing", GR_CRYO},
   {COMMAND(hd_pv_off), "turning off HD PV", GR_CRYO},
   {COMMAND(eth_switch_off), "turning off Eth Switch", GR_CRYO},
   {COMMAND(fc1_off), "turning off FC1", GR_CRYO},
@@ -139,7 +139,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(steppers_off), "turning off steppers", GR_CRYO},
   {COMMAND(clinometers_off), "turning off clinometers", GR_CRYO},
   {COMMAND(of_relay_15_off), "turning off OF relay 15", GR_CRYO},
-  {COMMAND(of_relay_16_off), "turning off OF relay 16", GR_CRYO},
+  {COMMAND(gps_timing_off), "turning off gps timing", GR_CRYO},
   {COMMAND(cycle_if_1), "powercycling if relay 1", GR_CRYO},
   {COMMAND(cycle_if_2), "powercycling if relay 2", GR_CRYO},
   {COMMAND(cycle_if_3), "powercycling if relay 3", GR_CRYO},
@@ -1037,8 +1037,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
       {
           {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
-          {"Separation (in 5ms steps)", 1, 1000, 'i', "SEPARATION"},
-          {"Length of Pulse (in 5ms steps)", 1, 1000, 'i', "LENGTH_PULSE"},
+          {"Separation (in 5ms steps)", 2, 30000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
       }
   },
 
