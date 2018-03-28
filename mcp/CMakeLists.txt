@@ -394,13 +394,15 @@ set(check_files ${POINTING_SRCS} ${MOTOR_SRCS}
 list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)
 string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_files}")
 
+if(NOT DEFINED ENV{OVERRIDE_CF}) 
 add_custom_command(TARGET mcp PRE_BUILD
 	#COMMAND /bin/echo ${check_files}
-	#COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
+  COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	COMMENT "Checking Code Style"
 	VERBATIM
 	)
+endif()
 
 install(TARGETS mcp DESTINATION bin)
 install(DIRECTORY DESTINATION "/data/etc")
