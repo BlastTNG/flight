@@ -139,23 +139,29 @@ void update_thermistors(void) {
     SET_SCALED_VALUE(thermistor_28_Addr, labjack_get_value(LABJACK_OF_1, 13));
 }
 // updates clinometers instead of thermometers
-void update_clinometer(void) {
+static void update_clinometers(void) {
     static int first_time_clin = 1;
     static channel_t* clin_1_x_Addr;
     static channel_t* clin_1_y_Addr;
     static channel_t* clin_2_x_Addr;
     static channel_t* clin_2_y_Addr;
+    static channel_t* clin_1_t_Addr;
+    static channel_t* clin_2_t_Addr;
     if (first_time_clin == 1) {
         first_time_clin = 0;
-        clin_1_x_Addr = channels_find_by_name("clin_1_x");
-        clin_1_y_Addr = channels_find_by_name("clin_1_y");
-        clin_2_x_Addr = channels_find_by_name("clin_2_x");
-        clin_2_y_Addr = channels_find_by_name("clin_2_y");
+        clin_1_x_Addr = channels_find_by_name("clin_of_x");
+        clin_1_y_Addr = channels_find_by_name("clin_of_y");
+        clin_2_x_Addr = channels_find_by_name("clin_if_x");
+        clin_2_y_Addr = channels_find_by_name("clin_if_y");
+        clin_1_t_Addr = channels_find_by_name("clin_of_t");
+        clin_2_t_Addr = channels_find_by_name("clin_if_t");
     }
     SET_SCALED_VALUE(clin_1_x_Addr, labjack_get_value(LABJACK_OF_3, 10));
     SET_SCALED_VALUE(clin_1_y_Addr, labjack_get_value(LABJACK_OF_3, 11));
     SET_SCALED_VALUE(clin_2_x_Addr, labjack_get_value(LABJACK_OF_3, 12));
     SET_SCALED_VALUE(clin_2_y_Addr, labjack_get_value(LABJACK_OF_3, 13));
+    SET_SCALED_VALUE(clin_1_t_Addr, labjack_get_value(LABJACK_MULT_OF, 0));
+    SET_SCALED_VALUE(clin_2_t_Addr, labjack_get_value(LABJACK_MULT_OF, 1));
 }
 // same deal for current sensors
 void update_current_sensors(void) {
@@ -201,7 +207,7 @@ void outer_frame(int setting) {
     if (setting == 1 && state[2].initialized && state[3].initialized && state[4].initialized) {
         update_current_sensors();
         update_thermistors();
-        // update_clinometers();
+        update_clinometers();
     }
 }
 

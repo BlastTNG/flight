@@ -124,6 +124,14 @@ labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_highbay_labjack",
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 8,
+        .address = "labjack9",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mapping_labjack",
+        .have_warned_write_reg = 0,
     }
 };
 
@@ -295,17 +303,21 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
             ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
+    /*
     if (m_state->which == 6) {
         static int counter = 1;
         if (counter == 1) {
-            blast_info("data for %d is value %f", 4, m_state->AIN[4]);
+            for (int i = 0; i < 85; i++) {
+                blast_info("data for %d is value %f", i, m_state->AIN[i]);
+            }
+        }
             counter++;
             if (counter > 200) {
                 counter = 1;
             }
         }
+     */
     }
-}
 // Correct for word swaps between mcp and the labjack
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {

@@ -287,15 +287,17 @@ void lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(1, 1, 0, 0, 0, 1);
-    // mult_labjack_networking_init(6, 84, 1);
+    init_labjacks(0, 0, 1, 1, 1, 1);
+    mult_labjack_networking_init(6, 84, 1);
     // 7 is for highbay labjack
-    labjack_networking_init(7, 14, 1);
-    ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    // labjack_networking_init(7, 14, 1);
+    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
+    // labjack_networking_init(8, 14, 1);
+    // initialize_labjack_commands(8);
     // switch to this thread for flight
-    // ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
+    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 }
 
@@ -322,7 +324,7 @@ static void mcp_200hz_routines(void)
     // store_data_200hz();
     superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
                                        RATE_200HZ, master_superframe);
-    cryo_200hz(1);
+    // cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
 {
@@ -393,15 +395,15 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       } 
     }
-    auto_cycle_mk2();
+    // auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
-    cryo_1hz(1);
+    // cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(0);
+    outer_frame(1);
     // relays arg defines found in relay.h
     relays(ALL_RELAYS);
     // highbay will be rewritten as all on or off when box is complete
-    highbay(1);
+    // highbay(1);
     // thermal_vac();
     labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
@@ -591,7 +593,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
    allocFifo(telem_fifo[i], 3, superframe_size);
   } 
-  /*
+/*
   // load all the linklists
   load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
   linklist_generate_lookup(linklist_array);
@@ -607,7 +609,7 @@ int main(int argc, char *argv[])
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
-  */
+*/
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);

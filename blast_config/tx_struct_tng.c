@@ -151,10 +151,12 @@ channel_t channel_list[] =
     { "current_gyros",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     // ADD CLINOMETER CHANNELS
-    { "clin_1_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
-    { "clin_1_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
-    { "clin_2_x", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
-    { "clin_2_y", 1, 0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_of_x", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_of_y", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_if_x", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_if_y", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_of_t", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "clin_if_t", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
 
     // below are the status channels
     { "status_charcoal_heater", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
