@@ -212,9 +212,10 @@ channel_t channel_list[] =
 
 
     {"x0_last_trig_lat", LI2DEG, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
-    {"x0_last_trig_lst", SEC2HR, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
+    {"x0_last_trig_lst", LI2SEC*SEC2HR, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
 
-    {"x0_image_num_blobs",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_num_blobs_found",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_num_blobs_matched",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x0_ctr_stars",               SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_image_ctr_stars",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
@@ -239,8 +240,8 @@ channel_t channel_list[] =
 
     {"x0_image_num_exposures",     SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
     {"x0_image_stats_mean",        CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_noise",       CONVERT_STATS_1000_M, CONVERT_STATS_1000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_gaindb",      CONVERT_STATS_1000_M, CONVERT_STATS_1000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_noise",       CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_gaindb",      CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_image_stats_num_px_sat",  SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_image_stats_frac_px_sat", 2.0/(NARROW_MAX-1.0), -1.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_image_afocus_metric",     CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
@@ -263,7 +264,8 @@ channel_t channel_list[] =
     {"x0_image_hor_sigma_roll",    SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x0_image_hor_sigma_pointing", SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
-    {"x1_image_num_blobs",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_num_blobs_found",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_num_blobs_matched",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x1_ctr_stars",               SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x1_image_ctr_stars",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
@@ -288,8 +290,8 @@ channel_t channel_list[] =
 
     {"x1_image_num_exposures",     SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
     {"x1_image_stats_mean",        CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_noise",       CONVERT_STATS_1000_M, CONVERT_STATS_1000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_gaindb",      CONVERT_STATS_1000_M, CONVERT_STATS_1000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_noise",       CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_gaindb",      CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x1_image_stats_num_px_sat",  SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x1_image_stats_frac_px_sat", 2.0/(NARROW_MAX-1.0), -1.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x1_image_afocus_metric",     CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
