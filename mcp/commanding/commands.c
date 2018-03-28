@@ -342,7 +342,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycle_of_15 = 1;
             CommandData.Relays.cycled_of = 1;
             break;
-        case cycle_of_16:
+        case cycle_gps_timing:
             CommandData.Relays.cycle_of_16 = 1;
             CommandData.Relays.cycled_of = 1;
             break;
@@ -466,11 +466,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_15_off = 1;
             CommandData.Relays.update_of = 1;
             break;
-        case of_relay_16_on:
+        case gps_timing_on:
             CommandData.Relays.of_16_on = 1;
             CommandData.Relays.update_of = 1;
             break;
-        case of_relay_16_off:
+        case gps_timing_off:
             CommandData.Relays.of_16_off = 1;
             CommandData.Relays.update_of = 1;
             break;
