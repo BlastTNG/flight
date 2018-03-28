@@ -657,14 +657,16 @@ void store_1hz_xsc(int m_which)
     static channel_t *address_xN_image_hor_sigma_roll[2];
     static channel_t *address_xN_image_hor_sigma_pointing[2];
 
-    static channel_t *address_xN_image_num_blobs[2];
+    static channel_t *address_xN_image_num_blobs_found[2];
+    static channel_t *address_xN_image_num_blobs_matched[2];
 
     int i_point = GETREADINDEX(point_index);
 
     if (firsttime[m_which]) {
         firsttime[m_which] = false;
 
-        address_xN_image_num_blobs[m_which] = get_xsc_channel("image_num_blobs", m_which);
+        address_xN_image_num_blobs_found[m_which] = get_xsc_channel("image_num_blobs_found", m_which);
+        address_xN_image_num_blobs_matched[m_which] = get_xsc_channel("image_num_blobs_matched", m_which);
 
         address_xN_hk_temp_lens[m_which] = get_xsc_channel("hk_temp_lens", m_which);
         address_xN_hk_temp_comp[m_which] = get_xsc_channel("hk_temp_comp", m_which);
@@ -724,9 +726,10 @@ void store_1hz_xsc(int m_which)
         }
     }
 
-    SET_SCALED_VALUE(address_xN_image_num_blobs[m_which],
-                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_found << 6) |
-                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched & 0b111111));
+    SET_SCALED_VALUE(address_xN_image_num_blobs_found[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_num_blobs_found);
+    SET_SCALED_VALUE(address_xN_image_num_blobs_matched[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched);
 
     SET_SCALED_VALUE(address_xN_hk_temp_lens[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_lens);
     SET_SCALED_VALUE(address_xN_hk_temp_comp[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_comp);
@@ -788,8 +791,8 @@ void store_1hz_xsc(int m_which)
     /// TODO(seth): Re-add local image saving
 //    SET_SCALED_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
     if (m_which == 0) {
-        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat*DEG2LI);
-        SET_SCALED_VALUE(address_xN_last_trig_lst       , xsc_pointing_state[m_which].last_trigger.lst);
+        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat);
+        SET_VALUE(address_xN_last_trig_lst              , xsc_pointing_state[m_which].last_trigger.lst*SEC2LI);
     }
 }
 
