@@ -202,13 +202,17 @@ void groundhog_publish(void *arg) {
                     framing_extract_and_publish(data_buffer[i], i, RATE_1HZ);
 
                     // decrement the fifo
-                    decrementFifo(&downlink[i].fifo);
+                    if (!fifoIsEmpty(&downlink[i].fifo)) {
+                        decrementFifo(&downlink[i].fifo);
+                    }
                     data_buffer[i] = NULL;
                 }
 
                 // queue new data to read
                 if (new_data[i]) { 
-                    data_buffer[i] = getFifoRead(&downlink[i].fifo);
+                    if (!fifoIsEmpty(&downlink[i].fifo)) {
+                        data_buffer[i] = getFifoRead(&downlink[i].fifo);
+                    }
                     new_data[i] = false;
                 }
             }
