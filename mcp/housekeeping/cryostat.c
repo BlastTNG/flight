@@ -731,8 +731,7 @@ static void cooling_cycle(void) {
         cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
 
         if (/*cycle_state.t250 < cycle_state.tcrit_fpa &&*/
-            cycle_state.t350 < cycle_state.tcrit_fpa /* &&
-            cycle_state.t500 < cycle_state.tcrit_fpa */) {
+            cycle_state.t350 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
             blast_info("Arrays are cool, standby operating mode");
