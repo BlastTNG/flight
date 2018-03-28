@@ -252,9 +252,8 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
  * -> frame: BLAST frame to be copied from the superframe
  * -> rate: the rate type for the BLAST frame
  */
-unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe)
+unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  static unsigned int frame_location[RATE_END] = {0};
   if (!superframe)
 	{
     blast_err("Superframe is not allocated. Fix!");

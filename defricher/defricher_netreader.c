@@ -103,6 +103,13 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
             if (correct_topic) {
                 if (ri.channels_ready) {
                     if (!strcasecmp(topics[count-1], "200HZ")) ri.read ++;
+                    if (!strcasecmp(topics[count-1], "5HZ")) {
+                        for (int i = 666; i < 670; i++) {
+                            if (i%32 == 0) printf("\n%.3d : ", i/32);
+                            printf("0x%.2x ", *(((uint8_t *) message->payload)+i));
+                        }
+                        printf("\n");
+                    }
                     frame_handle_data(topics[count-1], message->payload, message->payloadlen);
                 }
             }
