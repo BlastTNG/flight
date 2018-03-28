@@ -37,33 +37,20 @@
 #include "channels_tng.h"
 #include "groundhog_framing.h"
 #include "crc.h"
+#include "FIFO.h"
 #include "derived.h"
 #include "mputs.h"
 #include "linklist_compress.h"
 
+struct DownLinkStruct downlink[NUM_DOWNLINKS] = {
+    [PILOT] = {"pilot"},
+    [BI0] = {"biphase"},
+    [HIGHRATE] = {"highrate"}
+};
+
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
 pthread_mutex_t mqqt_lock;
-
-void initialize_circular_superframes(superframes_list_t *superframes)
-{
-    int i;
-    superframes->i_in = 0;
-    superframes->i_out = 0;
-    for (i = 0; i < NUM_FRAMES; i++) {
-        superframes->framelist[i] = calloc(1, superframe_size);
-        memset(superframes->framelist[i], 0, superframe_size);
-    }
-}
-
-void push_superframe(const void *m_frame, superframes_list_t *superframes)
-{
-    int i_in;
-    i_in = (superframes->i_in + 1) & (NUM_FRAMES-1);
-    superframes->framesize[i_in] = superframe_size;
-    memcpy(superframes->framelist[i_in], m_frame, superframe_size);
-    superframes->i_in = i_in;
-}
 
 static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
@@ -71,96 +58,19 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
-void framing_init_mutex()
-{
-    if (pthread_mutex_init(&mqqt_lock, NULL) != 0) {
-        blast_fatal("Unable to initialized mutex to MQQT server");
-        exit(2);
-    }
-}
 
-void framing_publish(void *m_frame, char *telemetry, E_RATE m_rate)
+void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE m_rate)
 {    
+    static unsigned int counter[NUM_DOWNLINKS][RATE_END] = {0};
+
+    if (index >= NUM_DOWNLINKS) return;
+    if (frame_size[m_rate] == 0) return;
+
     pthread_mutex_lock(&mqqt_lock); 
-
-    static char frame_name[32];
-    char rate_name[16];
-    strcpy(rate_name, RATE_LOOKUP_TABLE[m_rate].text);
-    rate_name[strlen(rate_name)-1] = 'z';
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/%s", telemetry, rate_name);
-    // if (frame_stop) return;
-    if (frame_size[m_rate]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                          frame_size[m_rate], m_frame, 0, false);
-    }
-  
+    extract_frame_from_superframe(downlink[index].data[m_rate], m_rate, data_buffer, counter[index]);
+    mosquitto_publish(mosq, NULL, downlink[index].frame_name[m_rate], frame_size[m_rate],
+                                  downlink[index].data[m_rate], 0, false);
     pthread_mutex_unlock(&mqqt_lock);
-}
-
-void framing_publish_1hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/1Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_1HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                          frame_size[RATE_1HZ], m_frame, 0, false);
-    }
-}
-
-void framing_publish_5hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/5Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_5HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_5HZ], m_frame, 0, false);
-    }
-}
-
-void framing_publish_100hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/100Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_100HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_100HZ], m_frame, 0, false);
-    }
-}
-
-void framing_publish_200hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/200Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_200HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_200HZ], m_frame, 0, false);
-    }
-}
-
-void framing_publish_244hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/244Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_244HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_244HZ], m_frame, 0, false);
-    }
-}
-
-void framing_publish_488hz(void *m_frame, char *telemetry)
-{
-    static char frame_name[32];
-    snprintf(frame_name, sizeof(frame_name), "frames/%s/488Hz", telemetry);
-    // if (frame_stop) return;
-    if (frame_size[RATE_488HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_488HZ], m_frame, 0, false);
-    }
 }
 
 /**
@@ -173,7 +83,6 @@ int framing_init(void)
     channel_header_t *channels_pkg = NULL;
     derived_header_t *derived_pkg = NULL;
 
-    char id[20] = "groundhog_blastgs01";
     char host[10] = "localhost";
     char topic[64];
 
@@ -182,9 +91,10 @@ int framing_init(void)
     int keepalive = 60;
     bool clean_session = true;
 
-    struct telemetries m_telemetries = {3, {"biphase", "pilot", "highrate"}};
-
     mosquitto_lib_init();
+    // for (int i = 0; i < NUM_DOWNLINKS; i++) {
+    char id[32];
+    sprintf(id, "groundhog_blastgs01");
     mosq = mosquitto_new(id, clean_session, NULL);
     if (!mosq) {
         perror("mosquitto_new() failed");
@@ -194,7 +104,7 @@ int framing_init(void)
 
     ret = mosquitto_connect_async(mosq, host, port, keepalive); 
     if (ret == MOSQ_ERR_SUCCESS) {
-   	printf("Succesfully connected groundhog to mosquitto server on %s\n", host);
+        printf("Succesfully connected groundhog to mosquitto server on %s\n", host);
     } else if (ret == MOSQ_ERR_INVAL) {
         blast_info("Unable to connect to mosquitto server: Invalid Parameters!\n");
     } else {
@@ -207,6 +117,10 @@ int framing_init(void)
         }
     }
 
+
+    mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
+    mosquitto_loop_start(mosq);
+    
     /**
      * Set up the channels and derived packages for subscribers
      */ 
@@ -215,19 +129,16 @@ int framing_init(void)
         return -1;
     }
 
-    mosquitto_reconnect_delay_set(mosq, 1, 10, 1);
-    mosquitto_loop_start(mosq);
 
-
-    for (int i = 0; i < m_telemetries.number; i++ ) {
-        snprintf(topic, sizeof(topic), "channels/%s", m_telemetries.types[i]);
+    for (int i = 0; i < NUM_DOWNLINKS; i++ ) {
+        snprintf(topic, sizeof(topic), "channels/%s", downlink[i].name);
         mosquitto_publish(mosq, NULL, topic,
                 sizeof(channel_header_t) + channels_pkg->length * sizeof(struct channel_packed), channels_pkg, 1, true);
 
         if (!(derived_pkg = channels_create_derived_map(derived_list))) {
-            blast_info("Failed sending derived packages for telemetry %s\n", m_telemetries.types[i]);
+            blast_info("Failed sending derived packages for telemetry %s\n", downlink[i].name);
         } else {
-            snprintf(topic, sizeof(topic), "derived/%s", m_telemetries.types[i]);
+            snprintf(topic, sizeof(topic), "derived/%s", downlink[i].name);
             mosquitto_publish(mosq, NULL, topic,
                     sizeof(derived_header_t) + derived_pkg->length * sizeof(derived_tng_t), derived_pkg, 1, true);
             bfree(err, derived_pkg);
@@ -235,7 +146,124 @@ int framing_init(void)
     }
     bfree(err, channels_pkg);
 
+    // initialize the mutex
+    if (pthread_mutex_init(&mqqt_lock, NULL) != 0) {
+        blast_fatal("Unable to initialized mutex to MQQT server");
+        exit(2);
+    }
+
+    // initialize channel data for each downlink
+    for (int rate = 0; rate < RATE_END; rate++) {
+        size_t allocated_size = MAX(frame_size[rate], sizeof(uint64_t));
+        char rate_name[16];
+        strcpy(rate_name, RATE_LOOKUP_TABLE[rate].text);
+        rate_name[strlen(rate_name)-1] = 'z';
+
+        for (int i = 0; i < NUM_DOWNLINKS; i++) {
+            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe_size);
+            downlink[i].data[rate] = calloc(1, allocated_size);
+
+            sprintf(downlink[i].frame_name[rate], "frames/%s/%s", downlink[i].name, rate_name);
+            blast_info("There will be a topic with name %s", downlink[i].frame_name[rate]);
+        }
+    }
+
     return 0;
+}
+
+#define MCP_FREQ 24400
+#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+
+void groundhog_publish(void *arg) {
+    // data is available for the next 1 Hz frame publishing loop
+    bool new_data[NUM_DOWNLINKS] = {false};
+    uint8_t * data_buffer[NUM_DOWNLINKS] = {NULL};
+
+    int counter_488hz = 1;
+    int counter_244hz = 1;
+    int counter_200hz = 1;
+    int counter_100hz = 1;
+    int counter_5hz = 1;
+    int counter_1hz = 1;
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    while (true) {
+        const struct timespec interval_ts = {.tv_sec = 0, .tv_nsec = MCP_NS_PERIOD};
+        ts = timespec_add(ts, interval_ts);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (!--counter_1hz) {
+            counter_1hz = HZ_COUNTER(1);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_1HZ);
+
+                    // decrement the fifo
+                    decrementFifo(&downlink[i].fifo);
+                    data_buffer[i] = NULL;
+                }
+
+                // queue new data to read
+                if (new_data[i]) { 
+                    data_buffer[i] = getFifoRead(&downlink[i].fifo);
+                    new_data[i] = false;
+                }
+            }
+            //printf("1Hz\n");
+        }
+        if (!--counter_5hz) {
+            counter_5hz = HZ_COUNTER(5);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_5HZ);
+                }
+            }
+            //printf("5Hz\n");
+        }
+        if (!--counter_100hz) {
+            counter_100hz = HZ_COUNTER(100);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_100HZ);
+                }
+            }
+            //printf("100Hz\n");
+        }
+        if (!--counter_200hz) {
+            counter_200hz = HZ_COUNTER(200);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_200HZ);
+                }
+            }
+            //printf("200Hz\n");
+        }
+        if (!--counter_244hz) {
+            counter_244hz = HZ_COUNTER(244);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_244HZ);
+                }
+            }
+            //printf("244Hz\n");
+        }
+        if (!--counter_488hz) {
+            counter_488hz = HZ_COUNTER(488);
+            for (int i = 0; i < NUM_DOWNLINKS; i++) {
+                if (data_buffer[i]) {
+                    framing_extract_and_publish(data_buffer[i], i, RATE_488HZ);
+                }
+                // check every time to see if there's new data 
+                new_data[i] = !fifoIsEmpty(&downlink[i].fifo);
+                // if (new_data[i]) printf("%s data queued for publish\n", downlink[i].name);
+            }
+
+            //printf("488Hz\n");
+        }
+    }
 }
 
 void framing_shutdown(void)

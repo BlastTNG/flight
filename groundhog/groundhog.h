@@ -11,7 +11,7 @@ struct UDPSetup {
   unsigned int port;
   unsigned int maxsize;
   unsigned int packetsize;
-  superframes_list_t * sf;
+  int downlink_index;
 };
 
 void udp_receive(void *arg);
@@ -24,9 +24,6 @@ void highrate_receive(void *arg);
 void highrate_publish(void *arg);
 
 extern char datestring[80];
-extern superframes_list_t pilot_superframes;
-extern superframes_list_t highrate_superframes;
-extern superframes_list_t biphase_superframes; 
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))
