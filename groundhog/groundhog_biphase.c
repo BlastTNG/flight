@@ -164,6 +164,7 @@ void biphase_receive(void *args)
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
                       decompress_linklist_by_size(local_superframe, ll, compressed_linklist, transmit_size);
                       memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+                      groundhog_linklist_publish(ll, compressed_linklist);
 
                       incrementFifo(local_fifo);
                       memset(compressed_linklist, 0, BI0_MAX_BUFFER_SIZE);

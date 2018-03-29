@@ -49,6 +49,7 @@
 #endif
 
 #include <openssl/md5.h>
+#include <mosquitto.h>
 
 #include "channels_tng.h"
 
@@ -112,6 +113,7 @@ linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 linklist_t * linklist_all_telemetry();
 void linklist_to_file(linklist_t *, char *);
+void linklist_publish(struct mosquitto *, linklist_t *, uint8_t *);
 
 #ifdef __cplusplus
 }

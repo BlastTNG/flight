@@ -48,6 +48,7 @@
 #include <openssl/md5.h>
 #include <float.h>
 #include <ctype.h>
+#include <mosquitto.h>
 
 #include "blast.h"
 #include "channels_tng.h"
@@ -147,6 +148,16 @@ void parse_line(char *line, char ** sinks, unsigned int nargs)
 static int one (const struct dirent *unused)
 {
   return 1;
+}
+
+// publishes a compressed linklist buffer to the mqtt server
+void linklist_publish(struct mosquitto *mosq, linklist_t * ll, uint8_t * buffer) {
+  if (!ll || !buffer) return;
+
+  char frame_name[32] = {0};
+  sprintf(frame_name, "linklists/%s", ll->name);
+
+  mosquitto_publish(mosq, NULL, frame_name, ll->blk_size, buffer, 0, false);
 }
 
 int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
