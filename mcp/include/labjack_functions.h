@@ -48,6 +48,9 @@
 #define STREAM_TARGET_USB 0x02  // USB
 #define STREAM_TARGET_CR 0x10  // Command/Response
 
+#define LABJACK_MULT_OF 6
+#define LABJACK_MULT_PSS 5
+
 // Max samples per packet
 #define STREAM_MAX_SAMPLES_PER_PACKET_TCP 512
 #define STREAM_TYPE 16
@@ -93,7 +96,7 @@
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 4096
 
-#define NUM_LABJACKS 8
+#define NUM_LABJACKS 9
 
 typedef struct { // temp names
     channel_t* status_charcoal_heater_Addr;

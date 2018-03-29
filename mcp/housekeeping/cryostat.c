@@ -663,7 +663,7 @@ static void heating_cycle(void) {
                 // we could add the open the pumped pot valve here.
                 cycle_state.heat_delay++;
             }
-            if (cycle_state.heat_delay < 180) {
+            if (cycle_state.heat_delay == 180) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 1;
                 blast_info("turning on the charcoal");
