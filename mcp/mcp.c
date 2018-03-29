@@ -305,7 +305,7 @@ void * lj_connection_handler(void *arg) {
     return NULL;
 }
 
-unsigned int superframe_counter[RATE_END] = {1};
+unsigned int superframe_counter[RATE_END] = {0};
 
 static void mcp_488hz_routines(void)
 {
