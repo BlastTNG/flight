@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
 #include <netinet/ip.h>
@@ -117,7 +118,7 @@
 #define PI_READ_TIMEOUT (800*1000) /* Pi read timeout, usec */
 #define LO_READ_TIMEOUT (600*1000) /* LO read timeout, usec */
 #define INIT_VALON_TIMEOUT (500*1000) /* Valon init timeout, usec */
-#define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
+#define FLAG_THRESH 10 /* Threshold for use in function roach_check_retune */
 #define LUT_FREQ_OFFSET 3000 /* Hz, Frequency offset (+/-) of LUT0 and LUT1 from f0 */
 #define DF_THRESHOLD 100000 /* Hz, Delta F threshold for retuning */
 #define DEFAULT_SWITCH_PERIOD 1 /* Seconds, default switching period*/
@@ -430,12 +431,15 @@ int roach_read_int(roach_state_t *m_roach, const char *m_register)
 int roach_write_data(roach_state_t *m_roach, const char *m_register,
     uint8_t *m_data, size_t m_len, uint32_t m_offset, int m_timeout)
 {
+    // TODO(Sam) Lock FD to prevent katcp crash?
+    // flock(m_roach->katcp_fd, LOCK_EX);
     return send_rpc_katcl(m_roach->rpc_conn, m_timeout,
                    KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?write",
                    KATCP_FLAG_STRING, m_register,
                    KATCP_FLAG_ULONG, m_offset,
                    KATCP_FLAG_BUFFER, m_data, m_len,
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, m_len, NULL);
+    // flock(m_roach->katcp_fd, LOCK_UN);
 }
 
 /* Function: roach_write_int
@@ -1938,6 +1942,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     // struct stat dir_stat;
     // int stat_return;
     if (sweep_type == VNA) {
+        roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0);
         char *vna_freq_fname;
         if (create_sweepdir(m_roach, VNA)) {
             // TODO(Sam) for short sweep, m_span = VNA_SWEEP_SPAN
@@ -2851,6 +2856,7 @@ void roach_check_retune(roach_state_t *m_roach)
                 nflags++;
             } else { m_roach->retune_mask[chan] = 0;}
         }
+        blast_info("NFLAGS = %d", nflags);
         if (nflags > FLAG_THRESH) {
             m_roach->retune_flag = 1;
             blast_info("ROACH%d: %d above threshold, RETUNE RECOMMENDED", m_roach->which, nflags);
@@ -2871,8 +2877,12 @@ void roach_auto_retune(int16_t ind)
             }
         }
         // blast_info("ROACH%d, Writing tone LUTs...", m_roach.which - 1);
+        if (roach_state_table[ind].lut_idx == 1) {
+            roach_switch_LUT(&roach_state_table[ind]);
+        }
         roach_write_tones(&roach_state_table[ind], roach_state_table[ind].targ_tones_LUT0,
                             roach_state_table[ind].num_kids);
+            roach_switch_LUT(&roach_state_table[ind]);
         roach_write_tones(&roach_state_table[ind], roach_state_table[ind].targ_tones_LUT1,
                             roach_state_table[ind].num_kids);
         // re-enable switch
@@ -2891,6 +2901,7 @@ void roach_retune_counter(uint16_t ind, int retune_period)
               roach_state_table[ind].retune_count);*/
         // blast_info("STATUS = %d", m_roach.status);
         if (CommandData.roach[ind].auto_retune &&
+                     !CommandData.roach[ind].do_sweeps &&
                      roach_state_table[ind].status >= ROACH_STATUS_POP_LUTS) {
             roach_auto_retune(ind);
         }
@@ -3017,6 +3028,18 @@ int roach_upload_status(roach_state_t *m_roach)
     } else {
         return 0;
     }
+}
+
+// Check to see if katcp file descriptor still valid.
+// If not, reopen connection to Roach
+int check_katcp_link(roach_state_t *m_roach)
+{
+    int retval = -1;
+    /* m_roach->katcp_fd = net_connect(roach_state_table[i].address,
+                              0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
+    blast_info("fd:%d ", roach_state_table[i].katcp_fd);
+    roach_state_table[i].rpc_conn = create_katcl(roach_state_table[i].katcp_fd);*/
+    return retval;
 }
 
 /*
@@ -3156,9 +3179,9 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].roach_desired_state);
             CommandData.roach[i].roach_state = 0;
         }
-        /* if (CommandData.roach[i].do_sweeps == 0) {
-            roach_state_table[i].status = ROACH_STATUS_STREAMING;
-        }*/
+        if (CommandData.roach[i].do_sweeps == 0) {
+            CommandData.roach[i].auto_retune = 0;
+        }
         /* if (CommandData.roach[i].switch_period) {
             roach_write_int(&roach_state_table[i], "switch_period", CommandData.roach_params[i].period, 0);
         } */
@@ -3368,8 +3391,6 @@ void *roach_cmd_loop(void* ind)
         }
         if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
             roach_state_table[i].desired_status >= ROACH_STATUS_VNA) {
-            roach_write_int(&roach_state_table[i], "PFB_fft_shift", VNA_FFT_SHIFT, 0);
-            usleep(3000);
             blast_info("ROACH%d, Initializing VNA sweep", i + 1);
             blast_info("ROACH%d, Starting VNA sweep...", i + 1);
             status = roach_do_sweep(&roach_state_table[i], VNA);
