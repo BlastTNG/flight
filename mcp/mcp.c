@@ -418,16 +418,12 @@ static void mcp_1hz_routines(void)
         roach_timestamp_init(i);
     }*/
     /*for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_switch_LUT(i);
-    }*/
-    /*for (int i = 0; i < NUM_ROACHES; i++) {
         roach_retune_counter(i, 10);
     }*/
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
                                      RATE_1HZ, master_superframe);
     roach_timestamp_init(1);
-    roach_switch_LUT(1);
-    roach_retune_counter(1, 10);
+    // roach_retune_counter(1, 10);
 //    store_data_1hz();
 }
 

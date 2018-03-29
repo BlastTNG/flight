@@ -119,6 +119,7 @@ typedef struct {
 
 typedef struct roach_state {
     int which;
+    int which_array;
     int katcp_fd;
     e_roach_status status;
     e_roach_status desired_status;
@@ -134,7 +135,8 @@ typedef struct roach_state {
     double *targ_tones_LUT0; // freqs for LUT0
     double *targ_tones_LUT1; // freqs for LUT1
     double lo_freq_req;
-    size_t current_ntones; // number of current kid frequencies
+    size_t current_ntones0; // current num tones in LUT0
+    size_t current_ntones1; // current num tones in LUT1
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
@@ -302,7 +304,6 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_status(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
-int roach_switch_LUT(uint16_t ind);
 void roach_retune_counter(uint16_t ind, int retune_period);
 int roach_read_int(roach_state_t *m_roach, const char *m_register);
 
