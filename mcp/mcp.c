@@ -446,8 +446,6 @@ static void *mcp_main_loop(void *m_arg)
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
 
-    superframe_counter[RATE_488HZ] = 1;
-
     while (true) {
         int ret;
         const struct timespec interval_ts = { .tv_sec = 0,
