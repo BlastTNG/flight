@@ -577,7 +577,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
             phases[i] = drand48() * 2.0 * M_PI;
         }
     }
-
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
         blast_info("Roach%d, Loading VNA AMPS", m_roach->which);
         char *amps_path = m_roach->vna_amps_path[CommandData.roach[m_roach->which - 1].load_vna_amps - 1];
@@ -591,7 +590,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         roach_read_1D_file(m_roach, amps_path, amps, m_freqlen);
     CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
     }
-
     if (CommandData.roach[m_roach->which - 1].change_tone_amps) {
         for (size_t i = 0; i < m_freqlen; i++) {
             amps[i] = m_roach->last_amps[i];
@@ -614,7 +612,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
         if (bin < 0) {
            bin += comb_fft_len;
         }
-        // blast_info("%g, %d, %d", m_freqs[i], bin, LUT_BUFFER_LEN/2);
+        // blast_info("%g, %d, %d", m_freqs[i], bin, LUT_BUFFER_LEN);
         if (bin >= LUT_BUFFER_LEN) {
             blast_info("Write Error: DAC freqs too high, resweep recommended");
             return -1;
@@ -1766,17 +1764,17 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
     } else {
         return -1;
     }
-    blast_info("NUM kids = %zd", m_roach->num_kids);
-    init_targ_luts(m_roach);
-    for (size_t j = 0; j < m_roach->num_kids; j++) {
-        m_roach->targ_tones_LUT0[j] = m_temp_freqs[j];
-        m_roach->targ_tones_LUT1[j] = m_temp_freqs[j];
-    }
-    blast_info("Uploading TARGET comb...");
     if (m_roach->targ_tones) {
         free(m_roach->targ_tones);
     }
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
+    blast_info("NUM kids = %zd", m_roach->num_kids);
+    for (size_t j = 0; j < m_roach->num_kids; j++) {
+        m_roach->targ_tones[j] = m_temp_freqs[j];
+        // m_roach->targ_tones_LUT1[j] = m_temp_freqs[j];
+    }
+    blast_info("Uploading TARGET comb...");
+    roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
     blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
     // blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which);
     // cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
@@ -1792,41 +1790,24 @@ int calc_grad_freqs(roach_state_t *m_roach, char* m_last_targ_path)
     // initialize targ combs
     init_targ_luts(m_roach);
     char *calc_freqs_command;
-    char *m_targ_freq_path;
-    double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
+    char *targ_freq_path;
+    double temp_freqs[m_roach->num_kids];
     blast_tmp_sprintf(calc_freqs_command,
            "python /data/etc/blast/roachPython/calc_targ_freqs.py %s %g",
            m_last_targ_path,
            m_roach->lo_centerfreq);
     blast_info("%s", calc_freqs_command);
     system(calc_freqs_command);
-    sleep(6);
-    blast_tmp_sprintf(m_targ_freq_path, "%s/gradient_freqs.dat", m_last_targ_path);
-    blast_info("Opening gradient freqs for reading...");
-    FILE *fd;
-    fd = fopen(m_targ_freq_path, "r");
-    if (!fd) {
-        blast_strerror("Could not open %s for reading", m_targ_freq_path);
+    sleep(3);
+    blast_tmp_sprintf(targ_freq_path, "%s/gradient_freqs.dat", m_last_targ_path);
+    // read frequencies from file and save to temp_freqs
+    if ((roach_read_1D_file(m_roach, targ_freq_path, temp_freqs, m_roach->num_kids)) < 0) {
+        blast_err("Could not open gradient_freqs.dat");
         return -1;
     }
-    for (size_t m_index = 0; m_index < m_roach->num_kids; m_index++) {
-        if (fscanf(fd, "%lg\n", &m_temp_freqs[m_index]) == EOF) break;
-    }
-    fclose(fd);
-    /* while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
-            && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
-    }*/
-    /* for (size_t j = 0; j < m_roach->num_kids; j++) {
-        blast_info("temp_freqs: %lg", m_temp_freqs[j]);
-    } */
-    blast_info("populating targ_tones...");
     for (size_t j = 0; j < m_roach->num_kids; j++) {
-        m_roach->targ_tones[j] = m_temp_freqs[j] - m_roach->lo_centerfreq;
-        blast_info("%g", m_roach->targ_tones[j]);
-        m_roach->targ_tones_LUT0[j] = (m_temp_freqs[j] - (double)LUT_FREQ_OFFSET)
-                                 - m_roach->lo_centerfreq;
-        m_roach->targ_tones_LUT1[j] = (m_temp_freqs[j] + (double)LUT_FREQ_OFFSET)
-                                 - m_roach->lo_centerfreq;
+        m_roach->targ_tones_LUT0[j] = (temp_freqs[j] - (double)LUT_FREQ_OFFSET);
+        m_roach->targ_tones_LUT1[j] = (temp_freqs[j] + (double)LUT_FREQ_OFFSET);
     }
     blast_info("ROACH%d, Writing tone LUTs...", m_roach->which - 1);
     roach_write_tones(m_roach, m_roach->targ_tones_LUT0, m_roach->num_kids);
@@ -2179,6 +2160,8 @@ int first_grad_calc(roach_state_t *m_roach)
     }
     blast_info("ROACH%d, calculating ref grads and DF...", m_roach->which - 1);
     roach_calc_df(m_roach);
+    // enable auto tuning
+    CommandData.roach[m_roach->which - 1].auto_retune = 1;
     return 0;
 }
 
@@ -2877,6 +2860,7 @@ void roach_check_retune(roach_state_t *m_roach)
 
 void roach_auto_retune(int16_t ind)
 {
+    // disable the switch and check for retune
     enable_qdr_switch(&roach_state_table[ind], 0);
     roach_check_retune(&roach_state_table[ind]);
     if (roach_state_table[ind].retune_flag) {
@@ -2891,8 +2875,9 @@ void roach_auto_retune(int16_t ind)
                             roach_state_table[ind].num_kids);
         roach_write_tones(&roach_state_table[ind], roach_state_table[ind].targ_tones_LUT1,
                             roach_state_table[ind].num_kids);
-        enable_qdr_switch(&roach_state_table[ind], 0);
+        // re-enable switch
     }
+    enable_qdr_switch(&roach_state_table[ind], 1);
 }
 
 void roach_retune_counter(uint16_t ind, int retune_period)
@@ -3115,7 +3100,6 @@ void *roach_cmd_loop(void* ind)
     // auto retune by default
     int status;
     int i = *((uint16_t*) ind);
-    CommandData.roach[i].auto_retune = 1;
     char tname[10];
     if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
         blast_tfatal("Could not name thread for roach%i", i);
@@ -3378,7 +3362,6 @@ void *roach_cmd_loop(void* ind)
                 blast_err("ROACH%d data streaming error. Reboot Roach?", i + 1);
             } else {
                 blast_info("ROACH%d, streaming SUCCESS", i + 1);
-                enable_qdr_switch(&roach_state_table[i], 1);
                 roach_state_table[i].status = ROACH_STATUS_STREAMING;
                 roach_state_table[i].desired_status = ROACH_STATUS_VNA;
             }
@@ -3399,7 +3382,6 @@ void *roach_cmd_loop(void* ind)
                 blast_info("ROACH%d, VNA sweep interrupted by blastcmd", i + 1);
                 roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
-                enable_qdr_switch(&roach_state_table[i], 1);
             } else { blast_info("ROACH%d, VNA sweep failed, will reattempt", i + 1);}
         }
         if (roach_state_table[i].status == ROACH_STATUS_VNA &&
@@ -3443,7 +3425,7 @@ void *roach_cmd_loop(void* ind)
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else { blast_info("ROACH%d, TARG sweep failed, will reattempt", i + 1);}
             first_grad_calc(&roach_state_table[i]);
-            roach_state_table[i].status = ROACH_STATUS_POP_LUTS;
+            roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
             roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
         }
         /* if (roach_state_table[i].status == ROACH_STATUS_TARG &&

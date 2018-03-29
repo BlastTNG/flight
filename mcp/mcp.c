@@ -423,7 +423,7 @@ static void mcp_1hz_routines(void)
     superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
                                      RATE_1HZ, master_superframe);
     roach_timestamp_init(1);
-    // roach_retune_counter(1, 10);
+    roach_retune_counter(1, 10);
 //    store_data_1hz();
 }
 
