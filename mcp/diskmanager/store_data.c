@@ -34,7 +34,6 @@
 #include <mputs.h>
 #include <command_struct.h>
 #include <roach.h>
-#include <store_data.h>
 #include <diskmanager_tng.h>
 #include <mcp.h>
 #include <crc.h>
@@ -242,6 +241,7 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     roach_packet_header_out_t packet_header_out;
     char type_roach[7];
     char file_name[MAX_NUM_FILENAME_CHARS];
+    char channel_list_name[MAX_NUM_FILENAME_CHARS];
     size_t header_size, packet_size;
 
     bytes_written = snprintf(type_roach, sizeof(type_roach), "roach%i", m_roach_udp->index + 1);
@@ -250,7 +250,7 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
                    bytes_written, (int) sizeof(type_roach), type_roach);
         return;
     }
-    get_write_file_name(file_name, type_roach, m_roach_udp->roach_packet_count);
+    get_write_file_name(file_name, channel_list_name, type_roach, m_roach_udp->roach_packet_count);
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);
