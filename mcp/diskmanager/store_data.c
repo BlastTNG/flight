@@ -73,9 +73,9 @@ void get_write_file_name(char* fname, char* chlist, char* type, uint32_t index)
     snprintf(fname, MAX_NUM_FILENAME_CHARS, "rawdir/mcp_%02d-%02d-%02d_%02d:%02d_%2x/%s/%u_%s",
              start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
              start_time.tm_hour, start_time.tm_min, extra_tag, type, index, type);
-    snprintf(chlist, MAX_NUM_FILENAME_CHARS, "rawdir/mcp_%02d-%02d-%02d_%02d:%02d/channel_list.dat",
+    snprintf(chlist, MAX_NUM_FILENAME_CHARS, "rawdir/mcp_%02d-%02d-%02d_%02d:%02d_%2x/channel_list.dat",
     		 start_time.tm_mday, start_time.tm_mon + 1 , start_time.tm_year + 1900,
-             start_time.tm_hour, start_time.tm_min);
+             start_time.tm_hour, start_time.tm_min, extra_tag);
 //    blast_info("Will store next %s frame to %s", type, fname);
 }
 
