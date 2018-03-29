@@ -58,8 +58,6 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
-uint32_t superframe_flag[RATE_END] = {0};
-
 uint32_t superframe_offset[RATE_END] = {0};
 uint32_t superframe_skip[RATE_END] = {0};
 uint32_t superframe_size = 0;
@@ -225,9 +223,8 @@ uint32_t get_channel_skip_in_superframe(const channel_t * chan)
  * -> frame: BLAST frame to be copied to the superframe
  * -> rate: the rate type for the BLAST frame
  */
-unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe)
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  static unsigned int frame_location[RATE_END] = {0};
   if (!superframe)
 	{
     blast_err("Superframe is not allocated. Fix!");
@@ -240,22 +237,19 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
   }
   
   // clear the frame if wrapping has occurred (ensures no split data)
-  if (frame_location[rate] == 0)
+  if (*frame_location == 0)
   {
     memset(superframe+superframe_offset[rate],0,frame_size[rate]*get_spf(rate));
   }
 
   // copy the frame to the superframe
-  memcpy(superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame,frame_size[rate]);
+  memcpy(superframe+superframe_offset[rate]+superframe_skip[rate]*(*frame_location),frame,frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
 /**
@@ -279,16 +273,13 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
   }
 
   // copy the frame from the superframe
-  memcpy(frame,superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame_size[rate]);
+  memcpy(frame,superframe+superframe_offset[rate]+superframe_skip[rate]*(*frame_location),frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
 

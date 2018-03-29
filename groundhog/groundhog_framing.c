@@ -67,7 +67,7 @@ void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE m_rate)
     if (frame_size[m_rate] == 0) return;
 
     pthread_mutex_lock(&mqqt_lock); 
-    extract_frame_from_superframe(downlink[index].data[m_rate], m_rate, data_buffer, counter[index]);
+    extract_frame_from_superframe(downlink[index].data[m_rate], m_rate, data_buffer, &counter[index][mrate]);
     mosquitto_publish(mosq, NULL, downlink[index].frame_name[m_rate], frame_size[m_rate],
                                   downlink[index].data[m_rate], 0, false);
     pthread_mutex_unlock(&mqqt_lock);
