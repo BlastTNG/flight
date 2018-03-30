@@ -167,7 +167,7 @@ void highrate_compress_and_send(void *arg) {
       }
 
       memset(compressed_buffer, 0, buffer_size);
-      allframe_count = (allframe_count + 1) % HIGHRATE_ALLFRAME_PERIOD;
+      allframe_count = (allframe_count + 1) % (HIGHRATE_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

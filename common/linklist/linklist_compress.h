@@ -60,10 +60,8 @@ struct dataCompressor {
 extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
 
 #define COMPRESS(x) (int)x, #x
+#define LL_CHANNEL_DATA(_chan) _chan->var
 
-extern uint32_t superframe_offset[RATE_END];
-extern uint32_t superframe_skip[RATE_END];
-extern uint32_t superframe_size;
 extern uint32_t allframe_size;
 
 int compress_linklist(uint8_t *, linklist_t *, uint8_t *);
@@ -71,9 +69,7 @@ double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist_by_size(uint8_t *, linklist_t *, uint8_t *, uint32_t);
 
 uint8_t * allocate_superframe();
-void define_superframe();
-uint32_t get_channel_start_in_superframe(const channel_t *);
-uint32_t get_channel_skip_in_superframe(const channel_t *);
+void define_allframe();
 unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
 unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
 int superframe_data_is_ready();

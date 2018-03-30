@@ -31,6 +31,7 @@
 #define FR_PATH_MAX 8192
 
 #include <dirent.h>     /* for MAXNAMELEN on BSD */
+#include "linklist.h"
 #ifndef NAME_MAX
 #ifdef MAXNAMELEN
 #define NAME_MAX MAXNAMELEN
@@ -64,6 +65,7 @@ struct rc_struct {
   char* output_dirfile;
   char* source;
   char* dest_dir;
+  char* linklist_file;
 
   struct timezone tz;
   char* chunk;
@@ -71,6 +73,8 @@ struct rc_struct {
   char* dirname;
   char* hostname;
   char* telemetry; // lab, highrate, biphase, pilot
+
+  linklist_t *ll;
 };
 
 struct ri_struct {

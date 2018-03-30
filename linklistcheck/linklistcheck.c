@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
   linklist_t *ll_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 
   channels_initialize(channel_list);
+  linklist_assign_channel_list(channel_list);
 
 	if (load_all_linklists(linklistdir, ll_array) < 0)
   {

@@ -56,6 +56,11 @@ static GHashTable *frame_table = NULL;
 static int channel_count[RATE_END][TYPE_END] = {{0}};
 int channels_count = 0;
 
+static GHashTable *superframe_table = NULL;
+struct superframe_attributes * superframe_attr = NULL;
+uint32_t superframe_offset[RATE_END] = {0};
+uint32_t superframe_size = 0;
+
 void *channel_data[RATE_END] = {0};
 size_t frame_size[RATE_END] = {0};
 static void *channel_ptr[RATE_END] = {0};
@@ -87,6 +92,65 @@ size_t channel_size(channel_t *m_channel)
     }
     return retsize;
 }
+
+unsigned int get_spf(unsigned int rate)
+{
+  switch (rate)
+  {
+    case RATE_1HZ:
+      return 1;
+    case RATE_5HZ:
+      return 5;
+    case RATE_100HZ:
+      return 100;
+    case RATE_200HZ:
+      return 200;
+    case RATE_244HZ:
+      return 244;
+    case RATE_488HZ:
+      return 488;
+    default:
+      blast_err("Invalid rate %d", rate);
+      return 0;
+  }
+}
+
+unsigned int get_channel_spf(const channel_t * chan)
+{
+    if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
+    return get_spf(chan->rate);
+}
+
+uint32_t get_channel_start_in_superframe(const channel_t * chan)
+{
+    if (!chan) {
+        blast_err("Null channel");
+        return 0;
+    }
+
+    struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
+
+    if (!retval) blast_err("Could not find %s!\n", chan->field);
+    return retval->start;
+}
+
+uint32_t get_channel_skip_in_superframe(const channel_t * chan)
+{
+    if (!chan) {
+        blast_err("Null channel");
+        return 0;
+    }
+
+    struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
+
+    if (!retval) blast_err("Could not find %s!\n", chan->field);
+    return retval->skip;
+}
+
+uint32_t get_superframe_offset(E_RATE m_rate) {
+    return superframe_offset[m_rate];
+}
+
 static guint channel_hash(gconstpointer m_data)
 {
     const char *field_name = (const char*)m_data;
@@ -339,6 +403,14 @@ int channels_initialize(const channel_t * const m_channel_list)
 
     if (frame_table == NULL) return -1;
 
+    if (superframe_table) g_hash_table_destroy(superframe_table);
+    superframe_table = g_hash_table_new(channel_hash, g_str_equal);
+
+    if (superframe_table == NULL) return -1;
+
+    if (superframe_attr) free(superframe_attr);
+    superframe_attr = NULL;
+
     for (int j = 0; j < RATE_END; j++) {
         for (int k = 0; k < TYPE_END; k++) {
           channel_count[j][k] = 0;
@@ -364,12 +436,14 @@ int channels_initialize(const channel_t * const m_channel_list)
         }
         channels_count++;
     }
+    superframe_attr = calloc(channels_count, sizeof(struct superframe_attributes));
 
     /**
      * Second Pass: Allocate a set of packed arrays representing the data frames for each source/rate.
      * We also set channel_ptr, our placeholder for the next free element in the array, to the first entry in each frame.
      */
 
+    superframe_size = 0;
     for (int rate = 0; rate < RATE_END; rate++) {
         frame_size[rate] = (channel_count[rate][TYPE_INT8]+channel_count[rate][TYPE_UINT8]) +
                        2 * (channel_count[rate][TYPE_INT16]+channel_count[rate][TYPE_UINT16]) +
@@ -377,6 +451,8 @@ int channels_initialize(const channel_t * const m_channel_list)
                             channel_count[rate][TYPE_FLOAT]) +
                        8 * (channel_count[rate][TYPE_INT64]+channel_count[rate][TYPE_UINT64] +
                             channel_count[rate][TYPE_DOUBLE]);
+        superframe_offset[rate] = superframe_size;
+        superframe_size += frame_size[rate]*get_spf(rate);
 
         if (frame_size[rate]) {
             /**
@@ -403,7 +479,16 @@ int channels_initialize(const channel_t * const m_channel_list)
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
+    
+    int i = 0;
+    for (channel = m_channel_list; channel->field[0]; channel++) {
+        superframe_attr[i].start =  (long unsigned int) (channel->var-channel_data[channel->rate]) + superframe_offset[channel->rate];
+        superframe_attr[i].skip = frame_size[channel->rate];
+        superframe_attr[i].chan = channel;
 
+        g_hash_table_insert(superframe_table, (gpointer)channel->field, (gpointer)&superframe_attr[i]);
+        i++;
+    }
 
     blast_startup("Successfully initialized Channels data structures");
     return 0;
