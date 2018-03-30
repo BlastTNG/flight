@@ -130,7 +130,10 @@ uint32_t get_channel_start_in_superframe(const channel_t * chan)
 
     struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
 
-    if (!retval) blast_err("Could not find %s!\n", chan->field);
+    if (!retval) {
+        blast_err("Could not find %s!\n", chan->field);
+        return 0;
+    }
     return retval->start;
 }
 
@@ -143,7 +146,10 @@ uint32_t get_channel_skip_in_superframe(const channel_t * chan)
 
     struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
 
-    if (!retval) blast_err("Could not find %s!\n", chan->field);
+    if (!retval) {
+        blast_err("Could not find %s!\n", chan->field);
+        return 0;
+    }
     return retval->skip;
 }
 
@@ -484,7 +490,7 @@ int channels_initialize(const channel_t * const m_channel_list)
     for (channel = m_channel_list; channel->field[0]; channel++) {
         superframe_attr[i].start =  (long unsigned int) (channel->var-channel_data[channel->rate]) + superframe_offset[channel->rate];
         superframe_attr[i].skip = frame_size[channel->rate];
-        superframe_attr[i].chan = channel;
+        superframe_attr[i].chan = (channel_t *) channel;
 
         g_hash_table_insert(superframe_table, (gpointer)channel->field, (gpointer)&superframe_attr[i]);
         i++;
