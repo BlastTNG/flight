@@ -73,6 +73,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "gps.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
@@ -508,6 +509,7 @@ int main(int argc, char *argv[])
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
+  ph_thread_t *gps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -655,6 +657,7 @@ int main(int argc, char *argv[])
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+  gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
