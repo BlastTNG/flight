@@ -111,7 +111,7 @@ void pilot_compress_and_send(void *arg) {
       sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
+      allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

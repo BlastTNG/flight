@@ -47,6 +47,7 @@
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
 #define GRPOS_ROACH 18
+#define GRPOS_LJPOWER  19
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -67,6 +68,7 @@
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
 #define GR_ROACH        (1 << GRPOS_ROACH)
+#define GR_LJPOWER      (1 << GRPOS_LJPOWER)
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;

@@ -559,7 +559,7 @@ void biphase_writer(void * arg)
                 usleep(1000);
             }
 */
-            allframe_count = (allframe_count + 1) % BI0_ALLFRAME_PERIOD;
+            allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);
         }
