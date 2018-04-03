@@ -582,7 +582,7 @@ derived_tng_t derived_list[] = {
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
     LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
-    
+
     // clinometer channels
     LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
     LINCOM("Clin_of_y", "CLIN_OF_Y", 10, 0),
