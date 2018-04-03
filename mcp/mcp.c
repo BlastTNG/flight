@@ -73,6 +73,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "gps.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
@@ -305,7 +306,7 @@ void * lj_connection_handler(void *arg) {
     return NULL;
 }
 
-unsigned int superframe_counter[RATE_END] = {1};
+unsigned int superframe_counter[RATE_END] = {0};
 
 static void mcp_488hz_routines(void)
 {
@@ -313,8 +314,7 @@ static void mcp_488hz_routines(void)
 
     share_data(RATE_488HZ);
     framing_publish_488hz();
-    superframe_counter[RATE_488HZ] = add_frame_to_superframe(channel_data[RATE_488HZ],
-                                       RATE_488HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_488HZ], RATE_488HZ, master_superframe, &superframe_counter[RATE_488HZ]);
 }
 
 static void mcp_244hz_routines(void)
@@ -323,8 +323,7 @@ static void mcp_244hz_routines(void)
 
     share_data(RATE_244HZ);
     framing_publish_244hz();
-    superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
-                                       RATE_244HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, master_superframe, &superframe_counter[RATE_244HZ]);
 }
 
 static void mcp_200hz_routines(void)
@@ -338,8 +337,7 @@ static void mcp_200hz_routines(void)
     share_data(RATE_200HZ);
     framing_publish_200hz();
     // store_data_200hz();
-    superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
-                                       RATE_200HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe, &superframe_counter[RATE_200HZ]);
     // cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
@@ -359,8 +357,7 @@ static void mcp_100hz_routines(void)
     share_data(RATE_100HZ);
     framing_publish_100hz();
     // store_data_100hz();
-    superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
-                                       RATE_100HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe, &superframe_counter[RATE_100HZ]);
 }
 static void mcp_5hz_routines(void)
 {
@@ -391,8 +388,7 @@ static void mcp_5hz_routines(void)
 
     share_data(RATE_5HZ);
     framing_publish_5hz();
-    superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
-                                     RATE_5HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe, &superframe_counter[RATE_5HZ]);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -434,8 +430,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
-                                     RATE_1HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe, &superframe_counter[RATE_1HZ]);
 //    store_data_1hz();
 }
 
@@ -451,8 +446,6 @@ static void *mcp_main_loop(void *m_arg)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
-
-    superframe_counter[RATE_488HZ] = 1;
 
     while (true) {
         int ret;
@@ -516,6 +509,7 @@ int main(int argc, char *argv[])
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
+  ph_thread_t *gps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -663,6 +657,7 @@ int main(int argc, char *argv[])
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+  gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);

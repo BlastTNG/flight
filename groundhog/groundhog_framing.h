@@ -28,6 +28,7 @@
 
 #define NUM_FRAMES 20 
 #include "FIFO.h"
+#include "linklist.h"
 
 struct DownLinkStruct {
     char name[32];
@@ -45,6 +46,7 @@ void framing_shutdown(void);
 
 void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE rate);
 void groundhog_publish(void *);
+void groundhog_linklist_publish(linklist_t *, uint8_t *);
 
 extern struct DownLinkStruct downlink[NUM_DOWNLINKS];
 

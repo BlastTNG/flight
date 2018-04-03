@@ -249,6 +249,7 @@ void highrate_receive(void *arg) {
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size);
                               memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+                              groundhog_linklist_publish(ll, compressed_buffer);
 
                               incrementFifo(local_fifo);
                           }

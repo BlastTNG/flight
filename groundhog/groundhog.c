@@ -39,7 +39,6 @@ void daemonize()
 {
     int pid;
     FILE* stream;
-    struct sigaction action;
 
     if ((pid = fork()) != 0) {
     if (pid == -1) {
