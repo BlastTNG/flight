@@ -568,6 +568,7 @@ static void *defricher_write_loop(void *m_arg)
 								decrementFifo(&fifo_data[pkt.rate]);
 								defricher_write_packet(pkt.rate);
             }
+            usleep(100);
         }
         usleep(100);
     }

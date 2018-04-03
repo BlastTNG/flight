@@ -73,7 +73,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>C:\stars_build\$(Configuration)\</OutDir>
+    <OutDir>.\Release</OutDir>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
     <IncludePath>C:\local\GnuWin32\include;C:\local\levmar-2.6;C:\local\cfitsio_MSVC_32bit_DLL_3370;C:\local\DMM-Universal-7.0\Common;C:\local\SDL-1.2.15\include;C:\Program Files\QImaging\SDK\Headers;C:\local\boost_1_58_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files\Windows Kits\8.1\Lib\winv6.3\um\x86;C:\local\cbia.lib.lapack.dyn.rel.x86.12;C:\local\DMM-Universal-7.0\Common;C:\Program Files\QImaging\SDK\libs\i386;C:\local\GnuWin32\bin;C:\local\GnuWin32\lib;C:\local\levmar-2.6;C:\local\cfitsio_MSVC_32bit_DLL_3370;C:\local\SDL-1.2.15\lib\x86;C:\local\boost_1_58_0\lib32-msvc-12.0;$(LibraryPath)</LibraryPath>

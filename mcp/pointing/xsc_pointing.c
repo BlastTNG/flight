@@ -377,8 +377,10 @@ void xsc_control_heaters(void)
 
         if (heater_on) {
             SET_VALUE(address[which], 0x2);
+            CommandData.XSC[which].net.heater_state = 0x2;
         } else {
             SET_VALUE(address[which], 0x0);
+            CommandData.XSC[which].net.heater_state = 0x0;
         }
     }
 }

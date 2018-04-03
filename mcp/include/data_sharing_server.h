@@ -1,7 +1,7 @@
 /* 
- * groundhog_framing.h: 
+ * data_sharing_server.h: 
  *
- * This software is copyright (C) 2013-2015 Seth Hillbrand
+ * This software is copyright (C) 2013-2014 Seth Hillbrand
  *
  * This file is part of mcp, created for the BLASTPol Project.
  *
@@ -20,32 +20,20 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * History:
- * Created on: Mar 31, 2015 by Seth Hillbrand
+ * Created on: Mar 13, 2018 by Javier Romualdez
  */
 
-#ifndef INCLUDE_FRAMING_H_
-#define INCLUDE_FRAMING_H_
+#ifndef INCLUDE_DATA_SHARING_SERVER_H_
+#define INCLUDE_DATA_SHARING_SERVER_H_
 
-#define NUM_FRAMES 20 
-#include "FIFO.h"
+// TODO(javier): get hostnames instead of IPs
+#define NORTH_IP "192.168.1.3"
+#define SOUTH_IP "192.168.1.4"
+#define DATA_SHARING_PORT 42224
+#define DATA_SHARING_LINKLIST "/data/etc/linklists/shared.ll"
 
-struct DownLinkStruct {
-    char name[32];
-    char frame_name[RATE_END][32];
-    struct Fifo fifo;
-    void *data[RATE_END];
-};
+void data_sharing_init(linklist_t **);
+void share_data(E_RATE);
+void share_superframe(uint8_t *);
 
-enum DownLinkTypes {PILOT, BI0, HIGHRATE, 
-                      NUM_DOWNLINKS};
-
-// int framing_init(channel_t *channel_list, derived_tng_t *m_derived);
-int framing_init(void);
-void framing_shutdown(void);
-
-void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE rate);
-void groundhog_publish(void *);
-
-extern struct DownLinkStruct downlink[NUM_DOWNLINKS];
-
-#endif /* INCLUDE_FRAMING_H_ */
+#endif /* INCLUDE_DATA_SHARING_SERVER_H_ */

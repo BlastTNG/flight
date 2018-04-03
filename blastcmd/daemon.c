@@ -30,6 +30,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include <sys/socket.h>
 #include <sys/syslog.h>
@@ -55,8 +56,13 @@ double getDefault(char *cmd_in); // in cmdlist.c
 #define AUTH_FILE DATA_ETC_DIR "/blastcmd.auth"
 struct auth_addr {
   struct in_addr addr;
+  uint32_t mask;
   struct auth_addr* next;
 };
+
+static char *pilot_host[2] = { "192.168.1.3:41414", "192.168.1.4:41414" };
+
+#define BUF_SIZE (30 * 1024)
 
 static struct auth_addr* auth_list = NULL;
 static int auth_all_allowed = 0;
@@ -64,7 +70,7 @@ static int auth_all_allowed = 0;
 static int ReadAuth()
 {
   FILE* stream;
-  char buffer[1024];
+  char buffer[BUF_SIZE];
   char* ip;
   char* tmp;
   struct auth_addr* new_addr;
@@ -81,32 +87,98 @@ static int ReadAuth()
     exit(4);
   }
 
-  while (fgets(buffer, sizeof(buffer), stream)) {
+  while (fgets(buffer, BUF_SIZE, stream)) {
     /* remove comments */
-    if ((tmp = strchr(buffer, '#')) != NULL) *tmp = '\0';
+    if ((tmp = strchr(buffer, '#')) != NULL)
+      *tmp = '\0';
 
     /* strip newline */
-    if ((tmp = strchr(buffer, '\n')) != NULL) *tmp = '\0';
+    if ((tmp = strchr(buffer, '\n')) != NULL)
+      *tmp = '\0';
 
     /* strip leading whitespace */
     ip = buffer + strspn(buffer, " \t");
 
     /* strip trailing whitespace */
-    if ((tmp = strchr(ip, ' ')) != NULL) *tmp = '\0';
-    if ((tmp = strchr(ip, '\t')) != NULL) *tmp = '\0';
+    if ((tmp = strchr(ip, ' ')) != NULL)
+      *tmp = '\0';
+    if ((tmp = strchr(ip, '\t')) != NULL)
+      *tmp = '\0';
 
-    if (ip[0] == '\0') continue;
+    /* empty line */
+    if (ip[0] == '\0')
+      continue;
 
     /* check for magical "accept all" word */
     if (strncmp(ip, "INADDR_ANY", 10) == 0) {
       auth_all_allowed = 1;
+      fclose(stream);
       /*printf("Authentication allowed for all hosts\n");*/
       return 0;
     }
 
     /* add to list */
-    new_addr = malloc(sizeof(struct auth_addr));
+    new_addr = malloc(sizeof(*new_addr));
     new_addr->next = auth_list;
+
+    /* deal with CIDR notation -- IP addresses are stored in network order (big
+     * endian, which is why these masks look backwards */
+    if ((tmp = strchr(ip, '/')) != NULL) {
+      *tmp = '\0';
+      int prefix = atoi(tmp + 1);
+      if (prefix == 31) /* two hosts */
+        new_addr->mask = 0xEFFFFFFF;
+      else if (prefix == 30) /* four hosts */
+        new_addr->mask = 0xCFFFFFFF;
+      else if (prefix == 29) /* eight hosts */
+        new_addr->mask = 0x8FFFFFFF;
+      else if (prefix == 28) /* sixteen hosts */
+        new_addr->mask = 0xFFFFFFF;
+      else if (prefix == 27) /* thirty-two hosts */
+        new_addr->mask = 0xEFFFFFF;
+      else if (prefix == 26) /* sixty-four hosts */
+        new_addr->mask = 0xCFFFFFF;
+      else if (prefix == 25) /* 128 hosts */
+        new_addr->mask = 0x8FFFFFF;
+      else if (prefix == 24) /* Class C network  */
+        new_addr->mask = 0xFFFFFF;
+      else if (prefix == 23) /* Class C x2 */
+        new_addr->mask = 0xEFFFFF;
+      else if (prefix == 22) /* Class C x4 */
+        new_addr->mask = 0xCFFFFF;
+      else if (prefix == 21) /* Class C x8 */
+        new_addr->mask = 0x8FFFFF;
+      else if (prefix == 20) /* Class C x16 */
+        new_addr->mask = 0xFFFFF;
+      else if (prefix == 19) /* Class C x32 */
+        new_addr->mask = 0xEFFFF;
+      else if (prefix == 18) /* Class C x64 */
+        new_addr->mask = 0xCFFFF;
+      else if (prefix == 17) /* Class C x128 */
+        new_addr->mask = 0x8FFFF;
+      else if (prefix == 16) /* Class B network */
+        new_addr->mask = 0xFFFF;
+      else if (prefix == 15) /* Class B x2 */
+        new_addr->mask = 0xEFFF;
+      else if (prefix == 14) /* Class B x4 */
+        new_addr->mask = 0xCFFF;
+      else if (prefix == 13) /* Class B x8 */
+        new_addr->mask = 0x8FFF;
+      else if (prefix == 12) /* Class B x16 */
+        new_addr->mask = 0xFFF;
+      else if (prefix == 11) /* Class B x32 */
+        new_addr->mask = 0xEFF;
+      else if (prefix == 10) /* Class B x64 */
+        new_addr->mask = 0xCFF;
+      else if (prefix == 9)  /* Class B x128 */
+        new_addr->mask = 0x8FF;
+      else if (prefix == 8)  /* Class A network */
+        new_addr->mask = 0xFF;
+      else                  /* for everything else, just consider the host */
+        new_addr->mask = 0xFFFFFFFF;
+    } else
+      new_addr->mask = 0xFFFFFFFF;
+
     if (!inet_aton(ip, &new_addr->addr)) {
       /*printf("*WARNING* skipping malformed IP: \"%s\"\n", ip);*/
       free(new_addr);
@@ -117,6 +189,7 @@ static int ReadAuth()
     }
   }
   /*printf("Allowing authentication from %d hosts\n", n_auth);*/
+  fclose(stream);
   return n_auth;
 }
 
@@ -126,7 +199,7 @@ static void ClearAuth()
   struct auth_addr* list = auth_list;
   while (list) {
     next = list->next;
-    free (list);
+    free(list);
     list = next;
   }
   auth_list = NULL;
@@ -134,16 +207,20 @@ static void ClearAuth()
 
 static int IsAuth(struct in_addr* addr)
 {
-  struct auth_addr* list = auth_list;
+  struct auth_addr* list;
 
   /* read file every time authentication is checked */
   ClearAuth();
   ReadAuth();
+  list = auth_list;
 
   /* do the check */
-  if (auth_all_allowed) return 1;
+  if (auth_all_allowed)
+    return 1;
+
   while (list) {
-    if (memcmp(addr, &list->addr, sizeof(struct in_addr)) == 0) return 1;
+    if ((addr->s_addr & list->mask) == (list->addr.s_addr & list->mask))
+      return 1; /* validated */
     list = list->next;
   }
   return 0;
@@ -195,7 +272,7 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
       else
         i_ack = 0;
 
-      WriteLogFile(count, token, i_ack);
+      WriteLogFile(0, NULL, i_ack);
 
       return i_ack;
     }
@@ -236,7 +313,7 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
       else
         i_ack = 0;
 
-      WriteLogFile(count, token, i_ack);
+      WriteLogFile(0, NULL, i_ack);
 
       return i_ack;
     }
@@ -246,10 +323,36 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
   return 1;
 }
 
+int ForwardRoute(char *buffer)
+{
+  if (pilot_host[1] == NULL) /* No host forward defined */
+    return 18;
+
+  if (NetCmdConnect(pilot_host[buffer[1] - '1'], 1, 0))
+    return 18;
+
+  /* lowercase ensures the downstream blastcmd won't elog it */
+  buffer[0] = 'l';
+  buffer[1] = '1';
+  strcat(buffer, "\r\n");
+
+  if (NetCmdTakeConn(1) == 0)
+    return 18;
+
+  int ack = NetCmdSendAndReceive(buffer, 1, 0, NULL);
+
+  WriteLogFile(0, NULL, ack);
+
+  NetCmdDrop();
+  return ack;
+}
+
 int SimpleRoute(int sock, int fd, char* buffer)
 {
-  if (write(fd, buffer, strlen(buffer)) < 0) perror("SimpleRoute write failed");
-  if (write(fd, "\n", 1) < 0) perror("SimpleRoute write failed");
+  if (write(fd, buffer, strlen(buffer)) < 0)
+    perror("SimpleRoute write failed");
+  if (write(fd, "\n", 1) < 0)
+    perror("SimpleRoute write failed");
   return 0;
 }
 
@@ -280,9 +383,11 @@ void StoreDefaultParameters(char *buffer) {
           for (i_param = 0; i_param<n_param; i_param++) {
             // FIXME: index parameter
             if (index_serial) {
-              sprintf(cmdstr,"%s;%d;%s", cmd, index_serial, mcommands[i_cmd].params[i_param].name);
+              sprintf(cmdstr, "%s;%d;%s", cmd, index_serial,
+                  mcommands[i_cmd].params[i_param].name);
             } else {
-              sprintf(cmdstr,"%s;%s", cmd, mcommands[i_cmd].params[i_param].name);
+              sprintf(cmdstr, "%s;%s", cmd,
+                  mcommands[i_cmd].params[i_param].name);
             }
             setDefault(cmdstr, atof(param[i_param]));
             if (mcommands[i_cmd].params[i_param].index_serial>0) {
@@ -295,28 +400,40 @@ void StoreDefaultParameters(char *buffer) {
   }
 }
 
-int ExecuteCommand(int sock, int fd, int route, char* buffer)
+int ExecuteCommand(int sock, int fd, int route, char* buffer, const char *user,
+    int lastsock)
 {
   int t_link = LINK_DEFAULT;
   int t_route = ROUTING_DEFAULT;
   char output[100];
-#ifdef ELOG_CMD
-  char log[5000];
-  char log2[5000];
-#endif
 
   int result = 0;
+  int forward = 0;
+
+  const char *log_buffer[2];
+
+#ifdef ENABLE_ELOG
+  int log_elog;
+  log_elog = (toupper(buffer[0]) == buffer[0]);
+#endif
 
   printf("EXE %s\n", buffer);
 
   switch (buffer[0]) {
+    case 'P':
+    case 'p':
+      forward = 1;
+      break;
     case 'L':
+    case 'l':
       t_link = 0x00;
       break;
     case 'T':
+    case 't':
       t_link = 0x01;
       break;
     case 'I':
+    case 'i':
       t_link = 0x02;
       break;
     default:
@@ -334,16 +451,25 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
       result = 11;
   }
 
-#ifdef ELOG_CMD
-  // must go before Route calls, as they change the buffer string
-  snprintf(log2, 4999, ELOG_CMD " \"EXE %s\n", buffer);
-  snprintf(log, 4999, "%sResult = %d\"", log2, result);
+#ifdef ENABLE_ELOG
+  // NB: need to use command buffer before Route calls, as they change it
+  if (log_elog) {
+    ElogBeforeRoute(buffer, user);
+  }
 #endif
 
   StoreDefaultParameters(&buffer[3]);
 
+  log_buffer[0] = user;
+  log_buffer[1] = buffer;
+  WriteLogFile(2, log_buffer, -1);
+
   if (result == 0) {
-    if (route)
+    if (link_disabled[(int)buffer[0]][(int)buffer[1] - '1'])
+      result = 20; /* channel disabled by command server */
+    else if (forward)
+      result = ForwardRoute(buffer);
+    else if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
     else
       result = SIPRoute(sock, t_link, t_route, &buffer[3]);
@@ -357,15 +483,13 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer)
   printf("%i<--%s", sock, output);
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 
-#ifdef ELOG_CMD
-  if (fork() != 0) {
-    return result;
-  } else {
-    exit(system(log));
+#ifdef ENABLE_ELOG
+  if (log_elog) {
+    ElogAfterRoute(result, lastsock);
   }
-#else
-  return result;
 #endif
+
+  return result;
 }
 
 void SendCmdDefault(int sock, double d){
@@ -406,10 +530,21 @@ void SendCommandList(int sock)
   for (i = 0; i < N_MCOMMANDS; ++i) {
     for (j = 0; j < mcommands[i].numparams; ++j)
       if (mcommands[i].params[j].nt) {
-        u16 = i * 256 + j;
+
+        u16 = i;
         if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
           return;
 
+        u16 = j;
+        if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+          return;
+
+        /*
+        u16 = i * 256 + j;
+        if (send(sock, &u16, sizeof(u16), MSG_NOSIGNAL) < 1)
+          return;
+        */
+        
         /* count */
         for (u16 = 0; mcommands[i].params[j].nt[u16]; ++u16)
           ;
@@ -432,26 +567,25 @@ void SendCommandList(int sock)
 
 void SendGroupNames(int sock)
 {
-  char output[4096];
   int i;
-  uint16_t num_groups = 0;
+  int num_groups = 0;
+  char output[4096];
 
   output[0] = '\0';
-    for (i = 0; i < N_GROUPS && GroupNames[i]; ++i) {
-        if (GroupNames[i]) {
-            num_groups++;
-            strncat(output, GroupNames[i], 127);
-            strcat(output, "\n");
-        }
+  for (i = 0; i < N_GROUPS && GroupNames[i]; ++i) {
+    if (GroupNames[i]) {
+      num_groups++;
+      strncat(output, GroupNames[i], 127);
+      strcat(output, "\n");
     }
+  }
 
-  if (send(sock, &num_groups, sizeof(num_groups), MSG_NOSIGNAL) < 1)
-    return;
+  if (send(sock, &num_groups, sizeof(num_groups), MSG_NOSIGNAL) < 1) return;
 
   send(sock, output, strlen(output), MSG_NOSIGNAL);
 }
 
-int MakeSock(void)
+int MakeSock(int port)
 {
   int sock, n;
   struct sockaddr_in addr;
@@ -468,7 +602,7 @@ int MakeSock(void)
   }
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(SOCK_PORT);
+  addr.sin_port = htons(port);
   addr.sin_addr.s_addr = INADDR_ANY;
 
   if (bind(sock, (struct sockaddr*)&addr, (socklen_t)sizeof(addr)) == -1) {
@@ -481,20 +615,22 @@ int MakeSock(void)
     exit(15);
   }
 
-  printf("Listening on port %i.\n", SOCK_PORT);
+  printf("Listening on port %i.\n", port);
 
   return sock;
 }
 
-void Daemonise(int route, int no_fork)
+#define N_CONN 1024
+#define CONN_USER_LEN 1024
+void Daemonise(int route, int no_fork, int port, char *daemon_pilot[2])
 {
   struct {
     int state;
     int report;
     int lurk; /* 0 = off, 1 = on, 2 = request, 3 = cmd_announce */
     int spy;  /* 0 = off, 1 = on, 2 = request, 3 = client_announce */
-    char user[1024];
-  } conn[1024];
+    char user[CONN_USER_LEN];
+  } conn[N_CONN];
   /* state list
    *  0 = client just connected
    *  1 = client user known
@@ -508,7 +644,7 @@ void Daemonise(int route, int no_fork)
 
   int owner = 0;
 
-  char *buffer;
+  char buffer[BUF_SIZE];
   char tmp_buf[512];
   char cmd[512];
   int cmd_from = 0;
@@ -531,6 +667,17 @@ void Daemonise(int route, int no_fork)
   ReadAuth();	/*read authorized IPs (mainly to check file at this point) */
 #endif
 
+  // transfer hosts for forwarding
+  if (strlen(daemon_pilot[0]) > 0) {
+    pilot_host[0] = daemon_pilot[0];
+    pilot_host[1] = daemon_pilot[1];
+  }
+
+  printf("HOSTS %s %s\n", pilot_host[0], pilot_host[1]);
+
+  /* for forward management */
+  setenv("USER", "blastcmd", 1);
+
   /* open our output before daemonising just in case it fails. */
   if (route == 1) /* fifo */
     fd = open("/data/etc/SIPSS.FIFO", O_RDWR); 
@@ -544,14 +691,8 @@ void Daemonise(int route, int no_fork)
     exit(2);
   }
 
-  buffer = malloc(30 * 1024 * sizeof(char));
-  if (buffer == NULL) {
-    perror("Unable to malloc send buffer");
-    exit(3);
-  }
-
   /* start the listener. */
-  lastsock = sock = MakeSock();
+  lastsock = sock = MakeSock(port);
 
   signal(SIGCHLD, SIG_IGN); /* We don't wait for children so don't require
                                the kernel to keep zombies.                  */
@@ -577,10 +718,7 @@ void Daemonise(int route, int no_fork)
   }
 
   /* Zero everything */
-  for (i = 0; i < 1024; i++)
-  {
-    conn[i].state = conn[i].report = conn[i].lurk = conn[i].spy = 0;
-  }
+  memset(conn, 0, sizeof(conn[0]) * N_CONN);
 
   /* select */
   FD_ZERO(&fdlist);
@@ -642,9 +780,10 @@ void Daemonise(int route, int no_fork)
 #endif
             }
           } else if (conn[n].state != 8) { /* read from authorised client */
-            if ((size = recv(n, buffer, 1024, 0)) == -1)
+            if ((size = recv(n, buffer, BUF_SIZE, 0)) == -1) {
               perror("recv");
-            else if (size == 0) { /* connection closed */
+              buffer[0] = 0;
+            } else if (size == 0) { /* connection closed */
               printf("connexion dropped on socket %i\n", n);
               shutdown(n, SHUT_RDWR);
               close(n);
@@ -657,15 +796,17 @@ void Daemonise(int route, int no_fork)
                 owner = 0;
               }
               conn[n].state = 0; /* Note that the connection is closed */
-              for (i = 0; i < 1024; i++)
+              for (i = 0; i < N_CONN; i++)
                 if (conn[i].spy == 1)
                   conn[i].spy = 3;
               continue;
             } else {
-              buffer[1023] = '\0';
-              for (i = 0; i < 1023; ++i)
-                if (buffer[i] == '\n' || buffer[i] == '\r')
+              buffer[BUF_SIZE - 1] = '\0';
+              for (i = 0; i < BUF_SIZE - 1; ++i)
+                if (buffer[i] == '\n' || buffer[i] == '\r') {
                   buffer[i] = '\0';
+                  break;
+                }
             }
 
             printf("%i-->%s\n", n, buffer);
@@ -673,9 +814,10 @@ void Daemonise(int route, int no_fork)
             if (conn[n].state == 0) { /* authentication */
               if (strncmp(buffer, "::user::", 8) == 0) {
                 conn[n].state = 1;
-                strcpy(conn[n].user, buffer + 8);
+                strncpy(conn[n].user, buffer + 8, CONN_USER_LEN);
+                conn[n].user[CONN_USER_LEN - 1] = 0;
                 printf("Authentication on socket %i by %s.\n", n, conn[n].user);
-                for (i = 0; i < 1024; i++) /* Remember to tell moles about new user */
+                for (i = 0; i < N_CONN; i++) /* Remember to tell moles about new user */
                   if (conn[i].spy == 1)
                     conn[i].spy = 3;
               } else { /* failed authentication */
@@ -719,11 +861,12 @@ void Daemonise(int route, int no_fork)
                 owner = 0;
                 conn[n].state = 2;
               } else if (buffer[0] != ':') {
-                ack = ExecuteCommand(n, fd, route, buffer);
+                ack = ExecuteCommand(n, fd, route, buffer, conn[n].user,
+                    lastsock);
                 cmd_from = n;
                 strncpy(cmd, buffer, 512);
                 cmd[511] = 0;
-                for (i = 0; i < 1024; i++)
+                for (i = 0; i < N_CONN; i++)
                   if (i != n && conn[i].lurk)
                     conn[i].lurk = 3;
               }
@@ -766,15 +909,15 @@ void Daemonise(int route, int no_fork)
               strcpy(buffer, ":::pong:::\r\n");
               conn[n].state &= ~0x100;
             } else if (conn[n].lurk == 3) { /* report command */
-              snprintf(buffer, 1024, ":::sender:::%s\r\n:::cmd:::%s\r\n:::rep:::%d\r\n", 
+              snprintf(buffer, BUF_SIZE, ":::sender:::%s\r\n:::cmd:::%s\r\n:::rep:::%d\r\n", 
                        conn[cmd_from].user, cmd, ack);
               conn[n].lurk = 1;
-              buffer[1023] = 0;
+              buffer[BUF_SIZE - 1] = 0;
             } else if (conn[n].spy == 3) { /* report clients */
-              for (i = 0; i < 1024; i++) {
+              for (i = 0; i < N_CONN; i++) {
                 if (conn[i].state) {
                   snprintf(tmp_buf, 100, ":::here:::%s\r\n", conn[i].user);
-                  strncat(buffer + strlen(buffer), tmp_buf, 30*1024 - strlen(buffer));
+                  strncat(buffer + strlen(buffer), tmp_buf, BUF_SIZE - strlen(buffer));
                 }
               }
               conn[n].spy = 1;

@@ -384,7 +384,7 @@ target_link_libraries(mcp
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
 		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
-		mcp.c tx.c ${PROJECT_SOURCE_DIR}/../common/linklist/bitserver.c
+		mcp.c tx.c 
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
 		${ROACH_HEADERS} 
@@ -394,13 +394,15 @@ set(check_files ${POINTING_SRCS} ${MOTOR_SRCS}
 list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)
 string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_files}")
 
+if(NOT DEFINED ENV{OVERRIDE_CF}) 
 add_custom_command(TARGET mcp PRE_BUILD
 	#COMMAND /bin/echo ${check_files}
-	#COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
+  COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	COMMENT "Checking Code Style"
 	VERBATIM
 	)
+endif()
 
 install(TARGETS mcp DESTINATION bin)
 install(DIRECTORY DESTINATION "/data/etc")

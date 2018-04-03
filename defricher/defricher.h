@@ -70,7 +70,7 @@ struct rc_struct {
   char* dirfile;
   char* dirname;
   char* hostname;
-  char* telemetry; // lab, tdrss, biphase, pilot
+  char* telemetry; // lab, highrate, biphase, pilot
 };
 
 struct ri_struct {

@@ -28,7 +28,6 @@
 #include <time.h>
 
 #include <xsc_protocol.h>
-#include "isc_protocol.h"
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
@@ -365,6 +364,7 @@ typedef struct {
 typedef struct {
     uint8_t amp;
     int8_t status;
+    bool reset;
 } cmd_rox_bias_t;
 
 struct CommandDataStruct {
@@ -384,12 +384,13 @@ struct CommandDataStruct {
   uint32_t pilot_bw;
   uint32_t biphase_bw;
   uint32_t biphase_clk_speed;
+  bool biphase_rnrz;
   bool highrate_through_tdrss;
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
 
-  enum {vtx_isc, vtx_osc} vtx_sel[2];
+  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
@@ -466,7 +467,7 @@ struct CommandDataStruct {
   double autotrim_rate;      // degrees/s
   time_t autotrim_time;      // in seconds
   time_t autotrim_xsc0_last_bad;
-  time_t autotrim_osc_last_bad;
+  time_t autotrim_xsc1_last_bad;
 
   double cal_xmax_mag;
   double cal_xmin_mag;
@@ -605,6 +606,7 @@ void InitCommandData();
 double LockPosition(double);
 int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
+void WritePrevStatus();
 
 extern struct CommandDataStruct CommandData;
 

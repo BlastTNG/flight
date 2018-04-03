@@ -297,6 +297,132 @@ void setup_libusb_transfers(void)
     pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) biphase_write_transfer);
 }
 
+
+// custom BITSender thread for writing to the LOS-UDP card
+// includes a query buffer and response port before writing data
+void * customSendDataThread(void *arg) {
+  struct BITSender *server = (struct BITSender *) arg;
+  unsigned int start, size, n_packets, packet_size, packet_maxsize;
+  unsigned int i;
+  uint8_t *header;
+  uint32_t serial, frame_num;
+  uint8_t *buffer;
+  uint8_t flags;
+
+  // buffer check socket
+  int status_sck;
+  struct sockaddr_in recv_addr, my_addr;
+  struct hostent * the_target = gethostbyname(BI0LOS_FLC_ADDR);
+
+  if ((status_sck = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    blast_err("socket() unsuccessful");
+    return NULL;
+  }
+
+  struct timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 100000;
+  if (setsockopt(status_sck, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+      perror("Error");
+  }
+
+  bzero(&my_addr, sizeof(my_addr));
+  my_addr.sin_family = AF_INET;
+  my_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
+  my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  if (bind(status_sck, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
+    blast_err("Bind address already in use");
+    return NULL;
+  }
+
+  bzero(&recv_addr, sizeof(recv_addr));
+  recv_addr.sin_family = AF_INET;
+  recv_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
+  memcpy(&recv_addr.sin_addr.s_addr, the_target->h_addr, the_target->h_length);
+
+  header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize, 1);
+
+  uint8_t buffer_status = 0;
+
+  while (1) {
+    if (!fifoIsEmpty(server->send_fifo)) { // something in the buffer
+      serial = server->serial;
+      start = server->send_fifo->start;
+      size = server->send_fifo->size[start];
+      flags = server->send_fifo->flags[start];
+      frame_num = server->send_fifo->frame_num[start];
+      packet_maxsize = server->packet_maxsize;
+      buffer = getFifoRead(server->send_fifo);
+      n_packets = (size-1)/packet_maxsize+1;
+
+      if (flags & NO_HEADER) { // send packet with header
+        if (n_packets > 1) {
+          blast_err("cannot send headerless multi-packet message.");
+        } else {
+          // printf("Sending headerless packet\n");
+          if (sendto(server->sck, buffer, size,
+            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+            }
+        }
+      } else {
+        i = 0;
+        n_packets = 1;
+        packet_size = server->packet_maxsize;
+        while (i < n_packets) {
+          uint8_t * pkt_buffer = packetizeBuffer(buffer, size, (uint32_t *) &packet_size,
+                                                 (uint16_t *) &i, (uint16_t *) &n_packets);
+          writeHeader(header, serial, frame_num, i++, n_packets);
+
+          // query the UDP-LOS card to see if there is a buffer available
+          char recv_status[9] = {0};
+          socklen_t slen = sizeof(recv_addr);
+
+          while (!buffer_status) {
+            slen = sizeof(recv_addr);
+            if (sendto(status_sck, &buffer_status, 1, MSG_NOSIGNAL, 
+                         (struct sockaddr *) &(recv_addr), slen) < 0) {
+              // blast_err("Could not request buffer status\n");
+            }
+
+            if (recvfrom(status_sck, recv_status, 10, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
+              // blast_err("Could not receive buffer status\n");
+              buffer_status = 0;
+            } else {
+              buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
+              // blast_info("%d Buffer status = %d == %c\n", i, buffer_status, recv_status[7]);
+            }
+          }
+
+          // add header to packet (adds due to MSG_MORE flag)
+          if (sendto(server->sck, header, PACKET_HEADER_SIZE,
+            MSG_NOSIGNAL | MSG_MORE,
+            (struct sockaddr *) &(server->send_addr),
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+          }
+
+          // add data to packet and send
+          if (sendto(server->sck, pkt_buffer, packet_size,
+            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
+            server->slen) < 0) {
+              blast_err("sendTo failed (errno %d)", errno);
+          }
+          //if (buffer_status > 0) buffer_status--;
+          if (buffer_status > 0) buffer_status = 0;
+        }
+      }
+      decrementFifo(server->send_fifo);
+    } else { // sleep the FIFO
+      usleep(1000); // FIFO is sleeping
+    }
+  }
+
+return NULL;
+}
+
 void biphase_writer(void * arg)
 {
     nameThread("Biphase");
@@ -322,7 +448,13 @@ void biphase_writer(void * arg)
     int allframe_count = 0;
     uint32_t bandwidth = 0, transmit_size = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE); 
- 
+
+    // BI0-LOS variables
+    struct BITSender bi0lossender = {0};
+    initBITSender(&bi0lossender, BI0LOS_FLC_ADDR, BI0LOS_FLC_PORT, 10, BI0_MAX_BUFFER_SIZE, BI0LOS_MAX_PACKET_SIZE);
+    pthread_cancel(bi0lossender.send_thread); 
+    pthread_create(&bi0lossender.send_thread, NULL, customSendDataThread, (void *) &bi0lossender);
+
     // packetization variables
     uint16_t i_pkt = 0;
     uint16_t n_pkt = 0;
@@ -376,20 +508,34 @@ void biphase_writer(void * arg)
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so
-        if (!fifoIsEmpty(&bi0_fifo) && ll) { // a superframe is ready 
+        if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
             // send allframe if necessary
             if (!allframe_count) {
-                //  write_allframe(compbuffer, getFifoRead(&bi0_fifo));
-                //  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+                transmit_size = write_allframe(compbuffer, getFifoRead(&bi0_fifo));
+            } else {
+                // compress the linklist to compbuffer
+                compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
+                decrementFifo(&bi0_fifo);
+                transmit_size = ll->blk_size;  
             }
 
-            // compress the linklist to compbuffer
-            compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
-            decrementFifo(&bi0_fifo);
+            // randomized NRZ
+            if (CommandData.biphase_rnrz) {
+                randomized_buffer(compbuffer, transmit_size, BI0LOS_RNRZ_SEED);
+            }
 
-            // compute the transmit size based on bandwidth
-            transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+            // bandwidth limit; frames are 1 Hz, so bandwidth == size
+            transmit_size = MIN(transmit_size, bandwidth);
 
+            // send of BI0-LOS
+            // memset(compbuffer, 0xaa, transmit_size);
+            setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
+            setBITSenderFramenum(&bi0lossender, transmit_size);
+            sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
+
+
+/*
+// commented out since new UDP-LOS devices work
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -412,8 +558,11 @@ void biphase_writer(void * arg)
                 //printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
+*/
+            allframe_count = (allframe_count + 1) % BI0_ALLFRAME_PERIOD;
         } else { // sleep until the next superframe
             usleep(10000);
         }
     }
 }
+

@@ -43,7 +43,16 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_LOCK] = "Lock Motor",
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
+                                    [GRPOS_FOCUS] = "Focus"
   };
+
+#define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
+
+const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
+const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",
+                                "test_files.ll",  "test.ll",
+                                "all_telemetry.ll", "no linklist", 0};
+
 
 // echoes as string; makes enum name the command name string
 #define COMMAND(x) (int)x, #x
@@ -62,8 +71,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna350_off), "turning off 350 lna", GR_CRYO},
   {COMMAND(lna500_on), "turning on 500 lna", GR_CRYO},
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
-  {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
-  {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
+  // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
+  // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
   {COMMAND(charcoal_on), "turning on charcoal heater", GR_CRYO},
   {COMMAND(charcoal_off), "turning off charcoal heater", GR_CRYO},
@@ -79,6 +88,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(heater_supply_on), "turning on 40V channels", GR_CRYO},
   {COMMAND(heater_supply_off), "turning off 40V channels", GR_CRYO},
   {COMMAND(heater_sync), "syncing heater command channel to input", GR_CRYO},
+  {COMMAND(bias_reset_rox), "Attempt to restart the ALSA sound card ROX bias generation.", GR_CRYO},
   {COMMAND(stop), "servo off of gyros to zero speed now", GR_POINT},
   {COMMAND(antisun), "turn antisolar now", GR_POINT},
 // power box OF and IF relay controls
@@ -257,30 +267,30 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
-  {COMMAND(trim_to_isc), "trim coarse sensors to ISC", GR_TRIM},
-  {COMMAND(trim_to_osc), "trim coarse sensors to OSC", GR_TRIM},
-  {COMMAND(trim_osc_to_isc), "trim OSC to ISC", GR_TRIM},
-  {COMMAND(trim_isc_to_osc), "trim ISC to OSC", GR_TRIM},
-  {COMMAND(autotrim_off), "disable auto-trim to ISC/OSC", GR_TRIM},
+  {COMMAND(trim_to_xsc0), "trim coarse sensors to XSC0", GR_TRIM},
+  {COMMAND(trim_to_xsc1), "trim coarse sensors to XSC1", GR_TRIM},
+  {COMMAND(trim_xsc1_to_xsc0), "trim XSC1 to XSC0", GR_TRIM},
+  {COMMAND(trim_xsc0_to_xsc1), "trim XSC0 to XSC1", GR_TRIM},
+  {COMMAND(autotrim_off), "disable auto-trim to XSC0/XSC1", GR_TRIM},
   {COMMAND(fixed), "fixed level bias", GR_BIAS},
   {COMMAND(ramp), "ramp bias with triangular waveform", GR_BIAS},
 
-  {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
-  {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
-  {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
-  {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO},
+  // {COMMAND(bda_on), "manually turn 300mK BDA heater on", GR_CRYO},
+  // {COMMAND(bda_off), "manually turn 300mK BDA heater off", GR_CRYO},
+  // {COMMAND(hs_pot_on), "pot heat switch on", GR_CRYO},
+  // {COMMAND(hs_pot_off), "pot heat switch off", GR_CRYO},
 
-  {COMMAND(cal_on), "calibrator on", GR_CRYO},
-  {COMMAND(cal_off), "calibrator off", GR_CRYO},
+  // {COMMAND(cal_on), "calibrator on", GR_CRYO},
+  // {COMMAND(cal_off), "calibrator off", GR_CRYO},
   {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
-  {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
-  {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
-  {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-    GR_CRYO},
-  {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-    GR_CRYO},
+  // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
+  // {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
+  // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
+  //  GR_CRYO},
+  // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
+  //   GR_CRYO},
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
@@ -290,10 +300,10 @@ struct scom scommands[xyzzy + 1] = {
     GR_TELEM},
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
-  {COMMAND(vtx1_isc), "put ISC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx1_osc), "put OSC video on transmitter #1", GR_TELEM},
-  {COMMAND(vtx2_isc), "put ISC video on transmitter #2", GR_TELEM},
-  {COMMAND(vtx2_osc), "put OSC video on transmitter #2", GR_TELEM},
+  {COMMAND(vtx1_xsc0), "put XSC0 video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx1_xsc1), "put XSC1 video on transmitter #1", GR_TELEM},
+  {COMMAND(vtx2_xsc0), "put XSC0 video on transmitter #2", GR_TELEM},
+  {COMMAND(vtx2_xsc1), "put XSC1 video on transmitter #2", GR_TELEM},
 
   {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
@@ -817,29 +827,18 @@ struct mcom mcommands[plugh + 2] = {
       {"Timeout (s)", 2, 65535, 'f', "TIMEOUT"}
     }
   },
-  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 3,
+
+  {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
-      {"Pilot Linklist", 0, 32, 's', "NONE"},
-      {"Biphase Linklist", 0, 32, 's', "NONE"},
-      {"High Rate Linklist", 0, 32, 's', "NONE"}
+      {"Downlink", 0, 2, 'i', "NONE", {downlink_names}},
+      {LINKLIST_SELECT}
     }
   },
 
-  {COMMAND(highrate_bw), "Highrate bandwith", GR_TELEM, 1,
+  {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
     {
-      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
-    }
-  },
-
-  {COMMAND(biphase_bw), "biphase bandwith", GR_TELEM, 1,
-    {
-      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
-    }
-  },
-
-  {COMMAND(pilot_bw), "pilot bandwith", GR_TELEM, 1,
-    {
-      {"Bandwidth (kbps)", 0, 500, 'f', "rate_pilot"}
+      {LINKLIST_SELECT},
+      {"Absolute file path", 0, 64, 's', ""}
     }
   },
 
@@ -848,27 +847,46 @@ struct mcom mcommands[plugh + 2] = {
       {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
     }
   },
+
   {COMMAND(highrate_through_tdrss), "Highrate downlink", GR_TELEM, 1,
     {
       {"TDRSS(1) or Iridium(0)", 0, 1, 'i', "NONE"}
     }
   },
 
+  {COMMAND(highrate_bw), "Highrate bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 500, 'f', "rate_highrate"}
+    }
+  },
+
+  {COMMAND(biphase_bw), "biphase bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 1, 2000, 'f', "rate_biphase"}
+    }
+  },
+
+  {COMMAND(pilot_bw), "pilot bandwidth", GR_TELEM, 1,
+    {
+      {"Bandwidth (kbps)", 0, 80000, 'f', "rate_pilot"}
+    }
+  },
+
 
   /****************************************/
   /*************** Misc.  *****************/
-  {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
-    {
-      {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
-      {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
-      {"Derivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
-    }
-  },
-  {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
-    {
-      {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
-    }
-  },
+  // {COMMAND(t_gyro_gain), "gyro box heater gains", GR_ELECT, 3,
+  //   {
+  //     {"Proportional Gain", 0, MAX_15BIT, 'i', "g_p_heat_gy"},
+  //     {"Integral Gain",     0, MAX_15BIT, 'i', "g_i_heat_gy"},
+  //     {"Derivative Gain",  0, MAX_15BIT, 'i', "g_d_heat_gy"}
+  //   }
+  // },
+  // {COMMAND(t_gyro_set), "gyro box temperature set point", GR_ELECT, 1,
+  //   {
+  //     {"Set Point (deg C)", 0, 60, 'f', "T_SET_GY"}
+  //   }
+  // },
 
 // *****************************************
 // ROACH Commands
@@ -971,14 +989,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Array (250, 350, 500, 0=all)", 0, 32767, 'i', "step_array_bias"},
     }
   },
-  {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
-    {
-      {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
-      {"End", 0, 32767, 'i', "STEP_END_PHASE"},
-      {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
-      {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
-    }
-  },
+  // {COMMAND(phase_step), "step through different phases", GR_BIAS, 4,
+  //   {
+  //     {"Start", 0, 32767, 'i', "STEP_START_PHASE"},
+  //     {"End", 0, 32767, 'i', "STEP_END_PHASE"},
+  //     {"N steps", 1, 32767, 'i', "step_nsteps_phase"},
+  //     {"Time per step (ms)", 1, 32767, 'i', "step_time_phase"},
+  //   }
+  // },
   {COMMAND(bias_level_rox), "bias level ROX", GR_BIAS, 1,
     {
       {"Level", 0, 32767, 'i', "AMPL_ROX_BIAS"}
@@ -998,13 +1016,13 @@ struct mcom mcommands[plugh + 2] = {
 
   /***************************************/
   /*********** Cal Lamp  *****************/
-  {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
-    {
-      {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
-      {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
-      {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
-    }
-  },
+  // {COMMAND(cal_repeat), "set calibrator to automatic repeated pulse mode", GR_CRYO, 3,
+  //   {
+  //     {"Pulse Length (ms)", 10, 8000, 'i', "PULSE_CAL"},
+  //     {"Max Pulse Delay (0=never pulse) (s)",  0, 32767, 'i', "PERIOD_CAL"},
+  //     {"Always Pulse before HWP move (0=no, 1=yes)",  0, 1, 'i', "NONE"}
+  //   }
+  // },
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
           {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
@@ -1033,23 +1051,23 @@ struct mcom mcommands[plugh + 2] = {
       {"Labjack - not 1", 0, 4, 'i', "LABJACK"}
       }
   },
-  {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
-    {
-      {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
-      {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
-    }
-  },
+  // {COMMAND(jfet_set), "jfet heater setpoints", GR_CRYO, 2,
+  //   {
+  //     {"On Point (K)", 0, 400., 'f', "JFET_SET_ON"},
+  //     {"Off Point (K)", 0, 400., 'f', "JFET_SET_OFF"}
+  //   }
+  // },
 
-  {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO, 6,
-    {
-      {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
-      {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
-      {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
-      {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
-      {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
-      {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
-    }
-  },
+  // {COMMAND(fridge_cycle_params), "Fridge cycle parameters", GR_CRYO, 6,
+  //   {
+  //     {"300mK_strap Start Temp (K)", 0, 4., 'f', "T_START_CYCLE"},
+  //     {"Pot Max Temp (K)", 0, 10., 'f', "T_POT_MAX_CYCLE"},
+  //     {"Charcoal Max Temp (K)", 0, 70., 'f', "T_CHAR_MAX_CYCLE"},
+  //     {"Charcoal Timeout (min)", 0, 120., 'f', "TIME_CHAR_CYCLE"},
+  //     {"Charcoal Settled Temp (K)", 0, 70., 'f', "T_CHAR_SET_CYCLE"},
+  //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
+  //   }
+  // },
 
 //  <!-- XSC general -->
 
@@ -1101,6 +1119,16 @@ struct mcom mcommands[plugh + 2] = {
         },
     },
 
+//    {COMMAND(xsc_network_reset), "Reset the xsc network", GR_XSC_PARAM, 4,
+//        {
+//            {"which", 0, 2, 'i', "NONE"},
+//            {"reset now?", 0, 1, 'i', "NONE"},
+//            {"enable lull?", 0, 1, 'i', "NONE"},
+//            {"lull delay", 0.0, 30.0, 'f', "NONE"},
+//        },
+//    },
+
+
 
 ////  <!-- XSC imaging (lens, camera, fake sky, masking) -->
 
@@ -1115,9 +1143,9 @@ struct mcom mcommands[plugh + 2] = {
     {COMMAND(xsc_set_autofocus_range), "xsc set autofocus range", GR_XSC_PARAM, 4,
         {
             {"which", 0, 2, 'i', "NONE"},
-            {"focus_search_min", 1, 10000, 'l', "NONE"},
-            {"focus_search_max", 2, 10000, 'l', "NONE"},
-            {"focus_search_step", 2, 1000, 'l', "NONE"},
+            {"focus_search_min", 0, 5000, 'l', "NONE"},
+            {"focus_search_max", 0, 5000, 'l', "NONE"},
+            {"focus_search_step", 1, 1000, 'l', "NONE"},
         },
     },
 
@@ -1258,16 +1286,32 @@ struct mcom mcommands[plugh + 2] = {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
+  {COMMAND(xsc_get_focus), "Get the absolute focus position", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
   {COMMAND(xsc_set_focus), "Set the absolute focus position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Absolute focus position", 0, 10000, 'i', "NONE"},
+              {"Absolute focus position", 0, 5000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_stop_focus), "Stop all motion on the focus actuator", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_define_focus), "Define the value of the focus at the current position", GR_XSC_MODE, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Focus value", 0, 5000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_set_focus_incremental), "Command an incremental step to the focus motor", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Incremental focus steps", -10000, 10000, 'i', "NONE"},
+              {"Incremental focus steps", -5000, 5000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_init_aperture), "Initialize the aperture motor", GR_XSC_MODE, 1,
@@ -1275,10 +1319,26 @@ struct mcom mcommands[plugh + 2] = {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
       }
   },
+  {COMMAND(xsc_get_aperture), "Get Aperture", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
   {COMMAND(xsc_set_aperture), "Set the absolute aperture position", GR_XSC_MODE, 2,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
-              {"Absolute aperture position", 0, 10000, 'i', "NONE"},
+              {"Absolute aperture position", 0, 1000, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_stop_aperture), "Stop all motion on the aperture actuator", GR_XSC_MODE, 1,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+      }
+  },
+  {COMMAND(xsc_define_aperture), "Define the value of the aperture at the current position", GR_XSC_MODE, 2,
+      {
+              {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
+              {"Aperture value", 0, 1000, 'i', "NONE"},
       }
   },
   {COMMAND(xsc_solver_general), "Solver parameter settings", GR_XSC_PARAM, 3,

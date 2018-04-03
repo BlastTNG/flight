@@ -266,42 +266,43 @@ channel_t channel_list[] =
     {"x1_predicted_streaking_px", CONVERT_VEL_M, CONVERT_VEL_B, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
 
 
-    {"x0_last_trig_lat", DEG2LI, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
-    {"x0_last_trig_lst", SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
+    {"x0_last_trig_lat", LI2DEG, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
+    {"x0_last_trig_lst", LI2SEC*SEC2HR, 0.0, TYPE_UINT32, RATE_200HZ, U_NONE, 0 },
 
-    {"x0_image_num_blobs",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_num_blobs_found",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_num_blobs_matched",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x0_ctr_stars",               SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_image_ctr_stars",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x0_image_ctr_mcp",           SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
 
-    {"x0_hk_temp_lens",    CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
-    {"x0_hk_temp_comp",    CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
-    {"x0_hk_temp_plate",   CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
-    {"x0_hk_temp_flange",  CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
-    {"x0_hk_pressure",     CONVERT_PRES_M,  CONVERT_PRES_B,  TYPE_UINT16, RATE_1HZ, U_P_PSI, 0 },
-    {"x0_hk_disk",         CONVERT_GB_M,    CONVERT_GB_B,    TYPE_UINT16, RATE_1HZ, U_GB, 0 },
+    {"x0_hk_temp_lens",            CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
+    {"x0_hk_temp_comp",            CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
+    {"x0_hk_temp_plate",           CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
+    {"x0_hk_temp_flange",          CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
+    {"x0_hk_pressure",             CONVERT_PRES_M,  CONVERT_PRES_B,  TYPE_UINT16, RATE_1HZ, U_P_PSI, 0 },
+    {"x0_hk_disk",                 CONVERT_GB_M,    CONVERT_GB_B,    TYPE_UINT16, RATE_1HZ, U_GB, 0 },
 
-    {"x0_image_eq_valid",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
-    {"x0_cam_gain_valid",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_hor_valid",         SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_eq_valid",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    {"x0_cam_gain_valid",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_hor_valid",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x0_image_afocus_metric_valid", SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
     {"x0_stars_run_time",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_T_S, 0 },
-    {"x0_cam_gain_db",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    {"x0_cam_gain_db",             CONVERT_GAIN_M, CONVERT_GAIN_B, TYPE_INT32, RATE_1HZ, U_NONE, 0 },
     {"x0_lens_focus",              SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x0_lens_aperture",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
     {"x0_image_num_exposures",     SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_mean",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_noise",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_gaindb",      128.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_mean",        CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_noise",       CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_gaindb",      CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_image_stats_num_px_sat",  SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_stats_frac_px_sat", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_afocus_metric",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_stats_frac_px_sat", 2.0/(NARROW_MAX-1.0), -1.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_afocus_metric",     CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
-    {"x0_image_eq_iplate",         10.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x0_image_hor_iplate",        10.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_eq_iplate",         9.7e-5/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x0_image_hor_iplate",        9.7e-5/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x0_image_eq_ra",             SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x0_image_eq_dec",            SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
@@ -318,7 +319,8 @@ channel_t channel_list[] =
     {"x0_image_hor_sigma_roll",    SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x0_image_hor_sigma_pointing", SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
-    {"x1_image_num_blobs",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_num_blobs_found",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_num_blobs_matched",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x1_ctr_stars",               SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
     {"x1_image_ctr_stars",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_200HZ, U_NONE, 0 },
@@ -328,8 +330,8 @@ channel_t channel_list[] =
     {"x1_hk_temp_comp",    CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
     {"x1_hk_temp_plate",   CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
     {"x1_hk_temp_flange",  CONVERT_TEMP_M,  CONVERT_TEMP_B,  TYPE_UINT16, RATE_1HZ, U_T_C, 0 },
-    {"x1_hk_pressure",     CONVERT_PRES_M,     CONVERT_PRES_B,     TYPE_UINT16, RATE_1HZ, U_P_PSI, 0 },
-    {"x1_hk_disk",         CONVERT_GB_M, CONVERT_GB_B, TYPE_UINT16, RATE_1HZ, U_GB, 0 },
+    {"x1_hk_pressure",     CONVERT_PRES_M,  CONVERT_PRES_B,  TYPE_UINT16, RATE_1HZ, U_P_PSI, 0 },
+    {"x1_hk_disk",         CONVERT_GB_M,    CONVERT_GB_B,    TYPE_UINT16, RATE_1HZ, U_GB, 0 },
 
     {"x1_image_eq_valid",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x1_cam_gain_valid",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
@@ -337,20 +339,20 @@ channel_t channel_list[] =
     {"x1_image_afocus_metric_valid", SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
     {"x1_stars_run_time",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_T_S, 0 },
-    {"x1_cam_gain_db",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    {"x1_cam_gain_db",             CONVERT_GAIN_M, CONVERT_GAIN_B, TYPE_INT32, RATE_1HZ, U_NONE, 0 },
     {"x1_lens_focus",              SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x1_lens_aperture",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
 
     {"x1_image_num_exposures",     SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_mean",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_noise",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_gaindb",      128.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_mean",        CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_noise",       CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_gaindb",      CONVERT_STATS_4000_M, CONVERT_STATS_4000_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x1_image_stats_num_px_sat",  SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_stats_frac_px_sat", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_afocus_metric",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_stats_frac_px_sat", 2.0/(NARROW_MAX-1.0), -1.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_afocus_metric",     CONVERT_STATS_DEPTH_M, CONVERT_STATS_DEPTH_B, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
-    {"x1_image_eq_iplate",         10.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    {"x1_image_hor_iplate",        10.0/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_eq_iplate",         9.7e-5/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    {"x1_image_hor_iplate",        9.7e-5/NARROW_MAX, 0.0, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     {"x1_image_eq_ra",             SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
     {"x1_image_eq_dec",            SCALE(CONVERT_WIDE_ANGLE), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
@@ -436,6 +438,7 @@ channel_t channel_list[] =
 
     { "status_eth",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
+    { "az_null",              I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, U_D_DEG, 0 },
     { "az_sun",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
     { "lvdt_low_act",         1.0,              -5000.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "status_mcc",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

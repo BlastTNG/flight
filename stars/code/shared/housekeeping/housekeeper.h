@@ -21,6 +21,7 @@ class Housekeeper
 {
   public:
     std::vector<Measurement> measurements;
+	int heater_state;
 };
 
 // writes: main

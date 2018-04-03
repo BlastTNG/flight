@@ -48,6 +48,7 @@
 #include "labjack.h"
 #include "labjack_functions.h"
 #include "linklist.h"
+#include "linklist_compress.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"
@@ -62,7 +63,7 @@
 #define NUM_LOCK_POS 10
 static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34.88, 44.86, 54.83, 64.81, 74.80, 89.78};
 
-/* based on isc_protocol.h */
+/* based on xsc0.h */
 #define ISC_SHUTDOWN_NONE     0
 #define ISC_SHUTDOWN_HALT     1
 #define ISC_SHUTDOWN_REBOOT   2
@@ -97,7 +98,7 @@ struct CommandDataStruct CommandData;
 const char* SName(enum singleCommand command); // share/sip.c
 
 /** Write the Previous Status: called whenever anything changes */
-static void WritePrevStatus()
+void WritePrevStatus()
 {
   int fp, n;
 
@@ -617,20 +618,20 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.pointing_mode.h = 0;
             break;
 
-        case trim_to_isc:
+        case trim_to_xsc0:
             CommandData.autotrim_enable = 0;
             CommandData.autotrim_rate = 0.0;
             SetTrimToSC(0);
             break;
-        case trim_to_osc:
+        case trim_to_xsc1:
             CommandData.autotrim_enable = 0;
             CommandData.autotrim_rate = 0.0;
             SetTrimToSC(1);
             break;
-        case trim_osc_to_isc:
+        case trim_xsc1_to_xsc0:
             trim_xsc(0);
             break;
-        case trim_isc_to_osc:
+        case trim_xsc0_to_xsc1:
             trim_xsc(1);
             break;
         case reset_trims:
@@ -1078,17 +1079,17 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case not_at_float:
             CommandData.at_float = 0;
             break;
-        case vtx1_isc:
-            CommandData.vtx_sel[0] = vtx_isc;
+        case vtx1_xsc0:
+            CommandData.vtx_sel[0] = vtx_xsc0;
             break;
-        case vtx1_osc:
-            CommandData.vtx_sel[0] = vtx_osc;
+        case vtx1_xsc1:
+            CommandData.vtx_sel[0] = vtx_xsc1;
             break;
-        case vtx2_isc:
-            CommandData.vtx_sel[1] = vtx_isc;
+        case vtx2_xsc0:
+            CommandData.vtx_sel[1] = vtx_xsc0;
             break;
-        case vtx2_osc:
-            CommandData.vtx_sel[1] = vtx_osc;
+        case vtx2_xsc1:
+            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
@@ -1405,7 +1406,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.autotrim_time = ivalues[1];
       CommandData.autotrim_rate = rvalues[2];
       CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
-      CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
+      CommandData.autotrim_xsc1_last_bad = CommandData.autotrim_xsc0_last_bad;
       CommandData.autotrim_enable = 1;
       break;
     case az_gyro_offset:
@@ -1698,7 +1699,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
-    //Sam Grab these (just this 1 case)
+    // Sam Grab these (just this 1 case)
     case periodic_cal:
       CommandData.Cryo.periodic_pulse = 1;
       CommandData.Cryo.num_pulse = ivalues[0];
@@ -1742,41 +1743,31 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 //      CommandData.power.gyro_off[ivalues[0]-1] &= ~0x01;
 //      break;
     case set_linklists:
-      copysvalue(CommandData.pilot_linklist_name, svalues[0]);
-      telemetries_linklist[PILOT_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
-
-      copysvalue(CommandData.bi0_linklist_name, svalues[1]);
-      telemetries_linklist[BI0_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
-
-      copysvalue(CommandData.highrate_linklist_name, svalues[2]);
-      telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] = 
-          linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
-
-    case timeout:        // Set timeout
-      CommandData.timeout = rvalues[0];
-      break;
-    case highrate_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
-      break;
-    case highrate_through_tdrss:
-      if (ivalues[0]) {
-        CommandData.highrate_through_tdrss = true;
+      if (ivalues[0] == 0) {
+        copysvalue(CommandData.pilot_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+      } else if (ivalues[0] == 1) {
+        copysvalue(CommandData.bi0_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[BI0_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+      } else if (ivalues[0] == 2) {
+        copysvalue(CommandData.highrate_linklist_name, linklist_names[ivalues[1]]);
+        telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
       } else {
-        CommandData.highrate_through_tdrss = false;
+        blast_err("Unknown downlink index %d", ivalues[0]);
       }
-    case pilot_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
       break;
-    case biphase_bw:
-      // Value entered by user in kbps but stored in Bps
-      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+    case request_file:
+      i = 0;
+      while (linklist_names[i]) i++;
+      if (ivalues[0] < i) {
+        send_file_to_linklist(linklist_find_by_name(
+            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);
+      } else {
+        blast_err("Index %d is outside linklist name range", ivalues[0]);
+      }
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
@@ -1795,6 +1786,32 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         snprintf(str3, sizeof(str3), "%s %s", str, str2);
         blast_warn("%s", str3);
       }
+      break;
+    case highrate_through_tdrss:
+      // route through tdrss or otherwise
+      if (ivalues[0]) {
+        CommandData.highrate_through_tdrss = true;
+      } else {
+        CommandData.highrate_through_tdrss = false;
+      }
+      break;
+    case timeout:        // Set timeout
+      CommandData.timeout = rvalues[0];
+      break;
+    case highrate_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
+      break;
+    case pilot_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
+      break;
+    case biphase_bw:
+      // Value entered by user in kbps but stored in Bps
+      CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
+      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
       break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
@@ -2085,6 +2102,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
+        case xsc_get_focus:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_get_focus);
+                }
+            }
+            break;
+        }
         case xsc_set_focus:
         {
             for (unsigned int which = 0; which < 2; which++) {
@@ -2095,13 +2121,36 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             }
             break;
         }
-        case xsc_set_focus_incremental:
+        case xsc_stop_focus:
         {
             for (unsigned int which = 0; which < 2; which++) {
                 if (xsc_command_applies_to(which, ivalues[0])) {
-                    CommandData.XSC[which].net.set_focus_incremental_value = ivalues[1];
-                    xsc_activate_command(which, xC_set_focus_incremental);
+                    xsc_activate_command(which, xC_stop_focus);
                 }
+            }
+            break;
+        }
+        case xsc_define_focus:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    CommandData.XSC[which].net.define_focus_value = ivalues[1];
+                    xsc_activate_command(which, xC_define_focus);
+                }
+            }
+            break;
+        }
+        case xsc_set_focus_incremental:
+        {
+            if (ivalues[0]) {
+								for (unsigned int which = 0; which < 2; which++) {
+										if (xsc_command_applies_to(which, ivalues[0])) {
+												CommandData.XSC[which].net.set_focus_incremental_value = ivalues[1];
+												xsc_activate_command(which, xC_set_focus_incremental);
+										}
+								}
+            } else {
+                blast_err("Commands: must provide non-zero incremental value\n");
             }
             break;
         }
@@ -2165,6 +2214,34 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                 if (xsc_command_applies_to(which, ivalues[0])) {
                     CommandData.XSC[which].net.set_aperture_value = ivalues[1];
                     xsc_activate_command(which, xC_set_aperture);
+                }
+            }
+            break;
+        }
+        case xsc_get_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_get_aperture);
+                }
+            }
+            break;
+        }
+        case xsc_stop_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    xsc_activate_command(which, xC_stop_aperture);
+                }
+            }
+            break;
+        }
+        case xsc_define_aperture:
+        {
+            for (unsigned int which = 0; which < 2; which++) {
+                if (xsc_command_applies_to(which, ivalues[0])) {
+                    CommandData.XSC[which].net.define_aperture_value = ivalues[1];
+                    xsc_activate_command(which, xC_define_aperture);
                 }
             }
             break;
@@ -2478,7 +2555,7 @@ void InitCommandData()
 
     /* force autotrim to reset its wait time on restart */
     CommandData.autotrim_xsc0_last_bad = mcp_systime(NULL);
-    CommandData.autotrim_osc_last_bad = CommandData.autotrim_xsc0_last_bad;
+    CommandData.autotrim_xsc1_last_bad = CommandData.autotrim_xsc0_last_bad;
 
     CommandData.reset_rw = 0;
     CommandData.reset_piv = 0;
@@ -2493,7 +2570,7 @@ void InitCommandData()
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
-    //Sam Grab these
+    // Sam Grab these
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = 1;
     CommandData.Cryo.periodic_pulse = 0;
@@ -2630,15 +2707,16 @@ void InitCommandData()
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
     CommandData.highrate_bw = 6000/8.0; /* Bps */
-    CommandData.pilot_bw = 2000/8.0; /* Bps */
+    CommandData.pilot_bw = 70000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
     CommandData.biphase_clk_speed = 1000000; /* bps */
+    CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;
     copysvalue(CommandData.pilot_linklist_name, "test.ll");
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
-    CommandData.vtx_sel[0] = vtx_isc;
-    CommandData.vtx_sel[1] = vtx_osc;
+    CommandData.vtx_sel[0] = vtx_xsc0;
+    CommandData.vtx_sel[1] = vtx_xsc1;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
@@ -2755,6 +2833,7 @@ void InitCommandData()
 
     CommandData.rox_bias.amp = 56;
     CommandData.rox_bias.status = 0;
+    CommandData.rox_bias.reset = 0;
     // TODO(laura): These are for the BLASTPol detector biasing and should be removed.
     CommandData.Bias.bias[0] = 12470;   // 500um
     CommandData.Bias.bias[1] = 11690;   // 350um
