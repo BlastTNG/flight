@@ -43,6 +43,8 @@
 #include "pointing_struct.h"
 #include "angles.h"
 
+extern int16_t InCharge; 
+
 bool scan_entered_snap_mode = false;
 bool scan_leaving_snap_mode = false;
 
@@ -189,6 +191,8 @@ static bool xsc_scan_force_trigger_threshold()
 
 void xsc_control_triggers()
 {
+    if (!InCharge) return;
+
     static int state_counter = 0;
 
     static xsc_trigger_state_t trigger_state = xsc_trigger_in_hard_grace_period;
@@ -258,6 +262,7 @@ void xsc_control_triggers()
                 for (int which = 0; which < 2; which++) {
                 	trigger |= (1 << which);
                     xsc_trigger(which, 1);
+                    printf("Triggering XSC%d!\n", which);
 
                     xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
                     xsc_pointing_state[which].last_trigger.counter_stars =
@@ -266,6 +271,12 @@ void xsc_control_triggers()
                     xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
                     xsc_pointing_state[which].last_trigger.trigger_time = get_100hz_framenum();
                     xsc_pointing_state[which].last_trigger_time = get_100hz_framenum();
+
+                    struct timeval tv = { 0 };
+                    gettimeofday(&tv, NULL);
+                    xsc_pointing_state[which].last_trigger.timestamp_s = tv.tv_sec;
+                    xsc_pointing_state[which].last_trigger.timestamp_us = tv.tv_usec;
+
                     xsc_store_trigger_data(which, &(xsc_pointing_state[which].last_trigger));
                 }
 
@@ -322,6 +333,8 @@ static double xsc_get_temperature(int which)
 
 void xsc_control_heaters(void)
 {
+    if (!InCharge) return;
+
     static channel_t* address[2];
     static bool first_time = true;
     static int setpoint_counter[2] = {0, 0};
