@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
   linklist_t *ll_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 
   channels_initialize(channel_list);
+  linklist_assign_channel_list(channel_list);
 
 	if (load_all_linklists(linklistdir, ll_array) < 0)
   {
@@ -67,9 +68,10 @@ int main(int argc, char *argv[])
     	if (ll->items[i].tlm != NULL)
     	{
 
-      	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %d\n",
+      	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %s, sf_start = %d, sf_skip = %d\n",
          (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
-         ll->items[i].blk_size, ll->items[i].num, ll->items[i].comp_type);
+         ll->items[i].blk_size, ll->items[i].num, (ll->items[i].comp_type == NO_COMP) ? "NONE" : compRoutine[ll->items[i].comp_type].name, 
+         get_channel_start_in_superframe(ll->items[i].tlm), get_channel_skip_in_superframe(ll->items[i].tlm));
 				runningsum += ll->items[i].blk_size;
     	}
     	else 

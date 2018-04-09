@@ -218,7 +218,6 @@ static void *netreader_routine(void *m_arg)
                 sleep(1);
                 break;
         }
-
         fflush(NULL);
     }
 
@@ -255,11 +254,28 @@ pthread_t netreader_init(const char *m_host, char *m_telemetry)
         defricher_strerr("Unable to connect.\n");
         return 0;
     }
+            
+    char framename[32] = {0};
 
-    mosquitto_subscribe(mosq, NULL, "frames/#", 2);
+    if (rc.linklist_file) { // linklist mode
+        int i;
+        for (i = strlen(rc.linklist_file)-1; i >=0 ; i--) {
+          if (rc.linklist_file[i] == '/') break;
+        }
+        sprintf(framename, "linklists/%s", rc.linklist_file+i+1); 
+    } else { // normal full channel mode
+        if (strcmp(m_telemetry, "lab") == 0) {
+            sprintf(framename, "frames/#");
+        } else {
+            sprintf(framename, "frames/%s/#", m_telemetry);
+        }
+    }
+
+		mosquitto_subscribe(mosq, NULL, framename, 2);
     mosquitto_subscribe(mosq, NULL, "channels/#", 2);
     mosquitto_subscribe(mosq, NULL, "derived/#", 2);
 
+		printf("Subscribed to \"%s\"\n", framename);
 
     if (!pthread_create(&netread_thread, NULL, &netreader_routine, NULL))
             return netread_thread;
