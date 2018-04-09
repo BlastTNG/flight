@@ -441,6 +441,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     {
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+        break;
         // blast_info("Block %d is beyond the max size of %d", sumcount, maxsize);
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer

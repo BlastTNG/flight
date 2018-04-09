@@ -84,6 +84,14 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
     }
 }
 
+static void frame_handle_linklist_data(void * m_data, unsigned int m_len) {
+    if (m_len != rc.ll->blk_size) {
+        defricher_err("Packet data size mismatch: expected %d bytes and received %d bytes", rc.ll->blk_size, m_len);
+        return;
+    }
+    defricher_info("Received data from %s (size %d == %d)\n", rc.linklist_file, rc.ll->blk_size, m_len);
+}
+
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
     char **topics;
@@ -96,9 +104,9 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
             if (strcmp(telemetry, "lab") == 0) {
-                correct_topic = ((count == 4) && topics[0] && strcmp(topics[0], "frames") == 0);
+                correct_topic = (!rc.ll && (count == 4) && topics[0] && strcmp(topics[0], "frames") == 0);
             } else {
-                correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
+                correct_topic = (!rc.ll && (count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
             }
             if (correct_topic) {
                 if (ri.channels_ready) {
@@ -135,6 +143,7 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     }
                 }
             }
+<<<<<<< HEAD
             if (strcmp(telemetry, "lab") == 0) {
                correct_topic = false;
             } else {
@@ -143,6 +152,22 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
             if (correct_topic) {
                 defricher_info("Received data from %s == %s (size %d == %d)\n", rc.linklist_file, topics[1], rc.ll->blk_size, message->payloadlen);
             }
+=======
+<<<<<<< Updated upstream
+=======
+            if (strcmp(telemetry, "lab") == 0) {
+               correct_topic = false;
+            } else {
+               correct_topic = (rc.ll && (count == 2) && topics[0] && strcmp(topics[0], "linklists") == 0); 
+            }
+            if (correct_topic) {
+                if (ri.channels_ready) {
+                    ri.read += 200;
+                    frame_handle_linklist_data(message->payload, message->payloadlen);
+                }
+            }
+>>>>>>> Stashed changes
+>>>>>>> telemetry
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
 

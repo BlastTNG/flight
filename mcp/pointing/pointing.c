@@ -60,11 +60,12 @@
 #include "time_lst.h"
 #include "utilities_pointing.h"
 #include "magnetometer.h"
+#include "gps.h"
 #include "sip.h"
 
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
-struct XSCPointingState xsc_pointing_state[2] = {{.counter_mcp = 0}};
+struct XSCPointingState xsc_pointing_state[2] = {{.counter_mcp = 0, .stars_response_counter = 0}};
 
 struct ElAttStruct {
   double el;
@@ -611,55 +612,44 @@ int possible_solution(double az, double el, int i_point) {
   return(1);
 }
 
-static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
+static xsc_last_trigger_state_t *XSCGetLatestTriggerState(int which)
 {
+    static unsigned int last_image_ctr_stars[2];
+
     xsc_last_trigger_state_t *trig_state = NULL;
+    xsc_last_trigger_state_t *temp_state = NULL;
 
-    // The latest solution isn't good
-    if (!XSC_SERVER_DATA(which).channels.image_eq_valid) {
+/*
+    if ((XSC_SERVER_DATA(which).channels.image_ctr_stars < 0) || (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0) ||
+        (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter)) {
         return NULL;
     }
+*/
 
-    // The camera system has just started
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars < 0 || XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0) {
-        return NULL;
-    }
-
-    // The solution has already been processed
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars == xsc_pointing_state[which].last_solution_stars_counter) {
+    if ((XSC_SERVER_DATA(which).channels.image_ctr_stars < 0) || (XSC_SERVER_DATA(which).channels.image_ctr_mcp < 0) ||
+        (XSC_SERVER_DATA(which).channels.image_ctr_stars == last_image_ctr_stars[which])) {
         return NULL;
     }
 
-    /* Joy is commenting this out, replacing with previous EBEX logic
-    while ((trig_state = xsc_get_trigger_data(which))) {
-        if (XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
-            break;
-        blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
-        free(trig_state);
-    } 
-    */
-    while ((trig_state = xsc_get_trigger_data(which))) {
-        if ((XSC_SERVER_DATA(which).channels.image_ctr_mcp == trig_state->counter_mcp)
-          & (XSC_SERVER_DATA(which).channels.image_ctr_stars == trig_state->counter_stars)) {
-            break;
-        }
-        blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
-        blast_dbg("Discarding trigger data with image_ctr_mcp %d", XSC_SERVER_DATA(which).channels.image_ctr_mcp);
-        blast_dbg("Discarding trigger data with counter_stars %d", trig_state->counter_stars);
-        blast_dbg("Discarding trigger data with image_ctr_stars %d", XSC_SERVER_DATA(which).channels.image_ctr_stars);
-        free(trig_state);
+    printf("Got a response from the XSC%d counter %d %d\n", which, last_image_ctr_stars[which], XSC_SERVER_DATA(which).channels.image_ctr_stars);
+    last_image_ctr_stars[which] = XSC_SERVER_DATA(which).channels.image_ctr_stars;
+
+    // ensure that we get the newest trig state
+    while ((temp_state = xsc_get_trigger_data(which))) {
+        if (trig_state) free(trig_state);
+        trig_state = temp_state;        
+        printf("Trigger time: %d\n", trig_state->trigger_time);
     }
-    /*
-    trig_state = xsc_get_trigger_data(which);
-    if (XSC_SERVER_DATA(which).channels.image_ctr_stars != trig_state->counter_stars) {
-        free(trig_state);
-        return NULL;
+
+    if (trig_state) {
+	   	  struct timeval tv = { 0 };
+		    gettimeofday(&tv, NULL);
+		    printf("Our time %ld %d; trigger_state time %ld %d; stars solution time %ld\n", ((uint32_t) tv.tv_sec*100)+tv.tv_usec/10000, get_100hz_framenum(),
+			     			trig_state->timestamp_s*100+trig_state->timestamp_us/10000, trig_state->trigger_time,
+				    		XSC_SERVER_DATA(which).channels.timestamp_s*100+XSC_SERVER_DATA(which).channels.timestamp_us/10000);
+        printf("image_ctr_stars %d; last_solution_stars_counter %d; ctr_stars %d; trigger.counter_stars %d\n", XSC_SERVER_DATA(which).channels.image_ctr_stars, 
+               xsc_pointing_state[which].last_solution_stars_counter, XSC_SERVER_DATA(which).channels.ctr_stars, trig_state->counter_stars);
     }
-    if (XSC_SERVER_DATA(which).channels.image_ctr_mcp != trig_state->counter_mcp) {
-        free(trig_state);
-        return NULL;
-    }
-    */
 
     return trig_state;
 }
@@ -684,7 +674,9 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     a->angle += gy_az / SR;
     a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
 
-    if ((trig_state = XSCHasNewSolution(which))) {
+    if ((trig_state = XSCGetLatestTriggerState(which)) && 
+      XSC_SERVER_DATA(which).channels.image_eq_valid) { // solution is valid
+
         double w1, w2;
         int delta_100hz = get_100hz_framenum() - trig_state->trigger_time;
 
@@ -1189,8 +1181,14 @@ void Pointing(void)
 
     /************************************************/
     /** Set the official Lat and Lon **/
-    last_good_lat = SIPData.GPSpos.lat;
-    last_good_lon = SIPData.GPSpos.lon;
+    if (GPSData.isnew) {
+        last_good_lat = GPSData.latitude;
+        last_good_lon = GPSData.longitude;
+        GPSData.isnew = 0;
+    } else {
+        last_good_lat = SIPData.GPSpos.lat;
+        last_good_lon = SIPData.GPSpos.lon;
+    }
     last_good_alt = SIPData.GPSpos.alt;
 
     PointingData[point_index].lat = last_good_lat;

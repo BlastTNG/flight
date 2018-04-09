@@ -73,6 +73,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "gps.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
@@ -290,7 +291,7 @@ void * lj_connection_handler(void *arg) {
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
     init_labjacks(0, 0, 1, 1, 1, 1);
-    mult_labjack_networking_init(6, 84, 1);
+    mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
     // labjack_networking_init(7, 14, 1);
     // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
@@ -508,6 +509,7 @@ int main(int argc, char *argv[])
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
+  ph_thread_t *gps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -656,6 +658,7 @@ int main(int argc, char *argv[])
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+  gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);

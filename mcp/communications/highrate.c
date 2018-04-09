@@ -153,7 +153,7 @@ void highrate_compress_and_send(void *arg) {
 
         // send the full packet 
         unsigned int sendsize = chunksize+CSBF_HEADER_SIZE+PACKET_HEADER_SIZE+1;
-        unsigned int wrote = write(serial->sock->fd, csbf_packet, sendsize);
+        int wrote = write(serial->sock->fd, csbf_packet, sendsize);
         if (wrote < 0) { // send csbf header 
           get_serial_fd = 1;
           break;

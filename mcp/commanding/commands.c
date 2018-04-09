@@ -337,6 +337,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case cycle_clinometers:
             CommandData.Relays.cycle_of_14 = 1;
+            CommandData.Relays.cycled_of = 1;
             break;
         case cycle_of_15:
             CommandData.Relays.cycle_of_15 = 1;
