@@ -2,11 +2,13 @@ set(LINKLIST_SRCS
     ${LINKLIST_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist.c
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist_compress.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/linklist_writer.c
     PARENT_SCOPE
 )
 set(LINKLIST_HEADERS
     ${LINKLIST_HEADERS}
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist.h
     ${CMAKE_CURRENT_SOURCE_DIR}/linklist_compress.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/linklist_writer.h
     PARENT_SCOPE
 )

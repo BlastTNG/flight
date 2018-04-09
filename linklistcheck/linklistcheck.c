@@ -28,6 +28,7 @@
 #include "calibrate.h"
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "linklist_writer.h"
 #include "blast.h"
 
 int main(int argc, char *argv[])

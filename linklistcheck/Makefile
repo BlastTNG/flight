@@ -4,7 +4,7 @@ INCLUDEDIRS = -I ../common/linklist/ -I ../common/include/ -I../mcp/include/ \
 SOURCES = ../common/linklist/linklist.c ../common/CRC_func.c \
 			../common/linklist/linklist_compress.c ../common/channels_tng.c \
 			../common/blast.c ../common/PMurHash.c ../blast_config/tx_struct_tng.c \
-			linklistcheck.c
+			../common/linklist/linklist_writer.c linklistcheck.c
 CFLAGS = `pkg-config --cflags glib-2.0` $(INCLUDEDIRS) 
 LIBS = -lssl -lcrypto -lpthread -lmosquitto `pkg-config --libs glib-2.0`
 

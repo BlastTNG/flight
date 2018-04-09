@@ -1,11 +1,66 @@
+/* 
+ * linklist_writer.c: 
+ *
+ * This software is copyright 
+ *  (C) 2015-2018 University of Toronto, Toronto, ON
+ *
+ * This file is part of the SuperBIT project, modified and adapted for BLAST-TNG.
+ *
+ * linklist is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * linklist is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with mcp; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * History:
+ * Created on: April 9, 2018 by Javier Romualdez
+ */
+
+
+#include <math.h>
+#include <arpa/inet.h> // socket stuff
+#include <netinet/in.h> // socket stuff
+#include <stdio.h> // socket stuff
+#include <sys/types.h> // socket types
+#include <sys/socket.h> // socket stuff
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h> // threads
+#include <openssl/md5.h>
+#include <float.h>
+
+#include "blast.h"
+#include "linklist.h"
+#include "linklist_compress.h"
+#include "linklist_writer.h"
+
+#ifdef __cplusplus
+
+extern "C"{
+
+#endif
+
 const char * GD_TYPES_STR[] = {
-"UINT8", "UINT16", "UINT32", "UINT64", 
-"INT8", "INT16", "INT32", "INT64", 
-"FLOAT32", "FLOAT64", ""
+  "UINT8", "UINT16", "UINT32", "UINT64", 
+  "INT8", "INT16", "INT32", "INT64", 
+  "FLOAT32", "FLOAT64", ""
 };
-char * get_gd_type_string(const E_TYPE m_type)
+const char * get_gd_type_string(const E_TYPE m_type)
 {
-    return GD_TYPES_STR[10];
+  return GD_TYPES_STR[10];
 }
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
@@ -44,7 +99,7 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
       if (tlm_le->tlm == &block_channel) {
       } else {
         // add channel to format file
-        fprintf(formatfile,"%s RAW %c %d\n", tlm_le->tlm->field, 
+        fprintf(formatfile,"%s RAW %s %d\n", tlm_le->tlm->field, 
                                              get_gd_type_string(tlm_le->tlm->type), 
                                              get_channel_spf(tlm_le->tlm));
         if (strlen(tlm_le->tlm->quantity) > 0)
@@ -71,7 +126,7 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
 
         // open the file
         sprintf(binname, "%s/%s", ll_dirfile->filename, tlm_le->tlm->field);
-        ll_dirfile->bin = fpreopenb(binname);  
+        ll_dirfile->bin[i] = fpreopenb(binname);  
       } 
     } 
   }
@@ -97,3 +152,8 @@ int write_linklist_dirfile(linklist_t * ll, uint8_t * buffer, FILE * fp) {
 
 }
 
+#ifdef __cplusplus
+
+}
+
+#endif

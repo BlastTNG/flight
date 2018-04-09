@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LINKLIST_DIRFILE_H
-#define INCLUDE_LINKLIST_DIRFILE_H
+#ifndef INCLUDE_LINKLIST_WRITER_H
+#define INCLUDE_LINKLIST_WRITER_H
 
 #include "linklist.h"
 
@@ -11,4 +11,4 @@ struct linklist_dirfile {
 
 typedef struct linklist_dirfile linklist_dirfile_t;
 
-#endif /* INCLUDE_LINKLIST_DIRFILE_H */
+#endif /* INCLUDE_LINKLIST_WRITER_H */
