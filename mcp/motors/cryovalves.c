@@ -42,7 +42,7 @@
 
 typedef enum {
 	no_move = 0, opening, closing, tighten
-}move_type_t;
+} move_type_t;
 
 static struct potvalve_struct {
 	int addr;
