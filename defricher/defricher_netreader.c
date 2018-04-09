@@ -143,8 +143,6 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     }
                 }
             }
-<<<<<<< Updated upstream
-=======
             if (strcmp(telemetry, "lab") == 0) {
                correct_topic = false;
             } else {
@@ -156,7 +154,6 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                     frame_handle_linklist_data(message->payload, message->payloadlen);
                 }
             }
->>>>>>> Stashed changes
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
 
