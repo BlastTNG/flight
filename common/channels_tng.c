@@ -449,6 +449,7 @@ superframe_entry_t * channels_generate_superframe(const channel_t * const m_chan
     for (rate = 0; rate < RATE_END; rate++) {
       superframe_offset[rate] = superframe_size;
       superframe_size += frame_size[rate]*get_spf(rate); 
+      printf("Offset %d\n", superframe_offset[rate]);
     }
 
     int i = 0;
@@ -465,7 +466,7 @@ superframe_entry_t * channels_generate_superframe(const channel_t * const m_chan
 
        i++; 
     }
-    
+ 
     // null terminate
     sf[i].field[0] = '\0';
 

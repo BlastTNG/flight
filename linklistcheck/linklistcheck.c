@@ -47,7 +47,9 @@ int main(int argc, char *argv[])
 
   channels_initialize(channel_list);
   superframe_list = channels_generate_superframe(channel_list);
+  printf("Successfully generated superframe\n");
   linklist_assign_superframe_list(superframe_list);
+  printf("Successfully assigned superframe list\n");
 
   printf("Superframe size = %d, count = %d\n", superframe_size, superframe_entry_count);
 
