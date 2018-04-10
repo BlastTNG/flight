@@ -59,6 +59,25 @@ extern "C"{
 
 #endif
 
+enum SFType
+{
+  SF_UINT8, SF_UINT16, SF_UINT32, SF_UINT64,
+  SF_INT8, SF_INT16, SF_INT32, SF_INT64,
+  SF_FLOAT32, SF_FLOAT64, SF_NUM 
+};
+
+struct superframe_entry 
+{
+	char field[FIELD_LEN];      // name of channel for FileFormats and CalSpecs
+	uint8_t type;               // Type of data stored
+	uint32_t spf;               // Samples per frame
+  uint32_t start;             // Start location of first sample in the superframe
+  uint32_t skip;              // Bytes to skipe between samples
+	char quantity[UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
+	char units[UNITS_LEN];      // eg, "K" or "^o/s"
+  void *var;                  // Pointer to data
+};
+
 struct link_entry
 {  
   uint32_t start; // start byte for entry in compressed frame

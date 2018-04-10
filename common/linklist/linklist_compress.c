@@ -276,11 +276,11 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
   // check validity of buffers
   if (!buffer_in) {
-    blast_err("buffer_in is NULL and no superframe assigned to linklist");
+    blast_err("buffer_in is NULL");
     return 0;
   }
   if (!buffer_out) {
-    blast_err("buffer_out is NULL and no compframe assigned to linklist");
+    blast_err("buffer_out is NULL");
     return 0;
   }
 
@@ -414,11 +414,11 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
   // check validity of buffers
   if (!buffer_out) {
-    blast_err("buffer_out is NULL and no superframe assigned to linklist");
+    blast_err("buffer_out is NULL");
     return 0;
   }
   if (!buffer_in) {
-    blast_err("buffer_in is NULL and no compframe assigned to linklist");
+    blast_err("buffer_in is NULL");
     return 0;
   }
 
