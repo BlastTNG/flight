@@ -48,10 +48,11 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
-#include <openssl/md5.h>
-#include <mosquitto.h>
+#define SF_FIELD_LEN 80
+#define SF_UNITS_LEN 80
 
-#include "channels_tng.h"
+#include <stdio.h>
+#include <openssl/md5.h>
 
 #ifdef __cplusplus
 
@@ -66,15 +67,15 @@ enum SFType
   SF_FLOAT32, SF_FLOAT64, SF_NUM 
 };
 
-struct superframe_entry 
+struct sf_entry 
 {
-	char field[FIELD_LEN];      // name of channel for FileFormats and CalSpecs
+	char field[SF_FIELD_LEN];      // name of entry for FileFormats and CalSpecs
 	uint8_t type;               // Type of data stored
 	uint32_t spf;               // Samples per frame
   uint32_t start;             // Start location of first sample in the superframe
   uint32_t skip;              // Bytes to skipe between samples
-	char quantity[UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
-	char units[UNITS_LEN];      // eg, "K" or "^o/s"
+	char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
+	char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data
 };
 
@@ -85,7 +86,7 @@ struct link_entry
   uint32_t blk_size; // size/allocation of entry in compressed frame
   uint32_t num; // number of samples per compressed frame
   double compvars[20]; // compression variable scratchpad
-  channel_t * tlm; // pointer to corresponding telemetry entry from telemlist
+  struct sf_entry * tlm; // pointer to corresponding entry from superframe
 };
 
 struct block_container
@@ -116,8 +117,10 @@ struct link_list
 typedef struct link_list linklist_t;
 typedef struct link_entry linkentry_t;
 typedef struct block_container block_t;
+typedef struct sf_entry superframe_entry_t;
 
-extern channel_t block_channel;
+extern unsigned int superframe_size;
+extern unsigned int superframe_entry_count;
 
 linklist_t * parse_linklist(char *);
 
@@ -129,8 +132,10 @@ linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 linklist_t * linklist_all_telemetry();
 void linklist_to_file(linklist_t *, char *);
-void linklist_publish(struct mosquitto *, linklist_t *, uint8_t *);
-void linklist_assign_channel_list(channel_t *);
+void linklist_assign_superframe_list(superframe_entry_t *);
+uint32_t get_superframe_entry_size(superframe_entry_t *);
+void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t));
+void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t));
 
 #ifdef __cplusplus
 }

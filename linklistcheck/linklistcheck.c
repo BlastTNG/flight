@@ -25,11 +25,12 @@
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 
+#include "blast.h"
 #include "calibrate.h"
+#include "channels_tng.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "linklist_writer.h"
-#include "blast.h"
 
 int main(int argc, char *argv[])
 {
@@ -42,9 +43,13 @@ int main(int argc, char *argv[])
 	int i, r;
   uint8_t format_serial[MD5_DIGEST_LENGTH] = {0};
   linklist_t *ll_array[MAX_NUM_LINKLIST_FILES] = {NULL};
+  superframe_entry_t * superframe_list = NULL;
 
   channels_initialize(channel_list);
-  linklist_assign_channel_list(channel_list);
+  superframe_list = channels_generate_superframe(channel_list);
+  linklist_assign_superframe_list(superframe_list);
+
+  printf("Superframe size = %d, count = %d\n", superframe_size, superframe_entry_count);
 
 	if (load_all_linklists(linklistdir, ll_array) < 0)
   {
@@ -72,7 +77,7 @@ int main(int argc, char *argv[])
       	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %s, sf_start = %d, sf_skip = %d\n",
          (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
          ll->items[i].blk_size, ll->items[i].num, (ll->items[i].comp_type == NO_COMP) ? "NONE" : compRoutine[ll->items[i].comp_type].name, 
-         get_channel_start_in_superframe(ll->items[i].tlm), get_channel_skip_in_superframe(ll->items[i].tlm));
+         ll->items[i].tlm->start, ll->items[i].tlm->skip);
 				runningsum += ll->items[i].blk_size;
     	}
     	else 

@@ -27,7 +27,7 @@
  * Description:
  *
  * This file contains functions for parsing and initializing linklist
- * files, which are used for the channel selection and compression of
+ * files, which are used for the entry selection and compression of
  * BLAST frames over telemetry downlinks.
  */
 
@@ -51,7 +51,6 @@
 #include <mosquitto.h>
 
 #include "blast.h"
-#include "channels_tng.h"
 #include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -70,13 +69,66 @@ extern "C" {
 int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
-channel_t block_channel = {{0}}; // a dummy channel for blocks
-channel_t * ll_channel_list = NULL;
+superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 
-void linklist_assign_channel_list(channel_t * m_channel_list) {
-  ll_channel_list = m_channel_list;
+superframe_entry_t * ll_superframe_list = NULL;
+unsigned int superframe_entry_count = 0;
+superframe_entry_t ** superframe_hash_table = NULL;
+unsigned int superframe_hash_table_size = 0;
+unsigned int superframe_size = 0; 
+
+double (*(*datatodouble))(uint8_t *, uint8_t) = NULL;
+int (*(*doubletodata))(uint8_t *, double, uint8_t) = NULL;
+
+void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t)) {
+  (*datatodouble) = func;
+}
+void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t)) {
+  (*doubletodata) = func;
 }
 
+//Implements the djb2 hashing algorithm for char*s 
+unsigned int hash(const char* input){
+  int returnVal = 5381;
+  int c;
+
+  while ((c = *input++))
+    returnVal = ((returnVal << 5) + returnVal) + c;
+
+  return returnVal;
+}
+
+
+void linklist_assign_superframe_list(superframe_entry_t* m_superframe_list) {
+  ll_superframe_list = m_superframe_list;
+
+  int i = 0;
+  superframe_size = 0;
+  superframe_entry_count = 0;
+  for (i = 0; m_superframe_list[i].field[0]; i++) {
+    superframe_size += get_superframe_entry_size(&m_superframe_list[i])*m_superframe_list[i].spf;
+    superframe_entry_count++;
+  }
+
+  if (superframe_hash_table) free(superframe_hash_table);
+  superframe_hash_table_size = superframe_entry_count*1000;
+  superframe_hash_table = calloc(superframe_hash_table_size, sizeof(superframe_entry_t *));
+  
+  for (i = 0; i < superframe_entry_count; i++) {
+    unsigned int hashloc = hash(m_superframe_list[i].field)%superframe_hash_table_size;
+    if (superframe_hash_table[hashloc]) {
+      blast_err("Hash with entry \"%s\"", m_superframe_list[i].field);
+    } else {
+      superframe_hash_table[hashloc] = &m_superframe_list[i];
+    }
+  }
+}
+
+superframe_entry_t * superframe_find_by_name(char * name) {
+  if (!name) return NULL;
+
+  return superframe_hash_table[hash(name)%superframe_hash_table_size];
+}
 
 void realloc_list(struct link_list * ll, int * x)
 {
@@ -126,16 +178,6 @@ void parse_line(char *line, char ** sinks, unsigned int nargs)
 static int one (const struct dirent *unused)
 {
   return 1;
-}
-
-// publishes a compressed linklist buffer to the mqtt server
-void linklist_publish(struct mosquitto *mosq, linklist_t * ll, uint8_t * buffer) {
-  if (!ll || !buffer) return;
-
-  char frame_name[32] = {0};
-  sprintf(frame_name, "linklists/%s", ll->name);
-
-  mosquitto_publish(mosq, NULL, frame_name, ll->blk_size, buffer, 0, false);
 }
 
 int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
@@ -215,11 +257,13 @@ void update_linklist_hash(MD5_CTX *mdContext, struct link_entry * le)
 	MD5_Update(mdContext, &le->num, sizeof(le->num));
 }
 
-void update_channel_hash(MD5_CTX *mdContext, channel_t * chan)
+void update_superframe_entry_hash(MD5_CTX *mdContext, superframe_entry_t * chan)
 {
-  MD5_Update(mdContext, chan->field, FIELD_LEN);
+  MD5_Update(mdContext, chan->field, SF_FIELD_LEN);
 	MD5_Update(mdContext, &chan->type, sizeof(chan->type));
-	MD5_Update(mdContext, &chan->rate, sizeof(chan->rate));
+	MD5_Update(mdContext, &chan->spf, sizeof(chan->spf));
+	MD5_Update(mdContext, &chan->spf, sizeof(chan->start));
+	MD5_Update(mdContext, &chan->skip, sizeof(chan->skip));
 }
 
 void parse_block(linklist_t * ll, char * name)
@@ -246,6 +290,33 @@ block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
     if (ll->blocks[i].le == le) return &ll->blocks[i];
   }
   return NULL;
+}
+
+uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
+	size_t retsize = 0;
+	switch (chan->type) {
+		case SF_INT8:
+		case SF_UINT8:
+			retsize = 1;
+			break;
+		case SF_INT16:
+		case SF_UINT16:
+			retsize = 2;
+			break;
+		case SF_INT32:
+		case SF_UINT32:
+		case SF_FLOAT32:
+			retsize = 4;
+			break;
+		case SF_INT64:
+		case SF_UINT64:
+		case SF_FLOAT64:
+			retsize = 8;
+			break;
+		default:
+			blast_fatal("Invalid Channel size!");
+	}
+	return retsize;
 }
 
 /**
@@ -281,9 +352,9 @@ linklist_t * parse_linklist(char *fname)
     return NULL; 
   }
 
-  if (ll_channel_list == NULL)
+  if (ll_superframe_list == NULL)
   {
-    blast_err("parse_linklist: no ll_channel_list is loaded\n");
+    blast_err("parse_linklist: no ll_superframe_list is loaded\n");
     return NULL;
   }
 
@@ -360,16 +431,16 @@ linklist_t * parse_linklist(char *fname)
       }
       else
       {
-        channel_t * chan = NULL;
+        superframe_entry_t * chan = NULL;
         if (strcmp(temps[1], "B") == 0) // blocks field 
         {
-          chan = &block_channel; // dummy channel associated with block
+          chan = &block_entry; // dummy entry associated with block
           comp_type = NO_COMP;
           isblock = 1;
         } 
         else 
         {
-          chan = channels_find_by_name(temps[0]);
+          chan = superframe_find_by_name(temps[0]);
           isblock = 0;
           if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0))
           {
@@ -407,14 +478,14 @@ linklist_t * parse_linklist(char *fname)
         // get compressed samples per frame
         if ((strcmp(temps[2], "NONE") == 0) || (strlen(temps[2]) == 0))
         {
-          num = get_channel_spf(chan);
+          num = chan->spf;
         }
         else
         {
           num = atoi(temps[2]); // get compressed samples per frame 
         }
 
-        update_channel_hash(&mdContext, chan);
+        update_superframe_entry_hash(&mdContext, chan);
 
         ll->items[ll->n_entries].tlm = chan; // connect entry to name
 
@@ -448,7 +519,7 @@ linklist_t * parse_linklist(char *fname)
         }
         else // no compression, so identical field to telemlist, but with decimation
         {
-          blk_size = num*channel_size(ll->items[ll->n_entries].tlm);
+          blk_size = num*get_superframe_entry_size(ll->items[ll->n_entries].tlm);
         }
 
         if (blk_size > 0) ll->items[ll->n_entries].blk_size = blk_size;
@@ -525,7 +596,7 @@ void linklist_to_file(linklist_t * ll, char * fname)
   fprintf(formatfile, "#\n");
 
   for (i = 0; i < ll->n_entries; i++) { 
-    if (ll->items[i].tlm == &block_channel) { // a block
+    if (ll->items[i].tlm == &block_entry) { // a block
       block_t * theblock = linklist_find_block_by_pointer(ll, &ll->items[i]);
       if (theblock) {
         fprintf(formatfile, "%s    ",  theblock->name); // block name
@@ -600,8 +671,8 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
 
 linklist_t * linklist_all_telemetry()
 {
-  if (ll_channel_list == NULL) {
-    blast_err("No channel list loaded");
+  if (ll_superframe_list == NULL) {
+    blast_err("No supeframe list loaded");
     return NULL;
   }
 
@@ -619,7 +690,7 @@ linklist_t * linklist_all_telemetry()
   MD5_Init(&mdContext); // initialize hash
 
   linklist_t * ll = (linklist_t *) calloc(1, sizeof(linklist_t));
-  ll->items = (linkentry_t *) calloc(channels_count+extra_chksm, sizeof(linkentry_t));
+  ll->items = (linkentry_t *) calloc(superframe_entry_count+extra_chksm, sizeof(linkentry_t));
   ll->blocks = NULL;
   ll->n_entries = 0;
 
@@ -630,7 +701,7 @@ linklist_t * linklist_all_telemetry()
   ll->n_entries++;
 
   // add all telemetry entries
-  for (i = 0; i < channels_count; i++) {
+  for (i = 0; i < superframe_entry_count; i++) {
     if ((chksm_count >= MIN_CHKSM_SPACING) && !no_auto_min_checksum) {
       blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
       update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
@@ -639,11 +710,11 @@ linklist_t * linklist_all_telemetry()
       chksm_count = 0;
     }
 
-    blk_size = channel_size(&ll_channel_list[i])*get_channel_spf(&ll_channel_list[i]); 
+    blk_size = get_superframe_entry_size(&ll_superframe_list[i])*ll_superframe_list[i].spf; 
 
     ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
-    ll->items[ll->n_entries].num = get_channel_spf(&ll_channel_list[i]);
-    ll->items[ll->n_entries].tlm = &ll_channel_list[i];
+    ll->items[ll->n_entries].num = ll_superframe_list[i].spf;
+    ll->items[ll->n_entries].tlm = &ll_superframe_list[i];
     ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].start = byteloc;
 

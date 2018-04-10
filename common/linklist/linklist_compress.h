@@ -70,11 +70,6 @@ double decompress_linklist_by_size(uint8_t *, linklist_t *, uint8_t *, uint32_t)
 
 uint8_t * allocate_superframe();
 void define_allframe();
-unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
-unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
-int superframe_data_is_ready();
-void assign_superframe_to_linklist(linklist_t *, uint8_t *);
-void assign_compframe_to_linklist(linklist_t *, uint8_t *);
 int write_allframe(uint8_t *, uint8_t *);
 int read_allframe(uint8_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);

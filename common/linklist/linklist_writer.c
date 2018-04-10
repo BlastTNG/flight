@@ -53,14 +53,16 @@ extern "C"{
 
 #endif
 
-const char * GD_TYPES_STR[] = {
+extern superframe_entry_t block_entry;
+
+const char * SF_TYPES_STR[] = {
   "UINT8", "UINT16", "UINT32", "UINT64", 
   "INT8", "INT16", "INT32", "INT64", 
   "FLOAT32", "FLOAT64", ""
 };
-const char * get_gd_type_string(const E_TYPE m_type)
+const char * get_sf_type_string(uint8_t m_type)
 {
-  return GD_TYPES_STR[m_type];
+  return SF_TYPES_STR[m_type];
 }
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
@@ -108,20 +110,20 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
   for (i = 0; i < ll->n_entries; i++) {
     tlm_le = &(ll->items[i]);
     if (tlm_le->tlm) {
-      if (tlm_le->tlm == &block_channel) {
+      if (tlm_le->tlm == &block_entry) {
       } else {
         for (k = 0; k < i; k++) {
           if (ll->items[k].tlm && (tlm_le->tlm == ll->items[k].tlm)) break;
         }
-        // comment out repeated channel
+        // comment out repeated entry 
         if (k != i) fprintf(formatfile, "# ");
 
-        // add channel to format file
+        // add entry to format file
         fprintf(formatfile,"%s RAW %s %d\n", tlm_le->tlm->field, 
-                                             get_gd_type_string(tlm_le->tlm->type), 
-                                             get_channel_spf(tlm_le->tlm));
+                                             get_sf_type_string(tlm_le->tlm->type), 
+                                             tlm_le->tlm->spf);
 
-        // comment out repeated channel
+        // comment out repeated entry 
         if (k != i) fprintf(formatfile, "# ");
         if (strlen(tlm_le->tlm->quantity) > 0)
         {
@@ -134,7 +136,7 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
           fprintf(formatfile,"\"\n");
         }
 
-        // comment out repeated channel
+        // comment out repeated entry 
         if (k != i) fprintf(formatfile, "# ");
 
         if (strlen(tlm_le->tlm->units) > 0)
@@ -211,12 +213,12 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
   for (i = 0; i < ll->n_entries; i++) {
     tlm_le = &(ll->items[i]);
     if (tlm_le->tlm) {
-      if (tlm_le->tlm == &block_channel) {
+      if (tlm_le->tlm == &block_entry) {
       } else { // just a normal field to be writting to the dirfile
-        tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
-        tlm_out_skip = get_channel_skip_in_superframe(tlm_le->tlm);
-        tlm_out_size = channel_size(tlm_le->tlm);
-        tlm_out_spf = get_channel_spf(tlm_le->tlm);
+        tlm_out_start = tlm_le->tlm->start;
+        tlm_out_skip = tlm_le->tlm->skip;
+        tlm_out_size = get_superframe_entry_size(tlm_le->tlm);
+        tlm_out_spf = tlm_le->tlm->spf;
 
         dir_loc = framenum*tlm_out_size*tlm_out_spf;
         fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
