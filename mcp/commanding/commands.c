@@ -180,6 +180,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
+        case allow_cycle:
+            CommandData.Cryo.cycle_allowed = 1;
+            break;
+        case disallow_cycle:
+            CommandData.Cryo.cycle_allowed = 0;
+            break;
         case heaters_off:
             heater_all_off();
             break;

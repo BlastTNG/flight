@@ -71,6 +71,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna350_off), "turning off 350 lna", GR_CRYO},
   {COMMAND(lna500_on), "turning on 500 lna", GR_CRYO},
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
+  {COMMAND(allow_cycle), "auto_cycle on", GR_CRYO},
+  {COMMAND(disallow_cycle), "autocycle_off", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},

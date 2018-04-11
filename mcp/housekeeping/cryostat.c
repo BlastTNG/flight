@@ -780,7 +780,7 @@ static void output_cycle(void) {
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
-    if (state[0].initialized && state[1].initialized) {
+    if (state[0].initialized && state[1].initialized && CommandData.Cryo.cycle_allowed) {
         if (first_time == 1) {
             blast_info("initalizing");
             init_cycle_channels();

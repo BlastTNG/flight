@@ -163,7 +163,7 @@ enum singleCommand {
     if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
     if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
     level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
-    heater_sync,
+    heater_sync, allow_cycle, disallow_cycle,
   xyzzy
 };
 

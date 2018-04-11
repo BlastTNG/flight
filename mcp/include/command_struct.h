@@ -276,7 +276,7 @@ typedef struct {
   uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
-  int labjack, send_dac, load_curve;
+  int labjack, send_dac, load_curve, cycle_allowed;
   float dac_value;
   // for the periodic cal Sam Grab these
   uint16_t num_pulse, separation, length, periodic_pulse;
