@@ -260,7 +260,7 @@ void update_superframe_entry_hash(MD5_CTX *mdContext, superframe_entry_t * chan)
   MD5_Update(mdContext, chan->field, SF_FIELD_LEN);
 	MD5_Update(mdContext, &chan->type, sizeof(chan->type));
 	MD5_Update(mdContext, &chan->spf, sizeof(chan->spf));
-	MD5_Update(mdContext, &chan->spf, sizeof(chan->start));
+	MD5_Update(mdContext, &chan->start, sizeof(chan->start));
 	MD5_Update(mdContext, &chan->skip, sizeof(chan->skip));
 }
 
