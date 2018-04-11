@@ -14,12 +14,12 @@ set(HEADERS
     linklist_writer.h
 )
 
-add_library(linklist SHARED 
+add_library(linklist STATIC
     ${SOURCES}
     ${HEADERS}
 )
 
 target_include_directories(linklist PRIVATE .)
 
-install(TARGETS linklist LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS linklist DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/linklist)
