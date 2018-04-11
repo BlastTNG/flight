@@ -100,7 +100,7 @@ void share_superframe(uint8_t * superframe) {
   if (peekBITRecver(&shared_data_recver)) {
     retval = recvFromBITRecver(&shared_data_recver, shared_recv_buffer, shared_packet_size, RECV_TIMEOUT);
     if (retval != shared_packet_size) {
-      if (retval > 0) blast_err("Could only receive %d/%d bytes of shared data", retval, shared_packet_size);
+      if (retval > 0) blast_err("Received %d bytes, expected %d bytes of shared data", retval, shared_packet_size);
       return;
     }
 
