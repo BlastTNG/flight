@@ -42,7 +42,6 @@
 #include <openssl/md5.h>
 #include <float.h>
 
-#include "blast.h"
 #include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -99,7 +98,7 @@ int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *
 void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 {
   if (!ll) {
-    blast_err("Invalid linklist given");
+    linklist_err("Invalid linklist given");
     return;
   }
 
@@ -114,20 +113,20 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
     }
   }
   if (!theblock) {
-    blast_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
     return;
   }
 
   // check to see if the previous send is done
   if (theblock->i != theblock->n) { // previous transfer not done
-    blast_info("Previous transfer for block \"%s\" is incomplete.", blockname);
+    linklist_info("Previous transfer for block \"%s\" is incomplete.", blockname);
     return;
   }
  
   // open the file
   FILE * fp = fopen(filename, "rb+");
   if (!fp) {
-    blast_err("File \"%s\" not found", filename);
+    linklist_err("File \"%s\" not found", filename);
     return;
   }
   
@@ -150,7 +149,7 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 
   theblock->id++; // increment the block counter
 
-  blast_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
+  linklist_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
 
   return;
 }
@@ -178,7 +177,7 @@ uint8_t * allocate_superframe()
 {
   // allocate data and superframe offsets
   if (!superframe_size || !ll_superframe_list) {
-    blast_err("Cannot allocate superframe");
+    linklist_err("Cannot allocate superframe");
     return NULL;
   }
 
@@ -212,11 +211,11 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
   // check validity of buffers
   if (!buffer_in) {
-    blast_err("buffer_in is NULL");
+    linklist_err("buffer_in is NULL");
     return 0;
   }
   if (!buffer_out) {
-    blast_err("buffer_out is NULL");
+    linklist_err("buffer_out is NULL");
     return 0;
   }
 
@@ -235,7 +234,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
         for (j=0;j<2;j++) crccheck(tlm_out_buf[j],&checksum,crctable); // check the checksum
         if (checksum != 0) 
         {
-          blast_err("compress_linklist: invalid checksum generated\n");
+          linklist_err("compress_linklist: invalid checksum generated\n");
         }
         //printf("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
       }
@@ -247,7 +246,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
       {
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) packetize_block_raw(theblock, tlm_out_buf);
-        else blast_err("Could not find block in linklist \"%s\"", ll->name);
+        else linklist_err("Could not find block in linklist \"%s\"", ll->name);
       }
       else // just a normal field 
       {
@@ -350,11 +349,11 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
   // check validity of buffers
   if (!buffer_out) {
-    blast_err("buffer_out is NULL");
+    linklist_err("buffer_out is NULL");
     return 0;
   }
   if (!buffer_in) {
-    blast_err("buffer_in is NULL");
+    linklist_err("buffer_in is NULL");
     return 0;
   }
 
@@ -378,10 +377,10 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
         break;
-        // blast_info("Block %d is beyond the max size of %d", sumcount, maxsize);
+        // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
-        blast_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
@@ -400,7 +399,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
       {
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
-        else blast_err("Could not find block in linklist \"%s\"", ll->name);
+        else linklist_err("Could not find block in linklist \"%s\"", ll->name);
       }
       else // just a normal field
       {
@@ -441,7 +440,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n, block->curr_size);
  
     if (loc > block->curr_size) {
-      blast_err("Block location %d > total size %d", loc, block->curr_size);
+      linklist_err("Block location %d > total size %d", loc, block->curr_size);
       return;
     }
 
@@ -450,7 +449,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
       if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
-        blast_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
+        linklist_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
       }
     } else { // there is data in the buffer
       memcpy(buffer+fsize, block->buffer+loc, cpy);
@@ -494,7 +493,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      blast_info("Closing \"%s\"", block->filename);
+      linklist_info("Closing \"%s\"", block->filename);
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
@@ -503,7 +502,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   }
 
   if (n == 0) { // special case of block fragment
-    blast_info("Received block fragment %d (size %d)\n",i,totalsize);
+    linklist_info("Received block fragment %d (size %d)\n",i,totalsize);
     
     totalsize = blksize;
     block->num = 1;
@@ -511,7 +510,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     i = 0;
     n = 0;
   } else if (i >= n) { 
-    blast_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
+    linklist_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
@@ -528,15 +527,15 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     if (!block->fp) { // file not open yet
       sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
       if (!(block->fp = fpreopenb(block->filename))) {
-        blast_err("Cannot open file %s", block->filename);
+        linklist_err("Cannot open file %s", block->filename);
         return;
       }
-      blast_info("New file \"%s\" opened\n", block->filename);
+      linklist_info("New file \"%s\" opened\n", block->filename);
     }
     fseek(block->fp, loc, SEEK_SET); 
     int retval = 0;
     if ((retval = fwrite(buffer+fsize, 1, blksize, block->fp)) != blksize) {
-      blast_err("Could only write %d/%d bytes at %d to file %s", retval, blksize, loc, block->filename);
+      linklist_err("Could only write %d/%d bytes at %d to file %s", retval, blksize, loc, block->filename);
     }
 
   } else { // just a normal block to be stored in memory
@@ -559,7 +558,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  blast_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
 }
 

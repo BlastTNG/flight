@@ -51,6 +51,11 @@
 #define SF_FIELD_LEN 80
 #define SF_UNITS_LEN 80
 
+#define linklist_info printf
+#define linklist_err printf
+#define linklist_warn printf
+#define linklist_fatal printf
+
 #include <stdio.h>
 #include <openssl/md5.h>
 

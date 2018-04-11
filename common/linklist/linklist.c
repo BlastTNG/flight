@@ -50,7 +50,6 @@
 #include <ctype.h>
 #include <mosquitto.h>
 
-#include "blast.h"
 #include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -117,7 +116,7 @@ void linklist_assign_superframe_list(superframe_entry_t* m_superframe_list) {
   for (i = 0; i < superframe_entry_count; i++) {
     unsigned int hashloc = hash(m_superframe_list[i].field)%superframe_hash_table_size;
     if (superframe_hash_table[hashloc]) {
-      blast_err("Hash with entry \"%s\"", m_superframe_list[i].field);
+      linklist_err("Hash with entry \"%s\"", m_superframe_list[i].field);
     } else {
       superframe_hash_table[hashloc] = &m_superframe_list[i];
     }
@@ -187,9 +186,9 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
   int num = 0;
 
   if (n<0) { 
-    blast_fatal("Cannot open the linklists directory %s", linklistdir);
+    linklist_fatal("Cannot open the linklists directory %s", linklistdir);
   } else if (n>=MAX_NUM_LINKLIST_FILES) { 
-    blast_fatal("Max linklists in %s\n",linklistdir);
+    linklist_fatal("Max linklists in %s\n",linklistdir);
   }
   
   // check to see if there are already linklists allocated
@@ -209,7 +208,7 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
       sprintf(full_path_name, "%s%s",linklistdir, dir[i]->d_name);
       
       if ((ll_array[num] = parse_linklist(full_path_name)) == NULL) {
-        blast_fatal("Unable to load linklist at %s", full_path_name);
+        linklist_fatal("Unable to load linklist at %s", full_path_name);
       }
       num++;
     }
@@ -217,7 +216,7 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
   ll_array[num] = linklist_all_telemetry(); // last linklist contains all the telemetry items
   ll_array[num+1] = NULL; // null terminate the list
 
-  blast_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
+  linklist_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
 
   return 1;
 }
@@ -231,7 +230,7 @@ linklist_t * linklist_find_by_name(char * name, linklist_t ** ll_array)
     if (strcmp(ll->name, name) == 0) return ll;
     ll = ll_array[++i];
   }
-  blast_err("Linklist \"%s\" not found.\n", name);
+  linklist_err("Linklist \"%s\" not found.\n", name);
 
   return NULL;
 }
@@ -314,7 +313,7 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
 			retsize = 8;
 			break;
 		default:
-			blast_fatal("Invalid Channel size!");
+			linklist_fatal("Invalid Channel size!");
 	}
 	return retsize;
 }
@@ -333,7 +332,7 @@ linklist_t * parse_linklist(char *fname)
   {
     if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
     {
-      blast_fatal("mk_crctable() memory allocation failed\n");
+      linklist_fatal("mk_crctable() memory allocation failed\n");
     }
   } 
 
@@ -348,13 +347,13 @@ linklist_t * parse_linklist(char *fname)
   FILE * cf = fopen(fname,"r"); 
   if (cf == NULL)
   {
-    blast_err("parse_linklist: cannot find %s\n",fname);
+    linklist_err("parse_linklist: cannot find %s\n",fname);
     return NULL; 
   }
 
   if (ll_superframe_list == NULL)
   {
-    blast_err("parse_linklist: no ll_superframe_list is loaded\n");
+    linklist_err("parse_linklist: no ll_superframe_list is loaded\n");
     return NULL;
   }
 
@@ -462,7 +461,7 @@ linklist_t * parse_linklist(char *fname)
             }
             else
             {
-              blast_err("Could not find compression type \"%s\"", temps[1]);
+              linklist_err("Could not find compression type \"%s\"", temps[1]);
               comp_type = NO_COMP;
             }
           }
@@ -471,7 +470,7 @@ linklist_t * parse_linklist(char *fname)
 
         if (!chan)
         {
-          blast_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
+          linklist_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
           continue;
         }
 
@@ -492,7 +491,7 @@ linklist_t * parse_linklist(char *fname)
         // check that comp_type is within range
         if ((comp_type >= num_compression_routines) && (comp_type != NO_COMP))
         {
-          blast_err("Invalid comp. type %d for \"%s\". Defaulting to uncompressed.",comp_type,chan->field);
+          linklist_err("Invalid comp. type %d for \"%s\". Defaulting to uncompressed.",comp_type,chan->field);
           comp_type = NO_COMP;
         }
 
@@ -510,7 +509,7 @@ linklist_t * parse_linklist(char *fname)
           }
           else
           {
-            blast_err("parse_linklist: max number of data blocks (%d) reached\n",MAX_DATA_BLOCKS);
+            linklist_err("parse_linklist: max number of data blocks (%d) reached\n",MAX_DATA_BLOCKS);
           }
         }
         else if (comp_type != NO_COMP) // normal compressed field
@@ -525,7 +524,7 @@ linklist_t * parse_linklist(char *fname)
         if (blk_size > 0) ll->items[ll->n_entries].blk_size = blk_size;
         else
         {
-          blast_err("parse_linklist: zero compressed size for %s in %s\n",ll->items[ll->n_entries].tlm->field,fname);
+          linklist_err("parse_linklist: zero compressed size for %s in %s\n",ll->items[ll->n_entries].tlm->field,fname);
         }
       }
 
@@ -582,7 +581,7 @@ void linklist_to_file(linklist_t * ll, char * fname)
   FILE * formatfile = fopen(fname, "w");
 
   if (formatfile == NULL) {
-    blast_err("Unable to generate linklist file \"%s\"", fname);
+    linklist_err("Unable to generate linklist file \"%s\"", fname);
     return;
   }
 
@@ -603,7 +602,7 @@ void linklist_to_file(linklist_t * ll, char * fname)
         fprintf(formatfile, "B    "); // block indicator
         fprintf(formatfile, "%u\n",  ll->items[i].num); // block size  
       } else {
-        blast_err("Could not find block in linklist");
+        linklist_err("Could not find block in linklist");
       }
     } else if (ll->items[i].tlm) { // not a checksum field
       fprintf(formatfile, "%s    ", ll->items[i].tlm->field); // field name
@@ -639,7 +638,7 @@ int linklist_generate_lookup(linklist_t ** lll) {
 
   memset(linktable, -1, 65536*sizeof(int8_t));
   if (!lll) {
-    blast_err("Linklist array is null\n");
+    linklist_err("Linklist array is null\n");
     return 0;
   }
   ll_list = lll;
@@ -649,7 +648,7 @@ int linklist_generate_lookup(linklist_t ** lll) {
     hash = *((uint16_t *) ll->serial);
     if (linktable[hash] != -1)
     {
-      blast_err("Hash colliision for linklist %d and %d\n", i, linktable[hash]);
+      linklist_err("Hash colliision for linklist %d and %d\n", i, linktable[hash]);
       return -1;
     }
     linktable[hash] = i;
@@ -661,7 +660,7 @@ int linklist_generate_lookup(linklist_t ** lll) {
 // returns the a pointer to the linklist with the given serial number 
 linklist_t * linklist_lookup_by_serial(uint32_t serial) {
   if (!ll_list) {
-    blast_err("linklist lookup is unallocated\n");
+    linklist_err("linklist lookup is unallocated\n");
     return NULL;
   }
   int ind = linktable[*((uint16_t *) &serial)];
@@ -672,7 +671,7 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
 linklist_t * linklist_all_telemetry()
 {
   if (ll_superframe_list == NULL) {
-    blast_err("No supeframe list loaded");
+    linklist_err("No supeframe list loaded");
     return NULL;
   }
 

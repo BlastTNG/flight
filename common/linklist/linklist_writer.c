@@ -42,7 +42,6 @@
 #include <openssl/md5.h>
 #include <float.h>
 
-#include "blast.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "linklist_writer.h"
@@ -67,11 +66,11 @@ const char * get_sf_type_string(uint8_t m_type)
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
   if (!ll) {
-    blast_err("Null linklist");
+    linklist_err("Null linklist");
     return NULL;
   }
   if (!dirname || (strlen(dirname) == 0)) {
-    blast_err("Invalid dirfile name");
+    linklist_err("Invalid dirfile name");
     return NULL;
   }
 
@@ -177,16 +176,16 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
 // writes a linklist buffer to a file
 double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer, unsigned int framenum) {
   if (!ll_dirfile) { 
-    blast_err("Null dirfile linklist");
+    linklist_err("Null dirfile linklist");
     return -1;
   }
   if (!buffer) { 
-    blast_err("Null buffer");
+    linklist_err("Null buffer");
     return -1;
   }
   linklist_t * ll = ll_dirfile->ll;
   if (!ll) {
-    blast_err("Null linklist");
+    linklist_err("Null linklist");
     return -1;
   }
 
