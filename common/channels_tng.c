@@ -471,8 +471,8 @@ superframe_entry_t * channels_generate_superframe(const channel_t * const m_chan
     sf[i].field[0] = '\0';
 
     // assign conversion functions
-    linklist_assign_datatodouble(channel_data_to_double);
-    linklist_assign_doubletodata(channel_double_to_data);
+    linklist_assign_datatodouble(&channel_data_to_double);
+    linklist_assign_doubletodata(&channel_double_to_data);
 
     return sf;
 }

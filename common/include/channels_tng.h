@@ -121,6 +121,7 @@ channel_header_t *channels_create_map(channel_t *m_channel_list);
 size_t channel_size(channel_t *);
 unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
 unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
+unsigned int get_spf(unsigned int);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);

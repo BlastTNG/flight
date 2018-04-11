@@ -47,6 +47,7 @@ int shared_data_recvd = 0;
 
 extern int16_t InCharge;
 extern int16_t SouthIAm;
+extern superframe_entry_t * superframe_list;
 
 linklist_t * shared_ll = NULL;
 
@@ -133,7 +134,7 @@ void share_data(E_RATE rate) {
   if (!shared_ll || !shared_data_recvd) return;
 
   int i;
-  channel_t * chan = NULL;
+  superframe_entry_t * chan = NULL;
   uint8_t * data_loc = NULL;
   const char which_flc[2] = {'n', 's'};
 
@@ -142,7 +143,7 @@ void share_data(E_RATE rate) {
 
     // don't process null channels or channels not at this rate
     if (!chan) continue;
-    if (chan->rate != rate) continue;
+    if (chan->spf != get_spf(rate)) continue;
 
     // logic for flc specified channels
     int len = strlen(chan->field);
@@ -155,8 +156,8 @@ void share_data(E_RATE rate) {
     // b) The channel is specific to the other flc
     if ((!InCharge && !this_flc) || that_flc) {
       // overwrite data with shared data
-      data_loc = shared_superframe+get_channel_start_in_superframe(chan)+get_channel_skip_in_superframe(chan)*frame_location[rate];
-      memcpy(chan->var, data_loc, channel_size(chan));
+      data_loc = shared_superframe + chan->start + (chan->skip*frame_location[rate]);
+      memcpy(chan->var, data_loc, get_superframe_entry_size(chan));
      //  if (!frame_location[rate]) blast_info("Copying shared data \"%s\"=%.4x", chan->field, *(uint16_t *) chan->var);
     }
   }
