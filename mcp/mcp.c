@@ -383,7 +383,6 @@ static void mcp_5hz_routines(void)
     StoreHWPRBus();
     SetGyroMask();
 //    ChargeController();
-//    ControlPower();
 //    VideoTx();
 //    cameraFields();
 
