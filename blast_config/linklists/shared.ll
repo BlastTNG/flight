@@ -189,3 +189,7 @@ status_500_LNA
 status_350_LNA
 status_300mk_heater
 status_cal_lamp
+
+x_mag
+y_mag
+z_mag

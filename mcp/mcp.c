@@ -382,7 +382,6 @@ static void mcp_5hz_routines(void)
     StoreHWPRBus();
     SetGyroMask();
 //    ChargeController();
-//    ControlPower();
 //    VideoTx();
 //    cameraFields();
 
@@ -586,6 +585,7 @@ int main(int argc, char *argv[])
 
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
+  linklist_assign_channel_list(channel_list);
 
   InitCommandData(); // This should happen before all other threads
 
@@ -611,7 +611,7 @@ int main(int argc, char *argv[])
 #endif
 
   // initialize superframe FIFO
-  define_superframe();
+  define_allframe();
   master_superframe = calloc(1, superframe_size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
     allocFifo(telem_fifo[i], 3, superframe_size);

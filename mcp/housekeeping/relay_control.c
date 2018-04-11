@@ -384,41 +384,41 @@ static void init_of_cycle(void) {
 }
 
 static void of_cycle_off(void) {
-    of_state.of_1_off = CommandData.Relays.cycle_of_1;
-    of_state.of_2_off = CommandData.Relays.cycle_of_2;
-    of_state.of_3_off = CommandData.Relays.cycle_of_3;
-    of_state.of_4_off = CommandData.Relays.cycle_of_4;
-    of_state.of_5_off = CommandData.Relays.cycle_of_5;
-    of_state.of_6_off = CommandData.Relays.cycle_of_6;
-    of_state.of_7_off = CommandData.Relays.cycle_of_7;
-    of_state.of_8_off = CommandData.Relays.cycle_of_8;
-    of_state.of_9_off = CommandData.Relays.cycle_of_9;
-    of_state.of_10_off = CommandData.Relays.cycle_of_10;
-    of_state.of_11_off = CommandData.Relays.cycle_of_11;
-    of_state.of_12_off = CommandData.Relays.cycle_of_12;
-    of_state.of_13_off = CommandData.Relays.cycle_of_13;
-    of_state.of_14_off = CommandData.Relays.cycle_of_14;
-    of_state.of_15_off = CommandData.Relays.cycle_of_15;
-    of_state.of_16_off = CommandData.Relays.cycle_of_16;
+    CommandData.Relays.of_1_off = CommandData.Relays.cycle_of_1;
+    CommandData.Relays.of_2_off = CommandData.Relays.cycle_of_2;
+    CommandData.Relays.of_3_off = CommandData.Relays.cycle_of_3;
+    CommandData.Relays.of_4_off = CommandData.Relays.cycle_of_4;
+    CommandData.Relays.of_5_off = CommandData.Relays.cycle_of_5;
+    CommandData.Relays.of_6_off = CommandData.Relays.cycle_of_6;
+    CommandData.Relays.of_7_off = CommandData.Relays.cycle_of_7;
+    CommandData.Relays.of_8_off = CommandData.Relays.cycle_of_8;
+    CommandData.Relays.of_9_off = CommandData.Relays.cycle_of_9;
+    CommandData.Relays.of_10_off = CommandData.Relays.cycle_of_10;
+    CommandData.Relays.of_11_off = CommandData.Relays.cycle_of_11;
+    CommandData.Relays.of_12_off = CommandData.Relays.cycle_of_12;
+    CommandData.Relays.of_13_off = CommandData.Relays.cycle_of_13;
+    CommandData.Relays.of_14_off = CommandData.Relays.cycle_of_14;
+    CommandData.Relays.of_15_off = CommandData.Relays.cycle_of_15;
+    CommandData.Relays.of_16_off = CommandData.Relays.cycle_of_16;
 }
 
 static void of_cycle_on(void) {
-    of_state.of_1_on = CommandData.Relays.cycle_of_1;
-    of_state.of_2_on = CommandData.Relays.cycle_of_2;
-    of_state.of_3_on = CommandData.Relays.cycle_of_3;
-    of_state.of_4_on = CommandData.Relays.cycle_of_4;
-    of_state.of_5_on = CommandData.Relays.cycle_of_5;
-    of_state.of_6_on = CommandData.Relays.cycle_of_6;
-    of_state.of_7_on = CommandData.Relays.cycle_of_7;
-    of_state.of_8_on = CommandData.Relays.cycle_of_8;
-    of_state.of_9_on = CommandData.Relays.cycle_of_9;
-    of_state.of_10_on = CommandData.Relays.cycle_of_10;
-    of_state.of_11_on = CommandData.Relays.cycle_of_11;
-    of_state.of_12_on = CommandData.Relays.cycle_of_12;
-    of_state.of_13_on = CommandData.Relays.cycle_of_13;
-    of_state.of_14_on = CommandData.Relays.cycle_of_14;
-    of_state.of_15_on = CommandData.Relays.cycle_of_15;
-    of_state.of_16_on = CommandData.Relays.cycle_of_16;
+    CommandData.Relays.of_1_on = CommandData.Relays.cycle_of_1;
+    CommandData.Relays.of_2_on = CommandData.Relays.cycle_of_2;
+    CommandData.Relays.of_3_on = CommandData.Relays.cycle_of_3;
+    CommandData.Relays.of_4_on = CommandData.Relays.cycle_of_4;
+    CommandData.Relays.of_5_on = CommandData.Relays.cycle_of_5;
+    CommandData.Relays.of_6_on = CommandData.Relays.cycle_of_6;
+    CommandData.Relays.of_7_on = CommandData.Relays.cycle_of_7;
+    CommandData.Relays.of_8_on = CommandData.Relays.cycle_of_8;
+    CommandData.Relays.of_9_on = CommandData.Relays.cycle_of_9;
+    CommandData.Relays.of_10_on = CommandData.Relays.cycle_of_10;
+    CommandData.Relays.of_11_on = CommandData.Relays.cycle_of_11;
+    CommandData.Relays.of_12_on = CommandData.Relays.cycle_of_12;
+    CommandData.Relays.of_13_on = CommandData.Relays.cycle_of_13;
+    CommandData.Relays.of_14_on = CommandData.Relays.cycle_of_14;
+    CommandData.Relays.of_15_on = CommandData.Relays.cycle_of_15;
+    CommandData.Relays.of_16_on = CommandData.Relays.cycle_of_16;
 }
 
 static void power_cycle_of(void) {
@@ -577,33 +577,33 @@ static void init_if_cycle(void) {
 }
 
 static void if_cycle_off(void) {
-    if_state.if_1_off = CommandData.Relays.cycle_if_1;
-    if_state.if_2_off = CommandData.Relays.cycle_if_2;
-    if_state.if_3_off = CommandData.Relays.cycle_if_3;
-    if_state.if_4_off = CommandData.Relays.cycle_if_4;
-    if_state.if_5_off = CommandData.Relays.cycle_if_5;
-    if_state.if_6_off = CommandData.Relays.cycle_if_6;
-    if_state.if_7_off = CommandData.Relays.cycle_if_7;
-    if_state.if_8_off = CommandData.Relays.cycle_if_8;
-    if_state.if_9_off = CommandData.Relays.cycle_if_9;
-    if_state.if_10_off = CommandData.Relays.cycle_if_10;
+    CommandData.Relays.if_1_off = CommandData.Relays.cycle_if_1;
+    CommandData.Relays.if_2_off = CommandData.Relays.cycle_if_2;
+    CommandData.Relays.if_3_off = CommandData.Relays.cycle_if_3;
+    CommandData.Relays.if_4_off = CommandData.Relays.cycle_if_4;
+    CommandData.Relays.if_5_off = CommandData.Relays.cycle_if_5;
+    CommandData.Relays.if_6_off = CommandData.Relays.cycle_if_6;
+    CommandData.Relays.if_7_off = CommandData.Relays.cycle_if_7;
+    CommandData.Relays.if_8_off = CommandData.Relays.cycle_if_8;
+    CommandData.Relays.if_9_off = CommandData.Relays.cycle_if_9;
+    CommandData.Relays.if_10_off = CommandData.Relays.cycle_if_10;
 }
 
 static void if_cycle_on(void) {
-    if_state.if_1_on = CommandData.Relays.cycle_if_1;
-    if_state.if_2_on = CommandData.Relays.cycle_if_2;
-    if_state.if_3_on = CommandData.Relays.cycle_if_3;
-    if_state.if_4_on = CommandData.Relays.cycle_if_4;
-    if_state.if_5_on = CommandData.Relays.cycle_if_5;
-    if_state.if_6_on = CommandData.Relays.cycle_if_6;
-    if_state.if_7_on = CommandData.Relays.cycle_if_7;
-    if_state.if_8_on = CommandData.Relays.cycle_if_8;
-    if_state.if_9_on = CommandData.Relays.cycle_if_9;
-    if_state.if_10_on = CommandData.Relays.cycle_if_10;
+    CommandData.Relays.if_1_on = CommandData.Relays.cycle_if_1;
+    CommandData.Relays.if_2_on = CommandData.Relays.cycle_if_2;
+    CommandData.Relays.if_3_on = CommandData.Relays.cycle_if_3;
+    CommandData.Relays.if_4_on = CommandData.Relays.cycle_if_4;
+    CommandData.Relays.if_5_on = CommandData.Relays.cycle_if_5;
+    CommandData.Relays.if_6_on = CommandData.Relays.cycle_if_6;
+    CommandData.Relays.if_7_on = CommandData.Relays.cycle_if_7;
+    CommandData.Relays.if_8_on = CommandData.Relays.cycle_if_8;
+    CommandData.Relays.if_9_on = CommandData.Relays.cycle_if_9;
+    CommandData.Relays.if_10_on = CommandData.Relays.cycle_if_10;
 }
 
 static void power_cycle_if(void) {
-    static int cycle_delay = 1;
+    static int cycle_delay = 4;
     static int cycle_taken = 0;
     if (CommandData.Relays.cycled_if == 1) {
         if (!cycle_taken) {
@@ -644,8 +644,8 @@ void if_control(void) {
         }
         if ((if_state.update_if = CommandData.Relays.update_if) == 1) {
             if_update_values();
-            if_trigger = 2;
-            if_counter = 3;
+            if_trigger = 1;
+            if_counter = 1;
             if_send_values();
             CommandData.Relays.update_if = 0;
         }

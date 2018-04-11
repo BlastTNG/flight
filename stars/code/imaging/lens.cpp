@@ -92,13 +92,12 @@ void Lens::parse_birger_result(string full_line, commands_t command)
     int int0 = 0;
     string line;
     string found_value;
-
+    uint8_t status_byte = (full_line.size() > 3) ? ((uint8_t) full_line[3]) & 0xf : 0;
     if (full_line.size() > 4) {
         line = full_line.substr(4, string::npos);
     } else {
         line = full_line;
     }
-    uint8_t status_byte = ((uint8_t) full_line[3]) & 0xf;
     string message;
 
     logger.log(format("recieved birger message for command callback %i")%command);

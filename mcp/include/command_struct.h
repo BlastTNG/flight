@@ -406,21 +406,9 @@ struct CommandDataStruct {
 
   struct {
     struct latch_pulse sc_tx;
-    struct latch_pulse das;
-    struct latch_pulse xsc0;
-    struct latch_pulse xsc1;
-    struct latch_pulse rw;
-    struct latch_pulse piv;
-    struct latch_pulse elmot;
     struct latch_pulse bi0;
-    struct latch_pulse rx_main;
-    struct latch_pulse rx_hk;
-    struct latch_pulse rx_amps;
     struct latch_pulse charge;
-    int gybox_off;
-    int gyro_off[6];
     int gyro_off_auto[6];
-    int hub232_off;
   } power;
 
   uint16_t disable_az;
