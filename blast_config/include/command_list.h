@@ -80,7 +80,7 @@ enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
   balance_auto,     balance_off,
   // cal_off,          cal_on,
-  hwpr_panic,       el_off,             el_on, 
+  hwpr_panic,       el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,
   // l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,

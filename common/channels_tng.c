@@ -95,8 +95,7 @@ size_t channel_size(channel_t *m_channel)
 
 unsigned int get_spf(unsigned int rate)
 {
-  switch (rate)
-  {
+  switch (rate) {
     case RATE_1HZ:
       return 1;
     case RATE_5HZ:
@@ -117,7 +116,7 @@ unsigned int get_spf(unsigned int rate)
 
 unsigned int get_channel_spf(const channel_t * chan)
 {
-    if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
+    if (!chan) blast_fatal("%s is NULL! Fix!", chan->field);
     return get_spf(chan->rate);
 }
 
@@ -485,10 +484,11 @@ int channels_initialize(const channel_t * const m_channel_list)
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
-    
+
     int i = 0;
     for (channel = m_channel_list; channel->field[0]; channel++) {
-        superframe_attr[i].start =  (long unsigned int) (channel->var-channel_data[channel->rate]) + superframe_offset[channel->rate];
+        superframe_attr[i].start =  (int64_t) (channel->var-channel_data[channel->rate])+
+                                      superframe_offset[channel->rate];
         superframe_attr[i].skip = frame_size[channel->rate];
         superframe_attr[i].chan = (channel_t *) channel;
 
