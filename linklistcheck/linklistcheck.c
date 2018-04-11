@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
   printf("Successfully generated superframe\n");
   linklist_assign_superframe_list(superframe_list);
   printf("Successfully assigned superframe list\n");
+  define_allframe();
 
   printf("Superframe size = %d, count = %d\n", superframe_size, superframe_entry_count);
 
@@ -107,6 +108,6 @@ int main(int argc, char *argv[])
 
   printf("\n===================GENERAL INFO====================\n");
 
-	printf("all_frame_size = %d\n",allframe_size);
+	printf("allframe_size = %d\n",allframe_size);
 
 }
