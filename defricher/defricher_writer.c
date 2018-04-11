@@ -512,7 +512,8 @@ static void *defricher_write_loop(void *m_arg)
                 dirfile_ready = false;
 
                  /* Parse the linklist, if present, and put into linklist mode */
-                linklist_assign_channel_list(channels);
+                superframe_entry_t * superframe_list = channels_generate_superframe(channels);
+                linklist_assign_superframe_list(superframe_list);
 								if (rc.linklist_file) {
 									rc.ll = parse_linklist(rc.linklist_file);
 								}
