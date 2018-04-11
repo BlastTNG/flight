@@ -227,7 +227,7 @@ typedef struct XSCPointingState {
     int counter_mcp;                        // the current counter_mcp, passed to the star camera after some delay
     int last_counter_mcp;                   // the previous counter_mcp passed to the star camera
     int last_solution_stars_counter;        // stars counter of last solution used in pointing solution
-    unsigned int stars_response_counter; 
+    unsigned int stars_response_counter;
     double az;                              // XSC Az
     double el;                              // XSC El
     int last_trigger_time;

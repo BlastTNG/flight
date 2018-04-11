@@ -155,7 +155,8 @@ void share_data(E_RATE rate) {
     // b) The channel is specific to the other flc
     if ((!InCharge && !this_flc) || that_flc) {
       // overwrite data with shared data
-      data_loc = shared_superframe+get_channel_start_in_superframe(chan)+get_channel_skip_in_superframe(chan)*frame_location[rate];
+      data_loc = shared_superframe+get_channel_start_in_superframe(chan)+
+                   get_channel_skip_in_superframe(chan)*frame_location[rate];
       memcpy(chan->var, data_loc, channel_size(chan));
      //  if (!frame_location[rate]) blast_info("Copying shared data \"%s\"=%.4x", chan->field, *(uint16_t *) chan->var);
     }
