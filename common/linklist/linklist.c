@@ -50,7 +50,6 @@
 #include <ctype.h>
 #include <mosquitto.h>
 
-#include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 
@@ -327,15 +326,6 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
 
 linklist_t * parse_linklist(char *fname)
 {
-  // allocate crc table if necessary
-  if (crctable == NULL)
-  {
-    if((crctable = mk_crctable((unsigned short)CRC_POLY,crchware)) == NULL)
-    {
-      linklist_fatal("mk_crctable() memory allocation failed\n");
-    }
-  } 
-
   // count the number of compression routines available
   if (num_compression_routines == 0)
   {

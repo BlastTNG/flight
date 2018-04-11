@@ -42,7 +42,6 @@
 #include <openssl/md5.h>
 #include <float.h>
 
-#include "CRC_func.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 
@@ -62,6 +61,9 @@ extern double (*datatodouble)(uint8_t *, uint8_t);
 extern int (*doubletodata)(uint8_t *, double, uint8_t);
 
 uint32_t allframe_size = 0;
+
+#define LL_CRC_POLY 0x1021
+uint16_t *ll_crctable = NULL;
 
 // generates the block header in the buffer
 int make_block_header(uint8_t * buffer, uint16_t id, uint16_t size, uint16_t i, uint16_t n, uint32_t totalsize)
@@ -93,6 +95,42 @@ int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *
   *totalsize = *(uint32_t *) (buffer+8);
 
   return PACKET_HEADER_SIZE;
+}
+
+// generates and returns a CRC table for linlist checksum validation 
+uint16_t *mk_ll_crctable(uint16_t poly, uint16_t (*crcfn)(uint16_t, uint16_t, uint16_t))
+{
+	uint16_t *ll_crctable;
+	int i;
+	if ((ll_crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
+		return NULL;
+	}
+	for (i = 0; i < 256; i++) {
+		ll_crctable[i] = (*crcfn)(i, poly, 0);
+	}
+	return ll_crctable;
+}
+
+// generator for CRC table
+uint16_t ll_crchware(uint16_t data, uint16_t genpoly, uint16_t accum)
+{
+	static int i;
+	data <<= 8;
+	for (i = 8; i > 0; i--) {
+	  if ((data ^ accum) & 0x8000) {
+      accum = (accum << 1) ^ genpoly;
+	  } else {
+      accum <<= 1;
+    }
+	  data <<= 1;
+	}
+	return accum;
+}
+
+// checks/generates a CRC value for received/sent message
+void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
+{
+	*accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
 void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
@@ -199,6 +237,15 @@ uint8_t * allocate_superframe()
  */
 int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+    }
+  } 
+
   int i,j;
 
   unsigned int tlm_in_start = 0;
@@ -231,7 +278,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
       {
         memcpy(tlm_out_buf+0,((uint8_t*)&checksum)+1,1);
         memcpy(tlm_out_buf+1,((uint8_t*)&checksum)+0,1);
-        for (j=0;j<2;j++) crccheck(tlm_out_buf[j],&checksum,crctable); // check the checksum
+        for (j=0;j<2;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable); // check the checksum
         if (checksum != 0) 
         {
           linklist_err("compress_linklist: invalid checksum generated\n");
@@ -265,7 +312,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
       // update checksum
 			tlm_out_size = tlm_le->blk_size;
-      for (j=0;j<tlm_out_size;j++) crccheck(tlm_out_buf[j],&checksum,crctable);
+      for (j=0;j<tlm_out_size;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
     }
   }
   return 1;
@@ -333,6 +380,15 @@ double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buff
  */
 double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize)
 {
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+    }
+  } 
+
   int i, j;
 
   unsigned int tlm_in_start = 0;
@@ -368,7 +424,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     tlm_in_buf = buffer_in+tlm_in_start;
 
     // update checksum
-    for (i=0;i<tlm_in_size;i++) crccheck(tlm_in_buf[i],&checksum,crctable);
+    for (i=0;i<tlm_in_size;i++) ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
 
     p_end = j;
 
