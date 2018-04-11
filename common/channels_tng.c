@@ -443,12 +443,12 @@ int channels_initialize(const channel_t * const m_channel_list)
 superframe_entry_t * channels_generate_superframe(const channel_t * const m_channel_list) {
     superframe_entry_t * sf = calloc(channels_count+1, sizeof(superframe_entry_t));
 
-    unsigned int superframe_size = 0;
+    unsigned int sf_size = 0;
 
     int rate = 0;
     for (rate = 0; rate < RATE_END; rate++) {
-      superframe_offset[rate] = superframe_size;
-      superframe_size += frame_size[rate]*get_spf(rate); 
+      superframe_offset[rate] = sf_size;
+      sf_size += frame_size[rate]*get_spf(rate); 
       printf("Offset %d\n", superframe_offset[rate]);
     }
 

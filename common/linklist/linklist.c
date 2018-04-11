@@ -77,14 +77,14 @@ superframe_entry_t ** superframe_hash_table = NULL;
 unsigned int superframe_hash_table_size = 0;
 unsigned int superframe_size = 0; 
 
-double (*(*datatodouble))(uint8_t *, uint8_t) = NULL;
-int (*(*doubletodata))(uint8_t *, double, uint8_t) = NULL;
+double (*datatodouble)(uint8_t *, uint8_t) = NULL;
+int (*doubletodata)(uint8_t *, double, uint8_t) = NULL;
 
 void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t)) {
-  datatodouble = &func;
+  datatodouble = func;
 }
 void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t)) {
-  doubletodata = &func;
+  doubletodata = func;
 }
 
 //Implements the djb2 hashing algorithm for char*s 
