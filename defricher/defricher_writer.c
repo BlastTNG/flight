@@ -43,6 +43,8 @@
 #include <blast.h>
 
 #include "FIFO.h"
+#include "linklist.h"
+
 #include "defricher.h"
 #include "defricher_utils.h"
 #include "defricher_data.h"
@@ -509,6 +511,12 @@ static void *defricher_write_loop(void *m_arg)
                 dirfile_offset = -1;
                 dirfile_ready = false;
 
+                 /* Parse the linklist, if present, and put into linklist mode */
+                linklist_assign_channel_list(channels);
+								if (rc.linklist_file) {
+									rc.ll = parse_linklist(rc.linklist_file);
+								}
+
                 // initialize FIFO buffer
                 int rate;
                 int num_elements_in_fifo = 1;
@@ -568,6 +576,7 @@ static void *defricher_write_loop(void *m_arg)
 								decrementFifo(&fifo_data[pkt.rate]);
 								defricher_write_packet(pkt.rate);
             }
+            usleep(100);
         }
         usleep(100);
     }

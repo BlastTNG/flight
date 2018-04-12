@@ -529,7 +529,7 @@ derived_tng_t derived_list[] = {
     LINCOM("Nitrogen_Flow", "N2_FLOW_V", 20, 0), // in L/min
     LINCOM("He_Blowoff", "HE_BLOW_V", 3, 0),
     LINCOM("He_Pot_Hi_Flow", "HE_POT_HI_FLOW_V", 1, 0),
-    LINCOM("He_Pot_Hi_Flow", "HE_POT_LO_FLOW_V", 20, 0),
+    LINCOM("He_Pot_Lo_Flow", "HE_POT_LO_FLOW_V", 20, 0),
     LINCOM("He_Pot_Purge", "HE_PURGE_FLOW_V", 200, 0), // in mL/min
     LINCOM("Alarm_gauge", "ALARM_GAUGE", 12.367, -24.83),
 
@@ -570,11 +570,11 @@ derived_tng_t derived_list[] = {
     UNITS("Tr_1k_plate", "Temperature", "K"),
     LINTERP("Tr_300mk_strap", "RR_300MK_STRAP", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_300mk_strap", "Temperature", "K"),
-    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "rox-raw.txt"),
+    LINTERP("Tr_350_fpa",   "RR_350_FPA"   , LUT_DIR "ROX_Cal_U04486.LUT"),
     UNITS("Tr_350_fpa", "Temperature", "K"),
     LINTERP("Tr_he4_pot",   "RR_HE4_POT"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he4_pot", "Temperature", "K"),
-    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "ROX_Cal_U04486.LUT"),
+    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he3_fridge", "Temperature", "K"),
     LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_500_fpa", "Temperature", "K"),
@@ -582,6 +582,14 @@ derived_tng_t derived_list[] = {
     LINCOM("Helium_level_inches", "LEVEL_SENSOR_READ", 4.598, 28.307),
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
     LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
+
+    // clinometer channels
+    LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
+    LINCOM("Clin_of_y", "CLIN_OF_Y", 10, 0),
+    LINCOM("Clin_of_t", "CLIN_OF_T", 100, 273.15),
+    LINCOM("Clin_if_x", "CLIN_IF_X", 10, 0),
+    LINCOM("Clin_if_y", "CLIN_IF_Y", 10, 0),
+    LINCOM("Clin_if_t", "CLIN_IF_T", 100, 273.15),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),

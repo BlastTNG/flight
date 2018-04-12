@@ -29,9 +29,19 @@
 #define BI0_FRAME_BUFBITS (4)
 #define BI0_FRAME_BUFLEN (1 << BI0_FRAME_BUFBITS)
 #define BI0_FRAME_BUFMASK (BI0_FRAME_BUFLEN-1)
+// TODO(javier): make allframe period commandable
+#define BI0_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
-#define BI0_MAX_BUFFER_SIZE 250000 // maximum frame size at 1 Hz (i.e. 2 Mbits)
+#define BI0_MAX_BUFFER_SIZE (2*superframe_size) // maximum frame size at 1 Hz (i.e. 2 Mbits)
 #define BI0_ZERO_PADDING 250 // number of bytes =0 to pad at the end of every packet sent 
+
+#define BI0LOS_FLC_ADDR "192.168.1.200"
+#define BI0LOS_FLC_PORT 50000
+#define BI0LOS_BUFFER_PORT 50100
+#define BI0LOS_GND_ADDR "192.168.1.201"
+#define BI0LOS_GND_PORT 51515
+#define BI0LOS_MAX_PACKET_SIZE 1388
+#define BI0LOS_RNRZ_SEED 0xeb90146f
 
 extern struct Fifo bi0_fifo;
 

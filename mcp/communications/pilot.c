@@ -90,19 +90,16 @@ void pilot_compress_and_send(void *arg) {
 
       // send allframe if necessary
       if (!allframe_count) {
-      //  write_allframe(compbuffer, getFifoRead(&pilot_fifo));
-      //  setBITSenderFramenum(&pilotsender, allframe_size);
-      //  sendToBITSender(&pilotsender, compbuffer, allframe_size, 0);
+        transmit_size = write_allframe(compbuffer, getFifoRead(&pilot_fifo));
+      } else {
+        // compress the linklist
+        compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
+        decrementFifo(&pilot_fifo);
+        transmit_size = ll->blk_size;
       }
 
-      // compress the linklist
-      int retval = compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
-      decrementFifo(&pilot_fifo);
-
-      if (!retval) continue;
-
-      // compute the transmit size based on bandwidth
-      transmit_size = MIN(ll->blk_size, bandwidth); // frames are 1 Hz, so bandwidth == size
+      // bandwidth limit; frames are 1 Hz, so bandwidth == size
+      transmit_size = MIN(transmit_size, bandwidth);  
 
       // have packet header serials match the linklist serials
       setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
@@ -114,7 +111,7 @@ void pilot_compress_and_send(void *arg) {
       sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
+      allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

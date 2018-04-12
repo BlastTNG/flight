@@ -27,6 +27,7 @@ void set_dac(void);
 void init_array();
 void load_curve_300mk(void);
 void force_incharge();
+void periodic_cal_control(void);
 void level_toggle();
 void cryo_1hz(int setting_1hz);
 void cryo_200hz(int setting_200hz);

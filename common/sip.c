@@ -113,19 +113,19 @@ int sip_setserial(const char *input_tty)
 
   if (cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
     blast_err("Error setting serial output speed");
-    if (fd >= 0) fclose(fd);
+    if (fd >= 0) close(fd);
     return -1;
   }
 
   if (cfsetispeed(&term, B1200)) {         /*  <======= SET THE SPEED HERE */
     blast_err("Error setting serial input speed");
-    if (fd >= 0) fclose(fd);
+    if (fd >= 0) close(fd);
     return -1;
   }
 
   if (tcsetattr(fd, TCSANOW, &term)) {
     blast_err("Unable to set serial attributes");
-    if (fd >= 0) fclose(fd);
+    if (fd >= 0) close(fd);
     return -1;
   }
   return fd;
@@ -477,6 +477,7 @@ void WatchFIFO(void* void_other_ip)
         } else {
             mcommand = MCommand(command);
 //            bputs(info, "Multi word command received\n");
+            printf("%s\n", command);
             if (mcommand_count == mcommands[MIndex(mcommand)].numparams) {
                 SetParametersFifo(mcommand, (uint16_t*)mcommand_data, rvalues,
                         ivalues, svalues);
