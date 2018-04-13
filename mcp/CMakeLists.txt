@@ -181,7 +181,7 @@ set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
 # add linklist library
-set(LINKLIST_LIBRARY ${PROJECT_BINARY_DIR}/linklist/liblinklist.a)
+set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
 ExternalProject_Add(linklist
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
@@ -368,20 +368,20 @@ add_dependencies(mcp soem phenomproj linklist)
 define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
-	${ALSA_LIBRARY}
-	${MODBUS_LIBRARY}
-    ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
-    ${MOSQ_LIBRARY}
-    ${GLIB_LIBRARY}
-    ${ECAT_LIBRARY}
-    ${LINKLIST_LIBRARY}
-    ${CK_LIBRARY}
-    ${PH_LIBRARY}
-    ${SENSORS_LIBRARY}
-    ${USB_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ssl crypto 
-    m)
+		${ALSA_LIBRARY}
+		${MODBUS_LIBRARY}
+		${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
+		${MOSQ_LIBRARY}
+		${GLIB_LIBRARY}
+		${ECAT_LIBRARY}
+		${LINKLIST_LIBRARY}
+		${CK_LIBRARY}
+		${PH_LIBRARY}
+		${SENSORS_LIBRARY}
+		${USB_LIBRARY}
+		${CMAKE_THREAD_LIBS_INIT}
+		ssl crypto 
+		m)
 
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 

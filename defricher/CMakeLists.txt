@@ -117,7 +117,8 @@ ExternalProject_Add(linklist
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND "")
+  INSTALL_COMMAND ""
+  BUILD_ALWAYS 1)
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
 
