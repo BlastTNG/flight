@@ -69,8 +69,6 @@ void daemonize()
 
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
-  superframe_entry_t * superframe_list = channels_generate_superframe(channel_list);
-  linklist_assign_superframe_list(superframe_list);
   define_allframe();
 
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};

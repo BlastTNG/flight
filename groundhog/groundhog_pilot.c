@@ -123,12 +123,6 @@ void udp_receive(void *arg) {
       decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
       memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
       groundhog_linklist_publish(ll, compbuffer);
-      /*
-      printf("Start\n");
-      for (int i = 0; i < 5; i++) {
-        printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
-      }
-      */
 
       incrementFifo(local_fifo);
     }
