@@ -70,6 +70,7 @@ uint8_t superframe_type_array[TYPE_END+1] = {
 double channel_data_to_double(uint8_t * data, uint8_t type);
 int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 unsigned int superframe_offset[RATE_END] = {0};
+superframe_entry_t * superframe_list = NULL;
 
 size_t channel_size(channel_t *m_channel)
 {
@@ -436,6 +437,10 @@ int channels_initialize(const channel_t * const m_channel_list)
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
  
+    // generate te superframe list
+    superframe_list = channels_generate_superframe(m_channel_list);
+    linklist_assign_superframe_list(superframe_list);
+
     blast_startup("Successfully initialized Channels data structures");
     return 0;
 }

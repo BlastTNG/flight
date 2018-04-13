@@ -112,7 +112,7 @@ ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
 # add linklist library
-set(LINKLIST_LIBRARY ${PROJECT_BINARY_DIR}/linklist/liblinklist.a)
+set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
 ExternalProject_Add(linklist
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
@@ -160,6 +160,8 @@ add_executable (defricher
     ${PROJECT_SOURCE_DIR}/defricher_writer.c
     ${PROJECT_SOURCE_DIR}/defricher_writer.h
     ) 
+
+add_dependencies(defricher linklist)
 
 define_file_basename_for_sources(defricher)
 

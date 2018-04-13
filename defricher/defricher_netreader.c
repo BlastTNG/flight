@@ -85,7 +85,7 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
     }
 }
 
-static void frame_handle_linklist_data(void * m_data, unsigned int m_len) {
+static void frame_handle_linklist_data(uint8_t * m_data, unsigned int m_len) {
     if (m_len != rc.ll->blk_size) {
         defricher_err("Packet data size mismatch: expected %d bytes and received %d bytes", rc.ll->blk_size, m_len);
         return;

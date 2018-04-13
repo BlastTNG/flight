@@ -151,7 +151,7 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
 
         fflush(formatfile);
 
-        // open the file
+        // open the file if not already opened
         sprintf(binname, "%s/%s", ll_dirfile->filename, tlm_le->tlm->field);
         ll_dirfile->bin[i] = fpreopenb(binname);  
 
@@ -213,7 +213,7 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
     tlm_le = &(ll->items[i]);
     if (tlm_le->tlm) {
       if (tlm_le->tlm == &block_entry) {
-      } else { // just a normal field to be writting to the dirfile
+      } else if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
         tlm_out_start = tlm_le->tlm->start;
         tlm_out_skip = tlm_le->tlm->skip;
         tlm_out_size = get_superframe_entry_size(tlm_le->tlm);
@@ -230,6 +230,7 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
       }
     }
   }  
+  memset(superframe, 0, superframe_size);
 
   return ret_val;
 }

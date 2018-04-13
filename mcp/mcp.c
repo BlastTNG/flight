@@ -116,7 +116,6 @@ struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
-superframe_entry_t * superframe_list = NULL;
 uint8_t * master_superframe = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
@@ -586,8 +585,6 @@ int main(int argc, char *argv[])
 
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
-  superframe_list = channels_generate_superframe(channel_list);
-  linklist_assign_superframe_list(superframe_list);
 
   InitCommandData(); // This should happen before all other threads
 
