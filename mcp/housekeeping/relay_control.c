@@ -652,11 +652,27 @@ void if_control(void) {
     }
 }
 
+static void of_status(void) {
+    uint16_t of_status;
+    int i;
+    static channel_t* of_status_Addr;
+    of_status_Addr = channels_find_by_name("of_status");
+    for (i = 0; i < 16; i++) {
+        if (CommandData.Relays.of_relays[i] == 1) {
+            of_status += pow(2, i);
+            blast_info("added %f", pow(2, i));
+        }
+    }
+    blast_info("of status is: %u", of_status);
+    SET_SCALED_VALUE(of_status_Addr, of_status);
+}
+
 void relays(int setting) {
     if (state[3].initialized && state[2].initialized && state[4].initialized) {
         if (setting == 1) {
             if_control();
             of_control();
+            of_status();
         }
         if (setting == 2) {
             rec_control();
@@ -664,12 +680,15 @@ void relays(int setting) {
         if (setting == 3) {
             if_control();
             of_control();
+            of_status();
             if (state[1].initialized) {
                 rec_control();
             }
         }
     }
 }
+
+
 
 
 

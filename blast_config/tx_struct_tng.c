@@ -89,6 +89,8 @@ channel_t channel_list[] =
     { "he_pot_lo_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "he_purge_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "alarm_gauge",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "of_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "if_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
