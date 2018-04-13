@@ -141,6 +141,7 @@ void linklist_assign_superframe_list(superframe_entry_t *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t));
 void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t));
+superframe_entry_t * superframe_find_by_name(char *);
 
 #ifdef __cplusplus
 }
