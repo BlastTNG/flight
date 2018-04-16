@@ -225,9 +225,18 @@ uint8_t * allocate_superframe()
 }
 
 
-
 /**
  * compress_linklist
+ * 
+ * Uses default options for compress_linklist_opt (see below) 
+ */
+int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
+{
+  return compress_linklist_opt(buffer_out, ll, buffer_in, UINT32_MAX, 0);
+}
+
+/**
+ * compress_linklist_opt
  * 
  * Selects entries from and compresses a superframe according to the provide
  * linklist format.
@@ -235,7 +244,7 @@ uint8_t * allocate_superframe()
  * -> ll: pointer to linklist specifying compression and entry selection
  * -> buffer_in: pointer to the superframe to be compressed. 
  */
-int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
+int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags)
 {
   // allocate crc table if necessary
   if (ll_crctable == NULL)
@@ -274,7 +283,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
     if (tlm_le->tlm == NULL) // checksum field
     {
-      //if (!tlm_no_checksum) // TODO: OPTION FOR IGNORING CHECKSUMS
+      if (!(flags & LL_IGNORE_CHECKSUM)) 
       {
         memcpy(tlm_out_buf+0,((uint8_t*)&checksum)+1,1);
         memcpy(tlm_out_buf+1,((uint8_t*)&checksum)+0,1);
@@ -359,15 +368,15 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
 /**
  * decompress_linklist
  *
- * See description below for decompress_linklist_by_size.
+ * Uses defaults for decompress_linklist_opt (see below).
  */
 double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buffer_in)
 {
-  return decompress_linklist_by_size(buffer_out, ll, buffer_in, UINT32_MAX);
+  return decompress_linklist_opt(buffer_out, ll, buffer_in, UINT32_MAX, 0);
 }
 
 /**
- * decompress_linklist_by_size
+ * decompress_linklist_opt
  * 
  * Selects entries from and compresses a superframe according to the provide
  * linklist format.
@@ -378,7 +387,7 @@ double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buff
  * -> buffer_in: pointer to the compressed frame to be decompressed. 
  * -> maxsize: the maximum size of the input buffer which may be less than
  */
-double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize)
+double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags)
 {
   // allocate crc table if necessary
   if (ll_crctable == NULL)
@@ -434,13 +443,13 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
         break;
         // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
-      } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
+      } else if ((checksum != 0) && !(flags && LL_IGNORE_CHECKSUM)) { // bad data block
         // clear/replace bad data from output buffer
         linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
-      //if (!tlm_no_checksum) printf("Checksum result: 0x%x\n",checksum);
+
       // reset checksum
       prechecksum |= *(uint16_t *) tlm_in_buf;
       checksum = 0;

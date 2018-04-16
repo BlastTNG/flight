@@ -127,7 +127,13 @@ typedef struct sf_entry superframe_entry_t;
 extern unsigned int superframe_size;
 extern unsigned int superframe_entry_count;
 
-linklist_t * parse_linklist(char *);
+#define LL_NO_AUTO_CHECKSUM 0x01
+
+linklist_t * parse_linklist_format(char *);
+linklist_t * parse_linklist_format_opt(char *, int);
+void write_linklist_format(linklist_t *, char *);
+linklist_t * generate_superframe_linklist();
+linklist_t * generate_superframe_linklist_opt(int);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
@@ -135,8 +141,6 @@ void delete_linklist(linklist_t *);
 int load_all_linklists(char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
-linklist_t * linklist_all_telemetry();
-void linklist_to_file(linklist_t *, char *);
 void linklist_assign_superframe_list(superframe_entry_t *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t));

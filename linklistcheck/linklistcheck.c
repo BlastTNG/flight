@@ -60,9 +60,23 @@ int main(int argc, char *argv[])
     exit(3);
   }
 
+  // check the parser and writer
+	linklist_t * ll = ll_array[0];  
+  r = 0;
+  while (ll) {
+    printf("Checking %s...\n", ll->name);
+    write_linklist_format(ll, ll->name);
+    linklist_t * temp_ll = parse_linklist_format_opt(ll->name, LL_NO_AUTO_CHECKSUM);
+    printf("0x%.4x == 0x%.4x\n", *(uint32_t *) ll->serial, *(uint32_t *) temp_ll->serial);
+
+    delete_linklist(temp_ll);
+    ll = ll_array[++r];
+  } 
+
+
   printf("------------------------ LINKLIST START ------------------------\n");
 
-	linklist_t * ll = ll_array[0];  
+	ll = ll_array[0];  
   r = 0;
 
 	while (ll)

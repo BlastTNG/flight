@@ -82,7 +82,7 @@ void udp_receive(void *arg) {
       
       // copy linklist file to the directory
       blast_info("Generating linklist format file to \"%s\"", basename);
-      linklist_to_file(ll, basename);
+      write_linklist_format(ll, basename);
     }
 #endif
 

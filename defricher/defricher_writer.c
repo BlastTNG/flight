@@ -509,7 +509,7 @@ static void *defricher_write_loop(void *m_arg)
 
                  /* Parse the linklist, if present, and put into linklist mode */
 								if (rc.linklist_file) {
-									rc.ll = parse_linklist(rc.linklist_file);
+									rc.ll = parse_linklist_format(rc.linklist_file);
 								}
 
                 // initialize FIFO buffer
