@@ -64,8 +64,6 @@ extern "C" {
 
 #endif
 
-int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
-int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 
@@ -115,7 +113,7 @@ void linklist_assign_superframe_list(superframe_entry_t* m_superframe_list) {
   for (i = 0; i < superframe_entry_count; i++) {
     unsigned int hashloc = hash(m_superframe_list[i].field)%superframe_hash_table_size;
     if (superframe_hash_table[hashloc]) {
-      linklist_err("Hash with entry \"%s\"", m_superframe_list[i].field);
+      linklist_err("Hash with entry \"%s\"\n", m_superframe_list[i].field);
     } else {
       superframe_hash_table[hashloc] = &m_superframe_list[i];
     }
@@ -206,16 +204,16 @@ int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
     if ((len >= 3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
       sprintf(full_path_name, "%s%s",linklistdir, dir[i]->d_name);
       
-      if ((ll_array[num] = parse_linklist(full_path_name)) == NULL) {
+      if ((ll_array[num] = parse_linklist_format(full_path_name)) == NULL) {
         linklist_fatal("Unable to load linklist at %s", full_path_name);
       }
       num++;
     }
   }
-  ll_array[num] = linklist_all_telemetry(); // last linklist contains all the telemetry items
+  ll_array[num] = generate_superframe_linklist(); // last linklist contains all the telemetry items
   ll_array[num+1] = NULL; // null terminate the list
 
-  linklist_info("Total of %d linklists loaded from \"%s\"", num, linklistdir);
+  linklist_info("Total of %d linklists loaded from \"%s\"\n", num, linklistdir);
 
   return 1;
 }
@@ -318,13 +316,17 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
 }
 
 /**
- * parse_linklist
+ * parse_linklist_format_opt
  * 
  * Returns a pointer to a linklist parsed from file.
  * -> fname: path to linklist to be parsed
  */
 
-linklist_t * parse_linklist(char *fname)
+linklist_t * parse_linklist_format(char *fname) {
+  return parse_linklist_format_opt(fname, 0);
+}
+
+linklist_t * parse_linklist_format_opt(char *fname, int flags)
 {
   // count the number of compression routines available
   if (num_compression_routines == 0)
@@ -337,13 +339,13 @@ linklist_t * parse_linklist(char *fname)
   FILE * cf = fopen(fname,"r"); 
   if (cf == NULL)
   {
-    linklist_err("parse_linklist: cannot find %s\n",fname);
+    linklist_err("parse_linklist_format: cannot find %s\n",fname);
     return NULL; 
   }
 
   if (ll_superframe_list == NULL)
   {
-    linklist_err("parse_linklist: no ll_superframe_list is loaded\n");
+    linklist_err("parse_linklist_format: no ll_superframe_list is loaded\n");
     return NULL;
   }
 
@@ -400,7 +402,7 @@ linklist_t * parse_linklist(char *fname)
     if ((line[st] != COMM) && (line[st] != '\n') && ((read-st) > 0)) // skip comments and blank lines
     {
       // add min checksum if necessary
-      if ((chksm_count >= MIN_CHKSM_SPACING) && !no_auto_min_checksum)
+      if ((chksm_count >= MIN_CHKSM_SPACING) && !(flags & LL_NO_AUTO_CHECKSUM))
       {
         blk_size = set_checksum_field(&(ll->items[ll->n_entries]),byteloc);
         update_linklist_hash(&mdContext,&ll->items[ll->n_entries]);
@@ -451,7 +453,7 @@ linklist_t * parse_linklist(char *fname)
             }
             else
             {
-              linklist_err("Could not find compression type \"%s\"", temps[1]);
+              linklist_err("Could not find compression type \"%s\"\n", temps[1]);
               comp_type = NO_COMP;
             }
           }
@@ -460,7 +462,7 @@ linklist_t * parse_linklist(char *fname)
 
         if (!chan)
         {
-          linklist_err("parse_linklist: unable to find telemetry entry %s\n",temps[0]);
+          linklist_err("parse_linklist_format: unable to find telemetry entry %s\n",temps[0]);
           continue;
         }
 
@@ -481,7 +483,7 @@ linklist_t * parse_linklist(char *fname)
         // check that comp_type is within range
         if ((comp_type >= num_compression_routines) && (comp_type != NO_COMP))
         {
-          linklist_err("Invalid comp. type %d for \"%s\". Defaulting to uncompressed.",comp_type,chan->field);
+          linklist_err("Invalid comp. type %d for \"%s\". Defaulting to uncompressed.\n",comp_type,chan->field);
           comp_type = NO_COMP;
         }
 
@@ -499,7 +501,7 @@ linklist_t * parse_linklist(char *fname)
           }
           else
           {
-            linklist_err("parse_linklist: max number of data blocks (%d) reached\n",MAX_DATA_BLOCKS);
+            linklist_err("parse_linklist_format: max number of data blocks (%d) reached\n",MAX_DATA_BLOCKS);
           }
         }
         else if (comp_type != NO_COMP) // normal compressed field
@@ -514,7 +516,7 @@ linklist_t * parse_linklist(char *fname)
         if (blk_size > 0) ll->items[ll->n_entries].blk_size = blk_size;
         else
         {
-          linklist_err("parse_linklist: zero compressed size for %s in %s\n",ll->items[ll->n_entries].tlm->field,fname);
+          linklist_err("parse_linklist_format: zero compressed size for %s in %s\n",ll->items[ll->n_entries].tlm->field,fname);
         }
       }
 
@@ -556,7 +558,7 @@ linklist_t * parse_linklist(char *fname)
   // update the hash
   MD5_Update(&mdContext, &byteloc, sizeof(byteloc));
   MD5_Update(&mdContext, &ll->n_entries, sizeof(ll->n_entries));
-  MD5_Update(&mdContext, ll->name, strlen(ll->name));
+  //MD5_Update(&mdContext, ll->name, strlen(ll->name));
 
   // generate serial
   MD5_Final(md5hash,&mdContext);
@@ -565,7 +567,8 @@ linklist_t * parse_linklist(char *fname)
   return ll;
 }
 
-void linklist_to_file(linklist_t * ll, char * fname)
+// this should be the inverse of parse_linklist_format
+void write_linklist_format(linklist_t * ll, char * fname)
 {
   int i;
   FILE * formatfile = fopen(fname, "w");
@@ -592,17 +595,17 @@ void linklist_to_file(linklist_t * ll, char * fname)
         fprintf(formatfile, "B    "); // block indicator
         fprintf(formatfile, "%u\n",  ll->items[i].num); // block size  
       } else {
-        linklist_err("Could not find block in linklist");
+        linklist_err("Could not find block in linklist\n");
       }
     } else if (ll->items[i].tlm) { // not a checksum field
       fprintf(formatfile, "%s    ", ll->items[i].tlm->field); // field name
       if (ll->items[i].comp_type == NO_COMP) {
-        fprintf(formatfile, "%u    ", ll->items[i].comp_type); // compression type
+        fprintf(formatfile, "%s    ", "NONE"); // compression type
       } else {
         fprintf(formatfile, "%s    ", compRoutine[ll->items[i].comp_type].name); // compression type
       }
       fprintf(formatfile, "%u\n", ll->items[i].num); // samples per frame (spf)
-    } else { // don't include first or last checksum
+    } else if ((i != 0) && (i != (ll->n_entries-1))){ // don't include first or last checksum
       fprintf(formatfile, "%s\n", LL_PARSE_CHECKSUM); // checksum indicator
     }
 
@@ -615,7 +618,11 @@ void linklist_to_file(linklist_t * ll, char * fname)
 void delete_linklist(struct link_list * ll)
 {
   int i;
-  for (i=0;i<ll->n_entries;i++) free(&ll->items[i]);
+  for (i = 0; i < ll->num_blocks; i++) {
+    free(ll->blocks[i].buffer);
+  }
+  free(ll->blocks);
+  free(ll->items);
   free(ll);
 }
 
@@ -658,10 +665,14 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
   return ll_list[ind];
 }
 
-linklist_t * linklist_all_telemetry()
+linklist_t * generate_superframe_linklist() {
+  return generate_superframe_linklist_opt(0);
+}
+
+linklist_t * generate_superframe_linklist_opt(int flags)
 {
   if (ll_superframe_list == NULL) {
-    linklist_err("No supeframe list loaded");
+    linklist_err("No supeframe list loaded\n");
     return NULL;
   }
 
@@ -670,7 +681,7 @@ linklist_t * linklist_all_telemetry()
   unsigned int blk_size = 0;
   unsigned int chksm_count = 0;
 
-  unsigned int extra_chksm = (!no_auto_min_checksum) ? superframe_size/MIN_CHKSM_SPACING : 0;
+  unsigned int extra_chksm = !(flags & LL_NO_AUTO_CHECKSUM) ? superframe_size/MIN_CHKSM_SPACING : 0;
   extra_chksm += 5;
 
   // MD5 hash
@@ -691,7 +702,7 @@ linklist_t * linklist_all_telemetry()
 
   // add all telemetry entries
   for (i = 0; i < superframe_entry_count; i++) {
-    if ((chksm_count >= MIN_CHKSM_SPACING) && !no_auto_min_checksum) {
+    if ((chksm_count >= MIN_CHKSM_SPACING) && !(flags & LL_NO_AUTO_CHECKSUM)) {
       blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
       update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
       byteloc += blk_size;
@@ -707,6 +718,7 @@ linklist_t * linklist_all_telemetry()
     ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].start = byteloc;
 
+    update_superframe_entry_hash(&mdContext, &ll_superframe_list[i]);
     update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
     byteloc += blk_size;
     ll->n_entries++;
