@@ -72,6 +72,7 @@ unsigned int superframe_entry_count = 0;
 superframe_entry_t ** superframe_hash_table = NULL;
 unsigned int superframe_hash_table_size = 0;
 unsigned int superframe_size = 0; 
+uint64_t superframe_serial = {0}; 
 
 double (*datatodouble)(uint8_t *, uint8_t) = NULL;
 int (*doubletodata)(uint8_t *, double, uint8_t) = NULL;
@@ -81,6 +82,25 @@ void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t)) {
 }
 void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t)) {
   doubletodata = func;
+}
+
+const char * SF_TYPES_STR[] = {
+  "UINT8", "UINT16", "UINT32", "UINT64", 
+  "INT8", "INT16", "INT32", "INT64", 
+  "FLOAT32", "FLOAT64", ""
+};
+const char * get_sf_type_string(uint8_t m_type)
+{
+  return SF_TYPES_STR[m_type];
+}
+
+uint8_t get_sf_type_int(char * str) {
+  int i = 0;
+  
+  for (i = 0; SF_TYPES_STR[i][0]; i++) {
+    if (strncmp(str, SF_TYPES_STR[i], strlen(SF_TYPES_STR[i])) == 0) break;
+  }
+  return i;
 }
 
 //Implements the djb2 hashing algorithm for char*s 
@@ -118,6 +138,7 @@ void linklist_assign_superframe_list(superframe_entry_t* m_superframe_list) {
       superframe_hash_table[hashloc] = &m_superframe_list[i];
     }
   }
+  superframe_serial = generate_superframe_serial(m_superframe_list);
 }
 
 superframe_entry_t * superframe_find_by_name(char * name) {
@@ -362,6 +383,7 @@ linklist_t * parse_linklist_format_opt(char *fname, int flags)
 
   char *temps[20];
   int def_n_entries = 150;
+  int optflag = 1;
 
   struct link_list * ll = (struct link_list *) calloc(1,sizeof(struct link_list));
   ll->items = (struct link_entry *) calloc(def_n_entries,sizeof(struct link_entry));
@@ -401,6 +423,18 @@ linklist_t * parse_linklist_format_opt(char *fname, int flags)
     while ((line[st] == '\t') || (line[st] == ' ')) st++;
     if ((line[st] != COMM) && (line[st] != '\n') && ((read-st) > 0)) // skip comments and blank lines
     {
+      // check for options at the beginning of file
+      if (optflag) {
+        // check for auto checksum field
+        if (strncmp(line+st, STR(LL_NO_AUTO_CHECKSUM), strlen(STR(LL_NO_AUTO_CHECKSUM))) == 0)
+        {
+          printf("No auto checksum\n");
+          flags |= LL_NO_AUTO_CHECKSUM; 
+          continue;
+        }
+      }
+      optflag = 0;
+
       // add min checksum if necessary
       if ((chksm_count >= MIN_CHKSM_SPACING) && !(flags & LL_NO_AUTO_CHECKSUM))
       {
@@ -414,7 +448,6 @@ linklist_t * parse_linklist_format_opt(char *fname, int flags)
       parse_line(line+st,temps,6);
       memset(&ll->items[ll->n_entries],0,sizeof(struct link_entry));
 
-      // check for checksum field
       if (strcmp(temps[0],LL_PARSE_CHECKSUM) == 0) 
       { 
         blk_size = set_checksum_field(&(ll->items[ll->n_entries]),byteloc);
@@ -544,6 +577,7 @@ linklist_t * parse_linklist_format_opt(char *fname, int flags)
   ll->n_entries++;
 
   ll->blk_size = byteloc;
+  ll->flags = flags;
 
   // add the linklist name
   for (i = strlen(fname)-1; i > 0; i--) {
@@ -570,6 +604,12 @@ linklist_t * parse_linklist_format_opt(char *fname, int flags)
 // this should be the inverse of parse_linklist_format
 void write_linklist_format(linklist_t * ll, char * fname)
 {
+  write_linklist_format_opt(ll, fname, ll->flags);
+}
+
+// this should be the inverse of parse_linklist_format
+void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
+{
   int i;
   FILE * formatfile = fopen(fname, "w");
 
@@ -586,6 +626,8 @@ void write_linklist_format(linklist_t * ll, char * fname)
   fprintf(formatfile, "# Serial=%.04x\n", *((uint16_t *) ll->serial)); // format specifier
   fprintf(formatfile, "# Blk Size=%d\n", ll->blk_size); // blk_size = bulk size
   fprintf(formatfile, "#\n");
+  
+  fprintf(formatfile, "%s\n\n", STR(LL_NO_AUTO_CHECKSUM));
 
   for (i = 0; i < ll->n_entries; i++) { 
     if (ll->items[i].tlm == &block_entry) { // a block
@@ -744,6 +786,172 @@ linklist_t * generate_superframe_linklist_opt(int flags)
  
   return ll;
 }
+
+uint64_t generate_superframe_serial(superframe_entry_t * sf) 
+{
+  // MD5 hash variables
+  MD5_CTX mdContext;
+  uint8_t md5hash[MD5_DIGEST_LENGTH];
+  MD5_Init(&mdContext); // initialize MD5 hash
+
+  int i = 0;
+  for (i = 0; sf[i].field[0]; i++) {
+		MD5_Update(&mdContext, &sf[i].field, SF_FIELD_LEN);
+		MD5_Update(&mdContext, &sf[i].type, sizeof(sf[i].type));
+		MD5_Update(&mdContext, &sf[i].spf, sizeof(sf[i].spf));
+		MD5_Update(&mdContext, &sf[i].start, sizeof(sf[i].start));
+		MD5_Update(&mdContext, &sf[i].skip, sizeof(sf[i].skip));
+		MD5_Update(&mdContext, &sf[i].quantity[0], SF_UNITS_LEN);
+		MD5_Update(&mdContext, &sf[i].units[0], SF_UNITS_LEN);
+	}
+
+  // generate MD5 hash of command_list
+  MD5_Final(md5hash,&mdContext);
+
+  return *(uint64_t *) md5hash;
+}
+
+superframe_entry_t * parse_superframe_format(char * fname) {
+  FILE * cf = fopen(fname, "r"); // open command file
+  if (cf == NULL) {
+    linklist_err("Cannot find %s\n",fname);
+    return NULL;
+  }
+
+  char *line = NULL;
+  size_t len = 0;
+  int st, read;
+  int i, j, r;
+  char temp[100];
+  char *temps[20];
+  uint8_t * frame = NULL;
+  int size, start, skip, num;
+  int count = 1;
+  uint64_t serial = 0;
+
+  // flags
+  uint8_t begin_f = 0, size_f = 0, serial_f = 0;
+
+  int def_n_entries = 150;
+  superframe_size = 0;
+  superframe_entry_count = 0;
+
+  superframe_entry_t * sf = calloc(def_n_entries, sizeof(superframe_entry_t));
+
+  while ((read = getline(&line, &len, cf)) != -1) {
+     // remove the newline
+    line[read-1] = '\0';
+    read--;
+
+    // remove end whitespace
+    for (r=(read-1);r>=0;r--) {
+      if ((line[r] != ' ') && (line[r] != '\t')) break;
+      else line[r] = '\0';
+    }
+    read = r+1;
+
+    // remove beginning whitespace
+    st = 0;
+    while ((line[st] == '\t') || (line[st] == ' ')) st++;
+
+    if ((line[st] != COMM) && (line[st] != '\n') && ((read-st) > 0)) { // skip comments and blank lines
+      strcpy(temp, line+st);
+
+      if (!begin_f) { // ignore everything up to the BEGIN marker
+        if (strncmp(temp,"BEGIN",5) == 0) begin_f = 1; // found beginning
+        //printf("Line %d: BEGIN\n",count);
+      } else if (!serial_f) { // next is the serial number
+        sscanf(temp, "%lx", &serial);
+        serial_f = 1;
+      } else if (!size_f) { // next is the frame size
+        superframe_size = atoi(temp);
+        size_f = 1;
+        frame = (uint8_t *) calloc(superframe_size, sizeof(uint8_t));
+      } else { // everything else is a telemetry entry
+        parse_line(temp, temps, 8);        
+
+        if (strncmp(temps[0],"END",3) == 0) {
+          //printf("Line %d: END\n",count);
+          break;
+        }
+        if ((superframe_entry_count+1) >= def_n_entries) {
+          def_n_entries += 5;
+          sf = (superframe_entry_t *) realloc(sf, def_n_entries*sizeof(superframe_entry_t));
+        }
+
+        strcpy(sf[superframe_entry_count].field, temps[0]); // name
+        sf[superframe_entry_count].type = get_sf_type_int(temps[1]); // type int
+        sf[superframe_entry_count].spf = atoi(temps[2]); // samples per frame
+
+        /*
+				// TODO(javier): deal with mins and maxs if that ends up being a thing
+  			if (strlen(temps[1]) > 1)
+  			{
+    			sscanf(temps[1],"%*c(%lf,%lf)%*s",&bit_tlms[N_TLM_TYPES].min,&bit_tlms[N_TLM_TYPES].max);
+    			//printf("%s min=%f max=%f\n",bit_tlms[N_TLM_TYPES].name,bit_tlms[N_TLM_TYPES].min,bit_tlms[N_TLM_TYPES].max);
+  			}
+        */
+
+        // determine start byte and skip
+        start = atoi(temps[3]);
+        skip = atoi(temps[4]);
+        sf[superframe_entry_count].start = start; // start byte
+        sf[superframe_entry_count].skip = skip; // skip
+        if (strlen(temps[5])) strcpy(sf[superframe_entry_count].quantity, temps[5]);
+        if (strlen(temps[6])) strcpy(sf[superframe_entry_count].units, temps[6]);
+        sf[superframe_entry_count].var = NULL;
+
+        // populate byte map
+        for (i = 0; i < sf[superframe_entry_count].spf; i++) {
+          for (j = 0; j < get_superframe_entry_size(&sf[superframe_entry_count]); j++) {
+            if (frame[skip*i+start+j] == 1) {
+              printf("Warning (line %d): byte %d overlap\n", count, skip*i+start+j);
+            }
+            frame[skip*i+start+j] = 1;
+          }
+        }
+        superframe_entry_count++;
+      }
+    }
+    count++;
+  }
+  fclose(cf);
+
+  sf[superframe_entry_count].field[0] = '\0';
+ 
+  uint64_t temp_serial = generate_superframe_serial(sf);
+  if (temp_serial != serial) {
+    linklist_err("Parsed serial 0x%.8lx does not match file serial 0x%.8lx\n", temp_serial, serial);
+  }
+
+  return sf;
+}
+
+void write_superframe_format(superframe_entry_t * sf, char * fname) {
+  if (!sf) return;
+
+  FILE * fp = fopen(fname, "w");
+  if (!fp) {
+    linklist_err("Unable to write format at \"%s\"\n", fname);
+  }
+  int i = 0;
+  
+  fprintf(fp, "BEGIN\n");
+  fprintf(fp, "%.4lx\n", superframe_serial); 
+  fprintf(fp, "%d\n", superframe_size); 
+
+  for (i = 0; i < superframe_entry_count; i++) {
+    fprintf(fp, "%s  %s  %u  %u  %u", sf[i].field, get_sf_type_string(sf[i].type), sf[i].spf, sf[i].start, sf[i].skip);
+    if (strlen(sf[i].quantity)) fprintf(fp, "  \"%s\"  \"%s\"", sf[i].quantity, sf[i].units);
+    fprintf(fp, "\n");
+  }
+
+  fprintf(fp, "END\n");
+
+  fflush(fp);
+  fclose(fp);
+}
+
 #ifdef __cplusplus
 }
 
