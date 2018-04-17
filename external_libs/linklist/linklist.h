@@ -117,6 +117,7 @@ struct link_list
   struct link_entry * items; // pointer to entries in the list
   struct block_container * blocks; // pointer to blocks
   unsigned int num_blocks; // number of data block fields
+  int flags; // flags for checksums, auto increment, etc
 };
 
 typedef struct link_list linklist_t;
@@ -125,15 +126,21 @@ typedef struct block_container block_t;
 typedef struct sf_entry superframe_entry_t;
 
 extern unsigned int superframe_size;
+extern uint64_t superframe_serial;
 extern unsigned int superframe_entry_count;
+extern const char * SF_TYPES_STR[]; 
 
+#define STR(s) #s
 #define LL_NO_AUTO_CHECKSUM 0x01
 
 linklist_t * parse_linklist_format(char *);
 linklist_t * parse_linklist_format_opt(char *, int);
 void write_linklist_format(linklist_t *, char *);
+void write_linklist_format_opt(linklist_t *, char *, int);
 linklist_t * generate_superframe_linklist();
 linklist_t * generate_superframe_linklist_opt(int);
+superframe_entry_t * parse_superframe_format(char *);
+void write_superframe_format(superframe_entry_t *, char *);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
@@ -146,6 +153,9 @@ uint32_t get_superframe_entry_size(superframe_entry_t *);
 void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t));
 void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t));
 superframe_entry_t * superframe_find_by_name(char *);
+uint64_t generate_superframe_serial(superframe_entry_t *); 
+const char * get_sf_type_string(uint8_t);
+uint8_t get_sf_type_int(char *);
 
 #ifdef __cplusplus
 }

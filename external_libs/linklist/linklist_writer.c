@@ -54,15 +54,6 @@ extern "C"{
 
 extern superframe_entry_t block_entry;
 
-const char * SF_TYPES_STR[] = {
-  "UINT8", "UINT16", "UINT32", "UINT64", 
-  "INT8", "INT16", "INT32", "INT64", 
-  "FLOAT32", "FLOAT64", ""
-};
-const char * get_sf_type_string(uint8_t m_type)
-{
-  return SF_TYPES_STR[m_type];
-}
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
   if (!ll) {

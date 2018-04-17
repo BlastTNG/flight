@@ -52,7 +52,11 @@ int main(int argc, char *argv[])
   printf("Successfully assigned superframe list\n");
   define_allframe();
 
-  printf("Superframe size = %d, count = %d\n", superframe_size, superframe_entry_count);
+  printf("Superframe size = %d, count = %d, serial = %.8lx\n", superframe_size, superframe_entry_count, superframe_serial);
+
+  write_superframe_format(superframe_list, "superframe.txt");
+  superframe_entry_t * testsf = parse_superframe_format("superframe.txt"); 
+  printf("Parse serial = %.8lx\n", generate_superframe_serial(testsf));
 
 	if (load_all_linklists(linklistdir, ll_array) < 0)
   {
