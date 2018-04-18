@@ -415,7 +415,7 @@ static void mcp_1hz_routines(void)
     // out frame monitoring (current loops and thermistors) 1 on 0 off
     outer_frame(1);
     // relays arg defines found in relay.h
-    relays(ALL_RELAYS);
+    relays(2);
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
     // thermal_vac();

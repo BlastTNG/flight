@@ -613,7 +613,7 @@ void heater_write(int m_labjack, int address, float command) {
             }
         }
     }
-    if (m_labjack == 1) {
+    if (m_labjack == 1 && address > 2008) {
         works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
         value = retprime[0];
         if (works < 0) {
@@ -677,6 +677,20 @@ void heater_write(int m_labjack, int address, float command) {
                     // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
                     break;
+            }
+        }
+    }
+    if (m_labjack == 1 && address <= 2008) {
+        ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+        if (ret < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                if (ret > 0) {
+                    break;
+                }
             }
         }
     }
