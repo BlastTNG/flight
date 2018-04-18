@@ -408,7 +408,7 @@ static void mcp_1hz_routines(void)
       }
     }
     share_superframe(master_superframe);
-
+    labjack_choose_execute();
     auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
@@ -419,7 +419,6 @@ static void mcp_1hz_routines(void)
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
     // thermal_vac();
-    labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();

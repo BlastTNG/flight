@@ -205,32 +205,34 @@ static void rec_send_values(void) {
 void rec_control(void) {
     static int rec_startup = 1;
     static int rec_trigger = 0;
-    if (rec_trigger == 3) { // turns off the power pulse after 1 second
-        rec_init();
-        rec_trigger = 0;
-        rec_send_values();
-        rec_state.update_rec = 0;
-        blast_info("pulse off");
-    } // turns on a power pulse and sets reminder to turn it off
-    if (rec_trigger < 3 && rec_trigger >= 1) {
-        rec_trigger++;
-        blast_info("counting to shutoff");
-    }
-    if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
-        rec_update_values();
-        CommandData.Relays.update_rec = 0;
-        rec_send_values();
-        rec_trigger = 1;
-        blast_info("pulsed");
-    }
-    if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
-        rec_startup = 0;
-        labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, 1);
-        labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
-        CommandData.Relays.update_rec = 0;
-        rec_init();
-        rec_trigger = 1;
-        blast_info("power box told to turn on");
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        if (rec_trigger == 3) { // turns off the power pulse after 1 second
+            rec_init();
+            rec_trigger = 0;
+            rec_send_values();
+            rec_state.update_rec = 0;
+            blast_info("pulse off");
+        } // turns on a power pulse and sets reminder to turn it off
+        if (rec_trigger < 3 && rec_trigger >= 1) {
+            rec_trigger++;
+            blast_info("counting to shutoff");
+        }
+        if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
+            rec_update_values();
+            CommandData.Relays.update_rec = 0;
+            rec_send_values();
+            rec_trigger = 1;
+            blast_info("pulsed");
+        }
+        if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
+            rec_startup = 0;
+            labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, 1);
+            labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            CommandData.Relays.update_rec = 0;
+            rec_init();
+            rec_trigger = 1;
+            blast_info("power box told to turn on");
+        }
     }
 }
 // initializes the OF relay structure

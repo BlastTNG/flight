@@ -210,12 +210,14 @@ void heater_read(void) {
     static channel_t* heater_300mk_status_Addr;
     static channel_t* cal_lamp_status_Addr;
     // queues up all the reads from labjack cryo 2
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    }
     if (first_time_read == 1) {
         first_time_read = 0;
         heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
