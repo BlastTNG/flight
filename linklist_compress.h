@@ -53,8 +53,8 @@ enum dataCompressTypes {
 struct dataCompressor {
   int id;
   char name[80];
-  int (*compressFunc) (uint8_t *, struct link_entry *, uint8_t *);
-  int (*decompressFunc) (uint8_t *, struct link_entry *, uint8_t *);
+  int (*compressFunc) (uint8_t *, linkentry_t *, uint8_t *);
+  int (*decompressFunc) (uint8_t *, linkentry_t *, uint8_t *);
 };
 
 extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
@@ -62,18 +62,16 @@ extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
 #define COMPRESS(x) (int)x, #x
 #define LL_CHANNEL_DATA(_chan) _chan->var
 
-extern uint32_t allframe_size;
-
 #define LL_IGNORE_CHECKSUM 0x02
 int compress_linklist(uint8_t *, linklist_t *, uint8_t *);
 int compress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
 
-uint8_t * allocate_superframe();
-void define_allframe();
-int write_allframe(uint8_t *, uint8_t *);
-int read_allframe(uint8_t *, uint8_t *);
+uint8_t * allocate_superframe(superframe_t *);
+void define_allframe(superframe_t *);
+int write_allframe(uint8_t *, superframe_t *, uint8_t *);
+int read_allframe(uint8_t *, superframe_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);
 void depacketize_block_raw(struct block_container * , uint8_t *);
 void send_file_to_linklist(linklist_t *, char *, char *);

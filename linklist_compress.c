@@ -54,13 +54,7 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
-extern superframe_entry_t * ll_superframe_list;
-extern unsigned int superframe_entry_count;
 extern superframe_entry_t block_entry;
-extern double (*datatodouble)(uint8_t *, uint8_t);
-extern int (*doubletodata)(uint8_t *, double, uint8_t);
-
-uint32_t allframe_size = 0;
 
 #define LL_CRC_POLY 0x1021
 uint16_t *ll_crctable = NULL;
@@ -205,21 +199,21 @@ uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int s
   return sum;
 }
 
-void define_allframe()
+void define_allframe(superframe_t * superframe)
 {
-  allframe_size = write_allframe(NULL, NULL);
+  superframe->allframe_size = write_allframe(NULL, superframe, NULL);
 }
 
 // allocates the 1 Hz superframe needed for linklist compression
-uint8_t * allocate_superframe()
+uint8_t * allocate_superframe(superframe_t * superframe)
 {
   // allocate data and superframe offsets
-  if (!superframe_size || !ll_superframe_list) {
+  if (!superframe || !superframe->size) {
     linklist_err("Cannot allocate superframe");
     return NULL;
   }
 
-  uint8_t * ptr = calloc(1,superframe_size);
+  uint8_t * ptr = calloc(1, superframe->size);
 
   return ptr;
 }
@@ -398,6 +392,8 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     }
   } 
 
+  superframe_t * superframe = ll->superframe;
+
   int i, j;
 
   unsigned int tlm_in_start = 0;
@@ -422,7 +418,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     return 0;
   }
 
-  if (buffer_save == NULL) buffer_save = calloc(1, superframe_size);
+  if (buffer_save == NULL) buffer_save = calloc(1, superframe->size);
 
   // extract the data to the full buffer
   for (j=0;j<ll->n_entries;j++)
@@ -489,7 +485,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     // ret = 0;
   }
   // save the data
-  memcpy(buffer_save, buffer_out, superframe_size);
+  memcpy(buffer_save, buffer_out, superframe->size);
 
   ret = (tot == 0) ? ret : ret/tot;
 
@@ -629,7 +625,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
 // takes superframe at buffer in and creates an all frame in buffer out
 // all frame is 1 sample per field uncompressed
-int write_allframe(uint8_t * allframe, uint8_t * superframe) {
+int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) {
   int i;
   int tlm_out_start = 4; // the first 4 bytes are the serial for allframes
   int tlm_in_start = 0; 
@@ -637,15 +633,17 @@ int write_allframe(uint8_t * allframe, uint8_t * superframe) {
   uint32_t test = ALLFRAME_SERIAL;
 
   int wd = 1;
-  if ((allframe == NULL) || (superframe == NULL)) wd = 0;
+  if ((allframe == NULL) || (sf == NULL)) wd = 0;
+
+  superframe_entry_t * ll_superframe_list = superframe->entries;
 
   if (wd) memcpy(allframe, &test, 4);
 
-  for (i = 0; i < superframe_entry_count; i++) {
+  for (i = 0; i < superframe->n_entries; i++) {
     tlm_in_start = ll_superframe_list[i].start;
     tlm_size = get_superframe_entry_size(&ll_superframe_list[i]);
 
-    if (wd) memcpy(allframe+tlm_out_start, superframe+tlm_in_start, tlm_size);
+    if (wd) memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
     tlm_out_start += tlm_size;
   }
   return tlm_out_start;
@@ -654,7 +652,7 @@ int write_allframe(uint8_t * allframe, uint8_t * superframe) {
 
 // takes an allframe at buffer in at 1 sample per frame and writes repeated
 // samples in the superframe
-int read_allframe(uint8_t * superframe, uint8_t * allframe) {
+int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
   int i,j;
   int tlm_out_start = 0;
   int tlm_in_start = 4;
@@ -662,19 +660,21 @@ int read_allframe(uint8_t * superframe, uint8_t * allframe) {
   int tlm_skip = 0;
   unsigned int tlm_size = 0;
   
+  superframe_entry_t * ll_superframe_list = superframe->entries;
+
   // check to see if this is actually an allframe
   if (*((uint32_t *) allframe) != ALLFRAME_SERIAL) { 
     return 0;
   }
   
-  for (i = 0; i < superframe_entry_count; i++) { 
+  for (i = 0; i < superframe->n_entries; i++) { 
     tlm_out_start = ll_superframe_list[i].start;
     tlm_size = get_superframe_entry_size(&ll_superframe_list[i]);
     tlm_num = ll_superframe_list[i].spf;
     tlm_skip = ll_superframe_list[i].skip;
 
     for (j = 0; j < tlm_num; j++) {
-      memcpy(superframe+tlm_out_start, allframe+tlm_in_start, tlm_size);
+      memcpy(sf+tlm_out_start, allframe+tlm_in_start, tlm_size);
       tlm_out_start += tlm_skip;
     }
     tlm_in_start += tlm_size;
@@ -683,7 +683,8 @@ int read_allframe(uint8_t * superframe, uint8_t * allframe) {
 
 }
 
-double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int skip, double * store)
+double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int skip,
+                   double (*datatodouble)(uint8_t *, uint8_t))
 {
   int i;
   double halfsum = 0;
@@ -695,8 +696,6 @@ double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int sk
   {
     halfsum += (*datatodouble)(data_in+i*skip,type); 
   }
-  //ret = (halfsum+(*store))/2.0/num;
-  //*store = halfsum;
   ret = halfsum/num;
 
   return ret;
@@ -717,6 +716,9 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   unsigned int outputnum = le->num;
   unsigned int decim = inputnum/outputnum;
   if (decim == 0) return 0;
+
+  // reference the custom conversion function
+  double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
 
   int i;
 
@@ -741,8 +743,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   {
     if (wd)
     {
-      //temp1 = (*datatodouble)(data_in+(i*decim*inputskip),type);
-      temp1 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp1 = antiAlias(data_in+(i*decim*inputskip), type ,decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
 			if (temp1 > UINT32_MAX) temp1 = UINT32_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
@@ -768,6 +769,9 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
+
+  // reference the custom conversion function
+  int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -819,6 +823,9 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   unsigned int decim = inputnum/outputnum;
   if (decim == 0) return 0;
 
+  // reference the custom conversion function
+  double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
+
   int i;
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
@@ -842,8 +849,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   {
     if (wd)
     {
-      temp1 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
-      //temp1 = (*datatodouble)(data_in+(i*decim*inputskip),type);
+      temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
 			if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
@@ -869,6 +875,9 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
+
+  // reference the custom conversion function
+  int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -918,6 +927,9 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
   unsigned int decim = inputnum/outputnum;
   if (decim == 0) return 0;
 
+  // reference the custom conversion function
+  double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
+
   int i;
   double min = 1.0e30, max = -1.0e30, temp1 = 0;
 
@@ -933,7 +945,7 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
   {
     if (wd)
     {
-      temp1 = antiAlias(data_in+(i*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp1 = antiAlias(data_in+(i*inputskip), type, decim, inputskip, datatodouble);
       if (temp1 < min) min = temp1;
       if (temp1 > max) max = temp1;
     }
@@ -951,8 +963,7 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
   {
     if (wd)
     {
-      //temp1 = (*datatodouble)(data_in+(i*decim*inputskip),type);
-      temp1 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
       data_out[blk_size] = temp1;
     }
@@ -977,6 +988,9 @@ int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_
   int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
+
+  // reference the custom conversion function
+  int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -1020,6 +1034,9 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
   unsigned int decim = inputnum/outputnum;
   if (decim == 0) return 0;  
 
+  // reference the custom conversion function
+  double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
+
   int i;
   double temp1 = 0, temp2 = 0, dif = 0;
   double min = INT32_MAX, max= -INT32_MAX;
@@ -1037,7 +1054,7 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
   {
     if (wd) 
     {
-      temp2 = antiAlias(data_in+(i*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp2 = antiAlias(data_in+(i*inputskip), type, decim, inputskip, datatodouble);
       dif = temp2-temp1;
       if (dif < min) min = dif;
       if (dif > max) max = dif;
@@ -1060,8 +1077,7 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
   {
     if (wd) 
     {
-      //temp2 = (*datatodouble)(data_in+(i*decim*inputskip),type);
-      temp2 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp2 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       dif = (temp2-temp1-offset)/(gain);
       data_out[blk_size] = dif+remainder;
       remainder += dif-data_out[blk_size];
@@ -1089,6 +1105,9 @@ int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * 
   int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
+
+  // reference the custom conversion function
+  int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -1130,6 +1149,11 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
   unsigned int decim = inputnum/outputnum;
   unsigned int size = get_superframe_entry_size(le->tlm);  
 
+  // reference the custom conversion function
+  int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
+
+  // reference the custom conversion function
+  double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
 
   if (decim == 0) return 0;
   int i;
@@ -1143,7 +1167,7 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
   {
     if (wd)
     {
-      temp1 = antiAlias(data_in+(i*decim*inputskip),type,decim,inputskip,&le->compvars[0]);
+      temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       (*doubletodata)((uint8_t *) &dout,temp1,type);
       memcpy(data_out+(i*inputsize),&dout,size);
     }

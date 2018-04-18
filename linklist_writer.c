@@ -183,7 +183,7 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
   static uint8_t * superframe = NULL;
   static int first_time = 1; 
   if (first_time) {
-    superframe = allocate_superframe();
+    superframe = allocate_superframe(ll->superframe);
     first_time = 0;
   }
 
@@ -221,7 +221,7 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
       }
     }
   }  
-  memset(superframe, 0, superframe_size);
+  memset(superframe, 0, ll->superframe->size);
 
   return ret_val;
 }
