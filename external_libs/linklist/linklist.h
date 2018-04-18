@@ -72,6 +72,12 @@ enum SFType
   SF_FLOAT32, SF_FLOAT64, SF_NUM 
 };
 
+struct linklist_struct;
+struct link_entry;
+struct block_container;
+struct sf_entry;
+struct superframe_struct;
+
 struct sf_entry 
 {
 	char field[SF_FIELD_LEN];      // name of entry for FileFormats and CalSpecs
@@ -82,6 +88,22 @@ struct sf_entry
 	char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
 	char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data
+  struct superframe_struct * superframe; // Pointer to corresponding superframe
+};
+
+struct superframe_struct
+{
+  unsigned int n_entries;
+  unsigned int size;
+  uint64_t serial;
+
+  struct sf_entry * entries;
+  struct sf_entry ** hash_table;
+  unsigned int hash_table_size;
+  unsigned int allframe_size;
+
+	double (*datatodouble)(uint8_t *, uint8_t);
+	int (*doubletodata)(uint8_t *, double, uint8_t);
 };
 
 struct link_entry
@@ -92,6 +114,20 @@ struct link_entry
   uint32_t num; // number of samples per compressed frame
   double compvars[20]; // compression variable scratchpad
   struct sf_entry * tlm; // pointer to corresponding entry from superframe
+  struct linklist_struct * linklist; // pointer to corresponding linklist
+};
+
+struct linklist_struct
+{
+  char name[64]; // name of the linklist file
+  uint32_t n_entries; // number of entries in the list
+  uint32_t blk_size; // size of entire compressed frame
+  uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
+  struct link_entry * items; // pointer to entries in the list
+  struct block_container * blocks; // pointer to blocks
+  unsigned int num_blocks; // number of data block fields
+  int flags; // flags for checksums, auto increment, etc
+  struct superframe_struct * superframe; // pointer to corresponding superframe
 };
 
 struct block_container
@@ -108,54 +144,43 @@ struct block_container
   FILE *fp;
 };
 
-struct link_list
-{
-  char name[64]; // name of the linklist file
-  uint32_t n_entries; // number of entries in the list
-  uint32_t blk_size; // size of entire compressed frame
-  uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
-  struct link_entry * items; // pointer to entries in the list
-  struct block_container * blocks; // pointer to blocks
-  unsigned int num_blocks; // number of data block fields
-  int flags; // flags for checksums, auto increment, etc
-};
-
-typedef struct link_list linklist_t;
+typedef struct linklist_struct linklist_t;
 typedef struct link_entry linkentry_t;
 typedef struct block_container block_t;
 typedef struct sf_entry superframe_entry_t;
+typedef struct superframe_struct superframe_t;
 
-extern unsigned int superframe_size;
-extern uint64_t superframe_serial;
-extern unsigned int superframe_entry_count;
 extern const char * SF_TYPES_STR[]; 
 
 #define STR(s) #s
 #define LL_NO_AUTO_CHECKSUM 0x01
 
-linklist_t * parse_linklist_format(char *);
-linklist_t * parse_linklist_format_opt(char *, int);
+linklist_t * parse_linklist_format(superframe_t *, char *);
+linklist_t * parse_linklist_format_opt(superframe_t *, char *, int);
 void write_linklist_format(linklist_t *, char *);
 void write_linklist_format_opt(linklist_t *, char *, int);
-linklist_t * generate_superframe_linklist();
-linklist_t * generate_superframe_linklist_opt(int);
-superframe_entry_t * parse_superframe_format(char *);
-void write_superframe_format(superframe_entry_t *, char *);
+linklist_t * generate_superframe_linklist(superframe_t *);
+linklist_t * generate_superframe_linklist_opt(superframe_t *, int);
+superframe_t * parse_superframe_format(char *);
+void write_superframe_format(superframe_t *, char *);
+void linklist_assign_datatodouble(superframe_t *, double (*func)(uint8_t *, uint8_t));
+void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double, uint8_t));
+uint64_t generate_superframe_serial(superframe_t *); 
+superframe_t * linklist_build_superframe(superframe_entry_t *,
+                                         double (*datatodouble)(uint8_t *, uint8_t), 
+                                         int (*doubletodata)(uint8_t *, double, uint8_t));
+
+superframe_entry_t * superframe_find_by_name(superframe_t *, char *);
+uint32_t get_superframe_entry_size(superframe_entry_t *);
+const char * get_sf_type_string(uint8_t);
+uint8_t get_sf_type_int(char *);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
 void delete_linklist(linklist_t *);
-int load_all_linklists(char *, linklist_t **);
+int load_all_linklists(superframe_t *, char *, linklist_t **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
-void linklist_assign_superframe_list(superframe_entry_t *);
-uint32_t get_superframe_entry_size(superframe_entry_t *);
-void linklist_assign_datatodouble(double (*func)(uint8_t *, uint8_t));
-void linklist_assign_doubletodata(int (*func)(uint8_t *, double, uint8_t));
-superframe_entry_t * superframe_find_by_name(char *);
-uint64_t generate_superframe_serial(superframe_entry_t *); 
-const char * get_sf_type_string(uint8_t);
-uint8_t get_sf_type_int(char *);
 
 #ifdef __cplusplus
 }

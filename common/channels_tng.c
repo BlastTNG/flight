@@ -70,7 +70,7 @@ uint8_t superframe_type_array[TYPE_END+1] = {
 double channel_data_to_double(uint8_t * data, uint8_t type);
 int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 unsigned int superframe_offset[RATE_END] = {0};
-superframe_entry_t * superframe_list = NULL;
+superframe_t * superframe = NULL;
 
 size_t channel_size(channel_t *m_channel)
 {
@@ -437,15 +437,14 @@ int channels_initialize(const channel_t * const m_channel_list)
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
  
-    // generate te superframe list
-    superframe_list = channels_generate_superframe(m_channel_list);
-    linklist_assign_superframe_list(superframe_list);
+    // generate superframe 
+    superframe = channels_generate_superframe(m_channel_list);
 
     blast_startup("Successfully initialized Channels data structures");
     return 0;
 }
 
-superframe_entry_t * channels_generate_superframe(const channel_t * const m_channel_list) {
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
     superframe_entry_t * sf = calloc(channels_count+1, sizeof(superframe_entry_t));
 
     unsigned int sf_size = 0;
@@ -474,11 +473,7 @@ superframe_entry_t * channels_generate_superframe(const channel_t * const m_chan
     // null terminate
     sf[i].field[0] = '\0';
 
-    // assign conversion functions
-    linklist_assign_datatodouble(&channel_data_to_double);
-    linklist_assign_doubletodata(&channel_double_to_data);
-
-    return sf;
+    return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
 }
 
 /**

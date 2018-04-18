@@ -20,3 +20,7 @@ $(EXECUTABLE): $(OBJECTS)
 .cpp.o:
 	gcc $(CFLAGS) $< -o $@
 
+.PHONY: clean
+
+clean: 
+	rm -f *.o $(EXECUTABLE)

@@ -111,6 +111,7 @@ extern size_t frame_size[RATE_END];
 extern channel_t channel_list[];
 extern derived_tng_t derived_list[];
 extern int channels_count;
+extern superframe_t * superframe;
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
@@ -125,6 +126,6 @@ unsigned int get_spf(unsigned int);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);
-superframe_entry_t * channels_generate_superframe(const channel_t * const m_channel_list);
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list);
 
 #endif /* CHANNELS_V2_H_ */

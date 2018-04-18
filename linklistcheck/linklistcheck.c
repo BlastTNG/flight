@@ -46,19 +46,15 @@ int main(int argc, char *argv[])
   superframe_entry_t * superframe_list = NULL;
 
   channels_initialize(channel_list);
-  superframe_list = channels_generate_superframe(channel_list);
-  printf("Successfully generated superframe\n");
-  linklist_assign_superframe_list(superframe_list);
-  printf("Successfully assigned superframe list\n");
-  define_allframe();
+  define_allframe(superframe);
 
-  printf("Superframe size = %d, count = %d, serial = %.8lx\n", superframe_size, superframe_entry_count, superframe_serial);
+  printf("Superframe size = %d, count = %d, serial = %.8lx\n", superframe->size, superframe->n_entries, superframe->serial);
 
-  write_superframe_format(superframe_list, "superframe.txt");
-  superframe_entry_t * testsf = parse_superframe_format("superframe.txt"); 
-  printf("Parse serial = %.8lx\n", generate_superframe_serial(testsf));
+  write_superframe_format(superframe, "superframe.txt");
+  superframe_t * testsf = parse_superframe_format("superframe.txt"); 
+  printf("Parse serial = %.8lx\n", testsf->serial);
 
-	if (load_all_linklists(linklistdir, ll_array) < 0)
+	if (load_all_linklists(superframe, linklistdir, ll_array) < 0)
   {
     printf("Unable to load linklists\n");
     exit(3);
@@ -70,7 +66,7 @@ int main(int argc, char *argv[])
   while (ll) {
     printf("Checking %s...\n", ll->name);
     write_linklist_format(ll, ll->name);
-    linklist_t * temp_ll = parse_linklist_format_opt(ll->name, LL_NO_AUTO_CHECKSUM);
+    linklist_t * temp_ll = parse_linklist_format_opt(superframe, ll->name, LL_NO_AUTO_CHECKSUM);
     printf("0x%.4x == 0x%.4x\n", *(uint32_t *) ll->serial, *(uint32_t *) temp_ll->serial);
 
     delete_linklist(temp_ll);
@@ -126,6 +122,6 @@ int main(int argc, char *argv[])
 
   printf("\n===================GENERAL INFO====================\n");
 
-	printf("allframe_size = %d\n",allframe_size);
+	printf("allframe_size = %d\n",superframe->allframe_size);
 
 }
