@@ -152,14 +152,14 @@ void linklist_assign_datatodouble(superframe_t * superframe, double (*func)(uint
   if (func) {
     superframe->datatodouble = func;
   } else {
-    superframe->datatodouble = def_datatodouble;
+    superframe->datatodouble = &def_datatodouble;
   }
 }
 void linklist_assign_doubletodata(superframe_t * superframe, int (*func)(uint8_t *, double, uint8_t)) {
   if (func) {
     superframe->doubletodata = func;
   } else {
-    superframe->doubletodata = def_doubletodata;
+    superframe->doubletodata = &def_doubletodata;
   }
 }
 
@@ -167,7 +167,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
                                          double (*datatodouble)(uint8_t *, uint8_t), 
                                          int (*doubletodata)(uint8_t *, double, uint8_t)) {
 
-  superframe_t * superframe = calloc(1, sizeof(superframe));  
+  superframe_t * superframe = calloc(1, sizeof(superframe_t));  
 
   superframe->entries = m_superframe_list;
   linklist_assign_datatodouble(superframe, datatodouble);
@@ -182,10 +182,9 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
     superframe->n_entries++;
   }
 
-  if (superframe->hash_table) free(superframe->hash_table);
   superframe->hash_table_size = superframe->n_entries*1000;
   superframe->hash_table = calloc(superframe->hash_table_size, sizeof(superframe_entry_t *));
-  
+ 
   for (i = 0; i < superframe->n_entries; i++) {
     unsigned int hashloc = hash(superframe->entries[i].field)%superframe->hash_table_size;
     if (superframe->hash_table[hashloc]) {
@@ -194,6 +193,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
       superframe->hash_table[hashloc] = &superframe->entries[i];
     }
   }
+
   superframe->serial = generate_superframe_serial(superframe);
 }
 

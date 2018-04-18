@@ -473,6 +473,8 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
     // null terminate
     sf[i].field[0] = '\0';
 
+    printf("Finished generating superframe entries\n");
+    
     return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
 }
 
