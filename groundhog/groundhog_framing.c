@@ -175,7 +175,7 @@ int framing_init(void)
         rate_name[strlen(rate_name)-1] = 'z';
 
         for (int i = 0; i < NUM_DOWNLINKS; i++) {
-            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe_size);
+            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe->size);
             downlink[i].data[rate] = calloc(1, allocated_size);
 
             sprintf(downlink[i].frame_name[rate], "frames/%s/%s", downlink[i].name, rate_name);

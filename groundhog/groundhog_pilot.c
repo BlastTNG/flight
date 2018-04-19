@@ -43,7 +43,7 @@ void udp_receive(void *arg) {
   // open a file to save all the raw linklist data
   FILE * rawsave = NULL;
 
-  uint8_t *local_superframe = calloc(1, superframe_size);
+  uint8_t *local_superframe = calloc(1, superframe->size);
   struct Fifo *local_fifo = &downlink[id].fifo; 
 
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
@@ -107,7 +107,7 @@ void udp_receive(void *arg) {
     }
 
     // decompress the linklist
-    if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
+    if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
       blast_info("[%s] Received an allframe :)\n", udpsetup->name);
     } else {
       blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
@@ -120,8 +120,8 @@ void udp_receive(void *arg) {
       }
 
       // decompress
-      decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
-      memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0); 
+      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
       groundhog_linklist_publish(ll, compbuffer);
 
       incrementFifo(local_fifo);

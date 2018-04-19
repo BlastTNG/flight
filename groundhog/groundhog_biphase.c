@@ -103,7 +103,7 @@ void biphase_receive(void *args)
   uint16_t *n_pkt;
   uint32_t *frame_number;
   int retval;
-  uint8_t *local_superframe = calloc(1, superframe_size);
+  uint8_t *local_superframe = calloc(1, superframe->size);
   struct Fifo *local_fifo = &downlink[BI0].fifo;
   bool normal_polarity = true;
 
@@ -156,14 +156,14 @@ void biphase_receive(void *args)
 
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
 
-                  if (read_allframe(local_superframe, compressed_linklist)) {
+                  if (read_allframe(local_superframe, superframe, compressed_linklist)) {
                       printf("[Biphase] Received an allframe :)\n");
                   } else {
                       // The compressed linklist has been fully reconstructed
                       blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
-                      decompress_linklist_by_size(local_superframe, ll, compressed_linklist, transmit_size);
-                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+                      decompress_linklist_opt(local_superframe, ll, compressed_linklist, transmit_size, 0);
+                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
                       groundhog_linklist_publish(ll, compressed_linklist);
 
                       incrementFifo(local_fifo);
