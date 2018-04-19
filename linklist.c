@@ -195,6 +195,9 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   }
 
   superframe->serial = generate_superframe_serial(superframe);
+  define_allframe(superframe);
+
+  return superframe;
 }
 
 superframe_entry_t * superframe_find_by_name(superframe_t * sf, char * name) {
@@ -814,13 +817,13 @@ uint64_t generate_superframe_serial(superframe_t * superframe)
 
   int i = 0;
   for (i = 0; sf[i].field[0]; i++) {
-		MD5_Update(&mdContext, &sf[i].field, SF_FIELD_LEN);
+		MD5_Update(&mdContext, sf[i].field, strlen(sf[i].field));
 		MD5_Update(&mdContext, &sf[i].type, sizeof(sf[i].type));
 		MD5_Update(&mdContext, &sf[i].spf, sizeof(sf[i].spf));
 		MD5_Update(&mdContext, &sf[i].start, sizeof(sf[i].start));
 		MD5_Update(&mdContext, &sf[i].skip, sizeof(sf[i].skip));
-		MD5_Update(&mdContext, &sf[i].quantity[0], SF_UNITS_LEN);
-		MD5_Update(&mdContext, &sf[i].units[0], SF_UNITS_LEN);
+		//if (strlen(sf[i].quantity)) MD5_Update(&mdContext, sf[i].quantity, strlen(sf[i].quantity));
+		//if (strlen(sf[i].units)) MD5_Update(&mdContext, sf[i].units, strlen(sf[i].units));
 	}
 
   // generate MD5 hash of command_list
@@ -897,6 +900,7 @@ superframe_t * parse_superframe_format(char * fname) {
           sf = (superframe_entry_t *) realloc(sf, def_n_entries*sizeof(superframe_entry_t));
         }
 
+        memset(sf[n_entries].field, 0, SF_FIELD_LEN);
         strcpy(sf[n_entries].field, temps[0]); // name
         sf[n_entries].type = get_sf_type_int(temps[1]); // type int
         sf[n_entries].spf = atoi(temps[2]); // samples per frame
@@ -915,6 +919,8 @@ superframe_t * parse_superframe_format(char * fname) {
         skip = atoi(temps[4]);
         sf[n_entries].start = start; // start byte
         sf[n_entries].skip = skip; // skip
+        memset(sf[n_entries].quantity, 0, SF_UNITS_LEN);
+        memset(sf[n_entries].units, 0, SF_UNITS_LEN);
         if (strlen(temps[5])) strcpy(sf[n_entries].quantity, temps[5]);
         if (strlen(temps[6])) strcpy(sf[n_entries].units, temps[6]);
         sf[n_entries].var = NULL;
