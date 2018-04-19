@@ -47,7 +47,6 @@ int shared_data_recvd = 0;
 
 extern int16_t InCharge;
 extern int16_t SouthIAm;
-extern superframe_entry_t * superframe_list;
 
 linklist_t * shared_ll = NULL;
 
@@ -63,7 +62,7 @@ void data_sharing_init(linklist_t ** ll_array) {
   shared_packet_size = temp_ll->blk_size+sizeof(struct CommandDataStruct);
   shared_recv_buffer = calloc(1, shared_packet_size);
   shared_cmddata = shared_recv_buffer+temp_ll->blk_size;
-  shared_superframe = calloc(1, superframe_size);
+  shared_superframe = calloc(1, superframe->size);
 
   // initialize bitserver
   initBITSender(&shared_data_sender, (SouthIAm) ? NORTH_IP : SOUTH_IP, DATA_SHARING_PORT, 3,

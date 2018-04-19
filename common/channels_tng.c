@@ -463,8 +463,8 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
        sf[i].spf = get_spf(channel->rate);
        sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
        sf[i].skip = frame_size[channel->rate];
-       strcpy(sf[i].quantity, channel->quantity);
-       strcpy(sf[i].units, channel->units);
+       if (strlen(channel->quantity)) strcpy(sf[i].quantity, channel->quantity);
+       if (strlen(channel->units)) strcpy(sf[i].units, channel->units);
        sf[i].var = channel->var;
 
        i++; 

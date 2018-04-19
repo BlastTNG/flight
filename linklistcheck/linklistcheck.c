@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
 
   write_superframe_format(superframe, "superframe.txt");
   superframe_t * testsf = parse_superframe_format("superframe.txt"); 
-  printf("Parse serial = %.8lx\n", testsf->serial);
+  write_superframe_format(testsf, "superframe.txt");
+  printf("Parsed size = %d, count = %d  serial = %.8lx\n", testsf->size, testsf->n_entries, testsf->serial);
 
 	if (load_all_linklists(superframe, linklistdir, ll_array) < 0)
   {

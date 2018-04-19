@@ -30,7 +30,7 @@
 #define PILOT_PORT 31213 // port that pilot data is sent to
 #define PILOT_ADDR "192.168.1.55" // address that pilot data is sent to
 #define PILOT_MAX_PACKET_SIZE 1024 // maximum size of a packet to be sent over Pilot
-#define PILOT_MAX_SIZE (superframe_size*2) // maximum compressed frame size to be send over Pilot
+#define PILOT_MAX_SIZE (superframe->size*2) // maximum compressed frame size to be send over Pilot
 // TODO(javier): make allframe period commandable
 #define PILOT_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 

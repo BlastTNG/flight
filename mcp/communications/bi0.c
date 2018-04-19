@@ -511,7 +511,7 @@ void biphase_writer(void * arg)
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
             // send allframe if necessary
             if (!allframe_count) {
-                transmit_size = write_allframe(compbuffer, getFifoRead(&bi0_fifo));
+                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
             } else {
                 // compress the linklist to compbuffer
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
