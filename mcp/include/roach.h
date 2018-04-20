@@ -117,6 +117,7 @@ typedef struct {
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
+    int array;
     int which;
     int katcp_fd;
     e_roach_status status;
