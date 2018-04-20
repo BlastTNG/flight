@@ -98,12 +98,12 @@
 #define HEATER_SUPPLY_OFF 2006
 
 // Digital reads on LJ CRYO 2
-#define READ_CHARCOAL 2009
-#define READ_250LNA 2010
-#define READ_1K_HEATER 2011
-#define READ_CHARCOAL_HS 2013
-#define READ_350LNA 2015
-#define READ_500LNA 2016
+#define READ_CHARCOAL 2009 // eio1
+#define READ_250LNA 2010 // eio2
+#define READ_1K_HEATER 2011 // eio3
+#define READ_CHARCOAL_HS 2013 // eio5
+#define READ_350LNA 2015 // eio7
+#define READ_500LNA 2016 // cio0
 
 // DACS
 #define DAC0 1000
