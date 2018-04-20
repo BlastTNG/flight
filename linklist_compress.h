@@ -69,7 +69,6 @@ double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
 
 uint8_t * allocate_superframe(superframe_t *);
-void define_allframe(superframe_t *);
 int write_allframe(uint8_t *, superframe_t *, uint8_t *);
 int read_allframe(uint8_t *, superframe_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);

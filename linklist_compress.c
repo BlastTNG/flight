@@ -199,11 +199,6 @@ uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int s
   return sum;
 }
 
-void define_allframe(superframe_t * superframe)
-{
-  superframe->allframe_size = write_allframe(NULL, superframe, NULL);
-}
-
 // allocates the 1 Hz superframe needed for linklist compression
 uint8_t * allocate_superframe(superframe_t * superframe)
 {
