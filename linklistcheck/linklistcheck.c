@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
   superframe_entry_t * superframe_list = NULL;
 
   channels_initialize(channel_list);
-  define_allframe(superframe);
 
   printf("Superframe size = %d, count = %d, serial = %.8lx\n", superframe->size, superframe->n_entries, superframe->serial);
 

@@ -195,7 +195,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   }
 
   superframe->serial = generate_superframe_serial(superframe);
-  define_allframe(superframe);
+  superframe->allframe_size = write_allframe(NULL, superframe, NULL);
 
   return superframe;
 }
