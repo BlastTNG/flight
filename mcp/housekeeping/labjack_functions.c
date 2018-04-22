@@ -124,6 +124,14 @@ labjack_state_t state[NUM_LABJACKS] = {
         .DAC = {0, 0},
         .channel_postfix = "_highbay_labjack",
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 8,
+        .address = "labjack9",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mapping_labjack",
+        .have_warned_write_reg = 0,
     }
 };
 
@@ -295,17 +303,21 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
             ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
+    /*
     if (m_state->which == 6) {
         static int counter = 1;
         if (counter == 1) {
-            blast_info("data for %d is value %f", 4, m_state->AIN[4]);
+            for (int i = 0; i < 85; i++) {
+                blast_info("data for %d is value %f", i, m_state->AIN[i]);
+            }
+        }
             counter++;
             if (counter > 200) {
                 counter = 1;
             }
         }
+     */
     }
-}
 // Correct for word swaps between mcp and the labjack
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {
@@ -601,7 +613,7 @@ void heater_write(int m_labjack, int address, float command) {
             }
         }
     }
-    if (m_labjack == 1) {
+    if (m_labjack == 1 && address > 2008) {
         works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
         value = retprime[0];
         if (works < 0) {
@@ -640,31 +652,19 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
                     break;
             }
-        } else {
-            switch (address) {
-                case 2009:
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
+        }
+    }
+    if (m_labjack == 1 && address <= 2008) {
+        ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+        if (ret < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                if (ret > 0) {
                     break;
-                case 2010:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
-                    break;
-                case 2011:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
-                    break;
-                case 2013:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
-                    break;
-                case 2015:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
-                    break;
-                case 2016:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
-                    break;
+                }
             }
         }
     }

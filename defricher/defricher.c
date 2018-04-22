@@ -47,6 +47,7 @@
 #include <blast_time.h>
 #include <channels_tng.h>
 
+
 #include "defricher.h"
 #include "defricher_writer.h"
 #include "defricher_netreader.h"
@@ -58,8 +59,9 @@ static GOptionEntry cmdline_options[] =
         { "autoreconnect", 0, 0, G_OPTION_ARG_NONE, &rc.auto_reconnect, "Automatically reconnect when dropped", NULL},
         { "daemonize", 0, 0, G_OPTION_ARG_NONE, &rc.daemonise, "Fork to the background on startup", NULL},
         { "force", 'f', 0, G_OPTION_ARG_NONE, &rc.force_stdio, "Overwrite destination file if exists", NULL},
+        { "linklist", 'l', 0, G_OPTION_ARG_STRING, &rc.linklist_file, "Use NAME in linklist mode. Will only receive data specified in linklist", NULL},
         { "output-dirfile", 'o', 0, G_OPTION_ARG_STRING, &rc.output_dirfile, "Use NAME as the output Dirfile name", NULL},
-        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &remaining_args, "<SOURCE> <TELEMETRY (lab/pilot/tdrss/biphase)> [OUTPUT DIRFILE]", NULL},
+        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &remaining_args, "<SOURCE> <TELEMETRY (lab/pilot/highrate/biphase)> [OUTPUT DIRFILE]", NULL},
         {NULL}
 };
 
@@ -166,7 +168,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
     GOptionContext *context;
 
     context = g_option_context_new("");
-    g_option_context_set_summary(context, "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles\ndefricher <SOURCE> <TELEMETRY (lab/pilot/tdrss/biphase)> [OUTPUT DIRFILE]");
+    g_option_context_set_summary(context, "Converts BLASTPol-TNG framefiles from SOURCE into dirfiles\ndefricher <SOURCE> <TELEMETRY (lab/pilot/highrate/biphase)> [OUTPUT DIRFILE]");
     g_option_context_set_description(context, "Please report any errors or bugs to <seth.hillbrand@gmail.com>");
     g_option_context_add_main_entries(context, cmdline_options, NULL);
 
@@ -187,7 +189,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
 
       if (remaining_args[1]) {
           g_debug("Telemetry is %s", remaining_args[1]);
-          char *possible_telemetries[4] = {"lab", "tdrss", "biphase", "pilot"};
+          char *possible_telemetries[4] = {"lab", "highrate", "biphase", "pilot"};
           bool valid_telemetry = false;
           for(int i = 0; i < 4; ++i)
           {
@@ -200,7 +202,7 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
                }
           }
           if (!valid_telemetry) {
-              g_error("Wrong argument for telemetry: %s. Please chose between lab, tdrss, pilot, or biphase", remaining_args[1]);
+              g_error("Wrong argument for telemetry: %s. Please choose between lab, highrate, pilot, or biphase", remaining_args[1]);
           }
       }
 
@@ -213,8 +215,9 @@ void parse_cmdline(int argc, char** argv, struct rc_struct* m_rc)
   }
 
   /* Fix up output_dirfile, if present */
-  if (m_rc->output_dirfile)
+  if (m_rc->output_dirfile) {
     m_rc->output_dirfile = resolve_output_dirfile(m_rc->output_dirfile, m_rc->dest_dir);
+  }
 
   g_option_context_free(context);
 }
@@ -308,6 +311,7 @@ int main(int argc, char** argv)
                  		ri.wrote,
                  		(ofr > 100) ? 1 : (ofr > 10) ? 2 : 3, ofr);
                  fflush(stdout);
+                 usleep(1000);
 #endif
             }
             usleep(500000);

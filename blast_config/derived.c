@@ -583,6 +583,31 @@ derived_tng_t derived_list[] = {
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
     LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
 
+    // clinometer channels
+    LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
+    LINCOM("Clin_of_y", "CLIN_OF_Y", 10, 0),
+    LINCOM("Clin_of_t", "CLIN_OF_T", 100, 273.15),
+    LINCOM("Clin_if_x", "CLIN_IF_X", 10, 0),
+    LINCOM("Clin_if_y", "CLIN_IF_Y", 10, 0),
+    LINCOM("Clin_if_t", "CLIN_IF_T", 100, 273.15),
+
+    // status channels
+    BITWORD("Hd_pv_status", "of_status", 0, 1),
+    BITWORD("Eth_switch_status", "of_status", 1, 1),
+    BITWORD("Fc1_status", "of_status", 2, 1),
+    BITWORD("Xsc1_status", "of_status", 3, 1),
+    BITWORD("Fc2_status", "of_status", 4, 1),
+    BITWORD("Xsc0_status", "of_status", 5, 1),
+    BITWORD("Gyros_status", "of_status", 6, 1),
+    BITWORD("Data_transmit_status", "of_status", 7, 1),
+    BITWORD("Elmot_status", "of_status", 8, 1),
+    BITWORD("Pivot_status", "of_status", 9, 1),
+    BITWORD("Mag_status", "of_status", 10, 1),
+    BITWORD("Rw_status", "of_status", 11, 1),
+    BITWORD("Steppers_status", "of_status", 12, 1),
+    BITWORD("Clino_status", "of_status", 13, 1),
+    BITWORD("Gps_timing_status", "of_status", 15, 1),
+
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),
     BITWORD("TRIGGER_STATE_XSC", "trigger_xsc", 2, 6),

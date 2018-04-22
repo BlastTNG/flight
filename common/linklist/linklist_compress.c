@@ -43,7 +43,7 @@
 #include <float.h>
 
 #include "blast.h"
-#include "CRC.h"
+#include "CRC_func.h"
 #include "channels_tng.h"
 #include "channel_macros.h"
 #include "linklist.h"
@@ -58,71 +58,133 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
-uint32_t superframe_flag[RATE_END] = {0};
+extern channel_t * ll_channel_list;
 
-uint32_t superframe_offset[RATE_END] = {0};
-uint32_t superframe_skip[RATE_END] = {0};
-uint32_t superframe_size = 0;
 uint32_t allframe_size = 0;
 
-void define_superframe()
+// generates the block header in the buffer
+int make_block_header(uint8_t * buffer, uint16_t id, uint16_t size, uint16_t i, uint16_t n, uint32_t totalsize)
 {
-  int rate = 0;
-  for (rate = 0; rate<RATE_END; rate++) 
-  {
-    superframe_offset[rate] = superframe_size;
-    superframe_skip[rate] = frame_size[rate];
-    superframe_size += frame_size[rate]*get_spf(rate);
+  /* block header (12 bytes)
+   * ----------------
+   * [0-1] = identifier
+   * [2-3] = packet size [bytes]
+   * [4-5] = packet number
+   * [6-7] = total number of packets
+   * [8-12] = total block size [bytes]
+   */
+  *((uint16_t *) (buffer+0)) = id; // ID
+  memcpy(buffer+2,&size,2); // packet size
+  memcpy(buffer+4,&i,2); // packet number
+  memcpy(buffer+6,&n,2); // number of packets
+  memcpy(buffer+8,&totalsize,4); // total size
+
+  return PACKET_HEADER_SIZE;
+}
+
+// generates the block header in the buffer
+int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *i, uint16_t *n, uint32_t *totalsize)
+{
+  *id = *(uint16_t *) (buffer+0);
+  *size = *(uint16_t *) (buffer+2);
+  *i = *(uint16_t *) (buffer+4);
+  *n = *(uint16_t *) (buffer+6);
+  *totalsize = *(uint32_t *) (buffer+8);
+
+  return PACKET_HEADER_SIZE;
+}
+
+void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
+{
+  if (!ll) {
+    blast_err("Invalid linklist given");
+    return;
   }
-  allframe_size = write_allframe(NULL, NULL);
-  blast_info("Superframe skip and offsets allocated\n");
+
+  int i = 0;
+  block_t * theblock = NULL;
+
+  // find the block
+  for (i = 0; i < ll->num_blocks; i++) {
+    if (strcmp(blockname, ll->blocks[i].name) == 0) {
+      theblock = &ll->blocks[i];
+      break;
+    }
+  }
+  if (!theblock) {
+    blast_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    return;
+  }
+
+  // check to see if the previous send is done
+  if (theblock->i != theblock->n) { // previous transfer not done
+    blast_info("Previous transfer for block \"%s\" is incomplete.", blockname);
+    return;
+  }
+ 
+  // open the file
+  FILE * fp = fopen(filename, "rb+");
+  if (!fp) {
+    blast_err("File \"%s\" not found", filename);
+    return;
+  }
   
+  // get the size of the file
+  unsigned int filesize = 0;
+  fseek(fp, 0L, SEEK_END);
+  filesize = ftell(fp);
+  fseek(fp, 0L, SEEK_SET);
+
+  // set the block variables to initialize transfer
+  theblock->fp = fp;
+  for (i = strlen(filename)-1; i > 0; i++) {
+    if (filename[i] == '/') break;
+  }
+  strcpy(theblock->filename, filename+i+1); // copy the filename stripped of path
+  theblock->i = 0;
+  theblock->num = 0;
+  theblock->n = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  theblock->curr_size = filesize;
+
+  theblock->id++; // increment the block counter
+
+  blast_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
+
+  return;
+}
+
+// randomizes/unrandomizes a buffer of a given size using a given seed
+uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int seed)
+{
+  srand(seed);
+  int i = 0;
+  unsigned int sum = 0;
+  for (i = 0; i < bufsize; i++) {
+    buffer[i] ^= rand();
+    sum ^= buffer[i];
+  }
+  return sum;
+}
+
+void define_allframe()
+{
+  allframe_size = write_allframe(NULL, NULL);
 }
 
 // allocates the 1 Hz superframe needed for linklist compression
 uint8_t * allocate_superframe()
 {
   // allocate data and superframe offsets
-  if (!superframe_size) define_superframe();
+  if (!superframe_size) {
+    blast_err("Cannot allocate superframe as channels are not defined");
+    return NULL;
+  }
 
   uint8_t * ptr = calloc(1,superframe_size);
 
   return ptr;
 }
 
-// assigns a superframe buffer to a particular linklist
-void assign_superframe_to_linklist(linklist_t * ll, uint8_t * superframe) {
-  ll->superframe = superframe;
-}
-
-// assigns a compressed frame buffer to a particular linklist
-void assign_compframe_to_linklist(linklist_t * ll, uint8_t * compframe) {
-  ll->compframe = compframe;
-}
-
-uint32_t get_channel_start_in_superframe(const channel_t * chan)
-{
-  if (!superframe_size) define_superframe();
-
-  if (channel_data[chan->rate] > chan->var)
-  {
-    blast_err("get_channel_start_in_superframe: channel is not in channel_list");
-    return 0;
-  }
-  return ((long unsigned int) (chan->var-channel_data[chan->rate])) + superframe_offset[chan->rate];
-}
-
-uint32_t get_channel_skip_in_superframe(const channel_t * chan)
-{
-  if (!superframe_size) define_superframe();
-
-  if (channel_data[chan->rate] > chan->var)
-  {
-    blast_err("get_channel_start_in_superframe: channel is not in channel_list");
-    return 0;
-  }
-  return superframe_skip[chan->rate];
-}
 
 /**
  * add_frame_to_superframe
@@ -131,9 +193,8 @@ uint32_t get_channel_skip_in_superframe(const channel_t * chan)
  * -> frame: BLAST frame to be copied to the superframe
  * -> rate: the rate type for the BLAST frame
  */
-unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe)
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  static unsigned int frame_location[RATE_END] = {0};
   if (!superframe)
 	{
     blast_err("Superframe is not allocated. Fix!");
@@ -146,22 +207,19 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
   }
   
   // clear the frame if wrapping has occurred (ensures no split data)
-  if (frame_location[rate] == 0)
+  if (*frame_location == 0)
   {
-    memset(superframe+superframe_offset[rate],0,frame_size[rate]*get_spf(rate));
+    memset(superframe+get_superframe_offset(rate),0,frame_size[rate]*get_spf(rate));
   }
 
   // copy the frame to the superframe
-  memcpy(superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame,frame_size[rate]);
+  memcpy(superframe+get_superframe_offset(rate)+frame_size[rate]*(*frame_location),frame,frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
 /**
@@ -171,11 +229,10 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
  * -> frame: BLAST frame to be copied from the superframe
  * -> rate: the rate type for the BLAST frame
  */
-unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe)
+unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  static unsigned int frame_location[RATE_END] = {0};
   if (!superframe)
-	{
+  {
     blast_err("Superframe is not allocated. Fix!");
     return 0;
   }
@@ -186,29 +243,15 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
   }
 
   // copy the frame from the superframe
-  memcpy(frame,superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame_size[rate]);
+  memcpy(frame,superframe+get_superframe_offset(rate)+frame_size[rate]*(*frame_location),frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
-// returns true if all frames are ready and synced to the superframe
-// i.e. superframe is ready for compression
-int superframe_data_is_ready() {
-  int i;
-  uint8_t data_ready = 1;
-  for (i = 0; i < RATE_END; i++) {
-    data_ready &= superframe_flag[i];
-    blast_info("Frame flag: %u\n", superframe_flag[i]);
-  }
-  return data_ready;
-}
 
 /**
  * compress_linklist
@@ -216,12 +259,8 @@ int superframe_data_is_ready() {
  * Selects channels from and compresses a superframe according to the provide
  * linklist format.
  * -> buffer_out: buffer in which compressed frame will be written.
-                  If NULL, the buffer assigned to the linklist via 
-                  assign_compframe_to_linklist will be used. 
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the superframe to be compressed. If NULL
-                  the buffer assigned to the linklist via
-                  assign_superframe_to_linklist will be used.
+ * -> buffer_in: pointer to the superframe to be compressed. 
  */
 int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 {
@@ -237,18 +276,12 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
 
   // check validity of buffers
   if (!buffer_in) {
-    if (!ll->superframe) {
-      blast_err("buffer_in is NULL and no superframe assigned to linklist");
-      return 0;
-    }
-    buffer_in = ll->superframe;
+    blast_err("buffer_in is NULL and no superframe assigned to linklist");
+    return 0;
   }
   if (!buffer_out) {
-    if (!ll->compframe) {
-      blast_err("buffer_out is NULL and no compframe assigned to linklist");
-      return 0;
-    }
-    buffer_out = ll->compframe;
+    blast_err("buffer_out is NULL and no compframe assigned to linklist");
+    return 0;
   }
 
   for (i=0;i<ll->n_entries;i++)
@@ -266,7 +299,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
         for (j=0;j<2;j++) crccheck(tlm_out_buf[j],&checksum,crctable); // check the checksum
         if (checksum != 0) 
         {
-          printf("compress_linklist: invalid checksum generated\n");
+          blast_err("compress_linklist: invalid checksum generated\n");
         }
         //printf("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
       }
@@ -274,29 +307,29 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
     }
     else // normal field
     {
-      tlm_out_size = tlm_le->blk_size;
-      tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
-      tlm_comp_type = tlm_le->comp_type;
-      tlm_in_buf = buffer_in+tlm_in_start;
-
-/* TODO: BLOCKS
-      if (tlm_le->tlm->type == 'B') // block types for images
+      if (tlm_le->tlm == &block_channel) // data block field
       {
-        packetize_block(downlinklist[linkfile_ind],tlm_le->tlm->name,tlm_out_buf);
-        //printf("intname = %d\n",*(uint16_t *) tlm_out_buf);
+        block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+        if (theblock) packetize_block_raw(theblock, tlm_out_buf);
+        else blast_err("Could not find block in linklist \"%s\"", ll->name);
       }
-      else 
-*/
-      if (tlm_comp_type != NO_COMP) // compression
+      else // just a normal field 
       {
-        (*compressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-      }
-      else
-      {
-        decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        tlm_comp_type = tlm_le->comp_type;
+        tlm_in_start = get_channel_start_in_superframe(tlm_le->tlm);
+        tlm_in_buf = buffer_in+tlm_in_start;
+        if (tlm_comp_type != NO_COMP) // compression
+        {
+          (*compRoutine[tlm_comp_type].compressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
+        else
+        {
+          decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
       }
 
       // update checksum
+			tlm_out_size = tlm_le->blk_size;
       for (j=0;j<tlm_out_size;j++) crccheck(tlm_out_buf[j],&checksum,crctable);
     }
   }
@@ -321,7 +354,7 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
     tlm_le = &(req_ll->items[i]);
     if (tlm_le->tlm != NULL)
     { 
-      if (tlm_le->tlm->type != 'B')
+      if (tlm_le->tlm != &block_channel)
       { 
         tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
         tlm_out_skip = get_channel_skip_in_superframe(tlm_le->tlm);
@@ -360,12 +393,8 @@ double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buff
                   If NULL, the buffer assigned to the linklist via
                   assign_superframe_to_linklist will be used.
  * -> ll: pointer to linklist specifying compression and channel selection
- * -> buffer_in: pointer to the compressed frame to be decompressed. If NULL,
-                  the buffer assigned to the linklist via
-                  assign_compframe_to_linklist will be used.
+ * -> buffer_in: pointer to the compressed frame to be decompressed. 
  * -> maxsize: the maximum size of the input buffer which may be less than
-                  ll->blk_size. All data after maxsize will be assumed to
-                  be corrupt or empty.
  */
 double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize)
 {
@@ -385,18 +414,12 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
 
   // check validity of buffers
   if (!buffer_out) {
-    if (!ll->superframe) {
-      blast_err("buffer_out is NULL and no superframe assigned to linklist");
-      return 0;
-    }
-    buffer_out = ll->superframe;
+    blast_err("buffer_out is NULL and no superframe assigned to linklist");
+    return 0;
   }
   if (!buffer_in) {
-    if (!ll->compframe) {
-      blast_err("buffer_in is NULL and no compframe assigned to linklist");
-      return 0;
-    }
-    buffer_in = ll->compframe;
+    blast_err("buffer_in is NULL and no compframe assigned to linklist");
+    return 0;
   }
 
   if (buffer_save == NULL) buffer_save = calloc(1, superframe_size);
@@ -418,9 +441,11 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     {
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+        break;
+        // blast_info("Block %d is beyond the max size of %d", sumcount, maxsize);
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
-        printf("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        blast_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
@@ -435,32 +460,33 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     }
     else
     {
-      tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
-      tlm_comp_type = tlm_le->comp_type;
-      tlm_out_buf = buffer_out+tlm_out_start;
+      if (tlm_le->tlm == &block_channel) // data block channel 
+      {
+        block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+        if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
+        else blast_err("Could not find block in linklist \"%s\"", ll->name);
+      }
+      else // just a normal field
+      {
+        tlm_out_start = get_channel_start_in_superframe(tlm_le->tlm);
+        tlm_comp_type = tlm_le->comp_type;
+        tlm_out_buf = buffer_out+tlm_out_start;
 
-/* TODO BLOCKS
-      if (tlm_le->tlm->type == 'B') // block types for images
-      {
-        depacketize_block(downlinklist[linkfile_ind],tlm_le->tlm->name,tlm_in_buf);
-        //printf("intname = %d\n",*(uint16_t *) tlm_out_buf);
-      }
-      else 
-*/
-      if (tlm_comp_type != NO_COMP) // compression
-      {
-        (*decompressFunc[tlm_comp_type])(tlm_out_buf,tlm_le,tlm_in_buf);
-      }
-      else
-      {
-        decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        if (tlm_comp_type != NO_COMP) // compression
+        {
+          (*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
+        else
+        {
+          decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
+        }
       }
     }
   }
   if (!prechecksum) // all the checksums were zero; must be blank frame
   {
     fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
-    ret = 0;
+    // ret = 0;
   }
   // save the data
   memcpy(buffer_save, buffer_out, superframe_size);
@@ -468,6 +494,137 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
   ret = (tot == 0) ? ret : ret/tot;
 
   return ret;
+}
+
+void packetize_block_raw(struct block_container * block, uint8_t * buffer)
+{
+  if (block->i < block->n) { // packets left to be sent 
+    unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
+    unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE, block->curr_size-loc);
+    
+    int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n, block->curr_size);
+ 
+    if (loc > block->curr_size) {
+      blast_err("Block location %d > total size %d", loc, block->curr_size);
+      return;
+    }
+
+    if (block->fp) { // there is a file instead of data in a buffer
+      *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
+      fseek(block->fp, loc, SEEK_SET); // go to the location in the file
+      int retval = 0;
+      if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
+        blast_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
+      }
+    } else { // there is data in the buffer
+      memcpy(buffer+fsize, block->buffer+loc, cpy);
+    }
+
+    // if (block->n > 5) printf("Sent block %d/%d (id = %d, size = %d)\n",block->i+1,block->n,block->id,cpy);
+    
+    block->i++;
+    block->num++;
+  } else { // no blocks left
+    memset(buffer, 0, block->le->blk_size);
+    block->i = block->n;
+    if (block->fp) { // file was open, so close it
+      fclose(block->fp);
+      block->fp = NULL;
+      block->filename[0] = 0;
+    }
+    //printf("Nothing to send\n");
+  }
+
+}
+
+// handle for openning and appending to files even if they don't exist
+FILE * fpreopenb(char *fname)
+{
+  FILE * temp = fopen(fname,"ab");
+  fclose(temp);
+  return fopen(fname,"rb+");
+}
+
+void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
+{
+  uint16_t id = 0;
+  uint16_t i = 0, n = 0;
+  uint16_t blksize = 0;
+  uint32_t totalsize = 0;
+
+  int fsize = read_block_header(buffer,&id,&blksize,&i,&n,&totalsize);
+
+  // no data to read
+  if (blksize == 0) {
+    // close any dangling file pointers
+    if (block->fp) {
+      blast_info("Closing \"%s\"", block->filename);
+      fclose(block->fp);
+      block->fp = NULL;
+      block->filename[0] = 0;
+    }
+    return;
+  }
+
+  if (n == 0) { // special case of block fragment
+    blast_info("Received block fragment %d (size %d)\n",i,totalsize);
+    
+    totalsize = blksize;
+    block->num = 1;
+    
+    i = 0;
+    n = 0;
+  } else if (i >= n) { 
+    blast_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
+    //memset(buffer,0,blksize+fsize); // clear the bad block
+    return;
+  }
+ 
+  unsigned int loc = i*(block->le->blk_size-fsize);
+
+  if (id & BLOCK_FILE_MASK) { // receiving a file
+    // a different id packet was received, so close file if that packet is open
+    id ^= BLOCK_FILE_MASK; // remove the mask
+    if ((id != block->id) && block->fp) {
+      fclose(block->fp);
+      block->fp = NULL;
+    }
+    if (!block->fp) { // file not open yet
+      sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
+      if (!(block->fp = fpreopenb(block->filename))) {
+        blast_err("Cannot open file %s", block->filename);
+        return;
+      }
+      blast_info("New file \"%s\" opened\n", block->filename);
+    }
+    fseek(block->fp, loc, SEEK_SET); 
+    int retval = 0;
+    if ((retval = fwrite(buffer+fsize, 1, blksize, block->fp)) != blksize) {
+      blast_err("Could only write %d/%d bytes at %d to file %s", retval, blksize, loc, block->filename);
+    }
+
+  } else { // just a normal block to be stored in memory
+    // expand the buffer if necessary
+    if (totalsize > block->alloc_size)
+    {  
+      void * tp = realloc(block->buffer,totalsize);
+      block->buffer = (uint8_t *) tp;
+      block->alloc_size = totalsize;
+    }
+    memcpy(block->buffer+loc,buffer+fsize,blksize);
+  }
+
+  // set block variables 
+  block->curr_size = totalsize;
+  block->i = i;
+  block->n = n;
+  block->id = id;  
+
+  block->i++;
+  block->num++;
+
+  blast_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+
 }
 
 double datatodouble(uint8_t * data, char type)
@@ -550,8 +707,8 @@ int write_allframe(uint8_t * allframe, uint8_t * superframe) {
   if (wd) memcpy(allframe, &test, 4);
 
   for (i=0;i<channels_count;i++) {
-    tlm_in_start = get_channel_start_in_superframe(&channel_list[i]);
-    tlm_size = channel_size(&channel_list[i]);
+    tlm_in_start = get_channel_start_in_superframe(&ll_channel_list[i]);
+    tlm_size = channel_size(&ll_channel_list[i]);
 
     if (wd) memcpy(allframe+tlm_out_start, superframe+tlm_in_start, tlm_size);
     tlm_out_start += tlm_size;
@@ -576,10 +733,10 @@ int read_allframe(uint8_t * superframe, uint8_t * allframe) {
   }
   
   for (i=0; i<channels_count; i++) { 
-    tlm_out_start = get_channel_start_in_superframe(&channel_list[i]);
-    tlm_size = channel_size(&channel_list[i]);
-    tlm_num = get_channel_spf(&channel_list[i]);
-    tlm_skip = get_channel_skip_in_superframe(&channel_list[i]);
+    tlm_out_start = get_channel_start_in_superframe(&ll_channel_list[i]);
+    tlm_size = channel_size(&ll_channel_list[i]);
+    tlm_num = get_channel_spf(&ll_channel_list[i]);
+    tlm_skip = get_channel_skip_in_superframe(&ll_channel_list[i]);
 
     for (j=0;j<tlm_num;j++) {
       memcpy(superframe+tlm_out_start, allframe+tlm_in_start, tlm_size);
@@ -1092,18 +1249,15 @@ int decimationDecompress(uint8_t * data_out, struct link_entry *le, uint8_t * da
 
 }
 
-int (*compressFunc[]) (uint8_t *, struct link_entry *, uint8_t *) = {
-  // ** THESE TWO FUNCTIONS MUST BE FIRSt **/
-  stream16bitFixedPtComp,   stream32bitFixedPtComp,   
-  stream8bitDeltaComp,     stream8bitComp,
-  NULL    
-};
 
-int (*decompressFunc[]) (uint8_t *, struct link_entry *, uint8_t *) = {
-  // ** THESE TWO FUNCTIONS MUST BE FIRSt **/
-  stream16bitFixedPtDecomp,  stream32bitFixedPtDecomp,  
-  stream8bitDeltaDecomp,   stream8bitDecomp,
-  NULL
+struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1] = {
+  {COMPRESS(FIXED_PT_16BIT), stream16bitFixedPtComp, stream16bitFixedPtDecomp},
+  {COMPRESS(FIXED_PT_32BIT), stream32bitFixedPtComp, stream32bitFixedPtDecomp},
+  {COMPRESS(MEAN_FLOAT_DELTA_8BIT), stream8bitDeltaComp, stream8bitDeltaDecomp},
+  {COMPRESS(MEAN_FLOAT_8BIT), stream8bitComp, stream8bitDecomp},
+ 
+  // terminator
+  {0}
 };
 
 #ifdef __cplusplus

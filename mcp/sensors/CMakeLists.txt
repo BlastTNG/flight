@@ -1,8 +1,8 @@
 set(SENSOR_SRCS
     ${SENSOR_SRCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/acs.c    
-    #${CMAKE_CURRENT_SOURCE_DIR}/csbf_dgps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dsp1760.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/gps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/geomag2015.c
     ${CMAKE_CURRENT_SOURCE_DIR}/magnetometer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_network.c
@@ -15,6 +15,7 @@ set(SENSOR_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/dsp1760.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/EGM9615.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/geomag2015.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/gps.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/magnetometer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_network.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/xsc_protocol.h

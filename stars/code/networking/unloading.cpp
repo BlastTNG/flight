@@ -34,7 +34,7 @@
 #define shared_packets (*(Shared::Network::packets.w))
 #define shared_image_client1_settings (*(Shared::Network::image_client_settings1.w))
 #define shared_image_client2_settings (*(Shared::Network::image_client_settings2.w))
-#define shared_housekeeper (*(Shared::Housekeeping::housekeeper.r))
+#define shared_housekeeper (*(Shared::Housekeeping::housekeeper_for_camera.w))
 #define shared_camera_requests (*(Shared::Camera::requests_for_main.w))
 #define shared_camera_results (*(Shared::Camera::results_for_network.r))
 #define shared_filters (*(Shared::Solving::filters_net_to_main.w))
@@ -86,6 +86,10 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[get_focus].counter = client_data.command_admins[xC_get_focus].counter;
         passed_something = true;
     }
+    if (check_command(xC_stop_focus)) {
+        shared_lens_requests.commands[stop_focus].counter = client_data.command_admins[xC_stop_focus].counter;
+        passed_something = true;
+    }
     if (check_command(xC_set_focus)) {
         shared_lens_requests.commands[set_focus].counter = client_data.command_admins[xC_set_focus].counter;
         shared_lens_requests.commands[set_focus].value = client_data.set_focus_value;
@@ -96,6 +100,11 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[set_focus_incremental].value = client_data.set_focus_incremental_value;
         passed_something = true;
     }
+    if (check_command(xC_define_focus)) {
+        shared_lens_requests.commands[define_focus].counter = client_data.command_admins[xC_define_focus].counter;
+        shared_lens_requests.commands[define_focus].value = client_data.define_focus_value;
+        passed_something = true;
+    }
     if (check_command(xC_init_aperture)) {
         shared_lens_requests.commands[init_aperture].counter = client_data.command_admins[xC_init_aperture].counter;
         passed_something = true;
@@ -104,9 +113,18 @@ void Connection::unload_client_data_lens_and_camera()
         shared_lens_requests.commands[get_aperture].counter = client_data.command_admins[xC_get_aperture].counter;
         passed_something = true;
     }
+    if (check_command(xC_stop_aperture)) {
+        shared_lens_requests.commands[stop_aperture].counter = client_data.command_admins[xC_stop_aperture].counter;
+        passed_something = true;
+    }
     if (check_command(xC_set_aperture)) {
         shared_lens_requests.commands[set_aperture].counter = client_data.command_admins[xC_set_aperture].counter;
         shared_lens_requests.commands[set_aperture].value = client_data.set_aperture_value;
+        passed_something = true;
+    }
+    if (check_command(xC_define_aperture)) {
+        shared_lens_requests.commands[define_aperture].counter = client_data.command_admins[xC_define_aperture].counter;
+        shared_lens_requests.commands[define_aperture].value = client_data.define_aperture_value;
         passed_something = true;
     }
     if (passed_something) {
@@ -331,6 +349,14 @@ void Connection::unload_client_data()
         shared_network_reset.reset_on_lull_delay = client_data.network_reset.reset_on_lull_delay;
         Shared::General::network_reset_for_net_reset.share();
     }
+	static int heater_state = -1;
+
+	if (client_data.heater_state != heater_state) {
+		logger.log("Heater state is " + std::to_string(client_data.heater_state));
+	}
+
+	heater_state = client_data.heater_state;
+	shared_housekeeper.heater_state = heater_state;
 
 }
 

@@ -1,6 +1,8 @@
 /* ---------------------------------------------------------------------
  * ----------------------------- BITSERVER -----------------------------
  * ---------------------------------------------------------------------
+ * Copyright 2014 Javier Romualdez
+ *
  * This program is distributed under the GNU General Public License (GPL)
  * Version 2 or higher.
  *
@@ -15,13 +17,12 @@
  *
  * Created: May 1, 2014
  *
- * Copyright 2014 Javier Romualdez
  *
  * -------------------------- Revisions --------------------------------
  *
  */
-#ifndef BITSERVER_H_
-#define BITSERVER_H_
+#ifndef INCLUDE_BITSERVER_H
+#define INCLUDE_BITSERVER_H
 
 #define UDPMAXBUFLEN 65536   // maximum UDP buffer size [bytes]
 #define PACKET_HEADER_SIZE 12 // header size for packets [bytes]
@@ -48,10 +49,10 @@
 #endif
 
 #ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 #ifndef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifdef __cplusplus
@@ -66,7 +67,7 @@ struct BITSender
   socklen_t slen;
   uint32_t serial;
   uint32_t frame_num;
-  
+
   pthread_t send_thread;
   unsigned int packet_maxsize;
   struct Fifo * send_fifo;
@@ -80,7 +81,7 @@ struct BITRecver
   socklen_t slen;
   uint32_t serial;
   uint32_t frame_num;
-  
+
   pthread_t recv_thread;
   unsigned int packet_maxsize;
   struct Fifo * recv_fifo;
@@ -89,18 +90,18 @@ struct BITRecver
 extern int verbosity;
 
 // some function prototypes
-int initBITSender(struct BITSender *, const  char *, 
-  unsigned int , unsigned int ,
-  unsigned int , unsigned int );
-int initBITRecver(struct BITRecver *, const char *, 
-  unsigned int , unsigned int ,
-  unsigned int , unsigned int );
-  
+int initBITSender(struct BITSender *, const  char *,
+  unsigned int, unsigned int,
+  unsigned int, unsigned int);
+int initBITRecver(struct BITRecver *, const char *,
+  unsigned int, unsigned int,
+  unsigned int, unsigned int);
+
 int closeBITSender(struct BITSender *);
 int closeBITRecver(struct BITRecver *);
 
-int sendToBITSender(struct BITSender *, uint8_t *, unsigned int, uint8_t );
-int recvFromBITRecver(struct BITRecver *, uint8_t *, unsigned int, uint8_t );
+int sendToBITSender(struct BITSender *, uint8_t *, unsigned int, uint8_t);
+int recvFromBITRecver(struct BITRecver *, uint8_t *, unsigned int, uint8_t);
 int peekBITRecver(struct BITRecver *);
 
 uint16_t writeHeader(uint8_t *, uint32_t, uint32_t, uint16_t, uint16_t);
@@ -110,8 +111,8 @@ int setBITSenderAddr(struct BITSender *, uint8_t *);
 uint8_t *getBITSenderAddr(struct BITSender *);
 uint8_t *getBITRecverAddr(struct BITRecver *, unsigned int *);
 
-int setBITSenderSerial(struct BITSender *, uint32_t );
-int setBITRecverSerial(struct BITRecver *, uint32_t );
+int setBITSenderSerial(struct BITSender *, uint32_t);
+int setBITRecverSerial(struct BITRecver *, uint32_t);
 int setBITSenderFramenum(struct BITSender *, uint32_t);
 int setBITRecverFramenum(struct BITRecver *, uint32_t);
 
@@ -122,4 +123,4 @@ int removeBITRecverAddr(struct BITRecver *);
 }
 #endif
 
-#endif /* BITSERVER_H_ */
+#endif /* INCLUE_BITSERVER_H */

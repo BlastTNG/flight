@@ -99,7 +99,7 @@
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
 #define TARG_SWEEP_SPAN 120.0e3 /* Target sweep span = 200 kHz */
-#define NCOEFF 12 /* 1 + Number of FW FIR coefficients */
+#define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Netcat port on Pi for FC1 */
 #define NC2_PORT 12346 /* Netcat port on Pi for FC2 */
@@ -116,7 +116,7 @@
 #define LO_READ_TIMEOUT (600*1000) /* LO read timeout, usec */
 #define INIT_VALON_TIMEOUT (500*1000) /* Valon init timeout, usec */
 #define FLAG_THRESH 300 /* Threshold for use in function roach_check_retune */
-#define ADC_CAL_NTRIES 100
+#define ADC_CAL_NTRIES 30
 #define ADC_TARG_RMS_VNA 100 /* mV, Same for all Roaches */
 #define ADC_TARG_RMS_250 100 /* mV, For 250 micron array TARG sweep */
 #define ADC_RMS_RANGE 5 /* mV */
@@ -137,6 +137,8 @@ static uint32_t accum_len = (1 << 19) - 1; /* Number of FW FFT accumulations */
 double fir_coeffs[12] = {0.0, 0.00145215, 0.0060159, 0.01373059, 0.02425512,
                    0.03688533, 0.05061838, 0.06425732, 0.07654357, 0.08630093,
                    0.09257286, 0.09473569};
+
+char fir_taps_path[] = "/home/fc1user/sam_tests/fir_taps.dat";
 
 // Roach source MAC addresses
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
@@ -161,6 +163,7 @@ uint32_t destmac1 = 256;
 static uint32_t dest_ip = IPv4(239, 1, 1, 234);
 
 const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v5_2018_Feb_12_1224.fpg";
+// const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
@@ -181,7 +184,8 @@ char read_valon_pi[] = "python /home/pi/device_control/read_valon.py";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Wed_Mar_14_19_51_43_2018";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/vna/Thu_Mar_15_13_21_45_2018";
 // char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Wed_Mar_21_16_03_45_2018";
-char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach5/vna/Thu_Apr_19_19_16_51_2018";
+// char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Sat_Apr_21_19_22_25_2018";
+char vna_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Sun_Apr_22_13_38_56_2018";
 
 // char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach2/targ/Tue_Feb_27_14_30_05_2018";
 // char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach1/targ/Tue_Mar_13_21_40_45_2018";
@@ -204,6 +208,28 @@ int get_roach_status(uint16_t ind)
     return status;
 }
 
+int roach_read_1D_file(roach_state_t *m_roach, char *m_file_path, double *m_buffer, size_t m_freqlen)
+{
+    int retval = -1;
+    blast_info("ROACH%d, file = %s", m_roach->which, m_file_path);
+    FILE *fd = fopen(m_file_path, "r");
+    if (!fd) {
+        blast_strerror("Could not open %s for reading", m_file_path);
+    } else {
+        blast_info("Opened %s", m_file_path);
+        for (size_t i = 0; i < m_freqlen; i++) {
+            if (fscanf(fd, "%lg\n", &m_buffer[i]) != EOF) {
+                // blast_info("Roach%d loaded vals: %g", m_roach->which, m_buffer[i]);
+            } else {
+                break;
+            }
+        }
+        fclose(fd);
+        retval = 0;
+    }
+    return retval;
+}
+
 /* Function: load_fir
  * ----------------------------
  * Programs the coefficients for the FW FIR filter
@@ -211,15 +237,20 @@ int get_roach_status(uint16_t ind)
  * @param m_roach a roach state structure
  * @param m_coeff FIR filter coefficients
 */
-void load_fir(roach_state_t *m_roach, double *m_coeff)
+void load_fir(roach_state_t *m_roach)
 {
+    double taps[NTAPS];
+    blast_info("Roach%d, Loading FIR taps", m_roach->which);
+    // If can't load file, use random phases
+    roach_read_1D_file(m_roach, fir_taps_path, taps, NTAPS);
     char *reg;
-    for (int i = 0; i < NCOEFF; ++i) {
-        m_coeff[i] *= ((pow(2, 31) - 1));
+    for (int i = 0; i < NTAPS; ++i) {
+        blast_info("ROACH%d, FIR tap = %g", m_roach->which, taps[i]);
+        taps[i] *= ((pow(2, 31) - 1));
         blast_tmp_sprintf(reg, "FIR_h%d", i);
-        roach_write_int(m_roach, reg, (int32_t)m_coeff[i], 0);
+        roach_write_int(m_roach, reg, (int32_t)taps[i], 0);
     }
-    blast_info("ROACH%d, Uploaded FIR coefficients", m_roach->which);
+    blast_info("ROACH%d, Loaded FIR taps", m_roach->which);
 }
 
 /* Function: roach_qdr_cal
@@ -396,28 +427,6 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register,
     uint32_t sendval = htonl(m_val);
     return roach_write_data(m_roach, m_register, (uint8_t*)&sendval,
                              sizeof(sendval), m_offset, WRITE_INT_TIMEOUT);
-}
-
-int roach_read_1D_file(roach_state_t *m_roach, char *m_file_path, double *m_buffer, size_t m_freqlen)
-{
-    int retval = -1;
-    blast_info("ROACH%d, file = %s", m_roach->which, m_file_path);
-    FILE *fd = fopen(m_file_path, "r");
-    if (!fd) {
-        blast_strerror("Could not open %s for reading", m_file_path);
-    } else {
-        blast_info("Opened %s", m_file_path);
-        for (size_t i = 0; i < m_freqlen; i++) {
-            if (fscanf(fd, "%lg\n", &m_buffer[i]) != EOF) {
-                // blast_info("Roach%d loaded vals: %g", m_roach->which, m_buffer[i]);
-            } else {
-                break;
-            }
-        }
-        fclose(fd);
-        retval = 0;
-    }
-    return retval;
 }
 
 /* Function: roach_init_LUT
@@ -1884,16 +1893,15 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     int stat_return;
     char *file_out;
     // create new chop directory, if doesn't exist
-    stat_return = stat(m_roach->last_chop_path, &dir_stat);
-    if (stat_return != 0) {
-        if (create_sweepdir(m_roach, CHOP)) {
-            blast_info("ROACH%d, CHOPS will be saved in %s",
-                           m_roach->which, m_roach->last_chop_path);
-        } else {
-            blast_err("Could not create new chop directory");
-            CommandData.roach[m_roach->which - 1].get_timestream = 0;
-            return -1;
-        }
+    // stat_return = stat(m_roach->last_chop_path, &dir_stat);
+    // if (stat_return != 0) {
+    if (create_sweepdir(m_roach, CHOP)) {
+        blast_info("ROACH%d, CHOPS will be saved in %s",
+                       m_roach->which, m_roach->last_chop_path);
+    } else {
+        blast_err("Could not create new chop directory");
+        CommandData.roach[m_roach->which - 1].get_timestream = 0;
+        return -1;
     }
     blast_tmp_sprintf(file_out, "%s/%d.dat", m_roach->last_chop_path, m_chan);
     blast_info("chan, nsec: %d, %f", m_chan, m_nsec);
@@ -1993,6 +2001,16 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
         free(Q[i]);
     }
     return 0;
+}
+
+void check_chop_data(roach_state_t *m_roach)
+{
+    char script_path[] = "/data/etc/blast/roachPython/chopSnrs.py";
+    char save_path[] = "/home/fc1user/sam_tests";
+    char *py_command;
+    blast_tmp_sprintf(py_command, "python %s > %s %s", script_path,
+              m_roach->last_chop_path, save_path);
+    // system(py_command);
 }
 
 // get the chop_snr for the timestream saved in save_timestream
@@ -2839,6 +2857,7 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].get_timestream == 2) {
             blast_info("Saving all timestreams");
             save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
+            check_chop_data(&roach_state_table[i]);
         }
         if (CommandData.roach[i].do_master_chop) {
             blast_info("Creating chop template");
@@ -3026,7 +3045,7 @@ void *roach_cmd_loop(void* ind)
             roach_write_int(&roach_state_table[i], "GbE_tx_srcmac1", srcmac1, 0);
             roach_write_int(&roach_state_table[i], "GbE_tx_destmac0", destmac0, 0);
             roach_write_int(&roach_state_table[i], "GbE_tx_destmac1", destmac1, 0);
-            // load_fir(&roach_state_table[i], fir_coeffs);
+            load_fir(&roach_state_table[i]);
             roach_state_table[i].status = ROACH_STATUS_CONFIGURED;
             roach_state_table[i].desired_status = ROACH_STATUS_CALIBRATED;
             }

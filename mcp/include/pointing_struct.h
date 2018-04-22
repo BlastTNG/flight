@@ -118,6 +118,8 @@ struct PointingDataStruct {
   double offset_ifrollmag_gy;
   double offset_ifyawmag_gy;
 
+  double null_az; // degrees
+
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
 
@@ -216,6 +218,8 @@ typedef struct XSCLastTriggerState
     int trigger_time;                       // Time of the last trigger, measured in loops through xsc_control_triggers
     bool forced_grace_period;
     bool forced_trigger_threshold;
+    uint32_t timestamp_s;
+    uint32_t timestamp_us;
 } xsc_last_trigger_state_t;
 
 typedef struct XSCPointingState {
@@ -223,6 +227,7 @@ typedef struct XSCPointingState {
     int counter_mcp;                        // the current counter_mcp, passed to the star camera after some delay
     int last_counter_mcp;                   // the previous counter_mcp passed to the star camera
     int last_solution_stars_counter;        // stars counter of last solution used in pointing solution
+    unsigned int stars_response_counter;
     double az;                              // XSC Az
     double el;                              // XSC El
     int last_trigger_time;

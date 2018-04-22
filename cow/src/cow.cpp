@@ -26,10 +26,11 @@
 // *  Later poked at a bit by D.V.Wiebe              *
 // *  further desecrated by cbn                      *
 // *  Commanding hacked to hell by M.D.P.Truch       *
-// *  "Ported" to qt4 by drmrshdw                    *
+// *  "Ported" to qt4 by Joshua Netterfield          *
 // ***************************************************
 
 #define _XOPEN_SOURCE 501
+#define _POSIX_C_SOURCE 200809L
 
 #include <QCompleter>
 #include <QDebug>
@@ -67,6 +68,8 @@
 #include <QSettings>
 #include <QDirModel>
 #include <QKeyEvent>
+#include <QStyleFactory>
+#include <QTabWidget>
 
 #include <iostream>
 #include <stdio.h>
@@ -87,6 +90,8 @@
 #error Edit cow.pro to define DATA_ETC_COW_DIR !
 #endif
 
+#define PONG_MISS_MAX 5
+
 #define PADDING 3
 #define SPACING 3
 
@@ -100,10 +105,24 @@
 #define ELOG_HOST "elog.blast"
 #endif
 
-#define PING_TIME 59000
+#define PING_TIME 19000
 #define WAIT_TIME 80
 
+#ifdef __APPLE__
+/* On a Mac keyboard, ⌘ (Command) is represented by ControlModifier, and
+ * Control by MetaModifier
+ */
+#define SEND_KEY ev->key() == Qt::Key_Enter && (ev->modifiers() & Qt::ControlModifier)
+/* For reasons of lameness, SEND_KEY_NAME must be a particular length */
+#define SEND_KEY_NAME "Cmd-Ent"
+#else
+#define SEND_KEY ev->key() == Qt::Key_F12 && (ev->modifiers()&Qt::ShiftModifier)
+#define SEND_KEY_NAME "Shift-F12"
+#endif
+
 QString blastcmd_host;
+int stop_comms;
+int missed_pongs;
 
 /* Defaults class holds the default parameter values */
 Defaults::Defaults()
@@ -169,7 +188,7 @@ void Defaults::Set(int i, int j, QString text)
 {
   idefaults[j][i] = text.toInt();
   rdefaults[j][i] = text.toDouble();
-  strncpy(sdefaults[j][i], text.toAscii(), CMD_STRING_LEN - 1);
+  strncpy(sdefaults[j][i], text.toLatin1(), CMD_STRING_LEN - 1);
   sdefaults[j][i][CMD_STRING_LEN - 1] = 0;
 }
 
@@ -191,9 +210,19 @@ const char* Defaults::asString(int i, int j) { return sdefaults[j][i]; }
 int MainForm::GetGroup() {
   int i;
 
-  for (i = 0; i < client_n_groups; i++)
-    if (NGroups[i]->isChecked())
-      return i;
+  if (TabWidget->currentIndex()==0) {
+    for (i = 0; i < client_n_groups; i++) {
+      if (NGroups[i]->isChecked()) {
+        return i;
+      }
+    }
+  } else {
+    for (i=0; i<ListOfHerds.length(); i++) {
+      if (HerdGroups[i]->isChecked()) {
+        return i;
+      }
+    }
+  }
 
   return 0;
 }
@@ -214,6 +243,11 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
   if(r.contains(' ')) r.truncate(x.indexOf(' ')+1);
 
   bool special=0;
+
+  if (NOmniBox->hasFocus()) {
+    TabWidget->setCurrentIndex(0);
+  }
+
   if(!NOmniBox->hasFocus()||((r==x||x+" "==r)&&NOmniBox->oldXSize<x.size())) {
     special=1;
   }
@@ -231,7 +265,11 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
       }
     }
   }
-  if(best_i!=-1) NGroups[OmniList[best_i].group]->toggle();
+  if (TabWidget->currentIndex()==0) {
+    if(best_i!=-1) {
+      NGroups[OmniList[best_i].group]->toggle();
+    }
+  }
 
   for(int i=0;i<NCommandList->count();i++) {
     if(NCommandList->item(i)->text()+" "==r) {
@@ -409,19 +447,56 @@ void MainForm::ChangeCommandList(bool really) {
   NCommandList->clearFocus();
   NCommandList->clear();
 
-  max = GroupSIndexes(GetGroup(), indexes);
-  max += GroupMIndexes(GetGroup(), &indexes[max]);
-  qsort(indexes, max, sizeof(int), &TheSort);
+  if (TabWidget->currentIndex()==0) {
+    max = GroupSIndexes(GetGroup(), indexes);
+    max += GroupMIndexes(GetGroup(), &indexes[max]);
+    //fprintf(stderr, "Group count: %i\n", max);
+    qsort(indexes, max, sizeof(int), &TheSort);
 
-  for (i = 0; i < max; i++)
-    if (indexes[i] >= client_n_scommands)
-      NCommandList->addItem(client_mcommands[indexes[i]
-          - client_n_scommands].name);
-    else
-      NCommandList->addItem(client_scommands[indexes[i]].name);
+    for (i = 0; i < max; i++)
+      if (indexes[i] >= client_n_scommands) {
+        NCommandList->addItem(client_mcommands[indexes[i]
+            - client_n_scommands].name);
+      } else {
+        NCommandList->addItem(client_scommands[indexes[i]].name);
+      }
+  } else {
+    NCommandList->addItems(HerdHash[ListOfHerds.at(GetGroup())]);
+    NCommandList->setSelectionMode(QAbstractItemView::SingleSelection);
 
+  }
   ChooseCommand();
   //    OmniParse();
+}
+
+// Check the dirfile name, and see if it's chagned */
+int MainForm::LinkChanged(void)
+{
+  static char old_target[4096] = { 0 };
+  ssize_t n;
+
+  char lnkname[4096];
+  char target[4096];
+  strncpy(lnkname, NCurFile->text().toStdString().c_str(), 4096);
+  lnkname[4095] = 0;
+
+  n = readlink(lnkname, target, 4096);
+
+  if (n < 0) {
+    //qDebug() << "readlink returned error";
+    old_target[0] = 0; /* forget old name */
+    return 1; // assume we need to re-read
+  }
+
+  if (strncmp(target, old_target, n)) {
+    // Link changed
+    strncpy(old_target, target, n);
+    old_target[n] = 0;
+    return 1;
+  }
+
+  // No change.
+  return 0;
 }
 
 //-------------------------------------------------------------
@@ -433,9 +508,16 @@ void MainForm::ChangeCommandList(bool really) {
 void MainForm::ChooseCommand(bool index_combo_changed, int combo_index) {
   int i, index;
   double indata;
+  Q_UNUSED(combo_index);
 
-  delete _dirfile;
-  _dirfile = new Dirfile(NCurFile->text().toStdString().c_str(), GD_RDONLY);
+  if (LinkChanged()) {
+    delete _dirfile;
+    _dirfile = new Dirfile(NCurFile->text().toStdString().c_str(), GD_RDONLY);
+    if (_dirfile->Error()) {
+      delete _dirfile;
+      _dirfile = NULL;
+    }
+  }
 
   // Remember parameter values
   if (lastmcmd != -1) {
@@ -555,21 +637,35 @@ void MainForm::ChooseCommand(bool index_combo_changed, int combo_index) {
                   cce->SetDefaultValue(index, i);
                 }
               }
-            } else if (((nf = _dirfile->NFrames())>0) && (_dirfile->GetData( client_mcommands[index].params[i].field,
-                                                                             nf-1, 0, 0, 1, // 1 sample from frame nf-1
-                                                                             Float64, (void*)(&indata))!=0)) {
+            } else if (_dirfile && ((nf = _dirfile->NFrames())>0) &&
+                (_dirfile->GetData( client_mcommands[index].params[i].field,
+                                    nf-1, 0, 0, 1, // 1 sample from frame nf-1
+                                    Float64, (void*)(&indata))!=0)) {
               dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(indata);
             } else {
               double d;
               char cmdstr[SIZE_CMDPARNAME];
               if (index_serial) {
-                sprintf(cmdstr, "%s;%d;%s", client_mcommands[index].name, index_serial, client_mcommands[index].params[i].name);
+                sprintf(cmdstr, "%s;%d;%s", client_mcommands[index].name,
+                    index_serial, client_mcommands[index].params[i].name);
               } else {
                 // FIXME: index parameter
-                sprintf(cmdstr, "%s;%s", client_mcommands[index].name, client_mcommands[index].params[i].name);
+                sprintf(cmdstr, "%s;%s", client_mcommands[index].name,
+                    client_mcommands[index].params[i].name);
               }
-              d = NetCmdGetDefault(cmdstr);
-              if ((d == DEF_NOT_FOUND) || (client_mcommands[index].params[i].index_serial)) {
+
+              if (stop_comms)
+                d = DEF_NOT_FOUND;
+              else if (NetCmdGetDefault(&d, cmdstr)) {
+                if (missed_pongs < PONG_MISS_MAX - 1)
+                  missed_pongs++;
+                d = DEF_NOT_FOUND;
+              }
+
+
+              if ((d == DEF_NOT_FOUND) ||
+                  (client_mcommands[index].params[i].index_serial))
+              {
                 dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetDefaultValue(index, i);
               } else {
                 dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetValue(d);
@@ -657,7 +753,7 @@ int MainForm::SIndex(QString cmd) {
   int i;
 
   for (i = 0; i < client_n_scommands; i++) {
-    if (strcmp(client_scommands[i].name, cmd.toAscii()) == 0)
+    if (strcmp(client_scommands[i].name, cmd.toLatin1()) == 0)
       return i;
   }
 
@@ -680,7 +776,7 @@ int MainForm::MIndex(QString cmd) {
   int i;
 
   for (i = 0; i < client_n_mcommands; i++) {
-    if (strcmp(client_mcommands[i].name, cmd.toAscii()) == 0)
+    if (strcmp(client_mcommands[i].name, cmd.toLatin1()) == 0)
       return i;
   }
 
@@ -759,9 +855,11 @@ void MainForm::Tick() {
     NWaitImage->setPixmap(*Images[framenum]);
   }
 
-  ReceivePackets(!verbose, CMD_NONE);
+  if (!stop_comms) {
+    ReceivePackets(!verbose, CMD_NONE);
 
-  ConnBanner->setText(NetCmdBanner());
+    ConnBanner->setText(NetCmdBanner());
+  }
   timer->start(WAIT_TIME);
 }
 
@@ -773,8 +871,13 @@ int MainForm::ReceivePackets(int silent, int wait_for)
 
   do {
     returnstatus = NetCmdReceive(!verbose, 1024, oob_message);
-    if (sending && ((returnstatus & 0xFF) == CMD_BCMD))
-    {
+    if ((returnstatus & 0xFF) == CMD_PING) {
+      pong = 1;
+      if (missed_pongs > 0) {
+        printf("Got a PONG from server.\n");
+        missed_pongs = 0;
+      }
+    } else if (sending && ((returnstatus & 0xFF) == CMD_BCMD)) {
       if ((returnstatus >> 8) == 12)
         returnstatus = (99 << 8);
 
@@ -784,17 +887,27 @@ int MainForm::ReceivePackets(int silent, int wait_for)
         WriteErr(NLog, NULL, returnstatus >> 8);
 
       TurnOff();
-    }
-  } while (returnstatus != CMD_NONE && returnstatus != wait_for);
+    } else if ((returnstatus & 0xff) == CMD_ERRR)
+      break;
+  } while (returnstatus != CMD_NONE && returnstatus != wait_for && !stop_comms);
   return returnstatus;
 }
 
 void MainForm::Ping(void) {
   ping_timer->stop();
-  if (!NetCmdPing())
-  {
-    printf("Error Sending Ping!\n");
+  if (!pong) { /* missed a pong */
+    printf("Missed PONG #%i from server!\n", missed_pongs);
+    if (++missed_pongs > PONG_MISS_MAX) {
+      stop_comms = 1;
+      ServerDropped();
+    }
   }
+
+  if (!NetCmdPing()) {
+    /* ping succesfully sent */
+    pong = 0; /* wait for next pong */
+  }
+
   ping_timer->start(PING_TIME);
 }
 
@@ -845,7 +958,7 @@ void MainForm::TurnOff(void) {
     QWidget* c=dynamic_cast<QWidget*>(NBotFrame->children()[i]);
     if(c) c->setEnabled(1);
   }
-  NSendButton->setText(tr("Send (Shift+F12)"));
+  NSendButton->setText(tr("Send (" SEND_KEY_NAME ")"));
 }
 
 
@@ -859,7 +972,7 @@ void MainForm::SendCommand() {
   int index, j;
   char buffer[1024];
   char request[1024];
-  const char link[] = "LTI";
+  const char link[] = "LTIP";
   const char route[] = "12";
 
   if (!sending) {
@@ -872,7 +985,7 @@ void MainForm::SendCommand() {
     request[2] = ' ';
 
     // command name
-    strcpy(request + 3, NCommandList->currentItem()->text().toAscii());
+    strcpy(request + 3, NCommandList->currentItem()->text().toLatin1());
 
     // Parameters
     if ((index = MIndex(NCommandList->currentItem()->text())) != -1)
@@ -946,22 +1059,14 @@ void MainForm::SendCommand() {
     dir=1;
     framenum=1;
 
+    /* NetCmd inhibited */
+    if (stop_comms)
+      return;
+
     /* Take the conn */
     /* note: loop takes place in TakeConn now. TODO implement limited attempts
-       int times = 0;
-       if (!NetCmdTakeConn()) {
-       do {
-       usleep(WAIT_TIME / 2 * 1000); //Half the normal wait time
-       times++;
-       } while (times < 25 && ReceivePackets(!verbose, CMD_CONN) != CMD_CONN);
-       if (!NetCmdTakeConn()) { //Never got the conn.
-       WriteCmd(NLog, request);
-       WriteErr(NLog, 12);
-       return;
-       }
-       }
-       */
-    if (!NetCmdTakeConn(verbose)) { //Never got the conn.
+    */
+    if (!NetCmdTakeConn(!verbose)) { //Never got the conn.
       WriteCmd(NLog, request);
       WriteErr(NLog, 12);
       return;
@@ -977,13 +1082,35 @@ void MainForm::SendCommand() {
     strcat(request, "\r\n");
     NetCmdSend(request);
   } else {
-    NetCmdSend("::kill::\r\n");
+    if (!stop_comms)
+      NetCmdSend("::kill::\r\n");
+  }
+}
+
+void MainForm::ServerDropped() {
+  bool ok;
+  stop_comms = 1; /* The reset will restart comms */
+
+  QString host=QInputDialog::getText(this,
+      "Server Dropped",
+      "Connection to server lost.  You may change "
+      "servers at this point, if desired, or cancel to close COW",
+      QLineEdit::Normal, blastcmd_host, &ok);
+  if (!ok) {
+    Quit();
+    qApp->exit(0);
+  } else {
+    blastcmd_host=host;
+    Quit();
+    qApp->exit(1337);
   }
 }
 
 void MainForm::ChangeHost() {
   bool ok;
-  QString host=QInputDialog::getText(this,windowTitle(),"What host should cow connect to?",QLineEdit::Normal,"",&ok);
+  QString host=QInputDialog::getText(this,
+      "Change Host", "What host (or host:port) should cow connect to?", 
+      QLineEdit::Normal, blastcmd_host, &ok);
   if(!ok) {
     return;
   } else {
@@ -1071,15 +1198,20 @@ void MainForm::WriteLog(const char *request) {
     case 2:
       LogEntry+="Iridium";
       break;
+    case 3:
+      LogEntry+="Pilot";
+      break;
   }
-  LogEntry+= " through SIP ";
-  switch (NSendRoute->currentIndex()) {
-    case 0:
-      LogEntry+="COMM 1";
-      break;
-    case 1:
-      LogEntry+="COMM 2";
-      break;
+  if (NSendMethod->currentIndex() != 3) {
+    LogEntry+= " through SIP ";
+    switch (NSendRoute->currentIndex()) {
+      case 0:
+        LogEntry+="COMM 1";
+        break;
+      case 1:
+        LogEntry+="COMM 2";
+        break;
+    }
   }
 
   LogEntry += "\n";
@@ -1091,8 +1223,8 @@ void MainForm::WriteLog(const char *request) {
     .arg("Cow",-10)
     .arg(Group, -10)
     .arg((getpwuid(getuid()))->pw_name, -10)
-    .arg(_dirfile->NFrames(),-10)
-    .arg(_dirfile->Name());
+    .arg(_dirfile ? _dirfile->NFrames() : -1, -10)
+    .arg(_dirfile ? _dirfile->Name() : "");
 
   LogEntry+="--------------------------------------------------\n\n";
 
@@ -1126,6 +1258,40 @@ void MainForm::WriteLog(const char *request) {
   }
 #endif
 }
+
+void MainForm::ReadHerdFile(const QString &herd_file_name)
+{
+  QFile file(herd_file_name);
+
+  QString herd;
+
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return;
+  }
+
+  while (!file.atEnd()) {
+    QByteArray line = file.readLine();
+    if (line.contains('#')) {
+      line.truncate(line.indexOf('#'));
+    }
+    line = line.trimmed();
+    if (line.isEmpty()) {
+      continue;
+    }
+
+    if (line.startsWith('[')) {
+      if (line.endsWith(']')) {
+        line.remove(0,1);
+        line.chop(1);
+        herd = QString(line);
+        ListOfHerds.append(herd);
+      }
+    } else {
+      HerdHash[herd].append(QString(line));
+    }
+  }
+}
+
 
 //-------------------------------------------------------------
 //
@@ -1199,6 +1365,18 @@ void MainForm::WriteErr(QTextEdit *dest, const char *message, int retstatus) {
         txt += "\n";
       }
       break;
+    case 18:
+      txt = "  COMMAND NOT SENT: Error forwarding command.\n";
+      break;
+    case 19:
+      txt = "  COMMAND NOT SENT: Protocol error.\n";
+      break;
+    case 20:
+      txt = "  COMMAND NOT SENT: Link/route pair disabled by command server.\n";
+      break;
+    default:
+      txt = "  COMMAND POSSIBLY NOT SENT: Unrecognised response from server.\n";
+      break;
   }
 
   QFile f(LOGFILE);
@@ -1252,7 +1430,7 @@ void MainForm::ReadLog(QTextEdit *dest) {
 
 void MainForm::keyPressEvent(QKeyEvent *ev)
 {
-  if(ev->key()==Qt::Key_F12&&(ev->modifiers()&Qt::ShiftModifier)) {
+  if (SEND_KEY) {
     NSendButton->animateClick(100);
   } else if(dynamic_cast<AbstractCowEntry*>(focusWidget())) {
     QMainWindow::keyPressEvent(ev);
@@ -1322,8 +1500,8 @@ void MainForm::PopulateOmnibox()
 //
 //-------------------------------------------------------------
 
-MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
-    Qt::WFlags fl) : QMainWindow( parent, fl )
+MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  const char* name,
+    Qt::WindowFlags fl) : QMainWindow( parent, fl )
 {
   setObjectName(name?QString(name):"Cow");
   int i;
@@ -1331,6 +1509,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   QSize tempsize;
   QPoint point;
   int w1, w2, w3, h1, h2, h3;
+
+  ReadHerdFile(herdfile);
 
   _dirfile = NULL;
 
@@ -1341,6 +1521,8 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   curfile = cf;
   lastmcmd = -1;
   sending = 0;
+  verbose = 0;
+  pong = 1;
 
   Images[0] = new QPixmap(":/icons/lightning00.png");
   Images[1] = new QPixmap(":/icons/lightning03.png");
@@ -1349,14 +1531,22 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   Images[4] = new QPixmap(":/icons/lightning12.png");
   Images[5] = new QPixmap(":/icons/lightning15.png");
 
-  /*
+  QString username = qgetenv("USER");
+  if (username.isEmpty())
+    username = qgetenv("USERNAME");
+
+  // if not SJB, also work when COW_BUTT environment variable is set
+  bool cowbutt = !qgetenv("COW_BUTT").isNull();
+
+  if (username == "sjb" || cowbutt) {
      Images[0] = new QPixmap(":/icons/cow0.png");
      Images[1] = new QPixmap(":/icons/cow1.png");
      Images[2] = new QPixmap(":/icons/cow2.png");
      Images[3] = new QPixmap(":/icons/cow3.png");
      Images[4] = new QPixmap(":/icons/cow4.png");
      Images[5] = new QPixmap(":/icons/cow5.png");
-     */
+  }
+
   framenum = 0;
   numframes = 4;
   dir = 1;
@@ -1380,9 +1570,13 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   // no automatic spacers because with the dynamic properties of the program
   // (things popping in and out of existence as different commands are
   // chosen) things would mess up.  So the code ain't too pretty . . .
-  NGroupsBox = new QGroupBox(this->centralWidget);
+  TabWidget = new QTabWidget(centralWidget);
+  tab1 = new QWidget();
+
+  NGroupsBox = new QGroupBox(tab1);
   NGroupsBox->setObjectName("NGroupsBox");
-  theVLayout->addWidget(NGroupsBox);
+  NGroupsBox->setFlat(true);
+  //theVLayout->addWidget(NGroupsBox);
 
   NGroupsLayout = new QGridLayout(NGroupsBox);
   NGroupsLayout->setAlignment(Qt::AlignTop);
@@ -1400,6 +1594,32 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
     NGroupsLayout->addWidget(NGroups[i], int(i/3), (i%3));
   }
 
+  TabWidget->addTab(tab1,"Default");
+
+  tab2 = new QWidget();
+  HerdGroupBox = new QGroupBox(tab2);
+  HerdGroupBox->setObjectName("NGroupsBox");
+  HerdGroupBox->setFlat(true);
+
+  HerdGroupsLayout = new QGridLayout(HerdGroupBox);
+  HerdGroupsLayout->setAlignment(Qt::AlignTop);
+  HerdGroupsLayout->setSpacing(1);
+  HerdGroupsLayout->setMargin(5);
+
+  HerdGroups = new QRadioButton*[ListOfHerds.length()];
+  for (i = 0; i < ListOfHerds.length(); i++) {
+    HerdGroups[i] = new QRadioButton(HerdGroupBox);
+    connect(HerdGroups[i],SIGNAL(toggled(bool)),this,SLOT(ChangeCommandList(bool)));
+    //HerdGroups[i]->setObjectName("QGroup");
+    HerdGroups[i]->setText(ListOfHerds.at(i));
+    HerdGroupsLayout->addWidget(HerdGroups[i], int(i/3), (i%3));
+  }
+
+  TabWidget->addTab(tab2, "Custom");
+
+  theVLayout->addWidget(TabWidget);
+  connect(TabWidget, SIGNAL(currentChanged(int)), this, SLOT(ChangeCommandList()));
+
   NTopFrame = new QFrame(this->centralWidget);
   NTopFrame->setObjectName("NTopFrame");
   NTopFrame->setFrameShape(QFrame::Box);
@@ -1408,6 +1628,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
 
   NCommandList = new QListWidget(this->centralWidget);
+  NCommandList->setSelectionMode(QAbstractItemView::SingleSelection);
   NCommandList->setObjectName("NCommandList");
   NCommandList->adjustSize();
   NCommandList->setGeometry(PADDING, PADDING+120, NCommandList->width(), 0);
@@ -1456,10 +1677,10 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   NAboutLabel->setAlignment(Qt::AlignLeft);
   NAboutLabel->setGeometry(0, 0, 2 * (w2 + w3 + PADDING) + SPACING * 4, 0);
   tempsize = NAboutLabel->sizeHint();
-  NAboutLabel->setGeometry(PADDING , PADDING*2+25, 2 * (w2 + w3 + PADDING)
+  NAboutLabel->setGeometry(PADDING , PADDING*2, 2 * (w2 + w3 + PADDING)
       + SPACING * 4, tempsize.height());
 
-  h1 = NAboutLabel->height()+PADDING+25;
+  h1 = NAboutLabel->height()+PADDING;
   for (i = 0; i < MAX_N_PARAMS; i++) {
     w2 = NParamLabels[i]->width();
     w3 = NParamFields[i]->width();
@@ -1481,7 +1702,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
   NCurFile = new QLineEdit(NTopFrame);
   NCurFile->setObjectName("NCurFile");
-  NCurFile->setText(tr(curfile.toAscii()));
+  NCurFile->setText(tr(curfile.toLatin1()));
   NCurFile->adjustSize();
   QCompleter* completer=new QCompleter;
   completer->setModel(new QDirModel(completer));
@@ -1503,6 +1724,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   NSendMethod->addItem(tr("LOS"));
   NSendMethod->addItem(tr("TDRSS"));
   NSendMethod->addItem(tr("Iridum"));
+  NSendMethod->addItem(tr("Pilot"));
   NSendMethod->adjustSize();
 
   NSendRoute = new QComboBox(NTopFrame);
@@ -1544,17 +1766,24 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   NTopFrame->adjustSize();
 
   NGroupsBox->adjustSize();
-  NGroupsBox->setGeometry(
-      2 * PADDING + NCommandList->width(),
-      PADDING*2+25,
-      NTopFrame->width(),
-      NGroupsBox->height()+NOmniBox->height()+PADDING);
+  NGroupsBox->setGeometry(0,0,NTopFrame->width(), NGroupsBox->height());
 
-  NTopFrame->setGeometry(
-      2 * PADDING + NCommandList->width(),
-      PADDING * 2 + NGroupsBox->height()+10,
-      NTopFrame->width(),
-      NTopFrame->height());
+  HerdGroupBox->adjustSize();
+  HerdGroupBox->setGeometry(0,0,NTopFrame->width(), HerdGroupBox->height());
+
+  int xleft = 2 * PADDING + NCommandList->width();
+  int ytop = PADDING*2+25;
+  int width = NTopFrame->width();
+  int height = TabWidget->tabBar()->height()+NGroupsBox->height()+2*PADDING;
+
+  TabWidget->adjustSize();
+  TabWidget->setGeometry(xleft, ytop, width, height);
+
+  NTopFrame->adjustSize();
+  ytop = ytop + height;
+  width = NTopFrame->width();
+  height = NTopFrame->height();
+  NTopFrame->setGeometry(xleft, ytop, width, height);
 
   NBotFrame = new QFrame(this->centralWidget);
   NBotFrame->setObjectName("NBotFrame");
@@ -1564,7 +1793,7 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
 
   NSendButton = new QPushButton(NBotFrame);
   NSendButton->setObjectName("NSendButton");
-  NSendButton->setText(tr("Send (Shift+F12)"));
+  NSendButton->setText(tr("Send (" SEND_KEY_NAME ")"));
   NSendButton->adjustSize();
   NSendButton->setDisabled(true);
 
@@ -1598,15 +1827,16 @@ MainForm::MainForm(const char *cf, QWidget* parent,  const char* name,
   ReadLog(NLog);
 
   NBotFrame->adjustSize();
-  NBotFrame->setGeometry(
-      2*PADDING+NCommandList->width(),
-      -25+PADDING * 3 + NGroupsBox->height() + NTopFrame->height(),
-      NTopFrame->width(),
+
+  ytop = ytop + NTopFrame->height();
+
+  NBotFrame->setGeometry(xleft, ytop, NTopFrame->width(),
       NBotFrame->height());
 
   NOmniBox->setGeometry(PADDING,PADDING,NCommandList->width()+PADDING+NTopFrame->width(),25);
-  NCommandList->setGeometry(PADDING, PADDING+25, NCommandList->width(), PADDING
-      * 2 + NGroupsBox->height() + NTopFrame->height() + NBotFrame->height()-25-25-PADDING);
+
+  NCommandList->setGeometry(PADDING, PADDING+NOmniBox->height()+PADDING,
+                            NCommandList->width(), ytop+NBotFrame->height()-25-2*PADDING);
 
   timer = new QTimer(this);
   timer->setObjectName("image_timer");
@@ -1649,8 +1879,9 @@ MainForm::~MainForm()
 {
   Quit();
   delete _dirfile;
+  _dirfile = NULL;
 
-  for(int i=0;i<6;i++)
+  for (int i = 0; i < 6; i++)
     delete Images[i];
 
   delete theVLayout;
@@ -1664,9 +1895,25 @@ MainForm::~MainForm()
 //****     Main()
 //***************************************************************************
 
+// Who ever though raising SIGABRT when QApplication couldn't connect to the
+// display would be a good idea?
+void handle_sigabrt(int sig)
+{
+  Q_UNUSED(sig);
+  std::cerr << "The Cow says: \"I can't connect to your DISPLAY." << std::endl;
+  std::cerr << "                Have you tried 'ssh -YC'?\"" << std::endl;
+  exit(1);
+}
+
 Defaults *defaults;
 int main(int argc, char* argv[]) {
+
+  // Catch QApplication's SIGABRT
+  signal(SIGABRT, &handle_sigabrt);
   QApplication app(argc, argv);
+
+  // Clear signal handler
+  signal(SIGABRT, SIG_DFL);
   QApplication::setOrganizationName("University of Toronto");
   QApplication::setApplicationName("cow");
 
@@ -1701,22 +1948,40 @@ int main(int argc, char* argv[]) {
 
   int retCode=1337;
   while(retCode==1337) {
+    int n;
     /* Client negotiation */
-    while (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
-      //retry if connection refused (HACK! fixes bug in blastcmd authentication)
-      sleep(1);
-      printf("Trying to connect one more time\n");
-      if (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
+    stop_comms = 0;
+    missed_pongs = 0;
+    while ((n = NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0)) < 0) {
+      if (n == -16) { /* unauthorised */
         bool ok;
-        blastcmd_host=QInputDialog::getText(0,"Bad host","Could not connect to "+QString(blastcmd_host)+" or blastcmd daemon. Try another hostname.",
-            QLineEdit::Normal,QString(blastcmd_host),&ok).toAscii();
-        if(!ok) {
+        blastcmd_host=QInputDialog::getText(0, "Unauthorised",
+            "You are not authorised to use the blastcmd daemon on " +
+            QString(blastcmd_host) + ". Try another hostname.",
+            QLineEdit::Normal,QString(blastcmd_host),&ok).toLatin1();
+        if (!ok)
           exit(16);
+      } else {
+        //retry if connection refused (HACK! fixes bug in blastcmd
+        //authentication)
+        sleep(1);
+        printf("Trying to connect one more time\n");
+        if (NetCmdConnect(blastcmd_host.toStdString().c_str(), 1, 0) < 0) {
+          bool ok;
+          blastcmd_host=QInputDialog::getText(0, "Bad host",
+              "Could not connect to " + QString(blastcmd_host) +
+              " or blastcmd daemon. Try another hostname.",
+              QLineEdit::Normal,QString(blastcmd_host),&ok).toLatin1();
+          if (!ok)
+            exit(16);
         }
       }
     }
-    NetCmdGetCmdList();
-    NetCmdGetGroupNames();
+    if (NetCmdGetCmdList())
+      return -1;
+    if (NetCmdGetGroupNames())
+      return -1;
+
 
     defaults = new Defaults();
 
@@ -1726,7 +1991,12 @@ int main(int argc, char* argv[]) {
       curfile= "/data/etc/defile.lnk"; //QFileDialog::getExistingDirectory(0,"Choose a curdir");
       //curfile+="/defile.lnk";
     }
-    MainForm moo(curfile.toStdString().c_str(), 0, "moo", 0);
+
+
+    // TODO the one place where Spider/BIT differ. Add GUI to set herd file
+    QString herdfile = "/data/etc/cow/blast.herd";
+
+    MainForm moo(curfile.toStdString().c_str(), herdfile, 0, "moo", 0);
     moo.show();
     retCode= app.exec();
     NetCmdDrop();

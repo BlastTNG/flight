@@ -60,6 +60,7 @@
 #include "time_lst.h"
 #include "utilities_pointing.h"
 #include "magnetometer.h"
+#include "gps.h"
 #include "sip.h"
 
 int point_index = 0;
@@ -644,6 +645,9 @@ static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
             break;
         }
         blast_dbg("Discarding trigger data with counter_mcp %d", trig_state->counter_mcp);
+        blast_dbg("Discarding trigger data with image_ctr_mcp %d", XSC_SERVER_DATA(which).channels.image_ctr_mcp);
+        blast_dbg("Discarding trigger data with counter_stars %d", trig_state->counter_stars);
+        blast_dbg("Discarding trigger data with image_ctr_stars %d", XSC_SERVER_DATA(which).channels.image_ctr_stars);
         free(trig_state);
     }
     /*
@@ -676,8 +680,8 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     e->variance += GYRO_VAR;
 
     // evolve az
-    gy_az = (m_rg->ifroll_gy + m_rg->ifroll_gy_offset) * cos(el_frame)
-            + (m_rg->ifyaw_gy + m_rg->ifyaw_gy_offset) * sin(el_frame);
+    gy_az = (m_rg->ifroll_gy + m_rg->ifroll_gy_offset) * sin(el_frame)
+            + (m_rg->ifyaw_gy + m_rg->ifyaw_gy_offset) * cos(el_frame);
     a->angle += gy_az / SR;
     a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
 
@@ -955,12 +959,12 @@ static void AutoTrimToSC()
         CommandData.autotrim_xsc0_last_bad = t;
     }
     if (PointingData[i_point].xsc_sigma[1] > CommandData.autotrim_thresh) {
-        CommandData.autotrim_osc_last_bad = t;
+        CommandData.autotrim_xsc1_last_bad = t;
     }
 
     if (t - CommandData.autotrim_xsc0_last_bad > CommandData.autotrim_time)
         isc_good = 1;
-    if (t - CommandData.autotrim_osc_last_bad > CommandData.autotrim_time)
+    if (t - CommandData.autotrim_xsc1_last_bad > CommandData.autotrim_time)
         osc_good = 1;
 
     // sticky choice
@@ -1186,8 +1190,14 @@ void Pointing(void)
 
     /************************************************/
     /** Set the official Lat and Lon **/
-    last_good_lat = SIPData.GPSpos.lat;
-    last_good_lon = SIPData.GPSpos.lon;
+    if (GPSData.isnew) {
+        last_good_lat = GPSData.latitude;
+        last_good_lon = GPSData.longitude;
+        GPSData.isnew = 0;
+    } else {
+        last_good_lat = SIPData.GPSpos.lat;
+        last_good_lon = SIPData.GPSpos.lon;
+    }
     last_good_alt = SIPData.GPSpos.alt;
 
     PointingData[point_index].lat = last_good_lat;
@@ -1369,6 +1379,8 @@ void Pointing(void)
     PointingData[point_index].mag_az = MagAz.angle;
     PointingData[point_index].mag_el = MagEl.angle;
     PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
+
+    PointingData[point_index].null_az = NullAz.angle;
 
     // Added 22 June 2010 GT
     PointingData[point_index].pss_az = PSSAz.angle;

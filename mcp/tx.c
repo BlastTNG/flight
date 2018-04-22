@@ -49,7 +49,6 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "chrgctrl.h"
-#include "data_sharing.h"
 
 #include "motors.h"
 
@@ -68,7 +67,6 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
-void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */
@@ -122,7 +120,6 @@ void WriteAux(void)
     static channel_t* count_cmd_addr[2];
 
     const char which_flc[2] = {'n', 's'};
-    data_sharing_t shared_data[2] = {{0}};
 
 #define ASSIGN_BOTH_FLC(_ch, _str) \
     ({ \
@@ -143,6 +140,8 @@ void WriteAux(void)
     static int firsttime = 1;
     if (firsttime) {
         firsttime = 0;
+
+        // status and housekeeping information
         statusMCCAddr = channels_find_by_name("status_mcc");
 
         he4LevOldAddr = channels_find_by_name("he4_lev_old");
@@ -160,6 +159,9 @@ void WriteAux(void)
         partsSchedAddr = channels_find_by_name("parts_sched");
         upslotSchedAddr = channels_find_by_name("upslot_sched");
 
+        // housekeeping info to be shared with other flight computer
+        // North/South specific (denoted ***_n or ***_s)
+        // names are automatically aliased with the correct computer
         ASSIGN_BOTH_FLC(tcpu0_flc_addr, "t_cpu0_flc");
         ASSIGN_BOTH_FLC(tcpu1_flc_addr, "t_cpu1_flc");
         ASSIGN_BOTH_FLC(v12_flc_addr, "v_12v_flc");
@@ -178,43 +180,16 @@ void WriteAux(void)
 
     SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
     SET_VALUE(timeUSecAddr, tv.tv_usec);
-
-    data_sharing_get_data(&(shared_data[1]));
     SET_VALUE(time_flc_addr[0], tv.tv_sec + TEMPORAL_OFFSET);
-    shared_data[0].time = tv.tv_sec + TEMPORAL_OFFSET;
-    SET_VALUE(time_flc_addr[1], shared_data[1].time);
-
     SET_VALUE(tcpu0_flc_addr[0], computer_sensors.core0_temp);
-    shared_data[0].t_cpu0 = computer_sensors.core0_temp;
-    SET_VALUE(tcpu0_flc_addr[1], shared_data[1].t_cpu0);
-
     SET_VALUE(tcpu1_flc_addr[0], computer_sensors.core1_temp);
-    shared_data[0].t_cpu0 = computer_sensors.core1_temp;
-    SET_VALUE(tcpu1_flc_addr[1], shared_data[1].t_cpu1);
-
     SET_VALUE(icurr_flc_addr[0], computer_sensors.curr_input);
-    shared_data[0].i_flc = computer_sensors.curr_input;
-    SET_VALUE(icurr_flc_addr[1], shared_data[1].i_flc);
-
     SET_VALUE(v12_flc_addr[0], computer_sensors.volt_12V);
-    shared_data[0].v_12 = computer_sensors.volt_12V;
-    SET_VALUE(v12_flc_addr[1], shared_data[1].v_12);
-
     SET_VALUE(v5_flc_addr[0], computer_sensors.volt_5V);
-    shared_data[0].v_5 = computer_sensors.volt_5V;
-    SET_VALUE(v5_flc_addr[1], shared_data[1].v_5);
-
     SET_VALUE(vbatt_flc_addr[0], computer_sensors.volt_battery);
-    shared_data[0].v_bat = computer_sensors.volt_battery;
-    SET_VALUE(vbatt_flc_addr[1], shared_data[1].v_bat);
-
     SET_VALUE(df_flc_addr[0], computer_sensors.disk_free);
-    shared_data[0].df = computer_sensors.disk_free;
-    SET_VALUE(df_flc_addr[1], shared_data[1].df);
-
     SET_VALUE(partsSchedAddr, CommandData.parts_sched & 0xffffff);
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
-
     i_point = GETREADINDEX(point_index);
 
 #ifdef BOLOTEST
@@ -225,12 +200,9 @@ void WriteAux(void)
 
     if (CommandData.pointing_mode.t > t) {
         SET_VALUE(timeout_addr[0], CommandData.pointing_mode.t - t);
-        shared_data[0].timeout = CommandData.pointing_mode.t - t;
     } else {
         SET_VALUE(timeout_addr[0], 0);
-        shared_data[0].timeout = 0;
     }
-    SET_VALUE(timeout_addr[1], shared_data[1].timeout);
 
     SET_VALUE(ploverAddr, CommandData.plover);
     SET_VALUE(rateHighrateAddr, CommandData.highrate_bw); // Bps
@@ -257,15 +229,8 @@ void WriteAux(void)
     }
 
     SET_VALUE(statusMCCAddr, mccstatus);
-
     SET_VALUE(last_cmd_addr[0], CommandData.last_command);
-    shared_data[0].last_command = CommandData.last_command;
-    SET_VALUE(last_cmd_addr[1], shared_data[1].last_command);
-
     SET_VALUE(count_cmd_addr[0], CommandData.command_count);
-    shared_data[0].command_count = CommandData.command_count;
-    SET_VALUE(count_cmd_addr[1], shared_data[1].command_count);
-    data_sharing_send_data(&(shared_data[0]));
 }
 
 void WriteChatter(void)

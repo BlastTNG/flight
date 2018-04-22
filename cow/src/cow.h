@@ -96,16 +96,28 @@ class MainForm : public QMainWindow
     Q_OBJECT
 
 public:
-    MainForm(const char *cf, QWidget* parent = 0, const char* name = 0,
-             Qt::WFlags fl = 0);
+    MainForm(const char *cf, const QString &herdfile, QWidget* parent = 0, const char* name = 0,
+             Qt::WindowFlags fl = 0);
     ~MainForm();
 
     QFrame *NTopFrame;
     QFrame *NBotFrame;
     QLineEdit *NCurFile;
     QPushButton *NHost;
+
+    QTabWidget *TabWidget;
+    QWidget *tab1;
+    QGridLayout *tab1Layout;
+
+    QWidget *tab2;
+    QGridLayout *tab2Layout;
+
     QGroupBox *NGroupsBox;
     QRadioButton **NGroups;
+
+    QGroupBox *HerdGroupBox;
+    QRadioButton **HerdGroups;
+
     QPushButton *NSendButton;
     //QLabel *NSettingsLabel;
     QPushButton *QuitButton;
@@ -141,6 +153,8 @@ protected:
 
     QList<OmniPair> OmniList;
     QGridLayout *NGroupsLayout;
+    QGridLayout *HerdGroupsLayout;
+
     void keyPressEvent(QKeyEvent *);
 
 private:
@@ -148,6 +162,7 @@ private:
     int GroupSIndexes(int group, int *indexes);
     int GroupMIndexes(int group, int *indexes);
     int GetGroup();
+    int LinkChanged();
     int SIndex(QString cmd);
     int MIndex(QString cmd);
     char *LongestParam();
@@ -156,18 +171,24 @@ private:
     void WriteErr(QTextEdit *dest, const char *message, int retstatus);
     void WriteErr(QTextEdit *dest, int retstatus);
     void WriteLog(const char *request);
+
+    void ReadHerdFile(const QString &herdfile);
+
+    QStringList ListOfHerds;
+    QHash<QString, QStringList> HerdHash;
+
     QLabel* ConnBanner;
 
     int ReceivePackets(int, int);
 
     int lastmcmd;
     QString curfile;
-    //KstFile *DataSource;
     Dirfile *_dirfile;
 
     int fid;
     bool sending;
 
+    int pong;
     int verbose;
     int framenum;
     int numframes;
@@ -187,6 +208,7 @@ public slots:
     void Tick();
     void Ping();
     void ChangeHost();
+    void ServerDropped();
     void nOmniBox_completerActivated(const QString & text);
     void nOmniBox_textEdited(const QString & text);
     //void testTextChanged(const QString & text);       //for debugging

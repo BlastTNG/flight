@@ -29,5 +29,6 @@
 #define INCLUDE_HIGHBAY_H_
 void monitor_flow(int on);
 void highbay(int);
+void mapper_command(int mux1, int mux2, int polarity, float voltage);
 #endif /* HIGHBAY_H_ */
 
