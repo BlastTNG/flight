@@ -614,6 +614,7 @@ void heater_write(int m_labjack, int address, float command) {
         }
     }
     if (m_labjack == 1 && address > 2008) {
+        blast_info("attempting to read address %d", address);
         works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
         value = retprime[0];
         if (works < 0) {
@@ -629,26 +630,27 @@ void heater_write(int m_labjack, int address, float command) {
             }
             switch (address) {
                 case 2009:
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
                     break;
                 case 2010:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
                     break;
                 case 2011:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
                     break;
                 case 2013:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
                     break;
                 case 2015:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
                     break;
                 case 2016:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
                     break;
             }

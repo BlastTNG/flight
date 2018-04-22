@@ -673,7 +673,7 @@ static void of_status(void) {
             blast_info("added %f", pow(2, i));
         }
     }
-    blast_info("of status is: %u", of_status);
+    // blast_info("of status is: %u", of_status);
     SET_SCALED_VALUE(of_status_Addr, of_status);
 }
 
