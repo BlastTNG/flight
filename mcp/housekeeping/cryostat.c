@@ -89,8 +89,8 @@ typedef struct { // structure that contains data about heater commands
 
 typedef struct { // structure that contains all of the fridge cycling information
     int standby, cooling, burning_off, heating, heat_delay, pot_fill;
-    double t250, t350, t500, tcharcoal, tcharcoalhs;
-    double t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
+    float t250, t350, t500, tcharcoal, tcharcoalhs;
+    float t250_old, t350_old, t500_old, tcharcoal_old, tcharcoalhs_old;
     channel_t* tfpa250_Addr; // set channel address pointers
     channel_t* tfpa350_Addr;
     channel_t* tfpa500_Addr;
@@ -579,8 +579,9 @@ static void init_cycle_values(void) {
     cycle_state.burning_counter = 0;
     cycle_state.reheating = 0;
     blast_info("values written");
-    cycle_state.tcrit_charcoal = 49441; // temp of charcoal
-    cycle_state.tmin_charcoal = 49834;
+    cycle_state.tcrit_charcoal = 49400; // temp of charcoal
+    cycle_state.tmin_charcoal = 49498;
+    cycle_state.tcrit_fpa = 30170;
 }
 // performs the startup operations of the cycle,
 // averaging the temperatures for 60 seconds before any other actions
@@ -590,11 +591,9 @@ static void start_cycle(void) {
         GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250_old);
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350_old);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500_old);
-        blast_info("got values");
         cycle_state.t250 += cycle_state.t250_old;
         cycle_state.t350 += cycle_state.t350_old;
         cycle_state.t500 += cycle_state.t500_old;
-        blast_info("added values...");
         if (cycle_state.start_up_counter == 60) {
             cycle_state.t250 = cycle_state.t250/60;
             cycle_state.t350 = cycle_state.t350/60;
@@ -616,26 +615,24 @@ static void standby_cycle(void) {
         GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
-        cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
-        cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
-        cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
+        cycle_state.t250 = (59*cycle_state.t250_old/60 + cycle_state.t250/60);
+        cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
+        cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
         // checks each array sequentially to see if the temperature is over the acceptable temp
         if (cycle_state.t250 > cycle_state.tcrit_fpa) {
+            // cycle_state.standby = 0;
+            // cycle_state.heating = 1;
+            // blast_info("moving on to the heating phase");
+        }
+        if (cycle_state.t350 > cycle_state.tcrit_fpa) {
             cycle_state.standby = 0;
             cycle_state.heating = 1;
             blast_info("moving on to the heating phase");
-        } else {
-            if (cycle_state.t350 > cycle_state.tcrit_fpa) {
-                cycle_state.standby = 0;
-                cycle_state.heating = 1;
-                blast_info("moving on to the heating phase");
-            } else {
-                if (cycle_state.t500 > cycle_state.tcrit_fpa) {
-                    cycle_state.standby = 0;
-                    cycle_state.heating = 1;
-                    blast_info("moving on to the heating phase");
-                }
-            }
+        }
+        if (cycle_state.t500 > cycle_state.tcrit_fpa) {
+            // cycle_state.standby = 0;
+            // cycle_state.heating = 1;
+            // blast_info("moving on to the heating phase");
         }
     }
 }
@@ -652,6 +649,7 @@ static void heating_cycle(void) {
                 fill_counter++;
             } else {
                 fill_counter = 0;
+                blast_info("pot full moving to cooking");
                 cycle_state.pot_fill = 0;
             }
         } else {
@@ -659,13 +657,16 @@ static void heating_cycle(void) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
+                blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
                 // we could add the open the pumped pot valve here.
                 cycle_state.heat_delay++;
-            } else {
+            }
+            if (cycle_state.heat_delay == 180) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 1;
+                blast_info("turning on the charcoal");
             }
             GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
             if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
@@ -689,23 +690,22 @@ static void burnoff_cycle(void) {
         if (cycle_state.burning_counter < cycle_state.burning_length && cycle_state.reheating == 0) {
             cycle_state.burning_counter++;
         }
-        if (cycle_state.tcharcoal > cycle_state.tmin_charcoal && cycle_state.reheating == 0) {
-            cycle_state.reheating = 1;
+        if (cycle_state.tcharcoal > cycle_state.tmin_charcoal) {
+            cycle_state.burning_off = 0;
+            cycle_state.cooling = 1;
             CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 1;
-            blast_info("reheating, dropped below boiling temp");
-        }
-        if (cycle_state.reheating == 1 && cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
-            cycle_state.reheating = 0;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal = 0;
-            blast_info("reheating over, back to burning off");
+            CommandData.Cryo.charcoal_hs = 1;
+            GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
+            GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
+            GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
+            blast_info("helium burned off, moving to cooling");
+            // close the pot valve here
         }
         if (cycle_state.burning_counter == cycle_state.burning_length) {
             cycle_state.burning_off = 0;
             cycle_state.cooling = 1;
             CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal_hs = 0;
+            CommandData.Cryo.charcoal_hs = 1;
             GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
             GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
             GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
@@ -726,12 +726,12 @@ static void cooling_cycle(void) {
         GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
-        cycle_state.t250 = cycle_state.t250_old*(59/60) + cycle_state.t250*(1/60);
-        cycle_state.t350 = cycle_state.t350_old*(59/60) + cycle_state.t350*(1/60);
-        cycle_state.t500 = cycle_state.t500_old*(59/60) + cycle_state.t500*(1/60);
-        if (cycle_state.t250 < cycle_state.tcrit_fpa &&
-            cycle_state.t350 < cycle_state.tcrit_fpa &&
-            cycle_state.t500 < cycle_state.tcrit_fpa) {
+        cycle_state.t250 = (59*cycle_state.t250_old/60 + cycle_state.t250/60);
+        cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
+        cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
+
+        if (/*cycle_state.t250 < cycle_state.tcrit_fpa &&*/
+            cycle_state.t350 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
             blast_info("Arrays are cool, standby operating mode");

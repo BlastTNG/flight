@@ -124,21 +124,31 @@ include_directories ("/usr/include/machine")
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${COMMON_DIR}/include"
+    "${CONFIG_DIR}/include"
+    "${LINKLIST_DIR}"
     )
 
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
+add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
+add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklist")
 
 add_library (blast_common OBJECT ${DEFRICHER_COMMON_SRCS} ${DEFRICHER_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
 
+add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
+define_file_basename_for_sources(linklist)
+
             
 add_executable (defricher 
     $<TARGET_OBJECTS:blast_common>
+    $<TARGET_OBJECTS:linklist>
     ${PROJECT_SOURCE_DIR}/defricher.c
     ${PROJECT_SOURCE_DIR}/defricher.h
     ${PROJECT_SOURCE_DIR}/defricher_utils.c
@@ -156,6 +166,7 @@ target_link_libraries(defricher
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
+    ssl crypto
     m)
 
 install(TARGETS defricher DESTINATION bin)

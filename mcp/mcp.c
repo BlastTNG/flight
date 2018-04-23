@@ -74,6 +74,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "gps.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
@@ -291,12 +292,14 @@ void * lj_connection_handler(void *arg) {
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
     init_labjacks(0, 0, 1, 1, 1, 1);
-    mult_labjack_networking_init(6, 84, 1);
+    mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
     // labjack_networking_init(7, 14, 1);
     // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
+    // labjack_networking_init(8, 14, 1);
+    // initialize_labjack_commands(8);
     // switch to this thread for flight
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
@@ -304,7 +307,7 @@ void * lj_connection_handler(void *arg) {
     return NULL;
 }
 
-unsigned int superframe_counter[RATE_END] = {1};
+unsigned int superframe_counter[RATE_END] = {0};
 
 static void mcp_488hz_routines(void)
 {
@@ -312,8 +315,7 @@ static void mcp_488hz_routines(void)
 
     share_data(RATE_488HZ);
     framing_publish_488hz();
-    superframe_counter[RATE_488HZ] = add_frame_to_superframe(channel_data[RATE_488HZ],
-                                       RATE_488HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_488HZ], RATE_488HZ, master_superframe, &superframe_counter[RATE_488HZ]);
 }
 
 static void mcp_244hz_routines(void)
@@ -322,8 +324,7 @@ static void mcp_244hz_routines(void)
 
     share_data(RATE_244HZ);
     framing_publish_244hz();
-    superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
-                                       RATE_244HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, master_superframe, &superframe_counter[RATE_244HZ]);
 }
 
 static void mcp_200hz_routines(void)
@@ -337,9 +338,8 @@ static void mcp_200hz_routines(void)
     share_data(RATE_200HZ);
     framing_publish_200hz();
     // store_data_200hz();
-    superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
-                                       RATE_200HZ, master_superframe);
-    cryo_200hz(1);
+    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe, &superframe_counter[RATE_200HZ]);
+    // cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
 {
@@ -358,8 +358,7 @@ static void mcp_100hz_routines(void)
     share_data(RATE_100HZ);
     framing_publish_100hz();
     // store_data_100hz();
-    superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
-                                       RATE_100HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe, &superframe_counter[RATE_100HZ]);
 }
 static void mcp_5hz_routines(void)
 {
@@ -384,14 +383,12 @@ static void mcp_5hz_routines(void)
     StoreHWPRBus();
     SetGyroMask();
 //    ChargeController();
-//    ControlPower();
 //    VideoTx();
 //    cameraFields();
 
     share_data(RATE_5HZ);
     framing_publish_5hz();
-    superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
-                                     RATE_5HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe, &superframe_counter[RATE_5HZ]);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -413,15 +410,15 @@ static void mcp_1hz_routines(void)
     }
     share_superframe(master_superframe);
 
-    // auto_cycle_mk2();
+    auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
-    cryo_1hz(1);
+    // cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(0);
+    outer_frame(1);
     // relays arg defines found in relay.h
     relays(ALL_RELAYS);
     // highbay will be rewritten as all on or off when box is complete
-    highbay(1);
+    // highbay(1);
     // thermal_vac();
     labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
@@ -433,8 +430,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
-                                     RATE_1HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe, &superframe_counter[RATE_1HZ]);
 //    store_data_1hz();
 }
 
@@ -450,8 +446,6 @@ static void *mcp_main_loop(void *m_arg)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
-
-    superframe_counter[RATE_488HZ] = 1;
 
     while (true) {
         int ret;
@@ -515,6 +509,7 @@ int main(int argc, char *argv[])
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
+  ph_thread_t *gps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -591,6 +586,7 @@ int main(int argc, char *argv[])
 
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
+  linklist_assign_channel_list(channel_list);
 
   InitCommandData(); // This should happen before all other threads
 
@@ -616,7 +612,7 @@ int main(int argc, char *argv[])
 #endif
 
   // initialize superframe FIFO
-  define_superframe();
+  define_allframe();
   master_superframe = calloc(1, superframe_size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
     allocFifo(telem_fifo[i], 3, superframe_size);
@@ -662,6 +658,7 @@ int main(int argc, char *argv[])
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+  gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);

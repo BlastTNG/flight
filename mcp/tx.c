@@ -67,7 +67,6 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
-void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */

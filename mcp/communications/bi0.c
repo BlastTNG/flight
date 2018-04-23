@@ -518,6 +518,12 @@ void biphase_writer(void * arg)
                 decrementFifo(&bi0_fifo);
                 transmit_size = ll->blk_size;  
             }
+
+            // randomized NRZ
+            if (CommandData.biphase_rnrz) {
+                randomized_buffer(compbuffer, transmit_size, BI0LOS_RNRZ_SEED);
+            }
+
             // bandwidth limit; frames are 1 Hz, so bandwidth == size
             transmit_size = MIN(transmit_size, bandwidth);
 
@@ -553,7 +559,7 @@ void biphase_writer(void * arg)
                 usleep(1000);
             }
 */
-            allframe_count = (allframe_count + 1) % BI0_ALLFRAME_PERIOD;
+            allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);
         }

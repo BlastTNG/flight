@@ -48,6 +48,7 @@
 #include <openssl/md5.h>
 #include <float.h>
 #include <ctype.h>
+#include <mosquitto.h>
 
 #include "blast.h"
 #include "channels_tng.h"
@@ -70,34 +71,12 @@ int tlm_no_checksum = 0; // flag to not use checksums in decompression routines
 int no_auto_min_checksum = 0; // flag to not auto add checksums in compression routines
 int num_compression_routines = 0; // number of compression routines available
 channel_t block_channel = {{0}}; // a dummy channel for blocks
+channel_t * ll_channel_list = NULL;
 
-unsigned int get_spf(unsigned int rate)
-{
-  switch (rate)
-  {
-    case RATE_1HZ:
-      return 1;
-    case RATE_5HZ:
-      return 5;
-    case RATE_100HZ:
-      return 100;
-    case RATE_200HZ:
-      return 200;
-    case RATE_244HZ:
-      return 244;
-    case RATE_488HZ:
-      return 488;
-    default:
-      blast_err("Invalid rate %d", rate);
-      return 0;
-  }
+void linklist_assign_channel_list(channel_t * m_channel_list) {
+  ll_channel_list = m_channel_list;
 }
 
-unsigned int get_channel_spf(const channel_t * chan)
-{
-  if (!chan) blast_fatal("%s is NULL! Fix!",chan->field);
-  return get_spf(chan->rate);
-}
 
 void realloc_list(struct link_list * ll, int * x)
 {
@@ -147,6 +126,16 @@ void parse_line(char *line, char ** sinks, unsigned int nargs)
 static int one (const struct dirent *unused)
 {
   return 1;
+}
+
+// publishes a compressed linklist buffer to the mqtt server
+void linklist_publish(struct mosquitto *mosq, linklist_t * ll, uint8_t * buffer) {
+  if (!ll || !buffer) return;
+
+  char frame_name[32] = {0};
+  sprintf(frame_name, "linklists/%s", ll->name);
+
+  mosquitto_publish(mosq, NULL, frame_name, ll->blk_size, buffer, 0, false);
 }
 
 int load_all_linklists(char * linklistdir, linklist_t ** ll_array) {
@@ -292,9 +281,9 @@ linklist_t * parse_linklist(char *fname)
     return NULL; 
   }
 
-  if (channel_list == NULL)
+  if (ll_channel_list == NULL)
   {
-    blast_err("parse_linklist: no channel_list is loaded\n");
+    blast_err("parse_linklist: no ll_channel_list is loaded\n");
     return NULL;
   }
 
@@ -611,7 +600,7 @@ linklist_t * linklist_lookup_by_serial(uint32_t serial) {
 
 linklist_t * linklist_all_telemetry()
 {
-  if (channel_list == NULL) {
+  if (ll_channel_list == NULL) {
     blast_err("No channel list loaded");
     return NULL;
   }
@@ -650,11 +639,11 @@ linklist_t * linklist_all_telemetry()
       chksm_count = 0;
     }
 
-    blk_size = channel_size(&channel_list[i])*get_channel_spf(&channel_list[i]); 
+    blk_size = channel_size(&ll_channel_list[i])*get_channel_spf(&ll_channel_list[i]); 
 
     ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
-    ll->items[ll->n_entries].num = get_channel_spf(&channel_list[i]);
-    ll->items[ll->n_entries].tlm = &channel_list[i];
+    ll->items[ll->n_entries].num = get_channel_spf(&ll_channel_list[i]);
+    ll->items[ll->n_entries].tlm = &ll_channel_list[i];
     ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].start = byteloc;
 

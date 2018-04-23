@@ -58,11 +58,8 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
-uint32_t superframe_flag[RATE_END] = {0};
+extern channel_t * ll_channel_list;
 
-uint32_t superframe_offset[RATE_END] = {0};
-uint32_t superframe_skip[RATE_END] = {0};
-uint32_t superframe_size = 0;
 uint32_t allframe_size = 0;
 
 // generates the block header in the buffer
@@ -156,54 +153,38 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
   return;
 }
 
-void define_superframe()
+// randomizes/unrandomizes a buffer of a given size using a given seed
+uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int seed)
 {
-  int rate = 0;
-  for (rate = 0; rate<RATE_END; rate++) 
-  {
-    superframe_offset[rate] = superframe_size;
-    superframe_skip[rate] = frame_size[rate];
-    superframe_size += frame_size[rate]*get_spf(rate);
+  srand(seed);
+  int i = 0;
+  unsigned int sum = 0;
+  for (i = 0; i < bufsize; i++) {
+    buffer[i] ^= rand();
+    sum ^= buffer[i];
   }
+  return sum;
+}
+
+void define_allframe()
+{
   allframe_size = write_allframe(NULL, NULL);
-  blast_info("Superframe skip and offsets allocated\n");
-  
 }
 
 // allocates the 1 Hz superframe needed for linklist compression
 uint8_t * allocate_superframe()
 {
   // allocate data and superframe offsets
-  if (!superframe_size) define_superframe();
+  if (!superframe_size) {
+    blast_err("Cannot allocate superframe as channels are not defined");
+    return NULL;
+  }
 
   uint8_t * ptr = calloc(1,superframe_size);
 
   return ptr;
 }
 
-uint32_t get_channel_start_in_superframe(const channel_t * chan)
-{
-  if (!superframe_size) define_superframe();
-
-  if (channel_data[chan->rate] > chan->var)
-  {
-    blast_err("get_channel_start_in_superframe: channel is not in channel_list");
-    return 0;
-  }
-  return ((long unsigned int) (chan->var-channel_data[chan->rate])) + superframe_offset[chan->rate];
-}
-
-uint32_t get_channel_skip_in_superframe(const channel_t * chan)
-{
-  if (!superframe_size) define_superframe();
-
-  if (channel_data[chan->rate] > chan->var)
-  {
-    blast_err("get_channel_start_in_superframe: channel is not in channel_list");
-    return 0;
-  }
-  return superframe_skip[chan->rate];
-}
 
 /**
  * add_frame_to_superframe
@@ -212,9 +193,8 @@ uint32_t get_channel_skip_in_superframe(const channel_t * chan)
  * -> frame: BLAST frame to be copied to the superframe
  * -> rate: the rate type for the BLAST frame
  */
-unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe)
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  static unsigned int frame_location[RATE_END] = {0};
   if (!superframe)
 	{
     blast_err("Superframe is not allocated. Fix!");
@@ -227,22 +207,19 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
   }
   
   // clear the frame if wrapping has occurred (ensures no split data)
-  if (frame_location[rate] == 0)
+  if (*frame_location == 0)
   {
-    memset(superframe+superframe_offset[rate],0,frame_size[rate]*get_spf(rate));
+    memset(superframe+get_superframe_offset(rate),0,frame_size[rate]*get_spf(rate));
   }
 
   // copy the frame to the superframe
-  memcpy(superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame,frame_size[rate]);
+  memcpy(superframe+get_superframe_offset(rate)+frame_size[rate]*(*frame_location),frame,frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
 /**
@@ -266,16 +243,13 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
   }
 
   // copy the frame from the superframe
-  memcpy(frame,superframe+superframe_offset[rate]+superframe_skip[rate]*frame_location[rate],frame_size[rate]);
+  memcpy(frame,superframe+get_superframe_offset(rate)+frame_size[rate]*(*frame_location),frame_size[rate]);
 
   // update the frame location
-  frame_location[rate] = (frame_location[rate]+1)%get_spf(rate);
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
 
   // return the next frame location in the superframe 
-  // (0 indicates that frame will wrap on next function call)
-  superframe_flag[rate] = !frame_location[rate];
-
-  return frame_location[rate];
+  return *frame_location;
 }
 
 
@@ -467,6 +441,7 @@ double decompress_linklist_by_size(uint8_t *buffer_out, linklist_t * ll, uint8_t
     {
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+        break;
         // blast_info("Block %d is beyond the max size of %d", sumcount, maxsize);
       } else if ((checksum != 0)) { // TODO: OPTION FOR IGNORING CHECKSUM && !tlm_no_checksum) // bad data block
         // clear/replace bad data from output buffer
@@ -732,8 +707,8 @@ int write_allframe(uint8_t * allframe, uint8_t * superframe) {
   if (wd) memcpy(allframe, &test, 4);
 
   for (i=0;i<channels_count;i++) {
-    tlm_in_start = get_channel_start_in_superframe(&channel_list[i]);
-    tlm_size = channel_size(&channel_list[i]);
+    tlm_in_start = get_channel_start_in_superframe(&ll_channel_list[i]);
+    tlm_size = channel_size(&ll_channel_list[i]);
 
     if (wd) memcpy(allframe+tlm_out_start, superframe+tlm_in_start, tlm_size);
     tlm_out_start += tlm_size;
@@ -758,10 +733,10 @@ int read_allframe(uint8_t * superframe, uint8_t * allframe) {
   }
   
   for (i=0; i<channels_count; i++) { 
-    tlm_out_start = get_channel_start_in_superframe(&channel_list[i]);
-    tlm_size = channel_size(&channel_list[i]);
-    tlm_num = get_channel_spf(&channel_list[i]);
-    tlm_skip = get_channel_skip_in_superframe(&channel_list[i]);
+    tlm_out_start = get_channel_start_in_superframe(&ll_channel_list[i]);
+    tlm_size = channel_size(&ll_channel_list[i]);
+    tlm_num = get_channel_spf(&ll_channel_list[i]);
+    tlm_skip = get_channel_skip_in_superframe(&ll_channel_list[i]);
 
     for (j=0;j<tlm_num;j++) {
       memcpy(superframe+tlm_out_start, allframe+tlm_in_start, tlm_size);

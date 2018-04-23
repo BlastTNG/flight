@@ -108,6 +108,7 @@ static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_dat
     if (data->xsc_protocol_version == XSC_PROTOCOL_VERSION) {
         memcpy(&xsc_mserver_data[state->which][array_index], data, sizeof(XSCServerData));
         xsc_server_index[state->which] = INC_INDEX(xsc_server_index[state->which]);
+        xsc_pointing_state[state->which].stars_response_counter++;
         state->have_warned_version = false;
     } else {
         if (!state->have_warned_version) {
