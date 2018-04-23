@@ -2445,20 +2445,20 @@ void InitCommandData()
     CommandData.power.sc_tx.set_count = 0;
     CommandData.power.bi0.rst_count = 0;
     CommandData.power.bi0.set_count = 0;
-    CommandData.power.rx_main.rst_count = 0;
-    CommandData.power.rx_main.set_count = 0;
-    CommandData.power.rx_hk.rst_count = 0;
-    CommandData.power.rx_hk.set_count = 0;
-    CommandData.power.rx_amps.rst_count = 0;
-    CommandData.power.rx_amps.set_count = 0;
-    CommandData.power.gybox_off = 0;
-    CommandData.power.gyro_off[0] = 0;
-    CommandData.power.gyro_off[1] = 0;
-    CommandData.power.gyro_off[2] = 0;
-    CommandData.power.gyro_off[3] = 0;
-    CommandData.power.gyro_off[4] = 0;
-    CommandData.power.gyro_off[5] = 0;
-    CommandData.power.hub232_off = 0;
+    // CommandData.power.rx_main.rst_count = 0;
+    // CommandData.power.rx_main.set_count = 0;
+    // CommandData.power.rx_hk.rst_count = 0;
+    // CommandData.power.rx_hk.set_count = 0;
+    // CommandData.power.rx_amps.rst_count = 0;
+    // CommandData.power.rx_amps.set_count = 0;
+    // CommandData.power.gybox_off = 0;
+    // CommandData.power.gyro_off[0] = 0;
+    // CommandData.power.gyro_off[1] = 0;
+    // CommandData.power.gyro_off[2] = 0;
+    // CommandData.power.gyro_off[3] = 0;
+    // CommandData.power.gyro_off[4] = 0;
+    // CommandData.power.gyro_off[5] = 0;
+    // CommandData.power.hub232_off = 0;
 
     // CommandData.Cryo.BDAHeat = 0;
 
