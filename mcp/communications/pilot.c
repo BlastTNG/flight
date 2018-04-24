@@ -46,11 +46,12 @@
 #include <openssl/md5.h>
 #include <float.h>
 
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "mcp.h"
 #include "FIFO.h"
 #include "bitserver.h"
-#include "linklist.h"
-#include "linklist_compress.h"
 #include "pilot.h"
 #include "blast.h"
 #include "mputs.h"

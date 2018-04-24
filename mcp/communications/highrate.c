@@ -33,8 +33,9 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-#include "linklist.h"
-#include "linklist_compress.h"
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "blast.h"
 #include "mcp.h"
 #include "command_struct.h"

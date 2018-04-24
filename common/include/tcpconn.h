@@ -40,6 +40,14 @@
 #define TCPCONN_FILE_RAW 0x02
 #define TCPCONN_NOLOOP 0x04
 
+#define SUPERFRAME_EXT ".sf.bin"
+#define SUPERFRAME_FORMAT_EXT ".sf.format"
+#define LINKLIST_EXT ".ll.bin"
+#define LINKLIST_FORMAT_EXT ".ll.format"
+
+#define TCP_PACKET_HEADER_SIZE 12
+#define CLIENT_TELEM_PORT 40204
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,6 +61,9 @@ struct TCPCONN
 	uint32_t serial;
 };
 
+#ifndef MAX
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
 
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);

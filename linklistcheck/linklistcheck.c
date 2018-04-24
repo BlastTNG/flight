@@ -31,6 +31,7 @@
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "linklist_writer.h"
+#include "tcpconn.h"
 
 int main(int argc, char *argv[])
 {

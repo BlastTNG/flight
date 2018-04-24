@@ -28,6 +28,7 @@
 #ifndef LINKLIST_COMPRESS_H_
 #define LINKLIST_COMPRESS_H_
 
+#include <inttypes.h>
 #include "linklist.h"
 
 #define ALLFRAME_SERIAL 0x42424242

@@ -33,8 +33,9 @@
 #include <termios.h>
 #include <libusb-1.0/libusb.h>
 
-#include "linklist.h"
-#include "linklist_compress.h"
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "bi0.h"
 #include "blast.h"
 #include "mcp.h"

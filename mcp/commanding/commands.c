@@ -38,6 +38,9 @@
 #include <pointing.h>
 #include <ec_motors.h>
 
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "command_list.h"
 #include "command_struct.h"
 #include "framing.h"
@@ -47,8 +50,6 @@
 #include "channels_tng.h"
 #include "labjack.h"
 #include "labjack_functions.h"
-#include "linklist.h"
-#include "linklist_compress.h"
 #include "cryostat.h"
 #include "relay_control.h"
 #include "bias_tone.h"

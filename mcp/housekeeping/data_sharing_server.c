@@ -27,12 +27,13 @@
 #include <unistd.h>
 #include <sys/statvfs.h>
 
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "mputs.h"
 
 #include "channels_tng.h"
 #include "command_struct.h"
-#include "linklist.h"
-#include "linklist_compress.h"
 #include "bitserver.h"
 #include "mcp.h"
 #include "data_sharing_server.h"
