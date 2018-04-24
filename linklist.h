@@ -56,8 +56,12 @@
 #define linklist_warn printf
 #define linklist_fatal printf
 
+#define LINKLIST_FILE_SERIAL_IND "# Serial="
+#define LINKLIST_FILE_SIZE_IND "# Blk Size="
+
 #include <stdio.h>
 #include <openssl/md5.h>
+#include <inttypes.h>
 
 #ifdef __cplusplus
 
@@ -174,6 +178,7 @@ superframe_entry_t * superframe_find_by_name(superframe_t *, char *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 const char * get_sf_type_string(uint8_t);
 uint8_t get_sf_type_int(char *);
+int read_linklist_formatfile_size(char *);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);

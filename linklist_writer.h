@@ -1,6 +1,7 @@
 #ifndef INCLUDE_LINKLIST_WRITER_H
 #define INCLUDE_LINKLIST_WRITER_H
 
+#include <inttypes.h>
 #include "linklist.h"
 
 struct linklist_dirfile {
