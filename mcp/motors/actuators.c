@@ -1595,7 +1595,7 @@ void *ActuatorBus(void *param)
 	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
 		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
 		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
-	    DoCryovalves(&bus);
+	    DoCryovalves(&bus, actuators_init);
 	    actuators_init |= 0x1 << POTVALVE_NUM;
 	} else {
 	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
