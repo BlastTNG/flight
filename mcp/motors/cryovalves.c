@@ -107,6 +107,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
 			EZBus_Release(bus, valve_data[index].addr);
+			blast_info("Starting to open Valve %d", index); // debug PAW
 		} else {
 			blast_info("Valve %d opening...", index);
 		}
@@ -115,6 +116,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
 			EZBus_Release(bus, valve_data[index].addr);
+                        blast_info("Starting to close Valve %d", index); // debug PAW
 		} else {
 			blast_info("Valve %d closing...", index);
 		}

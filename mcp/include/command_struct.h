@@ -259,7 +259,8 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
-typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
+typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t; // is this just for the pot valve?
+                                                                         // because it is used by the other two
 
 typedef struct {
   int16_t hwprPos;
