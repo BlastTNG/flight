@@ -458,7 +458,7 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
     int i = 0;
     const channel_t *channel;
     for (channel = m_channel_list; channel->field[0]; channel++) {
-       snprintf(sf[i].field, strlen(channel->field), "%s", channel->field);
+       strncpy(sf[i].field, channel->field, FIELD_LEN-1);
        sf[i].type = superframe_type_array[channel->type];
        sf[i].spf = get_spf(channel->rate);
        sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
