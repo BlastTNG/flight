@@ -6,12 +6,14 @@ set(SOURCES
     linklist.c
     linklist_compress.c
     linklist_writer.c
+    linklist_connect.c
 )
 
 set(HEADERS
     linklist.h
     linklist_compress.h
     linklist_writer.h
+    linklist_connect.h
 )
 
 add_library(linklist STATIC
