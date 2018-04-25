@@ -17,6 +17,8 @@
 
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "linklist_writer.h"
+#include "linklist_connect.h"
 #include "blast.h"
 #include "groundhog_framing.h"
 #include "channels_tng.h"
@@ -66,12 +68,22 @@ void daemonize()
     setsid();
 }
 
+void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
+  char tempname[80] = {0};
+  int i;
+  // strip possible extensions in name
+  for (i = 0; i < strlen(ll->name); i++) {
+    if (ll->name[i] == '.') break;
+  }
+  strncpy(tempname, ll->name, i);
+  sprintf(filename, "%s/%s_%s", archive_dir, tempname, datestring);
+}
 
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
 
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
-  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list);
+  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  
   write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
