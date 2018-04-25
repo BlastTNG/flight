@@ -256,7 +256,7 @@ static int one (const struct dirent *unused)
   return 1;
 }
 
-int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t ** ll_array) {
+int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t ** ll_array, unsigned int flags) {
   struct dirent **dir;
   int n = scandir(linklistdir,&dir,one,alphasort);
   int i;
@@ -284,7 +284,7 @@ int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t
     if ((len >= 3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
       sprintf(full_path_name, "%s%s",linklistdir, dir[i]->d_name);
       
-      if ((ll_array[num] = parse_linklist_format(superframe, full_path_name)) == NULL) {
+      if ((ll_array[num] = parse_linklist_format_opt(superframe, full_path_name, flags)) == NULL) {
         linklist_fatal("Unable to load linklist at %s", full_path_name);
       }
       num++;
