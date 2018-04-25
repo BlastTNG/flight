@@ -77,6 +77,7 @@ void increment_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
     linklist_err("Could not open raw linklist binary file %s\n", filename);
     return;
   }
+  linklist_info("Opening \"%s\" rawfile\n", filename);
 
 }
 
