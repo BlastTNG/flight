@@ -40,11 +40,6 @@
 #define TCPCONN_FILE_RAW 0x02
 #define TCPCONN_NOLOOP 0x04
 
-#define SUPERFRAME_EXT ".sf.bin"
-#define SUPERFRAME_FORMAT_EXT ".sf.format"
-#define LINKLIST_EXT ".ll.bin"
-#define LINKLIST_FORMAT_EXT ".ll.format"
-
 #define TCP_PACKET_HEADER_SIZE 12
 #define CLIENT_TELEM_PORT 40204
 

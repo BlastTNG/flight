@@ -41,6 +41,11 @@
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
 #define ALL_TELEMETRY_NAME "all_telemetry.ll"
 
+#define SUPERFRAME_EXT ".sf.bin"
+#define SUPERFRAME_FORMAT_EXT ".sf.format"
+#define LINKLIST_EXT ".ll.bin"
+#define LINKLIST_FORMAT_EXT ".ll.format"
+
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
 
