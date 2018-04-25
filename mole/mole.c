@@ -113,13 +113,31 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 }
 
 int main(int argc, char *argv[]) {
-  // start the server to accept clients
-  pthread_t server_thread;
-  pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL); 
+  int server_mode = 1;
+  int client_mode = 1;
 
-  sprintf(tcpconn.ip, "cacofonix");
-  char linklistname[64] = {0};
-  user_file_select(&tcpconn, linklistname);
+  int i;
+  for (i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-ns") == 0) { // no server mode
+      server_mode = 0;
+    } else if (strcmp(argv[i], "-nc") == 0) { // no client mode
+      client_mode = 0;
+    }
+  }
+
+  pthread_t server_thread;
+  if (server_mode) {
+    // start the server to accept clients
+    pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL); 
+  }
+
+  if (client_mode) {
+    sprintf(tcpconn.ip, "cacofonix");
+    char linklistname[64] = {0};
+    user_file_select(&tcpconn, linklistname);
+  }
+
+  if (server_mode) pthread_join(server_thread, NULL);
 }
 
 

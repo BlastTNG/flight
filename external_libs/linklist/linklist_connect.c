@@ -139,7 +139,7 @@ void *connection_handler(void *arg)
   linklist_t archive_ll = {0};
   unsigned int archive_framenum = 0;
 
-	struct dirent **dir;
+  struct dirent **dir;
 
   printf("::SERVER:: Accept CLIENT %d\n",sock);
 
@@ -166,25 +166,25 @@ void *connection_handler(void *arg)
         break;
       }
 
-			printf("::CLIENT %d:: request for file transfer\n", sock);        
+      printf("::CLIENT %d:: request for file transfer\n", sock);        
 
-			// strip name of slashes
-			int i;
-			for (i = strlen(req_name)-1; i >= 0; i--) {
-				if (req_name[i] == '/') {
-					req_name[i] = 0;
-					break;
-				}
-			}
-			i++;
+      // strip name of slashes
+      int i;
+      for (i = strlen(req_name)-1; i >= 0; i--) {
+        if (req_name[i] == '/') {
+          req_name[i] = 0;
+          break;
+        }
+      }
+      i++;
 
-			// build filename in data backup directory
-			char filename[128] = {0};
-			sprintf(filename, "%s/%s", archive_dir, req_name+i);
-			if (send_client_file(&tc, filename, SERVER_ARCHIVE_REQ) < 0) {
-				client_on = 0;
-				break;
-			}
+      // build filename in data backup directory
+      char filename[128] = {0};
+      sprintf(filename, "%s/%s", archive_dir, req_name+i);
+      if (send_client_file(&tc, filename, SERVER_ARCHIVE_REQ) < 0) {
+        client_on = 0;
+        break;
+      }
     } else if (*req_serial == SERVER_ARCHIVE_LIST_REQ) { // client requesting list of archived files
       printf("::CLIENT %d:: request for archive file list\n", sock);
 
@@ -359,12 +359,12 @@ void *connection_handler(void *arg)
           continue;
         } 
 
-				// read the file
-				if (fseek(clientbufferfile, (*req_frame_num)*writesize, SEEK_SET) != 0) {
-					printf("::CLIENT %d:: fseek failed\n", sock);
-					client_on = 0;
-					break;
-				} 
+        // read the file
+        if (fseek(clientbufferfile, (*req_frame_num)*writesize, SEEK_SET) != 0) {
+          printf("::CLIENT %d:: fseek failed\n", sock);
+          client_on = 0;
+          break;
+        } 
         if (buffersize < writesize) {
           if (!(buffer = realloc(buffer, writesize))) {
             printf("::CLIENt %d:: cannot allocate buffer\n", sock);
@@ -373,7 +373,7 @@ void *connection_handler(void *arg)
           }
           buffersize = writesize;
         }
-				fread(buffer, 1, writesize, clientbufferfile);
+        fread(buffer, 1, writesize, clientbufferfile);
 
         // respond with header for live data
         // format: serial, frame number, day, year*12+month
@@ -696,7 +696,7 @@ unsigned int initialize_connection(struct TCPCONN * tc, uint32_t serial)
   tc->themonth = ((*recv_n-1)%12)+1;
   tc->theyear = (*recv_n-1)/12;
   
-	tc->serial = *recv_ser;
+  tc->serial = *recv_ser;
 
   return *recv_frame_num;
 }
@@ -767,7 +767,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
       return 0;
     }
 
-    if (*recv_n  == ((*recv_i)+1)) break;
+    if (((*recv_i)+1) >= *recv_n) break;
 
   }
   return *recv_n;
@@ -825,7 +825,7 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
 // returns the number of retrieved bytes, including header info
 int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_t * buffer)
 {
-  uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};	
+  uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};  
   int rsize = 0;
 
   // request the next frame
@@ -841,7 +841,7 @@ int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_
     return -1; // connection error
   }
 
-	return rsize;
+  return rsize;
 }
 
 #ifdef __cplusplus
