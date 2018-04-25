@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
   write_superframe_format(testsf, "superframe.txt");
   printf("Parsed size = %d, count = %d  serial = %.8lx\n", testsf->size, testsf->n_entries, testsf->serial);
 
-	if (load_all_linklists(superframe, linklistdir, ll_array) < 0)
+	if (load_all_linklists(superframe, linklistdir, ll_array, 0) < 0)
   {
     printf("Unable to load linklists\n");
     exit(3);
