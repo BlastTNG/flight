@@ -255,6 +255,16 @@ void *connection_handler(void *arg)
         }
         ifile++;
       }
+      if (!ifile && !nfile) {
+        writeTCPHeader(header, SERVER_ARCHIVE_LIST_REQ, 0, 0, 0);
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+          printf("::CLIENT %d:: unable to send archive names\n", sock);
+          client_on = 0;
+        }
+      
+      }
+
+      printf("::CLIENT %d:: sent %d file names\n", sock, nfile); 
 
     } else if (*req_serial == SERVER_SET_LL_NAME_REQ) { // client wants to set the linklist name
       // recv name: *req_frame_num is number of characters
