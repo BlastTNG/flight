@@ -407,13 +407,11 @@ void *connection_handler(void *arg)
   return 0;
 }
 
-void server_thread(void * arg)
+void linklist_server(void * arg)
 {
   int client_sock, c;
   struct sockaddr_in server , client;
-
-  // arg points to the port number
-  int theport = *(int *) arg;
+  int theport = CLIENT_TELEM_PORT;
 
   //Create socket
   int socket_desc = socket(AF_INET , SOCK_STREAM , 0);
