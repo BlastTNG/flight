@@ -89,6 +89,8 @@ channel_t channel_list[] =
     { "he_pot_lo_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "he_purge_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "alarm_gauge",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "of_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "if_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
@@ -1068,7 +1070,8 @@ channel_t channel_list[] =
     { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 
 // Begin ROACH channels
-    /* roach diagnostic channels */
+/*
+    roach diagnostic channels
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
@@ -3273,7 +3276,7 @@ channel_t channel_list[] =
     { "i_kid1013_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
     { "i_kid1014_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
     { "i_kid1015_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
-
+*/
 //      { "roach2_kid0000_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 //      { "roach2_kid0001_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 //      { "roach2_kid0002_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
@@ -9375,7 +9378,7 @@ channel_t channel_list[] =
 //     { "roach4_kid1013_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1014_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1015_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
-#endif // ifndef NO_KIDS_TEST
+// #endif // ifndef NO_KIDS_TEST
     { {0} }
   };
 

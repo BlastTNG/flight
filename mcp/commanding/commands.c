@@ -181,6 +181,15 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
+        case allow_cycle:
+            CommandData.Cryo.cycle_allowed = 1;
+            break;
+        case disallow_cycle:
+            CommandData.Cryo.cycle_allowed = 0;
+            break;
+        case force_cycle:
+            CommandData.Cryo.forced = 1;
+            break;
         case heaters_off:
             heater_all_off();
             break;
@@ -287,314 +296,392 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case hd_pv_cycle:
             CommandData.Relays.cycle_of_1 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[0] = 1;
             break;
         case eth_switch_cycle:
             CommandData.Relays.cycle_of_2 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[1] = 1;
             break;
         case fc1_cycle:
             CommandData.Relays.cycle_of_3 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[2] = 1;
             break;
         case xsc1_cycle:
             CommandData.Relays.cycle_of_4 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[3] = 1;
             break;
         case fc2_cycle:
             CommandData.Relays.cycle_of_5 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[4] = 1;
             break;
         case xsc0_cycle:
             CommandData.Relays.cycle_of_6 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[5] = 1;
             break;
         case gyros_cycle:
             CommandData.Relays.cycle_of_7 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[6] = 1;
             break;
         case data_transmit_cycle:
             CommandData.Relays.cycle_of_8 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[7] = 1;
             break;
         case elmot_cycle:
             CommandData.Relays.cycle_of_9 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[8] = 1;
             break;
         case pivot_cycle:
             CommandData.Relays.cycle_of_10 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[9] = 1;
             break;
         case mag_cycle:
             CommandData.Relays.cycle_of_11 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[10] = 1;
             break;
         case rw_cycle:
             CommandData.Relays.cycle_of_12 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[11] = 1;
             break;
         case steppers_cycle:
             CommandData.Relays.cycle_of_13 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[12] = 1;
             break;
         case clino_cycle:
             CommandData.Relays.cycle_of_14 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[13] = 1;
             break;
         case of_15_cycle:
             CommandData.Relays.cycle_of_15 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[14] = 1;
             break;
         case gps_timing_cycle:
             CommandData.Relays.cycle_of_16 = 1;
             CommandData.Relays.cycled_of = 1;
+            CommandData.Relays.of_relays[15] = 1;
             break;
         case hd_pv_on:
             CommandData.Relays.of_1_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[0] = 1;
             break;
         case hd_pv_off:
             CommandData.Relays.of_1_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[0] = 0;
             break;
         case eth_switch_on:
             CommandData.Relays.of_2_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[1] = 1;
             break;
         case eth_switch_off:
             CommandData.Relays.of_2_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[1] = 0;
             break;
         case fc1_on:
             CommandData.Relays.of_3_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[2] = 1;
             break;
         case fc1_off:
             CommandData.Relays.of_3_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[2] = 0;
             break;
         case xsc1_on:
             CommandData.Relays.of_4_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[3] = 1;
             break;
         case xsc1_off:
             CommandData.Relays.of_4_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[3] = 0;
             break;
         case fc2_on:
             CommandData.Relays.of_5_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[4] = 1;
             break;
         case fc2_off:
             CommandData.Relays.of_5_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[4] = 0;
             break;
         case xsc0_on:
             CommandData.Relays.of_6_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[5] = 1;
             break;
         case xsc0_off:
             CommandData.Relays.of_6_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[5] = 0;
             break;
         case gyros_on:
             CommandData.Relays.of_7_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[6] = 1;
             break;
         case gyros_off:
             CommandData.Relays.of_7_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[6] = 0;
             break;
         case data_transmit_on:
             CommandData.Relays.of_8_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[7] = 1;
             break;
         case data_transmit_off:
             CommandData.Relays.of_8_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[7] = 0;
             break;
         case elmot_on:
             CommandData.Relays.of_9_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[8] = 1;
             break;
         case elmot_off:
             CommandData.Relays.of_9_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[8] = 0;
             break;
         case pivot_on:
             CommandData.Relays.of_10_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[9] = 1;
             break;
         case pivot_off:
             CommandData.Relays.of_10_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[9] = 0;
             break;
         case mag_on:
             CommandData.Relays.of_11_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[10] = 1;
             break;
         case mag_off:
             CommandData.Relays.of_11_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[10] = 0;
             break;
         case rw_on:
             CommandData.Relays.of_12_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[11] = 1;
             break;
         case rw_off:
             CommandData.Relays.of_12_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[11] = 0;
             break;
         case steppers_on:
             CommandData.Relays.of_13_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[12] = 1;
             break;
         case steppers_off:
             CommandData.Relays.of_13_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[12] = 0;
             break;
         case clino_on:
             CommandData.Relays.of_14_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[13] = 1;
             break;
         case clino_off:
             CommandData.Relays.of_14_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[13] = 0;
             break;
         case of_relay_15_on:
             CommandData.Relays.of_15_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[14] = 1;
             break;
         case of_relay_15_off:
             CommandData.Relays.of_15_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[14] = 0;
             break;
         case gps_timing_on:
             CommandData.Relays.of_16_on = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[15] = 1;
             break;
         case gps_timing_off:
             CommandData.Relays.of_16_off = 1;
             CommandData.Relays.update_of = 1;
+            CommandData.Relays.of_relays[15] = 0;
             break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[0] = 1;
             break;
         case if_2_cycle:
             CommandData.Relays.cycle_if_2 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[1] = 1;
             break;
         case if_3_cycle:
             CommandData.Relays.cycle_if_3 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[2] = 1;
             break;
         case if_4_cycle:
             CommandData.Relays.cycle_if_4 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[3] = 1;
             break;
         case if_5_cycle:
             CommandData.Relays.cycle_if_5 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[4] = 1;
             break;
         case if_6_cycle:
             CommandData.Relays.cycle_if_6 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[5] = 1;
             break;
         case if_7_cycle:
             CommandData.Relays.cycle_if_7 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[6] = 1;
             break;
         case if_8_cycle:
             CommandData.Relays.cycle_if_8 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[7] = 1;
             break;
         case if_9_cycle:
             CommandData.Relays.cycle_if_9 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[8] = 1;
             break;
         case if_10_cycle:
             CommandData.Relays.cycle_if_10 = 1;
             CommandData.Relays.cycled_if = 1;
+            CommandData.Relays.if_relays[9] = 1;
             break;
         case if_relay_1_on:
             CommandData.Relays.if_1_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[0] = 1;
             break;
         case if_relay_1_off:
             CommandData.Relays.if_1_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[0] = 0;
             break;
         case if_relay_2_on:
             CommandData.Relays.if_2_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[1] = 1;
             break;
         case if_relay_2_off:
             CommandData.Relays.if_2_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[1] = 0;
             break;
         case if_relay_3_on:
             CommandData.Relays.if_3_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[2] = 1;
             break;
         case if_relay_3_off:
             CommandData.Relays.if_3_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[2] = 0;
             break;
         case if_relay_4_on:
             CommandData.Relays.if_4_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[3] = 1;
             break;
         case if_relay_4_off:
             CommandData.Relays.if_4_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[3] = 0;
             break;
         case if_relay_5_on:
             CommandData.Relays.if_5_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[4] = 1;
             break;
         case if_relay_5_off:
             CommandData.Relays.if_5_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[4] = 0;
             break;
         case if_relay_6_on:
             CommandData.Relays.if_6_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[5] = 1;
             break;
         case if_relay_6_off:
             CommandData.Relays.if_6_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[5] = 0;
             break;
         case if_relay_7_on:
             CommandData.Relays.if_7_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[6] = 1;
             break;
         case if_relay_7_off:
             CommandData.Relays.if_7_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[6] = 0;
             break;
         case if_relay_8_on:
             CommandData.Relays.if_8_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[7] = 1;
             break;
         case if_relay_8_off:
             CommandData.Relays.if_8_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[7] = 0;
             break;
         case if_relay_9_on:
             CommandData.Relays.if_9_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[8] = 1;
             break;
         case if_relay_9_off:
             CommandData.Relays.if_9_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[8] = 0;
             break;
         case if_relay_10_on:
             CommandData.Relays.if_10_on = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[9] = 1;
             break;
         case if_relay_10_off:
             CommandData.Relays.if_10_off = 1;
             CommandData.Relays.update_if = 1;
+            CommandData.Relays.if_relays[9] = 0;
             break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
@@ -2497,6 +2584,8 @@ void InitCommandData()
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;
     CommandData.Cryo.send_dac = 0;
+    CommandData.Cryo.cycle_allowed = 0;
+    CommandData.Cryo.forced = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2780,6 +2869,33 @@ void InitCommandData()
 
     CommandData.lat = -77.86;  // McMurdo Building 096
     CommandData.lon = -167.04; // Willy Field Dec 2010
+
+
+    CommandData.Relays.of_relays[0] = 0;
+    CommandData.Relays.of_relays[1] = 0;
+    CommandData.Relays.of_relays[3] = 0;
+    CommandData.Relays.of_relays[4] = 0;
+    CommandData.Relays.of_relays[5] = 0;
+    CommandData.Relays.of_relays[6] = 0;
+    CommandData.Relays.of_relays[7] = 0;
+    CommandData.Relays.of_relays[8] = 0;
+    CommandData.Relays.of_relays[9] = 0;
+    CommandData.Relays.of_relays[10] = 0;
+    CommandData.Relays.of_relays[11] = 0;
+    CommandData.Relays.of_relays[12] = 0;
+    CommandData.Relays.of_relays[13] = 0;
+    CommandData.Relays.of_relays[14] = 0;
+    CommandData.Relays.of_relays[15] = 0;
+
+    CommandData.Relays.if_relays[0] = 0;
+    CommandData.Relays.if_relays[1] = 0;
+    CommandData.Relays.if_relays[3] = 0;
+    CommandData.Relays.if_relays[4] = 0;
+    CommandData.Relays.if_relays[5] = 0;
+    CommandData.Relays.if_relays[6] = 0;
+    CommandData.Relays.if_relays[7] = 0;
+    CommandData.Relays.if_relays[8] = 0;
+    CommandData.Relays.if_relays[9] = 0;
 
     WritePrevStatus();
 }
