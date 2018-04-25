@@ -113,6 +113,10 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 }
 
 int main(int argc, char *argv[]) {
+  // start the server to accept clients
+  pthread_t server_thread;
+  pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL); 
+
   sprintf(tcpconn.ip, "cacofonix");
   char linklistname[64] = {0};
   user_file_select(&tcpconn, linklistname);

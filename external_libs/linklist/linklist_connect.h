@@ -79,6 +79,7 @@ void set_server_linklist_name(struct TCPCONN * , char *);
 uint32_t request_server_file(struct TCPCONN * , char * , unsigned int );
 int send_client_file(struct TCPCONN * , char * , uint32_t );
 void send_client_error(struct TCPCONN *);
+void linklist_server(void *);
 
 #ifdef __cplusplus
 }
