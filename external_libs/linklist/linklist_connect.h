@@ -60,10 +60,14 @@ struct TCPCONN
 	uint16_t theday, themonth, theyear;
 	uint32_t serial;
 };
+  
+typedef struct TCPCONN linklist_tcpconn_t;
 
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
+
+extern char archive_dir[128];
 
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);

@@ -56,7 +56,7 @@
 #include <openssl/md5.h>
 
 #include "linklist.h"
-#include "tcpconn.h"
+#include "linklist_connect.h"
 
 #define DATAETC "/data/etc"
 #define MAX_CONNECT_TRIES 5
@@ -753,8 +753,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
   uint16_t *recv_i, *recv_n;
   uint32_t *recv_ser, *recv_fn;
 
-  while (1)
-  {
+  while (1) {
     // receive name header
     while (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
       printf("Failed to receive archive name header\n");
