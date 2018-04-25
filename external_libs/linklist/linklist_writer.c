@@ -54,6 +54,73 @@ extern "C"{
 
 extern superframe_entry_t block_entry;
 
+linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
+  if (!ll) {
+    linklist_err("Null linklist");
+    return NULL;
+  }
+  if (!basename || (strlen(basename) == 0)) {
+    linklist_err("Invalid rawfile basename");
+    return NULL;
+  }
+
+  char filename[128];
+  unsigned int filecount = 0;
+
+  // open the binary file for raw linklist data
+  sprintf(filename, "%s" LINKLIST_EXT ".%u", basename, filecount);
+  FILE * fp = fpreopenb(filename);
+  if (!fp) {
+    linklist_err("Could not open raw linklist binary file\n");
+    return NULL;
+  }
+
+  linklist_rawfile_t * ll_rawfile = calloc(1, sizeof(linklist_rawfile_t));
+  strcpy(ll_rawfile->basename, basename);
+  ll_rawfile->framenum = 0;
+  ll_rawfile->filecount = 0;
+  ll_rawfile->ll = ll;
+  ll_rawfile->fp = fp;
+
+  // write the superframe and linklist format files
+  sprintf(filename, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+  write_superframe_format(ll->superframe, filename);
+  sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  write_linklist_format(ll_rawfile->ll, filename);
+
+  return ll_rawfile;
+}
+
+void close_and_free_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
+  if (ll_rawfile->fp) fclose(ll_rawfile->fp);
+  free(ll_rawfile); 
+}
+unsigned int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer, unsigned int framenum) {
+  if (!ll_rawfile) { 
+    linklist_err("Null rawfile linklist");
+    return -1;
+  }
+  if (!buffer) { 
+    linklist_err("Null buffer");
+    return -1;
+  }
+  linklist_t * ll = ll_rawfile->ll;
+  if (!ll) {
+    linklist_err("Null linklist");
+    return -1;
+  }
+
+  unsigned int writesize = ll->blk_size;
+  unsigned int retval = 0;
+
+  if (ll->flags & LL_INCLUDE_ALLFRAME) writesize += ll->superframe->allframe_size;
+
+  if (ll_rawfile->fp) {
+    fseek(ll_rawfile->fp, framenum*writesize, SEEK_SET);
+    retval = fwrite(buffer, writesize, 1, ll_rawfile->fp);
+  }
+  return retval;
+}
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
   if (!ll) {
@@ -180,15 +247,15 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
     return -1;
   }
 
-  static uint8_t * superframe = NULL;
+  static uint8_t * superframe_buf = NULL;
   static int first_time = 1; 
   if (first_time) {
-    superframe = allocate_superframe(ll->superframe);
+    superframe_buf = allocate_superframe(ll->superframe);
     first_time = 0;
   }
 
   // unpack the linklist
-  double ret_val = decompress_linklist(superframe, ll, buffer);
+  double ret_val = decompress_linklist(superframe_buf, ll, buffer);
 
   // write the data to the dirfile
   linkentry_t * tlm_le = NULL;
@@ -214,14 +281,14 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer,
         fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
 
         for (j = 0; j < tlm_out_spf; j++) {
-          fwrite(superframe+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
+          fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
           tlm_out_start += tlm_out_skip;
         }
         fflush(ll_dirfile->bin[i]);
       }
     }
   }  
-  memset(superframe, 0, ll->superframe->size);
+  memset(superframe_buf, 0, ll->superframe->size);
 
   return ret_val;
 }

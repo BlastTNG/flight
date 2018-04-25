@@ -45,6 +45,11 @@
 #define SUPERFRAME_FORMAT_EXT ".sf.format"
 #define LINKLIST_EXT ".ll.bin"
 #define LINKLIST_FORMAT_EXT ".ll.format"
+#define LINKLIST_FILE_SERIAL_IND "# Serial="
+#define LINKLIST_FILE_SIZE_IND "# Blk Size="
+
+#define LL_NO_AUTO_CHECKSUM 0x01
+#define LL_INCLUDE_ALLFRAME 0x02
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -61,8 +66,6 @@
 #define linklist_warn printf
 #define linklist_fatal printf
 
-#define LINKLIST_FILE_SERIAL_IND "# Serial="
-#define LINKLIST_FILE_SIZE_IND "# Blk Size="
 
 #include <stdio.h>
 #include <openssl/md5.h>
@@ -162,7 +165,6 @@ typedef struct superframe_struct superframe_t;
 extern const char * SF_TYPES_STR[]; 
 
 #define STR(s) #s
-#define LL_NO_AUTO_CHECKSUM 0x01
 
 linklist_t * parse_linklist_format(superframe_t *, char *);
 linklist_t * parse_linklist_format_opt(superframe_t *, char *, int);

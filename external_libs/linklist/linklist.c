@@ -642,7 +642,11 @@ void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
   fprintf(formatfile, "#");
   fprintf(formatfile, "\n");
   fprintf(formatfile, LINKLIST_FILE_SERIAL_IND "%.08x\n", *((uint32_t *) ll->serial)); // format specifier
-  fprintf(formatfile, LINKLIST_FILE_SIZE_IND "%d\n", ll->blk_size); // blk_size = bulk size
+  if (flags & LL_INCLUDE_ALLFRAME) {
+    fprintf(formatfile, LINKLIST_FILE_SIZE_IND "%d\n", ll->blk_size+ll->superframe->allframe_size); 
+  } else {
+    fprintf(formatfile, LINKLIST_FILE_SIZE_IND "%d\n", ll->blk_size); // blk_size = bulk size
+  }
   fprintf(formatfile, "#\n");
   
   fprintf(formatfile, "%s\n\n", STR(LL_NO_AUTO_CHECKSUM));

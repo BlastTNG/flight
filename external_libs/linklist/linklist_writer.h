@@ -11,10 +11,23 @@ struct linklist_dirfile {
   FILE ** bin;
 };
 
+struct linklist_rawfile {
+  char basename[128];
+  unsigned int framenum;
+  unsigned int filecount;
+  linklist_t * ll;
+  FILE * fp;
+};
+
 typedef struct linklist_dirfile linklist_dirfile_t;
+typedef struct linklist_rawfile linklist_rawfile_t;
 
 linklist_dirfile_t * open_linklist_dirfile(linklist_t *, char *);
 void close_and_free_linklist_dirfile(linklist_dirfile_t *);
 double write_linklist_dirfile(linklist_dirfile_t *, uint8_t *, unsigned int);
+
+linklist_rawfile_t * open_linklist_rawfile(linklist_t *, char *);
+void close_and_free_linklist_rawfile(linklist_rawfile_t *);
+unsigned int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *, unsigned int);
 
 #endif /* INCLUDE_LINKLIST_WRITER_H */
