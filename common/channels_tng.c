@@ -436,8 +436,8 @@ int channels_initialize(const channel_t * const m_channel_list)
      * Third Pass: Iterate over the hash table and assign the lookup pointers to their place in the frame.
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
- 
-    // generate superframe 
+
+    // generate superframe
     superframe = channels_generate_superframe(m_channel_list);
 
     blast_startup("Successfully initialized Channels data structures");
@@ -458,7 +458,7 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
     int i = 0;
     const channel_t *channel;
     for (channel = m_channel_list; channel->field[0]; channel++) {
-       strcpy(sf[i].field, channel->field);
+       snprintf(sf[i].field, strlen(channel->field), "%s", channel->field);
        sf[i].type = superframe_type_array[channel->type];
        sf[i].spf = get_spf(channel->rate);
        sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
@@ -467,14 +467,14 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
        if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
        sf[i].var = channel->var;
 
-       i++; 
+       i++;
     }
- 
+
     // null terminate
     sf[i].field[0] = '\0';
 
     printf("Finished generating superframe entries\n");
-    
+
     return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
 }
 
@@ -487,30 +487,27 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
  */
 unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  if (!superframe)
-	{
+  if (!superframe) {
     blast_err("Superframe is not allocated. Fix!");
     return 0;
   }
-  if (!frame)
-  {
+  if (!frame) {
     blast_err("Frame pointer is NULL. Fix!");
     return 0;
   }
-  
+
   // clear the frame if wrapping has occurred (ensures no split data)
-  if (*frame_location == 0)
-  {
-    memset(superframe+superframe_offset[rate],0,frame_size[rate]*get_spf(rate));
+  if (*frame_location == 0) {
+    memset(superframe+superframe_offset[rate], 0, frame_size[rate]*get_spf(rate));
   }
 
   // copy the frame to the superframe
-  memcpy(superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location),frame,frame_size[rate]);
+  memcpy(superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame, frame_size[rate]);
 
   // update the frame location
   *frame_location = ((*frame_location)+1)%get_spf(rate);
 
-  // return the next frame location in the superframe 
+  // return the next frame location in the superframe
   return *frame_location;
 }
 
@@ -523,24 +520,22 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
  */
 unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
 {
-  if (!superframe)
-  {
+  if (!superframe) {
     blast_err("Superframe is not allocated. Fix!");
     return 0;
   }
-  if (!frame)
-  {
+  if (!frame) {
     blast_err("Frame pointer is NULL. Fix!");
     return 0;
   }
 
   // copy the frame from the superframe
-  memcpy(frame,superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location),frame_size[rate]);
+  memcpy(frame, superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame_size[rate]);
 
   // update the frame location
   *frame_location = ((*frame_location)+1)%get_spf(rate);
 
-  // return the next frame location in the superframe 
+  // return the next frame location in the superframe
   return *frame_location;
 }
 
@@ -561,47 +556,32 @@ double channel_data_to_double(uint8_t * data, uint8_t type)
 }
 int channel_double_to_data(uint8_t * data, double dub, uint8_t type)
 {
-  if (type == SF_FLOAT64)
-  {
-    htobed(dub,*(uint64_t*) data);
+  if (type == SF_FLOAT64) {
+    htobed(dub, *(uint64_t*) data);
     return 8;
-  }
-  else if (type == SF_FLOAT32)
-  {
-    htobef(dub,*(uint32_t*) data)
+  } else if (type == SF_FLOAT32) {
+    htobef(dub, *(uint32_t*) data)
     return 4;
-  }
-  else if (type == SF_INT16)
-  {
+  } else if (type == SF_INT16) {
     int16_t s = dub;
     *(int16_t*) data = htobe16(s);
     return 2;
-  }
-  else if (type == SF_UINT16)
-  {
+  } else if (type == SF_UINT16) {
     uint16_t u = dub;
     *(uint16_t*) data = htobe16(u);
     return 2;
-  }
-  else if (type == SF_INT32)
-  {
+  } else if (type == SF_INT32) {
     int32_t i = dub;
     *(int32_t*) data = htobe32(i);
     return 4;
-  }
-  else if (type == SF_UINT32)
-  {
+  } else if (type == SF_UINT32) {
     uint32_t i = dub;
     *(uint32_t*) data = htobe32(i);
     return 4;
-  }
-  else if (type == SF_INT8)
-  {
+  } else if (type == SF_INT8) {
     *(int8_t*) data = dub;
     return 1;
-  }
-  else if (type == SF_UINT8)
-  {
+  } else if (type == SF_UINT8) {
     *(uint8_t*) data = dub;
     return 1;
   }
