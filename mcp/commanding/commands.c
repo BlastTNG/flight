@@ -186,6 +186,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case disallow_cycle:
             CommandData.Cryo.cycle_allowed = 0;
             break;
+        case force_cycle:
+            CommandData.Cryo.forced = 1;
+            break;
         case heaters_off:
             heater_all_off();
             break;
@@ -2580,6 +2583,8 @@ void InitCommandData()
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;
     CommandData.Cryo.send_dac = 0;
+    CommandData.Cryo.cycle_allowed = 0;
+    CommandData.Cryo.forced = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

@@ -290,11 +290,11 @@ void * lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(0, 0, 1, 1, 1, 1);
+    init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
-    // labjack_networking_init(7, 14, 1);
-    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    labjack_networking_init(7, 14, 1);
+    initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // labjack_networking_init(8, 14, 1);
@@ -408,18 +408,17 @@ static void mcp_1hz_routines(void)
       }
     }
     share_superframe(master_superframe);
-
+    labjack_choose_execute();
     auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
     outer_frame(1);
     // relays arg defines found in relay.h
-    relays(ALL_RELAYS);
+    relays(3);
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
     // thermal_vac();
-    labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();

@@ -195,6 +195,7 @@ static void rec_send_values(void) {
     labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
     labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_ON, rec_state.amp_supply_on);
     labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_OFF, rec_state.amp_supply_off);
+    blast_info("wrote %f to %d", rec_state.amp_supply_off, AMP_SUPPLY_OFF);
     labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_ON, rec_state.therm_supply_on);
     labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_OFF, rec_state.therm_supply_off);
     labjack_queue_command(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
@@ -202,26 +203,35 @@ static void rec_send_values(void) {
 }
 // function called in the main loop of MCP
 void rec_control(void) {
-    if (CommandData.Relays.labjack[1] == 1) {
-        static int rec_startup = 1;
-        static int rec_trigger = 0;
-        if (rec_trigger == 1) { // turns off the power pulse after 1 second
+    static int rec_startup = 1;
+    static int rec_trigger = 0;
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        if (rec_trigger == 3) { // turns off the power pulse after 1 second
             rec_init();
             rec_trigger = 0;
             rec_send_values();
+            rec_state.update_rec = 0;
+            blast_info("pulse off");
         } // turns on a power pulse and sets reminder to turn it off
+        if (rec_trigger < 3 && rec_trigger >= 1) {
+            rec_trigger++;
+            blast_info("counting to shutoff");
+        }
         if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
             rec_update_values();
             CommandData.Relays.update_rec = 0;
             rec_send_values();
             rec_trigger = 1;
+            blast_info("pulsed");
         }
         if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
             rec_startup = 0;
             labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, 1);
             labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            CommandData.Relays.update_rec = 0;
             rec_init();
             rec_trigger = 1;
+            blast_info("power box told to turn on");
         }
     }
 }
@@ -663,27 +673,25 @@ static void of_status(void) {
             blast_info("added %f", pow(2, i));
         }
     }
-    blast_info("of status is: %u", of_status);
+    // blast_info("of status is: %u", of_status);
     SET_SCALED_VALUE(of_status_Addr, of_status);
 }
 
 void relays(int setting) {
-    if (state[3].initialized && state[2].initialized && state[4].initialized) {
-        if (setting == 1) {
-            if_control();
-            of_control();
-            of_status();
-        }
-        if (setting == 2) {
+    if (setting == 1 && state[3].initialized && state[2].initialized && state[4].initialized) {
+        if_control();
+        of_control();
+        of_status();
+    }
+    if (setting == 2 && state[1].initialized) {
+        rec_control();
+    }
+    if (setting == 3 && state[3].initialized && state[2].initialized && state[4].initialized) {
+        if_control();
+        of_control();
+        of_status();
+        if (state[1].initialized) {
             rec_control();
-        }
-        if (setting == 3) {
-            if_control();
-            of_control();
-            of_status();
-            if (state[1].initialized) {
-                rec_control();
-            }
         }
     }
 }
