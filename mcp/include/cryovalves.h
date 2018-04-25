@@ -34,7 +34,7 @@
 #define FILLVALVE_NUM 9
 
 #define POTVALVE_PREAMBLE "j256"
-#define VALVE_PREAMBLE "n2j256V305064m60"
+#define VALVE_PREAMBLE "n2j256"
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init);
 void DoPotValve(struct ezbus* bus);
