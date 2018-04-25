@@ -79,6 +79,11 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   char name[1024][64] = {{0}};
   int numlink = request_server_archive_list(tc,name);
 
+  if (!numlink) {
+    linklistname[0] = 0;
+    return;
+  }
+
   int i,j;
 
   printf("\nSelect archive file:\n\n");

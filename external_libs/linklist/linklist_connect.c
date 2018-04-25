@@ -760,6 +760,12 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
     }
     readTCPHeader(request_msg,&recv_ser,&recv_fn,&recv_i,&recv_n);
 
+    // no files on server
+    if (!(*recv_i) && !(*recv_n)) {
+      printf("No files avaiable on server %s\n", tc->ip);
+      break;
+    }
+
     // receive name
     if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
       printf("Failed to receive archive name\n");
