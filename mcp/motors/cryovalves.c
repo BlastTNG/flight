@@ -80,11 +80,12 @@ void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 
 void DoValves(struct ezbus* bus, int index, int addr)
 {
-	static int firsttime_valve = 1;
+	static int firsttime_pump_valve = 1;
+	static int firsttime_fill_valve = 1;
 
-	if (firsttime_valve) {
+	if (firsttime_pump_valve && (index == 0)) {
 		valve_data[index].addr = GetActAddr(addr);
-		firsttime_valve = 0;
+		blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
 
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
@@ -92,11 +93,34 @@ void DoValves(struct ezbus* bus, int index, int addr)
 		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
 		CommandData.Cryo.valve_goals[index] = 0;
+		firsttime_pump_valve = 0;
 	}
 
+	if (firsttime_fill_valve && (index == 1)) {
+		valve_data[index].addr = GetActAddr(addr);
+		blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
+
+		EZBus_Take(bus, valve_data[index].addr);
+		blast_info("Making sure Valve %d is not running on startup", index);
+		EZBus_Stop(bus, valve_data[index].addr);
+		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
+		EZBus_Release(bus, valve_data[index].addr);
+		CommandData.Cryo.valve_goals[index] = 0;
+		firsttime_fill_valve = 0;
+	}
+	blast_info("Valve %d address is %c", index, valve_data[index].addr);
 
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
+
+	// Debug PAW 04/24/2018
+	blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
+	blast_info("actual valve 9 velocity is %d", bus->stepper[8].vel);
+	blast_info("actual valve 10 velocity is %d", bus->stepper[9].vel);
+	blast_info("commanded valve current is %d", CommandData.Cryo.valve_current);
+	blast_info("actual valve 9 current is %d", bus->stepper[8].imove);
+	blast_info("actual valve 10 current is %d", bus->stepper[9].imove);
+
 
 	// ?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
 	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit));
