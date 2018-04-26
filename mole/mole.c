@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     req_blksize = linklist->blk_size;
     if (linklist->flags & LL_INCLUDE_ALLFRAME) req_blksize += superframe->allframe_size;    
 
-    printf("Client initialized with serial 0x%.4x and framenum %d\n", req_serial, req_framenum);
+    printf("Client initialized with serial 0x%.4x and framenum %d\n", req_serial, req_init_framenum);
     printf("Binary file blksize is %d, linklist blksize is %d\n", req_blksize, linklist->blk_size);
 
     while (req_framenum < req_init_framenum) {
@@ -127,6 +127,8 @@ int main(int argc, char *argv[]) {
         buffer_size = req_blksize;
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
+      printf("Requesting frame %d\n", req_framenum);  
+
       recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer);
 
       printf("Received frame %d (size %d)\n", req_framenum, recv_size);
