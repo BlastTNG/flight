@@ -196,6 +196,8 @@ void DoPotValve(struct ezbus* bus)
 		firsttime = 0;
 	}
 
+	blast_info("Pot Valve address is %c", potvalve_data.addr); // DEBUG PAW
+
 	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
 
 	GetPotValvePos(*bus);
@@ -223,6 +225,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	do_move = (newstate || firstmove);
+	if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
 	firstmove = 0;
 
 	if(do_move) {
@@ -264,8 +267,8 @@ void DoPotValve(struct ezbus* bus)
 
 
 
-	// blast_info("pos: %d, current: %d, goal: %d, moving: %d, tight: %d",
-	// 	potvalve_data.adc[0], potvalve_data.current, potvalve_data.goal, potvalve_data.moving, tight_flag); // DEBUG PCA
+	blast_info("pos: %d, current: %d, goal: %d, moving: %d, tight: %d",
+		potvalve_data.adc[0], potvalve_data.current, potvalve_data.goal, potvalve_data.moving, tight_flag); // DEBUG PCA
 
 	usleep(10000);
 }
@@ -275,6 +278,7 @@ void GetPotValvePos(struct ezbus bus)
 	EZBus_Comm(&bus, potvalve_data.addr, "?aa");
 	sscanf(bus.buffer, "%i,%i,%i,%i", &potvalve_data.adc[0], &potvalve_data.adc[1],
 		&potvalve_data.adc[2], &potvalve_data.adc[3]);
+	blast_info("Pot Valve encoder position is %i", potvalve_data.adc[0]); // DEBUG PAW
 }
 
 
