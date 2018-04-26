@@ -110,7 +110,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 		CommandData.Cryo.valve_goals[index] = 0;
 		firsttime_fill_valve = 0;
 	}
-	blast_info("Valve %d address is %c", index, valve_data[index].addr);
+	// blast_info("Valve %d address is %c", index, valve_data[index].addr);
 
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
