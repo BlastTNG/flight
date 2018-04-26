@@ -73,53 +73,16 @@
 
 linklist_tcpconn_t tcpconn = {{0}};
 
-// opens a dialog to select file by name from the server
-void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
-{
-  char name[1024][64] = {{0}};
-  int numlink = request_server_archive_list(tc,name);
-
-  if (!numlink) {
-    linklistname[0] = 0;
-    return;
-  }
-
-  int i,j;
-
-  printf("\nSelect archive file:\n\n");
-
-  int n = numlink/3;
-  int width = 0;
-  for (i=0;i<n;i++) if (strlen(name[i]) > width) width = strlen(name[i]);
-  width += 6;
-
-  for (i=0;i<n;i++) {
-    if (name[i][0]) printf("%.2d: %s",i,name[i]);
-    for (j = strlen(name[i])+4; j < 32; j++) printf(" ");
-    if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
-    for (j = strlen(name[i+n])+4; j < 32; j++) printf(" ");
-    if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
-    printf("\n");
-  }
-
-  while (1) {
-    char ta[10];
-    printf("\nFile number: ");
-    fscanf(stdin,"%s",ta);
-    int cn = atoi(ta);
-    if ((cn >= 0) && (cn < numlink)) {
-      strcpy(linklistname, name[cn]);
-      break;
-    }
-    printf("\nInvalid selection\n");
-  }
-
-  printf("Archive file \"%s\" selected\n",linklistname);
-}
-
 int main(int argc, char *argv[]) {
   int server_mode = 1;
   int client_mode = 1;
+  unsigned int flags = TCPCONN_FILE_RAW;
+
+  uint32_t req_serial = 0;
+  unsigned int req_framenum = 0;
+
+  superframe_t * superframe = NULL;
+  linklist_t * linklist = NULL;
 
   int i;
   for (i = 1; i < argc; i++) {
@@ -140,6 +103,8 @@ int main(int argc, char *argv[]) {
     sprintf(tcpconn.ip, "cacofonix");
     char linklistname[64] = {0};
     user_file_select(&tcpconn, linklistname);
+    req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
+    req_framenum = initialize_client_connection(&tcpconn, req_serial);
   }
 
   if (server_mode) pthread_join(server_thread, NULL);
