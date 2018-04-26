@@ -479,7 +479,6 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       if (optflag) {
         // check for auto checksum field
         if (strncmp(line+st, STR(LL_NO_AUTO_CHECKSUM), strlen(STR(LL_NO_AUTO_CHECKSUM))) == 0) {
-          printf("No auto checksum\n");
           flags |= LL_NO_AUTO_CHECKSUM; 
           continue;
         }
