@@ -85,7 +85,8 @@ void DoValves(struct ezbus* bus, int index, int addr)
 
 	if (firsttime_pump_valve && (index == 0)) {
 		valve_data[index].addr = GetActAddr(addr);
-		blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
+		// Debug PAW 04/24/2018
+		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
 
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
@@ -98,7 +99,8 @@ void DoValves(struct ezbus* bus, int index, int addr)
 
 	if (firsttime_fill_valve && (index == 1)) {
 		valve_data[index].addr = GetActAddr(addr);
-		blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
+		// Debug PAW 04/24/2018
+		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
 
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
@@ -114,12 +116,12 @@ void DoValves(struct ezbus* bus, int index, int addr)
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
 
 	// Debug PAW 04/24/2018
-	blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
-	blast_info("actual valve 9 velocity is %d", bus->stepper[8].vel);
-	blast_info("actual valve 10 velocity is %d", bus->stepper[9].vel);
-	blast_info("commanded valve current is %d", CommandData.Cryo.valve_current);
-	blast_info("actual valve 9 current is %d", bus->stepper[8].imove);
-	blast_info("actual valve 10 current is %d", bus->stepper[9].imove);
+	// blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
+	// blast_info("actual valve 9 velocity is %d", bus->stepper[8].vel);
+	// blast_info("actual valve 10 velocity is %d", bus->stepper[9].vel);
+	// blast_info("commanded valve current is %d", CommandData.Cryo.valve_current);
+	// blast_info("actual valve 9 current is %d", bus->stepper[8].imove);
+	// blast_info("actual valve 10 current is %d", bus->stepper[9].imove);
 
 
 	// ?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
@@ -131,7 +133,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
 			EZBus_Release(bus, valve_data[index].addr);
-			blast_info("Starting to open Valve %d", index); // debug PAW
+			// blast_info("Starting to open Valve %d", index); // debug PAW
 		} else {
 			blast_info("Valve %d opening...", index);
 		}
@@ -140,7 +142,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
 			EZBus_Release(bus, valve_data[index].addr);
-                        blast_info("Starting to close Valve %d", index); // debug PAW
+                        // blast_info("Starting to close Valve %d", index); // debug PAW
 		} else {
 			blast_info("Valve %d closing...", index);
 		}
