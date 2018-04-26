@@ -220,8 +220,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   unlink(pathname);
 
   // set the name assigned by the server
-  sprintf(pathname, "%s" LINKLIST_EXT ".00", linklistname);
-	set_server_linklist_name(tc, pathname);
+	set_server_linklist_name(tc, linklistname);
 
   return recv_ll_serial;
 }

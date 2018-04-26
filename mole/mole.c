@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
     user_file_select(&tcpconn, linklistname);
     req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
     req_framenum = initialize_client_connection(&tcpconn, req_serial);
+    printf("Client initialized with serial 0x%.4x and framenum %d\n", req_serial, req_framenum);
   }
 
   if (server_mode) pthread_join(server_thread, NULL);
