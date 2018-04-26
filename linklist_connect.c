@@ -108,6 +108,122 @@ static int one (const struct dirent *unused)
   return 1;
 }
 
+// opens a dialog to select file by name from the server
+void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
+{
+  char name[1024][64] = {{0}};
+  int numlink = request_server_archive_list(tc,name);
+
+  if (!numlink) {
+    linklistname[0] = 0;
+    return;
+  }
+
+  int i,j;
+
+  linklist_info("\nSelect archive file:\n\n");
+
+  int n = numlink/3;
+  int width = 0;
+  for (i=0;i<n;i++) if (strlen(name[i]) > width) width = strlen(name[i]);
+  width += 6;
+
+  for (i=0;i<n;i++) {
+    if (name[i][0]) printf("%.2d: %s",i,name[i]);
+    for (j = strlen(name[i])+4; j < 32; j++) printf(" ");
+    if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
+    for (j = strlen(name[i+n])+4; j < 32; j++) printf(" ");
+    if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
+    printf("\n");
+  }
+
+  while (1) {
+    char ta[10];
+    printf("\nFile number: ");
+    fscanf(stdin,"%s",ta);
+    int cn = atoi(ta);
+    if ((cn >= 0) && (cn < numlink)) {
+      strcpy(linklistname, name[cn]);
+      break;
+    }
+    linklist_info("\nInvalid selection\n");
+  } 
+  
+  linklist_info("Archive file \"%s\" selected\n", linklistname);
+}
+
+// a macro function that requests format and link files and parses them;
+// this function overwrites all previously parsed telemlist format file
+// and linklist link files
+uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int flags,
+                          superframe_t ** sf, linklist_t ** ll)
+{
+  // initiate server connection if not done already
+  while (tc->fd <= 0) {
+    tc->fd = connect_tcp(tc);
+    sleep(1);
+  }
+
+  uint32_t recv_ff_serial, recv_ll_serial;
+
+  char reqffname[64] = {0};
+  char reqllname[64] = {0};
+  char pathname[128] = {0};
+
+  // get linklist format file
+  while (1) {
+    sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, linklistname); // suffix for formatfile
+    sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, linklistname); // suffix for linkfile
+
+    // get the formatfile name
+    recv_ff_serial = request_server_file(tc, reqffname, flags);
+    if (recv_ff_serial == 0x1badfeed) { // file not found
+      linklist_err("Failed to recv superframe format\n");
+      user_file_select(tc, linklistname);
+      continue;
+    } else if (recv_ff_serial == 0) { // connection issue
+      close_connection(tc);
+      tc->fd = connect_tcp(tc);
+      continue;
+    }
+
+    // get the linkfile name
+    recv_ll_serial = request_server_file(tc, reqllname, flags);
+    if (recv_ll_serial == 0x1badfeed) { // file not found
+      linklist_err("Failed to recv linklist format\n");
+      user_file_select(tc, linklistname);
+      continue;
+    } else if (recv_ll_serial == 0) { // connection issue
+      close_connection(tc);
+      tc->fd = connect_tcp(tc);
+      continue;
+    }
+    break;
+  }
+
+  // parse the superframe format
+  sprintf(pathname, "%s/%s", archive_dir, reqffname);
+	if (!(*sf = parse_superframe_format(pathname))) {
+    linklist_err("Superframe format parser error.\n");
+    return 0;
+  }
+  linklist_info("Parsed superframe format \"%s\"\n", pathname);
+  unlink(pathname);
+
+  // parse the linklist format
+  sprintf(pathname,"%s/%s", archive_dir, reqllname);
+	if (!(*ll = parse_linklist_format(*sf, pathname))) {
+	  linklist_err("Linklist format parser error.\n");
+    return 0;
+	}
+  linklist_info("Parsed linklist format \"%s\"\n", pathname);
+  unlink(pathname);
+
+  // set the name assigned by the server
+	set_server_linklist_name(tc, linklistname);
+
+  return recv_ll_serial;
+}
 void *connection_handler(void *arg)
 {
   //Get the socket descriptor
@@ -141,14 +257,14 @@ void *connection_handler(void *arg)
 
   struct dirent **dir;
 
-  printf("::SERVER:: Accept CLIENT %d\n",sock);
+  linklist_info("::SERVER:: Accept CLIENT %d\n",sock);
 
   while (client_on) {
     // recv header request from client
     read_size = recv(sock, client_message, TCP_PACKET_HEADER_SIZE, 0);
 
     if (read_size <= 0) {
-      printf("::CLIENT %d:: connection dropped\n",sock);
+      linklist_info("::CLIENT %d:: connection dropped\n",sock);
       client_on = 0;
       break;
     }
@@ -161,12 +277,12 @@ void *connection_handler(void *arg)
       read_size = recv(sock, req_name, MIN(*req_frame_num, 63), 0);
     
       if (read_size <= 0) {
-        printf("::CLIENT %d:: unable to receive linklist name\n",sock);
+        linklist_err("::CLIENT %d:: unable to receive linklist name\n",sock);
         client_on = 0;
         break;
       }
 
-      printf("::CLIENT %d:: request for file transfer\n", sock);        
+      linklist_info("::CLIENT %d:: request for file transfer\n", sock);        
 
       // strip name of slashes
       int i;
@@ -186,7 +302,7 @@ void *connection_handler(void *arg)
         break;
       }
     } else if (*req_serial == SERVER_ARCHIVE_LIST_REQ) { // client requesting list of archived files
-      printf("::CLIENT %d:: request for archive file list\n", sock);
+      linklist_info("::CLIENT %d:: request for archive file list\n", sock);
 
       int n = scandir(archive_dir, &dir, one, alphasort);
       int i;
@@ -194,7 +310,7 @@ void *connection_handler(void *arg)
       int nfile = 0;
 
       if (n < 0) {
-        printf("::CLIENT %d:: unable to open archive directory\n", sock);
+        linklist_err("::CLIENT %d:: unable to open archive directory\n", sock);
         client_on = 0;
         break;
       }
@@ -205,10 +321,11 @@ void *connection_handler(void *arg)
         for (pos = 0; pos < strlen(dir[i]->d_name); pos++) {
           if (dir[i]->d_name[pos] == '.') break;
         }
+        char tempc[128];
+        sprintf(tempc, LINKLIST_EXT ".00");
 
         // look for linklist binary files
-        if (strncmp(dir[i]->d_name+pos, LINKLIST_EXT, strlen(LINKLIST_EXT)) == 0) {
-          char tempc[128];
+        if (strcmp(dir[i]->d_name+pos, tempc) == 0) {
           dir[i]->d_name[pos] = 0; // clear the suffix
 
           // check if corresponding superframe format and linklist format files exist
@@ -225,6 +342,7 @@ void *connection_handler(void *arg)
 
           // strip the forward slashes          
           int j;
+          dir[i]->d_name[pos] = '.'; // restore the suffix
           for (j=strlen(dir[i]->d_name)-1;j>=0;j--) {
             if (dir[i]->d_name[j] == '/') break;
           }
@@ -245,12 +363,12 @@ void *connection_handler(void *arg)
         // format: SERVER_ARCHIVE_LIST_REQ, num chars, file index, total # of files
         writeTCPHeader(header, SERVER_ARCHIVE_LIST_REQ, strlen(dir[i]->d_name)+1, ifile, nfile);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-          printf("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
+          linklist_err("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
           client_on = 0;
         }
         // send name
         if (send(sock, dir[i]->d_name, strlen(dir[i]->d_name)+1, 0) <= 0) {
-          printf("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
+          linklist_err("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
           client_on = 0;
         }
         ifile++;
@@ -258,13 +376,13 @@ void *connection_handler(void *arg)
       if (!ifile && !nfile) {
         writeTCPHeader(header, SERVER_ARCHIVE_LIST_REQ, 0, 0, 0);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-          printf("::CLIENT %d:: unable to send archive names\n", sock);
+          linklist_err("::CLIENT %d:: unable to send archive names\n", sock);
           client_on = 0;
         }
       
       }
 
-      printf("::CLIENT %d:: sent %d file names\n", sock, nfile); 
+      linklist_info("::CLIENT %d:: sent %d file names\n", sock, nfile); 
 
     } else if (*req_serial == SERVER_SET_LL_NAME_REQ) { // client wants to set the linklist name
       // recv name: *req_frame_num is number of characters
@@ -272,7 +390,7 @@ void *connection_handler(void *arg)
       read_size = recv(sock, req_name, MIN(*req_frame_num, 63), 0);
 
       if (read_size <= 0) {
-        printf("::CLIENT %d:: unable to receive and set linklist name\n", sock);
+        linklist_err("::CLIENT %d:: unable to receive and set linklist name\n", sock);
         client_on = 0;
         break;
       }
@@ -289,12 +407,12 @@ void *connection_handler(void *arg)
 
       // this name should include the linklist binary file extension (LINKLIST_EXT)
       strcpy(linklist_name, req_name+j);
-      printf("::CLIENT %d:: linklist name set to \"%s\"\n", sock, linklist_name);
+      linklist_info("::CLIENT %d:: linklist name set to \"%s\"\n", sock, linklist_name);
     } else if (*req_serial == SERVER_ARCHIVE_REQ) { // client requesting archived data
       if (archive_framenum == 0) { // assume archive file has not yet been loaded
         // check if linklist_name has been loaded from format file and linklist file request
         if (strlen(linklist_name) == 0) {
-          printf("::CLIENT %d:: no archive file requested\n", sock);
+          linklist_err("::CLIENT %d:: no archive file requested\n", sock);
           client_on = 0;
           break;
         }
@@ -314,7 +432,7 @@ void *connection_handler(void *arg)
         // load dummy linklist that corresponds to archive file
         int formatfile_blksize = read_linklist_formatfile_size(archive_filename);
         if (formatfile_blksize < 0) {
-          printf("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_filename);
+          linklist_err("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_filename);
           client_on = 0;
           break;
         }
@@ -325,7 +443,7 @@ void *connection_handler(void *arg)
         if (clientbufferfile) fclose(clientbufferfile);
         clientbufferfile = NULL;
         if ((clientbufferfile = fopen(archive_filename, "rb")) == NULL) {
-          printf("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
+          linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
           client_on = 0;
           break;
         }
@@ -339,10 +457,10 @@ void *connection_handler(void *arg)
       // open data file if not yet opened
       if (!clientbufferfile) {
         clientbufferfile = fopen(archive_filename,"r");    
-        printf("::CLIENT %d:: opening file \"%s\"\n", sock, archive_filename);
+        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_filename);
       }
       if (!clientbufferfile) {
-        printf("::CLIENT %d:: bufferfile %s unreadable\n", sock, archive_filename);
+        linklist_err("::CLIENT %d:: bufferfile %s unreadable\n", sock, archive_filename);
         client_on = 0;
         break;
       }
@@ -350,18 +468,18 @@ void *connection_handler(void *arg)
       // handle the type of data block request 
       if (*req_frame_num == 0) { // requesting a frame number initialization
         // initialize variables for live data block transfer
-        printf("::CLIENT %d:: request for initialization\n",sock);
+        linklist_info("::CLIENT %d:: request for initialization\n",sock);
 
         // respond with header for live data
         // format: serial, initialization framenm, day, year*12+month
         writeTCPHeader(header, *((uint32_t *) archive_ll.serial), archive_framenum-frame_lag, theday, theyear*12+themonth);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-          printf("::CLIENT %d:: unable to send initialization message\n",sock);
+          linklist_err("::CLIENT %d:: unable to send initialization message\n",sock);
           client_on = 0;
         }
         memset(header,0,TCP_PACKET_HEADER_SIZE);
 
-        printf("::CLIENT %d:: initialized with serial 0x%x\n", sock, *((uint32_t *) archive_ll.serial));
+        linklist_info("::CLIENT %d:: initialized with serial 0x%x\n", sock, *((uint32_t *) archive_ll.serial));
 
       } else { // requesting data block
         // wait for the requested frame num to become available
@@ -371,13 +489,13 @@ void *connection_handler(void *arg)
 
         // read the file
         if (fseek(clientbufferfile, (*req_frame_num)*writesize, SEEK_SET) != 0) {
-          printf("::CLIENT %d:: fseek failed\n", sock);
+          linklist_err("::CLIENT %d:: fseek failed\n", sock);
           client_on = 0;
           break;
         } 
         if (buffersize < writesize) {
           if (!(buffer = realloc(buffer, writesize))) {
-            printf("::CLIENt %d:: cannot allocate buffer\n", sock);
+            linklist_err("::CLIENt %d:: cannot allocate buffer\n", sock);
             client_on = 0; 
             break;
           }
@@ -389,13 +507,13 @@ void *connection_handler(void *arg)
         // format: serial, frame number, day, year*12+month
         writeTCPHeader(header, *((uint32_t *) archive_ll.serial), *req_frame_num, theday, theyear*12+themonth);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
-          printf("::CLIENT %d:: unable to send header\n", sock);
+          linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
         }
         // send the data 
         if (send(sock, buffer, writesize, 0) <= 0) {
-          printf("::CLIENT %d:: unable to send data\n",sock);
+          linklist_err("::CLIENT %d:: unable to send data\n",sock);
           break;
         }
         memset(buffer, 0, buffersize);
@@ -403,7 +521,7 @@ void *connection_handler(void *arg)
     }
   }
 
-  printf("::SERVER:: closed connection to CLIENT %d\n",sock);
+  linklist_info("::SERVER:: closed connection to CLIENT %d\n",sock);
 
   // cleanup
   if (clientbufferfile) 
@@ -450,13 +568,13 @@ void linklist_server(void * arg)
 
 
   //Accept and incoming connection
-  printf("::SERVER:: Waiting for incoming connections...\n");
+  linklist_info("::SERVER:: Waiting for incoming connections...\n");
   c = sizeof(struct sockaddr_in);
   pthread_t thread_id;
 
   while ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c))) {
     if (client_sock < 0) {
-      printf("Accept client failed\n");
+      linklist_err("Accept client failed\n");
     }
   
     if (pthread_create(&thread_id, NULL, connection_handler, (void*) &client_sock) < 0) {
@@ -481,7 +599,7 @@ int connect_tcp(struct TCPCONN * tc)
   int connected = 0;
   while (!connected) {
     if ((he = gethostbyname(tc->ip))==NULL) {
-      printf("Cannot get the host name \"%s\"\n",tc->ip);
+      linklist_err("Cannot get the host name \"%s\"\n",tc->ip);
       numtries = MAX_CONNECT_TRIES;
       if (tc->flag & TCPCONN_NOLOOP) { // non blocking mode
         return socket_fd;
@@ -489,7 +607,7 @@ int connect_tcp(struct TCPCONN * tc)
       goto RETRY;
     }
 
-    if (!(tc->flag & TCPCONN_NOLOOP)) printf("Connecting to %s...\n",tc->ip);
+    if (!(tc->flag & TCPCONN_NOLOOP)) linklist_info("Connecting to %s...\n",tc->ip);
     connected = 1; 
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
       fprintf(stderr, "Socket Failure!!\n");
@@ -514,7 +632,7 @@ int connect_tcp(struct TCPCONN * tc)
       if (tc->flag & TCPCONN_NOLOOP) { // non blocking mode
         return socket_fd;
       }
-      printf("Connection refused...trying again\n");
+      linklist_info("Connection refused...trying again\n");
       goto RETRY;
     }
     break;
@@ -525,7 +643,7 @@ int connect_tcp(struct TCPCONN * tc)
 
     // try a new host if not in multi mole mode
     if ((numtries >= MAX_CONNECT_TRIES) && !(tc->flag & TCPCONN_LOOP)) {
-      printf("\nTry a different host: ");
+      linklist_info("\nTry a different host: ");
       fscanf(stdin,"%s",tc->ip);
       if (tc->ip[strlen(tc->ip)-1] == '\n') tc->ip[strlen(tc->ip)-1] = 0;
       numtries = 0;
@@ -562,7 +680,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
   // open the requested file
   FILE * req_file = fopen(filename, "r");
   if (req_file == 0) {
-    printf("::CLIENT %d:: could not open file \"%s\"\n",tc->fd,filename);
+    linklist_err("::CLIENT %d:: could not open file \"%s\"\n",tc->fd,filename);
     send_client_error(tc);
     return 0;
   }
@@ -576,7 +694,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
   // format: SERVER_LL_REQ, total file size [bytes], 4 byte linklist serial
   writeTCPHeader(header, SERVER_LL_REQ, req_filesize, (serial & 0xffff), (serial & 0xffff0000)>>16);
   if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-    printf("::CLIENT %d:: unable to send file transfer initialization message\n", tc->fd);
+    linklist_err("::CLIENT %d:: unable to send file transfer initialization message\n", tc->fd);
     return -1;
   }
   memset(header, 0, TCP_PACKET_HEADER_SIZE);
@@ -588,7 +706,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
     loc = MIN(1024, req_filesize-bytes_transferred);
     col = fread(buffer, 1, loc, req_file);
     if (loc != col) {
-      printf("::CLIENT %d:: file read error\n", tc->fd);
+      linklist_err("::CLIENT %d:: file read error\n", tc->fd);
       return 0;
     } else {
       send(tc->fd, buffer, col, 0);
@@ -600,7 +718,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
 
   fclose(req_file);
 
-  printf("::CLIENT %d:: file transfer complete (%d bytes)\n", tc->fd, req_filesize);
+  linklist_info("::CLIENT %d:: file transfer complete (%d bytes)\n", tc->fd, req_filesize);
 
   return 1;
 }
@@ -619,34 +737,33 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   uint32_t ll_serial;
 
   char savedname[256] = {0};
-  sprintf(savedname,"%s/%s",DATAETC,filename);
+  sprintf(savedname, "%s/%s", archive_dir, filename);
 
-  //printf("Requesting file \"%s\" from server...\n",filename);
+  // linklist_info("Requesting file \"%s\" from server...\n",filename);
 
   // send request for file by name
-  writeTCPHeader(buffer,SERVER_LL_REQ,strlen(filename),flags,0);
-  if (send(sock,buffer,TCP_PACKET_HEADER_SIZE,0) <= 0) {
-    printf("request_server_file: failed to send file request message\n");
+  writeTCPHeader(buffer, SERVER_LL_REQ, strlen(filename), flags, 0);
+  if (send(sock, buffer, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+    linklist_err("request_server_file: failed to send file request message\n");
     return 0;
   }
-  if (send(sock,filename,strlen(filename),0) <= 0) {
-    printf("request_server_file: failed to send filename\n");
+  if (send(sock, filename, strlen(filename), 0) <= 0) {
+    linklist_err("request_server_file: failed to send filename\n");
     return 0;
   }
 
   // get file info before receiving
   if (recv(sock, msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
-    printf("request_server_file: failed to recv file stats\n");
+    linklist_err("request_server_file: failed to recv file stats\n");
     return 0;
   }
   readTCPHeader(msg, &recv_ser, &recv_filesize, &recv_i, &recv_n);
   ll_serial = ((*recv_n)<<16) + (*recv_i);
 
   if (*recv_ser != SERVER_LL_REQ) { // handle error messages
-    printf("request_server_file: file \"%s\" not on server\n",filename);
+    linklist_err("request_server_file: file \"%s\" not on server\n",filename);
     return *recv_ser;
   }
-  //printf("0x%x 0x%x %d\n",*recv_ser, ll_serial, *recv_filesize);
 
   // receive the file and write it to disk
   FILE * f = fopen(savedname,"wb");
@@ -656,7 +773,7 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   while (bytes_recvd < *recv_filesize) {
     loc = MIN(1024,(*recv_filesize)-bytes_recvd);
     if (recv(sock, buffer, loc, MSG_WAITALL) <= 0) {
-      printf("request_server_file: failed to recv file block\n");
+      linklist_err("request_server_file: failed to recv file block\n");
       return 0;
     }
     fwrite(buffer,1,loc,f);
@@ -666,13 +783,13 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   fflush(f);
   fclose(f);
 
-  //printf("Received file \"%s\" from server (size %d)\n",filename,*recv_filesize);
+  //linklist_info("Received file \"%s\" from server (size %d)\n",filename,*recv_filesize);
 
   return ll_serial;
 }
 
 // initialize server connection with time and framenum info based on a linklist serial
-unsigned int initialize_connection(struct TCPCONN * tc, uint32_t serial)
+unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
 {
   // initialize connection if not done so already
   while (tc->fd <= 0) {
@@ -686,21 +803,21 @@ unsigned int initialize_connection(struct TCPCONN * tc, uint32_t serial)
   uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};
 
   // initialization with serial
-  writeTCPHeader(request_msg,serial,0,0,0);
-  if (send(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,0) <= 0) {
-    printf("Failed to send initialization message\n");
+  writeTCPHeader(request_msg, serial, 0, 0, 0);
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+    linklist_err("Failed to send initialization message\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
     return -1;
   }
 
-  if (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
-    printf("Failed to receive initalization message\n");
+  if (recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
+    linklist_err("Failed to receive initalization message\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
     return -1;
   }
-  readTCPHeader(request_msg,&recv_ser,&recv_frame_num,&recv_i,&recv_n);
+  readTCPHeader(request_msg, &recv_ser, &recv_frame_num, &recv_i, &recv_n);
   
   tc->theday = *recv_i;
   tc->themonth = ((*recv_n-1)%12)+1;
@@ -726,13 +843,13 @@ void set_server_linklist_name(struct TCPCONN * tc, char *linklistname)
   // request file list from server
   writeTCPHeader(request_msg,SERVER_SET_LL_NAME_REQ,strlen(linklistname)+1,0,0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-    printf("Failed to send link name select request\n");
+    linklist_err("Failed to send link name select request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
   }
   if (send(tc->fd, linklistname, strlen(linklistname)+1, 0) <= 0)
   {
-    printf("Failed to send link name\n");
+    linklist_err("Failed to send link name\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
   }
@@ -753,7 +870,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
   // request file list from server
   writeTCPHeader(request_msg,SERVER_ARCHIVE_LIST_REQ,0,0,0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-    printf("Failed to send archive select request\n");
+    linklist_err("Failed to send archive select request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
   }
@@ -764,7 +881,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
   while (1) {
     // receive name header
     while (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
-      printf("Failed to receive archive name header\n");
+      linklist_err("Failed to receive archive name header\n");
       close_connection(tc);
       return 0;
     }
@@ -772,13 +889,13 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
 
     // no files on server
     if (!(*recv_i) && !(*recv_n)) {
-      printf("No files avaiable on server %s\n", tc->ip);
+      linklist_err("No files avaiable on server %s\n", tc->ip);
       break;
     }
 
     // receive name
     if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
-      printf("Failed to receive archive name\n");
+      linklist_err("Failed to receive archive name\n");
       close_connection(tc);
       return 0;
     }
@@ -804,7 +921,7 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
   // request file list from server
   writeTCPHeader(request_msg,SERVER_LL_LIST_REQ,0,0,0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-    printf("Failed to send link select request\n");
+    linklist_err("Failed to send link select request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
   }
@@ -817,7 +934,7 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
   {
     // receive name header
     if (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
-      printf("Failed to receive linklist name header\n");
+      linklist_err("Failed to receive linklist name header\n");
       close_connection(tc);
       return 0;
     }
@@ -825,7 +942,7 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
 
     // receive name
     if (recv(tc->fd,name[*recv_i],*recv_fn,0) <= 0) {
-      printf("Failed to receive linklist name\n");
+      linklist_err("Failed to receive linklist name\n");
       close_connection(tc);
       return 0;
     }  
@@ -847,13 +964,13 @@ int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_
   // request the next frame
   writeTCPHeader(request_msg,tc->serial,fn,0,0);
   if (send(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,0) <= 0) {
-    printf("Server connection lost on send.\n");
+    linklist_err("Server connection lost on send.\n");
     return -1; // connection error
   }
 
   // receive the next frame
   if ((rsize = recv(tc->fd,buffer,bufsize,MSG_WAITALL)) <= 0) {
-    printf("Server connection lost on recv.\n");
+    linklist_err("Server connection lost on recv.\n");
     return -1; // connection error
   }
 

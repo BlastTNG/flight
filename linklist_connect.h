@@ -66,7 +66,7 @@ extern char archive_dir[128];
 
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
-unsigned int initialize_connection(struct TCPCONN * , uint32_t );
+unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
 int request_server_list(struct TCPCONN * , char [][64]);
 int request_server_archive_list(struct TCPCONN * , char [][64]);
 int retrieve_data(struct TCPCONN * , uint64_t , unsigned int , uint8_t *);
@@ -75,6 +75,8 @@ uint32_t request_server_file(struct TCPCONN * , char * , unsigned int );
 int send_client_file(struct TCPCONN * , char * , uint32_t );
 void send_client_error(struct TCPCONN *);
 void linklist_server(void *);
+void user_file_select(linklist_tcpconn_t *, char *);
+uint32_t sync_with_server(struct TCPCONN *, char *, unsigned int, superframe_t **, linklist_t **);
 
 #ifdef __cplusplus
 }
