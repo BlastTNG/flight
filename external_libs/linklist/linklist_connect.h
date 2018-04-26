@@ -63,8 +63,6 @@ typedef struct TCPCONN linklist_tcpconn_t;
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
-extern char archive_dir[128];
-
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
 unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );

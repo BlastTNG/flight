@@ -127,6 +127,11 @@ int main(int argc, char *argv[]) {
     // open linklist dirfile
     ll_dirfile = open_linklist_dirfile(linklist, "test.DIR");  
 
+    // open linklist rawfile
+    char filename[128] = {0};
+    sprintf(filename, "%s/%s", archive_dir, linklistname);
+    ll_rawfile = open_linklist_rawfile(linklist, filename); 
+
     while (req_framenum < req_init_framenum) {
       if (buffer_size < req_blksize) {
         buffer_size = req_blksize;
@@ -134,6 +139,7 @@ int main(int argc, char *argv[]) {
       }
       recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer, recv_header);
       write_linklist_dirfile(ll_dirfile, recv_buffer);
+      write_linklist_rawfile(ll_rawfile, recv_buffer);
 
       printf("Received frame %d (size %d)\n", req_framenum, recv_size);
   

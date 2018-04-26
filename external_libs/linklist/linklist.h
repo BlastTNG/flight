@@ -163,6 +163,7 @@ typedef struct sf_entry superframe_entry_t;
 typedef struct superframe_struct superframe_t;
 
 extern const char * SF_TYPES_STR[]; 
+extern char archive_dir[128];
 
 #define STR(s) #s
 
