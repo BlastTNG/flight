@@ -87,12 +87,15 @@ int main(int argc, char *argv[]) {
 
   // received data variables
   uint8_t * recv_buffer = NULL;
+  uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
   unsigned int recv_size = 0;
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
   linklist_t * linklist = NULL;
+  linklist_dirfile_t * ll_dirfile = NULL;
+  linklist_rawfile_t * ll_rawfile = NULL;
 
   int i;
   for (i = 1; i < argc; i++) {
@@ -119,21 +122,32 @@ int main(int argc, char *argv[]) {
     req_blksize = linklist->blk_size;
     if (linklist->flags & LL_INCLUDE_ALLFRAME) req_blksize += superframe->allframe_size;    
 
-    printf("Client initialized with serial 0x%.4x and framenum %d\n", req_serial, req_init_framenum);
-    printf("Binary file blksize is %d, linklist blksize is %d\n", req_blksize, linklist->blk_size);
+    printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
+
+    // open linklist dirfile
+    ll_dirfile = open_linklist_dirfile(linklist, "test.DIR");  
 
     while (req_framenum < req_init_framenum) {
       if (buffer_size < req_blksize) {
         buffer_size = req_blksize;
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
-      printf("Requesting frame %d\n", req_framenum);  
-
-      recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer);
+      recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer, recv_header);
+      write_linklist_dirfile(ll_dirfile, recv_buffer);
 
       printf("Received frame %d (size %d)\n", req_framenum, recv_size);
+  
+/* 
+      int i;
+      for (i = 0; i < recv_size; i++) {
+        if (i % 32 == 0) printf("\n%.4d: ", i/32);
+        printf("0x%.2x ", recv_buffer[i]);
+      }
+      printf("\n");
+*/
 
       memset(recv_buffer, 0, buffer_size);
+      memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
       req_framenum++;
     }
   }
