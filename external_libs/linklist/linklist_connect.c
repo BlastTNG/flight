@@ -220,7 +220,8 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   unlink(pathname);
 
   // set the name assigned by the server
-	set_server_linklist_name(tc, linklistname);
+  sprintf(pathname, "%s" LINKLIST_EXT ".00", linklistname);
+	set_server_linklist_name(tc, pathname);
 
   return recv_ll_serial;
 }
@@ -342,7 +343,6 @@ void *connection_handler(void *arg)
 
           // strip the forward slashes          
           int j;
-          dir[i]->d_name[pos] = '.'; // restore the suffix
           for (j=strlen(dir[i]->d_name)-1;j>=0;j--) {
             if (dir[i]->d_name[j] == '/') break;
           }
