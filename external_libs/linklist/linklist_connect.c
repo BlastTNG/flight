@@ -253,6 +253,7 @@ void *connection_handler(void *arg)
 
   char archive_filename[128] = {0};
   char archive_format_filename[128] = {0};
+  char archive_binary_filename[128] = {0};
   linklist_t archive_ll = {0};
   unsigned int archive_framenum = 0;
 
@@ -417,22 +418,17 @@ void *connection_handler(void *arg)
           break;
         }
 
-        // write data filename for archive file
+        // write data file base name for archive file
         sprintf(archive_filename,"%s/%s", archive_dir, linklist_name);
 
-        // get the extensionless name
-        int j;
-        for (j = 0; j < strlen(linklist_name); j++) {
-          if (linklist_name[j] == '.') break;
-        }
-        // create path to the linklist format file
-        strncpy(archive_format_filename, linklist_name, j);
-        strcat(archive_format_filename, LINKLIST_FORMAT_EXT);
+        // create path to the linklist format and binary files
+        sprintf(archive_format_filename, "%s" LINKLIST_FORMAT_EXT, archive_filename);
+        sprintf(archive_binary_filename, "%s" LINKLIST_EXT ".00", archive_filename);
 
         // load dummy linklist that corresponds to archive file
-        int formatfile_blksize = read_linklist_formatfile_size(archive_filename);
+        int formatfile_blksize = read_linklist_formatfile_size(archive_format_filename);
         if (formatfile_blksize < 0) {
-          linklist_err("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_filename);
+          linklist_err("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_format_filename);
           client_on = 0;
           break;
         }
@@ -442,8 +438,9 @@ void *connection_handler(void *arg)
         // get framenumber from the file
         if (clientbufferfile) fclose(clientbufferfile);
         clientbufferfile = NULL;
-        if ((clientbufferfile = fopen(archive_filename, "rb")) == NULL) {
-          linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
+
+        if ((clientbufferfile = fopen(archive_binary_filename, "rb")) == NULL) {
+          linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_binary_filename);
           client_on = 0;
           break;
         }
@@ -456,11 +453,11 @@ void *connection_handler(void *arg)
 
       // open data file if not yet opened
       if (!clientbufferfile) {
-        clientbufferfile = fopen(archive_filename,"r");    
-        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_filename);
+        clientbufferfile = fopen(archive_binary_filename,"r");    
+        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_binary_filename);
       }
       if (!clientbufferfile) {
-        linklist_err("::CLIENT %d:: bufferfile %s unreadable\n", sock, archive_filename);
+        linklist_err("::CLIENT %d:: bufferfile %s unreadable\n", sock, archive_binary_filename);
         client_on = 0;
         break;
       }

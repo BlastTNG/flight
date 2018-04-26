@@ -69,7 +69,12 @@ void daemonize()
 }
 
 void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
+  // get the date string for file saving
+  time_t now = time(0);
+  struct tm * tm_t = localtime(&now);
+  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", tm_t);
   char tempname[80] = {0};
+
   int i;
   // strip possible extensions in name
   for (i = 0; i < strlen(ll->name); i++) {
@@ -113,10 +118,6 @@ int main(int argc, char * argv[]) {
   // initialize framing
   framing_init();
 
-  // get the date string for file saving
-  time_t now = time(0);
-  struct tm * tm_t = localtime(&now);
-  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // setup pilot receive udp struct
   struct UDPSetup pilot_setup = {"Pilot", 
