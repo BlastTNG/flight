@@ -441,23 +441,13 @@ void *connection_handler(void *arg)
           client_on = 0;
           break;
         }
-        fseek(clientbufferfile, 0, SEEK_END);
+        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_binary_filename);
       }
 
       // update the archived file framenumber
-      archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1,0);
+      fseek(clientbufferfile, 0, SEEK_END);
+      archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1, 0);
       writesize = archive_ll.blk_size;
-
-      // open data file if not yet opened
-      if (!clientbufferfile) {
-        clientbufferfile = fopen(archive_binary_filename,"r");    
-        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_binary_filename);
-      }
-      if (!clientbufferfile) {
-        linklist_err("::CLIENT %d:: bufferfile %s unreadable\n", sock, archive_binary_filename);
-        client_on = 0;
-        break;
-      }
 
       // handle the type of data block request 
       if (*req_i & TCPCONN_CLIENT_INIT) { // requesting a frame number initialization
@@ -471,14 +461,16 @@ void *connection_handler(void *arg)
           linklist_err("::CLIENT %d:: unable to send initialization message\n",sock);
           client_on = 0;
         }
-        memset(header,0,TCP_PACKET_HEADER_SIZE);
+        memset(header, 0, TCP_PACKET_HEADER_SIZE);
 
-        linklist_info("::CLIENT %d:: initialized with serial 0x%x\n", sock, *((uint32_t *) archive_ll.serial));
+        linklist_info("::CLIENT %d:: initialized with serial 0x%x, nof %d, size %d\n", sock, *((uint32_t *) archive_ll.serial), archive_framenum, writesize);
 
       } else { // requesting data block
         // wait for the requested frame num to become available
-        if ((archive_framenum-((int) frame_lag)) < (*((int*) req_frame_num))) {
-          continue;
+        while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
+          fseek(clientbufferfile, 0, SEEK_END);
+          archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1, 0);
+          sleep(2);
         } 
 
         // read the file
