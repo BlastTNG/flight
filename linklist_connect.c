@@ -208,7 +208,6 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     return 0;
   }
   linklist_info("Parsed superframe format \"%s\"\n", pathname);
-  unlink(pathname);
 
   // parse the linklist format
   sprintf(pathname,"%s/%s", archive_dir, reqllname);
@@ -217,7 +216,6 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     return 0;
 	}
   linklist_info("Parsed linklist format \"%s\"\n", pathname);
-  unlink(pathname);
 
   // set the name assigned by the server
 	set_server_linklist_name(tc, linklistname);
@@ -462,7 +460,7 @@ void *connection_handler(void *arg)
       }
 
       // handle the type of data block request 
-      if (*req_frame_num == 0) { // requesting a frame number initialization
+      if (*req_i & TCPCONN_CLIENT_INIT) { // requesting a frame number initialization
         // initialize variables for live data block transfer
         linklist_info("::CLIENT %d:: request for initialization\n",sock);
 
@@ -799,7 +797,7 @@ unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
   uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};
 
   // initialization with serial
-  writeTCPHeader(request_msg, serial, 0, 0, 0);
+  writeTCPHeader(request_msg, serial, 0, TCPCONN_CLIENT_INIT, 0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("Failed to send initialization message\n");
     close_connection(tc);
@@ -958,14 +956,14 @@ int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_
   int rsize = 0;
 
   // request the next frame
-  writeTCPHeader(request_msg,tc->serial,fn,0,0);
-  if (send(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,0) <= 0) {
+  writeTCPHeader(request_msg, tc->serial, fn, 0, 0);
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("Server connection lost on send.\n");
     return -1; // connection error
   }
 
   // receive the next frame
-  if ((rsize = recv(tc->fd,buffer,bufsize,MSG_WAITALL)) <= 0) {
+  if ((rsize = recv(tc->fd, buffer, bufsize, MSG_WAITALL)) <= 0) {
     linklist_err("Server connection lost on recv.\n");
     return -1; // connection error
   }

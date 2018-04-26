@@ -580,6 +580,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       ll->n_entries++;
     }
   }
+  fclose(cf);
 
   // check memory allocation
   if (ll->n_entries >= def_n_entries) {
@@ -593,8 +594,18 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   byteloc += blk_size;
   ll->n_entries++;
 
+  int file_blk_size = read_linklist_formatfile_size(fname);
+  if (file_blk_size != byteloc) {
+    if (file_blk_size == byteloc+superframe->allframe_size) {
+      flags |= LL_INCLUDE_ALLFRAME;
+    } else {
+      linklist_err("File blksize %d inconsistent with parsed blksize %d\n", file_blk_size, byteloc);
+    }
+  }
+
   ll->blk_size = byteloc;
   ll->flags = flags;
+
 
   // add the linklist name
   for (i = strlen(fname)-1; i > 0; i--) {
