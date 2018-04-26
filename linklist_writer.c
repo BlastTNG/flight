@@ -78,6 +78,23 @@ void increment_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
     return;
   }
 }
+ 
+void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
+  // get the date string for file saving
+  time_t now = time(0);
+  char datestring[80] = {0};
+  struct tm * tm_t = localtime(&now);
+  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", tm_t);
+  char tempname[80] = {0};
+
+  int i;
+  // strip possible extensions in name
+  for (i = 0; i < strlen(ll->name); i++) {
+    if (ll->name[i] == '.') break;
+  }
+  strncpy(tempname, ll->name, i);
+  sprintf(filename, "%s/%s_%s", archive_dir, tempname, datestring);
+}
 
 linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
   if (!ll) {

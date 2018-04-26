@@ -446,7 +446,7 @@ void *connection_handler(void *arg)
 
       // update the archived file framenumber
       fseek(clientbufferfile, 0, SEEK_END);
-      archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1, 0);
+      archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size, 0);
       writesize = archive_ll.blk_size;
 
       // handle the type of data block request 

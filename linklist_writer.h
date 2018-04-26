@@ -30,5 +30,6 @@ void increment_linklist_rawfile(linklist_rawfile_t *);
 linklist_rawfile_t * open_linklist_rawfile(linklist_t *, char *);
 void close_and_free_linklist_rawfile(linklist_rawfile_t *);
 unsigned int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
+void make_linklist_rawfile_name(linklist_t *, char *);
 
 #endif /* INCLUDE_LINKLIST_WRITER_H */
