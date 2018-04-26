@@ -74,13 +74,23 @@
 linklist_tcpconn_t tcpconn = {{0}};
 
 int main(int argc, char *argv[]) {
+  // mode selection
   int server_mode = 1;
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW;
 
+  // initialization variables
   uint32_t req_serial = 0;
   unsigned int req_framenum = 0;
+  unsigned int req_init_framenum = 0;
+  int req_blksize = 0;
 
+  // received data variables
+  uint8_t * recv_buffer = NULL;
+  unsigned int buffer_size = 0;
+  unsigned int recv_size = 0;
+
+  // superframe and linklist 
   superframe_t * superframe = NULL;
   linklist_t * linklist = NULL;
 
@@ -103,9 +113,27 @@ int main(int argc, char *argv[]) {
     sprintf(tcpconn.ip, "cacofonix");
     char linklistname[64] = {0};
     user_file_select(&tcpconn, linklistname);
+
     req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
-    req_framenum = initialize_client_connection(&tcpconn, req_serial);
+    req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
+    req_blksize = linklist->blk_size;
+    if (linklist->flags & LL_INCLUDE_ALLFRAME) req_blksize += superframe->allframe_size;    
+
     printf("Client initialized with serial 0x%.4x and framenum %d\n", req_serial, req_framenum);
+    printf("Binary file blksize is %d, linklist blksize is %d\n", req_blksize, linklist->blk_size);
+
+    while (req_framenum < req_init_framenum) {
+      if (buffer_size < req_blksize) {
+        buffer_size = req_blksize;
+        recv_buffer = realloc(recv_buffer, buffer_size);
+      }
+      recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer);
+
+      printf("Received frame %d (size %d)\n", req_framenum, recv_size);
+
+      memset(recv_buffer, 0, buffer_size);
+      req_framenum++;
+    }
   }
 
   if (server_mode) pthread_join(server_thread, NULL);
