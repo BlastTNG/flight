@@ -942,7 +942,7 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
 // retrieves data from the server and writes it to the specified buffer of size bufsize
 // data is requested based on serial number and framenumber
 // returns the number of retrieved bytes, including header info
-int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_t * buffer)
+int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_t * buffer, uint8_t * header)
 {
   uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};  
   int rsize = 0;
@@ -951,6 +951,12 @@ int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_
   writeTCPHeader(request_msg, tc->serial, fn, 0, 0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("Server connection lost on send.\n");
+    return -1; // connection error
+  }
+
+  // receive header for the next frame
+  if ((rsize = recv(tc->fd, header, TCP_PACKET_HEADER_SIZE, MSG_WAITALL)) <= 0) {
+    linklist_err("Server connection lost on recv.\n");
     return -1; // connection error
   }
 
