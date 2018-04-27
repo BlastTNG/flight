@@ -707,7 +707,6 @@ int EZBus_IsBusy(struct ezbus* bus, char who)
         // on error return code with busy bit set
         return retval | EZ_READY;
     }
-
     // otherwise just flip busy bit which usually means the opposite
     return retval ^ EZ_READY;
 }

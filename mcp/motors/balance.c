@@ -37,6 +37,7 @@
 #include "motors.h"
 
 #define BAL_EL_FILTER_LEN 150 // 30 seconds
+#define BAL_SLEEP 1000000
 
 typedef enum
 {
@@ -66,7 +67,8 @@ void ControlBalance(void)
 
 //  Initialize balance state
     if (firsttime) {
-        balance_state.i_el_avg = 0.0;
+       	blast_info("Init ControlBalance");
+	balance_state.i_el_avg = 0.0;
         firsttime = 0;
     }
 
@@ -120,7 +122,7 @@ void ControlBalance(void)
 	       }
            }
        } else {
-           balance_state.do_move = 0;
+	   balance_state.do_move = 0;
       	   balance_state.dir = no_move;
        }
 }
@@ -150,11 +152,15 @@ void WriteBalance_5Hz(void)
       iLevelOffBalAddr = channels_find_by_name("i_level_off_bal");
       iElReqAvgBalAddr = channels_find_by_name("i_el_req_avg_bal");
       statusBalAddr = channels_find_by_name("status_bal");
+      posBalAddr = channels_find_by_name("pos_bal");
+      limBalAddr = channels_find_by_name("lim_bal");
     }
     SET_UINT32(velBalAddr, CommandData.balance.vel);
     SET_UINT16(accBalAddr, CommandData.balance.acc);
     SET_UINT16(iMoveBalAddr, CommandData.balance.move_i);
     SET_UINT16(iHoldBalAddr, CommandData.balance.hold_i);
+    SET_INT32(posBalAddr, balance_state.pos);
+    SET_UINT16(limBalAddr, balance_state.lims);
     SET_SCALED_VALUE(iLevelOnBalAddr, CommandData.balance.i_el_on_bal);
     SET_SCALED_VALUE(iLevelOffBalAddr, CommandData.balance.i_el_off_bal);
     SET_SCALED_VALUE(iElReqAvgBalAddr, balance_state.i_el_avg);
@@ -171,9 +177,11 @@ void WriteBalance_5Hz(void)
 void DoBalance(struct ezbus* bus)
 {
     static int firsttime = 1;
+    char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
-        balance_state.init = 0;
+       	blast_info("Init DoBalance");
+	balance_state.init = 0;
         balance_state.ind = BALANCENUM;
         balance_state.addr = GetActAddr(balance_state.ind);
         /* Attempt to stop the balance motor */
@@ -190,13 +198,17 @@ void DoBalance(struct ezbus* bus)
      }
 
         /* update the Balance move parameters */
+    // EZBus_SetPreamble(bus, balance_state.addr, BALANCE_PREAMBLE);
     EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
     EZBus_SetAccel(bus, balance_state.addr, CommandData.balance.acc);
     EZBus_SetIMove(bus, balance_state.addr, CommandData.balance.move_i);
     EZBus_SetIHold(bus, balance_state.addr, CommandData.balance.hold_i);
 
-	// get (relative) position on the rail and read limit switches
-    EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
+// TODO(laura): Add checking to make sure that the motor commands actually went through
+// updating the status variables.
+
+        // get (relative) position on the rail and read limit switches
+	// EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);
 
     if ((balance_state.do_move) && (!balance_state.moving)) {
@@ -219,6 +231,13 @@ void DoBalance(struct ezbus* bus)
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
     }
+
+    blast_info("lims = %d", balance_state.lims);
+    if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
+	balance_state.do_move = 0;
+	// balance_state.moving = 0;
+    }
+
 // Write balance data
     WriteBalance_5Hz();
 
