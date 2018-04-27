@@ -653,6 +653,7 @@ static void heating_cycle(void) {
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
 		// open pumped pot valve
+		CommandData.Cryo.potvalve_goal = opened;
                 blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
@@ -669,6 +670,7 @@ static void heating_cycle(void) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
 		// close pumped pot valve
+		CommandData.Cryo.potvalve_goal = closed;
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
