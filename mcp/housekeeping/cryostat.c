@@ -195,12 +195,16 @@ void load_curve_300mk(void) {
 void set_dac(void) {
     int labjack;
     float value;
-    if (CommandData.Cryo.send_dac == 1) {
-        labjack = CommandData.Cryo.labjack;
-        value = CommandData.Cryo.dac_value;
-        blast_info("voltage = %f, labjack = %d", value, labjack);
-        CommandData.Cryo.send_dac = 0;
-        labjack_queue_command(labjack, 1000, value);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        if (CommandData.Cryo.send_dac == 1) {
+            labjack = CommandData.Cryo.labjack;
+            value = CommandData.Cryo.dac_value;
+            blast_info("voltage = %f, labjack = %d", value, labjack);
+            CommandData.Cryo.send_dac = 0;
+            if (state[labjack].initialized == 1) {
+                labjack_queue_command(labjack, 1000, value);
+            }
+        }
     }
 }
 
@@ -644,21 +648,12 @@ static void standby_cycle(void) {
 static void heating_cycle(void) {
     static int fill_counter = 0;
     if (cycle_state.heating == 1) {
-        if (cycle_state.pot_fill == 1) {
-            blast_info("filling the pot for 5 minutes");
-            // fill the pot here
-            if (fill_counter < 300) {
-                fill_counter++;
-            } else {
-                fill_counter = 0;
-                blast_info("pot full moving to cooking");
-                cycle_state.pot_fill = 0;
-            }
         } else {
             if (cycle_state.heat_delay == 0) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
+                // open the pot
                 blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
@@ -674,6 +669,7 @@ static void heating_cycle(void) {
             if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
+                // close the pot
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
@@ -819,6 +815,7 @@ void cryo_1hz(int setting_1hz) {
         heater_control();
         heater_read();
         load_curve_300mk();
+        set_dac();
     }
 }
 
