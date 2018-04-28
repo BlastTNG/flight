@@ -486,7 +486,6 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-
     ec_mcp_state.n_found = ec_config(false, &io_map);
     if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
