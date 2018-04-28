@@ -24,32 +24,21 @@
  */
 
 #include <remote_serial.h>
-
+#include <inttypes.h>
 #include <unistd.h>
-
 #include <blast.h>
 #include "phenom/defs.h"
 #include "phenom/listener.h"
 #include "phenom/socket.h"
 #include "phenom/memory.h"
+#include "phenom/buffer.h"
 
+/*beaglebone addresses*/
 static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
-static const uint16_t port = 10001;
+static const uint16_t port = 12346; /* telnet port on bb */
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;
-
-typedef struct remote_serial {
-    int which;
-    int port;
-    bool connected;
-    bool have_warned_version;
-    uint32_t backoff_sec;
-    struct timeval timeout;
-    ph_job_t connect_job;
-    ph_sock_t *sock;
-    ph_bufq_t *input_buffer;
-} remote_serial_t;
 
 /**
  * Process an incoming packet or event.  If we have an error, we'll disable
@@ -61,12 +50,12 @@ typedef struct remote_serial {
  */
 static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
+    // blast_info("Inside callback, m_why = %i", m_why);
     ph_buf_t *buf;
     remote_serial_t *state = (remote_serial_t*) m_data;
-    size_t buflen;
-
+    uint64_t buflen;
     /**
-     * If we have an error, or do not receive data from the star camera in the expected
+     * If we have an error, or do not receive data from the beaglebone in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
     if (m_why & PH_IOMASK_ERR) {
@@ -81,12 +70,14 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
     /**
      * If we timeout, send a newline to keep the socket alive
      */
-    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
-
+//    if (m_why & PH_IOMASK_TIME) ph_stm_printf(m_sock->stream, "\n");
     buflen = ph_bufq_len(m_sock->rbuf);
+    // blast_info("Read buffer length = %" PRId64, buflen);
     if (buflen) {
         buf = ph_sock_read_bytes_exact(m_sock, buflen);
-        ph_bufq_append(state->input_buffer, ph_buf_mem(buf), ph_buf_len(buf), NULL);
+	// blast_info("Number of bytes read = %" PRId64" %.*s", ph_buf_len(buf), ph_buf_len(buf), ph_buf_mem(buf));
+	ph_bufq_append(state->input_buffer, ph_buf_mem(buf), ph_buf_len(buf), NULL);
+	// blast_info("Input buffer length = %" PRId64, ph_bufq_len(state->input_buffer));
         ph_buf_delref(buf);
     }
 }
@@ -100,7 +91,8 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
     uint64_t written;
     if (!InCharge) return -2;
     if (!m_serial->connected) {
-        m_serial->timeout.tv_sec = 5;
+        blast_info("Socket not connected");
+	m_serial->timeout.tv_sec = 5;
         ph_job_dispatch_now(&m_serial->connect_job);
     }
 
@@ -110,7 +102,6 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
     }
 
     ph_stm_write(m_serial->sock->stream, m_data, m_len, &written);
-    ph_stm_flush(m_serial->sock->stream);
     return (int)written;
 }
 
@@ -122,36 +113,26 @@ int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t
 {
     ph_buf_t *buf;
     int retval = -1;
+    // blast_info("InCharge = %i", InCharge);
+    // blast_info("Connected = %d", m_serial->connected);
     if (!InCharge) return -2;
     if (!m_serial->connected) return -1;
 
     while (m_serial->connected) {
-        buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
-        if (buf) {
+        // blast_info("attempting to read %zd of % " PRId64 " bytes", m_size, ph_bufq_len(m_serial->input_buffer));
+	buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
+	if (buf) {
+    	    // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
             memcpy(m_buffer, ph_buf_mem(buf), m_size);
-            ph_buf_delref(buf);
+	    ph_buf_delref(buf);
             retval = m_size;
-            break;
+	    break;
         }
         usleep(1000);
     }
     return retval;
 }
 
-int remote_serial_flush(remote_serial_t *m_serial)
-{
-    ph_buf_t *buf;
-
-    if (!m_serial->connected) return -1;
-
-    buf = ph_bufq_consume_bytes(m_serial->input_buffer, ph_bufq_len(m_serial->input_buffer));
-    ph_buf_delref(buf);
-
-    buf = ph_bufq_consume_bytes(m_serial->sock->rbuf, ph_bufq_len(m_serial->input_buffer));
-    ph_buf_delref(buf);
-
-    return 0;
-}
 /**
  * Handle a connection callback.  The connection may succeed or fail.
  * If it fails, we increase the backoff time and reschedule another attempt.
@@ -163,6 +144,7 @@ int remote_serial_flush(remote_serial_t *m_serial)
  * @param m_elapsed Unused
  * @param m_data Pointer to our Remote Serial State variable
  */
+
 static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_sockaddr_t *m_addr,
                       struct timeval *m_elapsed, void *m_data)
 {
@@ -187,18 +169,21 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
             return;
     }
 
-    blast_info("Connected to ROACH%d at %s", state->which, addresses[state->which]);
+    blast_info("Connected to Beaglebone%d at %s", state->which + 1, addresses[state->which]);
 
     /// If we had an old socket from an invalid connection, free the reference here
-    if (state->sock) ph_sock_free(state->sock);
+    if (state->sock && m_sock != state->sock) ph_sock_free(state->sock);
 
     state->sock = m_sock;
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
-    state->timeout.tv_sec = 1;
+    state->timeout.tv_sec = 10;
     state->timeout.tv_usec = 0;
+    state->sock->timeout_duration.tv_sec = 0.5;
+    state->input_buffer = ph_bufq_new(4192);
     m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;
+    blast_info("Enabling socket...");
     ph_sock_enable(state->sock, true);
 }
 
@@ -210,23 +195,42 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
  * @param m_why Unused
  * @param m_data Pointer to the Remote Serial State variable
  */
+
 static void connect_remote_serial(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 {
     ph_unused_parameter(m_job);
     ph_unused_parameter(m_why);
     remote_serial_t *state = (remote_serial_t*)m_data;
-
+    if (!state->input_buffer) {
+    }
     blast_info("Connecting to %s", addresses[state->which]);
-    ph_sock_resolve_and_connect(addresses[state->which], port,
+    ph_sock_resolve_and_connect(addresses[state->which], port, 0,
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM,
         connected, m_data);
 }
 
 /**
- * Initialize the remote serial I/O routine.  The state variable tracks each
- * camera connection and is passed to the connect job.
+ * Shutdown the remote serial connection and free the associated memory
  *
- * @param m_which 0,1,2,3 for ROACH0, ROACH1, ROACH2 or ROACH3
+ * @param m_serial Pointer to the initialized remote serial structure
+ */
+void remote_serial_shutdown(remote_serial_t *m_serial)
+{
+    if (!m_serial) return;
+
+    if (m_serial->sock) {
+        ph_sock_shutdown(m_serial->sock, PH_SOCK_SHUT_RDWR);
+        ph_sock_enable(m_serial->sock, false);
+        ph_sock_free(m_serial->sock);
+    }
+    free(m_serial);
+}
+
+/**
+ * Initialize the remote serial I/O routine.  The state variable tracks each
+ * beaglebone connection and is passed to the connect job.
+ *
+ * @param m_which 0,1,2,3 for BB1, BB2, BB3 or BB4
  */
 remote_serial_t *remote_serial_init(int m_which, int m_port)
 {
@@ -241,10 +245,10 @@ remote_serial_t *remote_serial_init(int m_which, int m_port)
     new_port->timeout.tv_sec = 5;
     new_port->timeout.tv_usec = 0;
     ph_job_init(&(new_port->connect_job));
-    new_port->connect_job.callback = connect_remote_serial;
     new_port->connect_job.data = new_port;
+    new_port->connect_job.callback = connect_remote_serial;
 
     ph_job_dispatch_now(&(new_port->connect_job));
-
     return new_port;
 }
+

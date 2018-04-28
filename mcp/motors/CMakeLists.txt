@@ -6,6 +6,7 @@ set(MOTOR_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/ezstep.c
     ${CMAKE_CURRENT_SOURCE_DIR}/hwpr.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xystage.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/balance.c
     PARENT_SCOPE
 )
 set(MOTOR_HEADERS
@@ -15,5 +16,6 @@ set(MOTOR_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/hwpr.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ezstep.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/xystage.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/../include/balance.h
    PARENT_SCOPE
 )

@@ -50,10 +50,12 @@ void Housekeeping::update()
                 measurements[i].set_value(Time::time_string(shared_housekeeper.measurements[i].value));
             }
             else {
-                int precision = 1;
+				int precision = 5;
+                // int precision = 1;
                 if (shared_housekeeper.measurements[i].units == " a") {
-                    precision = 2;
+                //     precision = 2;
                 }
+				
                 measurements[i].set_value(shared_housekeeper.measurements[i].value,
                     shared_housekeeper.measurements[i].units, precision);
             }

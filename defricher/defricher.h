@@ -31,6 +31,7 @@
 #define FR_PATH_MAX 8192
 
 #include <dirent.h>     /* for MAXNAMELEN on BSD */
+#include "linklist.h"
 #ifndef NAME_MAX
 #ifdef MAXNAMELEN
 #define NAME_MAX MAXNAMELEN
@@ -64,12 +65,16 @@ struct rc_struct {
   char* output_dirfile;
   char* source;
   char* dest_dir;
+  char* linklist_file;
 
   struct timezone tz;
   char* chunk;
   char* dirfile;
   char* dirname;
   char* hostname;
+  char* telemetry; // lab, highrate, biphase, pilot
+
+  linklist_t *ll;
 };
 
 struct ri_struct {
@@ -80,6 +85,7 @@ struct ri_struct {
 
   struct timeval last;  // Last time written to dirfile
   int lw;               // Total number of samples written previously
+  int lr;               // Total number of samples written previously
   int wrote;                // Current number of samples written
   bool new_channels;        // Have we received a new channels structure?
   bool channels_ready;      // Is the channels structure initialized?
@@ -92,6 +98,9 @@ struct ri_struct {
 /* interthread communication */
 extern struct rc_struct rc;
 extern struct ri_struct ri;
+
+#include "FIFO.h"
+extern struct Fifo fifo_data[RATE_END];
 
 extern sigset_t signals;
 

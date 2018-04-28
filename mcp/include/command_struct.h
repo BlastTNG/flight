@@ -28,10 +28,10 @@
 #include <time.h>
 
 #include <xsc_protocol.h>
-#include "isc_protocol.h"
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
+#include "roach.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -63,14 +63,14 @@
 // CommandData.uei_command.uei_of_dio_432_out.
 // TODO(laura): These are for BLASTPol (taken from das.c). Get updated list from Jeff.
 // TODO(laura): move this to a separate cryo control program modeled on das.c
-#define HEAT_HELIUM_LEVEL    0x01
-#define HEAT_CHARCOAL        0x02
-#define HEAT_POT_HS          0x04
-#define HEAT_CHARCOAL_HS     0x08
-#define HEAT_JFET            0x10
-#define HEAT_BDA             0x20
-#define HEAT_CALIBRATOR      0x40
-#define HEAT_HWPR_POS        0x80
+#define HEAT_HELIUM_LEVEL    0x0001
+#define HEAT_CHARCOAL        0x0002
+#define HEAT_POT_HS          0x0004
+#define HEAT_CHARCOAL_HS     0x0008
+#define HEAT_JFET            0x0010
+#define HEAT_BDA             0x0020
+#define HEAT_CALIBRATOR      0x0040
+#define HEAT_HWPR_POS        0x0080
 
 #define LS_CLOSED      0x0002
 #define LS_DRIVE_OFF   0x0004
@@ -92,6 +92,8 @@
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
+/* Need to undef I here in for source files that utilize complex.h */
+#undef I
 struct GainStruct {
   float P;
   float I;
@@ -257,6 +259,115 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef struct {
+  int16_t hwprPos;
+  int hwpr_pos_old;
+
+  uint16_t cal_length, calib_period;
+  int calib_repeats;
+  int calib_hwpr;
+  int do_cal_pulse;
+  int do_level_pulse;
+  uint16_t level_length;
+  uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+  uint16_t heater_update;
+  uint16_t heater_status;
+  uint16_t sync;
+  uint16_t force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
+  int labjack, send_dac, load_curve, cycle_allowed;
+  float dac_value;
+  // for the periodic cal Sam Grab these
+  uint16_t num_pulse, separation, length, periodic_pulse;
+} cryo_cmds_t;
+
+typedef struct {
+  float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
+  float of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
+  float of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
+  float of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
+  float if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
+  float if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
+  float if_9_on, if_9_off, if_10_on, if_10_off;
+  float cycle_of_1, cycle_of_2, cycle_of_3, cycle_of_4, cycle_of_5, cycle_of_6;
+  float cycle_of_7, cycle_of_8, cycle_of_9, cycle_of_10, cycle_of_11, cycle_of_12;
+  float cycle_of_13, cycle_of_14, cycle_of_15, cycle_of_16;
+  float cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4, cycle_if_5, cycle_if_6;
+  float cycle_if_7, cycle_if_8, cycle_if_9, cycle_if_10;
+  float cycled_of, cycled_if;
+  float rec_on, rec_off, amp_supply_on, amp_supply_off;
+  float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
+  float update_rec, update_of, update_if;
+  uint16_t labjack[5];
+  int of_relays[16], if_relays[10];
+} relay_cmds_t;
+
+typedef struct {
+    uint16_t lj_q_on;
+    uint16_t which_q[5];
+    uint16_t set_q;
+} labjack_queue_t;
+
+typedef struct slinger_commanding
+{
+    unsigned int downlink_rate_bps;
+    bool highrate_active;
+    bool biphase_active;
+} slinger_commanding_t;
+
+typedef struct udp_roach
+{
+    bool store_udp;
+    bool publish_udp;
+} udp_roach_t;
+
+typedef struct roach
+{
+    unsigned int new_state;
+    unsigned int change_state;
+    unsigned int df_calc;
+    unsigned int auto_retune;
+    unsigned int opt_tones;
+    unsigned int do_sweeps;
+    unsigned int load_amps;
+    unsigned int set_rudats;
+    unsigned int set_attens;
+    unsigned int find_kids;
+} roach_status_t;
+
+typedef struct roach_params
+{
+//  Parameters input to find_kids script
+    double smoothing_scale;
+    double peak_threshold;
+    double spacing_threshold;
+//  Set attenuators
+    double in_atten;
+    double out_atten;
+} roach_params_t;
+
+typedef struct {
+    enum {bal_rest = 0, bal_manual, bal_auto} mode;
+    enum {neg = 0, no_bal, pos} bal_move_type;
+    uint32_t pos;
+    uint32_t vel;
+    uint16_t hold_i;
+    uint16_t move_i;
+    uint16_t acc;
+
+    // servo parameters
+    double i_el_on_bal;
+    double i_el_off_bal;
+    double gain_bal;
+} cmd_balance_t;
+
+typedef struct {
+    uint8_t amp;
+    int8_t status;
+    bool reset;
+} cmd_rox_bias_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -270,12 +381,25 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+  uint32_t biphase_clk_speed;
+  bool biphase_rnrz;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
 
-  enum {vtx_isc, vtx_osc} vtx_sel[2];
+  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
+
+  roach_status_t roach[NUM_ROACHES];
+  udp_roach_t udp_roach[NUM_ROACHES];
+  roach_params_t roach_params[NUM_ROACHES];
 
   uei_commands_t uei_command;
+
+  cmd_rox_bias_t rox_bias;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
@@ -283,21 +407,9 @@ struct CommandDataStruct {
 
   struct {
     struct latch_pulse sc_tx;
-    struct latch_pulse das;
-    struct latch_pulse xsc0;
-    struct latch_pulse xsc1;
-    struct latch_pulse rw;
-    struct latch_pulse piv;
-    struct latch_pulse elmot;
     struct latch_pulse bi0;
-    struct latch_pulse rx_main;
-    struct latch_pulse rx_hk;
-    struct latch_pulse rx_amps;
     struct latch_pulse charge;
-    int gybox_off;
-    int gyro_off[6];
     int gyro_off_auto[6];
-    int hub232_off;
   } power;
 
   uint16_t disable_az;
@@ -344,7 +456,7 @@ struct CommandDataStruct {
   double autotrim_rate;      // degrees/s
   time_t autotrim_time;      // in seconds
   time_t autotrim_xsc0_last_bad;
-  time_t autotrim_osc_last_bad;
+  time_t autotrim_xsc1_last_bad;
 
   double cal_xmax_mag;
   double cal_xmin_mag;
@@ -369,55 +481,13 @@ struct CommandDataStruct {
     struct Step biasStep;
   } Bias;
 
-  // TODO(seth): Move Cryo cmd
-  struct {
-    uint16_t charcoalHeater;
-    uint16_t hsCharcoal;
-    uint16_t fridgeCycle;
-    uint16_t force_cycle;
+  cryo_cmds_t Cryo;
 
-    double cycle_start_temp;
-    double cycle_pot_max;
-    double cycle_charcoal_max;
-    double cycle_charcoal_settle;
-    // timeouts in minutes (NB: time will probably be in seconds)
-    double cycle_charcoal_timeout;
-    double cycle_settle_timeout;
+  labjack_queue_t Labjack_Queue;
 
-    uint16_t BDAHeat;
-    uint16_t hsPot;
-    int16_t heliumLevel;
-    int he4_lev_old;
-    int16_t hwprPos;
-    int hwpr_pos_old;
+  relay_cmds_t Relays;
 
-    uint16_t JFETHeat;
-    uint16_t autoJFETheat;
-    double JFETSetOn, JFETSetOff;
-
-    enum calmode calibrator;
-    uint16_t calib_pulse, calib_period;
-    int calib_repeats;
-    int calib_hwpr;
-
-    uint16_t potvalve_open, potvalve_on, potvalve_close;
-    uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
-  } Cryo;
-
-  struct {
-    enum {bal_rest, bal_manual, bal_auto} mode;
-    double level;
-
-    // servo parameters
-    double level_on_bal;
-    double level_off_bal;
-    double level_target_bal;
-    double gain_bal;
-
-    // heating card parameters
-    double heat_on;
-    double heat_tset;
-  } pumps;
+  cmd_balance_t balance;
 
   struct {
     int off;
@@ -503,9 +573,6 @@ struct CommandDataStruct {
   double lat;
   double lon;
 
-  /* Integrating Star Camera Stuff */
-  struct ISCStatusStruct ISCState[2];
-
   struct {
     int pulse_width;
     int fast_pulse_width;
@@ -518,12 +585,17 @@ struct CommandDataStruct {
   } ISCControl[2];
 
   struct XSCCommandStruct XSC[2];
+
+  slinger_commanding_t packet_slinger;
+
+  uint32_t checksum;
 };
 
 void InitCommandData();
 double LockPosition(double);
 int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
+void WritePrevStatus();
 
 extern struct CommandDataStruct CommandData;
 

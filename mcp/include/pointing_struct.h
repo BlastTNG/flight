@@ -44,6 +44,9 @@
 #include <time.h>
 #include <stdbool.h>
 
+#define NUM_PSS 8
+#define NUM_PSS_V 4
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -54,14 +57,7 @@ struct ACSDataStruct {
   double mag_x;     // counts;
   double mag_y;     // counts;
   double mag_z;     // counts;
-  double pss1_i1;   // counts
-  double pss1_i2;   // counts
-  double pss1_i3;   // counts
-  double pss1_i4;   // counts
-  double pss2_i1;   // counts
-  double pss2_i2;   // counts
-  double pss2_i3;   // counts
-  double pss2_i4;   // counts
+  double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts
@@ -121,6 +117,8 @@ struct PointingDataStruct {
   double mag_strength; // nanoTesla
   double offset_ifrollmag_gy;
   double offset_ifyawmag_gy;
+
+  double null_az; // degrees
 
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
@@ -209,7 +207,7 @@ struct AxesModeStruct {
   unsigned int i_dith;
 };
 
-extern time_t csbf_gps_time;
+// extern time_t csbf_gps_time;
 
 typedef struct XSCLastTriggerState
 {
@@ -220,6 +218,8 @@ typedef struct XSCLastTriggerState
     int trigger_time;                       // Time of the last trigger, measured in loops through xsc_control_triggers
     bool forced_grace_period;
     bool forced_trigger_threshold;
+    uint32_t timestamp_s;
+    uint32_t timestamp_us;
 } xsc_last_trigger_state_t;
 
 typedef struct XSCPointingState {
@@ -227,11 +227,12 @@ typedef struct XSCPointingState {
     int counter_mcp;                        // the current counter_mcp, passed to the star camera after some delay
     int last_counter_mcp;                   // the previous counter_mcp passed to the star camera
     int last_solution_stars_counter;        // stars counter of last solution used in pointing solution
+    unsigned int stars_response_counter;
     double az;                              // XSC Az
     double el;                              // XSC El
     int last_trigger_time;
     int exposure_time_cs;
-    double predicted_motion_px;
+    double predicted_streaking_px;
 } xsc_pointing_state_t;
 
 extern struct XSCPointingState xsc_pointing_state[2];

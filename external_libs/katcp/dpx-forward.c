@@ -548,7 +548,7 @@ int perform_forward_symbolic_group_cmd_katcp(struct katcp_dispatch *d, int argc)
   struct katcp_cmd_item *ix;
   struct katcp_flat *fx, *fy;
   struct forward_symbolic_state *fs;
-  struct katcp_endpoint *target, *source, *origin;
+  struct katcp_endpoint *target, *source;
   struct katcl_parse *px;
   char *req;
 

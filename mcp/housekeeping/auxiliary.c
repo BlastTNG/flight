@@ -55,217 +55,76 @@ extern int16_t InCharge; /* tx.c */
 /*    ControlPumpHeat:  Controls balance system pump temp               */
 /************************************************************************/
 
-static int ControlPumpHeat(int bits_bal)
-{
-  static channel_t *tBoxBalAddr, *vtPumpBalAddr;
-  static struct LutType tPumpBalLut =
-     {"/data/etc/blast/thermistor.lut", 0, NULL, NULL, 0};
-  static int firsttime = 1;
-
-  double temp1, temp2;
-
-  if (firsttime) {
-    firsttime = 0;
-    tBoxBalAddr = channels_find_by_name("t_box_bal");
-    vtPumpBalAddr = channels_find_by_name("vt_pump_bal");
-    LutInit(&tPumpBalLut);
-  }
-
-
-  temp1 = (double)GET_UINT16(tBoxBalAddr);
-  temp2 = (double)GET_UINT16(vtPumpBalAddr);
-
-  temp1 = calibrate_ad590(temp1) - 273.15;
-  temp2 = calibrate_thermister(temp2) - 273.15;
-
-  if (CommandData.pumps.heat_on) {
-    if (temp1 < CommandData.pumps.heat_tset) {
-      bits_bal |= BAL_HEAT;  /* set heat bit */
-    } else {
-      bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
-    }
-  } else {
-      bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
-  }
-
-  return bits_bal;
-}
-
+// static int ControlPumpHeat(int bits_bal)
+// {
+//   static channel_t *tBoxBalAddr, *vtPumpBalAddr;
+//   static struct LutType tPumpBalLut =
+//      {"/data/etc/blast/thermistor.lut", 0, NULL, NULL, 0};
+//   static int firsttime = 1;
+//
+//   double temp1, temp2;
+//
+//   if (firsttime) {
+//     firsttime = 0;
+//     tBoxBalAddr = channels_find_by_name("t_box_bal");
+//     vtPumpBalAddr = channels_find_by_name("vt_pump_bal");
+//     LutInit(&tPumpBalLut);
+//   }
+//
+//
+//   temp1 = (double)GET_UINT16(tBoxBalAddr);
+//   temp2 = (double)GET_UINT16(vtPumpBalAddr);
+//
+//   temp1 = calibrate_ad590(temp1) - 273.15;
+//   temp2 = calibrate_thermister(temp2) - 273.15;
+//
+//   if (CommandData.pumps.heat_on) {
+//     if (temp1 < CommandData.pumps.heat_tset) {
+//       bits_bal |= BAL_HEAT;  /* set heat bit */
+//     } else {
+//       bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
+//     }
+//   } else {
+//       bits_bal &= (0xFF - BAL_HEAT); /* clear heat bit */
+//   }
+//
+//   return bits_bal;
+// }
+//
 
 /*****************************************************************/
 /*                                                               */
-/*   Control the pumps and the lock                              */
+/*   Control the pumps                                           */
 /*                                                               */
 /*****************************************************************/
-void ControlAuxMotors()
-{
-  static channel_t* levelOnBalAddr, *levelOffBalAddr;
-  static channel_t* levelTargetBalAddr;
-  static channel_t* gainBalAddr;
-  static channel_t* bitsBalAddr;
-
-  int bits_bal = 0;
-
-  static int firsttime = 1;
-  if (firsttime) {
-    firsttime = 0;
-    bitsBalAddr = channels_find_by_name("bits_bal");
-    levelOnBalAddr = channels_find_by_name("level_on_bal");
-    levelOffBalAddr = channels_find_by_name("level_off_bal");
-    levelTargetBalAddr = channels_find_by_name("level_target_bal");
-    gainBalAddr = channels_find_by_name("gain_bal");
-  }
-
-  /* Run Heating card, maybe */
-  bits_bal = ControlPumpHeat(bits_bal);
-
-  SET_VALUE(levelOnBalAddr, CommandData.pumps.level_on_bal);
-  SET_VALUE(levelOffBalAddr, CommandData.pumps.level_off_bal);
-  SET_VALUE(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.));
-  SET_VALUE(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.));
-  SET_VALUE(bitsBalAddr, bits_bal);
-}
-
-/* create latching relay pulses, and update enable/disbale levels */
-/* actbus/steppers enable is handled separately in StoreActBus() */
-void ControlPower(void)
-{
-    static int firsttime = 1;
-    static channel_t* latchingAddr[2];
-    static channel_t* switchGyAddr;
-    static channel_t* switchMiscAddr;
-    int latch0 = 0, latch1 = 0, gybox = 0, misc = 0;
-    int i;
-
-    if (firsttime) {
-        firsttime = 0;
-        latchingAddr[0] = channels_find_by_name("latch0");
-        latchingAddr[1] = channels_find_by_name("latch1");
-        switchGyAddr = channels_find_by_name("switch_gy");
-        switchMiscAddr = channels_find_by_name("switch_misc");
-    }
-
-    if (CommandData.power.hub232_off) {
-        if (CommandData.power.hub232_off > 0) CommandData.power.hub232_off--;
-        misc |= 0x08;
-    }
-
-    if (CommandData.power.charge.set_count > 0) {
-        CommandData.power.charge.set_count--;
-        if (CommandData.power.charge.set_count < LATCH_PULSE_LEN) misc |= 0x0040;
-    }
-    if (CommandData.power.charge.rst_count > 0) {
-        CommandData.power.charge.rst_count--;
-        if (CommandData.power.charge.rst_count < LATCH_PULSE_LEN) misc |= 0x0080;
-    }
-
-    for (i = 0; i < 6; i++) {
-        if (CommandData.power.gyro_off[i] || CommandData.power.gyro_off_auto[i]) {
-            if (CommandData.power.gyro_off[i] > 0) CommandData.power.gyro_off[i]--;
-            if (CommandData.power.gyro_off_auto[i] > 0) CommandData.power.gyro_off_auto[i]--;
-            gybox |= 0x01 << i;
-        }
-    }
-
-    if (CommandData.power.gybox_off) {
-        if (CommandData.power.gybox_off > 0) CommandData.power.gybox_off--;
-        gybox |= 0x80;
-    }
-
-    if (CommandData.power.sc_tx.set_count > 0) {
-        CommandData.power.sc_tx.set_count--;
-        if (CommandData.power.sc_tx.set_count < LATCH_PULSE_LEN) latch0 |= 0x0001;
-    }
-    if (CommandData.power.sc_tx.rst_count > 0) {
-        CommandData.power.sc_tx.rst_count--;
-        if (CommandData.power.sc_tx.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0002;
-    }
-    if (CommandData.power.das.set_count > 0) {
-        CommandData.power.das.set_count--;
-        if (CommandData.power.das.set_count < LATCH_PULSE_LEN) latch0 |= 0x0004;
-    }
-    if (CommandData.power.das.rst_count > 0) {
-        CommandData.power.das.rst_count--;
-        if (CommandData.power.das.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0008;
-    }
-    if (CommandData.power.xsc0.set_count > 0) {
-        CommandData.power.xsc0.set_count--;
-        if (CommandData.power.xsc0.set_count < LATCH_PULSE_LEN) latch0 |= 0x0010;
-    }
-    if (CommandData.power.xsc0.rst_count > 0) {
-        CommandData.power.xsc0.rst_count--;
-        if (CommandData.power.xsc0.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0020;
-    }
-    if (CommandData.power.xsc1.set_count > 0) {
-        CommandData.power.xsc1.set_count--;
-        if (CommandData.power.xsc1.set_count < LATCH_PULSE_LEN) latch0 |= 0x0040;
-    }
-    if (CommandData.power.xsc1.rst_count > 0) {
-        CommandData.power.xsc1.rst_count--;
-        if (CommandData.power.xsc1.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0080;
-    }
-    if (CommandData.power.rw.set_count > 0) {
-        CommandData.power.rw.set_count--;
-        if (CommandData.power.rw.set_count < LATCH_PULSE_LEN) latch0 |= 0x0400;
-    }
-    if (CommandData.power.rw.rst_count > 0) {
-        CommandData.power.rw.rst_count--;
-        if (CommandData.power.rw.rst_count < LATCH_PULSE_LEN) latch0 |= 0x0800;
-    }
-    if (CommandData.power.piv.set_count > 0) {
-        CommandData.power.piv.set_count--;
-        if (CommandData.power.piv.set_count < LATCH_PULSE_LEN) latch0 |= 0x1000;
-    }
-    if (CommandData.power.piv.rst_count > 0) {
-        CommandData.power.piv.rst_count--;
-        if (CommandData.power.piv.rst_count < LATCH_PULSE_LEN) latch0 |= 0x2000;
-    }
-    if (CommandData.power.elmot.set_count > 0) {
-        CommandData.power.elmot.set_count--;
-        if (CommandData.power.elmot.set_count < LATCH_PULSE_LEN) latch0 |= 0x4000;
-    }
-    if (CommandData.power.elmot.rst_count > 0) {
-        CommandData.power.elmot.rst_count--;
-        if (CommandData.power.elmot.rst_count < LATCH_PULSE_LEN) latch0 |= 0x8000;
-    }
-    if (CommandData.power.bi0.set_count > 0) {
-        CommandData.power.bi0.set_count--;
-        if (CommandData.power.bi0.set_count < LATCH_PULSE_LEN) latch1 |= 0x0001;
-    }
-    if (CommandData.power.bi0.rst_count > 0) {
-        CommandData.power.bi0.rst_count--;
-        if (CommandData.power.bi0.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0002;
-    }
-    if (CommandData.power.rx_main.set_count > 0) {
-        CommandData.power.rx_main.set_count--;
-        if (CommandData.power.rx_main.set_count < LATCH_PULSE_LEN) latch1 |= 0x0004;
-    }
-    if (CommandData.power.rx_main.rst_count > 0) {
-        CommandData.power.rx_main.rst_count--;
-        if (CommandData.power.rx_main.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0008;
-    }
-    if (CommandData.power.rx_hk.set_count > 0) {
-        CommandData.power.rx_hk.set_count--;
-        if (CommandData.power.rx_hk.set_count < LATCH_PULSE_LEN) latch1 |= 0x5050;
-    }
-    if (CommandData.power.rx_hk.rst_count > 0) {
-        CommandData.power.rx_hk.rst_count--;
-        if (CommandData.power.rx_hk.rst_count < LATCH_PULSE_LEN) latch1 |= 0xa0a0;
-    }
-    if (CommandData.power.rx_amps.set_count > 0) {
-        CommandData.power.rx_amps.set_count--;
-        if (CommandData.power.rx_amps.set_count < LATCH_PULSE_LEN) latch1 |= 0x0500;
-    }
-    if (CommandData.power.rx_amps.rst_count > 0) {
-        CommandData.power.rx_amps.rst_count--;
-        if (CommandData.power.rx_amps.rst_count < LATCH_PULSE_LEN) latch1 |= 0x0a00;
-    }
-
-    SET_VALUE(latchingAddr[0], latch0);
-    SET_VALUE(latchingAddr[1], latch1);
-    SET_VALUE(switchGyAddr, gybox);
-    SET_VALUE(switchMiscAddr, misc);
-}
+// void ControlAuxMotors()
+// {
+//   static channel_t* levelOnBalAddr, *levelOffBalAddr;
+//   static channel_t* levelTargetBalAddr;
+//   static channel_t* gainBalAddr;
+//   static channel_t* bitsBalAddr;
+//
+//   int bits_bal = 0;
+//
+//   static int firsttime = 1;
+//   if (firsttime) {
+//     firsttime = 0;
+//     bitsBalAddr = channels_find_by_name("bits_bal");
+//     levelOnBalAddr = channels_find_by_name("level_on_bal");
+//     levelOffBalAddr = channels_find_by_name("level_off_bal");
+//     levelTargetBalAddr = channels_find_by_name("level_target_bal");
+//     gainBalAddr = channels_find_by_name("gain_bal");
+//   }
+//
+//   /* Run Heating card, maybe */
+//   bits_bal = ControlPumpHeat(bits_bal);
+//
+//   SET_VALUE(levelOnBalAddr, CommandData.pumps.level_on_bal);
+//   SET_VALUE(levelOffBalAddr, CommandData.pumps.level_off_bal);
+//   SET_VALUE(levelTargetBalAddr, (CommandData.pumps.level_target_bal + 1990.13*5.));
+//   SET_VALUE(gainBalAddr, (int)(CommandData.pumps.gain_bal * 1000.));
+//   SET_VALUE(bitsBalAddr, bits_bal);
+// }
 
 void VideoTx(void)
 {
@@ -278,8 +137,8 @@ void VideoTx(void)
         bitsVtxAddr = channels_find_by_name("bits_vtx");
     }
 
-    if (CommandData.vtx_sel[0] == vtx_osc) vtx_bits |= 0x1;
-    if (CommandData.vtx_sel[1] == vtx_isc) vtx_bits |= 0x4;
+    if (CommandData.vtx_sel[0] == vtx_xsc1) vtx_bits |= 0x1;
+    if (CommandData.vtx_sel[1] == vtx_xsc0) vtx_bits |= 0x4;
 
     SET_VALUE(bitsVtxAddr, vtx_bits);
 }

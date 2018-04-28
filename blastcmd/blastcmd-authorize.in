@@ -1,39 +1,66 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
-$blastcmd_auth = "@DATA_ETC_DIR@/blastcmd.auth";
+use strict;
 
-@w = split(/ +/, `/usr/bin/who -m --ips`);
+my $WHO = "/usr/bin/who";
+my $HOST = "/usr/bin/host";
+my $blastcmd_auth = "@DATA_ETC_DIR@/blastcmd.auth";
+my $username = getpwuid($<);
+my $ip;
+my $host = "";
 
-$username = $w[0];
-$addr = substr $w[4], 0, -1; # Get rid of parenthesis!
-
-if ($addr =~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)
+sub resolve
 {
-  $ip = $addr;
-  $host = "";
-} else {
-  $host = $addr;
-  @h = split(/ +/, `/usr/bin/host $addr`);
-  $ip = $h[3];
-  chomp $ip; # Get rid of newline.
+  local $_ = shift;
+  chomp;
+
+  unless (/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
+    $host = $_;
+
+    my $lookup = `$HOST $host 2>/dev/null`
+      or die "Unable to execute $HOST";
+
+    chomp $lookup;
+
+    die "Unable to resolve \"$host\"" if ($lookup =~ /not found/);
+
+    $lookup =~ /([^ ]*)$/;
+    $_ = $1;
+  }
+  return $_;
 }
 
-open(AUTH, "$blastcmd_auth");
-@auth = <AUTH>;
-close(AUTH);
+if ($#ARGV >= 0) {
+  # Let the user specify the IP address to add
+  $ip = &resolve(shift);
+} else {
+  # try to get it from who
+  my $whodata = `$WHO -m --ips 2>/dev/null`
+    or die "Unable to execute $WHO";
+  my ($addr) = $whodata =~ /\(?([^ \)]*)\)?$/;
 
-foreach $a (@auth)
-{
-  @authlines = split(/#/, $a); # Delete all comments
-  $authline = $authlines[0];
-  if ($authline =~ /$ip\s/)
-  {
-    print "You ($ip) are already in the auth file!\n";
-    exit;
+  die "Unable to parse $WHO output" unless ($addr);
+
+  $ip = &resolve($addr);
+}
+
+# update AUTH file
+my $AUTH;
+
+# check if it's already there
+if (open $AUTH, $blastcmd_auth) {
+  while (<$AUTH>) {
+    s/#.*//; # Delete all comments
+    if (/^$ip\s/) {
+      $host = " ($host)" if $host;
+      die "$ip$host is already in the auth file!\n"
+    }
   }
 }
 
-open(AUTH, ">>$blastcmd_auth");
-print AUTH  "$ip # $username $host\n";
-print "You ($ip) have been added to the auth file!\n";
+# nope, append it.
+open $AUTH, ">>$blastcmd_auth" or die "Unable to write AUTH file: $!";
+my $new_auth = "$ip # $username $host";
+print $AUTH "$new_auth\n" or die "Unable to write AUTH file: $!";
 
+print "Added:\n  $new_auth\nto the auth file.\n";

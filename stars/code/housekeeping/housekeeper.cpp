@@ -43,6 +43,7 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
     Measurement measurement;
     string type = "";
     measurement.channel = channel_num;
+	logger.log("I am in add_channel");
     if (map.count(field_name)) {
         measurement.name = map[field_name].as<string>();
     } else {
@@ -51,18 +52,23 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
     if (map.count(field_type)) {
         type = map[field_type].as<string>();
         if (type == "temperature" && map.count(field_resistor_value)) {
-            measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
-            measurement.offset = -273.15;
-            measurement.units = " C";
+            // measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
+            // measurement.offset = -273.15;
+			measurement.scale = 1;
+			measurement.offset = 0;
+			measurement.units = " C";
         } else if (type == "pressure" && map.count(field_voltage)) {
-            measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
-            measurement.offset = 0.04 / (0.004 * 101.325);
+            // measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
+            // measurement.offset = 0.04 / (0.004 * 101.325);
+			measurement.scale = 1;
+			measurement.offset = 0;
             measurement.units = " a";
         } else {
             return;
         }
     }
     measurements.push_back(measurement);
+
 }
 
 void Housekeeper::update_shared()
@@ -109,20 +115,36 @@ void Housekeeper::update()
 			try {
 				double values[16] = { 0.0 };
 				int channel;
-                string logdata = "temps";
+                string logdata = "temps=> ";
 				string logerror = "";
 
 				ad_card->dmm_scan(values);
 
+				for (unsigned int i = 0; i < 16; i++) {
+					logdata += std::to_string(i) + ": " + std::to_string(values[i]) + " ";
+				}
+
                 for (unsigned int i=0; i<measurements.size(); i++) {
                     channel = measurements[i].channel;
-					measurements[i].add_value(values[i]);
-					logdata += (format(" %s %.03d") % measurements[i].name % values[i]).str();
+					measurements[i].add_value(values[channel]);
                 }
-                if (write_temps_counter == 0) {
-                    logger.log(logdata);
-                }
-                write_temps_counter = (write_temps_counter+1)%10;
+               
+
+				// int heater_state = shared_housekeeper.heater_state;
+				// TODO(javier): remove for flight
+				int heater_state = 0;
+				if (heater_state > 0) {
+					ad_card->heat_camera(true);
+					logdata += "Heating";
+				}
+				else {
+					ad_card->heat_camera(false);
+					logdata += "Not Heating";
+				}
+				if (write_temps_counter == 0) {
+					logger.log(logdata);
+				}
+				write_temps_counter = (write_temps_counter + 1) % 10;
             } catch (...) {
             }
         #else

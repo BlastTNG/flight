@@ -44,7 +44,8 @@
 	_(x, 5HZ)					\
 	_(x, 100HZ)					\
 	_(x, 200HZ)                 \
-	_(x, 244HZ)
+	_(x, 244HZ)                 \
+    _(x, 488HZ)
 
 BLAST_LOOKUP_TABLE(RATE, static);
 
@@ -61,13 +62,6 @@ BLAST_LOOKUP_TABLE(RATE, static);
 	_(x, DOUBLE)
 BLAST_LOOKUP_TABLE(TYPE, static);
 
-#define _SRCS(x, _)	\
-	_(x, OF_UEI)    \
-	_(x, IF_UEI)    \
-    _(x, FC)        \
-    _(x, SC)
-BLAST_LOOKUP_TABLE(SRC, static);
-
 
 struct channel {
     char field[FIELD_LEN];      /// name of channel for FileFormats and CalSpecs
@@ -75,11 +69,8 @@ struct channel {
     double b_e2e;               ///   e = c * m_c2e + b_e2e
     E_TYPE type;                /// Type of data stored
     E_RATE rate;                /// Rate at which the channel is recorded
-    E_SRC source;               /// Source of the data channel (who writes)
     char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
     char units[UNITS_LEN];      /// eg, "K" or "^o/s"
-    uint8_t board;              /// If the source is a UEI, which board is it? Otherwise, 0
-    uint8_t chan;               /// If the source is a UEI, which channel on the board?
     void *var;                  /// Pointer to the variable in the current frame
 } __attribute__((aligned));
 
@@ -94,7 +85,6 @@ struct channel_packed {
     double b_e2e;               ///   e = c * m_c2e + b_e2e
     int8_t type;                /// Type of data stored
     int8_t rate;                /// Rate at which the channel is recorded
-    int8_t source;              /// Source of the data channel (who writes)
     char quantity[UNITS_LEN];   /// eg, "Temperature" or "Angular Velocity"
     char units[UNITS_LEN];      /// eg, "K" or "^o/s"
 };
@@ -115,17 +105,31 @@ typedef struct {
 } frame_header_t;
 #pragma pack(pop)
 
-extern void *channel_data[SRC_END][RATE_END];
-extern size_t frame_size[SRC_END][RATE_END];
+struct superframe_attributes {
+  uint32_t start;
+  uint32_t skip;
+  channel_t * chan;
+};
+
+extern void *channel_data[RATE_END];
+extern size_t frame_size[RATE_END];
 extern channel_t channel_list[];
 extern derived_tng_t derived_list[];
+extern int channels_count;
+extern uint32_t superframe_size;
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
-int channels_store_data(E_SRC m_src, E_RATE m_rate, const void *m_data, size_t m_len);
+int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len);
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
-size_t channels_get_count_by_source(E_SRC m_src);
+size_t channel_size(channel_t *);
+unsigned int get_channel_spf(const channel_t *);
+unsigned int get_spf(unsigned int);
+uint32_t get_channel_start_in_superframe(const channel_t *);
+uint32_t get_channel_skip_in_superframe(const channel_t *);
+uint32_t get_superframe_offset(E_RATE);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);

@@ -34,21 +34,24 @@
 #include <blast.h>
 #include <blast_time.h>
 #include <channels_tng.h>
+#include <crc.h>
 #include <derived.h>
 #include <mputs.h>
 
+#include <command_struct.h>
+
 static int frame_stop;
 static struct mosquitto *mosq = NULL;
+static struct mosquitto *mosq_other = NULL;
 extern int16_t SouthIAm;
+extern int16_t InCharge;
 
+static int32_t mcp_488hz_framenum = -1;
 static int32_t mcp_244hz_framenum = -1;
 static int32_t mcp_200hz_framenum = -1;
 static int32_t mcp_100hz_framenum = -1;
 static int32_t mcp_5hz_framenum = -1;
 static int32_t mcp_1hz_framenum = -1;
-static int32_t uei_of_100hz_framenum = -1;
-static int32_t uei_of_200hz_framenum = -1;
-static int32_t uei_of_1hz_framenum = -1;
 
 /**
  * Returns the current MCP framenumber of the 200Hz Frames
@@ -89,69 +92,14 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
-void uei_publish_1hz(void)
-{
-    static channel_t *uei_of_1hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (uei_of_1hz_framenum_addr == NULL) {
-        uei_of_1hz_framenum_addr = channels_find_by_name("uei_of_1hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/1Hz");
-    }
-
-    if (frame_stop) return;
-
-    uei_of_1hz_framenum++;
-    SET_INT32(uei_of_1hz_framenum_addr, uei_of_1hz_framenum);
-    if (frame_size[SRC_OF_UEI][RATE_1HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_OF_UEI][RATE_1HZ], channel_data[SRC_OF_UEI][RATE_1HZ], 0, false);
-    }
-}
-
-void uei_publish_100hz(void)
-{
-    static channel_t *uei_of_100hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (uei_of_100hz_framenum_addr == NULL) {
-        uei_of_100hz_framenum_addr = channels_find_by_name("uei_of_100hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/100Hz");
-    }
-
-    if (frame_stop) return;
-
-    uei_of_100hz_framenum++;
-    SET_INT32(uei_of_100hz_framenum_addr, uei_of_100hz_framenum);
-    if (frame_size[SRC_OF_UEI][RATE_100HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_OF_UEI][RATE_100HZ], channel_data[SRC_OF_UEI][RATE_100HZ], 0, false);
-    }
-}
-
-void uei_publish_200hz(void)
-{
-    static channel_t *uei_of_200hz_framenum_addr = NULL;
-    static char frame_name[32];
-    if (uei_of_200hz_framenum_addr == NULL) {
-        uei_of_200hz_framenum_addr = channels_find_by_name("uei_of_200hz_framecount");
-        snprintf(frame_name, sizeof(frame_name), "frames/of_uei/dummy/200Hz");
-    }
-
-    if (frame_stop) return;
-
-    uei_of_200hz_framenum++;
-    SET_INT32(uei_of_200hz_framenum_addr, uei_of_200hz_framenum);
-    if (frame_size[SRC_OF_UEI][RATE_200HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_OF_UEI][RATE_200HZ], channel_data[SRC_OF_UEI][RATE_200HZ], 0, false);
-    }
-}
-
 void framing_publish_1hz(void)
 {
     static channel_t *mcp_1hz_framenum_addr = NULL;
+    static channel_t *mcp_1hz_framenum_dl_addr = NULL;
     static char frame_name[32];
     if (mcp_1hz_framenum_addr == NULL) {
         mcp_1hz_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+        mcp_1hz_framenum_dl_addr = channels_find_by_name("mcp_1hz_framecount_dl");
         snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/1Hz", SouthIAm + 1);
     }
 
@@ -159,9 +107,13 @@ void framing_publish_1hz(void)
 
     mcp_1hz_framenum++;
     SET_INT32(mcp_1hz_framenum_addr, mcp_1hz_framenum);
-    if (frame_size[SRC_FC][RATE_1HZ]) {
+    SET_INT32(mcp_1hz_framenum_dl_addr, mcp_1hz_framenum);
+    if (frame_size[RATE_1HZ]) {
+        if (1) {
+            // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_1HZ], channel_data[SRC_FC][RATE_1HZ], 0, false);
+                          frame_size[RATE_1HZ], channel_data[RATE_1HZ], 0, false);
     }
 }
 
@@ -178,9 +130,12 @@ void framing_publish_5hz(void)
 
     mcp_5hz_framenum++;
     SET_INT32(mcp_5hz_framenum_addr, mcp_5hz_framenum);
-    if (frame_size[SRC_FC][RATE_5HZ]) {
+    if (frame_size[RATE_5HZ]) {
+        if (mcp_5hz_framenum % 5 == 1) {
+            // blast_warn("the size of the 5hz frame is %zu", frame_size[RATE_5HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_5HZ], channel_data[SRC_FC][RATE_5HZ], 0, false);
+                frame_size[RATE_5HZ], channel_data[RATE_5HZ], 0, false);
     }
 }
 
@@ -197,9 +152,12 @@ void framing_publish_100hz(void)
 
     mcp_100hz_framenum++;
     SET_INT32(mcp_100hz_framenum_addr, mcp_100hz_framenum);
-    if (frame_size[SRC_FC][RATE_100HZ]) {
+    if (frame_size[RATE_100HZ]) {
+        if (mcp_100hz_framenum % 100 == 1) {
+            // blast_warn("the size of the 100hz data is %zu", frame_size[RATE_100HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_100HZ], channel_data[SRC_FC][RATE_100HZ], 0, false);
+                frame_size[RATE_100HZ], channel_data[RATE_100HZ], 0, false);
     }
 }
 
@@ -217,9 +175,12 @@ void framing_publish_200hz(void)
 
     mcp_200hz_framenum++;
     SET_INT32(mcp_200hz_framenum_addr, mcp_200hz_framenum);
-    if (frame_size[SRC_FC][RATE_200HZ]) {
+    if (frame_size[RATE_200HZ]) {
+        if (mcp_200hz_framenum % 200 == 1) {
+            // blast_warn("the size of the 200hz frame is %zu", frame_size[RATE_200HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_200HZ], channel_data[SRC_FC][RATE_200HZ], 0, false);
+                frame_size[RATE_200HZ], channel_data[RATE_200HZ], 0, false);
     }
 }
 
@@ -237,17 +198,46 @@ void framing_publish_244hz(void)
 
     mcp_244hz_framenum++;
     SET_INT32(mcp_244hz_framenum_addr, mcp_244hz_framenum);
-    if (frame_size[SRC_FC][RATE_244HZ]) {
+    if (frame_size[RATE_244HZ]) {
+        if ((mcp_244hz_framenum % 244) == 1) {
+           // blast_warn("size of 244hz is %zu", frame_size[RATE_244HZ]);
+        }
         mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[SRC_FC][RATE_244HZ], channel_data[SRC_FC][RATE_244HZ], 0, false);
+                frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
     }
 }
 
+void framing_publish_488hz(void)
+{
+    static channel_t *mcp_488hz_framenum_addr = NULL;
+    static char frame_name[32];
+
+    if (mcp_488hz_framenum_addr == NULL) {
+        mcp_488hz_framenum_addr = channels_find_by_name("mcp_488hz_framecount");
+        snprintf(frame_name, sizeof(frame_name), "frames/fc/%d/488Hz", SouthIAm + 1);
+    }
+
+    if (frame_stop) return;
+
+    mcp_488hz_framenum++;
+    SET_INT32(mcp_488hz_framenum_addr, mcp_488hz_framenum);
+    if (frame_size[RATE_488HZ]) {
+        mosquitto_publish(mosq, NULL, frame_name,
+                frame_size[RATE_488HZ], channel_data[RATE_488HZ], 0, false);
+    }
+}
+
+/**
+ * Publish updated CommandData
+ */
+void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
+{
+    mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
+}
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)
 {
     RATE_LOOKUP_T *rate;
-    SRC_LOOKUP_T *src;
 
     if (!m_src || !m_rate) {
         blast_err("Err in pointers");
@@ -265,23 +255,12 @@ static void framing_handle_data(const char *m_src, const char *m_rate, const voi
         blast_err("Did not recognize rate %s!", m_rate);
         return;
     }
-
-    // TODO(laura) Think about mapping FC1/FC2
-    for (src = SRC_LOOKUP_TABLE; src->position < SRC_END; src++) {
-        if (strncasecmp(src->text, m_src, BLAST_LOOKUP_TABLE_TEXT_SIZE) == 0) break;
-    }
-    if (src->position == SRC_END) {
-        blast_err("Did not recognize source %s", m_src);
-        return;
-    }
 }
 
 static void framing_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
     char **topics;
     int count;
-    static uint32_t last_crc = 0;
-    static uint32_t last_derived_crc = 0;
 
     if (message->payloadlen) {
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
@@ -291,9 +270,93 @@ static void framing_message_callback(struct mosquitto *mosq, void *userdata, con
             mosquitto_sub_topic_tokens_free(&topics, count);
         }
     }
-    fflush(stdout);
 }
 
+/**
+ * Received data from "other" flight computer including CommandData struct,
+ * EtherCAT state, Flight computer temps, etc.
+ * @param mosq Pointer to mosq connection to other flight computer
+ * @param userdata
+ * @param message
+ */
+static void framing_shared_data_callback(struct mosquitto *mosq, void *userdata,
+                                         const struct mosquitto_message *message)
+{
+    char **topics;
+    int count;
+    static int has_warned = 0;
+
+    if (message->payloadlen > 0) {
+        if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
+            if (topics[0] && strcmp(topics[0], "commanddata") == 0) {
+                if (!InCharge && (sizeof(CommandData) == message->payloadlen)) {
+                    struct CommandDataStruct temp_command_data = {0};
+                    uint32_t prev_crc;
+
+                    memcpy(&temp_command_data, message->payload, message->payloadlen);
+                    prev_crc = temp_command_data.checksum;
+                    temp_command_data.checksum = 0;
+                    if (prev_crc == crc32_le(0, (uint8_t*)&temp_command_data, sizeof(temp_command_data))) {
+                        has_warned = 0;
+                        memcpy(&CommandData, &temp_command_data, sizeof(CommandData));
+                    } else if (!has_warned) {
+                        has_warned = 1;
+                        blast_err("Received invalid CommandData from in charge flight computer!"
+                                " Please check that both FCs are running the same mcp");
+                    }
+                }
+            }
+            mosquitto_sub_topic_tokens_free(&topics, count);
+        }
+    }
+}
+
+static void framing_shared_connect_callback(struct mosquitto *m_mosq, void *obj, int rc)
+{
+    if (rc == MOSQ_ERR_SUCCESS) {
+        mosquitto_subscribe(m_mosq, NULL, "commanddata", 1);
+    }
+}
+
+int framing_shared_data_init(void)
+{
+    char id[4] = "fcX";
+    char host[4] = "fcX";
+
+    int ret = 0;
+    int port = 1883;
+    int keepalive = 60;
+    bool clean_session = true;
+
+    snprintf(id, sizeof(id), "fc%d", SouthIAm + 1);
+    snprintf(host, sizeof(host), "fc%d", (SouthIAm + 2) % 2 + 1);
+
+    mosq_other = mosquitto_new(id, clean_session, NULL);
+    if (!mosq_other) {
+        blast_err("mosquitto_new() failed creating other");
+        return -1;
+    }
+    mosquitto_log_callback_set(mosq_other, frame_log_callback);
+    mosquitto_message_callback_set(mosq_other, framing_shared_data_callback);
+    mosquitto_connect_callback_set(mosq_other, framing_shared_connect_callback);
+
+    if ((ret = mosquitto_connect_async(mosq_other, host, port, keepalive)) != MOSQ_ERR_SUCCESS) {
+        if (ret == MOSQ_ERR_INVAL) {
+        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
+        } else {
+        	if (errno == EINPROGRESS) {
+        		/* Do nothing, connection in progress */
+        	} else {
+        		blast_strerror("Unable to connect to mosquitto server!");
+        		return -1;
+        	}
+        }
+    }
+
+    mosquitto_reconnect_delay_set(mosq_other, 1, 10, 1);
+    mosquitto_loop_start(mosq_other);
+    return 0;
+}
 /**
  * Initializes the mosquitto library and associated framing routines.
  * @return
@@ -307,6 +370,7 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     char host[4] = "fcX";
     char topic[64];
 
+    int ret = 0;
     int port = 1883;
     int keepalive = 60;
     bool clean_session = true;
@@ -323,8 +387,16 @@ int framing_init(channel_t *channel_list, derived_tng_t *m_derived)
     mosquitto_message_callback_set(mosq, framing_message_callback);
 
     if (mosquitto_connect_async(mosq, host, port, keepalive)) {
-        fprintf(stderr, "Unable to connect.\n");
-        return -1;
+        if (ret == MOSQ_ERR_INVAL) {
+        	blast_err("Unable to connect to mosquitto server: Invalid Parameters!");
+        } else {
+        	if (errno == EINPROGRESS) {
+        		/* Do nothing, connection in progress */
+        	} else {
+        		blast_strerror("Unable to connect to mosquitto server!");
+        		return -1;
+        	}
+        }
     }
 
     /**

@@ -63,18 +63,6 @@ include (ExternalProject)
 # Used to check contents of header files
 include (CheckLibraryExists)
 
-# Find UEI Library
-
-find_path(UEI_INCLUDE_DIR powerdna.h REQUIRED)
-find_library(UEI_LIBRARY NAMES powerdna libpowerdna REQUIRED)
-IF(NOT UEI_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find powerdna.h.  You must install the UEI sdk.")
-ENDIF()
-IF(NOT UEI_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libpowerdna.  You must install the UEI sdk.")
-ENDIF()
-include_directories(${UEI_INCLUDE_DIR})
-
 # Find gsl    
 pkg_check_modules(PC_GSL QUIET gsl)
 set(GSL_DEFINITIONS ${PC_GSL_CFLAGS_OTHER})
@@ -211,6 +199,24 @@ IF(NOT ALSA_LIBRARY)
 ENDIF()
 include_directories(${ALSA_INCLUDE_DIR})
 
+# Find libmodbux
+pkg_check_modules(PC_MODBUS QUIET libmodbus)
+set(MODBUS_DEFINITIONS ${PC_MODBUS_CFLAGS_OTHER})
+
+find_path(MODBUS_INCLUDE_DIR modbus.h
+          HINTS ${PC_MODBUS_INCLUDEDIR} ${PC_MODBUS_INCLUDE_DIRS}
+          REQUIRED)
+
+find_library(MODBUS_LIBRARY NAMES libmodbus modbus
+            HINTS ${PC_MODBUS_LIBDIR} ${PC_MODBUS_LIBRARY_DIRS} REQUIRED)
+IF(NOT MODBUS_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find modbus.h.  Is libmodbus-dev installed?")
+ENDIF()
+IF(NOT MODBUS_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find libmodbus.  Please install this using apt-get.")
+ENDIF()
+include_directories(${MODBUS_INCLUDE_DIR})
+
 
 # Find libusb    
 pkg_check_modules(PC_USB QUIET libusb-1.0)
@@ -243,6 +249,9 @@ set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
 set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
+set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
+set(LINKLIST_DIR "${PROJECT_SOURCE_DIR}/../common/linklist")
+set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/communications/")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -252,7 +261,10 @@ include_directories (
     "${CONFIG_DIR}/include"
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
+    "${COMMUNICATIONS_DIR}/include"
     "${MPSSE_DIR}"
+    "${SYNCLINK_DIR}"
+    "${LINKLIST_DIR}"
     )
 
 # add commanding objects
@@ -274,11 +286,11 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/sensors")
 # add housekeeping objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/housekeeping")
 
+# add diskmanager objects
+add_subdirectory("${PROJECT_SOURCE_DIR}/diskmanager")
+
 # add data frame objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/framing")
-
-# add uei objects
-add_subdirectory("${PROJECT_SOURCE_DIR}/uei")
 
 # add roach objects
 add_subdirectory("${PROJECT_SOURCE_DIR}/roach")
@@ -292,6 +304,9 @@ add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
 # add MPSSE Files
 add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
 
+#add linklists files
+add_subdirectory(${LINKLIST_DIR} "${PROJECT_BINARY_DIR}/linklists")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
@@ -300,10 +315,12 @@ add_library (sensors OBJECT ${SENSOR_SRCS} ${SENSOR_HEADERS})
 define_file_basename_for_sources(sensors)
 add_library (commanding OBJECT ${CMD_SRCS} ${CMD_HEADERS})
 define_file_basename_for_sources(commanding)
-add_library (mcp_comms OBJECT ${MCP_COMMS_SRCS} ${MCP_COMMS_HEADERS})
-define_file_basename_for_sources(mcp_comms)
+add_library (communications OBJECT ${MCP_COMMUNICATIONS_SRCS} ${MCP_COMMUNICATIONS_HEADERS})
+define_file_basename_for_sources(communications)
 add_library (housekeeping OBJECT ${HOUSEKEEPING_SRCS} ${HOUSEKEEPING_HEADERS})
 define_file_basename_for_sources(housekeeping)
+add_library (diskmanager OBJECT ${DISKMANAGER_SRCS} ${DISKMANAGER_HEADERS})
+define_file_basename_for_sources(diskmanager)
 add_library (framing OBJECT ${FRAME_SRCS} ${FRAME_HEADERS})
 define_file_basename_for_sources(framing)
 add_library (blast_common OBJECT ${MCP_COMMON_SRCS} ${MCP_COMMON_HEADERS})
@@ -313,9 +330,8 @@ add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 add_library (mpsse OBJECT ${MPSSE_SRCS} ${MPSSE_HEADERS})
 define_file_basename_for_sources(mpsse)
-
-add_library (uei OBJECT ${UEI_SRCS} ${UEI_HEADERS})
-define_file_basename_for_sources(uei)
+add_library (linklist OBJECT ${LINKLIST_SRCS} ${LINKLIST_HEADERS})
+define_file_basename_for_sources(linklist)
 
 add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
 define_file_basename_for_sources(roach)
@@ -331,8 +347,9 @@ define_file_basename_for_sources(mcp_obj)
 	
 add_executable (mcp 
     $<TARGET_OBJECTS:housekeeping>
+    $<TARGET_OBJECTS:diskmanager>
     $<TARGET_OBJECTS:commanding>
-    $<TARGET_OBJECTS:mcp_comms>
+    $<TARGET_OBJECTS:communications>
     $<TARGET_OBJECTS:pointing>
     $<TARGET_OBJECTS:motors>
     $<TARGET_OBJECTS:sensors>
@@ -340,9 +357,9 @@ add_executable (mcp
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:blast_comms>
     $<TARGET_OBJECTS:mpsse>
-    $<TARGET_OBJECTS:uei>
     $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
+    $<TARGET_OBJECTS:linklist>
     ) 
 
 add_dependencies(mcp soem phenomproj)
@@ -351,39 +368,41 @@ define_file_basename_for_sources(mcp)
 
 target_link_libraries(mcp 
 	${ALSA_LIBRARY}
+	${MODBUS_LIBRARY}
     ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY}
-    ${MOSQ_LIBRARY}  
-    ${GLIB_LIBRARY} 
+    ${MOSQ_LIBRARY}
+    ${GLIB_LIBRARY}
     ${ECAT_LIBRARY}
     ${CK_LIBRARY}
     ${PH_LIBRARY}
     ${SENSORS_LIBRARY}
     ${USB_LIBRARY}
-    ${UEI_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
     ssl crypto 
     m)
 
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
-		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${UEI_SRCS}  ${ROACH_SRCS} 
-		mcp.c tx.c
+		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
+		mcp.c tx.c 
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
-		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${UEI_HEADERS}
-		${ROACH_HEADERS}
+		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
+		${ROACH_HEADERS} 
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)
 list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)
 string(REGEX REPLACE "[ ]*[a-zA-Z/]*PMurHash.[ch][ ]*" " " check_files "${check_files}")
 
+if(NOT DEFINED ENV{OVERRIDE_CF}) 
 add_custom_command(TARGET mcp PRE_BUILD
 	#COMMAND /bin/echo ${check_files}
-	COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
+  COMMAND ${PROJECT_SOURCE_DIR}/testing/clint.sh ${check_files}
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	COMMENT "Checking Code Style"
 	VERBATIM
 	)
+endif()
 
 install(TARGETS mcp DESTINATION bin)
 install(DIRECTORY DESTINATION "/data/etc")

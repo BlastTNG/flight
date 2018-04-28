@@ -87,7 +87,9 @@
 #define compiletime_assert(condition, msg) \
         _compiletime_assert(condition, msg, __compiletime_assert_, __LINE__)
 
-#define always_inline                   inline  __attribute__((always_inline))
+#ifndef __always_inline
+    #define __always_inline             __inline  __attribute__((always_inline))
+#endif
 #define __deprecated                    __attribute__((deprecated))
 #define __packed                        __attribute__((packed))
 #ifndef __weak
@@ -110,7 +112,9 @@
 #define __aligned(x)                    __attribute__((aligned(x)))
 #define __printf(a, b)                  __attribute__((format(printf, a, b)))
 #define __scanf(a, b)                   __attribute__((format(scanf, a, b)))
-#define  noinline                       __attribute__((noinline))
+#ifndef __noinline
+    #define __noinline                      __attribute__((noinline))
+#endif
 #define __maybe_unused                  __attribute__((unused))
 #define __always_unused                 __attribute__((unused))
 /*

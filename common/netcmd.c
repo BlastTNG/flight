@@ -38,13 +38,14 @@
 #include <sys/types.h>
 
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include <arpa/inet.h>
 
 #include "netcmd.h"
 
-uint16_t  client_n_scommands = 0;
-uint16_t  client_n_mcommands = 0;
+unsigned short client_n_scommands = 0;
+unsigned short client_n_mcommands = 0;
 struct scom *client_scommands;
 struct mcom *client_mcommands;
 char client_command_list_serial[1024];
@@ -52,13 +53,15 @@ char client_command_list_serial[1024];
 int client_n_groups = 0;
 char **client_group_names;
 
-char me[1024];
-char owner[1024];
-char banner[1024];
+#define ME_SIZE 1000
+char me[ME_SIZE];
+char owner[ME_SIZE];
 int is_free = -1;
 static int sock;
 
-int ReadLine(int sock, char* buffer, int bufflen)
+#define PROTOCOL_ERROR fprintf(stderr, "Protocol error from daemon in %s.\n", __func__);
+
+static int ReadLine(int sock, char* buffer, int bufflen)
 {
   static int prebuffer_size = 0;
   static char prebuffer[2048] = "";
@@ -87,7 +90,7 @@ int ReadLine(int sock, char* buffer, int bufflen)
     }
   }
 
-  while ((prebuffer[i] == '\r' || prebuffer[i] == '\n') && i < 2048)
+  while ((prebuffer[i] == '\r' || prebuffer[i] == '\n') && i <= 2048)
     i++;
 
   memmove(prebuffer, prebuffer + i, 2048 - i);
@@ -99,7 +102,7 @@ int ReadLine(int sock, char* buffer, int bufflen)
   return strlen(buffer);
 }
 
-int SetOwner(char* buffer)
+static int SetOwner(char* buffer)
 {
   int i;
 
@@ -111,10 +114,12 @@ int SetOwner(char* buffer)
   if (strcmp(buffer, ":::free:::") == 0) {
     is_free = 1;
   } else if (strncmp(buffer, ":::conn:::", 10) == 0) {
-    strcpy(owner, buffer + 10);
+    strncpy(owner, buffer + 10, ME_SIZE - 1);
+    owner[ME_SIZE - 1] = 0;
     is_free = 0;
   } else if (strcmp(buffer, ":::nope:::") == 0) {
-    fprintf(stderr, "Connexion refused from this host.\n");
+    fprintf(stderr, "Connection refused from this host.\n");
+    fprintf(stderr, "Do you need to run blastcmd-authorise?\n");
     return -16;
   }
   return 0;
@@ -137,10 +142,14 @@ int NetCmdReceive(int silent, size_t oob_buflen, char *oob_message)
   i = ReadLine(sock, buffer, 1024);
   buffer[1023] = '\0';
 
-  if (i < 0) {
+  if (i <= 0) {
     if (errno == EAGAIN)
       return CMD_NONE;
-    else {
+    else if (i == 0) {
+      /* Connection reset by peer */
+      //fprintf(stderr, "Connection reset by peer.\n");
+      return CMD_ERRR + (14 << 8);
+    } else {
       perror("Unable to receive");
       return CMD_ERRR + (14 << 8);
     }
@@ -188,16 +197,18 @@ int NetCmdReceive(int silent, size_t oob_buflen, char *oob_message)
   } else if (strncmp(buffer, ":::free:::", 10) == 0) {
     if (!silent)
       printf("Free received: %s\n", buffer);
-    SetOwner(buffer);
+    if (SetOwner(buffer))
+      return 0x1000 | CMD_BCMD;
     return CMD_CONN;
   } else if (strncmp(buffer, ":::conn:::", 10) == 0) {
     if (!silent)
       printf("Conn received: %s\n", buffer);
-    SetOwner(buffer);
+    if (SetOwner(buffer))
+      return 0x1000 | CMD_BCMD;
     return CMD_CONN;
   } else {
     buffer[1023] = '\0';
-    printf("Unknown Reponse: %s\n", buffer);
+    printf("Unknown Reponse: 0x%X %s\n", buffer[0], buffer);
   }
 
   return 0;
@@ -224,13 +235,13 @@ int NetCmdSendAndReceive(const char *inbuf, int silent, size_t buflen,
     } else if ((ack & 0xff) == CMD_NONE)
       usleep(1000);
     else {
-      fprintf(stderr, "Protocol error from daemon (0x%04X).\n", ack);
-      exit(14);
+      PROTOCOL_ERROR;
+      return 20;
     }
   } while (1);
 
   fprintf(stderr, "Unexpected trap in NetCmdSendAndReceive. Stop.\n");
-  exit(-1);
+  abort();
 }
 
 /* read a \n-terminated string from the server, returning a malloc'd buffer */
@@ -244,7 +255,7 @@ static char *read_string(int max)
   for (i = 0; i < max; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
-      exit(14);
+      return NULL;
     } else if (i == max - 1 && c != '\n')
       break;
     else if (c == '\n') {
@@ -255,17 +266,19 @@ static char *read_string(int max)
   }
 
   /* overrun */
-  fprintf(stderr, "Protocol error from daemon.\n");
-  exit(14);
+  PROTOCOL_ERROR;
+  return NULL;
 }
 
 // get back default of one command parameter
 // cmdstr should be <cmdname>;<parname>
-double NetCmdGetDefault(char *cmdstr) {
+int NetCmdGetDefault(double *val, const char *cmdstr)
+{
   char buffer[1024];
-  char defstr[50];
+  char defstr[100] = "";
   int len;
-  int i, n, c = 0;
+  int i, n;
+  char c = 0;
 
   sprintf(buffer, "::cmddef::%s\r\n", cmdstr);
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
@@ -276,7 +289,7 @@ double NetCmdGetDefault(char *cmdstr) {
   for (i = 0; i < len; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
-      exit(14);
+      goto CMDDEF_READ_ERROR;
     } else if (buffer[i] != c)
       goto CMDDEF_READ_ERROR;
   }
@@ -284,7 +297,7 @@ double NetCmdGetDefault(char *cmdstr) {
   for (i = 0; i < 100; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
-      exit(14);
+      goto CMDDEF_READ_ERROR;
     } else if (i == 99 && c != '\n')
       goto CMDDEF_READ_ERROR;
 
@@ -295,39 +308,41 @@ double NetCmdGetDefault(char *cmdstr) {
       defstr[i] = c;
   }
 
-  return atof(defstr);
+  *val = atof(defstr);
+  return 0;
 
 CMDDEF_READ_ERROR:
-  fprintf(stderr, "Protocol error from daemon.\n");
-  return (0);
-  //exit(14);
+  PROTOCOL_ERROR;
+  return 1;
 }
 
 //Blocks on reading until list comes through.
 int NetCmdGetCmdList(void)
 {
   uint16_t u16;
-  int n, c = 0;
+  int n;
+  char c = 0;
   size_t i, len;
   char buffer[1024] = "::list::\r\n";
-
+  
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
+  // Read from sock: verify that "::rev::" is returned.
   strcpy(buffer, ":::rev:::");
-
   len = strlen(buffer);
   for (i = 0; i < len; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
-      exit(14);
+      goto CMDLIST_READ_ERROR;
     } else if (buffer[i] != c) 
       goto CMDLIST_READ_ERROR;
   }
 
+  // read command list serial number
   for (i = 0; i < 100; ++i) {
     if ((n = read(sock, &c, 1)) <= 0) {
       perror("Unable to receive");
-      exit(14);
+      goto CMDLIST_READ_ERROR;
     } else if (i == 99 && c != '\n')
       goto CMDLIST_READ_ERROR;
 
@@ -338,24 +353,33 @@ int NetCmdGetCmdList(void)
       client_command_list_serial[i] = c;
   }
 
-  if (read(sock, &client_n_scommands, sizeof(client_n_scommands)) < 0)
+  if (read(sock, &client_n_scommands, sizeof(client_n_scommands))
+      < (int)sizeof(client_n_scommands))
+  {
     printf("Warning: NetCmdGetCmdList failed to read n_scommands\n");
-  if (read(sock, &client_n_mcommands, sizeof(client_n_mcommands)) < 0)
-    printf("Warning: NetCmdGetCmdList failed to read n_mcommands\n");
+    goto CMDLIST_READ_ERROR;
+  }
 
-  if (client_n_scommands > 255 || client_n_mcommands > 255 ||
-      client_n_scommands * client_n_mcommands == 0)
+  if (read(sock, &client_n_mcommands, sizeof(client_n_mcommands))
+      < (int)sizeof(client_n_mcommands))
+  {
+    printf("Warning: NetCmdGetCmdList failed to read n_mcommands\n");
+    goto CMDLIST_READ_ERROR;
+  }
+    
+  if (client_n_scommands > 0xfff || client_n_mcommands > 0xfff ||
+      (client_n_scommands == 0) || (client_n_mcommands == 0))
   {
     goto CMDLIST_READ_ERROR;
   }
 
-  client_scommands = (struct scom*)malloc(client_n_scommands
+  client_scommands = (struct scom*)malloc((unsigned)client_n_scommands
       * sizeof(struct scom));
-  client_mcommands = (struct mcom*)malloc(client_n_mcommands
+  client_mcommands = (struct mcom*)malloc((unsigned)client_n_mcommands
       * sizeof(struct mcom));
-  recv(sock, client_scommands, client_n_scommands * sizeof(struct scom),
+  recv(sock, client_scommands, (unsigned)client_n_scommands * sizeof(struct scom),
       MSG_WAITALL);
-  recv(sock, client_mcommands, client_n_mcommands * sizeof(struct mcom),
+  recv(sock, client_mcommands, (unsigned)client_n_mcommands * sizeof(struct mcom),
       MSG_WAITALL);
 
   /* read parameter value tables */
@@ -366,9 +390,14 @@ int NetCmdGetCmdList(void)
 
     if (u16 == 0xFFFF) /* end */
       break;
-    cmd = u16 >> 8;
-    prm = u16 & 0xFF;
+    
+    cmd = u16;
 
+    if (read(sock, &u16, sizeof(uint16_t)) < 1)
+      goto CMDLIST_READ_ERROR;
+    
+    prm = u16;
+    
     if (cmd >= client_n_mcommands || prm >= client_mcommands[cmd].numparams)
       goto CMDLIST_READ_ERROR;
 
@@ -376,16 +405,19 @@ int NetCmdGetCmdList(void)
       goto CMDLIST_READ_ERROR;
 
     client_mcommands[cmd].params[prm].nt = malloc((u16 + 1) * sizeof(char*));
-    for (i = 0; i < u16; ++i)
+    for (i = 0; i < u16; ++i) {
       client_mcommands[cmd].params[prm].nt[i] = read_string(80);
+      if (client_mcommands[cmd].params[prm].nt[i] == NULL)
+        goto CMDLIST_READ_ERROR;
+    }
     client_mcommands[cmd].params[prm].nt[u16] = NULL;
   }
 
   return 0;
 
 CMDLIST_READ_ERROR:
-  fprintf(stderr, "Protocol error from daemon.\n");
-  exit(14);
+  PROTOCOL_ERROR;
+  return -1;
 }
 
 //Blocks on reading until list comes through.
@@ -396,16 +428,22 @@ int NetCmdGetGroupNames(void)
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
-  if (read(sock, &client_n_groups, sizeof(client_n_groups)) < 0)
-    printf("Warning: NetCmdGetGroupNames failed to read n_groups\n");
-  if (client_n_groups > 31) {
-    fprintf(stderr, "Protocol error from daemon.\n");
-    exit(14);
+  if (read(sock, &client_n_groups, sizeof(client_n_groups)) <
+      (int)sizeof(client_n_groups))
+  {
+    return -1;
   }
+
+  if (client_n_groups < 1 || client_n_groups > 31)
+    return -1;
+
   client_group_names = (char**)malloc(client_n_groups * sizeof(char*));
 
-  for (j = 0; j < client_n_groups; ++j)
+  for (j = 0; j < client_n_groups; ++j) {
     client_group_names[j] = read_string(128);
+    if (client_group_names[j] == NULL)
+      return -1;
+  }
 
   return 0;
 }
@@ -416,7 +454,7 @@ int NetCmdTakeConn(int silent)
   char buffer[1024] = "::take::\r\n";
 
   /* don't take it if we already have it */
-  if (is_free == 0 && strncmp(owner, me, strlen(me)) == 0)
+  if (is_free == 0 && strcmp(owner, me) == 0)
     return 1;
 
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
@@ -424,29 +462,36 @@ int NetCmdTakeConn(int silent)
   //cow didn't wait for a response before. Maybe there was a reason for that
   do {
     ack = NetCmdReceive(silent, 0, NULL);
-    if ((ack & 0xff) == CMD_CONN) break;
-    else if ((ack & 0xff) == CMD_NONE) usleep(1000);
+    if ((ack & 0xff) == CMD_BCMD)
+      return ack >> 8;
+    else if ((ack & 0xff) == CMD_CONN)
+      break;
+    else if ((ack & 0xff) == CMD_NONE)
+      usleep(1000);
     else {
-      fprintf(stderr, "Protocol error from daemon.\n");
-      exit(14);
+      PROTOCOL_ERROR;
+      return 0;
     }
   } while (1);
 
-  return (is_free == 0 && strncmp(owner, me, strlen(me)) == 0);
+  return (is_free == 0 && strcmp(owner, me) == 0);
 }
 
 const char* NetCmdBanner(void)
 {
+  static char banner[1024];
   if (is_free)
     return "The conn is free.";
-  else if (strncmp(owner, me, strlen(me)) == 0)
+  else if (strcmp(owner, me) == 0)
     return "I have the conn.";
   else {
-    snprintf(banner, 1000, "%s has the conn.", owner);
+    snprintf(banner, 1023, "%s has the conn.", owner);
+    banner[1023] = 0;
     return banner;
   }
 }
 
+/* Only used by COW/Narsil */
 int NetCmdPing(void)
 {
   char buffer[1024] = "::ping::\r\n";
@@ -454,10 +499,10 @@ int NetCmdPing(void)
 
   sent = send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
 
-  if (sent == -1)
-    return 0;
+  if (sent <= 0) /* send error */
+    return 1;
 
-  return 1;
+  return 0;
 }
 
 // Initialization Function... All blocking network i/o.
@@ -470,8 +515,9 @@ int NetCmdConnect(const char* host_in, int silent, int silenter)
   struct passwd pw;
   struct passwd *pwptr;
   char host[255];
+  char *user;
   int i_ch;
-  int port;
+  int port, n;
 
   for (i_ch = 0; (host_in[i_ch]!='\0') && (host_in[i_ch]!=':'); i_ch++) {
     host[i_ch] = host_in[i_ch];
@@ -494,25 +540,34 @@ int NetCmdConnect(const char* host_in, int silent, int silenter)
 
   addr.sin_port = htons(port);
   addr.sin_family = AF_INET;
+  memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
   memcpy(&(addr.sin_addr.s_addr), the_host->h_addr, the_host->h_length);
 
   /* set user */
-  getpwuid_r(getuid(), &pw, buffer, 1024, &pwptr);
-  strcpy(me, pw.pw_name);
-  strcat(me, "@");
-  i = strlen(me);
-  gethostname(me + i, 1023 - i);
-  sprintf(me + strlen(me), ".%i", getpid());
+  user = getenv("USER"); 
+  if (user == NULL) {
+    user = getenv("LOGNAME");
+    if (user == NULL) {
+      getpwuid_r(getuid(), &pw, buffer, 1024, &pwptr);
+      user = pw.pw_name;
+    }
+  }
+  gethostname(host, 255);
+  snprintf(me, ME_SIZE - 1, "%s@%s.%i", user, host, getpid());
+  me[ME_SIZE - 1] = 0;
 
   sprintf(buffer, "::user::%s\r\n", me);
 
   if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
     perror("Unable to create socket");
-    exit(14);
+    return -141;
   }
 
+  n = 1;
+  setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &n, sizeof(n));
+
   if (!silenter)
-    printf("Connecting to %s (%s) port %i ...\n", host,
+    printf("Connecting to %s (%s) port %i ...\n", host_in,
         inet_ntoa(addr.sin_addr), port);
 
   if ((i = connect(sock, (struct sockaddr*)&addr, sizeof(addr))) == -1) {
@@ -523,17 +578,18 @@ int NetCmdConnect(const char* host_in, int silent, int silenter)
   send(sock, buffer, strlen(buffer), MSG_NOSIGNAL);
   if ((i = recv(sock, buffer, 1024, 0)) <= 0) {
     perror("Unable to receive");
-    exit(14);
+    return -141;
   } else if (buffer[0] != ':' || buffer[1] != ':' || buffer[2] != ':') {
-    fprintf(stderr, "Protocol error from daemon.\n");
-    exit(14);
+    PROTOCOL_ERROR;
+    return -141;
   }
 
-  if ((i = SetOwner(buffer)) < 0) return -i;
+  if (SetOwner(buffer))
+    return -16;
 
   if (is_free == -1) {
-    fprintf(stderr, "Protocol error from daemon.\n");
-    exit(14);
+    PROTOCOL_ERROR;
+    return -141;
   }
 
   if (!silenter)

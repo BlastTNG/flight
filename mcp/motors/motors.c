@@ -57,8 +57,10 @@ struct AxesModeStruct axes_mode = {
 
 // motor control parameters
 #define MOTORSR 200.0
-#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps
-#define MAX_I  200.0 // Maximum accumulated integral in milliamps
+#define MAX_DI_EL 20.0 // Maximum integral accumulation per step in milliamps for El motor
+#define MAX_I_EL  800.0 // Maximum accumulated integral in milliamps for El motor
+#define MAX_DI 20.0 // Maximum integral accumulation per step in milliamps for Az motors
+#define MAX_I  200.0 // Maximum accumulated integral in milliamps for Az motors
 
 #define INTEGRAL_LENGTH  5.0  // length of the integral time constant in seconds
 #define INTEGRAL_CUTOFF (1.0/(INTEGRAL_LENGTH*MOTORSR))
@@ -159,7 +161,7 @@ static double get_elev_vel(void)
         //    vel = (axes_mode.el_dest - PointingData[i_point].el) * 0.36;
     } else if (axes_mode.el_mode == AXIS_LOCK) {
         /* for the lock, only use the elevation encoder */
-        vel = (axes_mode.el_dest - ElevMotorData[i_elev].position) * 0.64;
+        vel = (axes_mode.el_dest - ElevMotorData[i_elev].motor_position * EL_MOTOR_ENCODER_SCALING) * 0.64;
     }
 
     /* correct offset and convert to Gyro Units */
@@ -515,22 +517,41 @@ static void initialize_el_dither()
 static void calculate_az_mode_vel(double m_az, double m_leftbound, double m_rightbound, double m_vel,
                                   double m_az_drift_vel)
 {
+    static bool from_scan_to_turnaround = false;
+    static bool from_turnaround_to_scan = true;
     if (axes_mode.az_vel < -m_vel + m_az_drift_vel) axes_mode.az_vel = -m_vel + m_az_drift_vel;
     if (axes_mode.az_vel > m_vel + m_az_drift_vel) axes_mode.az_vel = m_vel + m_az_drift_vel;
 
-    /// TODO(seth): Update AzScanMode with XSC data
     if (m_az < m_leftbound) {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel < m_vel + m_az_drift_vel) axes_mode.az_vel += az_accel;
+        // Forced Triggering
+        if (from_scan_to_turnaround) {
+            scan_entered_snap_mode = true;
+            from_scan_to_turnaround = false;
+        }
+        from_turnaround_to_scan = true;
     } else if (m_az > m_rightbound) {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel > -m_vel + m_az_drift_vel) axes_mode.az_vel -= az_accel;
+        // Forced Triggering
+        if (from_scan_to_turnaround) {
+            scan_entered_snap_mode = true;
+            from_scan_to_turnaround = false;
+        }
+        from_turnaround_to_scan = true;
     } else {
         axes_mode.az_mode = AXIS_VEL;
         if (axes_mode.az_vel > 0) {
             axes_mode.az_vel = m_vel + m_az_drift_vel;
         } else {
             axes_mode.az_vel = -m_vel + m_az_drift_vel;
+        }
+        // Forced Triggering
+        from_scan_to_turnaround = true;
+        if (from_turnaround_to_scan) {
+            scan_leaving_snap_mode = true;
+            from_turnaround_to_scan = false;
         }
     }
 }
@@ -968,7 +989,6 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1158,7 +1178,6 @@ static void do_mode_el_box(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_az = (targ_az - (az - caz)) / t;
         // set targ_az for the next step
@@ -1344,7 +1363,6 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
@@ -1559,7 +1577,6 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
-        scan_entered_snap_mode = true;
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
@@ -1767,8 +1784,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
 
     if (fabsf(I_step) < I_db) I_step = 0;
 
-    if (fabsf(I_step) > MAX_DI) {
-        I_step = copysignf(MAX_DI, I_step);
+    if (fabsf(I_step) > MAX_DI_EL) {
+        I_step = copysignf(MAX_DI_EL, I_step);
     }
 
     /**
@@ -1777,8 +1794,8 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * is a result of accumulating excessively large I terms.
      */
     I_term += I_step;
-    if (fabsf(I_term) > MAX_I) {
-        I_term = copysignf(MAX_I, I_term);
+    if (fabsf(I_term) > MAX_I_EL) {
+        I_term = copysignf(MAX_I_EL, I_term);
     }
 
     /**
@@ -1842,7 +1859,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
         milliamp_return = last_milliamp - max_delta_mA;
     }
 
-    if (m_disabled) {
+    if (m_disabled || (CommandData.pin_is_in && !CommandData.force_el)) {
         last_pv = pv;
         I_term = 0.0;
         milliamp_return = 0;

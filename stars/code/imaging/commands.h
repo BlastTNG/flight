@@ -19,13 +19,24 @@ enum commands_t {
     get_focus,
     set_focus,
     set_focus_incremental,
+    load_focus,
+    save_focus,
     init_aperture,
     get_aperture,
     set_aperture,
+    load_aperture,
+    save_aperture,
     version_string,
-    clearing_read_buffer
+    define_aperture,
+    define_focus,
+    stop_aperture,
+    stop_focus,
+    set_aperture_velocity,
+    set_focus_velocity,
+    set_aperture_current,
+	clearing_read_buffer // This needs to be the last command
 };
-static const unsigned int num_commands = 9;
+static const unsigned int num_commands = 22;
 
     }
 }
