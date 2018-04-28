@@ -101,13 +101,27 @@ static inline uint8_t object_subindex(uint16_t m_index, uint8_t m_subindex)
 }
 
 typedef enum {
-    ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
-    ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
-    ECAT_MOTOR_MAPPED,         //!< ECAT_MOTOR_MAPPED
-    ECAT_MOTOR_RUNNING,        //!< ECAT_MOTOR_RUNNING
-    ECAT_MOTOR_LOST,
+    ECAT_DEV_COLD,           //!< ECAT_MOTOR_COLD
+    ECAT_DEV_FOUND,          //!< ECAT_MOTOR_FOUND
+    ECAT_DEV_MAPPED,         //!< ECAT_MOTOR_MAPPED
+    ECAT_DEV_RUNNING,        //!< ECAT_MOTOR_RUNNING
+    ECAT_DEV_LOST,
 } ec_motor_state_t;
 
+typedef enum {
+    ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
+    ECAT_MOTOR_INIT,           //!< ECAT_MOTOR_INIT
+    ECAT_MOTOR_FOUND_PARTIAL,  //!< ECAT_MOTOR_FOUND_PARTIAL
+    ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
+    ECAT_MOTOR_RUNNING_PARTIAL,//!< ECAT_MOTOR_RUNNING_PARTIAL
+    ECAT_MOTOR_RUNNING         //!< ECAT_MOTOR_RUNNING
+} ec_contol_status_t;
+
+typedef struct {
+	uint8_t n_found;
+	uint8_t slave_count;
+	ec_contol_status_t status;
+} ec_state_t;
 
 #define COPLEY_ETHERCAT_VENDOR 0x000000ab
 #define AEP_090_036_PRODCODE 0x00000380

@@ -91,12 +91,17 @@ static char io_map[1024];
 
 static int motors_exit = false;
 
+
+/**
+ * Number of ethercat controllers (including the HWP encoder)
+ */
 #define N_MCs 4
 
 /**
  * Ethercat driver status
  */
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
+static ec_state_t ec_mcp_state = {0};
 
 /**
  * The following pointers reference data points read from/written to
@@ -481,24 +486,22 @@ static void piv_init_resolver(void)
  */
 static int find_controllers(void)
 {
-    int ret_init;
-    int ret_config;
 
-    ret_config = ec_config(false, &io_map);
-    if (ret_config <= 0) {
+    ec_mcp_state.n_found = ec_config(false, &io_map);
+    if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
     }
-    blast_startup("ec_config returns %d slaves found", ret_config);
+    blast_startup("ec_config returns %d slaves found", ec_mcp_state.n_found);
 
-    if (ret_config < 3)
-        controller_state = ECAT_MOTOR_FOUND_PARTIAL;
+    if (ec_mcp_state.n_found < 3)
+        ec_mcp_state.status = ECAT_MOTOR_FOUND_PARTIAL;
     else
-        controller_state = ECAT_MOTOR_FOUND;
+        ec_mcp_state.status = ECAT_MOTOR_FOUND;
 
     /* wait for all slaves to reach SAFE_OP state */
     if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 3) != EC_STATE_SAFE_OP) {
-        controller_state = ECAT_MOTOR_RUNNING_PARTIAL;
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING_PARTIAL;
         blast_err("Not all slaves reached safe operational state.");
         ec_readstate();
         for (int i = 1; i <= ec_slavecount; i++) {
@@ -508,9 +511,9 @@ static int find_controllers(void)
             }
         }
     } else {
-        controller_state = ECAT_MOTOR_RUNNING;
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING;
     }
-
+    ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
@@ -686,7 +689,7 @@ static void map_index_vars(int m_index)
      */
 #define PDO_SEARCH_LIST(_obj, _map) { \
     found = false; \
-    for (GSList *el = pdo_list; (el); el = g_slist_next(el)) { \
+    for (GSList *el = pdo_list[m_index]; (el); el = g_slist_next(el)) { \
         pdo_channel_map_t *ch = (pdo_channel_map_t*)el->data; \
         if (ch->index == object_index(_obj) && \
                 ch->subindex == object_subindex(_obj)) { \
@@ -775,7 +778,7 @@ static int motor_set_operational()
      * If we've reached fully operational state, return
      */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
-        controller_state = ECAT_MOTOR_RUNNING;
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING;
         return 0;
     }
 
@@ -830,6 +833,7 @@ static void read_motor_data()
 void mc_readPDOassign(int m_slave) {
     uint16 idxloop, nidx, subidxloop, rdat, idx, subidx;
     uint8 subcnt;
+    GSList *m_pdo_list = pdo_list[m_slave];
     int wkc = 0;
     int len = 0;
     int offset = 0;
@@ -871,7 +875,7 @@ void mc_readPDOassign(int m_slave) {
             channel->index = pdo_map.index;
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
-            pdo_list = g_slist_prepend(pdo_list, channel);
+            m_pdo_list = g_slist_prepend(m_pdo_list, channel);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
             offset += (pdo_map.size / 8);
@@ -893,6 +897,7 @@ static void* motor_control(void* arg)
     ph_thread_set_name("Motors");
 
     ret = ec_config(false, &io_map);
+    blast_info("ec_config found %d slaves.", ret);
 
     // TODO(seth): setup state machine for looping in motors
     find_controllers();

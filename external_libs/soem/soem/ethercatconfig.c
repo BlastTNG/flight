@@ -59,7 +59,8 @@
 #include "ethercatconfig.h"
 
 // define if debug printf is needed
-#undef EC_DEBUG
+// #undef EC_DEBUG
+#define EC_DEBUG
 
 #ifdef EC_DEBUG
 #define EC_PRINT printf
