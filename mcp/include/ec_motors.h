@@ -118,8 +118,8 @@ typedef enum {
 } ec_contol_status_t;
 
 typedef struct {
-	uint8_t n_found;
-	uint8_t slave_count;
+	int8_t n_found;
+	int8_t slave_count;
 	ec_contol_status_t status;
 } ec_state_t;
 
