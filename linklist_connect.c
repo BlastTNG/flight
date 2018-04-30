@@ -219,9 +219,31 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   // set the name assigned by the server
 	set_server_linklist_name(tc, linklistname);
+  linklist_info("Linklist name set to %s\n", linklistname);
+
+  // request linklist name resolution if necessary (for symlinks on server)
+  request_server_linklist_name(tc, linklistname, 128); 
+  linklist_info("Linklist name resolves to %s\n", linklistname);
 
   return recv_ll_serial;
 }
+
+char *get_real_file_name(char * real_name, char * symlink_name) 
+{
+	char resolved_name[128] = {0};
+	if (!realpath(symlink_name, resolved_name)) {
+    real_name[0] = '\0';
+    return NULL;
+	}
+	int i = 0;
+	for (i = strlen(resolved_name)-1; i >= 0; i--) {
+		if (resolved_name[i] == '/') break;
+	}
+	strcpy(real_name, resolved_name+i+1);
+
+  return real_name;
+}
+
 void *connection_handler(void *arg)
 {
   //Get the socket descriptor
@@ -406,6 +428,30 @@ void *connection_handler(void *arg)
       // this name should include the linklist binary file extension (LINKLIST_EXT)
       strcpy(linklist_name, req_name+j);
       linklist_info("::CLIENT %d:: linklist name set to \"%s\"\n", sock, linklist_name);
+    } else if (*req_serial == SERVER_LL_NAME_REQ) { // client wants the linklist name
+      char send_name[128] = {0};
+      if (*req_i & TCPCONN_RESOLVE_NAME) { // resolve any symlinks in linklist name if necessary
+        if (!get_real_file_name(send_name, linklist_name)) {
+          linklist_err("::CLIENT %d:: unable to resolve linklist name \"%s\"\n", sock, linklist_name);
+          strcpy(send_name, linklist_name); // default to unresolved name
+        }
+      } else { // just get the linklist name
+        strcpy(send_name, linklist_name);
+      }
+      // shorten the name for sending to client if necessary
+			if (((*req_frame_num)-1) <= strlen(send_name)) send_name[(*req_frame_num)-1] = 0;
+			writeTCPHeader(header, SERVER_LL_NAME_REQ, strlen(send_name)+1, 0, 0);
+			if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+				linklist_err("::CLIENT %d:: unable to send response to linklist name\n", sock);
+				client_on = 0;
+        break;
+			}
+			if (send(sock, send_name, strlen(send_name)+1, 0) <= 0) {
+				linklist_err("::CLIENT %d:: unable to send linklist name %s\n", sock, send_name);
+				client_on = 0;
+        break;
+			}
+      linklist_info("::CLIENT %d:: linklist \"%s\" name sent\n", sock, linklist_name);
     } else if (*req_serial == SERVER_ARCHIVE_REQ) { // client requesting archived data
       if (archive_framenum == 0) { // assume archive file has not yet been loaded
         // check if linklist_name has been loaded from format file and linklist file request
@@ -814,6 +860,47 @@ unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
   return *recv_frame_num;
 }
 
+void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsigned int len)
+{
+  // initiate server connection if not done already
+  while (tc->fd <= 0) {
+    tc->fd = connect_tcp(tc);
+    sleep(1);
+  }
+
+  uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};
+  uint32_t *recv_serial = NULL;
+  uint32_t *recv_frame_num = NULL;
+  uint16_t *recv_i = NULL;
+  uint16_t *recv_n = NULL;
+
+  // request file list from server
+  writeTCPHeader(request_msg, SERVER_LL_NAME_REQ, len-1,0,0);
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+    linklist_err("Failed to send link name request\n");
+    close_connection(tc);
+    tc->fd = connect_tcp(tc);
+  }
+
+  // receive the name
+	if (recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
+		linklist_err("Failed to receive archive name header\n");
+		close_connection(tc);
+		return;
+	}
+	readTCPHeader(request_msg, &recv_serial, &recv_frame_num ,&recv_i,&recv_n);
+	if (*recv_serial == SERVER_SET_LL_NAME_REQ) {
+		// recv name: *recv_frame_num is number of characters
+    memset(linklistname, 0, len);
+		int read_size = recv(tc->fd, linklistname, *recv_frame_num, 0);
+
+		if (read_size <= 0) {
+			linklist_err("Could not receive server linklist name\n");
+		}
+  } else {
+    linklist_err("Improper response to linklist name request (0x%x)\n", *recv_serial);
+  }
+}
 
 // manually sets the linklist name used by the server
 void set_server_linklist_name(struct TCPCONN * tc, char *linklistname)
