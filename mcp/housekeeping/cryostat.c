@@ -210,12 +210,14 @@ void heater_read(void) {
     static channel_t* heater_300mk_status_Addr;
     static channel_t* cal_lamp_status_Addr;
     // queues up all the reads from labjack cryo 2
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    }
     if (first_time_read == 1) {
         first_time_read = 0;
         heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
@@ -780,24 +782,31 @@ static void output_cycle(void) {
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
-    if (state[0].initialized && state[1].initialized) {
-        if (first_time == 1) {
-            blast_info("initalizing");
-            init_cycle_channels();
-            init_cycle_values();
-            first_time = 0;
-            blast_info("first time done");
+    if (CommandData.Cryo.cycle_allowed == 1) {
+        // blast_info("cycle allowed now");
+        if (state[0].initialized && state[1].initialized) {
+            if (first_time == 1) {
+                blast_info("initalizing");
+                init_cycle_channels();
+                init_cycle_values();
+                first_time = 0;
+                blast_info("first time done");
+            }
+            if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
+                forced();
+                CommandData.Cryo.forced = 0;
+                blast_info("STARTING FRIDGE CYCLE NOW");
+            }
+            start_cycle();
+            standby_cycle();
+            heating_cycle();
+            burnoff_cycle();
+            cooling_cycle();
+            output_cycle();
         }
-        if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
-            forced();
-            blast_info("STARTING FRIDGE CYCLE NOW");
-        }
-        start_cycle();
-        standby_cycle();
-        heating_cycle();
-        burnoff_cycle();
-        cooling_cycle();
-        output_cycle();
+    } else {
+        // blast_info("cycle not allowed yet");
+        first_time = 1;
     }
 }
 void force_incharge(void) {

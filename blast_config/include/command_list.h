@@ -132,13 +132,13 @@ enum singleCommand {
   pump_valve_open, pump_valve_close, fill_valve_open, fill_valve_close,
   ln_valve_on, ln_valve_off, pot_valve_on, pot_valve_off, pot_valve_open, pot_valve_close,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
-
+    heater_sync, allow_cycle, disallow_cycle,
 	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
 	xsc0_cycle, gyros_cycle, data_transmit_cycle, elmot_cycle, pivot_cycle,
 	mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_15_cycle,
 	gps_timing_cycle, if_1_cycle, if_2_cycle, if_3_cycle, if_4_cycle,
 	if_5_cycle, if_6_cycle, if_7_cycle, if_8_cycle, if_9_cycle,
-	if_10_cycle,
+	if_10_cycle, force_cycle,
 	hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
 	fc1_on, fc1_off, xsc1_on, xsc1_off,
 	fc2_on, fc2_off, xsc0_on, xsc0_off,
@@ -152,9 +152,7 @@ enum singleCommand {
 	if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
 	if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
 	if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
-
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
-	heater_sync,
   xyzzy
 };
 
