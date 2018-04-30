@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   // mode selection
   int server_mode = 1;
   int client_mode = 1;
-  unsigned int flags = TCPCONN_FILE_RAW;
+  unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
 
   // initialization variables
   uint32_t req_serial = 0;
