@@ -222,7 +222,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   linklist_info("Linklist name set to %s\n", linklistname);
 
   // request linklist name resolution if necessary (for symlinks on server)
-  request_server_linklist_name(tc, linklistname, 128, TCPCONN_RESOLVE_NAME); 
+  request_server_linklist_name(tc, linklistname, 128, flags & TCPCONN_RESOLVE_NAME); 
   linklist_info("Linklist name resolves to %s\n", linklistname);
 
   return recv_ll_serial;
@@ -454,7 +454,7 @@ void *connection_handler(void *arg)
 				client_on = 0;
         break;
 			}
-      linklist_info("::CLIENT %d:: linklist \"%s\" name sent\n", sock, linklist_name);
+      linklist_info("::CLIENT %d:: linklist \"%s\" name sent\n", sock, send_name);
     } else if (*req_serial == SERVER_ARCHIVE_REQ) { // client requesting archived data
       if (archive_framenum == 0) { // assume archive file has not yet been loaded
         // check if linklist_name has been loaded from format file and linklist file request
