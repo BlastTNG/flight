@@ -72,7 +72,7 @@ int request_server_list(struct TCPCONN * , char [][64]);
 int request_server_archive_list(struct TCPCONN * , char [][64]);
 int retrieve_data(struct TCPCONN * , uint64_t , unsigned int , uint8_t *, uint8_t *);
 void set_server_linklist_name(struct TCPCONN * , char *);
-void request_server_linklist_name(struct TCPCONN * , char *, unsigned int);
+void request_server_linklist_name(struct TCPCONN * , char *, unsigned int, unsigned int);
 uint32_t request_server_file(struct TCPCONN * , char * , unsigned int );
 int send_client_file(struct TCPCONN * , char * , uint32_t );
 void send_client_error(struct TCPCONN *);
