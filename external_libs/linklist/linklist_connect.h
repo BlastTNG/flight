@@ -35,11 +35,13 @@
 #define SERVER_SERIAL_REQ 0xEE000004
 #define SERVER_SET_LL_NAME_REQ 0xEE000005
 #define SERVER_ARCHIVE_LIST_REQ 0xEE000006
+#define SERVER_LL_NAME_REQ 0xEE000007
 
 #define TCPCONN_LOOP 0x01
 #define TCPCONN_FILE_RAW 0x02
 #define TCPCONN_NOLOOP 0x04
 #define TCPCONN_CLIENT_INIT 0x08
+#define TCPCONN_RESOLVE_NAME 0x10
 
 #define TCP_PACKET_HEADER_SIZE 12
 #define CLIENT_TELEM_PORT 40204
@@ -70,6 +72,7 @@ int request_server_list(struct TCPCONN * , char [][64]);
 int request_server_archive_list(struct TCPCONN * , char [][64]);
 int retrieve_data(struct TCPCONN * , uint64_t , unsigned int , uint8_t *, uint8_t *);
 void set_server_linklist_name(struct TCPCONN * , char *);
+void request_server_linklist_name(struct TCPCONN * , char *, unsigned int);
 uint32_t request_server_file(struct TCPCONN * , char * , unsigned int );
 int send_client_file(struct TCPCONN * , char * , uint32_t );
 void send_client_error(struct TCPCONN *);
