@@ -219,11 +219,11 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   // set the name assigned by the server
 	set_server_linklist_name(tc, linklistname);
-  linklist_info("Linklist name set to %s\n", linklistname);
+  // linklist_info("Linklist name set to %s\n", linklistname);
 
   // request linklist name resolution if necessary (for symlinks on server)
   request_server_linklist_name(tc, linklistname, 128, flags & TCPCONN_RESOLVE_NAME); 
-  linklist_info("Linklist name resolves to %s\n", linklistname);
+  // linklist_info("Linklist name resolves to %s\n", linklistname);
 
   return recv_ll_serial;
 }

@@ -78,7 +78,28 @@ void increment_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
     return;
   }
 }
- 
+
+// creates a symlink for the rawfile with the new name pointing to the ll_rawfile basename 
+void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
+  char filename[128] = {0};
+  char symname[128] = {0};
+
+  sprintf(symname, "%s" LINKLIST_EXT ".00", newname);
+  sprintf(filename, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
+  unlink(symname);
+  symlink(filename, symname);
+
+  sprintf(symname, "%s" SUPERFRAME_FORMAT_EXT, newname);
+  sprintf(filename, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+  unlink(symname);
+  symlink(filename, symname);
+
+  sprintf(symname, "%s" LINKLIST_FORMAT_EXT, newname);
+  sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  unlink(symname);
+  symlink(filename, symname);
+}
+
 void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
   // get the date string for file saving
   time_t now = time(0);

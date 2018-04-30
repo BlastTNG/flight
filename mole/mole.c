@@ -71,11 +71,13 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
-linklist_tcpconn_t tcpconn = {{0}};
+static linklist_tcpconn_t tcpconn = {"cacofonix"};
+char dirfile_name[128] = "test.DIR";
+char symname[128] = "/data/rawdir/LIVE";
 
 int main(int argc, char *argv[]) {
   // mode selection
-  int server_mode = 1;
+  int server_mode = 0;
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
 
@@ -99,10 +101,17 @@ int main(int argc, char *argv[]) {
 
   int i;
   for (i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-ns") == 0) { // no server mode
-      server_mode = 0;
+    if (argv[i][0] == '@') { // custom target
+      strcpy(tcpconn.ip, argv[i]+1);
+    } else if (strcmp(argv[i], "-s") == 0) { // server mode
+      server_mode = 1;
+    } else if (strcmp(argv[i], "-o") == 0) { // specify an output file
+      strcpy(dirfile_name, argv[++i]);
     } else if (strcmp(argv[i], "-nc") == 0) { // no client mode
       client_mode = 0;
+    } else {
+      printf("Unrecognized option \"%s\"\n", argv[i]);
+      exit(1);
     }
   }
 
@@ -113,7 +122,6 @@ int main(int argc, char *argv[]) {
   }
 
   if (client_mode) {
-    sprintf(tcpconn.ip, "cacofonix");
     char linklistname[64] = {0};
     user_file_select(&tcpconn, linklistname);
 
@@ -125,12 +133,13 @@ int main(int argc, char *argv[]) {
     printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
 
     // open linklist dirfile
-    ll_dirfile = open_linklist_dirfile(linklist, "test.DIR");  
+    ll_dirfile = open_linklist_dirfile(linklist, dirfile_name);  
 
     // open linklist rawfile
     char filename[128] = {0};
     sprintf(filename, "%s/%s", archive_dir, linklistname);
     ll_rawfile = open_linklist_rawfile(linklist, filename); 
+    create_rawfile_symlinks(ll_rawfile, symname);
 
     while (req_framenum < req_init_framenum) {
       if (buffer_size < req_blksize) {
