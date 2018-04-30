@@ -188,6 +188,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_MOTOR},
+  {COMMAND(reset_ethercat), "reset communications with all EtherCat devices", GR_MOTOR},
   {COMMAND(restore_piv), "restore the serial settings for the pivot controller", GR_MOTOR},
   {COMMAND(az_off), "disable az motors' gains", GR_MOTOR},
   {COMMAND(az_on), "enable az motors' gains", GR_MOTOR},

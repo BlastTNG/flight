@@ -347,6 +347,11 @@ typedef struct roach_params
     double out_atten;
 } roach_params_t;
 
+// Ethercat controller/device commands
+typedef struct {
+    bool reset;
+} ec_devices_struct_t;
+
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
     enum {neg = 0, no_bal, pos} bal_move_type;
@@ -488,6 +493,8 @@ struct CommandDataStruct {
   relay_cmds_t Relays;
 
   cmd_balance_t balance;
+
+  ec_devices_struct_t ec_devices;
 
   struct {
     int off;

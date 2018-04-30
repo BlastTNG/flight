@@ -907,6 +907,75 @@ void mc_readPDOassign(int m_slave) {
     }
 }
 
+// Set defaults for the current limits, and pids
+void set_ec_motor_defaults()
+{
+    /// Set the default current limits
+    rw_init_current_limit();
+    el_init_current_limit();
+    piv_init_current_limit();
+
+    rw_init_current_pid();
+    el_init_current_pid();
+    piv_init_current_pid();
+
+    /// Set the encoder defaults
+    rw_init_encoder();
+    el_init_encoder();
+    piv_init_resolver();
+}
+
+// Attempts to fully reset and reconnect to the EtherCat devices.
+// Right now this is mostly a copy
+int reset_ec_motors()
+{
+    find_controllers();
+
+    for (int i = 1; i <= ec_slavecount; i++) {
+        if (motor_pdo_init(i) < 0) blast_err("motor_pdo_init failed for slave %i", i);
+        mc_readPDOassign(i);
+    }
+    /// We re-configure the map now that we have assigned the PDOs
+    blast_info("Reconfigure the map now that we have assigned the PDOs");
+    if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
+    map_motor_vars();
+
+    /**
+     * Set the initial values of both commands to "safe" default values
+     */
+    for (int i = 1; i <= ec_slavecount; i++) {
+        *target_current[i] = 0;
+        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
+
+    if (CommandData.disable_az) {
+        rw_disable();
+        piv_disable();
+    } else {
+        rw_enable();
+        piv_enable();
+    }
+    if (CommandData.disable_el) {
+        el_disable();
+    } else {
+        el_enable();
+    }
+
+    set_ec_motor_defaults();
+    /// Start the Distributed Clock cycle
+    motor_configure_timing();
+
+    /// Put the motors in Operational mode (EtherCAT Operation)
+    blast_info("Setting the EtherCAT devices in operational mode.");
+    motor_set_operational();
+
+    for (int i = 1; i <= ec_slavecount; i++) {
+        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+    }    int expectedWKC, wkc;
+    int ret, len;
+    return(1);
+}
+
 static void* motor_control(void* arg)
 {
     int expectedWKC, wkc;
@@ -957,19 +1026,7 @@ static void* motor_control(void* arg)
     }
 
 
-    /// Set the default current limits
-    rw_init_current_limit();
-    el_init_current_limit();
-    piv_init_current_limit();
-
-    rw_init_current_pid();
-    el_init_current_pid();
-    piv_init_current_pid();
-
-    /// Set the encoder defaults
-    rw_init_encoder();
-    el_init_encoder();
-    piv_init_resolver();
+    set_ec_motor_defaults();
 
     /// Start the Distributed Clock cycle
     motor_configure_timing();
@@ -991,6 +1048,11 @@ static void* motor_control(void* arg)
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (CommandData.ec_devices.reset) {
+            if (!reset_ec_motors()) blast_err("Reset of EtherCat devices failed!");
+            CommandData.ec_devices.reset = 0;
+        }
 
         if (CommandData.disable_az) {
             rw_disable();
