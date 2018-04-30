@@ -222,7 +222,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   linklist_info("Linklist name set to %s\n", linklistname);
 
   // request linklist name resolution if necessary (for symlinks on server)
-  request_server_linklist_name(tc, linklistname, 128); 
+  request_server_linklist_name(tc, linklistname, 128, TCPCONN_RESOLVE_NAME); 
   linklist_info("Linklist name resolves to %s\n", linklistname);
 
   return recv_ll_serial;
@@ -231,7 +231,10 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 char *get_real_file_name(char * real_name, char * symlink_name) 
 {
 	char resolved_name[128] = {0};
-	if (!realpath(symlink_name, resolved_name)) {
+  char full_name[128] = {0};
+  sprintf(full_name, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
+
+	if (!realpath(full_name, resolved_name)) {
     real_name[0] = '\0';
     return NULL;
 	}
@@ -860,7 +863,7 @@ unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
   return *recv_frame_num;
 }
 
-void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsigned int len)
+void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsigned int len, unsigned int flags)
 {
   // initiate server connection if not done already
   while (tc->fd <= 0) {
@@ -875,7 +878,7 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
   uint16_t *recv_n = NULL;
 
   // request file list from server
-  writeTCPHeader(request_msg, SERVER_LL_NAME_REQ, len-1,0,0);
+  writeTCPHeader(request_msg, SERVER_LL_NAME_REQ, len-1, flags, 0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("Failed to send link name request\n");
     close_connection(tc);
@@ -889,7 +892,7 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
 		return;
 	}
 	readTCPHeader(request_msg, &recv_serial, &recv_frame_num ,&recv_i,&recv_n);
-	if (*recv_serial == SERVER_SET_LL_NAME_REQ) {
+	if (*recv_serial == SERVER_LL_NAME_REQ) {
 		// recv name: *recv_frame_num is number of characters
     memset(linklistname, 0, len);
 		int read_size = recv(tc->fd, linklistname, *recv_frame_num, 0);
