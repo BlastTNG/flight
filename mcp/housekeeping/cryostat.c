@@ -195,12 +195,16 @@ void load_curve_300mk(void) {
 void set_dac(void) {
     int labjack;
     float value;
-    if (CommandData.Cryo.send_dac == 1) {
-        labjack = CommandData.Cryo.labjack;
-        value = CommandData.Cryo.dac_value;
-        blast_info("voltage = %f, labjack = %d", value, labjack);
-        CommandData.Cryo.send_dac = 0;
-        labjack_queue_command(labjack, 1000, value);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        if (CommandData.Cryo.send_dac == 1) {
+            labjack = CommandData.Cryo.labjack;
+            value = CommandData.Cryo.dac_value;
+            blast_info("voltage = %f, labjack = %d", value, labjack);
+            CommandData.Cryo.send_dac = 0;
+            if (state[labjack].initialized == 1) {
+                labjack_queue_command(labjack, 1000, value);
+            }
+        }
     }
 }
 
@@ -210,12 +214,14 @@ void heater_read(void) {
     static channel_t* heater_300mk_status_Addr;
     static channel_t* cal_lamp_status_Addr;
     // queues up all the reads from labjack cryo 2
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
-    labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL_HS, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_350LNA, 0);
+        labjack_queue_command(LABJACK_CRYO_2, READ_500LNA, 0);
+    }
     if (first_time_read == 1) {
         first_time_read = 0;
         heater_300mk_status_Addr = channels_find_by_name("status_300mk_heater");
@@ -642,21 +648,12 @@ static void standby_cycle(void) {
 static void heating_cycle(void) {
     static int fill_counter = 0;
     if (cycle_state.heating == 1) {
-        if (cycle_state.pot_fill == 1) {
-            blast_info("filling the pot for 5 minutes");
-            // fill the pot here
-            if (fill_counter < 300) {
-                fill_counter++;
-            } else {
-                fill_counter = 0;
-                blast_info("pot full moving to cooking");
-                cycle_state.pot_fill = 0;
-            }
-        } else {
             if (cycle_state.heat_delay == 0) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
+		// open pumped pot valve
+		CommandData.Cryo.potvalve_goal = opened;
                 blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
@@ -672,6 +669,8 @@ static void heating_cycle(void) {
             if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
+		// close pumped pot valve
+		CommandData.Cryo.potvalve_goal = closed;
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
@@ -680,7 +679,6 @@ static void heating_cycle(void) {
             }
         }
     }
-}
 // in the burnoff phase, we monitor the temperature of the charcoal heater while the counter ticks along
 // if the temperature drops below a minimum threshold, we reheat the charcoal and then continue along
 // when the timer runs out, the charcoal heat switch is turned on
@@ -780,24 +778,31 @@ static void output_cycle(void) {
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
-    if (state[0].initialized && state[1].initialized) {
-        if (first_time == 1) {
-            blast_info("initalizing");
-            init_cycle_channels();
-            init_cycle_values();
-            first_time = 0;
-            blast_info("first time done");
+    if (CommandData.Cryo.cycle_allowed == 1) {
+        // blast_info("cycle allowed now");
+        if (state[0].initialized && state[1].initialized) {
+            if (first_time == 1) {
+                blast_info("initalizing");
+                init_cycle_channels();
+                init_cycle_values();
+                first_time = 0;
+                blast_info("first time done");
+            }
+            if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
+                forced();
+                CommandData.Cryo.forced = 0;
+                blast_info("STARTING FRIDGE CYCLE NOW");
+            }
+            start_cycle();
+            standby_cycle();
+            heating_cycle();
+            burnoff_cycle();
+            cooling_cycle();
+            output_cycle();
         }
-        if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
-            forced();
-            blast_info("STARTING FRIDGE CYCLE NOW");
-        }
-        start_cycle();
-        standby_cycle();
-        heating_cycle();
-        burnoff_cycle();
-        cooling_cycle();
-        output_cycle();
+    } else {
+        // blast_info("cycle not allowed yet");
+        first_time = 1;
     }
 }
 void force_incharge(void) {
@@ -810,6 +815,7 @@ void cryo_1hz(int setting_1hz) {
         heater_control();
         heater_read();
         load_curve_300mk();
+        set_dac();
     }
 }
 

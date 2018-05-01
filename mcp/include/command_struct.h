@@ -259,6 +259,8 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
+
 typedef struct {
   int16_t hwprPos;
   int hwpr_pos_old;
@@ -266,6 +268,12 @@ typedef struct {
   uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
+  int potvalve_on;
+  valve_state_t potvalve_goal;
+  uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
+  valve_state_t valve_goals[2];
+  uint16_t valve_vel, valve_current;
+  uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   int do_cal_pulse;
   int do_level_pulse;
   uint16_t level_length;
@@ -273,10 +281,10 @@ typedef struct {
   uint16_t heater_update;
   uint16_t heater_status;
   uint16_t sync;
-  uint16_t auto_cycle_allowed, force_cycle, auto_cycling;
+  uint16_t force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
-  int labjack, send_dac, load_curve;
+  int labjack, send_dac, load_curve, cycle_allowed;
   float dac_value;
   // for the periodic cal Sam Grab these
   uint16_t num_pulse, separation, length, periodic_pulse;
@@ -300,6 +308,7 @@ typedef struct {
   float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
   float update_rec, update_of, update_if;
   uint16_t labjack[5];
+  int of_relays[16], if_relays[10];
 } relay_cmds_t;
 
 typedef struct {

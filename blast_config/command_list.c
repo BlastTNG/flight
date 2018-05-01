@@ -71,6 +71,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna350_off), "turning off 350 lna", GR_CRYO},
   {COMMAND(lna500_on), "turning on 500 lna", GR_CRYO},
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
+  {COMMAND(allow_cycle), "autocycle on", GR_CRYO},
+  {COMMAND(disallow_cycle), "autocycle_off", GR_CRYO},
+  {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
@@ -240,12 +243,24 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hwpr_enc_on), "HWP rotation sensor on", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
+
+  // Old commands, should we delete? PAW 03/27/2018
+  // {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
+  // {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
   // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
   // {COMMAND(he_valve_off), "he4 tank valve off", GR_CRYO},
-  // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open",
-  //  GR_CRYO},
-  // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close",
-  //   GR_CRYO},
+  // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
+  // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
+
+  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
+  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
+  {COMMAND(pot_valve_open), "set He4 pot valve direction open", GR_CRYO},
+  {COMMAND(pot_valve_close), "set He4 pot valve direction close", GR_CRYO},
+  {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
+  {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
+  {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
+  {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
+
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
   {COMMAND(blast_sucks), "the receiver sucks, use the sad schedule file",
@@ -1024,6 +1039,30 @@ struct mcom mcommands[plugh + 2] = {
   //   }
   // },
 
+  {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
+    {
+      {"Velocity (microsteps/sec)", 0, 100000, 'i', "POTVALVE_VEL"}
+    }
+  },
+
+  {COMMAND(potvalve_set_current), "Set pot valve open and close currents", GR_CRYO, 2,
+    {
+      {"Pot valve open current (% max)", 0, 100, 'i', "POTVALVE_I_OPEN"},
+      {"Pot valve close current (% max)", 0, 100, 'i', "POTVALVE_I_CLOSE"}
+    }
+  },
+
+  {COMMAND(valves_set_vel), "Set cryostat valves velocity", GR_CRYO, 1,
+    {
+      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VALVES_VEL"}
+    }
+  },
+
+  {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
+    {
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "VALVES_I"}
+    }
+  },
 //  <!-- XSC general -->
 
 

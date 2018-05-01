@@ -71,6 +71,7 @@ channel_t channel_list[] =
     { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
@@ -89,6 +90,8 @@ channel_t channel_list[] =
     { "he_pot_lo_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "he_purge_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "alarm_gauge",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "of_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "if_status",  1, 0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     { "td_charcoal_hs",   SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "td_vcs2_filt",     SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
@@ -450,6 +453,18 @@ channel_t channel_list[] =
     { "i_level_off_bal",      CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
     { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_INT16, RATE_5HZ, U_I_A, 0 },
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
+
+    {"potvalve_pos",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_state",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_vel",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_I_open",       SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"potvalve_I_close",      SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+
+    {"pumpvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"fillvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"valve_vel",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"valve_current",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+
     { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_move_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
@@ -1068,7 +1083,8 @@ channel_t channel_list[] =
     { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 
 // Begin ROACH channels
-    /* roach diagnostic channels */
+/*
+    roach diagnostic channels
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
@@ -3273,7 +3289,7 @@ channel_t channel_list[] =
     { "i_kid1013_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
     { "i_kid1014_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
     { "i_kid1015_roach1",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
-
+*/
 //      { "roach2_kid0000_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 //      { "roach2_kid0001_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 //      { "roach2_kid0002_q",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
@@ -9375,7 +9391,7 @@ channel_t channel_list[] =
 //     { "roach4_kid1013_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1014_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1015_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
-#endif // ifndef NO_KIDS_TEST
+// #endif // ifndef NO_KIDS_TEST
     { {0} }
   };
 
