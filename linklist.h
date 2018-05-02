@@ -47,6 +47,7 @@
 #define LINKLIST_FORMAT_EXT ".ll.format"
 #define LINKLIST_FILE_SERIAL_IND "# Serial="
 #define LINKLIST_FILE_SIZE_IND "# Blk Size="
+#define LINKLIST_FRAMES_PER_FILE_IND "# Frames per file="
 
 #define LL_NO_AUTO_CHECKSUM 0x01
 #define LL_INCLUDE_ALLFRAME 0x02
@@ -186,7 +187,7 @@ superframe_entry_t * superframe_find_by_name(superframe_t *, char *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 const char * get_sf_type_string(uint8_t);
 uint8_t get_sf_type_int(char *);
-int read_linklist_formatfile_size(char *);
+int read_linklist_formatfile_comment(char *, char *);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);

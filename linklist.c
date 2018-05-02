@@ -66,7 +66,7 @@ extern "C" {
 
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
-
+unsigned int ll_rawfile_default_fpf = 900; // number of frames per file before incrementing linklist rawfiles
 
 const char * SF_TYPES_STR[] = {
   "UINT8", "UINT16", "UINT32", "UINT64", 
@@ -594,7 +594,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   byteloc += blk_size;
   ll->n_entries++;
 
-  int file_blk_size = read_linklist_formatfile_size(fname);
+  int file_blk_size = read_linklist_formatfile_comment(fname, LINKLIST_FILE_SIZE_IND);
   if ((file_blk_size > 0) && (file_blk_size != byteloc)) {
     if (file_blk_size == byteloc+superframe->allframe_size) {
       flags |= LL_INCLUDE_ALLFRAME;
@@ -657,6 +657,7 @@ void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
   } else {
     fprintf(formatfile, LINKLIST_FILE_SIZE_IND "%d\n", ll->blk_size); // blk_size = bulk size
   }
+  fprintf(formatfile, LINKLIST_FRAMES_PER_FILE_IND "%d\n", ll_rawfile_default_fpf); // number of frames per file
   fprintf(formatfile, "#\n");
   
   fprintf(formatfile, "%s\n\n", STR(LL_NO_AUTO_CHECKSUM));
@@ -846,20 +847,17 @@ uint64_t generate_superframe_serial(superframe_t * superframe)
   return *(uint64_t *) md5hash;
 }
 
-// get the claimed linklist blk_size from the linklist formatfile
-int read_linklist_formatfile_size(char * fin) {
+// get the number of frames per file (fpf) from the linklist formatfile
+int read_linklist_formatfile_comment(char * fin, char * comment) {
   FILE * f;
 
-  if ((f = fopen(fin,"r")) == NULL) {
-    printf("read_linklist_formatfile_size: unable to open file\n");
-    return -1;
+  if ((f = fopen(fin, "r")) == NULL) {
+    return -2;
   }
 
   char * line = NULL;
   size_t len = 0; 
   int read = 0;
-
-  char * comment = LINKLIST_FILE_SIZE_IND;
 
   while ((read = getline(&line, &len, f)) != -1) {
     if (strncmp(line, comment, strlen(comment)) == 0) {
@@ -871,6 +869,7 @@ int read_linklist_formatfile_size(char * fin) {
 
   return -1;
 }
+
 superframe_t * parse_superframe_format(char * fname) {
   FILE * cf = fopen(fname, "r"); // open command file
   if (cf == NULL) {

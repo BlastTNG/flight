@@ -14,7 +14,9 @@ struct linklist_dirfile {
 struct linklist_rawfile {
   char basename[128];
   unsigned int framenum;
-  unsigned int filecount;
+  unsigned int fileindex;
+  unsigned int framesize;
+  unsigned int fpf;
   linklist_t * ll;
   FILE * fp;
 };
@@ -26,10 +28,15 @@ linklist_dirfile_t * open_linklist_dirfile(linklist_t *, char *);
 void close_and_free_linklist_dirfile(linklist_dirfile_t *);
 double write_linklist_dirfile(linklist_dirfile_t *, uint8_t *);
 
-void increment_linklist_rawfile(linklist_rawfile_t *);
+int seek_linklist_rawfile(linklist_rawfile_t *, unsigned int);
+int seekend_linklist_rawfile(linklist_rawfile_t *);
+int tell_linklist_rawfile(linklist_rawfile_t *);
+
 linklist_rawfile_t * open_linklist_rawfile(linklist_t *, char *);
 void close_and_free_linklist_rawfile(linklist_rawfile_t *);
-unsigned int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
+int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
+int read_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
+
 void make_linklist_rawfile_name(linklist_t *, char *);
 void create_rawfile_symlinks(linklist_rawfile_t *, char *);
 
