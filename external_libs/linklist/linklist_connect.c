@@ -518,7 +518,7 @@ void *connection_handler(void *arg)
         // wait for the requested frame num to become available
         while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
           fseek(clientbufferfile, 0, SEEK_END);
-          archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1, 0);
+          archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size, 0);
           usleep(50000);
         } 
 
