@@ -125,6 +125,9 @@ int main(int argc, char * argv[]) {
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
 
+  // Serving up data received via telemetry
+  pthread_t server_thread;
+
   // publishing thread; handles all telemetry publishing to mosquitto
   pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
@@ -140,6 +143,9 @@ int main(int argc, char * argv[]) {
   if (highrate_on) {
     pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
   }
+
+  // start the server thread for mole clients
+  pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
   // The Joining
   pthread_join(groundhog_publish_worker, NULL);

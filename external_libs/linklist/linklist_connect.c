@@ -268,7 +268,7 @@ void *connection_handler(void *arg)
 
   int client_on = 1;
   unsigned int writesize = 0;
-  unsigned int frame_lag = 0; 
+  unsigned int frame_lag = 1; 
 
   FILE * clientbufferfile = NULL;
   char linklist_name[128] = {0};
