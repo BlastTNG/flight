@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     ll_rawfile = open_linklist_rawfile(linklist, filename); 
     create_rawfile_symlinks(ll_rawfile, symname);
 
-    while (req_framenum < req_init_framenum) {
+    while (1) {
       if (buffer_size < req_blksize) {
         buffer_size = req_blksize;
         recv_buffer = realloc(recv_buffer, buffer_size);

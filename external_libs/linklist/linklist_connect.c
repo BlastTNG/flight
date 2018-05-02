@@ -519,7 +519,7 @@ void *connection_handler(void *arg)
         while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
           fseek(clientbufferfile, 0, SEEK_END);
           archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size-1, 0);
-          sleep(2);
+          usleep(50000);
         } 
 
         // read the file
