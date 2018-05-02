@@ -595,7 +595,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   ll->n_entries++;
 
   int file_blk_size = read_linklist_formatfile_size(fname);
-  if (file_blk_size != byteloc) {
+  if ((file_blk_size > 0) && (file_blk_size != byteloc)) {
     if (file_blk_size == byteloc+superframe->allframe_size) {
       flags |= LL_INCLUDE_ALLFRAME;
     } else {
