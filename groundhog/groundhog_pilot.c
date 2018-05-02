@@ -47,6 +47,7 @@ void udp_receive(void *arg) {
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
+  char symname[128] = {0};
 
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
@@ -72,6 +73,8 @@ void udp_receive(void *arg) {
       char filename[128];
       make_linklist_rawfile_name(ll, filename);
       ll_rawfile = open_linklist_rawfile(ll, filename);
+      sprintf(symname, "%s/%s_live", archive_dir, udpsetup->name);
+      create_rawfile_symlinks(ll_rawfile, symname);
     }
 
     if (ll_rawfile->framenum >= GROUNDHOG_MAX_FRAMES_RESET) {
