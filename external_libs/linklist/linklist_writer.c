@@ -53,31 +53,7 @@ extern "C"{
 #endif
 
 extern superframe_entry_t block_entry;
-
-void increment_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
-  if (!ll_rawfile) {
-    linklist_err("Null linklist_rawfile\n");
-    return;
-  }
-
-  // close old file if necessary
-  if (ll_rawfile->fp) {
-    fclose(ll_rawfile->fp);
-    ll_rawfile->fp = NULL;
-  }
-  char filename[128];
-
-  // set the framenum to zero
-  ll_rawfile->framenum = 0;
-
-  // open the binary file for raw linklist data
-  sprintf(filename, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, ll_rawfile->filecount++);
-  ll_rawfile->fp = fpreopenb(filename);
-  if (!ll_rawfile->fp) {
-    linklist_err("Could not open raw linklist binary file %s\n", filename);
-    return;
-  }
-}
+extern unsigned int ll_rawfile_default_fpf;
 
 // creates a symlink for the rawfile with the new name pointing to the ll_rawfile basename 
 void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
@@ -117,6 +93,49 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
   sprintf(filename, "%s/%s_%s", archive_dir, tempname, datestring);
 }
 
+int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
+  // seek to the current file and file location to be written to next
+  do {
+    // seek to the beginning of the fragment files
+    seek_linklist_rawfile(ll_rawfile, ll_rawfile->fpf*ll_rawfile->fileindex);
+    if (fseek(ll_rawfile->fp, 0, SEEK_END)) {
+      return -1;
+    }
+    ll_rawfile->fileindex++;
+  } while ((ll_rawfile->framenum = ftell(ll_rawfile->fp)/ll_rawfile->framesize) >= ll_rawfile->fpf);
+  ll_rawfile->fileindex--;
+
+  return 0; 
+}
+
+int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum) {
+  if (!ll_rawfile) {
+    linklist_err("Null linklist_rawfile\n");
+    return -1;
+  }
+  unsigned int fileindex = framenum / ll_rawfile->fpf;
+  if (fileindex != ll_rawfile->fileindex || !ll_rawfile->fp) {
+    ll_rawfile->fileindex = fileindex;
+
+		// close the old file 
+		if (ll_rawfile->fp) {
+			fclose(ll_rawfile->fp);
+			ll_rawfile->fp = NULL;
+		}
+    char filename[128];
+    sprintf(filename, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, fileindex);
+		ll_rawfile->fp = fpreopenb(filename);
+		if (!ll_rawfile->fp) {
+			linklist_err("Could not open raw linklist binary file %s\n", filename);
+			return -2;
+		}
+  }
+
+  ll_rawfile->framenum = framenum % ll_rawfile->fpf;
+
+  return fseek(ll_rawfile->fp, ll_rawfile->framenum*ll_rawfile->framesize, SEEK_SET);
+}
+
 linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
   if (!ll) {
     linklist_err("Null linklist");
@@ -129,23 +148,27 @@ linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
 
   linklist_rawfile_t * ll_rawfile = calloc(1, sizeof(linklist_rawfile_t));
   strcpy(ll_rawfile->basename, basename);
-  ll_rawfile->framenum = 0;
-  ll_rawfile->filecount = 0;
   ll_rawfile->ll = ll;
-  increment_linklist_rawfile(ll_rawfile);
 
-  // free and return if could not open the file
-  if (!ll_rawfile->fp) {
+  ll_rawfile->framesize = ll->blk_size;
+  if (ll->flags & LL_INCLUDE_ALLFRAME) ll_rawfile->framesize += ll->superframe->allframe_size;
+
+  char filename[128];
+  sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND);
+  if (fpf > 0) ll_rawfile->fpf = fpf;
+  else ll_rawfile->fpf = ll_rawfile_default_fpf;
+
+  // open and seek to the beginning of the linklist rawfile
+  if (seekend_linklist_rawfile(ll_rawfile) < 0) {
     free(ll_rawfile);
     return NULL;
   }
-
+ 
   // write the superframe and linklist format files
-  char filename[128];
+  write_linklist_format(ll_rawfile->ll, filename);
   sprintf(filename, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
   write_superframe_format(ll->superframe, filename);
-  sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
-  write_linklist_format(ll_rawfile->ll, filename);
 
   return ll_rawfile;
 }
@@ -154,7 +177,16 @@ void close_and_free_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   if (ll_rawfile->fp) fclose(ll_rawfile->fp);
   free(ll_rawfile); 
 }
-unsigned int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
+
+int tell_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
+  if (!ll_rawfile) { 
+    linklist_err("Null rawfile linklist");
+    return -1;
+  }
+  return ll_rawfile->fileindex*ll_rawfile->fpf+ll_rawfile->framenum;
+}
+
+int read_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   if (!ll_rawfile) { 
     linklist_err("Null rawfile linklist");
     return -1;
@@ -169,14 +201,32 @@ unsigned int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * b
     return -1;
   }
 
-  unsigned int writesize = ll->blk_size;
   unsigned int retval = 0;
-
-  if (ll->flags & LL_INCLUDE_ALLFRAME) writesize += ll->superframe->allframe_size;
-
   if (ll_rawfile->fp) {
-    fseek(ll_rawfile->fp, ll_rawfile->framenum*writesize, SEEK_SET);
-    retval = fwrite(buffer, writesize, 1, ll_rawfile->fp);
+    retval = fread(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
+  }
+  ll_rawfile->framenum++;
+  return retval;
+}
+
+int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
+  if (!ll_rawfile) { 
+    linklist_err("Null rawfile linklist");
+    return -1;
+  }
+  if (!buffer) { 
+    linklist_err("Null buffer");
+    return -1;
+  }
+  linklist_t * ll = ll_rawfile->ll;
+  if (!ll) {
+    linklist_err("Null linklist");
+    return -1;
+  }
+
+  unsigned int retval = 0;
+  if (ll_rawfile->fp) {
+    retval = fwrite(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
     fflush(ll_rawfile->fp);
   }
   ll_rawfile->framenum++;

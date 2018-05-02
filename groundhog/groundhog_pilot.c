@@ -76,11 +76,6 @@ void udp_receive(void *arg) {
       sprintf(symname, "%s/%s_live", archive_dir, udpsetup->name);
       create_rawfile_symlinks(ll_rawfile, symname);
     }
-
-    if (ll_rawfile->framenum >= GROUNDHOG_MAX_FRAMES_RESET) {
-      increment_linklist_rawfile(ll_rawfile);
-    } 
-
     prev_serial = serial;
 
     // set the linklist serial

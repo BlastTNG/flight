@@ -472,7 +472,7 @@ void *connection_handler(void *arg)
         sprintf(archive_binary_filename, "%s" LINKLIST_EXT ".00", archive_filename);
 
         // load dummy linklist that corresponds to archive file
-        int formatfile_blksize = read_linklist_formatfile_size(archive_format_filename);
+        int formatfile_blksize = read_linklist_formatfile_comment(archive_format_filename, LINKLIST_FILE_SIZE_IND);
         if (formatfile_blksize < 0) {
           linklist_err("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_format_filename);
           client_on = 0;

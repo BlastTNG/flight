@@ -72,8 +72,9 @@
 #include <linklist_connect.h>
 
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char dirfile_name[128] = "test.DIR";
-char symname[128] = "/data/rawdir/LIVE";
+char * mole_dir = "/data/mole";
+char symdir_name[128] = "/data/etc/mole.lnk";
+char symraw_name[128] = "/data/rawdir/LIVE";
 
 int main(int argc, char *argv[]) {
   // mode selection
@@ -105,8 +106,6 @@ int main(int argc, char *argv[]) {
       strcpy(tcpconn.ip, argv[i]+1);
     } else if (strcmp(argv[i], "-s") == 0) { // server mode
       server_mode = 1;
-    } else if (strcmp(argv[i], "-o") == 0) { // specify an output file
-      strcpy(dirfile_name, argv[++i]);
     } else if (strcmp(argv[i], "-nc") == 0) { // no client mode
       client_mode = 0;
     } else {
@@ -123,6 +122,7 @@ int main(int argc, char *argv[]) {
 
   if (client_mode) {
     char linklistname[64] = {0};
+    char filename[128] = {0};
     user_file_select(&tcpconn, linklistname);
 
     req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
@@ -132,14 +132,15 @@ int main(int argc, char *argv[]) {
 
     printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
 
-    // open linklist dirfile
-    ll_dirfile = open_linklist_dirfile(linklist, dirfile_name);  
+    // open linklist rawfile and dirfile
+    sprintf(filename, "%s/%s", mole_dir, linklistname);
+    ll_dirfile = open_linklist_dirfile(linklist, filename);
+    unlink(symdir_name);
+    symlink(filename, symdir_name);  
 
-    // open linklist rawfile
-    char filename[128] = {0};
     sprintf(filename, "%s/%s", archive_dir, linklistname);
     ll_rawfile = open_linklist_rawfile(linklist, filename); 
-    create_rawfile_symlinks(ll_rawfile, symname);
+    create_rawfile_symlinks(ll_rawfile, symraw_name);
 
     while (1) {
       if (buffer_size < req_blksize) {
