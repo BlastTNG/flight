@@ -137,9 +137,10 @@ int main(int argc, char *argv[]) {
     ll_dirfile = open_linklist_dirfile(linklist, filename);
     unlink(symdir_name);
     symlink(filename, symdir_name);  
-
     sprintf(filename, "%s/%s", archive_dir, linklistname);
-    ll_rawfile = open_linklist_rawfile(filename, linklist); 
+    ll_rawfile = open_linklist_rawfile(filename, linklist);
+    seek_linklist_rawfile(ll_rawfile, 0);
+   
     create_rawfile_symlinks(ll_rawfile, symraw_name);
 
     while (1) {
@@ -148,6 +149,7 @@ int main(int argc, char *argv[]) {
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
       recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer, recv_header);
+     
       write_linklist_dirfile(ll_dirfile, recv_buffer);
       write_linklist_rawfile(ll_rawfile, recv_buffer);
 
