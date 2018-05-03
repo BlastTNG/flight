@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     symlink(filename, symdir_name);  
 
     sprintf(filename, "%s/%s", archive_dir, linklistname);
-    ll_rawfile = open_linklist_rawfile(linklist, filename); 
+    ll_rawfile = open_linklist_rawfile(filename, linklist); 
     create_rawfile_symlinks(ll_rawfile, symraw_name);
 
     while (1) {
