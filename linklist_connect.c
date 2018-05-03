@@ -286,8 +286,6 @@ void *connection_handler(void *arg)
   unsigned int archive_framenum = 0;
   unsigned int client_flags = 0;
 
-  struct dirent **dir;
-
   linklist_info("::SERVER:: Accept CLIENT %d\n",sock);
 
   while (client_on) {
@@ -335,6 +333,7 @@ void *connection_handler(void *arg)
     } else if (*req_serial == SERVER_ARCHIVE_LIST_REQ) { // client requesting list of archived files
       linklist_info("::CLIENT %d:: request for archive file list\n", sock);
 
+      struct dirent **dir;
       int n = scandir(archive_dir, &dir, one, alphasort);
       int i;
       int ifile = 0;
