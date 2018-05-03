@@ -240,7 +240,12 @@ int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   return retval;
 }
 
-linklist_dirfile_t * open_linklist_dirfile(linklist_t * ll, char * dirname) {
+int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum) {
+  ll_dirfile->framenum = framenum;
+  return 0;
+}
+
+linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   if (!ll) {
     linklist_err("Null linklist");
     return NULL;

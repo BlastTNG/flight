@@ -95,11 +95,11 @@ static void frame_handle_linklist_data(uint8_t * m_data, unsigned int m_len) {
     static int first_time = 1;
     static linklist_dirfile_t * ll_dirfile = NULL;
     if (first_time) {
-        ll_dirfile = open_linklist_dirfile(rc.ll, "test.DIR");
+        ll_dirfile = open_linklist_dirfile("test.DIR", rc.ll);
         first_time = 0;
     }
 
-    write_linklist_dirfile(ll_dirfile, m_data, counter++);
+    write_linklist_dirfile(ll_dirfile, m_data);
     // defricher_info("Received data from %s (size %d == %d, frame = %d)\n", rc.linklist_file, rc.ll->blk_size, m_len, counter);
 }
 

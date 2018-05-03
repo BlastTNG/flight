@@ -24,7 +24,8 @@ struct linklist_rawfile {
 typedef struct linklist_dirfile linklist_dirfile_t;
 typedef struct linklist_rawfile linklist_rawfile_t;
 
-linklist_dirfile_t * open_linklist_dirfile(linklist_t *, char *);
+int seek_linklist_dirfile(linklist_dirfile_t *, unsigned int);
+linklist_dirfile_t * open_linklist_dirfile(char *, linklist_t *);
 void close_and_free_linklist_dirfile(linklist_dirfile_t *);
 double write_linklist_dirfile(linklist_dirfile_t *, uint8_t *);
 

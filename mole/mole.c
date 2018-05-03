@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
   int server_mode = 0;
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
+  unsigned int rewind = 20;
 
   // initialization variables
   uint32_t req_serial = 0;
@@ -93,6 +94,10 @@ int main(int argc, char *argv[]) {
   uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
   unsigned int recv_size = 0;
+  uint32_t * recv_serial = NULL;
+  uint32_t * recv_framenum = NULL;
+  uint16_t * recv_i = NULL;
+  uint16_t * recv_n = NULL;
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -108,6 +113,8 @@ int main(int argc, char *argv[]) {
       server_mode = 1;
     } else if (strcmp(argv[i], "-nc") == 0) { // no client mode
       client_mode = 0;
+    } else if (strcmp(argv[i], "-w") == 0) { // rewind value 
+      rewind = atoi(argv[++i]);
     } else {
       printf("Unrecognized option \"%s\"\n", argv[i]);
       exit(1);
@@ -134,14 +141,17 @@ int main(int argc, char *argv[]) {
 
     // open linklist rawfile and dirfile
     sprintf(filename, "%s/%s", mole_dir, linklistname);
-    ll_dirfile = open_linklist_dirfile(linklist, filename);
+    ll_dirfile = open_linklist_dirfile(filename, linklist);
     unlink(symdir_name);
     symlink(filename, symdir_name);  
+
     sprintf(filename, "%s/%s", archive_dir, linklistname);
     ll_rawfile = open_linklist_rawfile(filename, linklist);
-    seek_linklist_rawfile(ll_rawfile, 0);
-   
     create_rawfile_symlinks(ll_rawfile, symraw_name);
+
+    // set the first framenum request
+    req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
+    req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
 
     while (1) {
       if (buffer_size < req_blksize) {
@@ -149,8 +159,14 @@ int main(int argc, char *argv[]) {
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
       recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer, recv_header);
-     
+      readTCPHeader(recv_header, &recv_serial, &recv_framenum, &recv_i, &recv_n);    
+
+      // write the dirfile
+      seek_linklist_dirfile(ll_dirfile, *recv_framenum);
       write_linklist_dirfile(ll_dirfile, recv_buffer);
+
+      // write the rawfile
+      seek_linklist_rawfile(ll_rawfile, *recv_framenum);
       write_linklist_rawfile(ll_rawfile, recv_buffer);
 
       printf("Received frame %d (size %d)\n", req_framenum, recv_size);
