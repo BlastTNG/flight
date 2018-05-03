@@ -509,13 +509,22 @@ void *connection_handler(void *arg)
         memset(header, 0, TCP_PACKET_HEADER_SIZE);
 
         linklist_info("::CLIENT %d:: initialized with serial 0x%x, nof %d, size %d\n", sock, SERVER_ARCHIVE_REQ, archive_framenum, archive_rawfile->framesize);
-      } else { // requesting data block
-        // wait for the requested frame num to become available
-        while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
-          seekend_linklist_rawfile(archive_rawfile);
-          archive_framenum = tell_linklist_rawfile(archive_rawfile);
-          usleep(50000);
-        } 
+      } else if ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) { // no data to read
+        // respond with header for live data
+        writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, TCPCONN_NO_DATA, 0);
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+          linklist_err("::CLIENT %d:: unable to send header\n", sock);
+          client_on = 0;
+          break;
+        }
+      } else { 
+        // respond with header for live data
+        writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, 0, 0);
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+          linklist_err("::CLIENT %d:: unable to send header\n", sock);
+          client_on = 0;
+          break;
+        }
 
         // reallocate the buffer if necessary
         if (buffersize < archive_rawfile->framesize) {
@@ -535,14 +544,6 @@ void *connection_handler(void *arg)
         }
         read_linklist_rawfile(archive_rawfile, buffer);
 
-        // respond with header for live data
-        // format: serial, frame number, day, year*12+month
-        writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, theday, theyear*12+themonth);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
-          linklist_err("::CLIENT %d:: unable to send header\n", sock);
-          client_on = 0;
-          break;
-        }
         // send the data 
         if (send(sock, buffer, archive_rawfile->framesize, 0) <= 0) {
           linklist_err("::CLIENT %d:: unable to send data\n",sock);
