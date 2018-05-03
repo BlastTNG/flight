@@ -204,7 +204,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   // parse the superframe format
   sprintf(pathname, "%s/%s", archive_dir, reqffname);
-	if (!(*sf = parse_superframe_format(pathname))) {
+  if (!(*sf = parse_superframe_format(pathname))) {
     linklist_err("Superframe format parser error.\n");
     return 0;
   }
@@ -212,14 +212,14 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   // parse the linklist format
   sprintf(pathname,"%s/%s", archive_dir, reqllname);
-	if (!(*ll = parse_linklist_format(*sf, pathname))) {
-	  linklist_err("Linklist format parser error.\n");
+  if (!(*ll = parse_linklist_format(*sf, pathname))) {
+    linklist_err("Linklist format parser error.\n");
     return 0;
-	}
+  }
   linklist_info("Parsed linklist format \"%s\"\n", pathname);
 
   // set the name assigned by the server
-	set_server_linklist_name(tc, linklistname);
+  set_server_linklist_name(tc, linklistname);
   // linklist_info("Linklist name set to %s\n", linklistname);
 
   // request linklist name resolution if necessary (for symlinks on server)
@@ -231,19 +231,25 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
 char *get_real_file_name(char * real_name, char * symlink_name) 
 {
-	char resolved_name[128] = {0};
+  char resolved_name[128] = {0};
   char full_name[128] = {0};
   sprintf(full_name, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
 
-	if (!realpath(full_name, resolved_name)) {
+  if (!realpath(full_name, resolved_name)) {
     real_name[0] = '\0';
     return NULL;
-	}
-	int i = 0;
-	for (i = strlen(resolved_name)-1; i >= 0; i--) {
-		if (resolved_name[i] == '/') break;
-	}
-	strcpy(real_name, resolved_name+i+1);
+  }
+  int i = 0;
+  for (i = strlen(resolved_name)-1; i >= 0; i--) {
+    if (resolved_name[i] == '/') break;
+  }
+  strcpy(real_name, resolved_name+i+1);
+
+  // strip the file extension
+  for (i = 0; i < strlen(real_name); i++) {
+    if (real_name[i] == '.') break;
+  }
+  real_name[i] = '\0';
 
   return real_name;
 }
@@ -273,9 +279,12 @@ void *connection_handler(void *arg)
   FILE * clientbufferfile = NULL;
   char linklist_name[128] = {0};
 
-  char archive_filename[128] = {0};
+  char * archive_filename;
+  char archive_symlink_filename[1280 ] = {0};
+  char archive_resolved_filename[128] = {0};
   linklist_rawfile_t * archive_rawfile = NULL;
   unsigned int archive_framenum = 0;
+  unsigned int client_flags = 0;
 
   struct dirent **dir;
 
@@ -436,22 +445,23 @@ void *connection_handler(void *arg)
           linklist_err("::CLIENT %d:: unable to resolve linklist name \"%s\"\n", sock, linklist_name);
           strcpy(send_name, linklist_name); // default to unresolved name
         }
+        client_flags |= TCPCONN_RESOLVE_NAME;
       } else { // just get the linklist name
         strcpy(send_name, linklist_name);
       }
       // shorten the name for sending to client if necessary
-			if (((*req_frame_num)-1) <= strlen(send_name)) send_name[(*req_frame_num)-1] = 0;
-			writeTCPHeader(header, SERVER_LL_NAME_REQ, strlen(send_name)+1, 0, 0);
-			if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-				linklist_err("::CLIENT %d:: unable to send response to linklist name\n", sock);
-				client_on = 0;
+      if (((*req_frame_num)-1) <= strlen(send_name)) send_name[(*req_frame_num)-1] = 0;
+      writeTCPHeader(header, SERVER_LL_NAME_REQ, strlen(send_name)+1, 0, 0);
+      if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+        linklist_err("::CLIENT %d:: unable to send response to linklist name\n", sock);
+        client_on = 0;
         break;
-			}
-			if (send(sock, send_name, strlen(send_name)+1, 0) <= 0) {
-				linklist_err("::CLIENT %d:: unable to send linklist name %s\n", sock, send_name);
-				client_on = 0;
+      }
+      if (send(sock, send_name, strlen(send_name)+1, 0) <= 0) {
+        linklist_err("::CLIENT %d:: unable to send linklist name %s\n", sock, send_name);
+        client_on = 0;
         break;
-			}
+      }
       linklist_info("::CLIENT %d:: linklist \"%s\" name sent\n", sock, send_name);
     } else if (*req_serial == SERVER_ARCHIVE_REQ) { // client requesting archived data
       if (!archive_rawfile) { // assume archive file has not yet been loaded
@@ -463,7 +473,13 @@ void *connection_handler(void *arg)
         }
 
         // write data file base name for archive file
-        sprintf(archive_filename,"%s/%s", archive_dir, linklist_name);
+        char linklist_resolved_name[128];
+        sprintf(archive_symlink_filename, "%s/%s", archive_dir, linklist_name);
+        sprintf(archive_resolved_filename, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
+
+        printf("%s %s\n", archive_symlink_filename, archive_resolved_filename);
+
+        archive_filename = (client_flags & TCPCONN_RESOLVE_NAME) ? archive_resolved_filename : archive_symlink_filename;
 
         if ((archive_rawfile = open_linklist_rawfile(archive_filename, NULL)) == NULL) {
           linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
@@ -866,20 +882,20 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
   }
 
   // receive the name
-	if (recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
-		linklist_err("Failed to receive archive name header\n");
-		close_connection(tc);
-		return;
-	}
-	readTCPHeader(request_msg, &recv_serial, &recv_frame_num ,&recv_i,&recv_n);
-	if (*recv_serial == SERVER_LL_NAME_REQ) {
-		// recv name: *recv_frame_num is number of characters
+  if (recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
+    linklist_err("Failed to receive archive name header\n");
+    close_connection(tc);
+    return;
+  }
+  readTCPHeader(request_msg, &recv_serial, &recv_frame_num ,&recv_i,&recv_n);
+  if (*recv_serial == SERVER_LL_NAME_REQ) {
+    // recv name: *recv_frame_num is number of characters
     memset(linklistname, 0, len);
-		int read_size = recv(tc->fd, linklistname, *recv_frame_num, 0);
+    int read_size = recv(tc->fd, linklistname, *recv_frame_num, 0);
 
-		if (read_size <= 0) {
-			linklist_err("Could not receive server linklist name\n");
-		}
+    if (read_size <= 0) {
+      linklist_err("Could not receive server linklist name\n");
+    }
   } else {
     linklist_err("Improper response to linklist name request (0x%x)\n", *recv_serial);
   }
