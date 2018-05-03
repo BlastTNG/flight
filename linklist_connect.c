@@ -124,7 +124,7 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   linklist_info("\nSelect archive file:\n\n");
 
-  int n = numlink/3;
+  int n = (numlink-1)/3+1;
   int width = 0;
   for (i=0;i<n;i++) if (strlen(name[i]) > width) width = strlen(name[i]);
   width += 6;
@@ -972,6 +972,8 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
       close_connection(tc);
       return 0;
     }
+
+    printf("%d/%d: %s\n", *recv_i, *recv_n, name[*recv_i]);
 
     if (((*recv_i)+1) >= *recv_n) break;
 
