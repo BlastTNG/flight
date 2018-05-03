@@ -71,6 +71,7 @@ channel_t channel_list[] =
     { "heater_status_read",     1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
     { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
@@ -452,6 +453,18 @@ channel_t channel_list[] =
     { "i_level_off_bal",      CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
     { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_INT16, RATE_5HZ, U_I_A, 0 },
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
+
+    {"potvalve_pos",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_state",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_vel",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_I_open",       SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"potvalve_I_close",      SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+
+    {"pumpvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"fillvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"valve_vel",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"valve_current",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+
     { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_move_bal",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

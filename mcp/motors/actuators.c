@@ -41,6 +41,7 @@
 #include "balance.h"
 #include "tx.h"
 #include "hwpr.h"
+#include "cryovalves.h"
 
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
@@ -49,16 +50,19 @@ extern int16_t InCharge;		/* tx.c */
 /* actuator bus setup paramters */
 #define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
-#define NACT 7
+#define NACT 10
 
 /* Index for each stepper for structures, name, id */
 #define LOCKNUM 4
 #define HWPRNUM 5
 #define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
-				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter"};
+				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter", "Pot Valve",
+				 "Pump Valve", "Fill Valve"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
-			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6, EZ_WHO_S7};
+			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6,
+			     EZ_WHO_S7, EZ_WHO_S8, EZ_WHO_S9,
+			     EZ_WHO_S10};
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
@@ -75,6 +79,7 @@ static struct ezbus bus;
 static int poll_timeout = POLL_TIMEOUT; /* track time since last repoll */
 static int actbus_reset = 1;		/* 1 means actbus is on */
 static unsigned int actuators_init = 0;	/* bitfield for when actuators usable */
+static unsigned int valve_check = 0;
 
 /* Lock motor parameters and data */
 #define LOCK_MOTOR_DATA_TIMER 100   /* 1 second */
@@ -148,7 +153,7 @@ static double t_primary = -1, t_secondary = -1;
 static double focus = -1;	  /* set in ab thread, read in fc thread */
 static double correction = 0;     /* set in fc thread, read in ab thread */
 
-/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c */
+/* Return the appropriate address to send commands to.  Used by balance.c, hwpr.c, cryovalves.c */
 int GetActAddr(int ind) {
     return id[ind];
 }
@@ -896,7 +901,7 @@ static void SetLockState(int nic)
 }
 
 #define SEND_SLEEP 100000 /* 100 milliseconds */
-#define WAIT_SLEEP 50000 /* 50 milliseconds */
+#define WAIT_SLEEP 100000 /* 100 millisecond */
 #define LA_EXIT    0
 #define LA_STOP    1
 #define LA_WAIT    2
@@ -1430,6 +1435,7 @@ void *ActuatorBus(void *param)
     int is_init = 0;
     int first_time = 1;
     int sf_ok;
+    int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
 
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
@@ -1477,7 +1483,11 @@ void *ActuatorBus(void *param)
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
         } else if (i == HWPRNUM) {
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-        } else {
+        } else if (i == POTVALVE_NUM) {
+	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
+	} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
+	} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
         }
     }
@@ -1535,7 +1545,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << SHUTTERNUM);
         }
-
+/*
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
             if (EZBus_IsUsable(&bus, id[i])) {
@@ -1557,7 +1567,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
         }
-
+*/
 // Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
             DoBalance(&bus);
@@ -1568,6 +1578,31 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << BALANCENUM);
         }
 
-        usleep(10000);
+	for (i = 0; i < 3; i++) {
+		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
+			actuators_init |= 0x1 << valve_arr[i];
+		} else {
+			EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
+			all_ok = 0;
+			actuators_init &= ~(0x1 << valve_arr[i]);
+		}
+		valve_check |= 0x1 << valve_arr[i];
+	}
+
+	if (valve_check & actuators_init) {
+		DoCryovalves(&bus, actuators_init);
+	}
+/*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
+		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
+		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
+	    DoCryovalves(&bus, actuators_init);
+	    actuators_init |= 0x1 << POTVALVE_NUM;
+	} else {
+	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
+	    all_ok = 0;
+	    actuators_init &= ~(0x1 << POTVALVE_NUM);
+	}*/
+
+	usleep(10000);
     }
 }
