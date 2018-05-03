@@ -95,17 +95,17 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
 
 int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   // seek to the current file and file location to be written to next
+  unsigned int fileindex = ll_rawfile->fileindex;
   do {
     // seek to the beginning of the fragment files
-    seek_linklist_rawfile(ll_rawfile, ll_rawfile->fpf*ll_rawfile->fileindex);
+    if (seek_linklist_rawfile(ll_rawfile, ll_rawfile->fpf*fileindex)) {
+      return -1;
+    }
     if (fseek(ll_rawfile->fp, 0, SEEK_END)) {
       return -1;
     }
-    ll_rawfile->fileindex++;
+    fileindex++;
   } while ((ll_rawfile->framenum = ftell(ll_rawfile->fp)/ll_rawfile->framesize) >= ll_rawfile->fpf);
-  ll_rawfile->fileindex--;
-
-  printf("Seekend: num %d, ind %d\n", ll_rawfile->framenum, ll_rawfile->fileindex);
 
   return 0; 
 }
@@ -116,8 +116,6 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
     return -1;
   }
   unsigned int fileindex = framenum / ll_rawfile->fpf;
-
-  printf("Framenum %d, fileindex %d, other fileindex %d\n", framenum , fileindex, ll_rawfile->fileindex);
 
   if (fileindex != ll_rawfile->fileindex || !ll_rawfile->fp) {
     ll_rawfile->fileindex = fileindex;
