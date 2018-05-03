@@ -56,6 +56,7 @@
 #include <openssl/md5.h>
 
 #include "linklist.h"
+#include "linklist_writer.h"
 #include "linklist_connect.h"
 
 #define DATAETC "/data/etc"
@@ -274,9 +275,7 @@ void *connection_handler(void *arg)
   char linklist_name[128] = {0};
 
   char archive_filename[128] = {0};
-  char archive_format_filename[128] = {0};
-  char archive_binary_filename[128] = {0};
-  linklist_t archive_ll = {0};
+  linklist_rawfile_t * archive_rawfile = NULL;
   unsigned int archive_framenum = 0;
 
   struct dirent **dir;
@@ -456,7 +455,7 @@ void *connection_handler(void *arg)
 			}
       linklist_info("::CLIENT %d:: linklist \"%s\" name sent\n", sock, send_name);
     } else if (*req_serial == SERVER_ARCHIVE_REQ) { // client requesting archived data
-      if (archive_framenum == 0) { // assume archive file has not yet been loaded
+      if (!archive_rawfile) { // assume archive file has not yet been loaded
         // check if linklist_name has been loaded from format file and linklist file request
         if (strlen(linklist_name) == 0) {
           linklist_err("::CLIENT %d:: no archive file requested\n", sock);
@@ -467,36 +466,17 @@ void *connection_handler(void *arg)
         // write data file base name for archive file
         sprintf(archive_filename,"%s/%s", archive_dir, linklist_name);
 
-        // create path to the linklist format and binary files
-        sprintf(archive_format_filename, "%s" LINKLIST_FORMAT_EXT, archive_filename);
-        sprintf(archive_binary_filename, "%s" LINKLIST_EXT ".00", archive_filename);
-
-        // load dummy linklist that corresponds to archive file
-        int formatfile_blksize = read_linklist_formatfile_comment(archive_format_filename, LINKLIST_FILE_SIZE_IND);
-        if (formatfile_blksize < 0) {
-          linklist_err("::CLIENT %d:: unable to find file \"%s\"\n", sock, archive_format_filename);
+        if ((archive_rawfile = open_linklist_rawfile(archive_filename, NULL)) == NULL) {
+          linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
           client_on = 0;
           break;
         }
-        archive_ll.blk_size = formatfile_blksize;
-        *((uint32_t *) archive_ll.serial) = SERVER_ARCHIVE_REQ;
-
-        // get framenumber from the file
-        if (clientbufferfile) fclose(clientbufferfile);
-        clientbufferfile = NULL;
-
-        if ((clientbufferfile = fopen(archive_binary_filename, "rb")) == NULL) {
-          linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_binary_filename);
-          client_on = 0;
-          break;
-        }
-        linklist_info("::CLIENT %d:: opening file \"%s\"\n", sock, archive_binary_filename);
+        linklist_info("::CLIENT %d:: opening rawfile \"%s\"\n", sock, archive_filename);
       }
 
       // update the archived file framenumber
-      fseek(clientbufferfile, 0, SEEK_END);
-      archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size, 0);
-      writesize = archive_ll.blk_size;
+      seekend_linklist_rawfile(archive_rawfile);
+      archive_framenum = tell_linklist_rawfile(archive_rawfile);
 
       // handle the type of data block request 
       if (*req_i & TCPCONN_CLIENT_INIT) { // requesting a frame number initialization
@@ -505,29 +485,23 @@ void *connection_handler(void *arg)
 
         // respond with header for live data
         // format: serial, initialization framenm, day, year*12+month
-        writeTCPHeader(header, *((uint32_t *) archive_ll.serial), archive_framenum-frame_lag, theday, theyear*12+themonth);
+        writeTCPHeader(header, SERVER_ARCHIVE_REQ, archive_framenum-frame_lag, theday, theyear*12+themonth);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
           linklist_err("::CLIENT %d:: unable to send initialization message\n",sock);
           client_on = 0;
         }
         memset(header, 0, TCP_PACKET_HEADER_SIZE);
 
-        linklist_info("::CLIENT %d:: initialized with serial 0x%x, nof %d, size %d\n", sock, *((uint32_t *) archive_ll.serial), archive_framenum, writesize);
-
+        linklist_info("::CLIENT %d:: initialized with serial 0x%x, nof %d, size %d\n", sock, SERVER_ARCHIVE_REQ, archive_framenum, archive_rawfile->framesize);
       } else { // requesting data block
         // wait for the requested frame num to become available
         while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
-          fseek(clientbufferfile, 0, SEEK_END);
-          archive_framenum = MAX(ftell(clientbufferfile)/archive_ll.blk_size, 0);
+					seekend_linklist_rawfile(archive_rawfile);
+					archive_framenum = tell_linklist_rawfile(archive_rawfile);
           usleep(50000);
         } 
 
-        // read the file
-        if (fseek(clientbufferfile, (*req_frame_num)*writesize, SEEK_SET) != 0) {
-          linklist_err("::CLIENT %d:: fseek failed\n", sock);
-          client_on = 0;
-          break;
-        } 
+        // reallocate the buffer if necessary
         if (buffersize < writesize) {
           if (!(buffer = realloc(buffer, writesize))) {
             linklist_err("::CLIENt %d:: cannot allocate buffer\n", sock);
@@ -536,18 +510,25 @@ void *connection_handler(void *arg)
           }
           buffersize = writesize;
         }
-        fread(buffer, 1, writesize, clientbufferfile);
+
+        // read the file
+        if (seek_linklist_rawfile(archive_rawfile, *req_frame_num) != 0) {
+          linklist_err("::CLIENT %d:: fseek failed\n", sock);
+          client_on = 0;
+          break;
+        }
+        read_linklist_rawfile(archive_rawfile, buffer);
 
         // respond with header for live data
         // format: serial, frame number, day, year*12+month
-        writeTCPHeader(header, *((uint32_t *) archive_ll.serial), *req_frame_num, theday, theyear*12+themonth);
+        writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, theday, theyear*12+themonth);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
           linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
         }
         // send the data 
-        if (send(sock, buffer, writesize, 0) <= 0) {
+        if (send(sock, buffer, archive_rawfile->framesize, 0) <= 0) {
           linklist_err("::CLIENT %d:: unable to send data\n",sock);
           break;
         }
