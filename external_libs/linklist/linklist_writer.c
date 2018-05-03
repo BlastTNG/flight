@@ -136,11 +136,7 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
   return fseek(ll_rawfile->fp, ll_rawfile->framenum*ll_rawfile->framesize, SEEK_SET);
 }
 
-linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
-  if (!ll) {
-    linklist_err("Null linklist");
-    return NULL;
-  }
+linklist_rawfile_t * open_linklist_rawfile(char * basename, linklist_t * ll) {
   if (!basename || (strlen(basename) == 0)) {
     linklist_err("Invalid rawfile basename");
     return NULL;
@@ -150,25 +146,39 @@ linklist_rawfile_t * open_linklist_rawfile(linklist_t * ll, char * basename) {
   strcpy(ll_rawfile->basename, basename);
   ll_rawfile->ll = ll;
 
-  ll_rawfile->framesize = ll->blk_size;
-  if (ll->flags & LL_INCLUDE_ALLFRAME) ll_rawfile->framesize += ll->superframe->allframe_size;
-
   char filename[128];
   sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+
+  // get the number of frames per file (fpf)
   int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND);
   if (fpf > 0) ll_rawfile->fpf = fpf;
   else ll_rawfile->fpf = ll_rawfile_default_fpf;
+
+  int blk_size = read_linklist_formatfile_comment(filename, LINKLIST_FILE_SIZE_IND);
+  if (blk_size > 0) {
+    ll_rawfile->framesize = blk_size;
+  } else {
+		if (!ll_rawfile->ll) {
+			linklist_err("Null linklist");
+      free(ll_rawfile);
+			return NULL;
+		}
+    ll_rawfile->framesize = ll->blk_size;
+    if (ll->flags & LL_INCLUDE_ALLFRAME) ll_rawfile->framesize += ll->superframe->allframe_size;
+  }
 
   // open and seek to the beginning of the linklist rawfile
   if (seekend_linklist_rawfile(ll_rawfile) < 0) {
     free(ll_rawfile);
     return NULL;
   }
- 
-  // write the superframe and linklist format files
-  write_linklist_format(ll_rawfile->ll, filename);
-  sprintf(filename, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
-  write_superframe_format(ll->superframe, filename);
+
+  if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
+		// write the superframe and linklist format files
+		write_linklist_format(ll_rawfile->ll, filename);
+		sprintf(filename, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+		write_superframe_format(ll->superframe, filename);
+  }
 
   return ll_rawfile;
 }
@@ -195,11 +205,6 @@ int read_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
     linklist_err("Null buffer");
     return -1;
   }
-  linklist_t * ll = ll_rawfile->ll;
-  if (!ll) {
-    linklist_err("Null linklist");
-    return -1;
-  }
 
   unsigned int retval = 0;
   if (ll_rawfile->fp) {
@@ -216,11 +221,6 @@ int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   }
   if (!buffer) { 
     linklist_err("Null buffer");
-    return -1;
-  }
-  linklist_t * ll = ll_rawfile->ll;
-  if (!ll) {
-    linklist_err("Null linklist");
     return -1;
   }
 
