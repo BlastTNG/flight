@@ -268,7 +268,6 @@ void *connection_handler(void *arg)
   unsigned int buffersize = 0;
 
   int client_on = 1;
-  unsigned int writesize = 0;
   unsigned int frame_lag = 1; 
 
   FILE * clientbufferfile = NULL;
@@ -496,19 +495,19 @@ void *connection_handler(void *arg)
       } else { // requesting data block
         // wait for the requested frame num to become available
         while ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) {
-					seekend_linklist_rawfile(archive_rawfile);
-					archive_framenum = tell_linklist_rawfile(archive_rawfile);
+          seekend_linklist_rawfile(archive_rawfile);
+          archive_framenum = tell_linklist_rawfile(archive_rawfile);
           usleep(50000);
         } 
 
         // reallocate the buffer if necessary
-        if (buffersize < writesize) {
-          if (!(buffer = realloc(buffer, writesize))) {
+        if (buffersize < archive_rawfile->framesize) {
+          if (!(buffer = realloc(buffer, archive_rawfile->framesize))) {
             linklist_err("::CLIENt %d:: cannot allocate buffer\n", sock);
             client_on = 0; 
             break;
           }
-          buffersize = writesize;
+          buffersize = archive_rawfile->framesize;
         }
 
         // read the file

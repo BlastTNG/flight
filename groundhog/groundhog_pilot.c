@@ -72,7 +72,7 @@ void udp_receive(void *arg) {
       } 
       char filename[128];
       make_linklist_rawfile_name(ll, filename);
-      ll_rawfile = open_linklist_rawfile(ll, filename);
+      ll_rawfile = open_linklist_rawfile(filename, ll);
       sprintf(symname, "%s/%s_live", archive_dir, udpsetup->name);
       create_rawfile_symlinks(ll_rawfile, symname);
     }
