@@ -66,6 +66,8 @@ typedef struct TCPCONN linklist_tcpconn_t;
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
+void readTCPHeader(uint8_t *, uint32_t **, uint32_t **, uint16_t **, uint16_t **);
+
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
 unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
