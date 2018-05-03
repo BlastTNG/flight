@@ -32,7 +32,7 @@ int seek_linklist_rawfile(linklist_rawfile_t *, unsigned int);
 int seekend_linklist_rawfile(linklist_rawfile_t *);
 int tell_linklist_rawfile(linklist_rawfile_t *);
 
-linklist_rawfile_t * open_linklist_rawfile(linklist_t *, char *);
+linklist_rawfile_t * open_linklist_rawfile(char *, linklist_t *);
 void close_and_free_linklist_rawfile(linklist_rawfile_t *);
 int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
 int read_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
