@@ -47,7 +47,6 @@
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
 #define GRPOS_ROACH 18
-#define GRPOS_LJPOWER  19
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -68,7 +67,6 @@
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
 #define GR_ROACH        (1 << GRPOS_ROACH)
-#define GR_LJPOWER      (1 << GRPOS_LJPOWER)
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -82,7 +80,7 @@ enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
   balance_auto,     balance_off,
   // cal_off,          cal_on,
-  hwpr_panic,   el_off,             el_on,
+  hwpr_panic,       el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
   fixed,
   // l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
@@ -96,18 +94,8 @@ enum singleCommand {
   trim_to_xsc0,      unlock,             lock_off,
   force_el_on,
   actbus_cycle,
-          hub232_cycle,
-
-  xsc0_off,         xsc0_on,            xsc0_cycle,
-  xsc1_off,         xsc1_on,            xsc1_cycle,
-  rw_off,	        rw_on,              rw_cycle,
-  piv_off,	        piv_on,             piv_cycle,
-  elmot_off,	    elmot_on,           elmot_cycle,
   vtx_off,	        vtx_on,
   bi0_off,	        bi0_on,
-  rx_off,		    rx_on,
-  rx_hk_off,        rx_hk_on,
-  rx_amps_off,	    rx_amps_on,
   charge_off,	    charge_on,		charge_cycle,
 
   ifroll_1_gy_allow, ifroll_1_gy_veto,   ifroll_2_gy_allow, ifroll_2_gy_veto,
@@ -116,9 +104,6 @@ enum singleCommand {
   ifroll_1_gy_off,  ifroll_1_gy_on,	ifroll_2_gy_off,  ifroll_2_gy_on,
   ifyaw_1_gy_off,   ifyaw_1_gy_on,	ifyaw_2_gy_off,	  ifyaw_2_gy_on,
   ifel_1_gy_off,    ifel_1_gy_on,	ifel_2_gy_off,	  ifel_2_gy_on,
-  ifroll_1_gy_cycle, ifroll_2_gy_cycle,  ifyaw_1_gy_cycle, ifyaw_2_gy_cycle,
-  ifel_1_gy_cycle,  ifel_2_gy_cycle,    gybox_off,        gybox_on,
-  hub232_off,      hub232_on,
   gybox_cycle,
             reap_north,       reap_south,
   xy_panic,
@@ -145,27 +130,27 @@ enum singleCommand {
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
-    cycle_hd_pv, cycle_eth_switch, cycle_fc1, cycle_xsc1, cycle_fc2,
-    cycle_xsc0, cycle_gyros, cycle_data_transmit, cycle_el_mot, cycle_pivot,
-    cycle_magnetometer, cycle_rw_mot, cycle_steppers, cycle_clinometers, cycle_of_15,
-    cycle_gps_timing, cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4,
-    cycle_if_5, cycle_if_6, cycle_if_7, cycle_if_8, cycle_if_9,
-    cycle_if_10,
-    hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
-    fc1_on, fc1_off, xsc1_acs_on, xsc1_acs_off,
-    fc2_on, fc2_off, xsc0_acs_on, xsc0_acs_off,
-    gyros_on, gyros_off, data_transmit_on, data_transmit_off,
-    el_mot_on, el_mot_off, pivot_on, pivot_off,
-    magnetometer_on, magnetometer_off, rw_mot_on, rw_mot_off,
-    steppers_on, steppers_off, clinometers_on, clinometers_off,
-    of_relay_15_on, of_relay_15_off, gps_timing_on, gps_timing_off,
-    if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
-    if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
-    if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
-    if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
-    if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
-    level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
-    heater_sync,
+    heater_sync, allow_cycle, disallow_cycle,
+	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
+	xsc0_cycle, gyros_cycle, data_transmit_cycle, elmot_cycle, pivot_cycle,
+	mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_15_cycle,
+	gps_timing_cycle, if_1_cycle, if_2_cycle, if_3_cycle, if_4_cycle,
+	if_5_cycle, if_6_cycle, if_7_cycle, if_8_cycle, if_9_cycle,
+	if_10_cycle, force_cycle,
+	hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
+	fc1_on, fc1_off, xsc1_on, xsc1_off,
+	fc2_on, fc2_off, xsc0_on, xsc0_off,
+	gyros_on, gyros_off, data_transmit_on, data_transmit_off,
+	elmot_on, elmot_off, pivot_on, pivot_off,
+	mag_on, mag_off, rw_on, rw_off,
+	steppers_on, steppers_off, clino_on, clino_off,
+	of_relay_15_on, of_relay_15_off, gps_timing_on, gps_timing_off,
+	if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
+	if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
+	if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
+	if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
+	if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
+	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve,
   xyzzy
 };
 

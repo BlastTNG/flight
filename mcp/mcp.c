@@ -290,11 +290,11 @@ void * lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(0, 0, 1, 1, 1, 1);
+    init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
-    // labjack_networking_init(7, 14, 1);
-    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    labjack_networking_init(7, 14, 1);
+    initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // labjack_networking_init(8, 14, 1);
@@ -338,7 +338,7 @@ static void mcp_200hz_routines(void)
     framing_publish_200hz();
     // store_data_200hz();
     add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe, &superframe_counter[RATE_200HZ]);
-    // cryo_200hz(1);
+    cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
 {
@@ -382,7 +382,6 @@ static void mcp_5hz_routines(void)
     StoreHWPRBus();
     SetGyroMask();
 //    ChargeController();
-//    ControlPower();
 //    VideoTx();
 //    cameraFields();
 
@@ -409,18 +408,17 @@ static void mcp_1hz_routines(void)
       }
     }
     share_superframe(master_superframe);
-
+    labjack_choose_execute();
     auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
-    // cryo_1hz(1);
+    cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
     outer_frame(1);
     // relays arg defines found in relay.h
-    relays(ALL_RELAYS);
+    relays(3);
     // highbay will be rewritten as all on or off when box is complete
-    // highbay(1);
+    highbay(1);
     // thermal_vac();
-    labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
     blast_store_disk_space();
@@ -586,6 +584,7 @@ int main(int argc, char *argv[])
 
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
+  linklist_assign_channel_list(channel_list);
 
   InitCommandData(); // This should happen before all other threads
 
@@ -611,7 +610,7 @@ int main(int argc, char *argv[])
 #endif
 
   // initialize superframe FIFO
-  define_superframe();
+  define_allframe();
   master_superframe = calloc(1, superframe_size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
     allocFifo(telem_fifo[i], 3, superframe_size);

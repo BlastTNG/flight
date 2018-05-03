@@ -43,7 +43,7 @@
 #include "pointing_struct.h"
 #include "angles.h"
 
-extern int16_t InCharge; 
+extern int16_t InCharge;
 
 bool scan_entered_snap_mode = false;
 bool scan_leaving_snap_mode = false;
