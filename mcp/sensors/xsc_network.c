@@ -155,14 +155,14 @@ void xsc_write_data(int which)
      * exposure_time (cs) + a commandable delay) to allow the camera to retrieve and stamp the new image.
      */
 
-    int post_trigger_counter_mcp_share_delay_cs =
-             CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs;
-    if (get_100hz_framenum() > (xsc_pointing_state[which].exposure_time_cs +
-            xsc_pointing_state[which].last_trigger_time + post_trigger_counter_mcp_share_delay_cs)) {
+    //int post_trigger_counter_mcp_share_delay_cs =
+    //         CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs;
+    //if (get_100hz_framenum() > (xsc_pointing_state[which].exposure_time_cs +
+    //        xsc_pointing_state[which].last_trigger_time + post_trigger_counter_mcp_share_delay_cs)) {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].counter_mcp;
-    } else {
-        xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
-    }
+    //} else {
+    //    xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
+    //}
     /**
      * note: everything that must be valid, and doesn't come from CommandData.XSC.net,
      * must be set here or it will be overwritten by CommandData.XSC.net
