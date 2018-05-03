@@ -66,7 +66,7 @@ extern "C" {
 
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
-unsigned int ll_rawfile_default_fpf = 900; // number of frames per file before incrementing linklist rawfiles
+unsigned int ll_rawfile_default_fpf = 10; // number of frames per file before incrementing linklist rawfiles
 
 const char * SF_TYPES_STR[] = {
   "UINT8", "UINT16", "UINT32", "UINT64", 
