@@ -69,7 +69,6 @@ void daemonize()
 
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
-
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  
