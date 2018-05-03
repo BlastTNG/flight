@@ -43,6 +43,7 @@
 #define TCPCONN_CLIENT_INIT 0x08
 #define TCPCONN_RESOLVE_NAME 0x10
 #define TCPCONN_FILE_RESET 0x20
+#define TCPCONN_NO_DATA 0x40
 
 #define TCP_PACKET_HEADER_SIZE 12
 #define CLIENT_TELEM_PORT 40204
@@ -71,15 +72,21 @@ void readTCPHeader(uint8_t *, uint32_t **, uint32_t **, uint16_t **, uint16_t **
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
 unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
+
 int request_server_list(struct TCPCONN * , char [][64]);
 int request_server_archive_list(struct TCPCONN * , char [][64]);
-int retrieve_data(struct TCPCONN * , uint64_t , unsigned int , uint8_t *, uint8_t *);
+
+int retrieve_data(struct TCPCONN * , uint8_t *, unsigned int);
+int request_data(struct TCPCONN *, unsigned int, uint16_t *);
+
 void set_server_linklist_name(struct TCPCONN * , char *);
 void request_server_linklist_name(struct TCPCONN * , char *, unsigned int, unsigned int);
 uint32_t request_server_file(struct TCPCONN * , char * , unsigned int );
 int send_client_file(struct TCPCONN * , char * , uint32_t );
+
 void send_client_error(struct TCPCONN *);
 void linklist_server(void *);
+
 void user_file_select(linklist_tcpconn_t *, char *);
 uint32_t sync_with_server(struct TCPCONN *, char *, unsigned int, superframe_t **, linklist_t **);
 

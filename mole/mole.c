@@ -87,17 +87,14 @@ int main(int argc, char *argv[]) {
   uint32_t req_serial = 0;
   unsigned int req_framenum = 0;
   unsigned int req_init_framenum = 0;
-  int req_blksize = 0;
 
   // received data variables
   uint8_t * recv_buffer = NULL;
   uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
   unsigned int recv_size = 0;
-  uint32_t * recv_serial = NULL;
-  uint32_t * recv_framenum = NULL;
-  uint16_t * recv_i = NULL;
-  uint16_t * recv_n = NULL;
+  uint32_t recv_framenum = 0;
+  uint16_t recv_flags = TCPCONN_FILE_RESET;
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -132,57 +129,80 @@ int main(int argc, char *argv[]) {
     char filename[128] = {0};
     user_file_select(&tcpconn, linklistname);
 
-    req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
-    req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
-    req_blksize = linklist->blk_size;
-    if (linklist->flags & LL_INCLUDE_ALLFRAME) req_blksize += superframe->allframe_size;    
-
-    printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
-
-    // open linklist rawfile and dirfile
-    sprintf(filename, "%s/%s", mole_dir, linklistname);
-    ll_dirfile = open_linklist_dirfile(filename, linklist);
-    unlink(symdir_name);
-    symlink(filename, symdir_name);  
-
-    sprintf(filename, "%s/%s", archive_dir, linklistname);
-    ll_rawfile = open_linklist_rawfile(filename, linklist);
-    create_rawfile_symlinks(ll_rawfile, symraw_name);
-
-    // set the first framenum request
-    req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-    req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
-
     while (1) {
-      if (buffer_size < req_blksize) {
-        buffer_size = req_blksize;
+      // send data request a rawfile has been opened 
+      if (ll_rawfile) {
+        recv_flags = 0;
+        recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
+      }
+
+      // the file on the server has switched, so resync 
+      if (recv_flags & TCPCONN_FILE_RESET) {
+        // sync with the server and get the initial framenum
+				req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
+				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
+
+				printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
+
+				// open linklist dirfile
+				sprintf(filename, "%s/%s", mole_dir, linklistname);
+				ll_dirfile = open_linklist_dirfile(filename, linklist);
+				unlink(symdir_name);
+				symlink(filename, symdir_name);  
+
+        // open the linklist rawfile
+				sprintf(filename, "%s/%s", archive_dir, linklistname);
+				ll_rawfile = open_linklist_rawfile(filename, linklist);
+				create_rawfile_symlinks(ll_rawfile, symraw_name);
+
+				// set the first framenum request
+				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
+        printf("tell %d\n", tell_linklist_rawfile(ll_rawfile));
+				req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+        rewind = UINT32_MAX; // all future rewinds are to the beginning of the file
+
+        continue; 
+      }
+
+      // there is no data on the server
+      if (recv_flags & TCPCONN_NO_DATA) {
+        usleep(50000);
+        continue;
+      } 
+
+      /* all flags are cleared at this point */
+
+      // check size of the buffer and enlarge if necessary
+      if (buffer_size < ll_rawfile->framesize) {
+        buffer_size = ll_rawfile->framesize;
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
-      recv_size = retrieve_data(&tcpconn, req_framenum, req_blksize, recv_buffer, recv_header);
-      readTCPHeader(recv_header, &recv_serial, &recv_framenum, &recv_i, &recv_n);    
+  
+      // get the data from the server
+			recv_size = retrieve_data(&tcpconn, recv_buffer, buffer_size);
 
-      // write the dirfile
-      seek_linklist_dirfile(ll_dirfile, *recv_framenum);
-      write_linklist_dirfile(ll_dirfile, recv_buffer);
+			// write the dirfile
+			seek_linklist_dirfile(ll_dirfile, recv_framenum);
+			write_linklist_dirfile(ll_dirfile, recv_buffer);
 
-      // write the rawfile
-      seek_linklist_rawfile(ll_rawfile, *recv_framenum);
-      write_linklist_rawfile(ll_rawfile, recv_buffer);
+			// write the rawfile
+			seek_linklist_rawfile(ll_rawfile, recv_framenum);
+			write_linklist_rawfile(ll_rawfile, recv_buffer);
 
-      printf("Received frame %d (size %d)\n", req_framenum, recv_size);
+			printf("Received frame %d (size %d)\n", req_framenum, recv_size);
   
 /* 
-      int i;
-      for (i = 0; i < recv_size; i++) {
-        if (i % 32 == 0) printf("\n%.4d: ", i/32);
-        printf("0x%.2x ", recv_buffer[i]);
-      }
-      printf("\n");
+			int i;
+			for (i = 0; i < recv_size; i++) {
+				if (i % 32 == 0) printf("\n%.4d: ", i/32);
+				printf("0x%.2x ", recv_buffer[i]);
+			}
+			printf("\n");
 */
 
-      memset(recv_buffer, 0, buffer_size);
-      memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
-      req_framenum++;
+			memset(recv_buffer, 0, buffer_size);
+			memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
+			req_framenum++;
     }
   }
 

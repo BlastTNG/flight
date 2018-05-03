@@ -973,8 +973,6 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
       return 0;
     }
 
-    printf("%d/%d: %s\n", *recv_i, *recv_n, name[*recv_i]);
-
     if (((*recv_i)+1) >= *recv_n) break;
 
   }
@@ -1028,13 +1026,18 @@ int request_server_list(struct TCPCONN * tc, char name[][64]) {
   return *recv_n;
 }
 
-// retrieves data from the server and writes it to the specified buffer of size bufsize
+
+// requests data from the server
 // data is requested based on serial number and framenumber
-// returns the number of retrieved bytes, including header info
-int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_t * buffer, uint8_t * header)
-{
+// returns the framenumber to be retrieved 
+int request_data(struct TCPCONN *tc, unsigned int fn, uint16_t * flags) {
   uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};  
   int rsize = 0;
+
+  uint32_t * recv_serial = NULL;
+  uint32_t * recv_framenum = NULL;
+  uint16_t * recv_i = NULL;
+  uint16_t * recv_n = NULL;
 
   // request the next frame
   writeTCPHeader(request_msg, tc->serial, fn, 0, 0);
@@ -1044,10 +1047,24 @@ int retrieve_data(struct TCPCONN * tc, uint64_t fn, unsigned int bufsize, uint8_
   }
 
   // receive header for the next frame
-  if ((rsize = recv(tc->fd, header, TCP_PACKET_HEADER_SIZE, MSG_WAITALL)) <= 0) {
+  if ((rsize = recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL)) <= 0) {
     linklist_err("Server connection lost on recv.\n");
     return -1; // connection error
   }
+  readTCPHeader(request_msg, &recv_serial, &recv_framenum, &recv_i, &recv_n); 
+  
+  // set the flags 
+  *flags = *recv_i;
+
+  return *recv_framenum;
+}
+
+// retrieves data from the server and writes it to the specified buffer of size bufsize
+// data is requested based on serial number and framenumber
+// returns the number of retrieved bytes
+int retrieve_data(struct TCPCONN * tc, uint8_t * buffer, unsigned int bufsize)
+{
+  int rsize = 0;
 
   // receive the next frame
   if ((rsize = recv(tc->fd, buffer, bufsize, MSG_WAITALL)) <= 0) {
