@@ -209,6 +209,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     return 0;
   }
   linklist_info("Parsed superframe format \"%s\"\n", pathname);
+  unlink(pathname);
 
   // parse the linklist format
   sprintf(pathname,"%s/%s", archive_dir, reqllname);
@@ -217,6 +218,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     return 0;
   }
   linklist_info("Parsed linklist format \"%s\"\n", pathname);
+  unlink(pathname);
 
   // set the name assigned by the server
   set_server_linklist_name(tc, linklistname);
