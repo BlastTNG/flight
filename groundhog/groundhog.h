@@ -1,7 +1,7 @@
 #ifndef INCLUDE_GROUNDHOG_H
 #define INCLUDE_GROUNDHOG_H
 
-#define FILE_SAVE_DIR "/data/groundhog"
+#define GROUNDHOG_MAX_FRAMES_RESET 900
 
 #include "groundhog_framing.h"
 
@@ -22,6 +22,8 @@ void biphase_publish(void *arg);
 
 void highrate_receive(void *arg);
 void highrate_publish(void *arg);
+
+void make_linklist_rawfile_name(linklist_t *, char *);
 
 extern char datestring[80];
 

@@ -17,6 +17,8 @@
 
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "linklist_writer.h"
+#include "linklist_connect.h"
 #include "blast.h"
 #include "groundhog_framing.h"
 #include "channels_tng.h"
@@ -26,7 +28,6 @@
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
-char datestring[80] = {0};
 int system_idled = 0;
 sigset_t signals;
 
@@ -66,16 +67,12 @@ void daemonize()
     setsid();
 }
 
-
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
-  linklist_assign_channel_list(channel_list);
-  define_allframe();
-
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
-  load_all_linklists(DEFAULT_LINKLIST_DIR, ll_list);
+  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  
-  linklist_to_file(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
+  write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
   int pilot_on = 1;
   int bi0_on = 1;
@@ -103,10 +100,6 @@ int main(int argc, char * argv[]) {
   // initialize framing
   framing_init();
 
-  // get the date string for file saving
-  time_t now = time(0);
-  struct tm * tm_t = localtime(&now);
-  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // setup pilot receive udp struct
   struct UDPSetup pilot_setup = {"Pilot", 
@@ -131,6 +124,9 @@ int main(int argc, char * argv[]) {
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
 
+  // Serving up data received via telemetry
+  pthread_t server_thread;
+
   // publishing thread; handles all telemetry publishing to mosquitto
   pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
@@ -146,6 +142,9 @@ int main(int argc, char * argv[]) {
   if (highrate_on) {
     pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
   }
+
+  // start the server thread for mole clients
+  pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
   // The Joining
   pthread_join(groundhog_publish_worker, NULL);

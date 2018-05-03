@@ -32,6 +32,7 @@
 
 #include "channel_macros.h"
 #include "lookup.h"
+#include "linklist.h"
 
 #define FIELD_LEN 32
 #define UNITS_LEN 48
@@ -105,18 +106,12 @@ typedef struct {
 } frame_header_t;
 #pragma pack(pop)
 
-struct superframe_attributes {
-  uint32_t start;
-  uint32_t skip;
-  channel_t * chan;
-};
-
 extern void *channel_data[RATE_END];
 extern size_t frame_size[RATE_END];
 extern channel_t channel_list[];
 extern derived_tng_t derived_list[];
 extern int channels_count;
-extern uint32_t superframe_size;
+extern superframe_t * superframe;
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
@@ -125,13 +120,12 @@ int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
 size_t channel_size(channel_t *);
-unsigned int get_channel_spf(const channel_t *);
+unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
+unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
 unsigned int get_spf(unsigned int);
-uint32_t get_channel_start_in_superframe(const channel_t *);
-uint32_t get_channel_skip_in_superframe(const channel_t *);
-uint32_t get_superframe_offset(E_RATE);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list);
 
 #endif /* CHANNELS_V2_H_ */

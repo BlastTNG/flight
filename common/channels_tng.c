@@ -51,19 +51,26 @@
 #include "PMurHash.h"
 #include "channels_tng.h"
 #include "derived.h"
+#include "linklist.h"
 
 static GHashTable *frame_table = NULL;
 static int channel_count[RATE_END][TYPE_END] = {{0}};
 int channels_count = 0;
 
-static GHashTable *superframe_table = NULL;
-struct superframe_attributes * superframe_attr = NULL;
-uint32_t superframe_offset[RATE_END] = {0};
-uint32_t superframe_size = 0;
-
 void *channel_data[RATE_END] = {0};
 size_t frame_size[RATE_END] = {0};
 static void *channel_ptr[RATE_END] = {0};
+
+// conversion from channel type to superframe type
+uint8_t superframe_type_array[TYPE_END+1] = {
+  SF_UINT8, SF_UINT16, SF_UINT32, SF_UINT64,
+  SF_INT8, SF_INT16, SF_INT32, SF_INT64,
+  SF_FLOAT32, SF_FLOAT64, SF_NUM
+};
+double channel_data_to_double(uint8_t * data, uint8_t type);
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
+unsigned int superframe_offset[RATE_END] = {0};
+superframe_t * superframe = NULL;
 
 size_t channel_size(channel_t *m_channel)
 {
@@ -92,68 +99,25 @@ size_t channel_size(channel_t *m_channel)
     }
     return retsize;
 }
-
 unsigned int get_spf(unsigned int rate)
 {
-  switch (rate) {
-    case RATE_1HZ:
-      return 1;
-    case RATE_5HZ:
-      return 5;
-    case RATE_100HZ:
-      return 100;
-    case RATE_200HZ:
-      return 200;
-    case RATE_244HZ:
-      return 244;
-    case RATE_488HZ:
-      return 488;
-    default:
-      blast_err("Invalid rate %d", rate);
-      return 0;
-  }
-}
-
-unsigned int get_channel_spf(const channel_t * chan)
-{
-    if (!chan) blast_fatal("%s is NULL! Fix!", chan->field);
-    return get_spf(chan->rate);
-}
-
-uint32_t get_channel_start_in_superframe(const channel_t * chan)
-{
-    if (!chan) {
-        blast_err("Null channel");
-        return 0;
+    switch (rate) {
+        case RATE_1HZ:
+            return 1;
+        case RATE_5HZ:
+            return 5;
+        case RATE_100HZ:
+            return 100;
+        case RATE_200HZ:
+            return 200;
+        case RATE_244HZ:
+            return 244;
+        case RATE_488HZ:
+            return 488;
+        default:
+            blast_err("Invalid rate %d", rate);
+            return 0;
     }
-
-    struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
-
-    if (!retval) {
-        blast_err("Could not find %s!\n", chan->field);
-        return 0;
-    }
-    return retval->start;
-}
-
-uint32_t get_channel_skip_in_superframe(const channel_t * chan)
-{
-    if (!chan) {
-        blast_err("Null channel");
-        return 0;
-    }
-
-    struct superframe_attributes *retval = g_hash_table_lookup(superframe_table, chan->field);
-
-    if (!retval) {
-        blast_err("Could not find %s!\n", chan->field);
-        return 0;
-    }
-    return retval->skip;
-}
-
-uint32_t get_superframe_offset(E_RATE m_rate) {
-    return superframe_offset[m_rate];
 }
 
 static guint channel_hash(gconstpointer m_data)
@@ -408,14 +372,6 @@ int channels_initialize(const channel_t * const m_channel_list)
 
     if (frame_table == NULL) return -1;
 
-    if (superframe_table) g_hash_table_destroy(superframe_table);
-    superframe_table = g_hash_table_new(channel_hash, g_str_equal);
-
-    if (superframe_table == NULL) return -1;
-
-    if (superframe_attr) free(superframe_attr);
-    superframe_attr = NULL;
-
     for (int j = 0; j < RATE_END; j++) {
         for (int k = 0; k < TYPE_END; k++) {
           channel_count[j][k] = 0;
@@ -441,14 +397,12 @@ int channels_initialize(const channel_t * const m_channel_list)
         }
         channels_count++;
     }
-    superframe_attr = calloc(channels_count, sizeof(struct superframe_attributes));
 
     /**
      * Second Pass: Allocate a set of packed arrays representing the data frames for each source/rate.
      * We also set channel_ptr, our placeholder for the next free element in the array, to the first entry in each frame.
      */
 
-    superframe_size = 0;
     for (int rate = 0; rate < RATE_END; rate++) {
         frame_size[rate] = (channel_count[rate][TYPE_INT8]+channel_count[rate][TYPE_UINT8]) +
                        2 * (channel_count[rate][TYPE_INT16]+channel_count[rate][TYPE_UINT16]) +
@@ -456,8 +410,6 @@ int channels_initialize(const channel_t * const m_channel_list)
                             channel_count[rate][TYPE_FLOAT]) +
                        8 * (channel_count[rate][TYPE_INT64]+channel_count[rate][TYPE_UINT64] +
                             channel_count[rate][TYPE_DOUBLE]);
-        superframe_offset[rate] = superframe_size;
-        superframe_size += frame_size[rate]*get_spf(rate);
 
         if (frame_size[rate]) {
             /**
@@ -485,18 +437,154 @@ int channels_initialize(const channel_t * const m_channel_list)
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
 
-    int i = 0;
-    for (channel = m_channel_list; channel->field[0]; channel++) {
-        superframe_attr[i].start =  (int64_t) (channel->var-channel_data[channel->rate])+
-                                      superframe_offset[channel->rate];
-        superframe_attr[i].skip = frame_size[channel->rate];
-        superframe_attr[i].chan = (channel_t *) channel;
-
-        g_hash_table_insert(superframe_table, (gpointer)channel->field, (gpointer)&superframe_attr[i]);
-        i++;
-    }
+    // generate superframe
+    superframe = channels_generate_superframe(m_channel_list);
 
     blast_startup("Successfully initialized Channels data structures");
     return 0;
+}
+
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
+    superframe_entry_t * sf = calloc(channels_count+1, sizeof(superframe_entry_t));
+
+    unsigned int sf_size = 0;
+
+    int rate = 0;
+    for (rate = 0; rate < RATE_END; rate++) {
+      superframe_offset[rate] = sf_size;
+      sf_size += frame_size[rate]*get_spf(rate);
+    }
+
+    int i = 0;
+    const channel_t *channel;
+    for (channel = m_channel_list; channel->field[0]; channel++) {
+       strncpy(sf[i].field, channel->field, FIELD_LEN-1);
+       sf[i].type = superframe_type_array[channel->type];
+       sf[i].spf = get_spf(channel->rate);
+       sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
+       sf[i].skip = frame_size[channel->rate];
+       if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
+       if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
+       sf[i].var = channel->var;
+
+       i++;
+    }
+
+    // null terminate
+    sf[i].field[0] = '\0';
+
+    printf("Finished generating superframe entries\n");
+
+    return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
+}
+
+/**
+ * add_frame_to_superframe
+ * 
+ * Takes a BLAST frame at a given rate and copies it to the superframe.
+ * -> frame: BLAST frame to be copied to the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
+{
+  if (!superframe) {
+    blast_err("Superframe is not allocated. Fix!");
+    return 0;
+  }
+  if (!frame) {
+    blast_err("Frame pointer is NULL. Fix!");
+    return 0;
+  }
+
+  // clear the frame if wrapping has occurred (ensures no split data)
+  if (*frame_location == 0) {
+    memset(superframe+superframe_offset[rate], 0, frame_size[rate]*get_spf(rate));
+  }
+
+  // copy the frame to the superframe
+  memcpy(superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame, frame_size[rate]);
+
+  // update the frame location
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
+
+  // return the next frame location in the superframe
+  return *frame_location;
+}
+
+/**
+ * extract_frame_from_superframe
+ * 
+ * Extracts a BLAST frame at a given rate from superframe and copies it to a given buffer.
+ * -> frame: BLAST frame to be copied from the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
+{
+  if (!superframe) {
+    blast_err("Superframe is not allocated. Fix!");
+    return 0;
+  }
+  if (!frame) {
+    blast_err("Frame pointer is NULL. Fix!");
+    return 0;
+  }
+
+  // copy the frame from the superframe
+  memcpy(frame, superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame_size[rate]);
+
+  // update the frame location
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
+
+  // return the next frame location in the superframe
+  return *frame_location;
+}
+
+double channel_data_to_double(uint8_t * data, uint8_t type)
+{
+  switch (type) {
+    case SF_FLOAT64 : return bedtoh(*((double *) data));
+    case SF_FLOAT32 : return beftoh(*((float *) data));
+    case SF_INT16 : return (int16_t) be16toh(*((int16_t *) data));
+    case SF_UINT16 : return be16toh(*((uint16_t *) data));
+    case SF_INT32 : return (int32_t) be32toh(*((int32_t *) data));
+    case SF_UINT32 : return be32toh(*((uint32_t *) data));
+    case SF_INT8 : return *((int8_t *) data);
+    case SF_UINT8 : return *((uint8_t *) data);
+    default : return 0;
+  }
+  return 0;
+}
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type)
+{
+  if (type == SF_FLOAT64) {
+    htobed(dub, *(uint64_t*) data);
+    return 8;
+  } else if (type == SF_FLOAT32) {
+    htobef(dub, *(uint32_t*) data)
+    return 4;
+  } else if (type == SF_INT16) {
+    int16_t s = dub;
+    *(int16_t*) data = htobe16(s);
+    return 2;
+  } else if (type == SF_UINT16) {
+    uint16_t u = dub;
+    *(uint16_t*) data = htobe16(u);
+    return 2;
+  } else if (type == SF_INT32) {
+    int32_t i = dub;
+    *(int32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_UINT32) {
+    uint32_t i = dub;
+    *(uint32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_INT8) {
+    *(int8_t*) data = dub;
+    return 1;
+  } else if (type == SF_UINT8) {
+    *(uint8_t*) data = dub;
+    return 1;
+  }
+  return 0;
 }
 

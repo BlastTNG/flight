@@ -117,7 +117,7 @@ struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
-uint8_t * master_superframe = NULL;
+uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
 #define MPRINT_BUFFER_SIZE 1024
@@ -315,7 +315,8 @@ static void mcp_488hz_routines(void)
 
     share_data(RATE_488HZ);
     framing_publish_488hz();
-    add_frame_to_superframe(channel_data[RATE_488HZ], RATE_488HZ, master_superframe, &superframe_counter[RATE_488HZ]);
+    add_frame_to_superframe(channel_data[RATE_488HZ], RATE_488HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_488HZ]);
 }
 
 static void mcp_244hz_routines(void)
@@ -324,7 +325,8 @@ static void mcp_244hz_routines(void)
 
     share_data(RATE_244HZ);
     framing_publish_244hz();
-    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, master_superframe, &superframe_counter[RATE_244HZ]);
+    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_244HZ]);
 }
 
 static void mcp_200hz_routines(void)
@@ -338,7 +340,8 @@ static void mcp_200hz_routines(void)
     share_data(RATE_200HZ);
     framing_publish_200hz();
     // store_data_200hz();
-    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe, &superframe_counter[RATE_200HZ]);
+    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_200HZ]);
     cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
@@ -358,7 +361,8 @@ static void mcp_100hz_routines(void)
     share_data(RATE_100HZ);
     framing_publish_100hz();
     // store_data_100hz();
-    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe, &superframe_counter[RATE_100HZ]);
+    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_100HZ]);
 }
 static void mcp_5hz_routines(void)
 {
@@ -388,7 +392,8 @@ static void mcp_5hz_routines(void)
 
     share_data(RATE_5HZ);
     framing_publish_5hz();
-    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe, &superframe_counter[RATE_5HZ]);
+    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_5HZ]);
 //    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
@@ -404,11 +409,11 @@ static void mcp_1hz_routines(void)
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
     if (ready) {
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
-         memcpy(getFifoWrite(telem_fifo[i]), master_superframe, superframe_size);
+         memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
          incrementFifo(telem_fifo[i]);
       }
     }
-    share_superframe(master_superframe);
+    share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
@@ -429,7 +434,8 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe, &superframe_counter[RATE_1HZ]);
+    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_1HZ]);
 //    store_data_1hz();
 }
 
@@ -585,7 +591,6 @@ int main(int argc, char *argv[])
 
   // populate nios addresses, based off of tx_struct, derived
   channels_initialize(channel_list);
-  linklist_assign_channel_list(channel_list);
 
   InitCommandData(); // This should happen before all other threads
 
@@ -611,14 +616,13 @@ int main(int argc, char *argv[])
 #endif
 
   // initialize superframe FIFO
-  define_allframe();
-  master_superframe = calloc(1, superframe_size);
+  master_superframe_buffer = calloc(1, superframe->size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
-    allocFifo(telem_fifo[i], 3, superframe_size);
+    allocFifo(telem_fifo[i], 3, superframe->size);
   }
 
   // load all the linklists
-  load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
+  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, linklist_array, 0);
   linklist_generate_lookup(linklist_array);
 
   // load the latest linklist into telemetry
