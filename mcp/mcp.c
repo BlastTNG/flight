@@ -65,6 +65,7 @@
 #include "actuators.h"
 #include "bias_tone.h"
 #include "balance.h"
+#include "cryovalves.h"
 #include "blast.h"
 // #include "blast_comms.h"
 #include "blast_time.h"
