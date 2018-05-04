@@ -136,7 +136,7 @@ void monitor_flow(int on) {
 
 
 void highbay(int on) {
-    if (on && state[7].initialized) {
+    if (on && state[7].connected) {
         aalborg_n2();
         aalborg_he_pot_hi();
         aalborg_he_blow();
@@ -313,7 +313,7 @@ void mapper_command(int mux1, int mux2, int polarity, float voltage) {
     if (mux1 == mux2) {
         blast_info("Error can't send current in and out on same line");
     } else {
-    if (state[8].initialized == 1) {
+    if (state[8].connected == 1) {
         choose_volts(polarity, voltage);
         setup_write();
         write_to_mux(mux1);
