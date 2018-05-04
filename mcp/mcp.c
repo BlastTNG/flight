@@ -291,7 +291,7 @@ void * lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(1, 1, 1, 1, 1, 1);
+    init_labjacks(0, 0, 1, 1, 1, 1);
     // mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
     labjack_networking_init(7, 14, 1);
