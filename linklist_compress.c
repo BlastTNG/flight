@@ -830,6 +830,8 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     type = '0';
   }
 
+  offset = 0;
+  gain = 1;
 /* TODO MAXMIN
   if ((le->tlm->max != 0) || (le->tlm->min != 0))
   {
@@ -837,8 +839,6 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     gain = (le->tlm->max-le->tlm->min)/((double) UINT16_MAX);
   }  
 */
-  offset = 0;
-  gain = 1;
 
   for (i=0;i<outputnum;i++)
   {

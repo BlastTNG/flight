@@ -4,12 +4,17 @@
 #include <inttypes.h>
 #include "linklist.h"
 
+struct linklist_dirfile_meta {
+  char * text;
+}
+
 struct linklist_dirfile {
   char filename[80];
   unsigned int framenum;
   linklist_t * ll;
   uint8_t * map;
   FILE ** bin;
+  struct linklist_dirfile_meta * meta;
 };
 
 struct linklist_rawfile {
@@ -24,6 +29,7 @@ struct linklist_rawfile {
 
 typedef struct linklist_dirfile linklist_dirfile_t;
 typedef struct linklist_rawfile linklist_rawfile_t;
+typedef struct linklist_dirfile_meta linklist_dirfile_meta_t;
 
 int seek_linklist_dirfile(linklist_dirfile_t *, unsigned int);
 linklist_dirfile_t * open_linklist_dirfile(char *, linklist_t *);
