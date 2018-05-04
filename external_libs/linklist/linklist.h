@@ -188,6 +188,7 @@ uint32_t get_superframe_entry_size(superframe_entry_t *);
 const char * get_sf_type_string(uint8_t);
 uint8_t get_sf_type_int(char *);
 int read_linklist_formatfile_comment(char *, char *);
+int superframe_entry_get_index(superframe_entry_t *, superframe_entry_t *);
 
 int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);

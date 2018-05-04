@@ -8,6 +8,7 @@ struct linklist_dirfile {
   char filename[80];
   unsigned int framenum;
   linklist_t * ll;
+  uint8_t * map;
   FILE ** bin;
 };
 

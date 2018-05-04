@@ -157,7 +157,6 @@ int main(int argc, char *argv[]) {
 
 				// set the first framenum request
 				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-        printf("tell %d\n", tell_linklist_rawfile(ll_rawfile));
 				req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
         rewind = UINT32_MAX; // all future rewinds are to the beginning of the file
 
