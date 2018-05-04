@@ -468,20 +468,26 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 
 static int initialized(void) {
     if (state[0].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[1].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[2].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[3].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[4].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     } else {
+        // blast_info("no labjack was seen");
         return 0;
     }
 }
