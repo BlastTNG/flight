@@ -428,7 +428,6 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
-    blast_info("%d", state[6].connected);
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
