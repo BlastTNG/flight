@@ -262,6 +262,9 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   ll_dirfile->ll = ll;
   ll_dirfile->framenum = 0;
 
+  // create a map for superframe entries
+  ll_dirfile->map = calloc(ll->superframe->n_entries, sizeof(uint8_t));
+
   // make the dir for the dirfile
 	if (mkdir(dirname, 00755) < 0) {
 		printf("%s directory exists\n", dirname);
@@ -282,62 +285,63 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   fprintf(formatfile, "/ENCODING none\n");
 
   // generate binary files
-  int i, j, k;
+  int i, j;
   char binname[80] = {0};
   linkentry_t * tlm_le = NULL; 
+  int tlm_index = 0;
+  superframe_entry_t * sfe = ll->superframe->entries;
 
-  ll_dirfile->bin = (FILE **) calloc(ll->n_entries, sizeof(FILE *));
+  // map out all the linklist entries within the superframe
   for (i = 0; i < ll->n_entries; i++) {
     tlm_le = &(ll->items[i]);
-    if (tlm_le->tlm) {
-      if (tlm_le->tlm == &block_entry) {
-      } else {
-        for (k = 0; k < i; k++) {
-          if (ll->items[k].tlm && (tlm_le->tlm == ll->items[k].tlm)) break;
-        }
-        // comment out repeated entry 
-        if (k != i) fprintf(formatfile, "# ");
+    if ((tlm_le->tlm) && (tlm_le->tlm != &block_entry)) {
+			if ((tlm_index = superframe_entry_get_index(tlm_le->tlm, sfe)) == -1) {
+				linklist_err("Could not get superframe index for \"%s\"\n", tlm_le->tlm->field);
+				continue;
+			}
+      ll_dirfile->map[tlm_index] = 1; 
+    }
+  }
 
-        // add entry to format file
-        fprintf(formatfile,"%s RAW %s %d\n", tlm_le->tlm->field, 
-                                             get_sf_type_string(tlm_le->tlm->type), 
-                                             tlm_le->tlm->spf);
+  // add all of the items from the superframe
+  // those in the linklist are at the full rate
+  // those not in the linklist are at 1 spf
+  ll_dirfile->bin = (FILE **) calloc(ll->superframe->n_entries, sizeof(FILE *));
 
-        // comment out repeated entry 
-        if (k != i) fprintf(formatfile, "# ");
-        if (strlen(tlm_le->tlm->quantity) > 0)
-        {
-          fprintf(formatfile,"%s/quantity STRING \"", tlm_le->tlm->field);
-          for (j = 0; j < strlen(tlm_le->tlm->quantity); j++)
-          {
-            if (tlm_le->tlm->quantity[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
-            fprintf(formatfile, "%c", tlm_le->tlm->quantity[j]);
-          }
-          fprintf(formatfile,"\"\n");
-        }
+  for (i = 0; i < ll->superframe->n_entries; i++) {
+		// add entry to format file
+		fprintf(formatfile,"%s RAW %s %d\n", sfe[i].field, 
+																				 get_sf_type_string(sfe[i].type), 
+																				 (ll_dirfile->map[i]) ? sfe[i].spf : 1);
 
-        // comment out repeated entry 
-        if (k != i) fprintf(formatfile, "# ");
+		if (strlen(sfe[i].quantity) > 0)
+		{
+			fprintf(formatfile,"%s/quantity STRING \"", sfe[i].field);
+			for (j = 0; j < strlen(sfe[i].quantity); j++)
+			{
+				if (sfe[i].quantity[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
+				fprintf(formatfile, "%c", sfe[i].quantity[j]);
+			}
+			fprintf(formatfile,"\"\n");
+		}
 
-        if (strlen(tlm_le->tlm->units) > 0)
-        {
-          fprintf(formatfile,"%s/units STRING \"", tlm_le->tlm->field);
-          for (j = 0; j < strlen(tlm_le->tlm->units); j++)
-          {
-            if (tlm_le->tlm->units[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
-            fprintf(formatfile, "%c", tlm_le->tlm->units[j]);
-          }
-          fprintf(formatfile,"\"\n");
-        }
+		// comment out repeated entry 
+		if (strlen(sfe[i].units) > 0)
+		{
+			fprintf(formatfile,"%s/units STRING \"", sfe[i].field);
+			for (j = 0; j < strlen(sfe[i].units); j++)
+			{
+				if (sfe[i].units[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
+				fprintf(formatfile, "%c", sfe[i].units[j]);
+			}
+			fprintf(formatfile,"\"\n");
+		}
 
-        fflush(formatfile);
+		fflush(formatfile);
 
-        // open the file if not already opened
-        sprintf(binname, "%s/%s", ll_dirfile->filename, tlm_le->tlm->field);
-        ll_dirfile->bin[i] = fpreopenb(binname);  
-
-      } 
-    } 
+		// open the file if not already opened
+		sprintf(binname, "%s/%s", ll_dirfile->filename, sfe[i].field);
+		ll_dirfile->bin[i] = fpreopenb(binname);  
   }
   fclose(formatfile);
 
@@ -346,11 +350,11 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
 
 void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   int i;
-  for (i = 0; i < ll_dirfile->ll->n_entries; i++) {
+  for (i = 0; i < ll_dirfile->ll->superframe->n_entries; i++) {
     if (ll_dirfile->bin[i]) fclose(ll_dirfile->bin[i]);
   }
-
   free(ll_dirfile->bin);
+  free(ll_dirfile->map);
   free(ll_dirfile);
 }
 
@@ -381,7 +385,7 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer)
   double ret_val = decompress_linklist(superframe_buf, ll, buffer);
 
   // write the data to the dirfile
-  linkentry_t * tlm_le = NULL;
+  superframe_entry_t * sfe = ll->superframe->entries;
   unsigned int dir_loc = 0;
   unsigned int tlm_out_start = 0;
   unsigned int tlm_out_size = 0;
@@ -390,26 +394,25 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer)
 
   int i = 0;
   int j = 0;
-  for (i = 0; i < ll->n_entries; i++) {
-    tlm_le = &(ll->items[i]);
-    if (tlm_le->tlm) {
-      if (tlm_le->tlm == &block_entry) {
-      } else if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
-        tlm_out_start = tlm_le->tlm->start;
-        tlm_out_skip = tlm_le->tlm->skip;
-        tlm_out_size = get_superframe_entry_size(tlm_le->tlm);
-        tlm_out_spf = tlm_le->tlm->spf;
+  for (i = 0; i < ll->superframe->n_entries; i++) {
+		if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
+			tlm_out_start = sfe[i].start;
+			tlm_out_skip = sfe[i].skip;
+			tlm_out_size = get_superframe_entry_size(&sfe[i]);
 
-        dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
-        fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
+      // entries in the linklist get the full rate
+      // entries not in the linklist get 1 spf
+			tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
 
-        for (j = 0; j < tlm_out_spf; j++) {
-          fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
-          tlm_out_start += tlm_out_skip;
-        }
-        fflush(ll_dirfile->bin[i]);
-      }
-    }
+			dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
+			fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
+
+			for (j = 0; j < tlm_out_spf; j++) {
+				fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
+				tlm_out_start += tlm_out_skip;
+			}
+			fflush(ll_dirfile->bin[i]);
+		}
   }  
   memset(superframe_buf, 0, ll->superframe->size);
   ll_dirfile->framenum++;

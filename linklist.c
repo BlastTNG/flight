@@ -325,6 +325,13 @@ int set_checksum_field(linkentry_t * le, unsigned int byteloc)
   return blk_size;
 }
 
+int superframe_entry_get_index(superframe_entry_t * sfi, superframe_entry_t * sf) {
+  long unsigned int item = (long unsigned int) sfi;
+  long unsigned int base = (long unsigned int) sf;
+  if (item < base) return -1;
+  return (item-base)/sizeof(superframe_entry_t);
+}
+
 void update_linklist_hash(MD5_CTX *mdContext, linkentry_t * le)
 {
 	MD5_Update(mdContext, &le->start, sizeof(le->start));
