@@ -66,7 +66,7 @@ void udp_receive(void *arg) {
     } while (true);
 
     if (serial != prev_serial) {
-      groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
+      ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
     }
     prev_serial = serial;
 
