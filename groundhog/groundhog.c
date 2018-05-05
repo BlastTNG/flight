@@ -22,6 +22,7 @@
 #include "blast.h"
 #include "groundhog_framing.h"
 #include "channels_tng.h"
+#include "derived.h"
 #include "groundhog.h"
 #include "pilot.h"
 #include "bi0.h"
