@@ -404,6 +404,9 @@ double write_linklist_dirfile(linklist_dirfile_t * ll_dirfile, uint8_t * buffer)
   }
 
   // unpack the linklist
+  if (ll->flags & LL_INCLUDE_ALLFRAME) {
+    read_allframe(superframe_buf, ll->superframe, buffer+ll->blk_size);
+  }
   double ret_val = decompress_linklist(superframe_buf, ll, buffer);
 
   // write the data to the dirfile
