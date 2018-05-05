@@ -43,6 +43,7 @@ void udp_receive(void *arg) {
   uint32_t transmit_size = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
+  uint8_t *local_allframe = calloc(1, superframe->allframe_size);
   struct Fifo *local_fifo = &downlink[id].fifo; 
 
   // open a file to save all the raw linklist data
@@ -91,12 +92,14 @@ void udp_receive(void *arg) {
     // decompress the linklist
     if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
       blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+      memcpy(local_allframe, compbuffer, superframe->allframe_size);
     } else {
       blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
       // write the linklist data to disk
       if (ll_rawfile) {
+        memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
         write_linklist_rawfile(ll_rawfile, compbuffer);
       }
 
