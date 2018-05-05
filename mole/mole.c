@@ -71,6 +71,19 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
+void print_display(char * text, unsigned int recv_framenum) {
+	char arrow[13] = "------------";
+	char spin[] = "/-\\|";
+  static unsigned int s = 0;
+	arrow[recv_framenum%12] = '>';
+	arrow[(recv_framenum+4)%12] = '>';
+	arrow[(recv_framenum+8)%12] = '>';
+	arrow[10] = '\0';
+	printf("%c Frame %d %s %s", spin[s=(s+1)%4], recv_framenum, arrow, text);
+	printf("\r");
+	fflush(stdout); 
+}
+
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
 char * mole_dir = "/data/mole";
 char symdir_name[128] = "/data/etc/mole.lnk";
@@ -92,7 +105,6 @@ int main(int argc, char *argv[]) {
   uint8_t * recv_buffer = NULL;
   uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
-  unsigned int recv_size = 0;
   uint32_t recv_framenum = 0;
   uint16_t recv_flags = TCPCONN_FILE_RESET;
 
@@ -181,7 +193,7 @@ int main(int argc, char *argv[]) {
       }
   
       // get the data from the server
-			recv_size = retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize);
+			retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize);
 
 			// write the dirfile
 			seek_linklist_dirfile(ll_dirfile, recv_framenum);
@@ -191,8 +203,7 @@ int main(int argc, char *argv[]) {
 			seek_linklist_rawfile(ll_rawfile, recv_framenum);
 			write_linklist_rawfile(ll_rawfile, recv_buffer);
 
-			printf("Received frame %d (size %d)\n", req_framenum, recv_size);
-  
+      print_display(linklistname, recv_framenum);
 /* 
 			int i;
 			for (i = 0; i < recv_size; i++) {
