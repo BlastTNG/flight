@@ -341,8 +341,9 @@ void *connection_handler(void *arg)
   char linklist_name[128] = {0};
 
   char * archive_filename;
-  char archive_symlink_filename[1280 ] = {0};
-  char archive_resolved_filename[128] = {0};
+  char archive_symlink_filename[128] = {0}; // path to the symlink
+  char archive_resolved_filename[128] = {0}; // path the file that the symlink resolves to
+  char linklist_resolved_name[128] = {0}; // name of the file that the symlink resolves to
   linklist_rawfile_t * archive_rawfile = NULL;
   unsigned int archive_framenum = 0;
   unsigned int client_flags = 0;
@@ -533,13 +534,12 @@ void *connection_handler(void *arg)
         }
 
         // write data file base name for archive file
-        char linklist_resolved_name[128];
+        char real_name[128];
         sprintf(archive_symlink_filename, "%s/%s", archive_dir, linklist_name);
         sprintf(archive_resolved_filename, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
 
-        printf("%s %s\n", archive_symlink_filename, archive_resolved_filename);
-
         archive_filename = (client_flags & TCPCONN_RESOLVE_NAME) ? archive_resolved_filename : archive_symlink_filename;
+        strcpy(linklist_resolved_name, real_name);
 
         if ((archive_rawfile = open_linklist_rawfile(archive_filename, NULL)) == NULL) {
           linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);

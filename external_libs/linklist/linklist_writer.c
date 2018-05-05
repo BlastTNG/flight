@@ -74,6 +74,11 @@ void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
   sprintf(filename, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
   symlink(filename, symname);
+
+  sprintf(symname, "%s" CALSPECS_FORMAT_EXT, newname);
+  sprintf(filename, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
+  unlink(symname);
+  symlink(filename, symname);
 }
 
 void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
