@@ -187,7 +187,7 @@ int copy_file(char *old_filename, char *new_filename)
 // a macro function that requests format and link files and parses them;
 // this function overwrites all previously parsed telemlist format file
 // and linklist link files
-uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int flags,
+uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklistname, unsigned int flags,
                           superframe_t ** sf, linklist_t ** ll)
 {
   // initiate server connection if not done already
@@ -206,15 +206,15 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   // get linklist format file
   while (1) {
-    sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, linklistname); // suffix for formatfile
-    sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, linklistname); // suffix for linkfile
-    sprintf(reqcsname, "%s" CALSPECS_FORMAT_EXT, linklistname); // suffix for calspecs file
+    sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
+    sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
+    sprintf(reqcsname, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
 
     // get the formatfile name
     recv_ff_serial = request_server_file(tc, reqffname, flags);
     if (recv_ff_serial == 0x1badfeed) { // file not found
       linklist_err("Failed to recv superframe format\n");
-      user_file_select(tc, linklistname);
+      user_file_select(tc, selectname);
       continue;
     } else if (recv_ff_serial == 0) { // connection issue
       close_connection(tc);
@@ -226,7 +226,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     recv_ll_serial = request_server_file(tc, reqllname, flags);
     if (recv_ll_serial == 0x1badfeed) { // file not found
       linklist_err("Failed to recv linklist format\n");
-      user_file_select(tc, linklistname);
+      user_file_select(tc, selectname);
       continue;
     } else if (recv_ll_serial == 0) { // connection issue
       close_connection(tc);
@@ -266,11 +266,11 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   unlink(pathname);
 
   // set the name assigned by the server
-  set_server_linklist_name(tc, linklistname);
-  // linklist_info("Linklist name set to %s\n", linklistname);
+  set_server_linklist_name(tc, selectname);
+  // linklist_info("Linklist name set to %s\n", selectname);
 
   // request linklist name resolution if necessary (for symlinks on server)
-  request_server_linklist_name(tc, linklistname, 128, flags & TCPCONN_RESOLVE_NAME); 
+  request_server_linklist_name(tc, linklistname, 64, flags & TCPCONN_RESOLVE_NAME); 
   // linklist_info("Linklist name resolves to %s\n", linklistname);
 
   // parse the calspecs format

@@ -126,8 +126,9 @@ int main(int argc, char *argv[]) {
 
   if (client_mode) {
     char linklistname[64] = {0};
+    char selectname[64] = {0};
     char filename[128] = {0};
-    user_file_select(&tcpconn, linklistname);
+    user_file_select(&tcpconn, selectname);
 
     while (1) {
       // send data request a rawfile has been opened 
@@ -139,7 +140,7 @@ int main(int argc, char *argv[]) {
       // the file on the server has switched, so resync 
       if (recv_flags & TCPCONN_FILE_RESET) {
         // sync with the server and get the initial framenum
-				req_serial = sync_with_server(&tcpconn, linklistname, flags, &superframe, &linklist);
+				req_serial = sync_with_server(&tcpconn, selectname, linklistname, flags, &superframe, &linklist);
 				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
 
 				printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
@@ -180,7 +181,7 @@ int main(int argc, char *argv[]) {
       }
   
       // get the data from the server
-			recv_size = retrieve_data(&tcpconn, recv_buffer, buffer_size);
+			recv_size = retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize);
 
 			// write the dirfile
 			seek_linklist_dirfile(ll_dirfile, recv_framenum);
