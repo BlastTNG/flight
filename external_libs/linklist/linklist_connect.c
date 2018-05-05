@@ -153,6 +153,33 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   linklist_info("Archive file \"%s\" selected\n", linklistname);
 }
 
+int copy_file(char *old_filename, char *new_filename)
+{
+  FILE  *ptr_old, *ptr_new;
+  int a;
+
+  ptr_old = fopen(old_filename, "rb");
+  ptr_new = fopen(new_filename, "wb");
+
+  if (!ptr_old) return -1;
+
+  if (!ptr_new) {
+    fclose(ptr_old);
+    return  -1;
+  }
+
+  while(1) {
+    a = fgetc(ptr_old); 
+    if (!feof(ptr_old)) fputc(a, ptr_new);
+    else break;
+  }
+
+  fclose(ptr_new);
+  fclose(ptr_old);
+  return 0;
+}
+
+
 // a macro function that requests format and link files and parses them;
 // this function overwrites all previously parsed telemlist format file
 // and linklist link files
@@ -234,10 +261,6 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   linklist_info("Parsed linklist format \"%s\"\n", pathname);
   unlink(pathname);
 
-  // print path for calspecs file
-  if (calspecs) sprintf((*sf)->calspecs, "%s/%s", archive_dir, reqcsname);
-  else (*sf)->calspecs[0] = '\0';
-
   // set the name assigned by the server
   set_server_linklist_name(tc, linklistname);
   // linklist_info("Linklist name set to %s\n", linklistname);
@@ -245,6 +268,24 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   // request linklist name resolution if necessary (for symlinks on server)
   request_server_linklist_name(tc, linklistname, 128, flags & TCPCONN_RESOLVE_NAME); 
   // linklist_info("Linklist name resolves to %s\n", linklistname);
+
+  // parse the calspecs format
+  if (calspecs) {
+    char fname[128];
+    sprintf(pathname, "%s/%s", archive_dir, reqcsname);
+    sprintf(fname, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
+    printf("%s %s\n", pathname, fname);
+
+    if (copy_file(reqcsname, fname) < 0) {
+      linklist_err("Cannot parse calspecs format \"%s\"\n", pathname);
+    } else {
+      linklist_info("Parsed calspecs format \"%s\"\n", pathname);
+    }
+    strcpy((*sf)->calspecs, fname);
+    // unlink(pathname);
+  } else {
+    (*sf)->calspecs[0] = '\0';
+  }  
 
   return recv_ll_serial;
 }
