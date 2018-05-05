@@ -878,6 +878,10 @@ int read_linklist_formatfile_comment(char * fin, char * comment) {
 }
 
 superframe_t * parse_superframe_format(char * fname) {
+  parse_superframe_format_opt(fname, 0);
+}
+
+superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   FILE * cf = fopen(fname, "r"); // open command file
   if (cf == NULL) {
     linklist_err("Cannot find %s\n",fname);

@@ -266,8 +266,8 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   ll_dirfile->map = calloc(ll->superframe->n_entries, sizeof(uint8_t));
 
   // make the dir for the dirfile
-	if (mkdir(dirname, 00755) < 0) {
-		printf("%s directory exists\n", dirname);
+	if (mkdir(ll_dirfile->filename, 00755) < 0) {
+		printf("%s directory exists\n", ll_dirfile->filename);
 		//perror("dirfile mkdir()");
 		//exit(0);
 	}
@@ -343,7 +343,7 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
 		sprintf(binname, "%s/%s", ll_dirfile->filename, sfe[i].field);
 		ll_dirfile->bin[i] = fpreopenb(binname);  
   }
-  fclose(formatfile);
+  ll_dirfile->format = formatfile;
 
   return ll_dirfile;
 }
@@ -353,6 +353,7 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i = 0; i < ll_dirfile->ll->superframe->n_entries; i++) {
     if (ll_dirfile->bin[i]) fclose(ll_dirfile->bin[i]);
   }
+  fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
   free(ll_dirfile->map);
   free(ll_dirfile);

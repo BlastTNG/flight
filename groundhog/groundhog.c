@@ -68,6 +68,93 @@ void daemonize()
     setsid();
 }
 
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile, char * symname) {
+	if (ll_rawfile) {
+		close_and_free_linklist_rawfile(ll_rawfile);
+	} 
+	char filename[128];
+	make_linklist_rawfile_name(ll, filename);
+	ll_rawfile = open_linklist_rawfile(filename, ll);
+
+  char fname[128];
+	sprintf(fname, "%s/%s_live", archive_dir, symname);
+	create_rawfile_symlinks(ll_rawfile, fname);
+
+  sprintf(fname, "%s" CALSPECS_FORMAT_EXT, filename);
+  groundhog_write_calspecs(fname, derived_list);
+
+  return ll_rawfile;
+}
+
+void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
+{
+  FILE * calspecsfile = fopen(fname, "w");
+  if (!calspecsfile) {
+    blast_err("Could not open \"%s\" as calspecs file\n", fname);
+    return;
+  }
+
+  for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
+    switch (derived->type) {
+      case 'w':
+      case 'b':
+        fprintf(calspecsfile, "%s BIT %s %u %u\n", derived->bitword.field, derived->bitword.source, derived->bitword.offset, derived->bitword.length);
+        break;
+      case 't':
+        fprintf(calspecsfile, "%s LINTERP %s %s\n", derived->linterp.field, derived->linterp.source, derived->linterp.lut);
+        break;
+      case 'c':
+        fprintf(calspecsfile, "%s LINCOM 1 %s %.16f %.16f\n", derived->lincom.field, derived->lincom.source, derived->lincom.m_c2e, derived->lincom.b_e2e);
+        break;
+      case '2':
+        fprintf(calspecsfile, "%s LINCOM 2 %s %.16f %.16f %s %.16f %.16f\n", derived->lincom2.field, 
+          derived->lincom2.source, derived->lincom2.m_c2e, derived->lincom2.b_e2e, 
+          derived->lincom2.source2, derived->lincom2.m2_c2e, derived->lincom2.b2_e2e);
+        break;
+      case '#':
+        break;
+      case 'u':
+				if (derived->units.quantity[0]) {
+					fprintf(calspecsfile, "%s/quantity STRING \"", derived->units.field);
+					for (j = 0; j < strlen(derived->units.quantity); j++) {
+						if (derived->units.quantity[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+						fprintf(calspecsfile, "%c", derived->units.quantity[j]);
+					}
+					fprintf(calspecsfile,"\"\n");
+				}
+				if (derived->units.units[0]) {
+					fprintf(calspecsfile, "%s/units STRING \"", derived->units.field);
+					for (j = 0; j < strlen(derived->units.units); j++) {
+						if (derived->units.units[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+						fprintf(calspecsfile, "%c", derived->units.units[j]);
+					}
+					fprintf(calspecsfile,"\"\n");
+				}
+        break;
+      case 'p':
+        fprintf(calspecsfile, "%s PHASE %s %d\n", derived->phase.field, derived->phase.source, derived->phase.shift);
+        break;
+      case 'r':
+        fprintf(calspecsfile, "%s RECIP %s %.16f\n", derived->recip.field, derived->recip->source, derived->recip.dividend);
+        break;
+      case '*':
+        fprintf(calspecsfile, "%s MULTIPLY %s %s\n", derived->math.field, derived->math.source, derived->math.source2);
+        break;
+      case '/':
+        fprintf(calspecsfile, "%s DIVIDE %s %s\n", derived->math.field, derived->math.source, derived->math.source2);
+        break;
+      case 'x':
+        fprintf(calspecsfile, "%s MPLEX %s %s %d %d\n", derived->mplex.field, derived->mplex.source, derived->mplex.index, derived->mplex.value, derived->mplex.max);
+        break;
+      default:
+        blast_warn("Unknown type %c", derived->type);
+        break;
+    }
+  }
+  fflush(calspecsfile);
+  fclose(calspecsfile);
+}
+
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};

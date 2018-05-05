@@ -45,6 +45,8 @@
 #define SUPERFRAME_FORMAT_EXT ".sf.format"
 #define LINKLIST_EXT ".ll.bin"
 #define LINKLIST_FORMAT_EXT ".ll.format"
+#define CALSPECS_FORMAT_EXT ".cs.format"
+
 #define LINKLIST_FILE_SERIAL_IND "# Serial="
 #define LINKLIST_FILE_SIZE_IND "# Blk Size="
 #define LINKLIST_FRAMES_PER_FILE_IND "# Frames per file="
@@ -117,6 +119,8 @@ struct superframe_struct
 
 	double (*datatodouble)(uint8_t *, uint8_t);
 	int (*doubletodata)(uint8_t *, double, uint8_t);
+
+  char calspecs[64];
 };
 
 struct link_entry
@@ -175,6 +179,7 @@ void write_linklist_format_opt(linklist_t *, char *, int);
 linklist_t * generate_superframe_linklist(superframe_t *);
 linklist_t * generate_superframe_linklist_opt(superframe_t *, int);
 superframe_t * parse_superframe_format(char *);
+superframe_t * parse_superframe_format_opt(char *, int);
 void write_superframe_format(superframe_t *, char *);
 void linklist_assign_datatodouble(superframe_t *, double (*func)(uint8_t *, uint8_t));
 void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double, uint8_t));

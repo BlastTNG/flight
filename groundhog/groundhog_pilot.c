@@ -67,14 +67,7 @@ void udp_receive(void *arg) {
     } while (true);
 
     if (serial != prev_serial) {
-      if (ll_rawfile) {
-        close_and_free_linklist_rawfile(ll_rawfile);
-      } 
-      char filename[128];
-      make_linklist_rawfile_name(ll, filename);
-      ll_rawfile = open_linklist_rawfile(filename, ll);
-      sprintf(symname, "%s/%s_live", archive_dir, udpsetup->name);
-      create_rawfile_symlinks(ll_rawfile, symname);
+      groundhog_open_new_rawfile(ll_rawfile, udpsetup->name);
     }
     prev_serial = serial;
 

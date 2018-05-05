@@ -167,14 +167,17 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
 
   uint32_t recv_ff_serial, recv_ll_serial;
 
-  char reqffname[64] = {0};
-  char reqllname[64] = {0};
+  char reqffname[128] = {0};
+  char reqllname[128] = {0};
+  char reqcsname[128] = {0};
   char pathname[128] = {0};
+  int calspecs = 1;
 
   // get linklist format file
   while (1) {
     sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, linklistname); // suffix for formatfile
     sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, linklistname); // suffix for linkfile
+    sprintf(reqcsname, "%s" CALSPECS_FORMAT_EXT, linklistname); // suffix for calspecs file
 
     // get the formatfile name
     recv_ff_serial = request_server_file(tc, reqffname, flags);
@@ -199,6 +202,17 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
       tc->fd = connect_tcp(tc);
       continue;
     }
+
+    // get the calspecs name
+    recv_ll_serial = request_server_file(tc, reqcsname, flags);
+    if (recv_ll_serial == 0x1badfeed) { // file not found
+      calspecs = 0; 
+    } else if (recv_ll_serial == 0) { // connection issue
+      close_connection(tc);
+      tc->fd = connect_tcp(tc);
+      continue;
+    }
+
     break;
   }
 
@@ -219,6 +233,10 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
   }
   linklist_info("Parsed linklist format \"%s\"\n", pathname);
   unlink(pathname);
+
+  // print path for calspecs file
+  if (calspecs) sprintf((*sf)->calspecs, "%s/%s", archive_dir, reqcsname);
+  else (*sf)->calspecs[0] = '\0';
 
   // set the name assigned by the server
   set_server_linklist_name(tc, linklistname);

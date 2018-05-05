@@ -3,6 +3,7 @@
 
 #define GROUNDHOG_MAX_FRAMES_RESET 900
 
+#include "derived.h"
 #include "groundhog_framing.h"
 
 struct UDPSetup {
@@ -23,7 +24,8 @@ void biphase_publish(void *arg);
 void highrate_receive(void *arg);
 void highrate_publish(void *arg);
 
-void make_linklist_rawfile_name(linklist_t *, char *);
+void groundhog_write_calspecs(char *, derived_tng_t *);
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, char *);
 
 extern char datestring[80];
 
