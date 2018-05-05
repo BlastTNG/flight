@@ -338,7 +338,7 @@ void *connection_handler(void *arg)
   unsigned int buffersize = 0;
 
   int client_on = 1;
-  unsigned int frame_lag = 1; 
+  int frame_lag = 1; 
 
   FILE * clientbufferfile = NULL;
   char linklist_name[128] = {0};
@@ -348,8 +348,9 @@ void *connection_handler(void *arg)
   char archive_resolved_filename[128] = {0}; // path the file that the symlink resolves to
   char linklist_resolved_name[128] = {0}; // name of the file that the symlink resolves to
   linklist_rawfile_t * archive_rawfile = NULL;
-  unsigned int archive_framenum = 0;
-  unsigned int client_flags = 0;
+  int archive_framenum = 0;
+  int archive_lag_framenum = 0;
+  int client_flags = 0;
 
   linklist_info("::SERVER:: Accept CLIENT %d\n",sock);
 
@@ -553,8 +554,11 @@ void *connection_handler(void *arg)
       }
 
       // update the archived file framenumber
+      char test_symlink_name[64] = {0};
+      get_real_file_name(test_symlink_name, linklist_name);
       seekend_linklist_rawfile(archive_rawfile);
       archive_framenum = tell_linklist_rawfile(archive_rawfile);
+      archive_lag_framenum = archive_framenum-frame_lag;
 
       // handle the type of data block request 
       if (*req_i & TCPCONN_CLIENT_INIT) { // requesting a frame number initialization
@@ -571,15 +575,26 @@ void *connection_handler(void *arg)
         memset(header, 0, TCP_PACKET_HEADER_SIZE);
 
         linklist_info("::CLIENT %d:: initialized with serial 0x%x, nof %d, size %d\n", sock, SERVER_ARCHIVE_REQ, archive_framenum, archive_rawfile->framesize);
-      } else if ((archive_framenum-((int) frame_lag)) < (int) (*req_frame_num)) { // no data to read
-        // respond with header for live data
+      } else if (strcmp(linklist_resolved_name, test_symlink_name)) { // the symlink has changed
+        // respond with header for change in datafile
+        linklist_info("::CLIENT %d:: data file symlink change\n", sock);
+        writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, TCPCONN_FILE_RESET, 0);
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+          linklist_err("::CLIENT %d:: unable to send header\n", sock);
+          client_on = 0;
+          break;
+        }
+        close_and_free_linklist_rawfile(archive_rawfile);
+        archive_rawfile = NULL;
+      } else if ((archive_lag_framenum < (int) (*req_frame_num) || (archive_lag_framenum <= 0))) { // no data to read
+        // respond with header for no data
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, TCPCONN_NO_DATA, 0);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
           linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
         }
-      } else { 
+      } else {
         // respond with header for live data
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, 0, 0);
         if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
