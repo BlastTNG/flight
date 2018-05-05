@@ -146,12 +146,14 @@ int main(int argc, char *argv[]) {
 
 				// open linklist dirfile
 				sprintf(filename, "%s/%s", mole_dir, linklistname);
+        if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
 				ll_dirfile = open_linklist_dirfile(filename, linklist);
 				unlink(symdir_name);
 				symlink(filename, symdir_name);  
 
         // open the linklist rawfile
 				sprintf(filename, "%s/%s", archive_dir, linklistname);
+        if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
 				ll_rawfile = open_linklist_rawfile(filename, linklist);
 				create_rawfile_symlinks(ll_rawfile, symraw_name);
 
