@@ -334,19 +334,19 @@ int superframe_entry_get_index(superframe_entry_t * sfi, superframe_entry_t * sf
 
 void update_linklist_hash(MD5_CTX *mdContext, linkentry_t * le)
 {
-	MD5_Update(mdContext, &le->start, sizeof(le->start));
-	MD5_Update(mdContext, &le->comp_type, sizeof(le->comp_type));
-	MD5_Update(mdContext, &le->blk_size, sizeof(le->blk_size));
-	MD5_Update(mdContext, &le->num, sizeof(le->num));
+  MD5_Update(mdContext, &le->start, sizeof(le->start));
+  MD5_Update(mdContext, &le->comp_type, sizeof(le->comp_type));
+  MD5_Update(mdContext, &le->blk_size, sizeof(le->blk_size));
+  MD5_Update(mdContext, &le->num, sizeof(le->num));
 }
 
 void update_superframe_entry_hash(MD5_CTX *mdContext, superframe_entry_t * chan)
 {
   MD5_Update(mdContext, chan->field, SF_FIELD_LEN);
-	MD5_Update(mdContext, &chan->type, sizeof(chan->type));
-	MD5_Update(mdContext, &chan->spf, sizeof(chan->spf));
-	MD5_Update(mdContext, &chan->start, sizeof(chan->start));
-	MD5_Update(mdContext, &chan->skip, sizeof(chan->skip));
+  MD5_Update(mdContext, &chan->type, sizeof(chan->type));
+  MD5_Update(mdContext, &chan->spf, sizeof(chan->spf));
+  MD5_Update(mdContext, &chan->start, sizeof(chan->start));
+  MD5_Update(mdContext, &chan->skip, sizeof(chan->skip));
 }
 
 void parse_block(linklist_t * ll, char * name)
@@ -376,30 +376,30 @@ block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
 }
 
 uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
-	size_t retsize = 0;
-	switch (chan->type) {
-		case SF_INT8:
-		case SF_UINT8:
-			retsize = 1;
-			break;
-		case SF_INT16:
-		case SF_UINT16:
-			retsize = 2;
-			break;
-		case SF_INT32:
-		case SF_UINT32:
-		case SF_FLOAT32:
-			retsize = 4;
-			break;
-		case SF_INT64:
-		case SF_UINT64:
-		case SF_FLOAT64:
-			retsize = 8;
-			break;
-		default:
-			linklist_fatal("Invalid Channel size!");
-	}
-	return retsize;
+  size_t retsize = 0;
+  switch (chan->type) {
+    case SF_INT8:
+    case SF_UINT8:
+      retsize = 1;
+      break;
+    case SF_INT16:
+    case SF_UINT16:
+      retsize = 2;
+      break;
+    case SF_INT32:
+    case SF_UINT32:
+    case SF_FLOAT32:
+      retsize = 4;
+      break;
+    case SF_INT64:
+    case SF_UINT64:
+    case SF_FLOAT64:
+      retsize = 8;
+      break;
+    default:
+      linklist_fatal("Invalid Channel size!");
+  }
+  return retsize;
 }
 
 /**
@@ -839,14 +839,14 @@ uint64_t generate_superframe_serial(superframe_t * superframe)
 
   int i = 0;
   for (i = 0; sf[i].field[0]; i++) {
-		MD5_Update(&mdContext, sf[i].field, strlen(sf[i].field));
-		MD5_Update(&mdContext, &sf[i].type, sizeof(sf[i].type));
-		MD5_Update(&mdContext, &sf[i].spf, sizeof(sf[i].spf));
-		MD5_Update(&mdContext, &sf[i].start, sizeof(sf[i].start));
-		MD5_Update(&mdContext, &sf[i].skip, sizeof(sf[i].skip));
-		//if (strlen(sf[i].quantity)) MD5_Update(&mdContext, sf[i].quantity, strlen(sf[i].quantity));
-		//if (strlen(sf[i].units)) MD5_Update(&mdContext, sf[i].units, strlen(sf[i].units));
-	}
+    MD5_Update(&mdContext, sf[i].field, strlen(sf[i].field));
+    MD5_Update(&mdContext, &sf[i].type, sizeof(sf[i].type));
+    MD5_Update(&mdContext, &sf[i].spf, sizeof(sf[i].spf));
+    MD5_Update(&mdContext, &sf[i].start, sizeof(sf[i].start));
+    MD5_Update(&mdContext, &sf[i].skip, sizeof(sf[i].skip));
+    //if (strlen(sf[i].quantity)) MD5_Update(&mdContext, sf[i].quantity, strlen(sf[i].quantity));
+    //if (strlen(sf[i].units)) MD5_Update(&mdContext, sf[i].units, strlen(sf[i].units));
+  }
 
   // generate MD5 hash of command_list
   MD5_Final(md5hash,&mdContext);
@@ -955,12 +955,12 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         sf[n_entries].spf = atoi(temps[2]); // samples per frame
 
         /*
-				// TODO(javier): deal with mins and maxs if that ends up being a thing
-  			if (strlen(temps[1]) > 1)
-  			{
-    			sscanf(temps[1],"%*c(%lf,%lf)%*s",&bit_tlms[N_TLM_TYPES].min,&bit_tlms[N_TLM_TYPES].max);
-    			//printf("%s min=%f max=%f\n",bit_tlms[N_TLM_TYPES].name,bit_tlms[N_TLM_TYPES].min,bit_tlms[N_TLM_TYPES].max);
-  			}
+        // TODO(javier): deal with mins and maxs if that ends up being a thing
+        if (strlen(temps[1]) > 1)
+        {
+          sscanf(temps[1],"%*c(%lf,%lf)%*s",&bit_tlms[N_TLM_TYPES].min,&bit_tlms[N_TLM_TYPES].max);
+          //printf("%s min=%f max=%f\n",bit_tlms[N_TLM_TYPES].name,bit_tlms[N_TLM_TYPES].min,bit_tlms[N_TLM_TYPES].max);
+        }
         */
 
         // determine start byte and skip
