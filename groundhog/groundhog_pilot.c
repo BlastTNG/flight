@@ -47,7 +47,6 @@ void udp_receive(void *arg) {
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
-  char symname[128] = {0};
 
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
@@ -67,7 +66,7 @@ void udp_receive(void *arg) {
     } while (true);
 
     if (serial != prev_serial) {
-      groundhog_open_new_rawfile(ll_rawfile, udpsetup->name);
+      groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
     }
     prev_serial = serial;
 

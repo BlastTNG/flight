@@ -14,6 +14,7 @@
 #include <string.h>
 #include <pthread.h> // threads
 #include <float.h>
+#include <ctype.h>
 
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -68,17 +69,17 @@ void daemonize()
     setsid();
 }
 
-linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile, char * symname) {
-	if (ll_rawfile) {
-		close_and_free_linklist_rawfile(ll_rawfile);
-	} 
-	char filename[128];
-	make_linklist_rawfile_name(ll, filename);
-	ll_rawfile = open_linklist_rawfile(filename, ll);
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile, linklist_t * ll, char * symname) {
+  if (ll_rawfile) {
+    close_and_free_linklist_rawfile(ll_rawfile);
+  } 
+  char filename[128];
+  make_linklist_rawfile_name(ll, filename);
+  ll_rawfile = open_linklist_rawfile(filename, ll);
 
   char fname[128];
-	sprintf(fname, "%s/%s_live", archive_dir, symname);
-	create_rawfile_symlinks(ll_rawfile, fname);
+  sprintf(fname, "%s/%s_live", archive_dir, symname);
+  create_rawfile_symlinks(ll_rawfile, fname);
 
   sprintf(fname, "%s" CALSPECS_FORMAT_EXT, filename);
   groundhog_write_calspecs(fname, derived_list);
@@ -86,15 +87,9 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile,
   return ll_rawfile;
 }
 
-void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
-{
-  FILE * calspecsfile = fopen(fname, "w");
-  if (!calspecsfile) {
-    blast_err("Could not open \"%s\" as calspecs file\n", fname);
-    return;
-  }
+void groundhog_write_calspecs_item(FILE *calspecsfile, derived_tng_t *derived) {
+    int j;
 
-  for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
     switch (derived->type) {
       case 'w':
       case 'b':
@@ -114,28 +109,28 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
       case '#':
         break;
       case 'u':
-				if (derived->units.quantity[0]) {
-					fprintf(calspecsfile, "%s/quantity STRING \"", derived->units.field);
-					for (j = 0; j < strlen(derived->units.quantity); j++) {
-						if (derived->units.quantity[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
-						fprintf(calspecsfile, "%c", derived->units.quantity[j]);
-					}
-					fprintf(calspecsfile,"\"\n");
-				}
-				if (derived->units.units[0]) {
-					fprintf(calspecsfile, "%s/units STRING \"", derived->units.field);
-					for (j = 0; j < strlen(derived->units.units); j++) {
-						if (derived->units.units[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
-						fprintf(calspecsfile, "%c", derived->units.units[j]);
-					}
-					fprintf(calspecsfile,"\"\n");
-				}
+        if (derived->units.quantity[0]) {
+          fprintf(calspecsfile, "%s/quantity STRING \"", derived->units.source);
+          for (j = 0; j < strlen(derived->units.quantity); j++) {
+            if (derived->units.quantity[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+            fprintf(calspecsfile, "%c", derived->units.quantity[j]);
+          }
+          fprintf(calspecsfile,"\"\n");
+        }
+        if (derived->units.units[0]) {
+          fprintf(calspecsfile, "%s/units STRING \"", derived->units.source);
+          for (j = 0; j < strlen(derived->units.units); j++) {
+            if (derived->units.units[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+            fprintf(calspecsfile, "%c", derived->units.units[j]);
+          }
+          fprintf(calspecsfile,"\"\n");
+        }
         break;
       case 'p':
         fprintf(calspecsfile, "%s PHASE %s %d\n", derived->phase.field, derived->phase.source, derived->phase.shift);
         break;
       case 'r':
-        fprintf(calspecsfile, "%s RECIP %s %.16f\n", derived->recip.field, derived->recip->source, derived->recip.dividend);
+        fprintf(calspecsfile, "%s RECIP %s %.16f\n", derived->recip.field, derived->recip.source, derived->recip.dividend);
         break;
       case '*':
         fprintf(calspecsfile, "%s MULTIPLY %s %s\n", derived->math.field, derived->math.source, derived->math.source2);
@@ -150,7 +145,46 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
         blast_warn("Unknown type %c", derived->type);
         break;
     }
+}
+
+void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
+{
+  FILE * calspecsfile = fopen(fname, "w");
+  if (!calspecsfile) {
+    blast_err("Could not open \"%s\" as calspecs file\n", fname);
+    return;
   }
+
+  for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
+    groundhog_write_calspecs_item(calspecsfile, derived);
+  }
+
+  derived_tng_t derived = {0};
+  char tmp_str[128] = {0};
+  for (channel_t *channel = channel_list; channel->field[0]; channel++) {
+    snprintf(tmp_str, 128, "%s", channel->field);
+    double m = channel->m_c2e;
+    double b = channel->b_e2e;
+
+    /// By default we set the converted field to upper case
+    for (int i = 0; tmp_str[i]; i++) tmp_str[i] = toupper(tmp_str[i]);
+    /// If our scale/offset are unity/zero respectively, tell defile to use the easier zero-phase
+    if (fabs(m - 1.0) <= DBL_EPSILON && fabs(b - 0.0) <= DBL_EPSILON) {
+      derived.type = 'p';
+      strcpy(derived.phase.field, tmp_str);
+      strcpy(derived.phase.source, channel->field);
+      derived.phase.shift = 0;
+    } else {
+      derived.type = 'c';
+      strcpy(derived.lincom.field, tmp_str);
+      strcpy(derived.lincom.source, channel->field);
+      derived.lincom.m_c2e = m;
+      derived.lincom.b_e2e = b;
+    }
+    groundhog_write_calspecs_item(calspecsfile, &derived);
+  }
+
+
   fflush(calspecsfile);
   fclose(calspecsfile);
 }

@@ -3,6 +3,8 @@
 
 #define GROUNDHOG_MAX_FRAMES_RESET 900
 
+#include "linklist.h"
+#include "linklist_writer.h"
 #include "derived.h"
 #include "groundhog_framing.h"
 
@@ -25,7 +27,7 @@ void highrate_receive(void *arg);
 void highrate_publish(void *arg);
 
 void groundhog_write_calspecs(char *, derived_tng_t *);
-linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, char *);
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
 
 extern char datestring[80];
 
