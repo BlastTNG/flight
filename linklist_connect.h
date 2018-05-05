@@ -88,7 +88,7 @@ void send_client_error(struct TCPCONN *);
 void linklist_server(void *);
 
 void user_file_select(linklist_tcpconn_t *, char *);
-uint32_t sync_with_server(struct TCPCONN *, char *, unsigned int, superframe_t **, linklist_t **);
+uint32_t sync_with_server(struct TCPCONN *, char *, char *, unsigned int, superframe_t **, linklist_t **);
 
 #ifdef __cplusplus
 }
