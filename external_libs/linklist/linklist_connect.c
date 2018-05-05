@@ -161,14 +161,18 @@ int copy_file(char *old_filename, char *new_filename)
   ptr_old = fopen(old_filename, "rb");
   ptr_new = fopen(new_filename, "wb");
 
-  if (!ptr_old) return -1;
+  if (!ptr_old) {
+    printf("Can't open %s\n", old_filename);
+    return -1;
+  }
 
   if (!ptr_new) {
+    printf("Can't open %s\n", new_filename);
     fclose(ptr_old);
     return  -1;
   }
 
-  while(1) {
+  while (1) {
     a = fgetc(ptr_old); 
     if (!feof(ptr_old)) fputc(a, ptr_new);
     else break;
@@ -274,15 +278,14 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * linklistname, unsigned int
     char fname[128];
     sprintf(pathname, "%s/%s", archive_dir, reqcsname);
     sprintf(fname, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
-    printf("%s %s\n", pathname, fname);
 
-    if (copy_file(reqcsname, fname) < 0) {
+    if (copy_file(pathname, fname) < 0) {
       linklist_err("Cannot parse calspecs format \"%s\"\n", pathname);
     } else {
       linklist_info("Parsed calspecs format \"%s\"\n", pathname);
     }
     strcpy((*sf)->calspecs, fname);
-    // unlink(pathname);
+    unlink(pathname);
   } else {
     (*sf)->calspecs[0] = '\0';
   }  

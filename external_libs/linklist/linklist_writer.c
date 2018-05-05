@@ -348,8 +348,24 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
 		sprintf(binname, "%s/%s", ll_dirfile->filename, sfe[i].field);
 		ll_dirfile->bin[i] = fpreopenb(binname);  
   }
-  ll_dirfile->format = formatfile;
 
+  if (ll->superframe->calspecs[0]) {
+    fprintf(formatfile, "\n####### Begin calspecs ######\n\n");
+    FILE * calspecsfile = fopen(ll->superframe->calspecs, "rb");
+    if (!calspecsfile) {
+      linklist_err("Could not open calspecs file \"%s\"\n", ll->superframe->calspecs);
+    }
+    int a;
+    while (1) {
+			a = fgetc(calspecsfile); 
+			if (!feof(calspecsfile)) fputc(a, formatfile);
+			else break;
+    }
+    fclose(calspecsfile);
+    fflush(formatfile);
+  }
+
+  ll_dirfile->format = formatfile;
   return ll_dirfile;
 }
 
