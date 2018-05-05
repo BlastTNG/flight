@@ -272,10 +272,10 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
 
   // make the dir for the dirfile
 	if (mkdir(ll_dirfile->filename, 00755) < 0) {
-		printf("%s directory exists\n", ll_dirfile->filename);
-		//perror("dirfile mkdir()");
-		//exit(0);
-	}
+		linklist_info("%s dirfile exists. Appending data...\n", ll_dirfile->filename);
+	} else {
+		linklist_info("New dirfile %s.\n", ll_dirfile->filename);
+  }
 
   // open formatfile
   char formatname[80] = {0};
