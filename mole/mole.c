@@ -72,14 +72,29 @@
 #include <linklist_connect.h>
 
 void print_display(char * text, unsigned int recv_framenum) {
-	char arrow[13] = "------------";
-	char spin[] = "/-\\|";
+	static char spin[] = "/-\\|";
   static unsigned int s = 0;
+  static unsigned int prev_framenum = 0;
+  static unsigned int idle_count = 0;
+
+	char arrow[13] = "------------";
+
+  if (recv_framenum == prev_framenum) {
+    idle_count++;
+  } else {
+    idle_count = 0;
+  }
+  prev_framenum = recv_framenum;
+
+  if (idle_count < 5) {
+    s = (s+1)%4;
+  }
+
 	arrow[s%12] = '>';
 	arrow[(s+4)%12] = '>';
 	arrow[(s+8)%12] = '>';
 	arrow[10] = '\0';
-	printf("%c Frame %d %s %s", spin[s=(s+1)%4], recv_framenum, arrow, text);
+	printf("%c Frame %d %s %s", spin[s], recv_framenum, arrow, text);
 	printf("\r");
 	fflush(stdout); 
 }
