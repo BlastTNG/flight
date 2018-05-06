@@ -774,6 +774,8 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
 
   linklist_t * ll = (linklist_t *) calloc(1, sizeof(linklist_t));
   ll->items = (linkentry_t *) calloc(superframe->n_entries+extra_chksm, sizeof(linkentry_t));
+  ll->flags = flags;
+  ll->superframe = superframe;
   ll->blocks = NULL;
   ll->n_entries = 0;
 
@@ -795,11 +797,12 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
 
     blk_size = get_superframe_entry_size(&ll_superframe_list[i])*ll_superframe_list[i].spf; 
 
+    ll->items[ll->n_entries].start = byteloc;
     ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
+    ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].num = ll_superframe_list[i].spf;
     ll->items[ll->n_entries].tlm = &ll_superframe_list[i];
-    ll->items[ll->n_entries].blk_size = blk_size;
-    ll->items[ll->n_entries].start = byteloc;
+    ll->items[ll->n_entries].linklist = ll;
 
     update_superframe_entry_hash(&mdContext, &ll_superframe_list[i]);
     update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
