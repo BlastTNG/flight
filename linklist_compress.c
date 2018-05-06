@@ -511,7 +511,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
-    // if (block->n > 5) printf("Sent block %d/%d (id = %d, size = %d)\n",block->i+1,block->n,block->id,cpy);
+    // printf("Sent block %d/%d (id = %d, size = %d, loc = %d)\n",block->i+1,block->n,block->id,cpy,loc);
     
     block->i++;
     block->num++;
@@ -549,7 +549,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      linklist_info("Closing \"%s\"", block->filename);
+      linklist_info("Closing \"%s\"\n\n", block->filename);
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
