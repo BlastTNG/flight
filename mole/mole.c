@@ -75,9 +75,9 @@ void print_display(char * text, unsigned int recv_framenum) {
 	char arrow[13] = "------------";
 	char spin[] = "/-\\|";
   static unsigned int s = 0;
-	arrow[recv_framenum%12] = '>';
-	arrow[(recv_framenum+4)%12] = '>';
-	arrow[(recv_framenum+8)%12] = '>';
+	arrow[s%12] = '>';
+	arrow[(s+4)%12] = '>';
+	arrow[(s+8)%12] = '>';
 	arrow[10] = '\0';
 	printf("%c Frame %d %s %s", spin[s=(s+1)%4], recv_framenum, arrow, text);
 	printf("\r");
@@ -143,6 +143,9 @@ int main(int argc, char *argv[]) {
     user_file_select(&tcpconn, selectname);
 
     while (1) {
+      // display
+      print_display(linklistname, recv_framenum);
+
       // send data request a rawfile has been opened 
       if (ll_rawfile) {
         recv_flags = 0;
@@ -203,7 +206,6 @@ int main(int argc, char *argv[]) {
 			seek_linklist_rawfile(ll_rawfile, recv_framenum);
 			write_linklist_rawfile(ll_rawfile, recv_buffer);
 
-      print_display(linklistname, recv_framenum);
 /* 
 			int i;
 			for (i = 0; i < recv_size; i++) {
