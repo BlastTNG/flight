@@ -474,7 +474,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
     }
     read = i+1;
     
-    if (ll->n_entries >= def_n_entries) {
+    if (ll->n_entries >= (def_n_entries-1)) {
       realloc_list(ll,&def_n_entries);
     }
 
@@ -514,7 +514,11 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
           comp_type = NO_COMP;
           isblock = 1;
         } else {
-          chan = superframe_find_by_name(superframe, temps[0]);
+          if (!(chan = superframe_find_by_name(superframe, temps[0]))) {
+						linklist_err("parse_linklist_format: unable to find telemetry entry %s\n",temps[0]);
+						continue;
+					}
+
           isblock = 0;
           if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0)) {
             comp_type = NO_COMP;
@@ -531,11 +535,6 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
               comp_type = NO_COMP;
             }
           }
-        }
-
-        if (!chan) {
-          linklist_err("parse_linklist_format: unable to find telemetry entry %s\n",temps[0]);
-          continue;
         }
 
         // get compressed samples per frame
@@ -590,7 +589,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   fclose(cf);
 
   // check memory allocation
-  if (ll->n_entries >= def_n_entries) {
+  if (ll->n_entries >= (def_n_entries-1)) {
     realloc_list(ll,&def_n_entries);
   }
 
@@ -947,7 +946,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
           //printf("Line %d: END\n",count);
           break;
         }
-        if ((n_entries+1) >= def_n_entries) {
+        if (n_entries >= (def_n_entries-1)) {
           def_n_entries += 5;
           sf = (superframe_entry_t *) realloc(sf, def_n_entries*sizeof(superframe_entry_t));
         }
