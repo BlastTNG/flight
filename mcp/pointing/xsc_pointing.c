@@ -265,8 +265,7 @@ void xsc_control_triggers()
                     printf("Triggering XSC%d!\n", which);
 
                     xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
-                    xsc_pointing_state[which].last_trigger.counter_stars =
-                            XSC_SERVER_DATA(which).channels.ctr_stars;
+                    xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
                     xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
                     xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
                     xsc_pointing_state[which].last_trigger.trigger_time = get_100hz_framenum();

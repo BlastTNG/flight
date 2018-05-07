@@ -122,7 +122,7 @@ void update_sun_sensors(void) {
         v4_8_Addr = channels_find_by_name("v4_8_pss");
         v5_8_Addr = channels_find_by_name("v5_8_pss");
     }
-    if (state[5].initialized) {
+    if (state[5].connected) {
         SET_SCALED_VALUE(v1_1_Addr, labjack_get_value(5, 4));
         SET_SCALED_VALUE(v2_1_Addr, labjack_get_value(5, 5));
         SET_SCALED_VALUE(v3_1_Addr, labjack_get_value(5, 6));
