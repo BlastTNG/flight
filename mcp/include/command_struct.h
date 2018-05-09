@@ -286,7 +286,6 @@ typedef struct {
   uint16_t forced;
   int labjack, send_dac, load_curve, cycle_allowed;
   float dac_value;
-  // for the periodic cal Sam Grab these
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
@@ -338,10 +337,25 @@ typedef struct roach
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
-    unsigned int load_amps;
-    unsigned int set_rudats;
+    unsigned int new_atten;
+    unsigned int load_vna_amps;
+    unsigned int load_targ_amps;
+    unsigned int calibrate_adc;
     unsigned int set_attens;
     unsigned int find_kids;
+    unsigned int adc_rms;
+    unsigned int test_tone;
+    unsigned int roach_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
+    unsigned int do_cal_sweeps;
+    unsigned int get_phase_centers;
+    unsigned int get_timestream;
+    unsigned int chan;
+    unsigned int tune_chan;
+    unsigned int refit_res_freqs;
+    unsigned int change_tone_amps;
+    unsigned int do_master_chop;
 } roach_status_t;
 
 typedef struct roach_params
@@ -353,6 +367,12 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double new_out_atten;
+    double test_freq;
+    double atten_step;
+    double npoints;
+    double ncycles;
+    double num_sec;
 } roach_params_t;
 
 typedef struct {

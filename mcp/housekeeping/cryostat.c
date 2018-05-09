@@ -77,7 +77,7 @@ typedef struct { // structure to read commands for level and cal pulses
     uint16_t cal_length;
     uint16_t level_length;
 } cryo_control_t;
-// Sam Grab these
+
 typedef struct {
     uint16_t num_pulse, separation, length;
 } periodi_cal_t;
@@ -114,7 +114,6 @@ heater_control_t heater_state;
 cryo_control_t cryo_state;
 cycle_control_t cycle_state;
 
-// Sam Grab these
 periodi_cal_t cal_state;
 
 // pulls data for heater state writing
@@ -309,13 +308,6 @@ void periodic_cal_control(void) {
         }
     }
 }
-
-
-
-
-
-
-
 
 // function that creates level sensor pulses via the mcp loop
 // utilizes the cryo control structure
@@ -849,10 +841,10 @@ void thermal_vac(void) {
     }
     SET_SCALED_VALUE(of_1_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
     SET_SCALED_VALUE(of_1_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
-    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
-    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
-    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_1, 0));
-    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_1, 13));
+    SET_SCALED_VALUE(of_2_0_Addr, labjack_get_value(LABJACK_OF_2, 0));
+    SET_SCALED_VALUE(of_2_13_Addr, labjack_get_value(LABJACK_OF_2, 13));
+    SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_3, 0));
+    SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_3, 13));
 }
 
 

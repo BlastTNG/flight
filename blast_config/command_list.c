@@ -861,13 +861,19 @@ struct mcom mcommands[plugh + 2] = {
 // *****************************************
 // ROACH Commands
 // *****************************************
-  {COMMAND(load_new_tone_amplitudes), "loads new tone amplitudes from file", GR_ROACH, 2,
+  {COMMAND(load_new_vna_amps), "loads new VNA amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"FILE[1 = default, 2 = uploaded]", 1, 2, 'i', "NONE"}
+      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
     }
   },
-  {COMMAND(cal_attens), "Calibrate RUDAT attenuations", GR_ROACH, 1,
+  {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
+    }
+  },
+  {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
@@ -877,9 +883,18 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 2,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"}
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
+    }
+  },
+  {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Atten step (dB)", 0.5, 6.0, 'f', "NONE"},
+      {"Number of sweep points", 5, 101, 'f', "NONE"},
+      {"Number of cycles (sweeps)", 2, 20, 'f', "NONE"},
     }
   },
   {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
@@ -921,8 +936,72 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
       {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"new_out_atten", 0.0, 30.0, 'f', "NONE"}
+    }
+  },
+  {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(test_tone), "Writes a single test tone to the DAC comb", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
+    }
+  },
+  {COMMAND(roach_state), "Change Roach state", GR_ROACH, 3,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"ROACH status", 0, 11, 'i', "NONE"},
+    {"ROACH desired status", 0, 11, 'i', "NONE"},
+  }
+  },
+  {COMMAND(calc_phase_centers), "Calculate channel phase centers from TARG sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(timestream), "Save a short IQ timestream", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel no", 0, 1000, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(all_timestreams), "Save IQ timestreams for all channels", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(chop_tune_chan), "Tune channel responsivity with optical chop", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel no", 0, 1000, 'i', "NONE"},
+      {"Number of sec to stream", 0, 10, 'f', "NONE"},
+    }
+  },
+  {COMMAND(refit_freqs), "Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(chop_template), "Saves timestreams for all channel and calculates avg chop", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
   /***************************************/
@@ -1003,7 +1082,6 @@ struct mcom mcommands[plugh + 2] = {
           {"Pulse Length (s)", 5, 5000, 'i', "PULSE_LEVEL"}
       }
   },
-  // Sam Grab these
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
       {
           {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
@@ -1011,8 +1089,6 @@ struct mcom mcommands[plugh + 2] = {
           {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
       }
   },
-
-
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",

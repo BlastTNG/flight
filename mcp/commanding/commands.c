@@ -1715,7 +1715,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
-    // Sam Grab these (just this 1 case)
     case periodic_cal:
       CommandData.Cryo.periodic_pulse = 1;
       CommandData.Cryo.num_pulse = ivalues[0];
@@ -1844,26 +1843,45 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 // *****************************************
 // ROACH Commands
 // *****************************************
-    case load_new_tone_amplitudes:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] > 0) && ivalues[1] <= 2)) {
-          CommandData.roach[ivalues[0]-1].load_amps = ivalues[1];
+    case load_new_vna_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].load_vna_amps = ivalues[1];
       }
       break;
-    case cal_attens:
+    case load_new_targ_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
+      }
+      break;
+    case cal_adc:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].set_rudats = 0;
+          CommandData.roach[ivalues[0]-1].calibrate_adc = 1;
       }
       break;
     case end_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_sweeps = 0;
+          CommandData.roach[ivalues[0]-1].do_cal_sweeps = 0;
       }
       break;
     case vna_sweep:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_CALIBRATED;
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
+          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_STREAMING;
           CommandData.roach[ivalues[0]-1].change_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
+          CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
+      }
+      break;
+    case cal_sweeps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+            // &&
+            // ((rvalues[1] >= 0.5) && (rvalues[1] <= 6.0)) &&
+            // ((rvalues[2] >= 5) && ((rvalues[2] <= 101)) &&
+            // ((rvalues[3] >= 2) && (rvalues[3] <= 10)))) {
+          CommandData.roach_params[ivalues[0]-1].atten_step = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].npoints = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].ncycles = rvalues[3];
+          CommandData.roach[ivalues[0]-1].do_cal_sweeps = 1;
       }
       break;
     case targ_sweep:
@@ -1896,10 +1914,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] < 30)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)
+                 && ((rvalues[2] > 0) && rvalues[2] <= 30)) {
           CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
-	  CommandData.roach[ivalues[0]-1].set_attens = 1;
+          CommandData.roach[ivalues[0]-1].set_attens = 1;
+      }
+      break;
+    case new_output_atten:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
+          CommandData.roach_params[ivalues[0]-1].new_out_atten = rvalues[1];
+          CommandData.roach[ivalues[0]-1].new_atten = 1;
       }
       break;
     case find_kids:
@@ -1907,7 +1932,69 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
           CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
-	  CommandData.roach[ivalues[0]-1].find_kids = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
+      }
+      break;
+    case show_adc_rms:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].adc_rms = 1;
+      }
+      break;
+    case test_tone:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 1.0e6) && rvalues[1] <= 250.0e6)) {
+          CommandData.roach_params[ivalues[0]-1].test_freq = rvalues[1];
+          CommandData.roach[ivalues[0]-1].test_tone = 1;
+      }
+      break;
+    case roach_state:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 11)
+                           && ((ivalues[2] >= 0) && ivalues[2] <= 11)) {
+          CommandData.roach[ivalues[0]-1].roach_new_state = ivalues[1];
+          CommandData.roach[ivalues[0]-1].roach_desired_state = ivalues[2];
+          CommandData.roach[ivalues[0]-1].roach_state = 1;
+      }
+      break;
+    case calc_phase_centers:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].get_phase_centers = ivalues[1];
+      }
+      break;
+    case timestream:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1000)
+                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 300.0)) {
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
+          CommandData.roach[ivalues[0]-1].get_timestream = 1;
+      }
+      break;
+    case all_timestreams:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)
+                    && ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach[ivalues[0]-1].get_timestream = 2;
+      }
+    case chop_tune_chan:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+                     ((ivalues[1] >= 0) && ivalues[1] <= 1000) &&
+                     ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
+          CommandData.roach[ivalues[0]-1].tune_chan = 1;
+      }
+      break;
+    case refit_freqs:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+      }
+      break;
+    case change_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
+      }
+      break;
+    case chop_template:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_master_chop = 1;
       }
       break;
       /*************************************
@@ -2501,17 +2588,30 @@ void InitCommandData()
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
 
-	for (i = 0; i < NUM_ROACHES; i++) {
-		CommandData.roach[i].set_rudats = 0;
-		CommandData.roach[i].set_attens = 0;
-		CommandData.roach[i].df_calc = 0; // Sets reference gradients
-		CommandData.roach[i].auto_retune = 0;
-		CommandData.roach[i].do_sweeps = 1;
-		CommandData.roach[i].new_state = 0;
-		CommandData.roach[i].change_state = 0;
-		CommandData.roach[i].find_kids = 0;
-		CommandData.roach[i].opt_tones = 0;
-	}
+    for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].calibrate_adc = 0;
+        CommandData.roach[i].set_attens = 0;
+        CommandData.roach[i].df_calc = 0; // Sets reference gradients
+        CommandData.roach[i].auto_retune = 0;
+        CommandData.roach[i].do_sweeps = 0;
+        CommandData.roach[i].do_cal_sweeps = 0;
+        CommandData.roach[i].new_state = 0;
+        CommandData.roach[i].change_state = 0;
+        CommandData.roach[i].roach_state = 0;
+        CommandData.roach[i].find_kids = 0;
+        CommandData.roach[i].opt_tones = 0;
+        CommandData.roach[i].adc_rms = 0;
+        CommandData.roach[i].test_tone = 0;
+        CommandData.roach[i].new_atten = 0;
+        CommandData.roach[i].load_vna_amps = 0;
+        CommandData.roach[i].load_targ_amps = 0;
+        CommandData.roach[i].get_phase_centers = 0;
+        CommandData.roach[i].get_timestream = 0;
+        CommandData.roach[i].tune_chan = 0;
+        CommandData.roach[i].refit_res_freqs = 0;
+        CommandData.roach[i].change_tone_amps = 0;
+        CommandData.roach[i].do_master_chop = 0;
+    }
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -2577,18 +2677,19 @@ void InitCommandData()
 
     CommandData.slot_sched = 0x100;
     CommandData.parts_sched = 0x0;
-    for (i = 0; i < NUM_ROACHES - 1; i++) {
-    	CommandData.roach[i].load_amps = 1;
-	}
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
-    // Sam Grab these
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = 1;
     CommandData.Cryo.periodic_pulse = 0;
     CommandData.Cryo.length = 1;
 
+    /* Added for triggering cal lamp */
+    CommandData.Cryo.num_pulse = 1;
+    CommandData.Cryo.separation = 1;
+    CommandData.Cryo.periodic_pulse = 0;
+    CommandData.Cryo.length = 1;
     /* relays should always be set to zero when starting MCP */
     /* relays */
     CommandData.Relays.cycle_of_1 = 0;
@@ -2837,10 +2938,16 @@ void InitCommandData()
         // find_kids
         CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
         CommandData.roach_params[i].peak_threshold = 3; // dB
-        CommandData.roach_params[i].spacing_threshold = 1.0e3; // kHz
+        CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].in_atten = 1;
-        CommandData.roach_params[i].out_atten = 1;
+        CommandData.roach_params[i].in_atten = 29;
+        CommandData.roach_params[i].out_atten = 16;
+        CommandData.roach_params[i].test_freq = 10.0125e6;
+        CommandData.roach_params[i].atten_step = 1.0;
+        CommandData.roach_params[i].npoints = 11;
+        CommandData.roach_params[i].ncycles = 3;
+        // For saving short timestream
+	CommandData.roach_params[i].num_sec = 1.0;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

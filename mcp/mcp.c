@@ -100,7 +100,7 @@
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int16_t SouthIAm;
-int16_t InCharge = 0;
+int16_t InCharge = 1;
 int16_t InChargeSet = 0;
 
 extern labjack_state_t state[NUM_LABJACKS];
@@ -313,7 +313,9 @@ unsigned int superframe_counter[RATE_END] = {0};
 
 static void mcp_488hz_routines(void)
 {
-//    write_roach_channels_244hz();
+#ifndef NO_KIDS_TEST
+	write_roach_channels_488hz();
+#endif
 
     share_data(RATE_488HZ);
     framing_publish_488hz();
@@ -403,6 +405,7 @@ static void mcp_2hz_routines(void)
     xsc_write_data(0);
     xsc_write_data(1);
 }
+
 static void mcp_1hz_routines(void)
 {
     int ready = !superframe_counter[RATE_488HZ];
@@ -429,7 +432,7 @@ static void mcp_1hz_routines(void)
     // thermal_vac();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
-    blast_store_disk_space();
+    // blast_store_disk_space();
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
@@ -438,11 +441,16 @@ static void mcp_1hz_routines(void)
     framing_publish_1hz();
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
+    // roach_timestamp_init(1);
 //    store_data_1hz();
 }
 
 static void *mcp_main_loop(void *m_arg)
 {
+#define MCP_FREQ 24400
+#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+
     int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
@@ -617,6 +625,21 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
+#ifndef NO_KIDS_TEST
+  blast_info("Initializing ROACHes from MCP...");
+  roach_udp_networking_init();
+  // init_roach(0);
+  init_roach(1);
+  // init_roach(2);
+  // init_roach(3);
+  init_roach(4);
+  blast_info("Finished initializing ROACHes...");
+#endif
+
+/* blast_info("Initializing Beaglebones from MCP...");
+init_beaglebone();
+blast_info("Finished initializing Beaglebones..."); */
+
   // initialize superframe FIFO
   master_superframe_buffer = calloc(1, superframe->size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
@@ -640,7 +663,7 @@ int main(int argc, char *argv[])
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+//  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
@@ -685,6 +708,7 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
+  blast_info("Joining main thread.");
   ph_thread_join(main_thread, NULL);
 
   return(0);
