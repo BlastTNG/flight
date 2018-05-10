@@ -1083,8 +1083,7 @@ channel_t channel_list[] =
     { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 
 // Begin ROACH channels
-/*
-    roach diagnostic channels
+    /* roach diagnostic channels */
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
@@ -11478,7 +11477,7 @@ channel_t channel_list[] =
      { "i_kid1013_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
      { "i_kid1014_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
      { "i_kid1015_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
-     */
+     
 //     { "roach2_kid1011_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach2_kid1012_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach2_kid1013_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
@@ -15552,7 +15551,7 @@ channel_t channel_list[] =
 //     { "roach4_kid1013_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1014_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1015_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
-// #endif // ifndef NO_KIDS_TEST
+#endif // ifndef NO_KIDS_TEST
     { {0} }
   };
 
