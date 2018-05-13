@@ -11477,7 +11477,7 @@ channel_t channel_list[] =
      { "i_kid1013_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
      { "i_kid1014_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
      { "i_kid1015_roach5",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
-     
+
 //     { "roach2_kid1011_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach2_kid1012_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach2_kid1013_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
