@@ -65,6 +65,7 @@
 #include "actuators.h"
 #include "bias_tone.h"
 #include "balance.h"
+#include "cryovalves.h"
 #include "blast.h"
 // #include "blast_comms.h"
 #include "blast_time.h"
@@ -101,6 +102,8 @@ char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 int16_t SouthIAm;
 int16_t InCharge = 0;
 int16_t InChargeSet = 0;
+
+extern labjack_state_t state[NUM_LABJACKS];
 
 bool shutdown_mcp = false;
 bool ready_to_close = false;
@@ -293,8 +296,8 @@ void * lj_connection_handler(void *arg) {
     init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
-    labjack_networking_init(7, 14, 1);
-    initialize_labjack_commands(7);
+    // labjack_networking_init(7, 14, 1);
+    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // labjack_networking_init(8, 14, 1);

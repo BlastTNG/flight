@@ -54,6 +54,7 @@
 #include <mputs.h>
 
 static ph_thread_t *motor_ctl_id;
+extern int16_t InCharge;
 
 // device node Serial Numbers
 #define RW_SN 0x01bbbb65
@@ -983,8 +984,16 @@ static void* motor_control(void* arg)
     struct timespec ts;
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 2000000}; /// 500HZ interval
+	bool firsttime = 1;
 
     nameThread("Motors");
+	while (!InCharge) {
+		usleep(100000);
+		if (firsttime) {
+			blast_info("Not in charge.  Waiting for control.");
+			firsttime = 0;
+		}
+	}
     blast_startup("Starting Motor Control");
 
     ph_thread_set_name("Motors");

@@ -155,7 +155,7 @@ void heater_control(void) {
         heater_status_Addr = channels_find_by_name("heater_status_write");
         // read in the heater channels and update accordingly here
     }
-    if (state[0].initialized) {
+    if (state[0].connected) {
         if (CommandData.Cryo.heater_update == 1) {
             CommandData.Cryo.heater_update = 0;
             update_heater_values();
@@ -195,12 +195,16 @@ void load_curve_300mk(void) {
 void set_dac(void) {
     int labjack;
     float value;
-    if (CommandData.Cryo.send_dac == 1) {
-        labjack = CommandData.Cryo.labjack;
-        value = CommandData.Cryo.dac_value;
-        blast_info("voltage = %f, labjack = %d", value, labjack);
-        CommandData.Cryo.send_dac = 0;
-        labjack_queue_command(labjack, 1000, value);
+    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+        if (CommandData.Cryo.send_dac == 1) {
+            labjack = CommandData.Cryo.labjack;
+            value = CommandData.Cryo.dac_value;
+            blast_info("voltage = %f, labjack = %d", value, labjack);
+            CommandData.Cryo.send_dac = 0;
+            if (state[labjack].connected == 1) {
+                labjack_queue_command(labjack, 1000, value);
+            }
+        }
     }
 }
 
@@ -210,7 +214,7 @@ void heater_read(void) {
     static channel_t* heater_300mk_status_Addr;
     static channel_t* cal_lamp_status_Addr;
     // queues up all the reads from labjack cryo 2
-    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+    if (CommandData.Labjack_Queue.lj_q_on == 1 && state[1].connected) {
         labjack_queue_command(LABJACK_CRYO_2, READ_CHARCOAL, 0);
         labjack_queue_command(LABJACK_CRYO_2, READ_250LNA, 0);
         labjack_queue_command(LABJACK_CRYO_2, READ_1K_HEATER, 0);
@@ -228,7 +232,7 @@ void heater_read(void) {
 // function that creates cal lamp pulses via the mcp loop
 // utilizes the cryo control structure
 void cal_control(void) {
-    if (state[0].initialized) {
+    if (state[0].connected) {
         if (CommandData.Cryo.do_cal_pulse) {
             cryo_state.cal_length = CommandData.Cryo.cal_length;
             CommandData.Cryo.do_cal_pulse = 0;
@@ -253,7 +257,7 @@ void cal_control(void) {
 // Sam Grab These
 void periodic_cal_control(void) {
     static int length, pulsed, down, separation;
-    if (state[0].initialized) {
+    if (state[0].connected) {
         if (CommandData.Cryo.periodic_pulse) {
             // blast_info("Asked to Pulse");
             cal_state.length = CommandData.Cryo.length;
@@ -316,7 +320,7 @@ void periodic_cal_control(void) {
 // function that creates level sensor pulses via the mcp loop
 // utilizes the cryo control structure
 void level_control(void) {
-    if (state[0].initialized) {
+    if (state[0].connected) {
         if (CommandData.Cryo.do_level_pulse) {
             cryo_state.level_length = CommandData.Cryo.level_length;
             CommandData.Cryo.do_level_pulse = 0;
@@ -338,7 +342,7 @@ void level_control(void) {
 }
 
 void level_toggle(void) {
-    if (state[0].initialized) {
+    if (state[0].connected) {
         static int level_state = 1;
         if (CommandData.Cryo.do_level_pulse) {
             CommandData.Cryo.do_level_pulse = 0;
@@ -480,7 +484,7 @@ void read_thermometers(void) {
         heater_300mk_Addr = channels_find_by_name("heater_300mk_read");
         firsttime_therm = 0;
     }
-    if (state[0].initialized && state[1].initialized) {
+    if (state[0].connected && state[1].connected) {
         SET_SCALED_VALUE(diode_charcoal_hs_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_CHARCOAL_HS));
         SET_SCALED_VALUE(diode_vcs2_filt_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_VCS2_FILT));
         SET_SCALED_VALUE(diode_250fpa_Addr, labjack_get_value(LABJACK_CRYO_1, DIODE_250FPA));
@@ -528,7 +532,7 @@ void read_chopper(void)
 		firsttime = 0;
 		stage_chopper_Addr = channels_find_by_name("stage_chopper");
 	}
-    if (state[1].initialized) {
+    if (state[1].connected) {
         SET_SCALED_VALUE(stage_chopper_Addr, labjack_get_value(1, 12));
     }
 }
@@ -644,21 +648,12 @@ static void standby_cycle(void) {
 static void heating_cycle(void) {
     static int fill_counter = 0;
     if (cycle_state.heating == 1) {
-        if (cycle_state.pot_fill == 1) {
-            blast_info("filling the pot for 5 minutes");
-            // fill the pot here
-            if (fill_counter < 300) {
-                fill_counter++;
-            } else {
-                fill_counter = 0;
-                blast_info("pot full moving to cooking");
-                cycle_state.pot_fill = 0;
-            }
-        } else {
             if (cycle_state.heat_delay == 0) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
+		// open pumped pot valve
+		CommandData.Cryo.potvalve_goal = opened;
                 blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
@@ -674,6 +669,8 @@ static void heating_cycle(void) {
             if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
+		// close pumped pot valve
+		CommandData.Cryo.potvalve_goal = closed;
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
@@ -682,7 +679,6 @@ static void heating_cycle(void) {
             }
         }
     }
-}
 // in the burnoff phase, we monitor the temperature of the charcoal heater while the counter ticks along
 // if the temperature drops below a minimum threshold, we reheat the charcoal and then continue along
 // when the timer runs out, the charcoal heat switch is turned on
@@ -784,7 +780,7 @@ void auto_cycle_mk2(void) {
     static int first_time = 1;
     if (CommandData.Cryo.cycle_allowed == 1) {
         // blast_info("cycle allowed now");
-        if (state[0].initialized && state[1].initialized) {
+        if (state[0].connected && state[1].connected) {
             if (first_time == 1) {
                 blast_info("initalizing");
                 init_cycle_channels();
@@ -815,19 +811,20 @@ void force_incharge(void) {
 }
 
 void cryo_1hz(int setting_1hz) {
-    if (setting_1hz == 1 && state[0].initialized && state[1].initialized) {
+    if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
         load_curve_300mk();
+        set_dac();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
-    if (setting_200hz == 1 && state[0].initialized && state[1].initialized) {
+    if (setting_200hz == 1 && state[0].connected && state[1].connected) {
         cal_control();
         read_thermometers();
     }
-    if (setting_200hz == 2 && state[0].initialized && state[1].initialized) {
+    if (setting_200hz == 2 && state[0].connected && state[1].connected) {
         read_chopper();
         read_thermometers();
     }

@@ -909,6 +909,77 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case hwpr_enc_pulse:
             CommandData.Cryo.hwprPos = 50;
             break;
+        // case auto_cycle:
+            // CommandData.Cryo.fridgeCycle = 1;
+            // CommandData.Cryo.force_cycle = 0;
+            // break;
+        // case fridge_cycle:
+            // CommandData.Cryo.fridgeCycle = 1;
+            // CommandData.Cryo.force_cycle = 1;
+            // break;
+        // case cal_on:
+            // CommandData.Cryo.calibrator = on;
+            // break;
+        // case cal_off:
+            // CommandData.Cryo.calibrator = off;
+            // break;
+        // case hs_pot_on:
+            // CommandData.Cryo.hsPot = 1;
+            // break;
+        // case hs_pot_off:
+            // CommandData.Cryo.hsPot = 0;
+            // break;
+        // case bda_on:
+            // CommandData.Cryo.BDAHeat = 1;
+            // break;
+        // case bda_off:
+            // CommandData.Cryo.BDAHeat = 0;
+            // break;
+        case pot_valve_open:
+            CommandData.Cryo.potvalve_goal = opened;
+            break;
+        case pot_valve_close:
+            CommandData.Cryo.potvalve_goal = closed;
+            break;
+        case pot_valve_on:
+            CommandData.Cryo.potvalve_on = 1;
+            break;
+        case pot_valve_off:
+            CommandData.Cryo.potvalve_on = 0;
+            break;
+        case pump_valve_open:
+	    CommandData.Cryo.valve_goals[0] = opened;
+	    break;
+	case pump_valve_close:
+	    CommandData.Cryo.valve_goals[0] = closed;
+	    break;
+	case fill_valve_open:
+	    CommandData.Cryo.valve_goals[1] = opened;
+	    break;
+	case fill_valve_close:
+	    CommandData.Cryo.valve_goals[1] = closed;
+	    break;
+	case l_valve_open:
+            CommandData.Cryo.lvalve_open = 100;
+            CommandData.Cryo.lvalve_close = 0;
+            break;
+        case l_valve_close:
+            CommandData.Cryo.lvalve_close = 100;
+            CommandData.Cryo.lvalve_open = 0;
+            break;
+        case he_valve_on:
+            CommandData.Cryo.lhevalve_on = 1;
+            break;
+        case he_valve_off:
+            CommandData.Cryo.lhevalve_on = 0;
+            break;
+        case ln_valve_on:
+            CommandData.Cryo.lnvalve_on = 1;
+            break;
+        case ln_valve_off:
+            CommandData.Cryo.lnvalve_on = 0;
+            break;
+
             // Lock
         case pin_in:
             CommandData.actbus.lock_goal = LS_CLOSED | LS_DRIVE_OFF | LS_IGNORE_EL;
@@ -1575,6 +1646,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
+    case potvalve_set_vel:
+      CommandData.Cryo.potvalve_vel = ivalues[0];
+      break;
+    case potvalve_set_current:
+      CommandData.Cryo.potvalve_opencurrent = ivalues[0];
+      CommandData.Cryo.potvalve_closecurrent = ivalues[1];
+      break;
+    case valves_set_vel:
+      CommandData.Cryo.valve_vel = ivalues[0];
+      break;
+    case valves_set_current:
+      CommandData.Cryo.valve_current = ivalues[0];
+      break;
+
 // .
     // XY STAGE
 // .
@@ -2450,6 +2535,35 @@ void InitCommandData()
     CommandData.power.sc_tx.set_count = 0;
     CommandData.power.bi0.rst_count = 0;
     CommandData.power.bi0.set_count = 0;
+    // CommandData.power.rx_main.rst_count = 0;
+    // CommandData.power.rx_main.set_count = 0;
+    // CommandData.power.rx_hk.rst_count = 0;
+    // CommandData.power.rx_hk.set_count = 0;
+    // CommandData.power.rx_amps.rst_count = 0;
+    // CommandData.power.rx_amps.set_count = 0;
+    // CommandData.power.gybox_off = 0;
+    // CommandData.power.gyro_off[0] = 0;
+    // CommandData.power.gyro_off[1] = 0;
+    // CommandData.power.gyro_off[2] = 0;
+    // CommandData.power.gyro_off[3] = 0;
+    // CommandData.power.gyro_off[4] = 0;
+    // CommandData.power.gyro_off[5] = 0;
+    // CommandData.power.hub232_off = 0;
+
+    // CommandData.Cryo.BDAHeat = 0;
+
+    CommandData.Cryo.potvalve_on = 0;
+    CommandData.Cryo.valve_goals[0] = intermed;
+    CommandData.Cryo.valve_goals[1] = intermed;
+    CommandData.Cryo.potvalve_goal = intermed;
+    CommandData.Cryo.lhevalve_on = 0;
+    CommandData.Cryo.lvalve_open = 0;
+    CommandData.Cryo.lvalve_close = 0;
+    CommandData.Cryo.lnvalve_on = 0;
+    CommandData.Cryo.potvalve_opencurrent = 50;
+    CommandData.Cryo.potvalve_closecurrent = 25;
+    CommandData.Cryo.potvalve_vel = 50000;
+
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
     CommandData.fast_offset_gy = 0;

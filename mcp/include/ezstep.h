@@ -245,7 +245,7 @@ int EZBus_SetVel(struct ezbus* bus, char who, int vel);
  */
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble);
 
-/* sets acceleration for simple motion moves (in steps/s)
+/* sets acceleration for simple motion moves (in steps/s/s)
  */
 int EZBus_SetAccel(struct ezbus* bus, char who, int acc);
 
