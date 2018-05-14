@@ -108,3 +108,5 @@ target_link_libraries(mole
     m)
 
 install(TARGETS mole DESTINATION bin)
+install(DIRECTORY DESTINATION "/data/rawdir")
+install(DIRECTORY DESTINATION "/data/mole")
