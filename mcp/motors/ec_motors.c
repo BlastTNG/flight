@@ -63,7 +63,7 @@ extern int16_t InCharge;
 #define RW_ADDR 0x3
 #define EL_ADDR 0x2
 #define PIV_ADDR 0x1
-
+#define FUCHS_MFG_ID 0x00ad // HWP encoder
 /**
  * Structure for storing the PDO assignments and their offsets in the
  * memory map
@@ -84,11 +84,12 @@ static GSList *pdo_list[4];
 static int rw_index = 0;
 static int piv_index = 0;
 static int el_index = 0;
+static int hwp_index = 0;
 
 /**
  * Memory mapping for the PDO variables
  */
-static char io_map[1024];
+static char io_map[4096];
 
 static int motors_exit = false;
 
@@ -96,7 +97,7 @@ static int motors_exit = false;
 /**
  * Number of ethercat controllers (including the HWP encoder)
  */
-#define N_MCs 4
+#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
 
 /**
  * Ethercat driver status
@@ -114,28 +115,42 @@ static int32_t dummy_var = 0;
 static int32_t dummy_write_var = 0;
 
 /// Read words
-static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var };
+static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var , &dummy_var };
+static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var , &dummy_var };
+static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var , &dummy_var };
 static int16_t *motor_current[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
-                                         (int16_t*) &dummy_var, (int16_t*) &dummy_var };
+                                         (int16_t*) &dummy_var, (int16_t*) &dummy_var , (int16_t*) &dummy_var };
 static uint32_t *status_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                            (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+                                            (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static int16_t *amp_temp[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
                                     (int16_t*) &dummy_var, (int16_t*) &dummy_var };
 static uint16_t *status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
+                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
 
 static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                             (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+                                             (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                              (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
+                                              (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
-                                         (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
+                                         (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var ,
+                                         (uint16_t*) &dummy_write_var };
 static int16_t *target_current[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var,
-                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var };
+                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var ,
+                                          (int16_t*) &dummy_write_var };
 
+/// Read word from encoder
+static uint32_t *hwp_position = (uint32_t*) &dummy_var;
+
+uint32_t hwp_get_position(void)
+{
+    return *hwp_position;
+}
+
+uint16_t hwp_get_state(void)
+{
+    return ec_slave[hwp_index].state;
+}
 /**
  * This set of functions return the latched faults of each motor controller
  * @return uint32 value latched bitmap
@@ -494,13 +509,13 @@ static int find_controllers(void)
     }
     blast_startup("ec_config returns %d slaves found", ec_mcp_state.n_found);
 
-    if (ec_mcp_state.n_found < 3)
+    if (ec_mcp_state.n_found < (N_MCs -1))
         ec_mcp_state.status = ECAT_MOTOR_FOUND_PARTIAL;
     else
         ec_mcp_state.status = ECAT_MOTOR_FOUND;
 
     /* wait for all slaves to reach SAFE_OP state */
-    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 3) != EC_STATE_SAFE_OP) {
+    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * (N_MCs - 1)) != EC_STATE_SAFE_OP) {
         ec_mcp_state.status = ECAT_MOTOR_RUNNING_PARTIAL;
         blast_err("Not all slaves reached safe operational state.");
         ec_readstate();
@@ -515,6 +530,19 @@ static int find_controllers(void)
     }
     ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
+        /**
+         * There is only one PEPER FUCHS encoder on the chain, so we test for this
+         * first.  It doesn't have a fixed index number like the motor controllers,
+         * so we can't test in the usual manner
+         */
+        if (ec_slave[i].eep_man == FUCHS_MFG_ID) {
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x650B, 0, false, &size, &serial, EC_TIMEOUTRXM);
+            blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
+                        ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            hwp_index = i;
+        }
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
@@ -549,6 +577,46 @@ static int find_controllers(void)
 
 find_err:
     return -1;
+}
+/**
+ * Configure the HWP PDO assignments.
+ */
+static int hwp_pdo_init(void)
+{
+    pdo_mapping_t map;
+
+    if (ec_slave[hwp_index].state != EC_STATE_SAFE_OP
+            && ec_slave[hwp_index].state != EC_STATE_PRE_OP) {
+        blast_err("Encoder index %d (%s) is not in pre-operational state!  Cannot configure.",
+                hwp_index, ec_slave[hwp_index].name);
+        return -1;
+    }
+
+    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+            hwp_index, ec_slave[hwp_index].name);
+
+    /**
+     * To program the PDO mapping, we first must clear the old state
+     */
+/*
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
+    for (int i = 0; i < 4; i++) {
+        if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
+    }
+*/
+    /**
+     * Define the PDOs that we want to send to the flight computer from the Controllers
+     */
+
+    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+/*
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
+        blast_err("Failed mapping!");
+    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+        blast_err("Failed mapping!");
+*/
+    return 0;
 }
 
 /**
@@ -733,6 +801,10 @@ static void map_motor_vars(void)
     if (el_index) map_index_vars(el_index);
     if (rw_index) map_index_vars(rw_index);
     if (piv_index) map_index_vars(piv_index);
+    if (hwp_index) {
+        hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
+    }
+
 	blast_info("Finished map_motor_vars.");
 }
 
@@ -928,9 +1000,13 @@ int reset_ec_motors()
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (motor_pdo_init(i) < 0) blast_err("motor_pdo_init failed for slave %i", i);
-        mc_readPDOassign(i);
-    }
+        if (i == hwp_index) {
+            // hwp_pdo_init();
+        } else {
+            motor_pdo_init(i);
+            mc_readPDOassign(i);
+        }
+	}
     /// We re-configure the map now that we have assigned the PDOs
     blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
@@ -966,9 +1042,10 @@ int reset_ec_motors()
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
-    }    int expectedWKC, wkc;
-    int ret, len;
+        if (i != hwp_index) {
+            ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        }
+    }
     return(1);
 }
 
@@ -1000,9 +1077,13 @@ static void* motor_control(void* arg)
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (motor_pdo_init(i) < 0) blast_err("motor_pdo_init failed for slave %i", i);
-        mc_readPDOassign(i);
-    }
+        if (i == hwp_index) {
+            // hwp_pdo_init();
+        } else {
+            motor_pdo_init(i);
+            mc_readPDOassign(i);
+        }
+	}
     /// We re-configure the map now that we have assigned the PDOs
     blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
@@ -1040,7 +1121,9 @@ static void* motor_control(void* arg)
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        if (i != hwp_index) {
+            ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        }
     }
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
