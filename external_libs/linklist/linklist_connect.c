@@ -125,15 +125,19 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   linklist_info("\nSelect archive file:\n\n");
 
   int n = (numlink-1)/3+1;
-  int width = 0;
-  for (i=0;i<n;i++) if (strlen(name[i]) > width) width = strlen(name[i]);
-  width += 6;
+  int width[3] = {0};
+  for (i=0;i<n;i++) {
+    if (strlen(name[i]) > width[0]) width[0] = strlen(name[i]);
+    if (strlen(name[i+n]) > width[1]) width[1] = strlen(name[i+n]);
+    if (strlen(name[i+n+n]) > width[2]) width[2] = strlen(name[i+n+n]);
+  }
+  for (i=0;i<3;i++) width[i] += 3;
 
   for (i=0;i<n;i++) {
     if (name[i][0]) printf("%.2d: %s",i,name[i]);
-    for (j = strlen(name[i])+4; j < 32; j++) printf(" ");
+    for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
     if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
-    for (j = strlen(name[i+n])+4; j < 32; j++) printf(" ");
+    for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
     if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
     printf("\n");
   }
@@ -285,7 +289,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
       linklist_info("Parsed calspecs format \"%s\"\n", pathname);
     }
     strcpy((*sf)->calspecs, fname);
-    unlink(pathname);
+    if (strcmp(pathname, fname)) unlink(pathname);
   } else {
     (*sf)->calspecs[0] = '\0';
   }  
