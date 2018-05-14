@@ -35,9 +35,9 @@
 #include "cryovalves.h"
 
 
-#define POTVALVE_OPEN 6000
-#define POTVALVE_CLOSED 3500
-#define POTVALVE_LOOSE_CLOSED 4500
+#define POTVALVE_OPEN 10000
+#define POTVALVE_CLOSED 5200
+#define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2
 
 typedef enum {
@@ -333,6 +333,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		velValveAddr = channels_find_by_name("valve_vel");
 		currentValveAddr = channels_find_by_name("valve_current");
 		limsFillValveAddr = channels_find_by_name("fillvalve_lims");
+		firsttime = 0;
 	}
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {

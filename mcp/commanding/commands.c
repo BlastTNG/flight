@@ -2560,8 +2560,8 @@ void InitCommandData()
     CommandData.Cryo.lvalve_open = 0;
     CommandData.Cryo.lvalve_close = 0;
     CommandData.Cryo.lnvalve_on = 0;
-    CommandData.Cryo.potvalve_opencurrent = 50;
-    CommandData.Cryo.potvalve_closecurrent = 25;
+    CommandData.Cryo.potvalve_opencurrent = 25;
+    CommandData.Cryo.potvalve_closecurrent = 20;
     CommandData.Cryo.potvalve_vel = 50000;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;

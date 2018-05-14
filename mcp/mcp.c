@@ -654,8 +654,8 @@ int main(int argc, char *argv[])
   // force_incharge();
 
   if (use_starcams) {
-      xsc_networking_init(0);
-      xsc_networking_init(1);
+       xsc_networking_init(0);
+       xsc_networking_init(1);
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);

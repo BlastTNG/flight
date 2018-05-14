@@ -718,17 +718,17 @@ struct mcom mcommands[plugh + 2] = {
     "define the four hwpr potentiometer positions to be used for scans",
     GR_HWPR, 4,
     {
-      {"Position 1", 0.1, 0.9, 'f', "POS0_HWPR"},
-      {"Position 2", 0.1, 0.9, 'f', "POS1_HWPR"},
-      {"Position 3", 0.1, 0.9, 'f', "POS2_HWPR"},
-      {"Position 4", 0.1, 0.9, 'f', "POS3_HWPR"}
+      {"Position 1", 0.0, 360.0, 'f', "POS0_HWPR"},
+      {"Position 2", 0.0, 360.0, 'f', "POS1_HWPR"},
+      {"Position 3", 0.0, 360.0, 'f', "POS2_HWPR"},
+      {"Position 4", 0.0, 360.0, 'f', "POS3_HWPR"}
     }
   },
   {COMMAND(hwpr_goto_pot),
-    "Move wave plate rotator to commanded potentiometer value",
+    "Move wave plate rotator to commanded encoder value",
     GR_HWPR, 1,
     {
-      {"Pot Value ", 0.1, 0.9, 'f', "POT_HWPR"},
+      {"Encoder Value ", 0.0, 360.0, 'f', "POT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_overshoot),

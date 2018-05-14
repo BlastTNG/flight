@@ -174,6 +174,8 @@ typedef struct {
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
 
+#define ECAT_FUCHS_POSITION 0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
+
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
 #  define ECAT_STATUS_SHORTCIRCUIT          (1<<0)
 #  define ECAT_STATUS_DRIVE_OVERTEMP        (1<<1)
@@ -260,6 +262,8 @@ double rw_get_velocity_dps(void);
 double el_get_velocity_dps(void);
 double piv_get_velocity_dps(void);
 
+uint32_t hwp_get_position(void);
+uint16_t hwp_get_state(void);
 uint32_t rw_get_latched(void);
 uint32_t el_get_latched(void);
 uint32_t piv_get_latched(void);
