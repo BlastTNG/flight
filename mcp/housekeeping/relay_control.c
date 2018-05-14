@@ -670,7 +670,7 @@ static void of_status(void) {
     for (i = 0; i < 16; i++) {
         if (CommandData.Relays.of_relays[i] == 1) {
             of_status += pow(2, i);
-            blast_info("added %f", pow(2, i));
+//            blast_info("added %f", pow(2, i));
         }
     }
     // blast_info("of status is: %u", of_status);

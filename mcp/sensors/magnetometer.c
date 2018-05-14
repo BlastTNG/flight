@@ -136,7 +136,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
      */
     if ((why & PH_IOMASK_TIME) || (mag_state.status == MAG_RESET)) {
         mag_state.cmd_state = 0;
-        blast_info("Sending CMD '%s' to the MAG", state_cmd[mag_state.cmd_state].cmd);
+//        blast_info("Sending CMD '%s' to the MAG", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
         return;
@@ -157,7 +157,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                 if (!memcmp(ph_buf_mem(buf), state_cmd[mag_state.cmd_state].resp,
                                       strlen(state_cmd[mag_state.cmd_state].resp))) {
                     mag_state.cmd_state++;
-                    blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
+//                    blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_flush(serial->stream);
 
