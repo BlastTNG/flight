@@ -695,15 +695,10 @@ static void map_index_vars(int m_index)
     found = false; \
     for (GSList *el = pdo_list[m_index]; (el); el = g_slist_next(el)) { \
         pdo_channel_map_t *ch = (pdo_channel_map_t*)el->data; \
-		blast_info("ch_name = %s, ch_index = %04x, ch_subindex = %02x, ch_offset = %d", \
-				   ch->name, ch->index, ch->subindex, ch->offset); \
-		blast_info("object_index = %04x, object_subindex = %02x", \
-				   object_index(_obj), object_subindex(_obj)); \
         if (ch->index == object_index(_obj) && \
                 ch->subindex == object_subindex(_obj)) { \
             _map[m_index] = (typeof(_map[0])) (ec_slave[m_index].inputs + ch->offset); \
             found = true; \
-            blast_info("Found a match!"); \
         } \
     } \
     if (!found) { \

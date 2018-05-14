@@ -304,14 +304,7 @@ void write_motor_channels_5hz(void)
     static channel_t *ctl_word_read_piv_addr;
     static channel_t *latched_fault_piv_addr;
 
-	static channel_t *cur_piv_addr;
-	static channel_t *cur_rw_addr;
-	static channel_t *cur_el_addr;
-
-	float cur_piv, cur_rw, cur_el;
-
     int i_motors;
-    static int count_motors = 0;
 
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
@@ -355,11 +348,6 @@ void write_motor_channels_5hz(void)
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
-
-        /* For mc debugging */
-        cur_el_addr = channels_find_by_name("current_ele_mot");
-        cur_piv_addr = channels_find_by_name("current_pivot");
-        cur_rw_addr = channels_find_by_name("current_rw_mot");
     }
 
     /***************************************************/
@@ -425,18 +413,6 @@ void write_motor_channels_5hz(void)
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
-
-	GET_VALUE(cur_piv_addr, cur_piv);
-	GET_VALUE(cur_el_addr, cur_el);
-	GET_VALUE(cur_rw_addr, cur_rw);
-    if ((count_motors % 10) == 0) {
-    	blast_info("Motor current read El = %f, RW = %f, Piv = %f, RWvel = %f: ",
-    	         ElevMotorData[i_motors].current, RWMotorData[i_motors].current,
-    	         PivotMotorData[i_motors].current, RWMotorData[i_motors].velocity);
-    	blast_info("Current Loops read El = %f, RW = %f, Piv = %f ",
-    	         cur_el, cur_rw, cur_piv);
-    }
-    count_motors++;
 }
 
 void write_motor_channels_200hz(void)
