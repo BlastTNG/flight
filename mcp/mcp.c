@@ -428,7 +428,6 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
-    blast_info("%d", state[6].connected);
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
@@ -655,8 +654,8 @@ int main(int argc, char *argv[])
   force_incharge();
 
   if (use_starcams) {
-      xsc_networking_init(0);
-      xsc_networking_init(1);
+       xsc_networking_init(0);
+       xsc_networking_init(1);
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
