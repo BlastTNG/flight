@@ -2699,6 +2699,7 @@ void InitCommandData()
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.forced = 0;
+    CommandData.Cryo.heater_update = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))

@@ -631,14 +631,14 @@ static void standby_cycle(void) {
             // blast_info("moving on to the heating phase");
         }
         if (cycle_state.t350 > cycle_state.tcrit_fpa) {
-            cycle_state.standby = 0;
-            cycle_state.heating = 1;
-            blast_info("moving on to the heating phase");
-        }
-        if (cycle_state.t500 > cycle_state.tcrit_fpa) {
             // cycle_state.standby = 0;
             // cycle_state.heating = 1;
             // blast_info("moving on to the heating phase");
+        }
+        if (cycle_state.t500 > cycle_state.tcrit_fpa) {
+            cycle_state.standby = 0;
+            cycle_state.heating = 1;
+            blast_info("moving on to the heating phase");
         }
     }
 }
@@ -653,7 +653,7 @@ static void heating_cycle(void) {
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
 		// open pumped pot valve
-		CommandData.Cryo.potvalve_goal = opened;
+                CommandData.Cryo.potvalve_goal = opened;
                 blast_info("turning off charcoal hs");
             }
             if (cycle_state.heat_delay < 180) { // give the charcoal HS time to cool off
@@ -670,7 +670,7 @@ static void heating_cycle(void) {
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
 		// close pumped pot valve
-		CommandData.Cryo.potvalve_goal = closed;
+                CommandData.Cryo.potvalve_goal = closed;
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
