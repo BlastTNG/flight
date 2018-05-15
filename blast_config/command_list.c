@@ -858,7 +858,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
+      {"APPLY TRF FILE[1 = default, 2 = apply first, 3 = apply new]", 1, 3, 'i', "NONE"},
     }
   },
   {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
@@ -871,10 +871,9 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 2,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
     }
   },
   {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 4,
