@@ -117,6 +117,7 @@ typedef struct {
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
+    char *fpg;
     int array;
     int which;
     int katcp_fd;
@@ -178,6 +179,7 @@ typedef struct roach_state {
     char *find_kids_log;
     char *opt_tones_log;
     uint16_t dest_port;
+    uint16_t src_port;
     uint32_t src_ip;
     // Path to tone amplitudes file
     char *amps_path[2];

@@ -68,7 +68,7 @@
 #define HEADER_LEN 42
 /* Number of Roach channels for each module that will be published to the server */
 // const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
-const uint16_t n_publish_roaches[5] = {0, 0, 0, 0, 0};
+const uint16_t n_publish_roaches[5] = {1016, 1016, 1016, 1016, 1016};
 /* The shared UDP socket file descriptor */
 extern int roach_sock_fd;
 

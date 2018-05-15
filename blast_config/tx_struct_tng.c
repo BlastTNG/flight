@@ -1083,7 +1083,8 @@ channel_t channel_list[] =
     { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 
 // Begin ROACH channels
-    /* roach diagnostic channels */
+    // roach diagnostic channels
+    /*
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
@@ -1265,7 +1266,7 @@ channel_t channel_list[] =
     { "df_kid0018_roach5",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0019_roach5",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0020_roach5",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
-
+    */
 #ifndef NO_KIDS_TEST
 // These channels are not defined if the cmake is compiled with -DNO_KIDS_TEST=1
      { "q_kid0000_roach1",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
