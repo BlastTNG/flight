@@ -97,6 +97,7 @@ struct SIPDataStruct SIPData;
 struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c
+char * linklist_nt[64] = {NULL};
 
 /** Write the Previous Status: called whenever anything changes */
 void WritePrevStatus()
@@ -1753,15 +1754,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       ************** Misc  ****************/
     case set_linklists:
       if (ivalues[0] == 0) {
-        copysvalue(CommandData.pilot_linklist_name, linklist_names[ivalues[1]]);
+        copysvalue(CommandData.pilot_linklist_name, linklist_nt[ivalues[1]]);
         telemetries_linklist[PILOT_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
       } else if (ivalues[0] == 1) {
-        copysvalue(CommandData.bi0_linklist_name, linklist_names[ivalues[1]]);
+        copysvalue(CommandData.bi0_linklist_name, linklist_nt[ivalues[1]]);
         telemetries_linklist[BI0_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
       } else if (ivalues[0] == 2) {
-        copysvalue(CommandData.highrate_linklist_name, linklist_names[ivalues[1]]);
+        copysvalue(CommandData.highrate_linklist_name, linklist_nt[ivalues[1]]);
         telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
       } else {
@@ -1770,10 +1771,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case request_file:
       i = 0;
-      while (linklist_names[i]) i++;
+      while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
         send_file_to_linklist(linklist_find_by_name(
-            (char *) linklist_names[ivalues[0]], linklist_array), "file_block", svalues[1]);
+            (char *) linklist_nt[ivalues[0]], linklist_array), "file_block", svalues[1]);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
@@ -2553,10 +2554,52 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 /*   is no previous state file, set to default              */
 /*                                                          */
 /************************************************************/
+static int one(const struct dirent *unused) {
+  return 1;
+}
 void InitCommandData()
 {
+		/* --- Start of Convenience hack for linklist --- */
+		struct dirent **dir;
+		int n = scandir("/data/etc/linklists/", &dir, one, alphasort);
+		int num_ll = 0;
+    int i = 0;
+
+		// get the list of linklists in the directory
+		for (i = 0; i < n; i++) {
+			if (num_ll >= 63) {
+				printf("Reached maximum linklists for dropdown\n");
+				break;
+			}
+			int len = strlen(dir[i]->d_name);
+			if ((len >=3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
+				linklist_nt[num_ll] = calloc(1, 80);
+				strncpy(linklist_nt[num_ll], dir[i]->d_name, 64);
+				num_ll++;
+			}
+		}
+		// assign the list of linklists to the parameters that have linklist dropdowns
+		if (num_ll > 0) {
+			for (i = 0; i < N_MCOMMANDS; i++) {
+				int p;
+				for (p = 0; p < mcommands[i].numparams; p++) {
+					if (strcmp(mcommands[i].params[p].name, "Linklist") == 0) {
+						mcommands[i].params[p].nt = (const char **) linklist_nt;
+					}
+				}
+			}
+			linklist_nt[num_ll] = calloc(1, 80);
+			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], "all_telemetry");
+      num_ll++;
+			linklist_nt[num_ll] = calloc(1, 80);
+			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], "no_linklist");
+      num_ll++;
+		}
+
+		/* --- End of Convenience hack for linklists --- */
+
     int fp, n_read = 0, junk, extra = 0;
-    int is_valid = 0, i = 0;
+    int is_valid = 0;
     uint32_t prev_crc;
 
     if ((fp = open(PREV_STATUS_FILE, O_RDONLY)) < 0) {

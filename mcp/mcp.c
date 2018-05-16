@@ -100,7 +100,7 @@
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
 
 int16_t SouthIAm;
-int16_t InCharge = 1;
+int16_t InCharge = 0;
 int16_t InChargeSet = 0;
 
 extern labjack_state_t state[NUM_LABJACKS];

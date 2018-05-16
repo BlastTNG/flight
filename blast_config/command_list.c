@@ -49,9 +49,7 @@ const char *GroupNames[N_GROUPS] = {
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
-const char *linklist_names[] = {"roach_status.ll",  "test2.ll",  "test3.ll",  "test4.ll",
-                                "test_files.ll",  "test.ll",
-                                "all_telemetry.ll", "no linklist", 0};
+const char *linklist_names[] = {0};
 
 
 // echoes as string; makes enum name the command name string
