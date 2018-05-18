@@ -1767,6 +1767,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
       }
       break;
+    case load_freqs:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].load_new_freqs = 1;
+      }
+      break;
     case cal_adc:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].calibrate_adc = 1;
@@ -2524,6 +2529,7 @@ void InitCommandData()
         CommandData.roach[i].refit_res_freqs = 0;
         CommandData.roach[i].change_tone_amps = 0;
         CommandData.roach[i].do_master_chop = 0;
+        CommandData.roach[i].load_new_freqs = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -2831,7 +2837,7 @@ void InitCommandData()
         CommandData.roach_params[i].npoints = 11;
         CommandData.roach_params[i].ncycles = 3;
         // For saving short timestream
-	CommandData.roach_params[i].num_sec = 1.0;
+        CommandData.roach_params[i].num_sec = 3.0;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;

@@ -991,6 +991,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(load_freqs), "loads a list of tone freqs from file", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

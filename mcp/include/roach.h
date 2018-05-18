@@ -188,6 +188,7 @@ typedef struct roach_state {
     char *targ_amps_path[2];
     char *random_phase_path;
     char *phase_centers_path;
+    char *freqlist_path;
     fftw_plan comb_plan;
 
     // PPC link
