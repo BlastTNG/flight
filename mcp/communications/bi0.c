@@ -302,9 +302,19 @@ void setup_libusb_transfers(void)
 // custom BITSender thread for writing to the LOS-UDP card
 // includes a query buffer and response port before writing data
 void * customSendDataThread(void *arg) {
-  struct BITSender *server = (struct BITSender *) arg;
-  unsigned int start, size, n_packets, packet_size, packet_maxsize;
   unsigned int i;
+  uint8_t cycle = 0;
+  struct BITSender * bitsenders[4];
+  bitsenders[0] = (struct BITSender *) arg;
+  for (i = 1; i < 4; i++) {
+    bitsenders[i] = calloc(1, sizeof(struct BITSender));
+    initBITSender(bitsenders[i], BI0LOS_FLC_ADDR, BI0LOS_FLC_PORT+i, 2, 1, 1);
+    pthread_cancel(bitsenders[i]->send_thread); 
+  } 
+
+  struct BITSender *server = bitsenders[0];
+  struct BITSender *sender = NULL;
+  unsigned int start, size, n_packets, packet_size, packet_maxsize;
   uint8_t *header;
   uint32_t serial, frame_num;
   uint8_t *buffer;
@@ -397,18 +407,25 @@ void * customSendDataThread(void *arg) {
             }
           }
 
+          // send to the appropriate port
+          // cycles through ports BASE+0 to BASE+3
+          sender = bitsenders[cycle];
+          cycle = (cycle+1)%4;
+
+          printf("Sending on %d\n", BI0LOS_FLC_PORT+cycle);
+
           // add header to packet (adds due to MSG_MORE flag)
-          if (sendto(server->sck, header, PACKET_HEADER_SIZE,
+          if (sendto(sender->sck, header, PACKET_HEADER_SIZE,
             MSG_NOSIGNAL | MSG_MORE,
-            (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) {
+            (struct sockaddr *) &(sender->send_addr),
+            sender->slen) < 0) {
               blast_err("sendTo failed (errno %d)", errno);
           }
 
           // add data to packet and send
-          if (sendto(server->sck, pkt_buffer, packet_size,
-            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) {
+          if (sendto(sender->sck, pkt_buffer, packet_size,
+            MSG_NOSIGNAL, (struct sockaddr *) &(sender->send_addr),
+            sender->slen) < 0) {
               blast_err("sendTo failed (errno %d)", errno);
           }
           //if (buffer_status > 0) buffer_status--;
