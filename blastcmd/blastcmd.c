@@ -707,7 +707,7 @@ int main(int argc, char *argv[]) {
 			}   
 		}
     linklist_nt[num_ll] = calloc(1, 80);
-    sprintf(linklist_nt[num_ll++], "all_telemetry");
+    sprintf(linklist_nt[num_ll++], "all_telemetry.ll");
     linklist_nt[num_ll] = calloc(1, 80);
     sprintf(linklist_nt[num_ll++], "no_linklist");
   } 
