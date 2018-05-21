@@ -2589,7 +2589,7 @@ void InitCommandData()
 				}
 			}
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], "all_telemetry");
+			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], ALL_TELEMETRY_NAME);
       num_ll++;
 			linklist_nt[num_ll] = calloc(1, 80);
 			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], "no_linklist");
