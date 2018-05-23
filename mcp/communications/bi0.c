@@ -412,8 +412,6 @@ void * customSendDataThread(void *arg) {
           sender = bitsenders[cycle];
           cycle = (cycle+1)%4;
 
-          printf("Sending on %d\n", BI0LOS_FLC_PORT+cycle);
-
           // add header to packet (adds due to MSG_MORE flag)
           if (sendto(sender->sck, header, PACKET_HEADER_SIZE,
             MSG_NOSIGNAL | MSG_MORE,
