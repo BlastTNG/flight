@@ -839,7 +839,48 @@ struct mcom mcommands[plugh + 2] = {
       {"Bandwidth (kbps)", 0, 80000, 'f', "rate_pilot"}
     }
   },
-
+  {COMMAND(set_roach_iq_chan), "Select 5 I/Q channel pairs", GR_TELEM, 10,
+    {
+      {"Kid A/B", 0, 1023, 'i', "kid_ab"},
+      {"Roach A/B", 1, 5, 'i', "roach_ab"},
+      {"Kid C/D", 0, 1023, 'i', "kid_cd"},
+      {"Roach C/D", 1, 5, 'i', "roach_cd"},
+      {"Kid E/F", 0, 1023, 'i', "kid_ef"},
+      {"Roach E/F", 1, 5, 'i', "roach_ef"},
+      {"Kid G/H", 0, 1023, 'i', "kid_gh"},
+      {"Roach G/H", 1, 5, 'i', "roach_gh"},
+      {"Kid I/J", 0, 1023, 'i', "kid_ij"},
+      {"Roach I/J", 1, 5, 'i', "roach_ij"}
+    }
+  },
+  {COMMAND(set_roach_df_chan_1), "Select the first 5 df channels", GR_TELEM, 10,
+    {
+      {"Kid A", 0, 1023, 'i', "kid_a"},
+      {"Roach A", 1, 5, 'i', "roach_a"},
+      {"Kid B", 0, 1023, 'i', "kid_b"},
+      {"Roach B", 1, 5, 'i', "roach_b"},
+      {"Kid C", 0, 1023, 'i', "kid_c"},
+      {"Roach C", 1, 5, 'i', "roach_c"},
+      {"Kid D", 0, 1023, 'i', "kid_d"},
+      {"Roach D", 1, 5, 'i', "roach_d"},
+      {"Kid E", 0, 1023, 'i', "kid_e"},
+      {"Roach E", 1, 5, 'i', "roach_e"}
+    }
+  },
+  {COMMAND(set_roach_df_chan_2), "Select the last 5 df channels", GR_TELEM, 10,
+    {
+      {"Kid F", 0, 1023, 'i', "kid_f"},
+      {"Roach F", 1, 5, 'i', "roach_f"},
+      {"Kid G", 0, 1023, 'i', "kid_g"},
+      {"Roach G", 1, 5, 'i', "roach_g"},
+      {"Kid H", 0, 1023, 'i', "kid_h"},
+      {"Roach H", 1, 5, 'i', "roach_h"},
+      {"Kid I", 0, 1023, 'i', "kid_i"},
+      {"Roach I", 1, 5, 'i', "roach_i"},
+      {"Kid J", 0, 1023, 'i', "kid_j"},
+      {"Roach J", 1, 5, 'i', "roach_j"}
+    }
+  },
 
   /****************************************/
   /*************** Misc.  *****************/

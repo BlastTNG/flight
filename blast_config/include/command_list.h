@@ -177,7 +177,9 @@ enum multiCommand {
   // t_gyro_set,
   highrate_bw,       pilot_bw,         biphase_bw,
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
-  request_file,
+  request_file,      set_roach_iq_chan,
+  set_roach_df_chan_1,
+  set_roach_df_chan_2,
 
   // t_gyro_gain,
   timeout,           vcap,
