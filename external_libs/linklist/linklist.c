@@ -48,7 +48,6 @@
 #include <openssl/md5.h>
 #include <float.h>
 #include <ctype.h>
-#include <mosquitto.h>
 
 #include "linklist.h"
 #include "linklist_compress.h"

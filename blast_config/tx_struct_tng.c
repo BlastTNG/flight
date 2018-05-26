@@ -1267,6 +1267,29 @@ channel_t channel_list[] =
     { "df_kid0019_roach5",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     { "df_kid0020_roach5",         M_16RFREQ,         B_16RFREQ,  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
     */
+
+     { "kidA_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidA_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidB_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidB_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidC_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidC_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidD_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidD_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidE_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidE_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidF_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidF_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidG_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidG_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidH_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidH_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidI_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidI_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+     { "kidJ_roachN",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
+     { "kidJ_roachN_index", SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
+
+/*
 #ifndef NO_KIDS_TEST
 // These channels are not defined if the cmake is compiled with -DNO_KIDS_TEST=1
      { "q_kid0000_roach1",       SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_488HZ, U_NONE, 0 },
@@ -15553,6 +15576,7 @@ channel_t channel_list[] =
 //     { "roach4_kid1014_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 //     { "roach4_kid1015_i",       SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0  },
 #endif // ifndef NO_KIDS_TEST
+*/
     { {0} }
   };
 

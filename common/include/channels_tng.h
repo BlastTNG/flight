@@ -38,6 +38,10 @@
 #define UNITS_LEN 48
 #define BLAST_TNG_CH_VERSION 1
 
+#define NUM_KIDS 1024
+#define NUM_ROACHES 5
+#define NUM_RTYPES 3
+
 #include "derived.h"
 
 #define _RATES(x, _)	\

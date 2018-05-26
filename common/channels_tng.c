@@ -444,6 +444,10 @@ int channels_initialize(const channel_t * const m_channel_list)
     return 0;
 }
 
+unsigned int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
+  return kid+(roach-1)*NUM_KIDS+rtype*NUM_ROACHES*NUM_KIDS; 
+}
+
 superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
     superframe_entry_t * sf = calloc(channels_count+1, sizeof(superframe_entry_t));
 

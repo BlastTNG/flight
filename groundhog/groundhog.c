@@ -184,6 +184,18 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
     groundhog_write_calspecs_item(calspecsfile, &derived);
   }
 
+  // generate multiplex fields for roach data
+  int kid = 0, roach = 1, rtype = 0;
+  for (roach = 1; roach <= NUM_ROACHES; roach++) {
+    for (kid = 0; kid < NUM_KIDS; kid++) {
+      for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
+        unsigned int index = get_roach_index(kid, roach, rtype);
+        derived.type = 'x';
+        
+      }
+    }
+  }
+
 
   fflush(calspecsfile);
   fclose(calspecsfile);

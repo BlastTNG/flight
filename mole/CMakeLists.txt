@@ -81,7 +81,7 @@ ExternalProject_Add(linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
   INSTALL_COMMAND ""
-  BUILD_ALWAYS 1)
+  )
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
 
@@ -108,5 +108,11 @@ target_link_libraries(mole
     m)
 
 install(TARGETS mole DESTINATION bin)
-install(DIRECTORY DESTINATION "/data/rawdir")
-install(DIRECTORY DESTINATION "/data/mole")
+install(DIRECTORY DESTINATION "/data/rawdir"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE)
+install(DIRECTORY DESTINATION "/data/mole"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE)
+install(DIRECTORY DESTINATION "/data/etc"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE)
+install(DIRECTORY DESTINATION "/data/etc/downloaded_files"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE)
