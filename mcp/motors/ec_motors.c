@@ -993,9 +993,13 @@ void set_ec_motor_defaults()
     piv_init_resolver();
 }
 
-// Attempts to fully reset and reconnect to the EtherCat devices.
-// Right now this is mostly a copy
-int reset_ec_motors()
+int close_ec_motors()
+{
+    ec_close(); // Attempt to close down the motors
+    return(1);
+}
+// Attempts to connect to the EtherCat devices.
+int configure_ec_motors()
 {
     find_controllers();
 
@@ -1049,6 +1053,12 @@ int reset_ec_motors()
     return(1);
 }
 
+int reset_ec_motors()
+{
+    configure_ec_motors();
+    return(1);
+}
+
 static void* motor_control(void* arg)
 {
     int expectedWKC, wkc;
@@ -1056,6 +1066,7 @@ static void* motor_control(void* arg)
     struct timespec ts;
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 2000000}; /// 500HZ interval
+    char name[16] = "eth1";
 	bool firsttime = 1;
 
     nameThread("Motors");
@@ -1070,68 +1081,21 @@ static void* motor_control(void* arg)
 
     ph_thread_set_name("Motors");
 
-//    ret = ec_config(false, &io_map);
-//    blast_info("ec_config found %d slaves.", ret);
-
-    // TODO(seth): setup state machine for looping in motors
-    find_controllers();
-
-    for (int i = 1; i <= ec_slavecount; i++) {
-        if (i == hwp_index) {
-            // hwp_pdo_init();
-        } else {
-            motor_pdo_init(i);
-            mc_readPDOassign(i);
-        }
-	}
-    /// We re-configure the map now that we have assigned the PDOs
-    blast_info("Reconfigure the map now that we have assigned the PDOs");
-    if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
-    map_motor_vars();
-
-    /**
-     * Set the initial values of both commands to "safe" default values
-     */
-    for (int i = 1; i <= ec_slavecount; i++) {
-        *target_current[i] = 0;
-        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
-    }
-
-    if (CommandData.disable_az) {
-        rw_disable();
-        piv_disable();
+    if (!(ret = ec_init(name))) {
+        berror(err, "Could not initialize %s", name);
+        return -1;
     } else {
-        rw_enable();
-        piv_enable();
+    	blast_info("Initialized %s", name);
     }
-    if (CommandData.disable_el) {
-        el_disable();
-    } else {
-        el_enable();
-    }
-
-
-    set_ec_motor_defaults();
-
-    /// Start the Distributed Clock cycle
-    motor_configure_timing();
-
-    /// Put the motors in Operational mode (EtherCAT Operation)
-    blast_info("Setting the EtherCAT devices in operational mode.");
-    motor_set_operational();
-
-    for (int i = 1; i <= ec_slavecount; i++) {
-        if (i != hwp_index) {
-            ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
-        }
-    }
+    blast_info("Attempting configure to EtherCat devices.");
+    configure_ec_motors();
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;
 	blast_info("expectedWKC = %i", expectedWKC);
 
     clock_gettime(CLOCK_REALTIME, &ts);
-    while (!motors_exit) {
+    while (!shutdown_mcp) {
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
@@ -1167,6 +1131,7 @@ static void* motor_control(void* arg)
             blast_err("%s", ec_elist2string());
         }
     }
+    shutdown_motors();
 
     return 0;
 }
@@ -1174,19 +1139,9 @@ static void* motor_control(void* arg)
 /* opens communications with motor controllers */
 int initialize_motors(void)
 {
-    char name[16] = "eth1";
-    int ret;
-
     memset(ElevMotorData, 0, sizeof(ElevMotorData));
     memset(RWMotorData, 0, sizeof(RWMotorData));
     memset(PivotMotorData, 0, sizeof(PivotMotorData));
-
-    if (!(ret = ec_init(name))) {
-        berror(err, "Could not initialize %s", name);
-        return -1;
-    } else {
-    	blast_info("Initialized %s", name);
-    }
 
     motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
     return 0;
@@ -1195,4 +1150,6 @@ int initialize_motors(void)
 void shutdown_motors(void)
 {
     blast_info("Shutting down motors");
+    close_ec_motors();
+    blast_info("Finished shutting down motors");
 }
