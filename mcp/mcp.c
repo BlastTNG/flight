@@ -671,6 +671,7 @@ int main(int argc, char *argv[])
 
 //  initialize_bias_tone();
   startChrgCtrl(0);
+  startChrgCtrl(1);
 
 //  initialize the data sharing server
   data_sharing_init(linklist_array);
