@@ -162,13 +162,17 @@ void DoPotValve(struct ezbus* bus)
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
 
+	blast_info("Starting DoPotValve"); // DEBUG PAW
 	if (CommandData.Cryo.potvalve_goal == opened) {
 		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
+		blast_info("set goal open"); // DEBUG PAW
 	} else if (CommandData.Cryo.potvalve_goal == closed) {
 		if ((potvalve_data.current == opened) || (potvalve_data.current == intermed)) {
 			potvalve_data.goal = loose_closed;
+			blast_info("set goal loose_closed"); // DEBUG PAW
 		} else {
 			potvalve_data.goal = closed;
+			blast_info("set goal closed"); // DEBUG PAW
 		}
 	}
 	if (firsttime) {
@@ -196,65 +200,87 @@ void DoPotValve(struct ezbus* bus)
 		firsttime = 0;
 	}
 
-	// blast_info("Pot Valve address is %c", potvalve_data.addr); // DEBUG PAW
+	blast_info("past firsttime loop"); // DEBUG PAW
+	blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
 
+	blast_info("about to call GetPotValvePos"); // DEBUG PAW
 	GetPotValvePos(*bus);
+	blast_info("about to call SetValveState, newstate = %d", newstate); // DEBUG PAW
 	newstate = SetValveState(tight_flag);
+	blast_info("called SetValveState, newstate = %d", newstate); // DEBUG PAW
 
 	if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
 
 	if (potvalve_data.current == potvalve_data.goal) {
 		potvalve_data.potvalve_move = no_move;
 		potvalve_data.moving = 0;
+		blast_info("current = goal, so no move"); // DEBUG PAW
 
 		if (potvalve_data.current == loose_closed) {
 			blast_info("RESET GOAL CLOSED"); // DEBUG PCA
 			potvalve_data.goal = closed;
 			potvalve_data.potvalve_move = tighten;
+			blast_info("goal was loose_closed, now is closed"); // DEBUG PAW
 		}
 	} else {
 		if (potvalve_data.moving != 1) {
+			blast_info("not currently moving (according to pot valve struct)"); // DEBUG PAW
 			if (potvalve_data.current != opened && potvalve_data.goal == opened) {
 				potvalve_data.potvalve_move = opening;
+				blast_info("move type set to opening"); // DEBUG PAW
 			} else if (potvalve_data.current != closed && (potvalve_data.goal == closed || potvalve_data.goal == loose_closed)) {
 				potvalve_data.potvalve_move = closing;
+				blast_info("move type set to closing"); // DEBUG PAW
 			}
 		}
 	}
 
 	do_move = (newstate || firstmove);
-	// if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
+	if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
 	firstmove = 0;
+	blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	if(do_move) {
 	switch(potvalve_data.potvalve_move) {
 		case(no_move):
+			blast_info("in case no_move"); // DEBUG PAW
 			EZBus_Stop(bus, potvalve_data.addr);
+			blast_info("called EZBus_Stop"); // DEBUG PAW
 			potvalve_data.moving = 0;
 			break;
 		case(opening):
+			blast_info("in case opening"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_opencurrent);
+			blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MAX) != EZ_ERR_OK)
                         	bputs(info, "Error opening pot valve");
+			blast_info("called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			tight_flag = 0;
 			break;
 		case(closing):
+			blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
+			blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
 				bputs(info, "Error closing pot valve");
+			blast_info("called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			break;
 		case(tighten):
+			blast_info("in case tighten"); // DEBUG PAW
 			if(potvalve_data.moving == 0) { // if we're just starting to tighten
-				blast_info("BEGIN TIGHTEN"); // DEBUG PCA
+				blast_info("after checking that we aren't moving yet"); // DEBUG PCA
 				blast_info("tighten current: %d; goal: %d", potvalve_data.current, potvalve_data.goal);
 				EZBus_Stop(bus, potvalve_data.addr); // make sure we're actually stopped
+				blast_info("called EZBus_Stop"); // DEBUG PAW
 				EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
+				blast_info("called EZBus_SetIMove"); // DEBUG PAW
 				if(EZBus_StrComm(bus, potvalve_data.addr, sizeof(buffer), buffer, "D1000000R") != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
+				blast_info("sent D1e6R to pot valve"); // DEBUG PAW
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
@@ -278,7 +304,7 @@ void GetPotValvePos(struct ezbus bus)
 	EZBus_Comm(&bus, potvalve_data.addr, "?aa");
 	sscanf(bus.buffer, "%i,%i,%i,%i", &potvalve_data.adc[0], &potvalve_data.adc[1],
 		&potvalve_data.adc[2], &potvalve_data.adc[3]);
-	// blast_info("Pot Valve encoder position is %i", potvalve_data.adc[0]); // DEBUG PAW
+	blast_info("Pot Valve encoder position is %i", potvalve_data.adc[0]); // DEBUG PAW
 }
 
 
