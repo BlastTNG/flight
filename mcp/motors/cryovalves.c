@@ -157,7 +157,7 @@ void DoPotValve(struct ezbus* bus)
 	static int firsttime = 1;
 	static int pot_init = 0;
 	static int tight_flag;
-	int firstmove;
+	static int firstmove;
 	int newstate;
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
