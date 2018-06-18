@@ -45,6 +45,10 @@
 #define PIV_DEFAULT_CURRENT_I    200
 #define PIV_DEFAULT_CURRENT_OFF  (0)
 
+#define HEARTBEAT_MS    0 // Period of heartbeat sent by devices in milliseconds
+#define LIFETIME_FACTOR_EC    10 // require a connection every second (10 x 100 ms)
+                                 // or trigger a heartbeat error.
+
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller
@@ -253,6 +257,18 @@ typedef struct {
 #  define ECAT_CTL_HALT                     (1<<8)
 
 #define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
+#  define ECAT_NET_NODE_STATUS      (1<<0) /* This is two bits */
+#  define ECAT_NET_SYNC_MISSING     (1<<4)
+#  define ECAT_NET_GUARD_ERROR      (1<<5)
+#  define ECAT_NET_BUS_OFF          (1<<8)
+#  define ECAT_NET_TRANSMIT_ERROR   (1<<9)
+#  define ECAT_NET_RECEIVE_ERROR    (1<<10)
+#  define ECAT_NET_TRANSMIT_WARNING (1<<11)
+#  define ECAT_NET_RECEIVE_WARNING  (1<<12)
+
+
+#define ECAT_HEARTBEAT_TIME 0x1017, 0 /* Heartbeat period (ms) */
+#define ECAT_LIFETIME_FACTOR 0x100D, 0 /* */
 
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);

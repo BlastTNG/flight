@@ -126,7 +126,8 @@ static int16_t *amp_temp[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var
                                     (int16_t*) &dummy_var, (int16_t*) &dummy_var };
 static uint16_t *status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
                                         (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
-
+static uint16_t *network_status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
+                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
 static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
                                              (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
@@ -183,6 +184,23 @@ int16_t el_get_ctl_word(void)
 int16_t piv_get_ctl_word(void)
 {
     return *control_word_read[piv_index];
+}
+
+/**
+ * This set of functions returns the network status word of each motor controller 
+ * @return uint16 network status word bitmap
+ */
+uint16_t rw_get_network_status_word(void)
+{
+    return *network_status_word[rw_index];
+}
+uint16_t el_get_network_status_word(void)
+{
+    return *network_status_word[el_index];
+}
+uint16_t piv_get_network_status_word(void)
+{
+    return *network_status_word[piv_index];
 }
 
 /**
@@ -496,6 +514,14 @@ static void piv_init_resolver(void)
     }
 }
 
+static void ec_init_heartbeat(int slave_index)
+{
+    if (slave_index) {
+        ec_SDOwrite16(slave_index, ECAT_HEARTBEAT_TIME, HEARTBEAT_MS);
+        ec_SDOwrite32(slave_index, ECAT_LIFETIME_FACTOR, LIFETIME_FACTOR_EC);
+    }
+}
+
 /**
  * Finds all motor controllers on the network and sets them to pre-operational state
  * @return -1 on error, number of controllers found otherwise
@@ -673,7 +699,10 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 1 element
+    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
+
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 1 element
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -758,7 +787,6 @@ static void map_index_vars(int m_index)
      */
 	blast_info("Starting map_index_vars for index %d", m_index);
     blast_info("Initial pdolist pointer: %p", test);
-    // TODO(lmf): We don't seem to ever enter this for loop
 #define PDO_SEARCH_LIST(_obj, _map) { \
     found = false; \
     for (GSList *el = pdo_list[m_index]; (el); el = g_slist_next(el)) { \
@@ -783,6 +811,7 @@ static void map_index_vars(int m_index)
     PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
     PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
     PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+    PDO_SEARCH_LIST(ECAT_CTL_STATUS, network_status_word);
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
@@ -882,6 +911,7 @@ static void read_motor_data()
     RWMotorData[motor_i].drive_info = rw_get_status_word();
     RWMotorData[motor_i].fault_reg = rw_get_latched();
     RWMotorData[motor_i].status = rw_get_status_register();
+    RWMotorData[motor_i].network_status = rw_get_network_status_word();
     RWMotorData[motor_i].position = rw_get_position();
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
@@ -892,6 +922,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].drive_info = el_get_status_word();
     ElevMotorData[motor_i].fault_reg = el_get_latched();
     ElevMotorData[motor_i].status = el_get_status_register();
+    ElevMotorData[motor_i].network_status = el_get_network_status_word();
     ElevMotorData[motor_i].position = el_get_position();
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
@@ -902,6 +933,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
     PivotMotorData[motor_i].fault_reg = piv_get_latched();
     PivotMotorData[motor_i].status = piv_get_status_register();
+    PivotMotorData[motor_i].network_status = piv_get_network_status_word();
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
@@ -991,6 +1023,11 @@ void set_ec_motor_defaults()
     rw_init_encoder();
     el_init_encoder();
     piv_init_resolver();
+
+    /// Set up the heartbeat which tracks communication errors with the slaves
+    ec_init_heartbeat(rw_index);
+    ec_init_heartbeat(el_index);
+    ec_init_heartbeat(piv_index);
 }
 
 int close_ec_motors()
