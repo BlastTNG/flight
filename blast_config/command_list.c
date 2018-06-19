@@ -557,6 +557,15 @@ struct mcom mcommands[plugh + 2] = {
       {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFEL_GY"},
     }
   },
+{COMMAND(fix_ethercat), "Attempt to fix EC device? (1=yes, 0=no)", GR_MOTOR, 4,
+    {
+      {"RW", 0, 1, 'i', "NONE"},
+      {"El", 0, 1, 'i', "NONE"},
+      {"Pivot", 0, 1, 'i', "NONE"},
+      {"HWP", 0, 1, 'i', "NONE"},
+    }
+},
+
   {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
     1,
     {

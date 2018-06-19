@@ -54,6 +54,8 @@
 #include <mputs.h>
 
 static ph_thread_t *motor_ctl_id;
+static ph_thread_t *ecmonitor_ctl_id;
+
 extern int16_t InCharge;
 
 // device node Serial Numbers
@@ -103,7 +105,7 @@ static int motors_exit = false;
  * Ethercat driver status
  */
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
-static ec_state_t ec_mcp_state = {0};
+ec_state_t ec_mcp_state = {0};
 
 /**
  * The following pointers reference data points read from/written to
@@ -903,10 +905,31 @@ static int motor_set_operational()
     return -1;
 }
 
+static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
+{
+    // Device is not in operational mode (bits 0 and 1 have value of 3)
+    if (!(net_status & 0x0003)) {
+        if (firsttime) {
+            blast_info("Device is not in operational mode.");
+        }
+        return(1);
+    }
+    if (net_status & 0x0010) {
+        if (firsttime) {
+            blast_info("Device network error.");
+        }
+        return(1);
+    }
+    if (firsttime) {
+        blast_info("No error in network status %u, returning 0.", net_status);
+    }
+    return(0);
+}
+
 static void read_motor_data()
 {
     int motor_i = motor_index;
-
+    static bool firsttime = 1;
     RWMotorData[motor_i].current = rw_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     RWMotorData[motor_i].drive_info = rw_get_status_word();
     RWMotorData[motor_i].fault_reg = rw_get_latched();
@@ -917,6 +940,7 @@ static void read_motor_data()
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
     RWMotorData[motor_i].state = rw_get_ctl_word();
+    RWMotorData[motor_i].network_problem = check_for_network_problem(RWMotorData[motor_i].network_status, firsttime);
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -928,6 +952,8 @@ static void read_motor_data()
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
     ElevMotorData[motor_i].state = el_get_ctl_word();
+    ElevMotorData[motor_i].network_problem  =
+                          check_for_network_problem(ElevMotorData[motor_i].network_status, firsttime);
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -938,7 +964,10 @@ static void read_motor_data()
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
     PivotMotorData[motor_i].state = piv_get_ctl_word();
+    PivotMotorData[motor_i].network_problem  =
+                            check_for_network_problem(PivotMotorData[motor_i].network_status, firsttime);
 
+    firsttime = 0;
     motor_index = INC_INDEX(motor_index);
 }
 
@@ -1096,10 +1125,35 @@ int reset_ec_motors()
     return(1);
 }
 
+static int check_ec_network_status()
+{
+    bool firsttime = 1;
+    int retval = 1;
+    int motor_i = motor_index;
+    if ((RWMotorData[motor_i].network_problem && CommandData.ec_devices.fix_rw) ||
+        (ElevMotorData[motor_i].network_problem && CommandData.ec_devices.fix_el) ||
+        (PivotMotorData[motor_i].network_problem && CommandData.ec_devices.fix_piv)) {
+            retval = 0;
+            if (firsttime) {
+                blast_warn("check_ec_network_status shows a network problem. RW = %u, El = %u, Piv = %u",
+                           RWMotorData[motor_i].network_problem, ElevMotorData[motor_i].network_problem,
+                           PivotMotorData[motor_i].network_problem);
+            }
+    }
+    return(retval);
+}
+
+void shutdown_motors(void)
+{
+    blast_info("Shutting down motors");
+    close_ec_motors();
+    blast_info("Finished shutting down motors");
+}
+
 static void* motor_control(void* arg)
 {
     int expectedWKC, wkc;
-    int ret, len;
+    int ret;
     struct timespec ts;
     struct timespec interval_ts = { .tv_sec = 0,
                                     .tv_nsec = 2000000}; /// 500HZ interval
@@ -1119,8 +1173,8 @@ static void* motor_control(void* arg)
     ph_thread_set_name("Motors");
 
     if (!(ret = ec_init(name))) {
-        berror(err, "Could not initialize %s", name);
-        return -1;
+        berror(err, "Could not initialize %s, exiting.", name);
+        exit(0);
     } else {
     	blast_info("Initialized %s", name);
     }
@@ -1137,6 +1191,20 @@ static void* motor_control(void* arg)
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 
+        if (!check_ec_network_status()) {
+            ec_mcp_state.network_error_count++;
+            if (((ec_mcp_state.network_error_count) % 10) == 1) {
+                blast_info("network_error_count = %u", ec_mcp_state.network_error_count);
+            }
+            if (ec_mcp_state.network_error_count >= NETWORK_ERR_RESET_THRESH) {
+                ec_mcp_state.network_error_count = 0;
+                if (!reset_ec_motors()) {
+                    blast_err("Reset of EtherCat devices failed!");
+                } else {
+                    blast_info("Reset EtherCat connection.");
+                }
+            }
+        }
         if (CommandData.ec_devices.reset) {
             if (!reset_ec_motors()) blast_err("Reset of EtherCat devices failed!");
             CommandData.ec_devices.reset = 0;
@@ -1184,9 +1252,3 @@ int initialize_motors(void)
     return 0;
 }
 
-void shutdown_motors(void)
-{
-    blast_info("Shutting down motors");
-    close_ec_motors();
-    blast_info("Finished shutting down motors");
-}

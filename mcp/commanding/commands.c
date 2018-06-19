@@ -1492,6 +1492,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.verbose_el = ivalues[1];
       CommandData.verbose_piv = ivalues[2];
       break;
+    case fix_ethercat:
+      CommandData.ec_devices.fix_rw = ivalues[0];
+      CommandData.ec_devices.fix_el = ivalues[1];
+      CommandData.ec_devices.fix_piv = ivalues[2];
+      CommandData.ec_devices.fix_hwpr = ivalues[3];
+      break;
 #endif
 
      /*************************************
@@ -2774,6 +2780,11 @@ void InitCommandData()
     CommandData.pivot_gain.F = 0.3;
 
     CommandData.ec_devices.reset = 0;
+    // By default don't try to fix the Ethercat devices to an operational state.
+    CommandData.ec_devices.fix_rw = 0;
+    CommandData.ec_devices.fix_el = 0;
+    CommandData.ec_devices.fix_piv = 0;
+    CommandData.ec_devices.fix_hwpr = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
     CommandData.disable_el = 1;

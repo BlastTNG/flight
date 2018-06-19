@@ -358,6 +358,10 @@ typedef struct roach_params
 // Ethercat controller/device commands
 typedef struct {
     bool reset;
+    bool fix_rw;
+    bool fix_el;
+    bool fix_piv;
+    bool fix_hwpr;
 } ec_devices_struct_t;
 
 typedef struct {

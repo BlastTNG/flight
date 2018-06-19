@@ -29,6 +29,7 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "channels_tng.h"
 #include "tx.h"
@@ -289,6 +290,7 @@ void write_motor_channels_5hz(void)
     static channel_t *tMCRWAddr;
     static channel_t *statusRWAddr;
     static channel_t *networkStatusRWAddr;
+    static channel_t *networkProblemRWAddr;
     static channel_t *stateRWAddr;
     static channel_t *ctl_word_read_rw_addr;
     static channel_t *latched_fault_rw_addr;
@@ -296,6 +298,7 @@ void write_motor_channels_5hz(void)
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
     static channel_t *networkStatusElAddr;
+    static channel_t *networkProblemElAddr;
     static channel_t *stateElAddr;
     static channel_t *ctl_word_read_el_addr;
     static channel_t *latched_fault_el_addr;
@@ -303,6 +306,7 @@ void write_motor_channels_5hz(void)
     static channel_t *tMCPivAddr;
     static channel_t *statusPivAddr;
     static channel_t *networkStatusPivAddr;
+    static channel_t *networkProblemPivAddr;
     static channel_t *statePivAddr;
     static channel_t *ctl_word_read_piv_addr;
     static channel_t *latched_fault_piv_addr;
@@ -337,6 +341,7 @@ void write_motor_channels_5hz(void)
         tMCRWAddr = channels_find_by_name("t_mc_rw");
         statusRWAddr = channels_find_by_name("status_rw");
         networkStatusRWAddr = channels_find_by_name("network_status_rw");
+        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
         stateRWAddr = channels_find_by_name("state_rw");
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
@@ -344,6 +349,7 @@ void write_motor_channels_5hz(void)
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
         networkStatusElAddr = channels_find_by_name("network_status_el");
+        networkProblemElAddr = channels_find_by_name("network_problem_el");
         stateElAddr = channels_find_by_name("state_el");
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
@@ -351,6 +357,7 @@ void write_motor_channels_5hz(void)
         tMCPivAddr = channels_find_by_name("t_mc_piv");
         statusPivAddr = channels_find_by_name("status_piv");
         networkStatusPivAddr = channels_find_by_name("network_status_piv");
+        networkProblemPivAddr = channels_find_by_name("network_problem_piv");
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
@@ -405,6 +412,7 @@ void write_motor_channels_5hz(void)
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
     SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
     SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
     SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].state);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
@@ -412,6 +420,7 @@ void write_motor_channels_5hz(void)
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
     SET_UINT16(networkStatusElAddr, ElevMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemElAddr, ElevMotorData[i_motors].network_problem);
     SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].state);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
@@ -419,6 +428,7 @@ void write_motor_channels_5hz(void)
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
     SET_UINT32(statusPivAddr, PivotMotorData[i_motors].status);
     SET_UINT16(networkStatusPivAddr, PivotMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemPivAddr, PivotMotorData[i_motors].network_problem);
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);

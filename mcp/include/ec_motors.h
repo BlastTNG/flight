@@ -48,7 +48,8 @@
 #define HEARTBEAT_MS    0 // Period of heartbeat sent by devices in milliseconds
 #define LIFETIME_FACTOR_EC    10 // require a connection every second (10 x 100 ms)
                                  // or trigger a heartbeat error.
-
+#define NETWORK_ERR_RESET_THRESH (500 * 60) // After this many network status errors
+                                            // we will attempt to reset the Ethercat connection.
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller
@@ -124,6 +125,7 @@ typedef enum {
 typedef struct {
 	int8_t n_found;
 	int8_t slave_count;
+	uint16_t network_error_count;
 	ec_contol_status_t status;
 } ec_state_t;
 
