@@ -1501,7 +1501,7 @@ void *ActuatorBus(void *param)
     for (;;) {
         /* Repoll bus if necessary */
         if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
-	    blast_info("repolling actuator bus"); // DEBUG PAW
+	    blast_info("forcing repoll of entire actuator bus"); // DEBUG PAW
             for (i = 0; i < NACT; i++)
                 EZBus_ForceRepoll(&bus, id[i]);
             poll_timeout = 0;
@@ -1511,9 +1511,12 @@ void *ActuatorBus(void *param)
 
     if (poll_timeout <= 0 && !all_ok && actbus_reset) {
             // suppress non-error messages during repoll
-	    blast_info("supressing non-errors during repoll"); // DEBUG PAW
-            bus.chatter = EZ_CHAT_ERR;
+	    // blast_info("supressing non-errors during repoll"); // DEBUG PAW
+            // bus.chatter = EZ_CHAT_ERR;
+	    // for now, not changing chatter during repoll
+	    blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
             all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+	    blast_info("done repolling"); // DEBUG PAW
             bus.chatter = ACTBUS_CHATTER;
             poll_timeout = POLL_TIMEOUT;
         }
@@ -1539,7 +1542,7 @@ void *ActuatorBus(void *param)
             DoLock();
             actuators_init |= 0x1 << LOCKNUM;
         } else {
-	    blast_info("Repolling lockpin"); // DEBUG PAW
+	    blast_info("forcing repoll of lockpin"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[LOCKNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << LOCKNUM);
@@ -1550,7 +1553,7 @@ void *ActuatorBus(void *param)
             DoShutter();
             actuators_init |= 0x1 << SHUTTERNUM;
         } else {
-	    blast_info("Repolling shutter"); // DEBUG PAW
+	    blast_info("forcing repoll of shutter"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << SHUTTERNUM);
@@ -1584,7 +1587,7 @@ void *ActuatorBus(void *param)
             DoBalance(&bus);
             actuators_init |= 0x1 << BALANCENUM;
         } else {
-	    blast_info("Repolling balance"); // DEBUG PAW
+	    blast_info("forcing repoll of balance"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[BALANCENUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
@@ -1594,7 +1597,7 @@ void *ActuatorBus(void *param)
 		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 			actuators_init |= 0x1 << valve_arr[i];
 		} else {
-	    		blast_info("Repolling valves"); // DEBUG PAW
+	    		blast_info("forcing repoll of valves"); // DEBUG PAW
 			EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
 			all_ok = 0;
 			actuators_init &= ~(0x1 << valve_arr[i]);
