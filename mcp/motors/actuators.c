@@ -50,7 +50,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
+#define ACTBUS_CHATTER	EZ_CHAT_BUS    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
 #define NACT 10
 
@@ -1439,7 +1439,7 @@ void *ActuatorBus(void *param)
     int sf_ok;
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
 
-	int hwp_pos; // DEBUG PCA
+    int hwp_pos; // DEBUG PCA
 
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
@@ -1501,6 +1501,7 @@ void *ActuatorBus(void *param)
     for (;;) {
         /* Repoll bus if necessary */
         if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
+	    blast_info("repolling actuator bus"); // DEBUG PAW
             for (i = 0; i < NACT; i++)
                 EZBus_ForceRepoll(&bus, id[i]);
             poll_timeout = 0;
@@ -1510,6 +1511,7 @@ void *ActuatorBus(void *param)
 
     if (poll_timeout <= 0 && !all_ok && actbus_reset) {
             // suppress non-error messages during repoll
+	    blast_info("supressing non-errors during repoll"); // DEBUG PAW
             bus.chatter = EZ_CHAT_ERR;
             all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
             bus.chatter = ACTBUS_CHATTER;
@@ -1533,18 +1535,22 @@ void *ActuatorBus(void *param)
 
         if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
             // DoLock temporarily disabled.  7/18/2012
+	    blast_info("calling DoLock"); // DEBUG PAW
             DoLock();
             actuators_init |= 0x1 << LOCKNUM;
         } else {
+	    blast_info("Repolling lockpin"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[LOCKNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << LOCKNUM);
         }
 
         if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
+	    blast_info("calling DoShutter"); // DEBUG PAW
             DoShutter();
             actuators_init |= 0x1 << SHUTTERNUM;
         } else {
+	    blast_info("Repolling shutter"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << SHUTTERNUM);
@@ -1574,9 +1580,11 @@ void *ActuatorBus(void *param)
 */
 // Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+	    blast_info("calling DoBalance"); // DEBUG PAW
             DoBalance(&bus);
             actuators_init |= 0x1 << BALANCENUM;
         } else {
+	    blast_info("Repolling balance"); // DEBUG PAW
             EZBus_ForceRepoll(&bus, id[BALANCENUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
@@ -1586,6 +1594,7 @@ void *ActuatorBus(void *param)
 		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 			actuators_init |= 0x1 << valve_arr[i];
 		} else {
+	    		blast_info("Repolling valves"); // DEBUG PAW
 			EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
 			all_ok = 0;
 			actuators_init &= ~(0x1 << valve_arr[i]);
@@ -1594,6 +1603,7 @@ void *ActuatorBus(void *param)
 	}
 
 	if (valve_check & actuators_init) {
+	        blast_info("calling DoCryovalves"); // DEBUG PAW
 		DoCryovalves(&bus, actuators_init);
 	}
 /*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||

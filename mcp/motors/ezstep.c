@@ -273,7 +273,7 @@ int EZBus_Take(struct ezbus* bus, char who)
     if (!EZBus_IsUsable(bus, who)) return EZ_ERR_POLL;
 
     if (bus->seized != who) {
-        if (bus->chatter >= EZ_CHAT_SEIZE)
+        if (bus->chatter >= EZ_CHAT_SEIZE) 
         blast_info("%sBus seized by %s.\n", bus->name, stepName(bus, who));
         bus->seized = who;
     }
@@ -351,7 +351,7 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
         if (bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: Serial error madness! err_count=%i", bus->err_count);
     } else {
         bus->err_count = 0;
-        // if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: No serial error! Resetting error count to 0.");
+        if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: No serial error! Resetting error count to 0.");
     }
 
     return (bus->error = retval);
@@ -803,7 +803,7 @@ int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
     char buf[EZ_BUS_BUF_LEN];
     char i;
     int retval;
-    if (!isWhoGroup(who)) {     // ingle stepper
+    if (!isWhoGroup(who)) {     // single stepper
         return EZBus_Comm(bus, who, EZBus_StrComm(bus, who, sizeof(buf), buf, "%sR", what));
     } else {
         for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {

@@ -88,7 +88,7 @@
 
 /* Chatter:
  * The verbosity level of the EZStep library.
- * The levels are cumultive, printing everything from all lower levels
+ * The levels are cumulative, printing everything from all lower levels
  */
 #define	EZ_CHAT_NONE	0   // print absolutely nothing
 #define	EZ_CHAT_ERR	    1   // print only errors and warnings

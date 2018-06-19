@@ -63,19 +63,24 @@ static struct valve_struct {
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
+	blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
 	int valve_addr[NVALVES] = {PUMPVALVE_NUM, FILLVALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
+		blast_info("calling DoPotValve"); // DEBUG PAW
 		DoPotValve(bus);
 	}
 
 	for (i = 0; i < NVALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
+		blast_info("calling DoValves"); // DEBUG PAW
 			DoValves(bus, i, valve_addr[i]);
 		}
 	}
+	blast_info("calling WriteValves"); // DEBUG PAW
 	WriteValves(actuators_init, valve_addr);
+	blast_info("called WriteValves"); // DEBUG PAW
 }
 
 void DoValves(struct ezbus* bus, int index, int addr)
@@ -182,7 +187,8 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
-		EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
+		// I don't think there is any point to this
+		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
 
 
@@ -195,8 +201,10 @@ void DoPotValve(struct ezbus* bus)
 		firstmove = 1;
 		tight_flag = 1;
 
-		if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
-			bputs(info, "Error initializing valve position");
+		// this command always returns an error I think because it is supposed to be
+		// sent only after an A command (or other move?)
+		// if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
+		// 	bputs(info, "Error initializing valve position");
 		firsttime = 0;
 	}
 
