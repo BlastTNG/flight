@@ -162,7 +162,7 @@ void DoPotValve(struct ezbus* bus)
 	static int firsttime = 1;
 	static int pot_init = 0;
 	static int tight_flag;
-	static int firstmove;
+	int firstmove;
 	int newstate;
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
@@ -187,7 +187,7 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
-		// I don't think there is any point to this
+		// I don't think there is any point to this PAW 2018/06/20
 		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
 
@@ -202,7 +202,7 @@ void DoPotValve(struct ezbus* bus)
 		tight_flag = 1;
 
 		// this command always returns an error I think because it is supposed to be
-		// sent only after an A command (or other move?)
+		// sent only after an A command (or other move?) also does nothing
 		// if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
 		// 	bputs(info, "Error initializing valve position");
 		firsttime = 0;
@@ -286,6 +286,8 @@ void DoPotValve(struct ezbus* bus)
 				blast_info("called EZBus_Stop"); // DEBUG PAW
 				EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 				blast_info("called EZBus_SetIMove"); // DEBUG PAW
+				// shorter positive before tighten to make sure this command is sent.
+				EZBus_RelMove(bus, potvalve_data.addr, 500000); // DEBUG PAW
 				if(EZBus_RelMove(bus, potvalve_data.addr, -1000000) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
 				blast_info("sent D1e6R to pot valve"); // DEBUG PAW
