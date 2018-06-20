@@ -67,7 +67,7 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 			     EZ_WHO_S10};
 
 // Set which steppers are used
-static int which_used[NACT] = [0,   // Actuator #0
+static int which_used[NACT] = {0,   // Actuator #0
 	   		       0,   // Actuator #1
 			       0,   // Actuator #2
 			       0,   // Balance
@@ -76,7 +76,7 @@ static int which_used[NACT] = [0,   // Actuator #0
 			       0,   // Shutter
 			       1,   // Pot Valve
 			       0,   // Pump Valve
-			       0];  // Fill Valve
+			       0};  // Fill Valve
 
 
 #define ID_ALL_ACT  EZ_WHO_G1_4
@@ -1509,7 +1509,6 @@ void *ActuatorBus(void *param)
 	    } else {
                 EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
     	    }
-    
 	}
     }
 
