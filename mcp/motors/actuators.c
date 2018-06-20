@@ -1512,7 +1512,8 @@ void *ActuatorBus(void *param)
 	}
     }
 
-    all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+    // I don't think this is necessary, it will always be called in the for loop --PAW 2018/06/20
+    // all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
 
     for (;;) {
         /* Repoll bus if necessary */
