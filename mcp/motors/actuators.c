@@ -1536,8 +1536,10 @@ void *ActuatorBus(void *param)
             bus.chatter = ACTBUS_CHATTER;
         }
 
+	// Commenting out everything but valves because repolling stuff takes too long
+/*
         if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-            // DoLock temporarily disabled.  7/18/2012
+            // DoLock temporarily disabled  7/18/2012
 	    blast_info("calling DoLock"); // DEBUG PAW
             DoLock();
             actuators_init |= 0x1 << LOCKNUM;
@@ -1558,7 +1560,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << SHUTTERNUM);
         }
-/*
+
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
             if (EZBus_IsUsable(&bus, id[i])) {
@@ -1580,7 +1582,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
         }
-*/
+
 // Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
 	    blast_info("calling DoBalance"); // DEBUG PAW
@@ -1592,7 +1594,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
         }
-
+*/
 	for (i = 0; i < 3; i++) {
 		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 			actuators_init |= 0x1 << valve_arr[i];
