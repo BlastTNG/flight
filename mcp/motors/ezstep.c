@@ -675,10 +675,12 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char))
         }
 
         if ((bus->stepper[iWho(i)].status & EZ_STEP_OK) && !(bus->stepper[iWho(i)].status & EZ_STEP_INIT)) {
-            if (ezinit(bus, i))
+            if (ezinit(bus, i)) {
+		blast_info("setting EZ_STEP_INIT for stepper %d", i);
                 bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
-            else
+	    } else {
                 bus->stepper[iWho(i)].status &= ~EZ_STEP_INIT;
+	    }
             sleep(1); // TODO(BLAST-Pol OK): belongs in library? may prevent many-init
         }
     }
