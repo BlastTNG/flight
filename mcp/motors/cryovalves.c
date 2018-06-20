@@ -287,7 +287,7 @@ void DoPotValve(struct ezbus* bus)
 				EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 				blast_info("called EZBus_SetIMove"); // DEBUG PAW
 				// shorter positive before tighten to make sure this command is sent.
-				EZBus_RelMove(bus, potvalve_data.addr, 500000); // DEBUG PAW
+				// EZBus_RelMove(bus, potvalve_data.addr, 500000); // DEBUG PAW
 				if(EZBus_RelMove(bus, potvalve_data.addr, -1000000) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
 				blast_info("sent D1e6R to pot valve"); // DEBUG PAW
