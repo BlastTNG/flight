@@ -676,7 +676,7 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char))
 
         if ((bus->stepper[iWho(i)].status & EZ_STEP_OK) && !(bus->stepper[iWho(i)].status & EZ_STEP_INIT)) {
             if (ezinit(bus, i)) {
-		blast_info("setting EZ_STEP_INIT for %d", name[(i]);
+		blast_info("setting EZ_STEP_INIT for %s", stepName(bus, i));
                 bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
 	    } else {
                 bus->stepper[iWho(i)].status &= ~EZ_STEP_INIT;
