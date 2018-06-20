@@ -56,7 +56,7 @@ extern int16_t InCharge;		/* tx.c */
 
 /* Index for each stepper for structures, name, id */
 #define LOCKNUM 4
-// #define HWPRNUM 5
+#define HWPRNUM 5
 #define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter", "Pot Valve",
@@ -65,6 +65,20 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6,
 			     EZ_WHO_S7, EZ_WHO_S8, EZ_WHO_S9,
 			     EZ_WHO_S10};
+
+// Set which steppers are used
+static int which_used[NACT] = [0,   // Actuator #0
+	   		       0,   // Actuator #1
+			       0,   // Actuator #2
+			       0,   // Balance
+			       0,   // Lockpin
+			       0,   // HWPR
+			       0,   // Shutter
+			       1,   // Pot Valve
+			       0,   // Pump Valve
+			       0];  // Fill Valve
+
+
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
@@ -476,7 +490,7 @@ static int InitialiseActuator(struct ezbus* thebus, char who)
 
     for (i = 0; i < 3; i++) {
         if (id[i] == who) {	  // only operate on actautors
-            // blast_info("Initialising %s...", name[i]);
+            blast_info("Inside InitialiseActuator, Initialising %s...", name[i]);
             ReadDR();	  // inefficient,
 
             /* Set the encoder */
@@ -1476,24 +1490,27 @@ void *ActuatorBus(void *param)
     blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
               LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
-        blast_info("Actuator %i, id[i] =%i", i, id[i]);
-        blast_info("name[i] = %s", name[i]);
-        EZBus_Add(&bus, id[i], name[i]);
-        if (i == BALANCENUM) {
-            EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
-	} else if (i == LOCKNUM) {
-            EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
-        } else if (i == SHUTTERNUM) {
-            EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
-        } else if (i == HWPRNUM) {
-            EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-        } else if (i == POTVALVE_NUM) {
-	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-	} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
-	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
-	} else {
-            EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
-        }
+	if (which_used[i]) {
+            blast_info("Actuator %i, id[i] =%i", i, id[i]);
+            blast_info("name[i] = %s", name[i]);
+            EZBus_Add(&bus, id[i], name[i]);
+            if (i == BALANCENUM) {
+                EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
+	    } else if (i == LOCKNUM) {
+                EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
+            } else if (i == SHUTTERNUM) {
+                EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
+            } else if (i == HWPRNUM) {
+                EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
+            } else if (i == POTVALVE_NUM) {
+	        EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
+	    } else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+	        EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
+	    } else {
+                EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
+    	    }
+    
+	}
     }
 
     all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
