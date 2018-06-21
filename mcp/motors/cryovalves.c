@@ -164,13 +164,13 @@ void DoPotValve(struct ezbus* bus)
 	static int tight_flag;
 	valve_state_t prev_goal;
 	int new_goal;
-	int firstmove;
+	// int firstmove;
 	int newstate;
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
 
 	blast_info("Starting DoPotValve"); // DEBUG PAW
-	
+
 	if (firsttime) {
 		blast_info("IN FIRSTTIME BLOCK"); // DEBUG PCA
 		potvalve_data.addr = GetActAddr(POTVALVE_NUM);
@@ -189,7 +189,7 @@ void DoPotValve(struct ezbus* bus)
 		potvalve_data.goal = 0;
 		potvalve_data.potvalve_move = 0;
 		newstate = 1;
-		firstmove = 1;
+		// firstmove = 1;
 		tight_flag = 1;
 
 		// this command always returns an error I think because it is supposed to be
@@ -200,7 +200,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	blast_info("past firsttime loop"); // DEBUG PAW
-	blast_info("firstmove = %d", firstmove); // DEBUG PAW
+	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	prev_goal = potvalve_data.goal;
 
@@ -251,12 +251,13 @@ void DoPotValve(struct ezbus* bus)
 		}
 	}
 
-	new_goal = !(prev_goal == potvalve_data.goal)
+	new_goal = !(prev_goal == potvalve_data.goal);
+	blast_info("compared previous and current goal, new_goal=%d", new_goal)
 
 	do_move = (newstate || new_goal);
-	if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
-	firstmove = 0;
-	blast_info("firstmove = %d", firstmove); // DEBUG PAW
+	if (do_move) blast_info("Pot Valve do_move is true"); // DEBUG PAW
+	// firstmove = 0;
+	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	if(do_move) {
 	switch(potvalve_data.potvalve_move) {
