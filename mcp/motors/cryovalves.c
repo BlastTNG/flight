@@ -38,7 +38,7 @@
 #define POTVALVE_OPEN 10000
 #define POTVALVE_CLOSED 4200
 #define POTVALVE_LOOSE_CLOSED 6500
-#define NVALVES 2
+#define NVALVES 2 // pump valve and fill valve, don't count pot valve here
 
 typedef enum {
 	no_move = 0, opening, closing, tighten
@@ -162,24 +162,15 @@ void DoPotValve(struct ezbus* bus)
 	static int firsttime = 1;
 	static int pot_init = 0;
 	static int tight_flag;
+	valve_state_t prev_goal;
+	int new_goal;
 	int firstmove;
 	int newstate;
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
 
 	blast_info("Starting DoPotValve"); // DEBUG PAW
-	if (CommandData.Cryo.potvalve_goal == opened) {
-		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
-		blast_info("set goal open"); // DEBUG PAW
-	} else if (CommandData.Cryo.potvalve_goal == closed) {
-		if ((potvalve_data.current == opened) || (potvalve_data.current == intermed)) {
-			potvalve_data.goal = loose_closed;
-			blast_info("set goal loose_closed"); // DEBUG PAW
-		} else {
-			potvalve_data.goal = closed;
-			blast_info("set goal closed"); // DEBUG PAW
-		}
-	}
+	
 	if (firsttime) {
 		blast_info("IN FIRSTTIME BLOCK"); // DEBUG PCA
 		potvalve_data.addr = GetActAddr(POTVALVE_NUM);
@@ -210,6 +201,21 @@ void DoPotValve(struct ezbus* bus)
 
 	blast_info("past firsttime loop"); // DEBUG PAW
 	blast_info("firstmove = %d", firstmove); // DEBUG PAW
+
+	prev_goal = potvalve_data.goal;
+
+	if (CommandData.Cryo.potvalve_goal == opened) {
+		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
+		blast_info("set goal open"); // DEBUG PAW
+	} else if (CommandData.Cryo.potvalve_goal == closed) {
+		if ((potvalve_data.current == opened) || (potvalve_data.current == intermed)) {
+			potvalve_data.goal = loose_closed;
+			blast_info("set goal loose_closed"); // DEBUG PAW
+		} else {
+			potvalve_data.goal = closed;
+			blast_info("set goal closed"); // DEBUG PAW
+		}
+	}
 
 	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
 
@@ -245,7 +251,9 @@ void DoPotValve(struct ezbus* bus)
 		}
 	}
 
-	do_move = (newstate || firstmove);
+	new_goal = !(prev_goal == potvalve_data.goal)
+
+	do_move = (newstate || new_goal);
 	if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
 	firstmove = 0;
 	blast_info("firstmove = %d", firstmove); // DEBUG PAW
