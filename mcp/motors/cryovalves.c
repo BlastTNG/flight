@@ -252,10 +252,11 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	new_goal = !(prev_goal == potvalve_data.goal);
-	blast_info("compared previous and current goal, new_goal=%d", new_goal)
+	blast_info("prev_goal = %d, current goal = %d", prev_goal, potvalve_data.goal);
+	blast_info("compared previous and current goal, new_goal=%d", new_goal);
 
 	do_move = (newstate || new_goal);
-	if (do_move) blast_info("Pot Valve do_move is true"); // DEBUG PAW
+	blast_info("Pot Valve do_move = %d", do_move); // DEBUG PAW
 	// firstmove = 0;
 	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
@@ -329,6 +330,7 @@ void GetPotValvePos(struct ezbus bus)
 int SetValveState(int tight_flag)
 {
 	valve_state_t prev = potvalve_data.current;
+	int retval;
 
 	if ((potvalve_data.adc[0] <= POTVALVE_CLOSED) && (tight_flag == 1)) {
 		potvalve_data.current = closed;
@@ -336,16 +338,19 @@ int SetValveState(int tight_flag)
 		potvalve_data.current = loose_closed;
 	} else if (potvalve_data.adc[0] >= POTVALVE_OPEN) {
 		potvalve_data.current = opened;
-	/* } else if (potvalve_data.adc[0] <= POTVALVE_LOOSE_CLOSED) {
-		potvalve_data.current = loose_closed;
-	} else if (potvalve_data.adc[0] <= POTVALVE_CLOSED) {
-		// && tight_flag == 1) { // only declare it closed if we went through tightening
-		potvalve_data.current = closed;*/
 	} else {
 		potvalve_data.current = intermed;
 	}
 
-	return (potvalve_data.current != prev);
+	retval = (potvalve_data.current != prev);
+
+	// if current state is intermed we don't want to set newstate because we don't need to send a new command
+	// unless the goal is also new
+	// Also don't send a command if we just un-tightened (started to open) otherwise we send open twice
+	if (potvalve_data.current == intermed || (prev == closed && potvalve_data.current == loose_closed))  {
+		retval = 0;
+	}
+	return retval;
 }
 
 void WriteValves(unsigned int actuators_init, int* valve_addr)
