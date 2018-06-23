@@ -969,6 +969,13 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
+  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel no", 0, 1000, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
   {COMMAND(chop_tune_chan), "Tune channel responsivity with optical chop", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},

@@ -199,9 +199,9 @@ char vna_path_350[] = "/home/fc1user/sam_tests/sweeps/roach2/vna/Thu_May_10_20_5
 char targ_search_path[] = "/home/fc1user/sam_tests/sweeps/roach5/targ/Thu_Apr_19_19_35_11_2018";
 
 char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
-char find_kids_250[] = "/data/etc/blast/roachPython/find_kids_250.py";
-char find_kids_350[] = "/data/etc/blast/roachPython/find_kids_350.py";
-char find_kids_500[] = "/data/etc/blast/roachPython/find_kids_500.py";
+// char find_kids_350[] = "/data/etc/blast/roachPython/find_kids_350.py";
+// char find_kids_500[] = "/data/etc/blast/roachPython/find_kids_500.py";
+char find_kids_py[] = "/data/etc/blast/roachPython/findKidsMcp.py";
 char center_phase_script[] = "/data/etc/blast/roachPython/center_phase.py";
 char chop_snr_script[] = "/data/etc/blast/roachPython/fit_mcp_chop.py";
 char refit_freqs_script[] = "/data/etc/blast/roachPython/fit_res.py";
@@ -1578,22 +1578,23 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
     }
     char *py_command;
     char *m_targ_freq_path;
-    char *find_kids_script;
+    // char *find_kids_script;
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[READ_LINE];
+    // blast_tmp_sprintf(find_kids_script, find_kids_script);
+    /*
     if (m_roach->array == 250) {
         blast_tmp_sprintf(find_kids_script, find_kids_250);
     } else if (m_roach->array == 350) {
         blast_tmp_sprintf(find_kids_script, find_kids_350);
     } else if (m_roach->array == 500) {
         blast_tmp_sprintf(find_kids_script, find_kids_500);
-    }
+    }*/
     blast_info("Calling Python script...");
     blast_tmp_sprintf(py_command, "python %s %d %s %g %g %g %g %g > %s",
-        find_kids_script,
+        find_kids_py,
         m_roach->which,
         m_vna_path,
-        // m_roach->last_targ_path,
         CommandData.roach_params[m_roach->which - 1].smoothing_scale,
         CommandData.roach_params[m_roach->which - 1].peak_threshold,
         CommandData.roach_params[m_roach->which - 1].spacing_threshold,
@@ -1794,7 +1795,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         return SWEEP_INTERRUPT;
     }
     char *save_bbfreqs_command;
-    char *save_vna_trf_command;
+    // char *save_vna_trf_command;
     char *save_targ_trf_command;
     double m_span;
     char *sweep_freq_fname;
@@ -1815,9 +1816,11 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 return SWEEP_FAIL;
             }
             // Save last system transfer function
+            /*
             blast_tmp_sprintf(save_vna_trf_command, "cp %s/roach%d/vna_trf.dat %s",
                 bb_targ_freqs_path, m_roach->which, m_roach->last_vna_path);
             system(save_vna_trf_command);
+            */
             save_path = m_roach->last_vna_path;
             comb_len = m_roach->vna_comb_len;
          } else {
@@ -2019,6 +2022,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     }
     // allocate memory to hold timestreams before saving to file
     int npoints = round(m_nsec * (double)DAC_FREQ_RES);
+    blast_info("ROACH%d, saving %d points %f sec", m_roach->which, npoints, m_nsec);
     int rows = m_roach->current_ntones;
     int cols = npoints;
     float *I[rows];
@@ -2896,7 +2900,7 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].get_timestream == 2) {
             blast_info("Saving all timestreams");
             save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
-            check_chop_data(&roach_state_table[i]);
+            // if (i == 0) CommandData.roach[2].get_timestream = 2;
         }
         if (CommandData.roach[i].do_master_chop) {
             blast_info("Creating chop template");
@@ -3286,8 +3290,8 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].phase_centers_path,
                       "/home/fc1user/sam_tests/sweeps/roach%d/phase_centers.dat", ind + 1);
     if ((ind == 0)) {
-        roach_state_table[ind].array = 250;
-        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].array = 500;
+        roach_state_table[ind].lo_centerfreq = 540.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -3295,7 +3299,6 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 1)) {
-        roach_state_table[ind].fpg = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
@@ -3305,6 +3308,15 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 2)) {
+        roach_state_table[ind].array = 350;
+        roach_state_table[ind].lo_centerfreq = 850.0e6;
+        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].p_max_freq = 246.001234e6;
+        roach_state_table[ind].p_min_freq = 1.02342e6;
+        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
+        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
+    }
+    if ((ind == 3)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
@@ -3313,18 +3325,9 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
-    if ((ind == 3)) {
-        roach_state_table[ind].array = 350;
-        roach_state_table[ind].lo_centerfreq = 850.0e6;
-        roach_state_table[ind].vna_comb_len = 1000;
-        roach_state_table[ind].p_max_freq = 246.001234e6;
-        roach_state_table[ind].p_min_freq = 1.02342e6;
-        roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
-        roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
-    }
     if ((ind == 4)) {
-        roach_state_table[ind].array = 350;
-        roach_state_table[ind].lo_centerfreq = 850.0e6;
+        roach_state_table[ind].array = 500;
+        roach_state_table[ind].lo_centerfreq = 540.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;

@@ -1887,9 +1887,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case all_timestreams:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)
-                    && ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+                    && ((rvalues[0] >= 0.0) && rvalues[0] <= 300.0)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[0];
           CommandData.roach[ivalues[0]-1].get_timestream = 2;
+          CommandData.roach[ivalues[0]-1].get_timestream = 2;
+      }
+    case all_roach_ts:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1000)
+                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 300.0)) {
+          CommandData.roach_params[0].num_sec = rvalues[2];
+          CommandData.roach_params[2].num_sec = rvalues[2];
+          CommandData.roach_params[3].num_sec = rvalues[2];
+          CommandData.roach[0].get_timestream = 2;
+          CommandData.roach[2].get_timestream = 2;
+          CommandData.roach[3].get_timestream = 2;
       }
     case chop_tune_chan:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&

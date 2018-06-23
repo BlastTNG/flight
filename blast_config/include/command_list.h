@@ -269,6 +269,7 @@ enum multiCommand {
   change_amps,
   chop_template,
   load_freqs,
+  all_roach_ts,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
