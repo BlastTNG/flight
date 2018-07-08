@@ -50,7 +50,7 @@ double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_BUS    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
+#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
 #define NACT 10
 
@@ -1518,7 +1518,7 @@ void *ActuatorBus(void *param)
     for (;;) {
         /* Repoll bus if necessary */
         if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
-	    blast_info("forcing repoll of entire actuator bus"); // DEBUG PAW
+	    blast_info("forcing repoll of entire actuator bus (or polling first time)"); // DEBUG PAW
             for (i = 0; i < NACT; i++)
                 EZBus_ForceRepoll(&bus, id[i]);
             poll_timeout = 0;
@@ -1553,10 +1553,7 @@ void *ActuatorBus(void *param)
             bus.chatter = ACTBUS_CHATTER;
         }
 
-	// Commenting out everything but valves because repolling stuff takes too long
-/*
         if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-            // DoLock temporarily disabled  7/18/2012
 	    blast_info("calling DoLock"); // DEBUG PAW
             DoLock();
             actuators_init |= 0x1 << LOCKNUM;
@@ -1600,7 +1597,6 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << HWPRNUM);
         }
 
-// Commenting out balance system for now (PCA 12/6/16)
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
 	    blast_info("calling DoBalance"); // DEBUG PAW
             DoBalance(&bus);
@@ -1611,7 +1607,7 @@ void *ActuatorBus(void *param)
             all_ok = 0;
             actuators_init &= ~(0x1 << BALANCENUM);
         }
-*/
+
 	for (i = 0; i < 3; i++) {
 		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 			actuators_init |= 0x1 << valve_arr[i];
