@@ -770,6 +770,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case restore_piv:
             CommandData.restore_piv = 1;
             break;
+        case reset_ethercat:
+            CommandData.ec_devices.reset = 1;
+            break;
         case pss_veto:
             CommandData.use_pss = 0;
             break;
@@ -2700,8 +2703,8 @@ void InitCommandData()
     CommandData.Cryo.lvalve_open = 0;
     CommandData.Cryo.lvalve_close = 0;
     CommandData.Cryo.lnvalve_on = 0;
-    CommandData.Cryo.potvalve_opencurrent = 50;
-    CommandData.Cryo.potvalve_closecurrent = 25;
+    CommandData.Cryo.potvalve_opencurrent = 25;
+    CommandData.Cryo.potvalve_closecurrent = 20;
     CommandData.Cryo.potvalve_vel = 50000;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
@@ -2843,6 +2846,7 @@ void InitCommandData()
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.forced = 0;
+    CommandData.Cryo.heater_update = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2913,6 +2917,7 @@ void InitCommandData()
     CommandData.pivot_gain.PE = 0;
     CommandData.pivot_gain.F = 0.3;
 
+    CommandData.ec_devices.reset = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
     CommandData.disable_el = 1;

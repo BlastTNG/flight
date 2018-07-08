@@ -296,8 +296,8 @@ void * lj_connection_handler(void *arg) {
     init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
-    // labjack_networking_init(7, 14, 1);
-    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    labjack_networking_init(7, 14, 1);
+    initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // labjack_networking_init(8, 14, 1);
@@ -681,8 +681,8 @@ blast_info("Finished initializing Beaglebones..."); */
   // force_incharge();
 
   if (use_starcams) {
-      xsc_networking_init(0);
-      xsc_networking_init(1);
+       xsc_networking_init(0);
+       xsc_networking_init(1);
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
@@ -698,6 +698,7 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  initialize_bias_tone();
   startChrgCtrl(0);
+  startChrgCtrl(1);
 
 //  initialize the data sharing server
   data_sharing_init(linklist_array);

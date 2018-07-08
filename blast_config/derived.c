@@ -574,7 +574,7 @@ derived_tng_t derived_list[] = {
     UNITS("Tr_350_fpa", "Temperature", "K"),
     LINTERP("Tr_he4_pot",   "RR_HE4_POT"   , LUT_DIR "rox-raw.txt"),
     UNITS("Tr_he4_pot", "Temperature", "K"),
-    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "rox-raw.txt"),
+    LINTERP("Tr_he3_fridge",    "RR_HE3_FRIDGE"    , LUT_DIR "rox-he3.txt"),
     UNITS("Tr_he3_fridge", "Temperature", "K"),
     LINTERP("Tr_500_fpa", "RR_500_FPA", LUT_DIR "rox-raw.txt"),
     UNITS("Tr_500_fpa", "Temperature", "K"),

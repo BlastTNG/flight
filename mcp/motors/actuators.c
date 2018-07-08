@@ -43,6 +43,8 @@
 #include "hwpr.h"
 #include "cryovalves.h"
 
+#include "ec_motors.h"
+
 void nameThread(const char*);		/* mcp.c */
 double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
@@ -54,7 +56,7 @@ extern int16_t InCharge;		/* tx.c */
 
 /* Index for each stepper for structures, name, id */
 #define LOCKNUM 4
-#define HWPRNUM 5
+// #define HWPRNUM 5
 #define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter", "Pot Valve",
@@ -1437,6 +1439,8 @@ void *ActuatorBus(void *param)
     int sf_ok;
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
 
+	int hwp_pos; // DEBUG PCA
+
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
 
@@ -1468,7 +1472,7 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPR_ADDR);
+    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
     blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
               LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
@@ -1504,7 +1508,7 @@ void *ActuatorBus(void *param)
             CommandData.actbus.force_repoll = 0;
         }
 
-        if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
             // suppress non-error messages during repoll
             bus.chatter = EZ_CHAT_ERR;
             all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
@@ -1559,11 +1563,11 @@ void *ActuatorBus(void *param)
         }
         if (sf_ok) DoActuators();
 
-        if (EZBus_IsUsable(&bus, HWPR_ADDR)) {
-            DoHWPR(&bus);
+        if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
+	    DoHWPR(&bus);
             actuators_init |= 0x1 << HWPRNUM;
         } else {
-            EZBus_ForceRepoll(&bus, HWPR_ADDR);
+            EZBus_ForceRepoll(&bus, id[HWPRNUM]);
             all_ok = 0;
             actuators_init &= ~(0x1 << HWPRNUM);
         }

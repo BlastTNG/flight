@@ -101,14 +101,27 @@ static inline uint8_t object_subindex(uint16_t m_index, uint8_t m_subindex)
 }
 
 typedef enum {
+    ECAT_DEV_COLD,           //!< ECAT_MOTOR_COLD
+    ECAT_DEV_FOUND,          //!< ECAT_MOTOR_FOUND
+    ECAT_DEV_MAPPED,         //!< ECAT_MOTOR_MAPPED
+    ECAT_DEV_RUNNING,        //!< ECAT_MOTOR_RUNNING
+    ECAT_DEV_LOST,
+} ec_motor_state_t;
+
+typedef enum {
     ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
     ECAT_MOTOR_INIT,           //!< ECAT_MOTOR_INIT
     ECAT_MOTOR_FOUND_PARTIAL,  //!< ECAT_MOTOR_FOUND_PARTIAL
     ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
     ECAT_MOTOR_RUNNING_PARTIAL,//!< ECAT_MOTOR_RUNNING_PARTIAL
     ECAT_MOTOR_RUNNING         //!< ECAT_MOTOR_RUNNING
-} ec_motor_state_t;
+} ec_contol_status_t;
 
+typedef struct {
+	int8_t n_found;
+	int8_t slave_count;
+	ec_contol_status_t status;
+} ec_state_t;
 
 #define COPLEY_ETHERCAT_VENDOR 0x000000ab
 #define AEP_090_036_PRODCODE 0x00000380
@@ -160,6 +173,8 @@ typedef enum {
 #define ECAT_LOAD_POSITION 0x2242, 0 /* Load Encoder position in counts INT32 */
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
+
+#define ECAT_FUCHS_POSITION 0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
 #  define ECAT_STATUS_SHORTCIRCUIT          (1<<0)
@@ -247,6 +262,8 @@ double rw_get_velocity_dps(void);
 double el_get_velocity_dps(void);
 double piv_get_velocity_dps(void);
 
+uint32_t hwp_get_position(void);
+uint16_t hwp_get_state(void);
 uint32_t rw_get_latched(void);
 uint32_t el_get_latched(void);
 uint32_t piv_get_latched(void);
@@ -289,6 +306,6 @@ void rw_reset_fault(void);
 void el_reset_fault(void);
 void piv_reset_fault(void);
 
-void initialize_motors(void);
+int initialize_motors(void);
 
 #endif /* INCLUDE_EC_MOTORS_H_ */
