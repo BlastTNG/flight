@@ -445,7 +445,38 @@ int channels_initialize(const channel_t * const m_channel_list)
 }
 
 unsigned int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
-  return kid+(roach-1)*NUM_KIDS+rtype*NUM_ROACHES*NUM_KIDS; 
+  return kid+(roach-1)*NUM_KIDS+rtype*NUM_ROACHES*NUM_KIDS;
+}
+
+void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtype, unsigned int roach_index) {
+  if (rtype) *rtype = roach_index/(NUM_ROACHES*NUM_KIDS);
+  roach_index %= NUM_ROACHES*NUM_KIDS;
+
+  if (roach) *roach = roach_index/(NUM_KIDS)+1;
+  roach_index %= NUM_KIDS;
+
+  if (kid) *kid = roach_index;
+}
+
+const char * rtypes[3] = {"i", "q", "df"};
+
+void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
+  unsigned int roach = 0, kid = 0, rtype = 0;
+  read_roach_index(&roach, &kid, &rtype, roach_index);
+
+  if (roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", roach);
+    return;    
+  }
+  if (kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", kid);
+    return;
+  }
+  if (rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", rtype);
+  }
+
+  snprintf(name, 63, "%s_kid%.04d_roach%.01d", rtypes[rtype], kid, roach);
 }
 
 superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
