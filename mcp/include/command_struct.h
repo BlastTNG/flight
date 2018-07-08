@@ -401,6 +401,14 @@ typedef struct {
     bool reset;
 } cmd_rox_bias_t;
 
+typedef struct {
+    unsigned int kid;
+    unsigned int roach;
+    unsigned int rtype;
+    unsigned int index;
+    char name[64];
+} roach_tlm_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -423,6 +431,7 @@ struct CommandDataStruct {
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
+  roach_tlm_t roach_tlm[NUM_ROACH_TLM]; 
 
   enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
 

@@ -147,6 +147,12 @@ void groundhog_write_calspecs_item(FILE *calspecsfile, derived_tng_t *derived) {
     }
 }
 
+void groundhog_channels_modify(superframe_t * superframe) 
+{
+  
+
+}
+
 void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
 {
   FILE * calspecsfile = fopen(fname, "w");
@@ -166,6 +172,11 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
     double m = channel->m_c2e;
     double b = channel->b_e2e;
 
+    // don't do roach channels; we have something special for that (see below)
+    if ((strstr(tmp_str, "roach") != NULL) && (strstr(tmp_str, "kid") != NULL)) {
+      continue;
+    }
+
     /// By default we set the converted field to upper case
     for (int i = 0; tmp_str[i]; i++) tmp_str[i] = toupper(tmp_str[i]);
     /// If our scale/offset are unity/zero respectively, tell defile to use the easier zero-phase
@@ -184,7 +195,8 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
     groundhog_write_calspecs_item(calspecsfile, &derived);
   }
 
-  // generate multiplex fields for roach data
+  // something special: generate multiplex fields for roach data
+  // roach data is demultiplexed from large block fields
   int kid = 0, roach = 1, rtype = 0;
   for (roach = 1; roach <= NUM_ROACHES; roach++) {
     for (kid = 0; kid < NUM_KIDS; kid++) {
@@ -203,6 +215,7 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
 
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
+  groundhog_superframe_modify(superframe);
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  

@@ -53,6 +53,7 @@
 #include "derived.h"
 #include "linklist.h"
 
+char * ROACH_TYPES[NUM_RTYPES] = {"i", "q", "df"};
 static GHashTable *frame_table = NULL;
 static int channel_count[RATE_END][TYPE_END] = {{0}};
 int channels_count = 0;
@@ -458,8 +459,6 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   if (kid) *kid = roach_index;
 }
 
-const char * rtypes[3] = {"i", "q", "df"};
-
 void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
   unsigned int roach = 0, kid = 0, rtype = 0;
   read_roach_index(&roach, &kid, &rtype, roach_index);
@@ -476,7 +475,7 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
     blast_err("Invalid rtype %d", rtype);
   }
 
-  snprintf(name, 63, "%s_kid%.04d_roach%.01d", rtypes[rtype], kid, roach);
+  snprintf(name, 63, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
 }
 
 superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {

@@ -311,11 +311,31 @@ void * lj_connection_handler(void *arg) {
 
 unsigned int superframe_counter[RATE_END] = {0};
 
+void add_roach_tlm_488hz() 
+{
+  static channel_t * roach_chans[NUM_ROACH_TLM] = {NULL};
+  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
+  static int first_time = 1;
+  if (first_time) {
+    memset(roach_indices, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
+    first_time = 0;
+  }
+
+  int i;
+  for (i = 0; i < NUM_ROACH_TLM; i++) {
+    if (roach_indices[i] != CommandData.roach_tlm[i].index) {
+      roach_chans[i] = channels_find_by_name(CommandData.roach_tlm[i].name);
+      roach_indices[i] = CommandData.roach_tlm[i].index;
+    }
+  }
+}
+
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
 	write_roach_channels_488hz();
 #endif
+    add_roach_tlm_488hz();
 
     share_data(RATE_488HZ);
     framing_publish_488hz();

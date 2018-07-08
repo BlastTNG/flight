@@ -89,6 +89,7 @@ extern int doing_schedule; /* sched.c */
 
 extern linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES];
 extern linklist_t * telemetries_linklist[NUM_TELEMETRIES];
+extern char * ROACH_TYPES[NUM_RTYPES];
 
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
@@ -1171,7 +1172,7 @@ static inline void copysvalue(char* dest, const char* src)
 void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-  int i;
+  int i, j, k;
   int is_new;
 
 //   Update CommandData struct with new info
@@ -1825,6 +1826,80 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       // Value entered by user in kbps but stored in Bps
       CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
       blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+      break;
+    case set_roach_iq_chan:
+      for (j = 0; j < NUM_RTYPES; j++) {
+        if (strcmp(ROACH_TYPES[j], "i") == 0) break;
+      }
+      if (j == NUM_RTYPES) {
+        blast_err("Roach type \"i\" not found");
+        break;
+      }
+      for (k = 0; k < NUM_RTYPES; k++) {
+        if (strcmp(ROACH_TYPES[k], "q") == 0) break;
+      }
+      if (k == NUM_RTYPES) {
+        blast_err("Roach type \"q\" not found");
+        break;
+      }
+      // loop through the roach_tlms and set I and Q alternately
+      for (i = 0; i < 10; i++) {
+        CommandData.roach_tlm[i].kid = rvalues[(i/2)*2];
+        CommandData.roach_tlm[i].roach = rvalues[(i/2)*2+1]; 
+        if (i%2 == 0) { // set I 
+          CommandData.roach_tlm[i].rtype = j;
+        } else { // set Q
+          CommandData.roach_tlm[i].rtype = k;
+        }
+        CommandData.roach_tlm[i].index = get_roach_index(CommandData.roach_tlm[i].roach,
+                                                         CommandData.roach_tlm[i].kid,
+                                                         CommandData.roach_tlm[i].rtype);
+        make_name_from_roach_index(CommandData.roach_tlm[i].index,
+                                   CommandData.roach_tlm[i].name); 
+      }
+
+      break;
+    case set_roach_df_chan_1:
+      // set the first half of df channels
+      for (j = 0; j < NUM_RTYPES; j++) {
+        if (strcmp(ROACH_TYPES[j], "df") == 0) break;
+      }
+      if (j == NUM_RTYPES) {
+        blast_err("Roach type \"df\" not found");
+        break;
+      }
+      for (i = 0; i < 5; i++) {
+        CommandData.roach_tlm[i].kid = rvalues[i*2];
+        CommandData.roach_tlm[i].roach = rvalues[i*2+1];
+        CommandData.roach_tlm[i].rtype = j;
+        CommandData.roach_tlm[i].index = get_roach_index(CommandData.roach_tlm[i].roach,
+                                                         CommandData.roach_tlm[i].kid,
+                                                         CommandData.roach_tlm[i].rtype);
+        make_name_from_roach_index(CommandData.roach_tlm[i].index,
+                                   CommandData.roach_tlm[i].name); 
+      }
+
+      break;
+    case set_roach_df_chan_2:
+      // set the second half of df channels
+      for (j = 0; j < NUM_RTYPES; j++) {
+        if (strcmp(ROACH_TYPES[j], "df") == 0) break;
+      }
+      if (j == NUM_RTYPES) {
+        blast_err("Roach type \"df\" not found");
+        break;
+      }
+      for (i = 0; i < 5; i++) {
+        CommandData.roach_tlm[i+5].kid = rvalues[i*2];
+        CommandData.roach_tlm[i+5].roach = rvalues[i*2+1];
+        CommandData.roach_tlm[i+5].rtype = j;
+        CommandData.roach_tlm[i+5].index = get_roach_index(CommandData.roach_tlm[i+5].roach,
+                                                         CommandData.roach_tlm[i+5].kid,
+                                                         CommandData.roach_tlm[i+5].rtype);
+        make_name_from_roach_index(CommandData.roach_tlm[i+5].index,
+                                   CommandData.roach_tlm[i+5].name); 
+      }
+
       break;
     case slot_sched:  // change uplinked schedule file
         // TODO(seth): Re-enable Uplink file loading
@@ -2592,10 +2667,10 @@ void InitCommandData()
 				}
 			}
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], ALL_TELEMETRY_NAME);
+			snprintf(linklist_nt[num_ll], 79, ALL_TELEMETRY_NAME);
       num_ll++;
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], linklist_nt[num_ll], "no_linklist");
+			snprintf(linklist_nt[num_ll], 79, "no_linklist");
       num_ll++;
 		}
 
