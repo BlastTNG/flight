@@ -639,7 +639,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
                     break;
                 case 2010:
-                    blast_info("writing to %d, value %d", address, value);
+                    // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
                     break;
                 case 2011:
@@ -647,7 +647,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
                     break;
                 case 2013:
-                    blast_info("writing to %d, value %d", address, value);
+                    // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
                     break;
                 case 2015:
@@ -666,7 +666,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
                     break;
                 case 2010:
-                    blast_info("writing to %d, value %d", address, value);
+                    // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
                     break;
                 case 2011:
@@ -674,7 +674,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
                     break;
                 case 2013:
-                    blast_info("writing to %d, value %d", address, value);
+                    // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
                     break;
                 case 2015:
