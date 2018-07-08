@@ -147,9 +147,9 @@ void groundhog_write_calspecs_item(FILE *calspecsfile, derived_tng_t *derived) {
     }
 }
 
-void groundhog_channels_modify(superframe_t * superframe) 
+void groundhog_superframe_modify(superframe_t * superframe) 
 {
-  
+    
 
 }
 
