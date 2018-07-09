@@ -147,9 +147,29 @@ void groundhog_write_calspecs_item(FILE *calspecsfile, derived_tng_t *derived) {
     }
 }
 
+// replaces the first roach telemetry item with a block for demultiplexing
 void groundhog_superframe_modify(superframe_t * superframe) 
 {
-    
+  char tlm_name[64] = {0}; 
+  superframe_entry_t * sfe_ref = NULL;
+
+  // generate a block starting at the first telemetry roach channel
+  snprintf(tlm_name, 63, "kidA_roachN"); 
+  sfe_ref = superframe_find_by_name(superframe, tlm_name); 
+  // fake sample rate is the roach rate times the number of roach telemetry channels
+  if (sfe_ref) {
+    sfe_ref->spf *= NUM_ROACH_TLM;
+    sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_NAME);
+  }
+
+  // generate a block startinga at the first telemetry roach index channel
+  snprintf(tlm_name, 63, "kidA_roachN_index"); 
+  sfe_ref = superframe_find_by_name(superframe, tlm_name); 
+  // fake sample rate is the roach rate times the number of roach telemetry channels
+  if (sfe_ref) {
+    sfe_ref->spf *= NUM_ROACH_TLM;
+    sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_INDEX_NAME);
+  }
 
 }
 
@@ -198,12 +218,19 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
   // something special: generate multiplex fields for roach data
   // roach data is demultiplexed from large block fields
   int kid = 0, roach = 1, rtype = 0;
-  for (roach = 1; roach <= NUM_ROACHES; roach++) {
-    for (kid = 0; kid < NUM_KIDS; kid++) {
-      for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
-        unsigned int index = get_roach_index(kid, roach, rtype);
+  for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
+    for (roach = 1; roach <= NUM_ROACHES; roach++) {
+      for (kid = 0; kid < NUM_KIDS; kid++) {
+        unsigned int index = get_roach_index(roach, kid, rtype);
         derived.type = 'x';
-        
+        make_name_from_roach_index(index, derived.mplex.field);
+        for (int i = 0; derived.mplex.field[i]; i++) derived.mplex.field[i] = toupper(derived.mplex.field[i]);
+        strcpy(derived.mplex.source, ROACH_CHANNEL_BLOCK_NAME);
+        strcpy(derived.mplex.index, ROACH_CHANNEL_BLOCK_INDEX_NAME);
+        derived.mplex.value = index;
+        derived.mplex.max = 0;
+
+        groundhog_write_calspecs_item(calspecsfile, &derived);
       }
     }
   }
@@ -220,6 +247,8 @@ int main(int argc, char * argv[]) {
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  
   write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
+
+  groundhog_write_calspecs("test.calspecs", derived_list); 
 
   int pilot_on = 1;
   int bi0_on = 1;
