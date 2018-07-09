@@ -336,7 +336,7 @@ void add_roach_tlm_488hz()
   }
 
   for (i = 0; i < NUM_ROACH_TLM; i++) {
-    if (roach_indices[i] != CommandData.roach_tlm[i].index) {
+    if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
       roach_chans[i] = channels_find_by_name(CommandData.roach_tlm[i].name);
       roach_indices[i] = CommandData.roach_tlm[i].index;
       if (roach_chans[i] && roach_indices[i]) blast_info("Telemetering \"%s\" -> \"%s\"", roach_chans[i]->field, tlm[i]->field);
@@ -357,7 +357,7 @@ void add_roach_tlm_488hz()
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-	write_roach_channels_488hz();
+	//write_roach_channels_488hz();
 #endif
     add_roach_tlm_488hz();
 
@@ -670,12 +670,12 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef NO_KIDS_TEST
-  blast_info("Initializing ROACHes from MCP...");
-  roach_udp_networking_init();
-  init_roach(0);
-  init_roach(1);
-  init_roach(2);
-  init_roach(3);
+  //blast_info("Initializing ROACHes from MCP...");
+  //roach_udp_networking_init();
+  //init_roach(0);
+  //init_roach(1);
+  //init_roach(2);
+  //init_roach(3);
   // init_roach(4);
   blast_info("Finished initializing ROACHes...");
 #endif

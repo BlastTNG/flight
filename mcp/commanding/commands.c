@@ -1844,8 +1844,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       // loop through the roach_tlms and set I and Q alternately
       for (i = 0; i < 10; i++) {
-        CommandData.roach_tlm[i].kid = rvalues[(i/2)*2];
-        CommandData.roach_tlm[i].roach = rvalues[(i/2)*2+1]; 
+        CommandData.roach_tlm[i].kid = ivalues[(i/2)*2];
+        CommandData.roach_tlm[i].roach = ivalues[(i/2)*2+1];
+ 
         if (i%2 == 0) { // set I 
           CommandData.roach_tlm[i].rtype = j;
         } else { // set Q
@@ -1869,8 +1870,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         break;
       }
       for (i = 0; i < 5; i++) {
-        CommandData.roach_tlm[i].kid = rvalues[i*2];
-        CommandData.roach_tlm[i].roach = rvalues[i*2+1];
+        CommandData.roach_tlm[i].kid = ivalues[i*2];
+        CommandData.roach_tlm[i].roach = ivalues[i*2+1];
         CommandData.roach_tlm[i].rtype = j;
         CommandData.roach_tlm[i].index = get_roach_index(CommandData.roach_tlm[i].roach,
                                                          CommandData.roach_tlm[i].kid,
@@ -1890,8 +1891,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         break;
       }
       for (i = 0; i < 5; i++) {
-        CommandData.roach_tlm[i+5].kid = rvalues[i*2];
-        CommandData.roach_tlm[i+5].roach = rvalues[i*2+1];
+        CommandData.roach_tlm[i+5].kid = ivalues[i*2];
+        CommandData.roach_tlm[i+5].roach = ivalues[i*2+1];
         CommandData.roach_tlm[i+5].rtype = j;
         CommandData.roach_tlm[i+5].index = get_roach_index(CommandData.roach_tlm[i+5].roach,
                                                          CommandData.roach_tlm[i+5].kid,
