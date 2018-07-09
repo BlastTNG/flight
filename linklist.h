@@ -96,13 +96,13 @@ struct superframe_struct;
 
 struct sf_entry 
 {
-	char field[SF_FIELD_LEN];      // name of entry for FileFormats and CalSpecs
-	uint8_t type;               // Type of data stored
-	uint32_t spf;               // Samples per frame
+  char field[SF_FIELD_LEN];      // name of entry for FileFormats and CalSpecs
+  uint8_t type;               // Type of data stored
+  uint32_t spf;               // Samples per frame
   uint32_t start;             // Start location of first sample in the superframe
   uint32_t skip;              // Bytes to skipe between samples
-	char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
-	char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
+  char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
+  char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data
   struct superframe_struct * superframe; // Pointer to corresponding superframe
 };
@@ -118,8 +118,8 @@ struct superframe_struct
   unsigned int hash_table_size;
   unsigned int allframe_size;
 
-	double (*datatodouble)(uint8_t *, uint8_t);
-	int (*doubletodata)(uint8_t *, double, uint8_t);
+  double (*datatodouble)(uint8_t *, uint8_t);
+  int (*doubletodata)(uint8_t *, double, uint8_t);
 
   char calspecs[64];
 };
