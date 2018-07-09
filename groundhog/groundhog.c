@@ -158,7 +158,7 @@ void groundhog_superframe_modify(superframe_t * superframe)
   sfe_ref = superframe_find_by_name(superframe, tlm_name); 
   // fake sample rate is the roach rate times the number of roach telemetry channels
   if (sfe_ref) {
-    sfe_ref->spf *= NUM_ROACH_TLM;
+    sfe_ref->override_size = get_superframe_entry_size(sfe_ref)*NUM_ROACH_TLM;
     sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_NAME);
   }
 
@@ -167,7 +167,7 @@ void groundhog_superframe_modify(superframe_t * superframe)
   sfe_ref = superframe_find_by_name(superframe, tlm_name); 
   // fake sample rate is the roach rate times the number of roach telemetry channels
   if (sfe_ref) {
-    sfe_ref->spf *= NUM_ROACH_TLM;
+    sfe_ref->override_size = get_superframe_entry_size(sfe_ref)*NUM_ROACH_TLM;
     sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_INDEX_NAME);
   }
 
