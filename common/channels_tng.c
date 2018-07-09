@@ -445,7 +445,20 @@ int channels_initialize(const channel_t * const m_channel_list)
     return 0;
 }
 
-unsigned int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
+int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
+  if (roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", roach);
+    return -1;    
+  }
+  if (kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", kid);
+    return -1;
+  }
+  if (rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", rtype);
+    return -1;
+  }
+
   return kid+(roach-1)*NUM_KIDS+rtype*NUM_ROACHES*NUM_KIDS;
 }
 
@@ -473,6 +486,7 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
   }
   if (rtype >= NUM_RTYPES) {
     blast_err("Invalid rtype %d", rtype);
+    return;
   }
 
   snprintf(name, 63, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
