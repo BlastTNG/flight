@@ -1,24 +1,25 @@
 # Timestreams for noise PSD
 # No downsampling or compression specified
 
-q_kid0275_roach1 NONE 61
-q_kid0276_roach2 NONE 61
-q_kid0277_roach3 NONE 61
-q_kid0278_roach4 NONE 61
-q_kid0279_roach5 NONE 61
-i_kid0275_roach1 NONE 61
-i_kid0276_roach2 NONE 61
-i_kid0277_roach3 NONE 61
-i_kid0278_roach4 NONE 61
-i_kid0279_roach5 NONE 61
+kidA_roachN NONE 61
+kidB_roachN NONE 61
+kidC_roachN NONE 61
+kidD_roachN NONE 61
+kidE_roachN NONE 61
+kidF_roachN NONE 61
+kidG_roachN NONE 61
+kidH_roachN NONE 61
+kidI_roachN NONE 61
+kidJ_roachN NONE 61
 
-df_kid0275_roach1 MEAN_FLOAT_8BIT 61
-df_kid0276_roach2 MEAN_FLOAT_8BIT 61
-df_kid0277_roach3 MEAN_FLOAT_8BIT 61
-df_kid0278_roach4 MEAN_FLOAT_8BIT 61
-df_kid0279_roach5 MEAN_FLOAT_8BIT 61
-df_kid0275_roach1 MEAN_FLOAT_8BIT 61
-df_kid0276_roach2 MEAN_FLOAT_8BIT 61
-df_kid0277_roach3 MEAN_FLOAT_8BIT 61
-df_kid0278_roach4 MEAN_FLOAT_8BIT 61
-df_kid0279_roach5 MEAN_FLOAT_8BIT 61
+kidA_roachN_index NONE 61
+kidB_roachN_index NONE 61
+kidC_roachN_index NONE 61
+kidD_roachN_index NONE 61
+kidE_roachN_index NONE 61
+kidF_roachN_index NONE 61
+kidG_roachN_index NONE 61
+kidH_roachN_index NONE 61
+kidI_roachN_index NONE 61
+kidJ_roachN_index NONE 61
+
