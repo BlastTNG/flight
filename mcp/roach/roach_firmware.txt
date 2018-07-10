@@ -1,0 +1,245 @@
+/* Firmware version: r1_fir_dds330.fpg
+ * Date: July 15, 2017
+ * Author: Sam
+*/
+
+/** The registers are listed in the first section of the fpg file
+ *
+ * Input SW registers: Registers which accept input from the processor (PPC)
+ * ------------------
+ **/
+
+/* dac_reset
+ * ----------------------
+ * Turns the DAC on/off
+ * 1: Disable the DAC
+ * 0: Enable the DAC
+ * dtype: 32b unsigned int
+ */
+
+/* start_dac
+ * ----------------------
+ * Synchronizes the LUT (QDR) RAM functions, and the DAC I,Q channels
+ * Timing is critical -- see roach.c
+ * Value: 0 or 1
+ * dtype: 32b unsigned int
+
+/* Programmable FIR filter
+ * ------------
+ * Goes between digital-down-converter and accumulator
+ * Type I delay line linear phase FIR filter
+ * Order 23 (length 24), linear phase
+ * Coeffs must be symmetric (first 11 are mirrored about center)
+ * Coefficients can be reconfigured at all times
+ * dtype: 32b signed int (see function: load_fir in roach.c)
+ *
+ * FIR_h0
+ * FIR_h1
+ * FIR_h10
+ * FIR_h11
+ * FIR_h2
+ * FIR_h3
+ * FIR_h4
+ * FIR_h5
+ * FIR_h6
+ * FIR_h7
+ * FIR_h8
+ * FIR_h9
+ */
+ *
+ /* dds_shift
+ * ----------------------
+ * A critical value, between 0 - 512, which should be set following firmware upload
+ * The value should be included in the fpg filename
+ * Should not change during operation
+ * dtype: 32b unsigned int
+ */
+
+/* GbE_one_GbE2 (technically an output register)
+ * ----------------
+ * The CASPER 1-GbE block, with added registers
+ * Packetizes data into UDP frame
+ * Header is not user-configurable, but contains
+ *    - IP level
+ *    - ETH level
+ *    - UDP level
+ *    - Note: checksum is absent from header
+ *
+ ******************************************************************
+ * UDP packet structure:
+ * -----------------------
+ * Total length: 8234 bytes
+ * Header: 42 bytes
+ * Data + timing info: 8192 bytes
+ * Data type: 32b signed integers
+ *     - Data should be unpacked as little-endian
+ * Number of channels: 1016
+ *     - Each channel has a 32b I value, and a 32b Q value
+ * Values:
+ * 1 - 512: Channels 0 - 512, I values
+ * 513 - 1024: Channels 0 - 512, Q values
+ * 1025 - 1536: Channels 513 - 1024, I values
+ * 1537 - 2048: Channels 513 - 1024, Q values
+ *
+ * Note: There are technically 1024 data channels,
+ * but the last 16 bytes of the packet (final 4 Q values)
+ * are used to store timing information, limiting the number
+ * of useable channels to 1016
+ *
+ * The information stored in the last 16 bytes:
+ *     - Should be unpacked as BIG-endian, unsigned
+ *     - Consists of four 32b unsigned ints
+ *     - From end of packet, these are:
+ * Raw packet count /* Initialized to 0 with 'GbE_pps_start' */
+ * Fine timestamp /* Clock cycles elapsed since last PPS pulse */
+ * Course timestamp /* The number of PPS pulses elapsed since 'pps_start' */
+ * Data checksum /* Currently a constant placeholder, 42 (in progress) */
+ *
+ **********************************************************************
+ * GbE_pps_start
+ * -------------
+ * Initializes packet time tagging
+ * Can be toggled at any time
+ * dtype: unsigned int, 0 or 1
+ *
+ * GbE_rx_rst
+ * ------------
+ * The rx (receive) registers are connected to
+ * avoid floating inputs in the design. The RX side of the block is not configured
+ * dtype: unsigned int, 0
+ *
+ * GbE_tx_destip
+ * --------------
+ * The destination IP for UDP packets
+ * Can be reconfigured during operation
+ * Unicast only -- multicast untested
+ * dtype: 32b unsigned int
+ *
+ * GbE_tx_destport
+ * --------------
+ * The destination port for UDP packets
+ * Can be reconfigured during operation
+ * Data type: 16b unsigned int
+ *
+ * GbE_tx_rst
+ * ----------
+ * 1: enables packet transmission
+ * 0: disables transmision
+ * dtype: 32b unsigned int
+ *
+ */
+
+ * adc_snap_adc_snap_trig
+ *------------------------
+ * The control for the ADC snap block
+ * View frequency comb post digitization, before further processing
+ * dtype: 16b signed int
+ */
+
+/* bins
+ * -----------------------
+ * A list of FFT bin indices to be passed on for further processing
+ * Value: integers between 0 - 1023, multiple indices can be repeated
+ * dtype: 32b unsigned int
+ *
+ * load_bins
+ * ----------------------
+ * Used to operate the read and write enable register on the RAM which contains 'bins'
+ * Do not operate during operation (see function: select_bins, roach.c)
+ * Value: 0 or 1
+ * dtype: 32b unsigned int
+ */
+
+/* PFB_fft_shift
+ * -------------
+ * Sets the FFT shift schedule to prevent overflow
+ * Each bit corresponds to a stage in the FFT
+ * 1 indicates that the stage output should be divided by two
+ * Can be safely set during operation
+ * Value: (2^N) - 1, for N = 1,...,9
+ * dtype: 32b unsigned int
+ */
+
+/* downsamp_sync_accum_len
+ * -------------------------
+ * Controls the length of the accumulator, and consequently the output data rate
+ * Value: (2^N) - 1, where N is a power of 2
+ * dtype: 32b unsigned int
+ * The desired data rate is calculated as: 256.0e6 clocks/s / (downsamp_sync_accum_len)
+ * For an output rate of 488.28 Hz, set to: 2^19 - 1
+ * Can be reconfigured during operation
+ *
+ *
+ * downsamp_sync_accum_reset
+ * -------------------------
+ * Resets the accumulator cycle so that FFT addition is bin-wise coherent
+ * Timing is critical - see roach.c
+ * Value: 0 or 1
+ * dtype: 32b unsigned int
+ */
+
+/* QDR_LUT_we_qdr
+ * --------------
+ * Enables writing to the QDR RAM.
+ * 1: Enable
+ * 0: Disable
+ * dtype: 32b unsigned int
+ *
+ *
+ * qdr0_ctrl
+ * qdr0_memory
+ * qdr1_ctrl
+ * qdr1_memory
+ * -----------------
+ * qdr0_memory and qdr1_memory are QDR (quad data rate) RAM on Roach2 board
+ * Used to store and loopback time domain frequency comb LUTS to DAC, DDC
+ * Values uploaded to KATCP as strings, see roach.c for procedure
+ * dtype: string buffer
+ */
+
+ /** Output SW registers: Registers which return data via the PPC
+ * 'snap' refers to a finite snapshot data which on request is stored in BRAM on the FPGA,
+ * and read back via the PPC
+ **/
+
+/* GbE_rx_ack
+ * ----------
+ * Receive acknowledge -- output terminated to avoid floating port
+ */
+
+/* accum_snap_accum_snap_bram
+ * accum_snap_accum_snap_ctrl
+ * accum_snap_accum_snap_status
+ * ----------------------------
+ * The controls for the 'accumulator' snap block
+ * View the frequency response of the accumulator output, prior to packetization
+ * dtype: 32b signed int
+ */
+
+/* adc_snap_adc_snap_bram
+ * adc_snap_adc_snap_ctrl
+ * adc_snap_adc_snap_status
+ * adc_snap_adc_snap_trig
+ *------------------------
+ * The control for the ADC snap block
+ * View frequency comb post digitization, before further processing
+ * dtype: 16b signed int
+ */
+
+/* downsamp_sync_accum_len
+ * -------------------------
+ * Controls the length of the accumulator, and consequently the output data rate
+ * Value: (2^N) - 1, where N is a power of 2
+ * dtype: 32b unsigned int
+ * The desired data rate is calculated as: 256.0e6 clocks/s / (downsamp_sync_accum_len)
+ * For an output rate of 488.28 Hz, set to: 2^19 - 1
+ * Can be reconfigured during operation
+ *
+ *
+ * downsamp_sync_accum_reset
+ * -------------------------
+ * Resets the accumulator cycle so that FFT addition is bin-wise coherent
+ * Timing is critical - see roach.c
+ * Value: 0 or 1
+ * dtype: 32b unsigned int
+ */

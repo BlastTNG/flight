@@ -34,8 +34,11 @@
 #include "phenom/buffer.h"
 
 /*beaglebone addresses*/
-static const char addresses[4][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63", "192.168.40.64"};
-static const uint16_t port = 12346; /* telnet port on bb */
+static const char addresses[5][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63",
+                                                 "192.168.40.64", "192.168.40.65"};
+
+static const uint16_t port = 12345; /* telnet port on Pi */
+
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
 extern int16_t InCharge;
@@ -179,8 +182,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->backoff_sec = min_backoff_sec;
     state->timeout.tv_sec = 10;
     state->timeout.tv_usec = 0;
-    state->sock->timeout_duration.tv_sec = 0.5;
-    state->input_buffer = ph_bufq_new(4192);
+    state->sock->timeout_duration.tv_sec = 0.4;
+    state->input_buffer = ph_bufq_new(512);
     m_sock->callback = remote_serial_process_packet;
     m_sock->job.data = state;
     blast_info("Enabling socket...");
