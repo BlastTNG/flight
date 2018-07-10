@@ -215,13 +215,20 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
     groundhog_write_calspecs_item(calspecsfile, &derived);
   }
 
-  // something special: generate multiplex fields for roach data
-  // roach data is demultiplexed from large block fields
+  // something special: generate an array of derived fields for each roach channel 
+  // multiplex roach index fields will point to the corresponding name for display in kst
+  fprintf(calspecsfile, "ROACH_NAMES SARRAY");
+
   int kid = 0, roach = 1, rtype = 0;
   for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
     for (roach = 1; roach <= NUM_ROACHES; roach++) {
       for (kid = 0; kid < NUM_KIDS; kid++) {
+        char tlm_name[64] = {0};
         unsigned int index = get_roach_index(roach, kid, rtype);
+        make_name_from_roach_index(index, tlm_name);
+        for (int i = 0; tlm_name[i]; i++) tlm_name[i] = toupper(tlm_name[i]);
+        fprintf(calspecsfile, " '%s'", tlm_name);
+/*
         derived.type = 'x';
         make_name_from_roach_index(index, derived.mplex.field);
         for (int i = 0; derived.mplex.field[i]; i++) derived.mplex.field[i] = toupper(derived.mplex.field[i]);
@@ -229,10 +236,16 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
         strcpy(derived.mplex.index, ROACH_CHANNEL_BLOCK_INDEX_NAME);
         derived.mplex.value = index;
         derived.mplex.max = 0;
-
         groundhog_write_calspecs_item(calspecsfile, &derived);
+*/
       }
     }
+  }
+  fprintf(calspecsfile, "\n");
+  
+  for (int i = 0; i < NUM_ROACH_TLM; i++) {
+    char c = 65+i;
+    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
   }
 
 
