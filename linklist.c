@@ -896,7 +896,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   char temp[100];
   char *temps[20];
   uint8_t * frame = NULL;
-  int size, start, skip, num;
+  int start, skip, num;
   int count = 1;
   uint64_t serial = 0;
 
@@ -999,7 +999,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
     linklist_err("Parsed serial 0x%.8lx does not match file serial 0x%.8lx\n", superframe->serial, serial);
   }
   if (superframe->size != blksize) {
-    linklist_err("Parsed size %d does not match file size %d\n", superframe->size, size);
+    linklist_err("Parsed size %d does not match file size %d\n", superframe->size, blksize);
   }
 
   return superframe;
