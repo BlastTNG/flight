@@ -101,7 +101,6 @@ struct sf_entry
   uint32_t spf;               // Samples per frame
   uint32_t start;             // Start location of first sample in the superframe
   uint32_t skip;              // Bytes to skip between samples
-  uint32_t override_size;      // If non-zero, this size overrides the default type size
   char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
   char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data

@@ -375,7 +375,6 @@ block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
 }
 
 uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
-  if (chan->override_size) return chan->override_size;
   size_t retsize = 0;
 
   switch (chan->type) {
