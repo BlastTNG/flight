@@ -11,4 +11,6 @@
 void update_thermistors(void);
 void update_current_sensors(void);
 void outer_frame(int setting);
+void outer_frame_multiplexed(void);
+void update_mult_vac(void);
 #endif /* outer_frame_h */
