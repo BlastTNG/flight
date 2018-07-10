@@ -61,6 +61,7 @@ void udp_receive(void *arg) {
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
+        printf("Got a bad serial 0x%x\n", serial);
       } else {
         break;
       }

@@ -492,8 +492,10 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
   snprintf(name, 63, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
 }
 
+#define EXTRA_SF_ENTRIES 2
+
 superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
-    superframe_entry_t * sf = calloc(channels_count+1, sizeof(superframe_entry_t));
+    superframe_entry_t * sf = calloc(channels_count+EXTRA_SF_ENTRIES+1, sizeof(superframe_entry_t));
 
     unsigned int sf_size = 0;
 

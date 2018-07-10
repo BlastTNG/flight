@@ -152,25 +152,49 @@ void groundhog_superframe_modify(superframe_t * superframe)
 {
   char tlm_name[64] = {0}; 
   superframe_entry_t * sfe_ref = NULL;
+  superframe_entry_t * sfe = superframe->entries;
 
   // generate a block starting at the first telemetry roach channel
-  snprintf(tlm_name, 63, "kidA_roachN"); 
+  snprintf(tlm_name, 63, ROACH_CHANNEL_REF_NAME); 
   sfe_ref = superframe_find_by_name(superframe, tlm_name); 
   // fake sample rate is the roach rate times the number of roach telemetry channels
   if (sfe_ref) {
-    sfe_ref->override_size = get_superframe_entry_size(sfe_ref)*NUM_ROACH_TLM;
-    sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_NAME);
+    memcpy(&sfe[superframe->n_entries], sfe_ref, sizeof(superframe_entry_t));
+    sfe[superframe->n_entries].override_size = get_superframe_entry_size(&sfe[superframe->n_entries])*NUM_ROACH_TLM;
+    sprintf(sfe[superframe->n_entries].field, ROACH_CHANNEL_BLOCK_NAME);
+    unsigned int hashloc = hash(sfe[superframe->n_entries].field)%superframe->hash_table_size;
+    if (superframe->hash_table[hashloc]) {
+      linklist_err("Groundhog hash with entry \"%s\"\n", sfe[superframe->n_entries].field);
+    } else {
+      superframe->hash_table[hashloc] = &sfe[superframe->n_entries];
+    }
+    superframe->n_entries++;
+  } else {
+    printf("Could not find \"%s\" in superframe\n", tlm_name);
   }
 
   // generate a block startinga at the first telemetry roach index channel
-  snprintf(tlm_name, 63, "kidA_roachN_index"); 
+  snprintf(tlm_name, 63, ROACH_CHANNEL_REF_INDEX_NAME); 
   sfe_ref = superframe_find_by_name(superframe, tlm_name); 
   // fake sample rate is the roach rate times the number of roach telemetry channels
   if (sfe_ref) {
-    sfe_ref->override_size = get_superframe_entry_size(sfe_ref)*NUM_ROACH_TLM;
-    sprintf(sfe_ref->field, ROACH_CHANNEL_BLOCK_INDEX_NAME);
+    memcpy(&sfe[superframe->n_entries], sfe_ref, sizeof(superframe_entry_t));
+    sfe[superframe->n_entries].override_size = get_superframe_entry_size(&sfe[superframe->n_entries])*NUM_ROACH_TLM;
+    sprintf(sfe[superframe->n_entries].field, ROACH_CHANNEL_BLOCK_INDEX_NAME);
+    unsigned int hashloc = hash(sfe[superframe->n_entries].field)%superframe->hash_table_size;
+    if (superframe->hash_table[hashloc]) {
+      linklist_err("Groundhog hash with entry \"%s\"\n", sfe[superframe->n_entries].field);
+    } else {
+      superframe->hash_table[hashloc] = &sfe[superframe->n_entries];
+    }
+    superframe->n_entries++;
+  } else {
+    printf("Could not find \"%s\" in superframe\n", tlm_name);
   }
+  // null terminate
+  sfe[superframe->n_entries].field[0] = '\0';
 
+  superframe->n_entries -= 2;
 }
 
 void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
@@ -242,12 +266,12 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
 
 int main(int argc, char * argv[]) {
   channels_initialize(channel_list);
-  groundhog_superframe_modify(superframe);
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
   linklist_generate_lookup(ll_list);  
   write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
+  groundhog_superframe_modify(superframe);
   groundhog_write_calspecs("test.calspecs", derived_list); 
 
   int pilot_on = 1;

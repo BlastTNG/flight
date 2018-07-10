@@ -3,8 +3,10 @@
 
 #define GROUNDHOG_MAX_FRAMES_RESET 900
 
-#define ROACH_CHANNEL_BLOCK_NAME "kidA_roachN"
-#define ROACH_CHANNEL_BLOCK_INDEX_NAME "kidA_roachN_index"
+#define ROACH_CHANNEL_REF_NAME "kidA_roachN"
+#define ROACH_CHANNEL_REF_INDEX_NAME "kidA_roachN_index"
+#define ROACH_CHANNEL_BLOCK_NAME "kid_roach_block"
+#define ROACH_CHANNEL_BLOCK_INDEX_NAME "kid_roach_index_block"
 
 #include "linklist.h"
 #include "linklist_writer.h"
