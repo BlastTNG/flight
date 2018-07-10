@@ -12,6 +12,8 @@
 **.suo
 stars/windows/stars/*
 **.ko
+**.swp
+**.swn
 
 moc_*
 qrc_*
