@@ -245,7 +245,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
 
-  // Old commands, should we delete? PAW 03/27/2018
+  // Old commands, should we delete? PAW 2018/03/27
   // {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
   // {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
   // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
@@ -1050,6 +1050,24 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"Pot valve open current (% max)", 0, 100, 'i', "POTVALVE_I_OPEN"},
       {"Pot valve close current (% max)", 0, 100, 'i', "POTVALVE_I_CLOSE"}
+    }
+  },
+
+  {COMMAND(potvalve_set_open_threshold), "Set pumped pot valve open threshold", GR_CRYO, 1,
+    {
+      {"Open threshold (8500-15000)", 8500, 15000, 'i', "POTVALVE_OPEN_THRESHOLD"}
+    }
+  },
+
+  {COMMAND(potvalve_set_loose_closed_threshold), "Set pumped pot valve loose closed threshold", GR_CRYO, 1,
+    {
+      {"Loose close threshold (5500-8000)", 5500, 8000, 'i', "POTVALVE_CLOSE_THRESHOLD"}
+    }
+  },
+
+  {COMMAND(potvalve_set_closed_threshold), "Set pumped pot valve closed threshold", GR_CRYO, 1,
+    {
+      {"Closed threshold (1000-5000)", 1000, 5000, 'i', "POTVALVE_CLOSED_THRESHOLD"}
     }
   },
 
