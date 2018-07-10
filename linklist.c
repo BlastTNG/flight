@@ -898,7 +898,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   char temp[100];
   char *temps[20];
   uint8_t * frame = NULL;
-  int size, start, skip, num;
+  int start, skip, num;
   int count = 1;
   uint64_t serial = 0;
 
@@ -1001,7 +1001,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
     linklist_err("Parsed serial 0x%.8lx does not match file serial 0x%.8lx\n", superframe->serial, serial);
   }
   if (superframe->size != blksize) {
-    linklist_err("Parsed size %d does not match file size %d\n", superframe->size, size);
+    linklist_err("Parsed size %d does not match file size %d\n", superframe->size, blksize);
   }
 
   return superframe;
@@ -1021,7 +1021,7 @@ void write_superframe_format(superframe_t * superframe, char * fname) {
   fprintf(fp, "%.8lx\n", superframe->serial); 
   fprintf(fp, "%d\n", superframe->size); 
 
-  for (i = 0; i < superframe->n_entries; i++) {
+  for (i = 0; sf[i].field[0]; i++) {
     fprintf(fp, "%s  %s  %u  %u  %u", sf[i].field, get_sf_type_string(sf[i].type), sf[i].spf, sf[i].start, sf[i].skip);
     if (strlen(sf[i].quantity)) fprintf(fp, "  \"%s\"  \"%s\"", sf[i].quantity, sf[i].units);
     fprintf(fp, "\n");
