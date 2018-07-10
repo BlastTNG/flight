@@ -228,6 +228,8 @@ void groundhog_write_calspecs(char * fname, derived_tng_t *m_derived)
 }
 
 int main(int argc, char * argv[]) {
+  sprintf(archive_dir, "/data/groundhog");
+
   channels_initialize(channel_list);
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
@@ -260,7 +262,7 @@ int main(int argc, char * argv[]) {
   }
 
   // initialize framing
-  //framing_init();
+  framing_init();
 
  
   // setup pilot receive udp struct
@@ -279,7 +281,7 @@ int main(int argc, char * argv[]) {
                                   BI0};
 
   // Publishing data to MSQT
-  // pthread_t groundhog_publish_worker;
+  pthread_t groundhog_publish_worker;
 
   // Receiving data from telemetry
   pthread_t pilot_receive_worker;
@@ -290,7 +292,7 @@ int main(int argc, char * argv[]) {
   pthread_t server_thread;
 
   // publishing thread; handles all telemetry publishing to mosquitto
-  //pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
+  pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
   if (pilot_on) {
     pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
@@ -309,7 +311,7 @@ int main(int argc, char * argv[]) {
   pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
   // The Joining
-  // pthread_join(groundhog_publish_worker, NULL);
+  pthread_join(groundhog_publish_worker, NULL);
 
   if (pilot_on) {
     pthread_join(pilot_receive_worker, NULL);
