@@ -312,12 +312,12 @@ void * lj_connection_handler(void *arg) {
 unsigned int superframe_counter[RATE_END] = {0};
 
 // distributes and multiplexes commanded roach channels to compressed telemetry fields
-void add_roach_tlm_488hz() 
+void add_roach_tlm_488hz()
 {
   static channel_t * roach_chans[NUM_ROACH_TLM] = {NULL};
   static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
-  static channel_t * tlm[NUM_ROACH_TLM] = {NULL}; 
-  static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL}; 
+  static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
+  static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
   static int first_time = 1;
 
   int i;
@@ -325,11 +325,11 @@ void add_roach_tlm_488hz()
   if (first_time) {
     for (i = 0; i < NUM_ROACH_TLM; i++) {
 			char tlm_name[64] = {0};
-			snprintf(tlm_name, 63, "kid%c_roachN", 65+i);
+			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN", 65+i);
       tlm[i] = channels_find_by_name(tlm_name);
-			snprintf(tlm_name, 63, "kid%c_roachN_index", 65+i);
+			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN_index", 65+i);
       tlm_index[i] = channels_find_by_name(tlm_name);
-    }   
+    }
 
     memset(roach_indices, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
     first_time = 0;
@@ -339,13 +339,14 @@ void add_roach_tlm_488hz()
     if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
       roach_chans[i] = channels_find_by_name(CommandData.roach_tlm[i].name);
       roach_indices[i] = CommandData.roach_tlm[i].index;
-      if (roach_chans[i] && roach_indices[i]) blast_info("Telemetering \"%s\" -> \"%s\"", roach_chans[i]->field, tlm[i]->field);
+      if (roach_chans[i] && roach_indices[i]) blast_info("Telemetering \"%s\" -> \"%s\"",
+                                                        roach_chans[i]->field, tlm[i]->field);
     }
     // write the channel data to the multiplexed field
     if (tlm[i] && roach_chans[i]) {
       double value = 0;
       GET_VALUE(roach_chans[i], value);
-      SET_FLOAT(tlm[i], value); 
+      SET_FLOAT(tlm[i], value);
     }
     // write the multiplex index
     if (tlm_index[i]) {
@@ -357,7 +358,7 @@ void add_roach_tlm_488hz()
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-	//write_roach_channels_488hz();
+	// write_roach_channels_488hz();
 #endif
     add_roach_tlm_488hz();
 
@@ -670,12 +671,12 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef NO_KIDS_TEST
-  //blast_info("Initializing ROACHes from MCP...");
-  //roach_udp_networking_init();
-  //init_roach(0);
-  //init_roach(1);
-  //init_roach(2);
-  //init_roach(3);
+  // blast_info("Initializing ROACHes from MCP...");
+  // roach_udp_networking_init();
+  // init_roach(0);
+  // init_roach(1);
+  // init_roach(2);
+  // init_roach(3);
   // init_roach(4);
   blast_info("Finished initializing ROACHes...");
 #endif

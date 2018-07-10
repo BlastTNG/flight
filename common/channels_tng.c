@@ -448,7 +448,7 @@ int channels_initialize(const channel_t * const m_channel_list)
 int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
   if (roach > NUM_ROACHES) {
     blast_err("Invalid roach %d", roach);
-    return -1;    
+    return -1;
   }
   if (kid >= NUM_KIDS) {
     blast_err("Invalid kid %d", kid);
@@ -478,7 +478,7 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
 
   if (roach > NUM_ROACHES) {
     blast_err("Invalid roach %d", roach);
-    return;    
+    return;
   }
   if (kid >= NUM_KIDS) {
     blast_err("Invalid kid %d", kid);
@@ -489,7 +489,7 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
     return;
   }
 
-  snprintf(name, 63, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+  snprintf(name, sizeof(name), "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
 }
 
 #define EXTRA_SF_ENTRIES 2

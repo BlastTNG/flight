@@ -1846,8 +1846,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       for (i = 0; i < 10; i++) {
         CommandData.roach_tlm[i].kid = ivalues[(i/2)*2];
         CommandData.roach_tlm[i].roach = ivalues[(i/2)*2+1];
- 
-        if (i%2 == 0) { // set I 
+
+        if (i%2 == 0) { // set I
           CommandData.roach_tlm[i].rtype = j;
         } else { // set Q
           CommandData.roach_tlm[i].rtype = k;
@@ -1856,7 +1856,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                                                          CommandData.roach_tlm[i].kid,
                                                          CommandData.roach_tlm[i].rtype);
         make_name_from_roach_index(CommandData.roach_tlm[i].index,
-                                   CommandData.roach_tlm[i].name); 
+                                   CommandData.roach_tlm[i].name);
       }
 
       break;
@@ -1877,7 +1877,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                                                          CommandData.roach_tlm[i].kid,
                                                          CommandData.roach_tlm[i].rtype);
         make_name_from_roach_index(CommandData.roach_tlm[i].index,
-                                   CommandData.roach_tlm[i].name); 
+                                   CommandData.roach_tlm[i].name);
       }
 
       break;
@@ -1898,7 +1898,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                                                          CommandData.roach_tlm[i+5].kid,
                                                          CommandData.roach_tlm[i+5].rtype);
         make_name_from_roach_index(CommandData.roach_tlm[i+5].index,
-                                   CommandData.roach_tlm[i+5].name); 
+                                   CommandData.roach_tlm[i+5].name);
       }
 
       break;
@@ -2668,10 +2668,10 @@ void InitCommandData()
 				}
 			}
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], 79, ALL_TELEMETRY_NAME);
+			snprintf(linklist_nt[num_ll], sizeof(linklist_nt[num_ll]), ALL_TELEMETRY_NAME);
       num_ll++;
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], 79, "no_linklist");
+			snprintf(linklist_nt[num_ll], sizeof(linklist_nt[num_ll]), "no_linklist");
       num_ll++;
 		}
 
