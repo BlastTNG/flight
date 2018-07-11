@@ -486,6 +486,11 @@ derived_tng_t derived_list[] = {
     BITWORD("NET_ST_SYNC_REC_ERROR_PIV", "network_status_piv", 10, 1),
     BITWORD("NET_ST_SYNC_TRANS_WARNING_PIVOT", "network_status_piv", 11, 1),
     BITWORD("NET_ST_SYNC_REC_WARNING_PIVOT", "network_status_piv", 12, 1),
+    BITWORD("MC_EC_CMD_RESET", "mc_cmd_status", 0, 1),
+    BITWORD("MC_EC_CMD_FIX_RW", "mc_cmd_status", 1, 1),
+    BITWORD("MC_EC_CMD_FIX_EL", "mc_cmd_status", 2, 1),
+    BITWORD("MC_EC_CMD_FIX_PIV", "mc_cmd_status", 3, 1),
+    BITWORD("MC_EC_CMD_FIX_HWPR", "mc_cmd_status", 4, 1),
 
 //  /* HWPR Control Info */
     BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 10, 1),

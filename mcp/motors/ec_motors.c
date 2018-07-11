@@ -907,14 +907,17 @@ static int motor_set_operational()
 
 static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 {
+    if (firsttime) {
+        blast_info("net_status = %2x", net_status);
+    }
     // Device is not in operational mode (bits 0 and 1 have value of 3)
-    if (!(net_status & 0x0003)) {
+    if (!(net_status & ECAT_NET_NODE_CHECK)) {
         if (firsttime) {
             blast_info("Device is not in operational mode.");
         }
         return(1);
     }
-    if (net_status & 0x0010) {
+    if (!(net_status & ECAT_NET_SYNC_CHECK)) {
         if (firsttime) {
             blast_info("Device network error.");
         }
@@ -1140,6 +1143,7 @@ static int check_ec_network_status()
                            PivotMotorData[motor_i].network_problem);
             }
     }
+    firsttime = 1;
     return(retval);
 }
 
@@ -1193,7 +1197,7 @@ static void* motor_control(void* arg)
 
         if (!check_ec_network_status()) {
             ec_mcp_state.network_error_count++;
-            if (((ec_mcp_state.network_error_count) % 10) == 1) {
+            if (((ec_mcp_state.network_error_count) % 1000) == 1) {
                 blast_info("network_error_count = %u", ec_mcp_state.network_error_count);
             }
             if (ec_mcp_state.network_error_count >= NETWORK_ERR_RESET_THRESH) {

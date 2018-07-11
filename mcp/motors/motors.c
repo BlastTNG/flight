@@ -268,6 +268,7 @@ static double get_az_vel(void)
 /************************************************************************/
 void write_motor_channels_5hz(void)
 {
+    uint8_t ec_cmd_status_field = 0;
     static channel_t* gPElAddr;
     static channel_t* gIElAddr;
     static channel_t* gDElAddr;
@@ -312,6 +313,8 @@ void write_motor_channels_5hz(void)
     static channel_t *latched_fault_piv_addr;
 
     int i_motors;
+
+    static channel_t *ethercat_cmds_addr;
 
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
@@ -361,6 +364,8 @@ void write_motor_channels_5hz(void)
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
+
+        ethercat_cmds_addr = channels_find_by_name("mc_cmd_status");
     }
 
     /***************************************************/
@@ -432,6 +437,13 @@ void write_motor_channels_5hz(void)
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
+
+    ec_cmd_status_field = ((uint8_t)CommandData.ec_devices.reset) +
+                          ((uint8_t)CommandData.ec_devices.fix_rw << 1) +
+                          ((uint8_t)CommandData.ec_devices.fix_el << 2) +
+                          ((uint8_t)CommandData.ec_devices.fix_piv << 3) +
+                          ((uint8_t)CommandData.ec_devices.fix_hwpr << 4);
+    SET_UINT8(ethercat_cmds_addr, ec_cmd_status_field);
 }
 
 void write_motor_channels_200hz(void)
