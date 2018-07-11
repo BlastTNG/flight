@@ -332,11 +332,11 @@ int SetValveState(int tight_flag)
 	valve_state_t prev = potvalve_data.current;
 	int retval;
 
-	if ((potvalve_data.adc[0] <= POTVALVE_CLOSED) && (tight_flag == 1)) {
+	if ((potvalve_data.adc[0] <= CommandData.Cryo.potvalve_closed_threshold) && (tight_flag == 1)) {
 		potvalve_data.current = closed;
-	} else if (potvalve_data.adc[0] <= POTVALVE_LOOSE_CLOSED) {
+	} else if (potvalve_data.adc[0] <= CommandData.Cryo.potvalve_loose_closed_threshold) {
 		potvalve_data.current = loose_closed;
-	} else if (potvalve_data.adc[0] >= POTVALVE_OPEN) {
+	} else if (potvalve_data.adc[0] >= CommandData.Cryo.potvalve_open_threshold) {
 		potvalve_data.current = opened;
 	} else {
 		potvalve_data.current = intermed;
