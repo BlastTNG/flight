@@ -120,8 +120,10 @@ int main(int argc, char *argv[]) {
   uint8_t * recv_buffer = NULL;
   uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
-  uint32_t recv_framenum = 0;
-  uint16_t recv_flags = TCPCONN_FILE_RESET;
+  int64_t recv_framenum = 0;
+  uint16_t recv_flags = 0;
+  int resync = 1;
+
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -161,14 +163,8 @@ int main(int argc, char *argv[]) {
       // display
       print_display(linklistname, recv_framenum);
 
-      // send data request a rawfile has been opened 
-      if (ll_rawfile) {
-        recv_flags = 0;
-        recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
-      }
-
       // the file on the server has switched, so resync 
-      if (recv_flags & TCPCONN_FILE_RESET) {
+      if (resync) {
         // sync with the server and get the initial framenum
 				req_serial = sync_with_server(&tcpconn, selectname, linklistname, flags, &superframe, &linklist);
 				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
@@ -193,16 +189,9 @@ int main(int argc, char *argv[]) {
 				req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
         rewind = UINT32_MAX; // all future rewinds are to the beginning of the file
 
+        resync = 0;
         continue; 
       }
-
-      // there is no data on the server
-      if (recv_flags & TCPCONN_NO_DATA) {
-        usleep(50000);
-        continue;
-      } 
-
-      /* all flags are cleared at this point */
 
       // check size of the buffer and enlarge if necessary
       if (buffer_size < ll_rawfile->framesize) {
@@ -210,8 +199,29 @@ int main(int argc, char *argv[]) {
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
   
+      // send data request a rawfile has been opened 
+			recv_flags = 0;
+			recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
+			if ((recv_flags & TCPCONN_FILE_RESET) || (recv_framenum < 0)) { 
+				linklist_err("Data request failed\n");
+				resync = 1;
+        continue;
+			}
+
+      // there is no data on the server
+      if (recv_flags & TCPCONN_NO_DATA) {
+        usleep(50000);
+        continue;
+      } 
+
       // get the data from the server
-			retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize);
+			if (retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize) < 0) {
+				linklist_err("Data retrieve failed\n");
+        resync = 1;
+        continue;
+      }
+
+      /* all flags are cleared at this point */
 
 			// write the dirfile
 			seek_linklist_dirfile(ll_dirfile, recv_framenum);
