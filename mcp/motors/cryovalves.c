@@ -348,7 +348,7 @@ int SetValveState(int tight_flag)
 	// unless the goal is also new
 	// Also don't send a command if we just un-tightened (started to open) otherwise we send open twice
 	// if (potvalve_data.current == intermed || (prev == closed && potvalve_data.current == loose_closed))  {
-	//	retval = 0;
+	// 	retval = 0;
 	// }
 	return retval;
 }

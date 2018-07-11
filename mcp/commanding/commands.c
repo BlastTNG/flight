@@ -938,7 +938,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
         // case bda_off:
             // CommandData.Cryo.BDAHeat = 0;
             // break;
-        case pot_valve_open:
+        // cryo valves
+	case pot_valve_open:
             CommandData.Cryo.potvalve_goal = opened;
             break;
         case pot_valve_close:
@@ -1023,7 +1024,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.xystage.force_repoll = 1;
 #endif
             break;
-// .
             // Shutter
         case shutter_init:
             CommandData.actbus.shutter_goal = SHUTTER_INIT;
@@ -1655,6 +1655,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case potvalve_set_current:
       CommandData.Cryo.potvalve_opencurrent = ivalues[0];
       CommandData.Cryo.potvalve_closecurrent = ivalues[1];
+      break;
+    case potvalve_set_open_threshold:
+      CommandData.Cryo.potvalve_open_threshold = ivalues[0];
+      break;
+    case potvalve_set_loose_closed_threshold:
+      CommandData.Cryo.potvalve_loose_closed_threshold = ivalues[0];
+      break;
+     case potvalve_set_closed_threshold:
+      CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
