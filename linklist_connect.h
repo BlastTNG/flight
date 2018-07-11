@@ -48,6 +48,10 @@
 #define TCP_PACKET_HEADER_SIZE 12
 #define CLIENT_TELEM_PORT 40204
 
+#ifndef MSG_MORE
+#define MSG_MORE 0
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
