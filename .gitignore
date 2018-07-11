@@ -29,6 +29,7 @@ stars/windows/stars
 
 defricher/build
 groundhog/build
+mole/build
 
 test_programs/synclink/build
 test_programs/mpsse/build
