@@ -2677,10 +2677,10 @@ void InitCommandData()
 				}
 			}
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], sizeof(linklist_nt[num_ll]), ALL_TELEMETRY_NAME);
+			strncpy(linklist_nt[num_ll],  ALL_TELEMETRY_NAME, 79);
       num_ll++;
 			linklist_nt[num_ll] = calloc(1, 80);
-			snprintf(linklist_nt[num_ll], sizeof(linklist_nt[num_ll]), "no_linklist");
+			strncpy(linklist_nt[num_ll], "no_linklist", 79);
       num_ll++;
 		}
 
