@@ -162,6 +162,8 @@ int copy_file(char *old_filename, char *new_filename)
   FILE  *ptr_old, *ptr_new;
   int a;
 
+  if (strcmp(old_filename, new_filename) == 0) return 0;
+
   ptr_old = fopen(old_filename, "rb");
   ptr_new = fopen(new_filename, "wb");
 
