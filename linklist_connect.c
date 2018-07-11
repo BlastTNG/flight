@@ -212,6 +212,8 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
 
   // get linklist format file
   while (1) {
+    sleep(1);
+
     sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
     sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
     sprintf(reqcsname, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
@@ -970,6 +972,7 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
   if (recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL) <= 0) {
     linklist_err("Failed to receive archive name header\n");
     close_connection(tc);
+    tc->fd = connect_tcp(tc);
     return;
   }
   readTCPHeader(request_msg, &recv_serial, &recv_frame_num ,&recv_i,&recv_n);
@@ -1016,51 +1019,58 @@ void set_server_linklist_name(struct TCPCONN * tc, char *linklistname)
 // fills the name array with archived linklist names from the server
 int request_server_archive_list(struct TCPCONN * tc, char name[][64])
 {
-  // initiate server connection if not done alread
-  while (tc->fd <= 0) {
+  // initiate server connection if not done already
+  while (1) {
     tc->fd = connect_tcp(tc);
+
+    uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};
+
+    // request file list from server
+    writeTCPHeader(request_msg,SERVER_ARCHIVE_LIST_REQ,0,0,0);
+    if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+      linklist_err("Failed to send archive select request\n");
+      close_connection(tc);
+      continue;
+    }
+
+    uint16_t *recv_i, *recv_n;
+    uint32_t *recv_ser, *recv_fn;
+
+    while (1) {
+      // receive name header
+      if (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
+        linklist_err("Failed to receive archive name header\n");
+        break;
+      }
+      readTCPHeader(request_msg,&recv_ser,&recv_fn,&recv_i,&recv_n);
+
+      // no files on server
+      if (!(*recv_i) && !(*recv_n)) {
+        linklist_err("No files avaiable on server %s\n", tc->ip);
+        break;
+      }
+
+      // receive name
+      if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
+        linklist_err("Failed to receive archive name\n");
+        close_connection(tc);
+        break; 
+      }
+
+      // this is the end of the function
+      if (((*recv_i)+1) >= *recv_n) {
+        return *recv_n;
+      }
+    }
+
+    // only get here if there was a conneciton problem
+    close_connection(tc);
+    linklist_err("Unable to connect to server\n");
     sleep(1);
   }
 
-  uint8_t request_msg[TCP_PACKET_HEADER_SIZE] = {0};
-
-  // request file list from server
-  writeTCPHeader(request_msg,SERVER_ARCHIVE_LIST_REQ,0,0,0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
-    linklist_err("Failed to send archive select request\n");
-    close_connection(tc);
-    tc->fd = connect_tcp(tc);
-  }
-
-  uint16_t *recv_i, *recv_n;
-  uint32_t *recv_ser, *recv_fn;
-
-  while (1) {
-    // receive name header
-    while (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
-      linklist_err("Failed to receive archive name header\n");
-      close_connection(tc);
-      return 0;
-    }
-    readTCPHeader(request_msg,&recv_ser,&recv_fn,&recv_i,&recv_n);
-
-    // no files on server
-    if (!(*recv_i) && !(*recv_n)) {
-      linklist_err("No files avaiable on server %s\n", tc->ip);
-      break;
-    }
-
-    // receive name
-    if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
-      linklist_err("Failed to receive archive name\n");
-      close_connection(tc);
-      return 0;
-    }
-
-    if (((*recv_i)+1) >= *recv_n) break;
-
-  }
-  return *recv_n;
+  // should never get here
+  return 0;
 
 }
 
@@ -1127,12 +1137,16 @@ int request_data(struct TCPCONN *tc, unsigned int fn, uint16_t * flags) {
   writeTCPHeader(request_msg, tc->serial, fn, 0, 0);
   if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("Server connection lost on send.\n");
+		close_connection(tc);
+		tc->fd = connect_tcp(tc);
     return -1; // connection error
   }
 
   // receive header for the next frame
   if ((rsize = recv(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_WAITALL)) <= 0) {
     linklist_err("Server connection lost on recv.\n");
+		close_connection(tc);
+		tc->fd = connect_tcp(tc);
     return -1; // connection error
   }
   readTCPHeader(request_msg, &recv_serial, &recv_framenum, &recv_i, &recv_n); 
@@ -1153,6 +1167,8 @@ int retrieve_data(struct TCPCONN * tc, uint8_t * buffer, unsigned int bufsize)
   // receive the next frame
   if ((rsize = recv(tc->fd, buffer, bufsize, MSG_WAITALL)) <= 0) {
     linklist_err("Server connection lost on recv.\n");
+    close_connection(tc);
+    tc->fd = connect_tcp(tc);
     return -1; // connection error
   }
 
