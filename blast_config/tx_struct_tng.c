@@ -995,7 +995,7 @@ channel_t channel_list[] =
     {"network_problem_el",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"network_problem_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"network_problem_piv",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-
+    {"mc_cmd_status", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
     // TODO(seth): Ensure that scale factors for all currents/commands are in Amps
     { "mc_piv_i_cmd",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, U_NONE, 0 },
