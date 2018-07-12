@@ -65,6 +65,7 @@ void daemonize()
     chdir("/");
     freopen("/dev/null", "r", stdin);
     freopen(GROUNDHOG_LOG, "a", stdout);
+    setvbuf(stdout,NULL,_IONBF,0);
     freopen("/dev/null", "w", stderr);
     setsid();
 }
