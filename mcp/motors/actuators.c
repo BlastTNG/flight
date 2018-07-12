@@ -1452,6 +1452,7 @@ void *ActuatorBus(void *param)
     int first_time = 1;
     int sf_ok;
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
+    int which_act_used;
 
     int hwp_pos; // DEBUG PCA
 
@@ -1513,7 +1514,8 @@ void *ActuatorBus(void *param)
     }
 
     // I don't think this is necessary, it will always be called in the for loop --PAW 2018/06/20
-    // all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+    // using now because the loop will poll based on which steppers are commanded to be used
+    all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
 
     for (;;) {
         /* Repoll bus if necessary */

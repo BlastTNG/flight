@@ -2791,6 +2791,9 @@ void InitCommandData()
     CommandData.Cryo.potvalve_opencurrent = 25;
     CommandData.Cryo.potvalve_closecurrent = 20;
     CommandData.Cryo.potvalve_vel = 50000;
+    CommandData.Cryo.potvalve_open_threshold = 10000;
+    CommandData.Cryo.potvalve_loose_closed_threshold = 6500;
+    CommandData.Cryo.potvalve_closed_threshold = 4200;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
