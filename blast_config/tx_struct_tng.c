@@ -61,6 +61,8 @@
 #define U_TRIM_DEG "Trim",    "^o"
 #define U_TRIM_MM "Trim",     "mm"
 
+// #define NO_KIDS_TEST
+
 #define SCALE(_type)  _type ## _M, _type ## _B
 // TODO(seth): Unify the _M, _B scale factor offset terms in a single location
 
