@@ -214,9 +214,9 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   while (1) {
     sleep(1);
 
-    sprintf(reqffname, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
-    sprintf(reqllname, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
-    sprintf(reqcsname, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
+    snprintf(reqffname, 128, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
+    snprintf(reqllname, 128, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
+    snprintf(reqcsname, 128, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
 
     // get the formatfile name
     recv_ff_serial = request_server_file(tc, reqffname, flags);
@@ -256,7 +256,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   }
 
   // parse the superframe format
-  sprintf(pathname, "%s/%s", archive_dir, reqffname);
+  snprintf(pathname, 128, "%s/%s", archive_dir, reqffname);
   if (!(*sf = parse_superframe_format(pathname))) {
     linklist_err("Superframe format parser error.\n");
     return 0;
@@ -265,7 +265,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   unlink(pathname);
 
   // parse the linklist format
-  sprintf(pathname,"%s/%s", archive_dir, reqllname);
+  snprintf(pathname, 128, "%s/%s", archive_dir, reqllname);
   if (!(*ll = parse_linklist_format(*sf, pathname))) {
     linklist_err("Linklist format parser error.\n");
     return 0;
@@ -284,8 +284,8 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   // parse the calspecs format
   if (calspecs) {
     char fname[128];
-    sprintf(pathname, "%s/%s", archive_dir, reqcsname);
-    sprintf(fname, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
+    snprintf(pathname, 128, "%s/%s", archive_dir, reqcsname);
+    snprintf(fname, 128, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
 
     if (copy_file(pathname, fname) < 0) {
       linklist_err("Cannot parse calspecs format \"%s\"\n", pathname);
@@ -305,7 +305,7 @@ char *get_real_file_name(char * real_name, char * symlink_name)
 {
   char resolved_name[128] = {0};
   char full_name[128] = {0};
-  sprintf(full_name, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
+  snprintf(full_name, 128, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
 
   if (!realpath(full_name, resolved_name)) {
     real_name[0] = '\0';
@@ -399,7 +399,7 @@ void *connection_handler(void *arg)
 
       // build filename in data backup directory
       char filename[128] = {0};
-      sprintf(filename, "%s/%s", archive_dir, req_name+i);
+      snprintf(filename, 128, "%s/%s", archive_dir, req_name+i);
       if (send_client_file(&tc, filename, SERVER_ARCHIVE_REQ) < 0) {
         client_on = 0;
         break;
@@ -426,19 +426,19 @@ void *connection_handler(void *arg)
           if (dir[i]->d_name[pos] == '.') break;
         }
         char tempc[128];
-        sprintf(tempc, LINKLIST_EXT ".00");
+        snprintf(tempc, 128, LINKLIST_EXT ".00");
 
         // look for linklist binary files
         if (strcmp(dir[i]->d_name+pos, tempc) == 0) {
           dir[i]->d_name[pos] = 0; // clear the suffix
 
           // check if corresponding superframe format and linklist format files exist
-          sprintf(tempc, "%s/%s" LINKLIST_FORMAT_EXT, archive_dir, dir[i]->d_name);
+          snprintf(tempc, 128, "%s/%s" LINKLIST_FORMAT_EXT, archive_dir, dir[i]->d_name);
           if (access(tempc, F_OK) != 0) {
             dir[i]->d_name[0] = 0;
             continue;
           }
-          sprintf(tempc,"%s/%s" SUPERFRAME_FORMAT_EXT, archive_dir, dir[i]->d_name);
+          snprintf(tempc, 128, "%s/%s" SUPERFRAME_FORMAT_EXT, archive_dir, dir[i]->d_name);
           if (access(tempc,F_OK) != 0) {
             dir[i]->d_name[0] = 0;
             continue;
@@ -547,8 +547,8 @@ void *connection_handler(void *arg)
 
         // write data file base name for archive file
         char real_name[128];
-        sprintf(archive_symlink_filename, "%s/%s", archive_dir, linklist_name);
-        sprintf(archive_resolved_filename, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
+        snprintf(archive_symlink_filename, 128, "%s/%s", archive_dir, linklist_name);
+        snprintf(archive_resolved_filename, 128, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
 
         archive_filename = (client_flags & TCPCONN_RESOLVE_NAME) ? archive_resolved_filename : archive_symlink_filename;
         strcpy(linklist_resolved_name, real_name);
@@ -855,7 +855,7 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   uint32_t ll_serial;
 
   char savedname[256] = {0};
-  sprintf(savedname, "%s/%s", archive_dir, filename);
+  snprintf(savedname, 256, "%s/%s", archive_dir, filename);
 
   // linklist_info("Requesting file \"%s\" from server...\n",filename);
 
