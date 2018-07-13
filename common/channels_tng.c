@@ -495,6 +495,7 @@ void make_name_from_roach_index(unsigned int roach_index, char * name) {
 linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
     int i;
     int count = 0;
+    unsigned int blk_size = 0;
 
     for (i = 0; i < ll_hk->n_entries; i++) {
         if (ll_hk->items[i].tlm) {
@@ -504,6 +505,7 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
                 break;
             }
         }
+        blk_size += ll_hk->items[i].blk_size;
         count++;
     }
 
@@ -512,6 +514,9 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
  
     // modify the linklist size
     ll_hk->n_entries = count;
+
+    // modify the linklist bulk size
+    ll_hk->blk_size = blk_size;
 
     // modify the serial
     for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
