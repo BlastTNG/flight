@@ -695,6 +695,7 @@ blast_info("Finished initializing Beaglebones..."); */
 
   // load all the linklists
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, linklist_array, 0);
+  generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, linklist_array), ALL_TELEMETRY_NAME);
   linklist_generate_lookup(linklist_array);
 
   // load the latest linklist into telemetry
