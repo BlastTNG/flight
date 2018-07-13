@@ -497,14 +497,13 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
     int i = 0;
     int rate = 0;
     const channel_t *channel;
-    int roachless_channels_count = channels_count;
-    memcpy(roachless_frame_size, frame_size, RATE_END*sizeof(size_t));
+    int roachless_channels_count = 0;
     
-    // remove roaches from channel count and frame sizes
+    // compute channel count and frame sizes without roaches
     for (channel = m_channel_list; channel->field[0]; channel++) {
-			  if ((strncmp(channel->field+2, "kid", 3) == 0) && (strncmp(channel->field+10, "roach", 5) == 0)) {
-            roachless_frame_size[channel->rate] -= channel_size((channel_t *) channel);
-            roachless_channels_count--;
+			  if ((strncmp(channel->field+2, "kid", 3) != 0) || (strncmp(channel->field+10, "roach", 5) != 0)) {
+            roachless_frame_size[channel->rate] += channel_size((channel_t *) channel);
+            roachless_channels_count++;
         }
     }
 
@@ -513,29 +512,29 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
 
     // compute the total superframe size and overall offsets
     for (rate = 0; rate < RATE_END; rate++) {
-      roachless_offset[rate] = sf_size;
-      sf_size += roachless_frame_size[rate]*get_spf(rate);
-      printf("%d %d %d %d\n", get_spf(rate), (int) roachless_frame_size[rate], (int) frame_size[rate], roachless_offset[rate]);
+        roachless_offset[rate] = sf_size;
+        sf_size += roachless_frame_size[rate]*get_spf(rate);
+        printf("%d %d %d %d\n", get_spf(rate), (int) roachless_frame_size[rate], (int) frame_size[rate], roachless_offset[rate]);
     }
     printf("%d %d\n", roachless_channels_count, channels_count);
 
     // process the channels as superframe entries
+    i = 0;
     for (channel = m_channel_list; channel->field[0]; channel++) {
-       // do not add roach fields to telemetry superframes
-			 if ((strncmp(channel->field+2, "kid", 3) == 0) && (strncmp(channel->field+10, "roach", 5) == 0)) {
-			     // linklist_info("Ignoring field %s\n", channel->field);
-           continue;
-			 }
-       strncpy(sf[i].field, channel->field, FIELD_LEN-1);
-       sf[i].type = superframe_type_array[channel->type];
-       sf[i].spf = get_spf(channel->rate);
-       sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+roachless_offset[channel->rate];
-       sf[i].skip = roachless_frame_size[channel->rate];
-       if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
-       if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
-       sf[i].var = channel->var;
+        // do not add roach fields to telemetry superframes
+			  if ((strncmp(channel->field+2, "kid", 3) != 0) || (strncmp(channel->field+10, "roach", 5) != 0)) {
+			      // linklist_info("Ignoring field %s\n", channel->field);
+					  strncpy(sf[i].field, channel->field, FIELD_LEN-1);
+					  sf[i].type = superframe_type_array[channel->type];
+					  sf[i].spf = get_spf(channel->rate);
+					  sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+roachless_offset[channel->rate];
+					  sf[i].skip = roachless_frame_size[channel->rate];
+					  if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
+					  if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
+					  sf[i].var = channel->var;
 
-       i++;
+					  i++;
+        }
     }
 
     // null terminate
