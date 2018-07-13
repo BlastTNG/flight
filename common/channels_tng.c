@@ -499,8 +499,8 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
 
     for (i = 0; i < ll_hk->n_entries; i++) {
         if (ll_hk->items[i].tlm) {
-						if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
-										 (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
+            if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
+                 (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
                 linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
                 break;
             }
@@ -519,10 +519,12 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
     ll_hk->blk_size = blk_size;
 
     // modify the serial
+    /*
     for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
       if (!name[i]) break;
       ll_hk->serial[i] ^= name[i];
     }
+    */
 
     return ll_hk;
 }

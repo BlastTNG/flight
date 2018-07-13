@@ -38,6 +38,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 #include <float.h>
@@ -532,6 +533,10 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 FILE * fpreopenb(char *fname)
 {
   FILE * temp = fopen(fname,"ab");
+  if (!temp) {
+    printf("Cannot open %s (errno %d: %s) \n", fname, errno, strerror(errno));
+    return NULL;
+  }
   fclose(temp);
   return fopen(fname,"rb+");
 }
