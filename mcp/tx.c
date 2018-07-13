@@ -67,7 +67,6 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
-void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */
@@ -206,11 +205,11 @@ void WriteAux(void)
     }
 
     SET_VALUE(ploverAddr, CommandData.plover);
-    SET_VALUE(rateHighrateAddr, CommandData.highrate_bw); // Bps
-    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw); // Bps
-    SET_VALUE(ratePilotAddr, CommandData.pilot_bw); // Bps
+    SET_VALUE(rateHighrateAddr, CommandData.highrate_bw*8.0/1000.0); // Bps
+    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw*8.0/1000.0); // Bps
+    SET_VALUE(ratePilotAddr, CommandData.pilot_bw*8.0/1000.0); // Bps
 
-    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed);
+    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed/1000.0);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));

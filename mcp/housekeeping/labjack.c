@@ -468,20 +468,26 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
 
 static int initialized(void) {
     if (state[0].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[1].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[2].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[3].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     }
     if (state[4].initialized) {
+        // blast_info("a labjack was seen");
         return 1;
     } else {
+        // blast_info("no labjack was seen");
         return 0;
     }
 }
@@ -489,7 +495,7 @@ static int initialized(void) {
 void labjack_choose_execute(void) {
     int init = initialized();
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
-        blast_info("setting cmd queue executor");
+        // blast_info("setting cmd queue executor");
         if (CommandData.Relays.labjack[0] == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;

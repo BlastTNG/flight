@@ -107,6 +107,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -115,6 +116,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack2",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -123,6 +125,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_highbay_labjack",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -131,6 +134,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mapping_labjack",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     }
 };
@@ -613,7 +617,7 @@ void heater_write(int m_labjack, int address, float command) {
             }
         }
     }
-    if (m_labjack == 1) {
+    if (m_labjack == 1 && address > 2008) {
         works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
         value = retprime[0];
         if (works < 0) {
@@ -632,7 +636,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
                     break;
                 case 2010:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
                     break;
                 case 2011:
@@ -640,7 +644,7 @@ void heater_write(int m_labjack, int address, float command) {
                     SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
                     break;
                 case 2013:
-                    // blast_info("writing to %d, value %d", address, value);
+                    blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
                     break;
                 case 2015:
@@ -655,6 +659,7 @@ void heater_write(int m_labjack, int address, float command) {
         } else {
             switch (address) {
                 case 2009:
+                    // blast_info("writing to %d, value %d", address, value);
                     SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
                     break;
                 case 2010:
@@ -680,6 +685,19 @@ void heater_write(int m_labjack, int address, float command) {
             }
         }
     }
+    if (m_labjack == 1 && address <= 2008) {
+        ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+        if (ret < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                if (ret > 0) {
+                    break;
+                }
+            }
+        }
+    }
 }
-
 

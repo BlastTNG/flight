@@ -46,11 +46,12 @@
 #include <openssl/md5.h>
 #include <float.h>
 
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "mcp.h"
 #include "FIFO.h"
 #include "bitserver.h"
-#include "linklist.h"
-#include "linklist_compress.h"
 #include "pilot.h"
 #include "blast.h"
 #include "mputs.h"
@@ -63,7 +64,7 @@ struct Fifo pilot_fifo = {0};
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
-  unsigned int fifosize = MAX(PILOT_MAX_SIZE, allframe_size);
+  unsigned int fifosize = MAX(PILOT_MAX_SIZE, superframe->allframe_size);
   initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
   linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
@@ -90,7 +91,7 @@ void pilot_compress_and_send(void *arg) {
 
       // send allframe if necessary
       if (!allframe_count) {
-        transmit_size = write_allframe(compbuffer, getFifoRead(&pilot_fifo));
+        transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
       } else {
         // compress the linklist
         compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
@@ -111,7 +112,7 @@ void pilot_compress_and_send(void *arg) {
       sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % PILOT_ALLFRAME_PERIOD;
+      allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

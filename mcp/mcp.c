@@ -65,6 +65,7 @@
 #include "actuators.h"
 #include "bias_tone.h"
 #include "balance.h"
+#include "cryovalves.h"
 #include "blast.h"
 // #include "blast_comms.h"
 #include "blast_time.h"
@@ -73,6 +74,7 @@
 #include "dsp1760.h"
 #include "ec_motors.h"
 #include "framing.h"
+#include "gps.h"
 #include "linklist.h"
 #include "linklist_compress.h"
 #include "pilot.h"
@@ -101,6 +103,8 @@ int16_t SouthIAm;
 int16_t InCharge = 0;
 int16_t InChargeSet = 0;
 
+extern labjack_state_t state[NUM_LABJACKS];
+
 bool shutdown_mcp = false;
 bool ready_to_close = false;
 
@@ -115,7 +119,7 @@ struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
-uint8_t * master_superframe = NULL;
+uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 
 #define MPRINT_BUFFER_SIZE 1024
@@ -289,11 +293,11 @@ void * lj_connection_handler(void *arg) {
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
     // order is CRYO1 CRYO2 OF1 OF2 OF3
-    init_labjacks(0, 0, 1, 1, 1, 1);
-    mult_labjack_networking_init(6, 84, 1);
+    init_labjacks(1, 1, 1, 1, 1, 1);
+    mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
     // 7 is for highbay labjack
-    // labjack_networking_init(7, 14, 1);
-    // ph_thread_t *cmd_thread = initialize_labjack_commands(7);
+    labjack_networking_init(7, 14, 1);
+    initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
     // labjack_networking_init(8, 14, 1);
@@ -305,16 +309,63 @@ void * lj_connection_handler(void *arg) {
     return NULL;
 }
 
-unsigned int superframe_counter[RATE_END] = {1};
+unsigned int superframe_counter[RATE_END] = {0};
+
+// distributes and multiplexes commanded roach channels to compressed telemetry fields
+void add_roach_tlm_488hz()
+{
+  static channel_t * roach_chans[NUM_ROACH_TLM] = {NULL};
+  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
+  static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
+  static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
+  static int first_time = 1;
+
+  int i;
+
+  if (first_time) {
+    for (i = 0; i < NUM_ROACH_TLM; i++) {
+			char tlm_name[64] = {0};
+			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN", 65+i);
+      tlm[i] = channels_find_by_name(tlm_name);
+			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN_index", 65+i);
+      tlm_index[i] = channels_find_by_name(tlm_name);
+    }
+
+    memset(roach_indices, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
+    first_time = 0;
+  }
+
+  for (i = 0; i < NUM_ROACH_TLM; i++) {
+    if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
+      roach_chans[i] = channels_find_by_name(CommandData.roach_tlm[i].name);
+      roach_indices[i] = CommandData.roach_tlm[i].index;
+      if (roach_chans[i] && roach_indices[i]) blast_info("Telemetering \"%s\" -> \"%s\"",
+                                                        roach_chans[i]->field, tlm[i]->field);
+    }
+    // write the channel data to the multiplexed field
+    if (tlm[i] && roach_chans[i]) {
+      double value = 0;
+      GET_VALUE(roach_chans[i], value);
+      SET_FLOAT(tlm[i], value);
+    }
+    // write the multiplex index
+    if (tlm_index[i]) {
+      SET_INT32(tlm_index[i], roach_indices[i]);
+    }
+  }
+}
 
 static void mcp_488hz_routines(void)
 {
-//    write_roach_channels_244hz();
+#ifndef NO_KIDS_TEST
+	// write_roach_channels_488hz();
+#endif
+    add_roach_tlm_488hz();
 
     share_data(RATE_488HZ);
     framing_publish_488hz();
-    superframe_counter[RATE_488HZ] = add_frame_to_superframe(channel_data[RATE_488HZ],
-                                       RATE_488HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_488HZ], RATE_488HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_488HZ]);
 }
 
 static void mcp_244hz_routines(void)
@@ -323,8 +374,8 @@ static void mcp_244hz_routines(void)
 
     share_data(RATE_244HZ);
     framing_publish_244hz();
-    superframe_counter[RATE_244HZ] = add_frame_to_superframe(channel_data[RATE_244HZ],
-                                       RATE_244HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_244HZ], RATE_244HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_244HZ]);
 }
 
 static void mcp_200hz_routines(void)
@@ -338,10 +389,9 @@ static void mcp_200hz_routines(void)
     share_data(RATE_200HZ);
     framing_publish_200hz();
     store_data_200hz();
-    // store_data_200hz();
-    superframe_counter[RATE_200HZ] = add_frame_to_superframe(channel_data[RATE_200HZ],
-                                       RATE_200HZ, master_superframe);
-    // cryo_200hz(1);
+    add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_200HZ]);
+    cryo_200hz(1);
 }
 static void mcp_100hz_routines(void)
 {
@@ -360,8 +410,9 @@ static void mcp_100hz_routines(void)
     share_data(RATE_100HZ);
     framing_publish_100hz();
     store_data_100hz();
-    superframe_counter[RATE_100HZ] = add_frame_to_superframe(channel_data[RATE_100HZ],
-                                       RATE_100HZ, master_superframe);
+    // store_data_100hz();
+    add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_100HZ]);
 }
 static void mcp_5hz_routines(void)
 {
@@ -386,21 +437,22 @@ static void mcp_5hz_routines(void)
     StoreHWPRBus();
     SetGyroMask();
 //    ChargeController();
-//    ControlPower();
 //    VideoTx();
 //    cameraFields();
 
     share_data(RATE_5HZ);
     framing_publish_5hz();
     store_data_5hz();
-    superframe_counter[RATE_5HZ] = add_frame_to_superframe(channel_data[RATE_5HZ],
-                                     RATE_5HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_5HZ]);
+//    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
     xsc_write_data(0);
     xsc_write_data(1);
 }
+
 static void mcp_1hz_routines(void)
 {
     int ready = !superframe_counter[RATE_488HZ];
@@ -409,26 +461,25 @@ static void mcp_1hz_routines(void)
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
     if (ready) {
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
-         memcpy(getFifoWrite(telem_fifo[i]), master_superframe, superframe_size);
+         memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
          incrementFifo(telem_fifo[i]);
       }
     }
-    share_superframe(master_superframe);
-
+    share_superframe(master_superframe_buffer);
+    labjack_choose_execute();
     auto_cycle_mk2();
     // all 1hz cryo monitoring 1 on 0 off
-    // cryo_1hz(1);
+    cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
     outer_frame(1);
     // relays arg defines found in relay.h
-    relays(ALL_RELAYS);
+    relays(3);
     // highbay will be rewritten as all on or off when box is complete
-    // highbay(1);
+    highbay(1);
     // thermal_vac();
-    labjack_choose_execute();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
-    blast_store_disk_space();
+    // blast_store_disk_space();
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
@@ -436,12 +487,17 @@ static void mcp_1hz_routines(void)
     share_data(RATE_1HZ);
     framing_publish_1hz();
     store_data_1hz();
-    superframe_counter[RATE_1HZ] = add_frame_to_superframe(channel_data[RATE_1HZ],
-                                     RATE_1HZ, master_superframe);
+    add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
+                            &superframe_counter[RATE_1HZ]);
+    // roach_timestamp_init(1);
 }
 
 static void *mcp_main_loop(void *m_arg)
 {
+#define MCP_FREQ 24400
+#define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
+#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
+
     int counter_488hz = 1;
     int counter_244hz = 1;
     int counter_200hz = 1;
@@ -452,8 +508,6 @@ static void *mcp_main_loop(void *m_arg)
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
-
-    superframe_counter[RATE_488HZ] = 1;
 
     while (true) {
         int ret;
@@ -517,6 +571,7 @@ int main(int argc, char *argv[])
   ph_thread_t *main_thread = NULL;
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
+  ph_thread_t *gps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -617,15 +672,29 @@ int main(int argc, char *argv[])
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 
+#ifndef NO_KIDS_TEST
+  // blast_info("Initializing ROACHes from MCP...");
+  // roach_udp_networking_init();
+  // init_roach(0);
+  // init_roach(1);
+  // init_roach(2);
+  // init_roach(3);
+  // init_roach(4);
+  blast_info("Finished initializing ROACHes...");
+#endif
+
+/* blast_info("Initializing Beaglebones from MCP...");
+init_beaglebone();
+blast_info("Finished initializing Beaglebones..."); */
+
   // initialize superframe FIFO
-  define_superframe();
-  master_superframe = calloc(1, superframe_size);
+  master_superframe_buffer = calloc(1, superframe->size);
   for (int i = 0; i < NUM_TELEMETRIES; i++) { // initialize all fifos
-    allocFifo(telem_fifo[i], 3, superframe_size);
+    allocFifo(telem_fifo[i], 3, superframe->size);
   }
 
   // load all the linklists
-  load_all_linklists(DEFAULT_LINKLIST_DIR, linklist_array);
+  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, linklist_array, 0);
   linklist_generate_lookup(linklist_array);
 
   // load the latest linklist into telemetry
@@ -659,11 +728,12 @@ int main(int argc, char *argv[])
   // force_incharge();
 
   if (use_starcams) {
-      xsc_networking_init(0);
-      xsc_networking_init(1);
+       xsc_networking_init(0);
+       xsc_networking_init(1);
   }
   initialize_magnetometer();
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+  gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
@@ -675,6 +745,7 @@ int main(int argc, char *argv[])
 
 //  initialize_bias_tone();
   startChrgCtrl(0);
+  startChrgCtrl(1);
 
 //  initialize the data sharing server
   data_sharing_init(linklist_array);
@@ -685,6 +756,7 @@ int main(int argc, char *argv[])
 #endif
   ph_sched_run();
 
+  blast_info("Joining main thread.");
   ph_thread_join(main_thread, NULL);
 
   return(0);

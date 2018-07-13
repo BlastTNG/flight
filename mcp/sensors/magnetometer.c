@@ -260,4 +260,5 @@ void *monitor_magnetometer(void *m_arg)
     }
     usleep(1000);
   }
+  return NULL;
 }

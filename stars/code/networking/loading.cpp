@@ -132,13 +132,13 @@ void Connection::load_server_data_image()
         server_data.channels.image_hor_iplate = shared_image_solution.horizontal.iplatescale;
 
         server_data.channels.image_num_blobs_found = shared_image_solution.num_blobs_total;
-		server_data.channels.image_num_blobs_matched = shared_image_solution.num_blobs_matched;
+        server_data.channels.image_num_blobs_matched = shared_image_solution.num_blobs_matched;
 
-		struct timeval tv = { 0 };
-		gettimeofday(&tv, NULL);
-		server_data.channels.timestamp_s = tv.tv_sec;
-		server_data.channels.timestamp_us = tv.tv_usec;
-	}
+    }
+    struct timeval tv = { 0 };
+    gettimeofday(&tv, NULL);
+    server_data.channels.timestamp_s = tv.tv_sec;
+    server_data.channels.timestamp_us = tv.tv_usec;
 
     server_data.blobs.counter_stars = shared_image_blobs.counter_stars;
     server_data.blobs.num_blobs = 0;

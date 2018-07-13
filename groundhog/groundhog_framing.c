@@ -58,6 +58,21 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
+// publishes a compressed linklist buffer to the mqtt server
+void linklist_publish(struct mosquitto *mosq, linklist_t * ll, uint8_t * buffer) {
+		if (!ll || !buffer) return;
+
+		char frame_name[32] = {0};
+		sprintf(frame_name, "linklists/%s", ll->name);
+
+		mosquitto_publish(mosq, NULL, frame_name, ll->blk_size, buffer, 0, false);
+}
+
+void groundhog_linklist_publish(linklist_t * ll, uint8_t * buffer) {
+    pthread_mutex_lock(&mqqt_lock);
+    linklist_publish(mosq, ll, buffer);
+    pthread_mutex_unlock(&mqqt_lock);
+}
 
 void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE m_rate)
 {    
@@ -67,7 +82,7 @@ void framing_extract_and_publish(uint8_t *data_buffer, int index, E_RATE m_rate)
     if (frame_size[m_rate] == 0) return;
 
     pthread_mutex_lock(&mqqt_lock); 
-    extract_frame_from_superframe(downlink[index].data[m_rate], m_rate, data_buffer, counter[index]);
+    extract_frame_from_superframe(downlink[index].data[m_rate], m_rate, data_buffer, &counter[index][m_rate]);
     mosquitto_publish(mosq, NULL, downlink[index].frame_name[m_rate], frame_size[m_rate],
                                   downlink[index].data[m_rate], 0, false);
     pthread_mutex_unlock(&mqqt_lock);
@@ -160,7 +175,7 @@ int framing_init(void)
         rate_name[strlen(rate_name)-1] = 'z';
 
         for (int i = 0; i < NUM_DOWNLINKS; i++) {
-            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe_size);
+            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe->size);
             downlink[i].data[rate] = calloc(1, allocated_size);
 
             sprintf(downlink[i].frame_name[rate], "frames/%s/%s", downlink[i].name, rate_name);
@@ -202,13 +217,17 @@ void groundhog_publish(void *arg) {
                     framing_extract_and_publish(data_buffer[i], i, RATE_1HZ);
 
                     // decrement the fifo
-                    decrementFifo(&downlink[i].fifo);
+                    if (!fifoIsEmpty(&downlink[i].fifo)) {
+                        decrementFifo(&downlink[i].fifo);
+                    }
                     data_buffer[i] = NULL;
                 }
 
                 // queue new data to read
                 if (new_data[i]) { 
-                    data_buffer[i] = getFifoRead(&downlink[i].fifo);
+                    if (!fifoIsEmpty(&downlink[i].fifo)) {
+                        data_buffer[i] = getFifoRead(&downlink[i].fifo);
+                    }
                     new_data[i] = false;
                 }
             }

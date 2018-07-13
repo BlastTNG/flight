@@ -40,10 +40,38 @@
 #include <channel_macros.h>
 #include <store_data.h>
 
+typedef struct {
+    bool    header_written;
+    bool    have_warned;
+    bool    init;
+    uint32_t    crc;
+    uint32_t mcp_framenum;
+    uint32_t frames_stored;
+    E_RATE rate;
+    uint16_t nrate;
+    char file_name[MAX_NUM_FILENAME_CHARS];
+    char chlist_name[MAX_NUM_FILENAME_CHARS];
+    char type[12];
+    fileentry_t *fp;
+    channel_t *mcp_framenum_addr;
+    channel_header_t *channels_pkg;
+} store_file_info_t;
+
 static store_file_info_t storage_info_1hz = {0};
 static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
+// =======
+// #define MAX_NUM_FILENAME_CHARS 72
+typedef struct {
+    fileentry_t *fp;
+    uint32_t pkts_written_ct;
+    char type[7];
+    char file_name[MAX_NUM_FILENAME_CHARS];
+} roach_udp_write_info_t;
+
+roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
+// >>>>>>> origin/master
 
 int store_disks_ready() {
 	static bool disk_init = false;
@@ -82,6 +110,21 @@ void get_write_file_name(char* fname, char* chlist, char* type, uint32_t index)
 int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char *m_type) {
     size_t pkg_size = sizeof(channel_header_t) + m_channels_pkg->length * sizeof(struct channel_packed);
     size_t bytes_written = 0;
+// =======
+// // Handles the file_open, file_write, and file_close calls.
+// static int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
+//                 int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
+// {
+//     uint16_t bytes_written = 0;
+//     if ((*m_counter) >= STORE_DATA_FRAMES_PER_FILE * m_freq) {
+//     	blast_info("Closing %s", m_file);
+//         file_close(*m_fp);
+//         get_write_file_name(m_file, m_type, m_frame_number);
+// 		blast_info("Opening %s", m_file);
+//         *m_fp = file_open(m_file, "w+");
+//         (*m_counter) = 0;
+//     }
+// >>>>>>> origin/master
     if (*m_fp) {
         bytes_written = file_write(*m_fp, (void*) m_channels_pkg, pkg_size);
 		if (bytes_written < pkg_size) {
@@ -167,6 +210,11 @@ void store_rate_data(store_file_info_t *m_storage) {
                 m_storage->have_warned = false;
                 m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
 		    }
+// =======
+// 	    if (temp_fp) {
+//            store_data(&temp_fp, file_name, type_1hz, RATE_1HZ,
+//                                    mcp_1hz_framenum, &frames_stored_to_1hz, 1);
+// >>>>>>> origin/master
         } else {
 	        if (m_storage->have_warned) {
 	            blast_err("Failed to open file %s for writing.", m_storage->file_name);
@@ -236,21 +284,40 @@ void store_data_200hz(void)
 void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_roach_udp,
                             uint16_t packet_err)
 {
-	int temp_fd = -1;
+    static int first_call = 1;
+	roach_udp_write_info_t* m_roach_write;
 	uint16_t bytes_written = 0;
-    roach_packet_header_out_t packet_header_out;
-    char type_roach[7];
-    char file_name[MAX_NUM_FILENAME_CHARS];
     char channel_list_name[MAX_NUM_FILENAME_CHARS];
     size_t header_size, packet_size;
+    roach_packet_header_out_t packet_header_out;
 
-    bytes_written = snprintf(type_roach, sizeof(type_roach), "roach%i", m_roach_udp->index + 1);
-    if (bytes_written < (sizeof(type_roach)-1)) {
-        blast_err("Could not print roach type string!  bytes_written = %u, sizeof(type_roach) = %i, type_roach = %s",
-                   bytes_written, (int) sizeof(type_roach), type_roach);
-        return;
+	if (m_roach_udp->first_packet) {
+	    blast_info("Called store_roach_udp_packet for the first packet of roach%u", m_roach_udp->which);
+	}
+
+    if (first_call) { // Initialize the roach_udp_write_info structure.
+        blast_info("Initializing roach_udp_write_info structure.");
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            roach_udp_write_info[i].fp = NULL;
+            roach_udp_write_info[i].pkts_written_ct = 0;
+            bytes_written = snprintf(roach_udp_write_info[i].type,
+                                     sizeof(roach_udp_write_info[i].type),
+                                     "roach%i", i + 1);
+            blast_info("Set type for roach%d to %s", i, roach_udp_write_info[i].type);
+            if (bytes_written < (sizeof(roach_udp_write_info[i].type)-1)) {
+                   blast_err("Could not print roach type string!  bytes_written = %u, sizeof(type) = %i, type = %s",
+                   bytes_written, (int) sizeof(roach_udp_write_info[i].type), roach_udp_write_info[i].type);
+                   return;
+            }
+        }
+        first_call = 0;
     }
-    get_write_file_name(file_name, channel_list_name, type_roach, m_roach_udp->roach_packet_count);
+//    get_write_file_name(file_name, channel_list_name, type_roach, m_roach_udp->roach_packet_count);
+
+    if (!store_disks_ready()) return;
+
+     m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->i_which]);
+// >>>>>>> origin/master
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);
@@ -263,23 +330,31 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     packet_header_out.port = m_roach_udp->port;
     packet_header_out.roach_packet_count = m_roach_udp->roach_packet_count;
 
-    temp_fd = file_open(file_name, "w+");
-	if (temp_fd >= 0) {
-	    // blast_info("Opened file %s for writing.", file_name);
-        bytes_written = file_write(temp_fd, (char*) (&packet_header_out), header_size);
-        if (bytes_written < header_size) {
-            blast_err("%s packet header size is %u bytes but we were only able to write %u bytes",
-                      type_roach, (uint16_t) header_size, bytes_written);
+    if ((m_roach_write->pkts_written_ct >= STORE_DATA_FRAMES_PER_FILE * 488) || !(m_roach_write->fp)) {
+        if (m_roach_write->fp) {
+    	    blast_info("Closing %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
+            file_close(m_roach_write->fp);
+        }
+        get_write_file_name(m_roach_write->file_name, channel_list_name,
+                            m_roach_write->type, m_roach_udp->roach_packet_count);
+		blast_info("Opening %s for roach%u", m_roach_write->file_name, m_roach_udp->which);
+        m_roach_write->fp = file_open(m_roach_write->file_name, "w+");
+        m_roach_write->pkts_written_ct = 0;
+    }
+    if (m_roach_write->fp) {
+	    // blast_info("writing to %s", m_file);
+        bytes_written = file_write(m_roach_write->fp, (char*) (&packet_header_out), header_size);
+		if (bytes_written < header_size) {
+            blast_err("%s header size is %u bytes but we were only able to write %u bytes",
+                        m_roach_write->type, (uint16_t) header_size, bytes_written);
 		}
-	    if (packet_size) {
-            bytes_written = file_write(temp_fd, (char*) m_packet, packet_size);
-            if (bytes_written < packet_size) {
-                blast_err("%s packet header size is %u bytes but we were only able to write %u bytes",
-                         type_roach, (uint16_t) packet_size, bytes_written);
-            }
+        bytes_written = file_write(m_roach_write->fp, (char*) m_packet, packet_size);
+		if (bytes_written < packet_size) {
+            blast_err("%s packet size is %u bytes but we were only able to write %u bytes",
+                        m_roach_write->type, (uint16_t) packet_size, bytes_written);
+		} else {
+		    // We wrote the frame successfully.
+            (m_roach_write->pkts_written_ct)++;
 		}
-        file_close(temp_fd);
-    } else {
-	    blast_err("Failed to open file %s for writing.", file_name);
     }
 }

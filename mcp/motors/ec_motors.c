@@ -54,6 +54,9 @@
 #include <mputs.h>
 
 static ph_thread_t *motor_ctl_id;
+static ph_thread_t *ecmonitor_ctl_id;
+
+extern int16_t InCharge;
 
 // device node Serial Numbers
 #define RW_SN 0x01bbbb65
@@ -62,7 +65,7 @@ static ph_thread_t *motor_ctl_id;
 #define RW_ADDR 0x3
 #define EL_ADDR 0x2
 #define PIV_ADDR 0x1
-
+#define FUCHS_MFG_ID 0x00ad // HWP encoder
 /**
  * Structure for storing the PDO assignments and their offsets in the
  * memory map
@@ -74,7 +77,7 @@ typedef struct {
     uint8_t     subindex;
     int         offset;
 } pdo_channel_map_t;
-static GSList *pdo_list;
+static GSList *pdo_list[4];
 
 
 /**
@@ -83,20 +86,26 @@ static GSList *pdo_list;
 static int rw_index = 0;
 static int piv_index = 0;
 static int el_index = 0;
-
-/**
- * Ethercat driver status
- */
-static ec_motor_state_t controller_state = ECAT_MOTOR_COLD;
+static int hwp_index = 0;
 
 /**
  * Memory mapping for the PDO variables
  */
-static char io_map[1024];
+static char io_map[4096];
 
 static int motors_exit = false;
 
-#define N_MCs 4
+
+/**
+ * Number of ethercat controllers (including the HWP encoder)
+ */
+#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
+
+/**
+ * Ethercat driver status
+ */
+static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
+ec_state_t ec_mcp_state = {0};
 
 /**
  * The following pointers reference data points read from/written to
@@ -108,28 +117,43 @@ static int32_t dummy_var = 0;
 static int32_t dummy_write_var = 0;
 
 /// Read words
-static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var };
-static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var };
+static int32_t *motor_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var , &dummy_var };
+static int32_t *motor_velocity[N_MCs] = { &dummy_var, &dummy_var, &dummy_var , &dummy_var , &dummy_var };
+static int32_t *actual_position[N_MCs] = { &dummy_var, &dummy_var, &dummy_var, &dummy_var , &dummy_var };
 static int16_t *motor_current[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
-                                         (int16_t*) &dummy_var, (int16_t*) &dummy_var };
+                                         (int16_t*) &dummy_var, (int16_t*) &dummy_var , (int16_t*) &dummy_var };
 static uint32_t *status_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                            (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+                                            (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static int16_t *amp_temp[N_MCs] = { (int16_t*) &dummy_var, (int16_t*) &dummy_var,
                                     (int16_t*) &dummy_var, (int16_t*) &dummy_var };
 static uint16_t *status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
-
+                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
+static uint16_t *network_status_word[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
+                                        (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
 static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
-                                             (uint32_t*) &dummy_var, (uint32_t*) &dummy_var };
+                                             (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
-                                              (uint16_t*) &dummy_var, (uint16_t*) &dummy_var };
+                                              (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
-                                         (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var };
+                                         (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var ,
+                                         (uint16_t*) &dummy_write_var };
 static int16_t *target_current[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var,
-                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var };
+                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var ,
+                                          (int16_t*) &dummy_write_var };
 
+/// Read word from encoder
+static uint32_t *hwp_position = (uint32_t*) &dummy_var;
+
+uint32_t hwp_get_position(void)
+{
+    return *hwp_position;
+}
+
+uint16_t hwp_get_state(void)
+{
+    return ec_slave[hwp_index].state;
+}
 /**
  * This set of functions return the latched faults of each motor controller
  * @return uint32 value latched bitmap
@@ -162,6 +186,23 @@ int16_t el_get_ctl_word(void)
 int16_t piv_get_ctl_word(void)
 {
     return *control_word_read[piv_index];
+}
+
+/**
+ * This set of functions returns the network status word of each motor controller 
+ * @return uint16 network status word bitmap
+ */
+uint16_t rw_get_network_status_word(void)
+{
+    return *network_status_word[rw_index];
+}
+uint16_t el_get_network_status_word(void)
+{
+    return *network_status_word[el_index];
+}
+uint16_t piv_get_network_status_word(void)
+{
+    return *network_status_word[piv_index];
 }
 
 /**
@@ -475,39 +516,35 @@ static void piv_init_resolver(void)
     }
 }
 
+static void ec_init_heartbeat(int slave_index)
+{
+    if (slave_index) {
+        ec_SDOwrite16(slave_index, ECAT_HEARTBEAT_TIME, HEARTBEAT_MS);
+        ec_SDOwrite32(slave_index, ECAT_LIFETIME_FACTOR, LIFETIME_FACTOR_EC);
+    }
+}
+
 /**
  * Finds all motor controllers on the network and sets them to pre-operational state
  * @return -1 on error, number of controllers found otherwise
  */
 static int find_controllers(void)
 {
-    char name[16] = "eth1";
-    int ret_init;
-    int ret_config;
-
-    if (controller_state == ECAT_MOTOR_COLD) {
-        if (!(ret_init = ec_init(name))) {
-            berror(err, "Could not initialize %s", name);
-            goto find_err;
-        }
-    }
-
-    controller_state = ECAT_MOTOR_INIT;
-    ret_config = ec_config(false, &io_map);
-    if (ret_config <= 0) {
+    ec_mcp_state.n_found = ec_config(false, &io_map);
+    if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
     }
-    blast_startup("ec_config returns %d slaves found", ret_config);
+    blast_startup("ec_config returns %d slaves found", ec_mcp_state.n_found);
 
-    if (ret_config < 3)
-        controller_state = ECAT_MOTOR_FOUND_PARTIAL;
+    if (ec_mcp_state.n_found < (N_MCs -1))
+        ec_mcp_state.status = ECAT_MOTOR_FOUND_PARTIAL;
     else
-        controller_state = ECAT_MOTOR_FOUND;
+        ec_mcp_state.status = ECAT_MOTOR_FOUND;
 
     /* wait for all slaves to reach SAFE_OP state */
-    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * 3) != EC_STATE_SAFE_OP) {
-        controller_state = ECAT_MOTOR_RUNNING_PARTIAL;
+    if (ec_statecheck(0, EC_STATE_SAFE_OP, EC_TIMEOUTSTATE * (N_MCs - 1)) != EC_STATE_SAFE_OP) {
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING_PARTIAL;
         blast_err("Not all slaves reached safe operational state.");
         ec_readstate();
         for (int i = 1; i <= ec_slavecount; i++) {
@@ -517,10 +554,23 @@ static int find_controllers(void)
             }
         }
     } else {
-        controller_state = ECAT_MOTOR_RUNNING;
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING;
     }
-
+    ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
+        /**
+         * There is only one PEPER FUCHS encoder on the chain, so we test for this
+         * first.  It doesn't have a fixed index number like the motor controllers,
+         * so we can't test in the usual manner
+         */
+        if (ec_slave[i].eep_man == FUCHS_MFG_ID) {
+            int32_t serial = 0;
+            int size = 4;
+            ec_SDOread(i, 0x650B, 0, false, &size, &serial, EC_TIMEOUTRXM);
+            blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
+                        ec_slave[i].aliasadr, ec_slave[i].name, serial);
+            hwp_index = i;
+        }
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
@@ -555,6 +605,46 @@ static int find_controllers(void)
 
 find_err:
     return -1;
+}
+/**
+ * Configure the HWP PDO assignments.
+ */
+static int hwp_pdo_init(void)
+{
+    pdo_mapping_t map;
+
+    if (ec_slave[hwp_index].state != EC_STATE_SAFE_OP
+            && ec_slave[hwp_index].state != EC_STATE_PRE_OP) {
+        blast_err("Encoder index %d (%s) is not in pre-operational state!  Cannot configure.",
+                hwp_index, ec_slave[hwp_index].name);
+        return -1;
+    }
+
+    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+            hwp_index, ec_slave[hwp_index].name);
+
+    /**
+     * To program the PDO mapping, we first must clear the old state
+     */
+/*
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
+    for (int i = 0; i < 4; i++) {
+        if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
+    }
+*/
+    /**
+     * Define the PDOs that we want to send to the flight computer from the Controllers
+     */
+
+    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+/*
+    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
+        blast_err("Failed mapping!");
+    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+        blast_err("Failed mapping!");
+*/
+    return 0;
 }
 
 /**
@@ -611,7 +701,10 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 1 element
+    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
+
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 1 element
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -674,8 +767,8 @@ static int motor_pdo_init(int m_slave)
 
     ec_SDOwrite8(m_slave, ECAT_RXPDO_ASSIGNMENT, 0, 1); /// There is on map in the RX PDOs
 
-    ec_SDOwrite32(m_slave, 0x2420, 0, 8);
-    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);
+    ec_SDOwrite32(m_slave, 0x2420, 0, 8);           // MISC settings for aborting trajectory, saving PDO map
+    ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);  // Save all objects (the 0x65766173 is hex for 'save')
 
     return 0;
 }
@@ -688,14 +781,17 @@ static int motor_pdo_init(int m_slave)
 static void map_index_vars(int m_index)
 {
     bool found;
-
+    GSList *test;
+    test = pdo_list[m_index];
     /**
      * Inputs.  Each is sequentially mapped to the IOMap memory space
      * for the motor controller
      */
+	blast_info("Starting map_index_vars for index %d", m_index);
+    blast_info("Initial pdolist pointer: %p", test);
 #define PDO_SEARCH_LIST(_obj, _map) { \
     found = false; \
-    for (GSList *el = pdo_list; (el); el = g_slist_next(el)) { \
+    for (GSList *el = pdo_list[m_index]; (el); el = g_slist_next(el)) { \
         pdo_channel_map_t *ch = (pdo_channel_map_t*)el->data; \
         if (ch->index == object_index(_obj) && \
                 ch->subindex == object_subindex(_obj)) { \
@@ -703,10 +799,12 @@ static void map_index_vars(int m_index)
             found = true; \
         } \
     } \
-    if (!found) blast_err("Could not find PDO map for %s", #_map); \
+    if (!found) { \
+        blast_err("Could not find PDO map for %s", #_map); \
+    } else { \
+    	blast_info("Found PDO map for %s", #_map); \
+    } \
     }
-
-
     PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
     PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
     PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
@@ -715,6 +813,7 @@ static void map_index_vars(int m_index)
     PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
     PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
     PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+    PDO_SEARCH_LIST(ECAT_CTL_STATUS, network_status_word);
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
@@ -729,9 +828,15 @@ static void map_index_vars(int m_index)
  */
 static void map_motor_vars(void)
 {
+	blast_info("Starting map_motor_vars.");
     if (el_index) map_index_vars(el_index);
     if (rw_index) map_index_vars(rw_index);
     if (piv_index) map_index_vars(piv_index);
+    if (hwp_index) {
+        hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
+    }
+
+	blast_info("Finished map_motor_vars.");
 }
 
 /**
@@ -750,6 +855,10 @@ static void motor_configure_timing(void)
         } else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
         }
+        /**
+         * Set the SYNC Manager mode to free-running so that we get data from the drive as soon as
+         * available.  Otherwise, the data will be held until the SYNC0 time updates
+         */
         ec_SDOwrite16(i, 0x1C32, 1, 0);
     }
 }
@@ -780,7 +889,7 @@ static int motor_set_operational()
      * If we've reached fully operational state, return
      */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
-        controller_state = ECAT_MOTOR_RUNNING;
+        ec_mcp_state.status = ECAT_MOTOR_RUNNING;
         return 0;
     }
 
@@ -796,56 +905,103 @@ static int motor_set_operational()
     return -1;
 }
 
+static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
+{
+    if (firsttime) {
+        blast_info("net_status = %2x", net_status);
+    }
+    // Device is not in operational mode (bits 0 and 1 have value of 3)
+    if (!(net_status & ECAT_NET_NODE_CHECK)) {
+        if (firsttime) {
+            blast_info("Device is not in operational mode.");
+        }
+        return(1);
+    }
+    if (!(net_status & ECAT_NET_SYNC_CHECK)) {
+        if (firsttime) {
+            blast_info("Device network error.");
+        }
+        return(1);
+    }
+    if (!(net_status & ECAT_NET_COBUS_OFF_CHECK)) {
+        if (firsttime) {
+            blast_info("Network CANOPEN Bus is off.");
+        }
+        return(1);
+    }
+    if (firsttime) {
+        blast_info("No error in network status %u, returning 0.", net_status);
+    }
+    return(0);
+}
+
 static void read_motor_data()
 {
     int motor_i = motor_index;
-
+    static bool firsttime = 1;
     RWMotorData[motor_i].current = rw_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     RWMotorData[motor_i].drive_info = rw_get_status_word();
     RWMotorData[motor_i].fault_reg = rw_get_latched();
     RWMotorData[motor_i].status = rw_get_status_register();
+    RWMotorData[motor_i].network_status = rw_get_network_status_word();
     RWMotorData[motor_i].position = rw_get_position();
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
     RWMotorData[motor_i].state = rw_get_ctl_word();
+    RWMotorData[motor_i].network_problem = check_for_network_problem(RWMotorData[motor_i].network_status, firsttime);
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
     ElevMotorData[motor_i].fault_reg = el_get_latched();
     ElevMotorData[motor_i].status = el_get_status_register();
+    ElevMotorData[motor_i].network_status = el_get_network_status_word();
     ElevMotorData[motor_i].position = el_get_position();
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
     ElevMotorData[motor_i].state = el_get_ctl_word();
+    ElevMotorData[motor_i].network_problem  =
+                          check_for_network_problem(ElevMotorData[motor_i].network_status, firsttime);
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
     PivotMotorData[motor_i].fault_reg = piv_get_latched();
     PivotMotorData[motor_i].status = piv_get_status_register();
+    PivotMotorData[motor_i].network_status = piv_get_network_status_word();
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
     PivotMotorData[motor_i].state = piv_get_ctl_word();
+    PivotMotorData[motor_i].network_problem  =
+                            check_for_network_problem(PivotMotorData[motor_i].network_status, firsttime);
 
+    firsttime = 0;
     motor_index = INC_INDEX(motor_index);
 }
 
-void mc_readPDOassign(int Slave) {
+void mc_readPDOassign(int m_slave) {
     uint16 idxloop, nidx, subidxloop, rdat, idx, subidx;
     uint8 subcnt;
+//    GSList *m_pdo_list;
     int wkc = 0;
     int len = 0;
     int offset = 0;
 
     len = sizeof(rdat);
     rdat = 0;
+
+//    m_pdo_list = pdo_list[m_slave];
+    blast_info("Starting mc_readPDOassign for slave %i", m_slave);
     /* read PDO assign subindex 0 ( = number of PDO's) */
-    wkc = ec_SDOread(Slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
+    wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
     rdat = etohs(rdat);
     /* positive result from slave ? */
-    if ((wkc <= 0) || (rdat <= 0))  return;
+    blast_info("Result from ec_SDOread wkc = %i, len = %i, rdat = %04x", wkc, len, rdat);
+    if ((wkc <= 0) || (rdat <= 0))  {
+    	blast_info("no data returned from ec_SDOread ... returning.");
+    	return;
+    }
 
     /* number of available sub indexes */
     nidx = rdat;
@@ -854,15 +1010,18 @@ void mc_readPDOassign(int Slave) {
         len = sizeof(rdat);
         rdat = 0;
         /* read PDO assign */
-        wkc = ec_SDOread(Slave, ECAT_TXPDO_ASSIGNMENT, (uint8) idxloop, FALSE, &len, &rdat, EC_TIMEOUTRXM);
+        wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, (uint8) idxloop, FALSE, &len, &rdat, EC_TIMEOUTRXM);
         /* result is index of PDO */
         idx = etohl(rdat);
-        if (idx <= 0) continue;
-
+        if (idx <= 0) {
+        	continue;
+        } else {
+            blast_info("found idx = %i at wkc = %i, idxloop = %i", idx, wkc, idxloop);
+        }
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
-        wkc = ec_SDOread(Slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
+        wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
         /* for each subindex */
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
@@ -870,13 +1029,15 @@ void mc_readPDOassign(int Slave) {
             pdo_mapping_t pdo_map = { 0 };
             len = sizeof(pdo_map);
             /* read SDO that is mapped in PDO */
-            wkc = ec_SDOread(Slave, idx, (uint8) subidxloop, FALSE, &len, &pdo_map, EC_TIMEOUTRXM);
-
+            wkc = ec_SDOread(m_slave, idx, (uint8) subidxloop, FALSE, &len, &pdo_map, EC_TIMEOUTRXM);
             channel = malloc(sizeof(pdo_channel_map_t));
             channel->index = pdo_map.index;
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
-            pdo_list = g_slist_prepend(pdo_list, channel);
+            pdo_list[m_slave] = g_slist_prepend(pdo_list[m_slave], channel);
+            blast_info("Read SDO wkc = %i, idx = %i, len = %i", wkc, idx, len);
+            blast_info("Appending channel to m_pdo_list = %p: index = %i, subindex = %i, offset = %i",
+                       pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
             offset += (pdo_map.size / 8);
@@ -884,31 +1045,54 @@ void mc_readPDOassign(int Slave) {
     }
 }
 
-static void* motor_control(void* arg)
+// Set defaults for the current limits, and pids
+void set_ec_motor_defaults()
 {
-    int expectedWKC, wkc;
-    int ret, len;
-    struct timespec ts;
-    struct timespec interval_ts = { .tv_sec = 0,
-                                    .tv_nsec = 2000000}; /// 500HZ interval
+    /// Set the default current limits
+    rw_init_current_limit();
+    el_init_current_limit();
+    piv_init_current_limit();
 
-    nameThread("Motors");
-    blast_startup("Starting Motor Control");
+    rw_init_current_pid();
+    el_init_current_pid();
+    piv_init_current_pid();
 
-    ph_thread_set_name("Motors");
-    // TODO(seth): setup state machine for looping in motors
+    /// Set the encoder defaults
+    rw_init_encoder();
+    el_init_encoder();
+    piv_init_resolver();
+
+    /// Set up the heartbeat which tracks communication errors with the slaves
+    ec_init_heartbeat(rw_index);
+    ec_init_heartbeat(el_index);
+    ec_init_heartbeat(piv_index);
+}
+
+int close_ec_motors()
+{
+    ec_close(); // Attempt to close down the motors
+    return(1);
+}
+// Attempts to connect to the EtherCat devices.
+int configure_ec_motors()
+{
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        motor_pdo_init(i);
-        mc_readPDOassign(i);
-    }
+        if (i == hwp_index) {
+            // hwp_pdo_init();
+        } else {
+            motor_pdo_init(i);
+            mc_readPDOassign(i);
+        }
+	}
     /// We re-configure the map now that we have assigned the PDOs
-    ec_config_map(&io_map);
+    blast_info("Reconfigure the map now that we have assigned the PDOs");
+    if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
     map_motor_vars();
 
     /**
-     * Get the current value of each RX word to avoid stomping on the current state
+     * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
         *target_current[i] = 0;
@@ -928,39 +1112,113 @@ static void* motor_control(void* arg)
         el_enable();
     }
 
-
-    /// Set the default current limits
-    rw_init_current_limit();
-    el_init_current_limit();
-    piv_init_current_limit();
-
-    rw_init_current_pid();
-    el_init_current_pid();
-    piv_init_current_pid();
-
-    /// Set the encoder defaults
-    rw_init_encoder();
-    el_init_encoder();
-    piv_init_resolver();
-
+    set_ec_motor_defaults();
     /// Start the Distributed Clock cycle
     motor_configure_timing();
 
     /// Put the motors in Operational mode (EtherCAT Operation)
+    blast_info("Setting the EtherCAT devices in operational mode.");
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        if (i != hwp_index) {
+            ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
+        }
     }
+    return(1);
+}
+
+int reset_ec_motors()
+{
+    configure_ec_motors();
+    return(1);
+}
+
+static int check_ec_network_status()
+{
+    bool firsttime = 1;
+    int retval = 1;
+    int motor_i = motor_index;
+    if ((RWMotorData[motor_i].network_problem && CommandData.ec_devices.fix_rw) ||
+        (ElevMotorData[motor_i].network_problem && CommandData.ec_devices.fix_el) ||
+        (PivotMotorData[motor_i].network_problem && CommandData.ec_devices.fix_piv)) {
+            retval = 0;
+            if (firsttime) {
+                blast_warn("check_ec_network_status shows a network problem. RW = %u, El = %u, Piv = %u",
+                           RWMotorData[motor_i].network_problem, ElevMotorData[motor_i].network_problem,
+                           PivotMotorData[motor_i].network_problem);
+            }
+    }
+    firsttime = 1;
+    return(retval);
+}
+
+void shutdown_motors(void)
+{
+    blast_info("Shutting down motors");
+    close_ec_motors();
+    blast_info("Finished shutting down motors");
+}
+
+static void* motor_control(void* arg)
+{
+    int expectedWKC, wkc;
+    int ret;
+    struct timespec ts;
+    struct timespec interval_ts = { .tv_sec = 0,
+                                    .tv_nsec = 2000000}; /// 500HZ interval
+    char name[16] = "eth1";
+	bool firsttime = 1;
+
+    nameThread("Motors");
+	while (!InCharge) {
+		usleep(100000);
+		if (firsttime) {
+			blast_info("Not in charge.  Waiting for control.");
+			firsttime = 0;
+		}
+	}
+    blast_startup("Starting Motor Control");
+
+    ph_thread_set_name("Motors");
+
+    if (!(ret = ec_init(name))) {
+        berror(err, "Could not initialize %s, exiting.", name);
+        exit(0);
+    } else {
+    	blast_info("Initialized %s", name);
+    }
+    blast_info("Attempting configure to EtherCat devices.");
+    configure_ec_motors();
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;
+	blast_info("expectedWKC = %i", expectedWKC);
 
     clock_gettime(CLOCK_REALTIME, &ts);
-    while (!motors_exit) {
+    while (!shutdown_mcp) {
         /// Set our wakeup time
         ts = timespec_add(ts, interval_ts);
         ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+
+        if (!check_ec_network_status()) {
+            ec_mcp_state.network_error_count++;
+            if (((ec_mcp_state.network_error_count) % 1000) == 1) {
+                blast_info("network_error_count = %u", ec_mcp_state.network_error_count);
+            }
+            if (ec_mcp_state.network_error_count >= NETWORK_ERR_RESET_THRESH) {
+                ec_mcp_state.network_error_count = 0;
+                if (!reset_ec_motors()) {
+                    blast_err("Reset of EtherCat devices failed!");
+                } else {
+                    blast_info("Reset EtherCat connection.");
+                }
+            }
+        }
+        if (CommandData.ec_devices.reset) {
+            if (!reset_ec_motors()) blast_err("Reset of EtherCat devices failed!");
+            CommandData.ec_devices.reset = 0;
+        }
 
         if (CommandData.disable_az) {
             rw_disable();
@@ -988,22 +1246,19 @@ static void* motor_control(void* arg)
             blast_err("%s", ec_elist2string());
         }
     }
+    shutdown_motors();
 
     return 0;
 }
 
-
 /* opens communications with motor controllers */
-void initialize_motors(void)
+int initialize_motors(void)
 {
-  memset(ElevMotorData, 0, sizeof(ElevMotorData));
-  memset(RWMotorData, 0, sizeof(RWMotorData));
-  memset(PivotMotorData, 0, sizeof(PivotMotorData));
+    memset(ElevMotorData, 0, sizeof(ElevMotorData));
+    memset(RWMotorData, 0, sizeof(RWMotorData));
+    memset(PivotMotorData, 0, sizeof(PivotMotorData));
 
-  motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
+    motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
+    return 0;
 }
 
-void shutdown_motors(void)
-{
-    blast_info("Shutting down motors");
-}

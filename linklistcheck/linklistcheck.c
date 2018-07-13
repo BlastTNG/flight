@@ -25,10 +25,13 @@
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 
+#include "blast.h"
 #include "calibrate.h"
+#include "channels_tng.h"
 #include "linklist.h"
 #include "linklist_compress.h"
-#include "blast.h"
+#include "linklist_writer.h"
+#include "linklist_connect.h"
 
 int main(int argc, char *argv[])
 {
@@ -41,18 +44,40 @@ int main(int argc, char *argv[])
 	int i, r;
   uint8_t format_serial[MD5_DIGEST_LENGTH] = {0};
   linklist_t *ll_array[MAX_NUM_LINKLIST_FILES] = {NULL};
+  superframe_entry_t * superframe_list = NULL;
 
   channels_initialize(channel_list);
 
-	if (load_all_linklists(linklistdir, ll_array) < 0)
+  printf("Superframe size = %d, count = %d, serial = %.8lx\n", superframe->size, superframe->n_entries, superframe->serial);
+
+  write_superframe_format(superframe, "superframe.txt");
+  superframe_t * testsf = parse_superframe_format("superframe.txt"); 
+  write_superframe_format(testsf, "superframe.txt");
+  printf("Parsed size = %d, count = %d  serial = %.8lx\n", testsf->size, testsf->n_entries, testsf->serial);
+
+	if (load_all_linklists(superframe, linklistdir, ll_array, 0) < 0)
   {
     printf("Unable to load linklists\n");
     exit(3);
   }
 
+  // check the parser and writer
+	linklist_t * ll = ll_array[0];  
+  r = 0;
+  while (ll) {
+    printf("Checking %s...\n", ll->name);
+    write_linklist_format(ll, ll->name);
+    linklist_t * temp_ll = parse_linklist_format_opt(superframe, ll->name, LL_NO_AUTO_CHECKSUM);
+    printf("0x%.4x == 0x%.4x\n", *(uint32_t *) ll->serial, *(uint32_t *) temp_ll->serial);
+
+    delete_linklist(temp_ll);
+    ll = ll_array[++r];
+  } 
+
+
   printf("------------------------ LINKLIST START ------------------------\n");
 
-	linklist_t * ll = ll_array[0];  
+	ll = ll_array[0];  
   r = 0;
 
 	while (ll)
@@ -67,9 +92,10 @@ int main(int argc, char *argv[])
     	if (ll->items[i].tlm != NULL)
     	{
 
-      	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %d\n",
+      	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %s, sf_start = %d, sf_skip = %d\n",
          (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
-         ll->items[i].blk_size, ll->items[i].num, ll->items[i].comp_type);
+         ll->items[i].blk_size, ll->items[i].num, (ll->items[i].comp_type == NO_COMP) ? "NONE" : compRoutine[ll->items[i].comp_type].name, 
+         ll->items[i].tlm->start, ll->items[i].tlm->skip);
 				runningsum += ll->items[i].blk_size;
     	}
     	else 
@@ -97,6 +123,6 @@ int main(int argc, char *argv[])
 
   printf("\n===================GENERAL INFO====================\n");
 
-	printf("all_frame_size = %d\n",allframe_size);
+	printf("allframe_size = %d\n",superframe->allframe_size);
 
 }

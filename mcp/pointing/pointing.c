@@ -60,6 +60,7 @@
 #include "time_lst.h"
 #include "utilities_pointing.h"
 #include "magnetometer.h"
+#include "gps.h"
 #include "sip.h"
 
 int point_index = 0;
@@ -1189,8 +1190,14 @@ void Pointing(void)
 
     /************************************************/
     /** Set the official Lat and Lon **/
-    last_good_lat = SIPData.GPSpos.lat;
-    last_good_lon = SIPData.GPSpos.lon;
+    if (GPSData.isnew) {
+        last_good_lat = GPSData.latitude;
+        last_good_lon = GPSData.longitude;
+        GPSData.isnew = 0;
+    } else {
+        last_good_lat = SIPData.GPSpos.lat;
+        last_good_lon = SIPData.GPSpos.lon;
+    }
     last_good_alt = SIPData.GPSpos.alt;
 
     PointingData[point_index].lat = last_good_lat;

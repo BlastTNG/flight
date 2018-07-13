@@ -33,8 +33,9 @@
 #include <termios.h>
 #include <libusb-1.0/libusb.h>
 
-#include "linklist.h"
-#include "linklist_compress.h"
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "bi0.h"
 #include "blast.h"
 #include "mcp.h"
@@ -511,7 +512,7 @@ void biphase_writer(void * arg)
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
             // send allframe if necessary
             if (!allframe_count) {
-                transmit_size = write_allframe(compbuffer, getFifoRead(&bi0_fifo));
+                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
             } else {
                 // compress the linklist to compbuffer
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
@@ -559,7 +560,7 @@ void biphase_writer(void * arg)
                 usleep(1000);
             }
 */
-            allframe_count = (allframe_count + 1) % BI0_ALLFRAME_PERIOD;
+            allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);
         }

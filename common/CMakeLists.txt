@@ -92,6 +92,7 @@ set(DEFRICHER_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/blast.c
     ${CMAKE_CURRENT_SOURCE_DIR}/channels_tng.c
     ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/CRC_func.c
     ${CMAKE_CURRENT_SOURCE_DIR}/FIFO.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mputs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
@@ -103,6 +104,7 @@ set(DEFRICHER_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/blast_time.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/channels_tng.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/crc.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/CRC_func.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/derived.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/FIFO.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/mputs.h

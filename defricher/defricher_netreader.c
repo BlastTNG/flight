@@ -37,6 +37,7 @@
 #include "blast.h"
 #include "channels_tng.h"
 #include "FIFO.h"
+#include "linklist_writer.h"
 
 #include "defricher.h"
 #include "defricher_utils.h"
@@ -84,6 +85,24 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
     }
 }
 
+static void frame_handle_linklist_data(uint8_t * m_data, unsigned int m_len) {
+    if (m_len != rc.ll->blk_size) {
+        defricher_err("Packet data size mismatch: expected %d bytes and received %d bytes", rc.ll->blk_size, m_len);
+        return;
+    }
+
+    static int counter = 0;
+    static int first_time = 1;
+    static linklist_dirfile_t * ll_dirfile = NULL;
+    if (first_time) {
+        ll_dirfile = open_linklist_dirfile("test.DIR", rc.ll);
+        first_time = 0;
+    }
+
+    write_linklist_dirfile(ll_dirfile, m_data);
+    // defricher_info("Received data from %s (size %d == %d, frame = %d)\n", rc.linklist_file, rc.ll->blk_size, m_len, counter);
+}
+
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
     char **topics;
@@ -96,9 +115,9 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
     if(message->payloadlen){
         if (mosquitto_sub_topic_tokenise(message->topic, &topics, &count) == MOSQ_ERR_SUCCESS) {
             if (strcmp(telemetry, "lab") == 0) {
-                correct_topic = ((count == 4) && topics[0] && strcmp(topics[0], "frames") == 0);
+                correct_topic = (!rc.ll && (count == 4) && topics[0] && strcmp(topics[0], "frames") == 0);
             } else {
-                correct_topic = ((count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
+                correct_topic = (!rc.ll && (count == 3) && topics[0] && strcmp(topics[0], "frames") == 0 && strcmp(topics[1], telemetry) == 0);
             }
             if (correct_topic) {
                 if (ri.channels_ready) {
@@ -133,6 +152,17 @@ static void frame_message_callback(struct mosquitto *mosq, void *userdata, const
                         defricher_request_updated_derived();
                         last_derived_crc = ((derived_header_t*)message->payload)->crc;
                     }
+                }
+            }
+            if (strcmp(telemetry, "lab") == 0) {
+               correct_topic = false;
+            } else {
+               correct_topic = (rc.ll && (count == 2) && topics[0] && strcmp(topics[0], "linklists") == 0); 
+            }
+            if (correct_topic) {
+                if (ri.channels_ready) {
+                    ri.read += 200;
+                    frame_handle_linklist_data(message->payload, message->payloadlen);
                 }
             }
             mosquitto_sub_topic_tokens_free(&topics, count);
@@ -199,7 +229,6 @@ static void *netreader_routine(void *m_arg)
                 sleep(1);
                 break;
         }
-
         fflush(NULL);
     }
 
@@ -236,11 +265,28 @@ pthread_t netreader_init(const char *m_host, char *m_telemetry)
         defricher_strerr("Unable to connect.\n");
         return 0;
     }
+            
+    char framename[32] = {0};
 
-    mosquitto_subscribe(mosq, NULL, "frames/#", 2);
+    if (rc.linklist_file) { // linklist mode
+        int i;
+        for (i = strlen(rc.linklist_file)-1; i >=0 ; i--) {
+          if (rc.linklist_file[i] == '/') break;
+        }
+        sprintf(framename, "linklists/%s", rc.linklist_file+i+1); 
+    } else { // normal full channel mode
+        if (strcmp(m_telemetry, "lab") == 0) {
+            sprintf(framename, "frames/#");
+        } else {
+            sprintf(framename, "frames/%s/#", m_telemetry);
+        }
+    }
+
+		mosquitto_subscribe(mosq, NULL, framename, 2);
     mosquitto_subscribe(mosq, NULL, "channels/#", 2);
     mosquitto_subscribe(mosq, NULL, "derived/#", 2);
 
+		printf("Subscribed to \"%s\"\n", framename);
 
     if (!pthread_create(&netread_thread, NULL, &netreader_routine, NULL))
             return netread_thread;

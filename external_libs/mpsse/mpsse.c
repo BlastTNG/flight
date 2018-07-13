@@ -844,4 +844,3 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 
 	return retval;
 }
-

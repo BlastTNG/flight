@@ -195,6 +195,7 @@ static void rec_send_values(void) {
     labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, rec_state.rec_off);
     labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_ON, rec_state.amp_supply_on);
     labjack_queue_command(LABJACK_CRYO_2, AMP_SUPPLY_OFF, rec_state.amp_supply_off);
+    blast_info("wrote %f to %d", rec_state.amp_supply_off, AMP_SUPPLY_OFF);
     labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_ON, rec_state.therm_supply_on);
     labjack_queue_command(LABJACK_CRYO_2, THERM_READOUT_OFF, rec_state.therm_supply_off);
     labjack_queue_command(LABJACK_CRYO_2, HEATER_SUPPLY_ON, rec_state.heater_supply_on);
@@ -202,26 +203,36 @@ static void rec_send_values(void) {
 }
 // function called in the main loop of MCP
 void rec_control(void) {
-    if (CommandData.Relays.labjack[1] == 1) {
-        static int rec_startup = 1;
-        static int rec_trigger = 0;
-        if (rec_trigger == 1) { // turns off the power pulse after 1 second
+    static int rec_startup = 1;
+    static int rec_trigger = 0;
+    blast_info("state 1 connected = %d", state[1].connected);
+    if (CommandData.Labjack_Queue.lj_q_on == 1 && state[1].connected == 1) {
+        if (rec_trigger == 3) { // turns off the power pulse after 1 second
             rec_init();
             rec_trigger = 0;
             rec_send_values();
+            rec_state.update_rec = 0;
+            blast_info("pulse off");
         } // turns on a power pulse and sets reminder to turn it off
+        if (rec_trigger < 3 && rec_trigger >= 1) {
+            rec_trigger++;
+            blast_info("counting to shutoff");
+        }
         if ((rec_state.update_rec = CommandData.Relays.update_rec) == 1) {
             rec_update_values();
             CommandData.Relays.update_rec = 0;
             rec_send_values();
             rec_trigger = 1;
+            blast_info("pulsed");
         }
         if (rec_startup == 1) { // initializes the power box to feed power to relays (ONLY REC)
             rec_startup = 0;
             labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_ON, 1);
             labjack_queue_command(LABJACK_CRYO_2, POWER_BOX_OFF, 0);
+            CommandData.Relays.update_rec = 0;
             rec_init();
             rec_trigger = 1;
+            blast_info("power box told to turn on");
         }
     }
 }
@@ -384,41 +395,41 @@ static void init_of_cycle(void) {
 }
 
 static void of_cycle_off(void) {
-    of_state.of_1_off = CommandData.Relays.cycle_of_1;
-    of_state.of_2_off = CommandData.Relays.cycle_of_2;
-    of_state.of_3_off = CommandData.Relays.cycle_of_3;
-    of_state.of_4_off = CommandData.Relays.cycle_of_4;
-    of_state.of_5_off = CommandData.Relays.cycle_of_5;
-    of_state.of_6_off = CommandData.Relays.cycle_of_6;
-    of_state.of_7_off = CommandData.Relays.cycle_of_7;
-    of_state.of_8_off = CommandData.Relays.cycle_of_8;
-    of_state.of_9_off = CommandData.Relays.cycle_of_9;
-    of_state.of_10_off = CommandData.Relays.cycle_of_10;
-    of_state.of_11_off = CommandData.Relays.cycle_of_11;
-    of_state.of_12_off = CommandData.Relays.cycle_of_12;
-    of_state.of_13_off = CommandData.Relays.cycle_of_13;
-    of_state.of_14_off = CommandData.Relays.cycle_of_14;
-    of_state.of_15_off = CommandData.Relays.cycle_of_15;
-    of_state.of_16_off = CommandData.Relays.cycle_of_16;
+    CommandData.Relays.of_1_off = CommandData.Relays.cycle_of_1;
+    CommandData.Relays.of_2_off = CommandData.Relays.cycle_of_2;
+    CommandData.Relays.of_3_off = CommandData.Relays.cycle_of_3;
+    CommandData.Relays.of_4_off = CommandData.Relays.cycle_of_4;
+    CommandData.Relays.of_5_off = CommandData.Relays.cycle_of_5;
+    CommandData.Relays.of_6_off = CommandData.Relays.cycle_of_6;
+    CommandData.Relays.of_7_off = CommandData.Relays.cycle_of_7;
+    CommandData.Relays.of_8_off = CommandData.Relays.cycle_of_8;
+    CommandData.Relays.of_9_off = CommandData.Relays.cycle_of_9;
+    CommandData.Relays.of_10_off = CommandData.Relays.cycle_of_10;
+    CommandData.Relays.of_11_off = CommandData.Relays.cycle_of_11;
+    CommandData.Relays.of_12_off = CommandData.Relays.cycle_of_12;
+    CommandData.Relays.of_13_off = CommandData.Relays.cycle_of_13;
+    CommandData.Relays.of_14_off = CommandData.Relays.cycle_of_14;
+    CommandData.Relays.of_15_off = CommandData.Relays.cycle_of_15;
+    CommandData.Relays.of_16_off = CommandData.Relays.cycle_of_16;
 }
 
 static void of_cycle_on(void) {
-    of_state.of_1_on = CommandData.Relays.cycle_of_1;
-    of_state.of_2_on = CommandData.Relays.cycle_of_2;
-    of_state.of_3_on = CommandData.Relays.cycle_of_3;
-    of_state.of_4_on = CommandData.Relays.cycle_of_4;
-    of_state.of_5_on = CommandData.Relays.cycle_of_5;
-    of_state.of_6_on = CommandData.Relays.cycle_of_6;
-    of_state.of_7_on = CommandData.Relays.cycle_of_7;
-    of_state.of_8_on = CommandData.Relays.cycle_of_8;
-    of_state.of_9_on = CommandData.Relays.cycle_of_9;
-    of_state.of_10_on = CommandData.Relays.cycle_of_10;
-    of_state.of_11_on = CommandData.Relays.cycle_of_11;
-    of_state.of_12_on = CommandData.Relays.cycle_of_12;
-    of_state.of_13_on = CommandData.Relays.cycle_of_13;
-    of_state.of_14_on = CommandData.Relays.cycle_of_14;
-    of_state.of_15_on = CommandData.Relays.cycle_of_15;
-    of_state.of_16_on = CommandData.Relays.cycle_of_16;
+    CommandData.Relays.of_1_on = CommandData.Relays.cycle_of_1;
+    CommandData.Relays.of_2_on = CommandData.Relays.cycle_of_2;
+    CommandData.Relays.of_3_on = CommandData.Relays.cycle_of_3;
+    CommandData.Relays.of_4_on = CommandData.Relays.cycle_of_4;
+    CommandData.Relays.of_5_on = CommandData.Relays.cycle_of_5;
+    CommandData.Relays.of_6_on = CommandData.Relays.cycle_of_6;
+    CommandData.Relays.of_7_on = CommandData.Relays.cycle_of_7;
+    CommandData.Relays.of_8_on = CommandData.Relays.cycle_of_8;
+    CommandData.Relays.of_9_on = CommandData.Relays.cycle_of_9;
+    CommandData.Relays.of_10_on = CommandData.Relays.cycle_of_10;
+    CommandData.Relays.of_11_on = CommandData.Relays.cycle_of_11;
+    CommandData.Relays.of_12_on = CommandData.Relays.cycle_of_12;
+    CommandData.Relays.of_13_on = CommandData.Relays.cycle_of_13;
+    CommandData.Relays.of_14_on = CommandData.Relays.cycle_of_14;
+    CommandData.Relays.of_15_on = CommandData.Relays.cycle_of_15;
+    CommandData.Relays.of_16_on = CommandData.Relays.cycle_of_16;
 }
 
 static void power_cycle_of(void) {
@@ -577,33 +588,33 @@ static void init_if_cycle(void) {
 }
 
 static void if_cycle_off(void) {
-    if_state.if_1_off = CommandData.Relays.cycle_if_1;
-    if_state.if_2_off = CommandData.Relays.cycle_if_2;
-    if_state.if_3_off = CommandData.Relays.cycle_if_3;
-    if_state.if_4_off = CommandData.Relays.cycle_if_4;
-    if_state.if_5_off = CommandData.Relays.cycle_if_5;
-    if_state.if_6_off = CommandData.Relays.cycle_if_6;
-    if_state.if_7_off = CommandData.Relays.cycle_if_7;
-    if_state.if_8_off = CommandData.Relays.cycle_if_8;
-    if_state.if_9_off = CommandData.Relays.cycle_if_9;
-    if_state.if_10_off = CommandData.Relays.cycle_if_10;
+    CommandData.Relays.if_1_off = CommandData.Relays.cycle_if_1;
+    CommandData.Relays.if_2_off = CommandData.Relays.cycle_if_2;
+    CommandData.Relays.if_3_off = CommandData.Relays.cycle_if_3;
+    CommandData.Relays.if_4_off = CommandData.Relays.cycle_if_4;
+    CommandData.Relays.if_5_off = CommandData.Relays.cycle_if_5;
+    CommandData.Relays.if_6_off = CommandData.Relays.cycle_if_6;
+    CommandData.Relays.if_7_off = CommandData.Relays.cycle_if_7;
+    CommandData.Relays.if_8_off = CommandData.Relays.cycle_if_8;
+    CommandData.Relays.if_9_off = CommandData.Relays.cycle_if_9;
+    CommandData.Relays.if_10_off = CommandData.Relays.cycle_if_10;
 }
 
 static void if_cycle_on(void) {
-    if_state.if_1_on = CommandData.Relays.cycle_if_1;
-    if_state.if_2_on = CommandData.Relays.cycle_if_2;
-    if_state.if_3_on = CommandData.Relays.cycle_if_3;
-    if_state.if_4_on = CommandData.Relays.cycle_if_4;
-    if_state.if_5_on = CommandData.Relays.cycle_if_5;
-    if_state.if_6_on = CommandData.Relays.cycle_if_6;
-    if_state.if_7_on = CommandData.Relays.cycle_if_7;
-    if_state.if_8_on = CommandData.Relays.cycle_if_8;
-    if_state.if_9_on = CommandData.Relays.cycle_if_9;
-    if_state.if_10_on = CommandData.Relays.cycle_if_10;
+    CommandData.Relays.if_1_on = CommandData.Relays.cycle_if_1;
+    CommandData.Relays.if_2_on = CommandData.Relays.cycle_if_2;
+    CommandData.Relays.if_3_on = CommandData.Relays.cycle_if_3;
+    CommandData.Relays.if_4_on = CommandData.Relays.cycle_if_4;
+    CommandData.Relays.if_5_on = CommandData.Relays.cycle_if_5;
+    CommandData.Relays.if_6_on = CommandData.Relays.cycle_if_6;
+    CommandData.Relays.if_7_on = CommandData.Relays.cycle_if_7;
+    CommandData.Relays.if_8_on = CommandData.Relays.cycle_if_8;
+    CommandData.Relays.if_9_on = CommandData.Relays.cycle_if_9;
+    CommandData.Relays.if_10_on = CommandData.Relays.cycle_if_10;
 }
 
 static void power_cycle_if(void) {
-    static int cycle_delay = 1;
+    static int cycle_delay = 4;
     static int cycle_taken = 0;
     if (CommandData.Relays.cycled_if == 1) {
         if (!cycle_taken) {
@@ -644,32 +655,49 @@ void if_control(void) {
         }
         if ((if_state.update_if = CommandData.Relays.update_if) == 1) {
             if_update_values();
-            if_trigger = 2;
-            if_counter = 3;
+            if_trigger = 1;
+            if_counter = 1;
             if_send_values();
             CommandData.Relays.update_if = 0;
         }
     }
 }
 
+static void of_status(void) {
+    uint16_t of_status;
+    int i;
+    static channel_t* of_status_Addr;
+    of_status_Addr = channels_find_by_name("of_status");
+    for (i = 0; i < 16; i++) {
+        if (CommandData.Relays.of_relays[i] == 1) {
+            of_status += pow(2, i);
+            // blast_info("added %f", pow(2, i));
+        }
+    }
+    // blast_info("of status is: %u", of_status);
+    SET_SCALED_VALUE(of_status_Addr, of_status);
+}
+
 void relays(int setting) {
-    if (state[3].initialized && state[2].initialized && state[4].initialized) {
-        if (setting == 1) {
-            if_control();
-            of_control();
-        }
-        if (setting == 2) {
+    if (setting == 1 && state[3].connected && state[2].connected && state[4].connected) {
+        if_control();
+        of_control();
+        of_status();
+    }
+    if (setting == 2 && state[1].connected) {
+        rec_control();
+    }
+    if (setting == 3 && state[3].connected && state[2].connected && state[4].connected) {
+        if_control();
+        of_control();
+        of_status();
+        if (state[1].connected) {
             rec_control();
-        }
-        if (setting == 3) {
-            if_control();
-            of_control();
-            if (state[1].initialized) {
-                rec_control();
-            }
         }
     }
 }
+
+
 
 
 
