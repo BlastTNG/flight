@@ -70,9 +70,8 @@ uint8_t superframe_type_array[TYPE_END+1] = {
 };
 double channel_data_to_double(uint8_t * data, uint8_t type);
 int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
+unsigned int superframe_offset[RATE_END] = {0};
 superframe_t * superframe = NULL;
-size_t roachless_frame_size[RATE_END] = {0};
-unsigned int roachless_offset[RATE_END] = {0};
 
 size_t channel_size(channel_t *m_channel)
 {
@@ -473,7 +472,7 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   if (kid) *kid = roach_index;
 }
 
-void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
+void make_name_from_roach_index(unsigned int roach_index, char * name) {
   unsigned int roach = 0, kid = 0, rtype = 0;
   read_roach_index(&roach, &kid, &rtype, roach_index);
 
@@ -490,57 +489,69 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
     return;
   }
 
-  snprintf(name, sizeof(name), "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+  snprintf(name, 64, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
 }
 
-superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
-    int i = 0;
-    int rate = 0;
-    const channel_t *channel;
-    int roachless_channels_count = 0;
-    
-    // compute channel count and frame sizes without roaches
-    for (channel = m_channel_list; channel->field[0]; channel++) {
-			  if ((strncmp(channel->field+2, "kid", 3) != 0) || (strncmp(channel->field+10, "roach", 5) != 0)) {
-            roachless_frame_size[channel->rate] += channel_size((channel_t *) channel);
-            roachless_channels_count++;
+linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
+    int i;
+    int count = 0;
+
+    for (i = 0; i < ll_hk->n_entries; i++) {
+        if (ll_hk->items[i].tlm) {
+						if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
+										 (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
+                linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
+                break;
+            }
         }
+        count++;
     }
 
-    superframe_entry_t * sf = calloc(roachless_channels_count+1, sizeof(superframe_entry_t));
+    // modify the linklist name
+    strncpy(ll_hk->name, name, 63);
+ 
+    // modify the linklist size
+    ll_hk->n_entries = count;
+
+    // modify the serial
+    for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+      if (!name[i]) break;
+      ll_hk->serial[i] ^= name[i];
+    }
+
+    return ll_hk;
+}
+
+#define EXTRA_SF_ENTRIES 2
+
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
+    superframe_entry_t * sf = calloc(channels_count+EXTRA_SF_ENTRIES+1, sizeof(superframe_entry_t));
+
     unsigned int sf_size = 0;
 
-    // compute the total superframe size and overall offsets
+    int rate = 0;
     for (rate = 0; rate < RATE_END; rate++) {
-        roachless_offset[rate] = sf_size;
-        sf_size += roachless_frame_size[rate]*get_spf(rate);
-        printf("%d %d %d %d\n", get_spf(rate), (int) roachless_frame_size[rate], (int) frame_size[rate], roachless_offset[rate]);
+      superframe_offset[rate] = sf_size;
+      sf_size += frame_size[rate]*get_spf(rate);
     }
-    printf("%d %d\n", roachless_channels_count, channels_count);
 
-    // process the channels as superframe entries
-    i = 0;
+    int i = 0;
+    const channel_t *channel;
     for (channel = m_channel_list; channel->field[0]; channel++) {
-        // do not add roach fields to telemetry superframes
-			  if ((strncmp(channel->field+2, "kid", 3) != 0) || (strncmp(channel->field+10, "roach", 5) != 0)) {
-			      // linklist_info("Ignoring field %s\n", channel->field);
-					  strncpy(sf[i].field, channel->field, FIELD_LEN-1);
-					  sf[i].type = superframe_type_array[channel->type];
-					  sf[i].spf = get_spf(channel->rate);
-					  sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+roachless_offset[channel->rate];
-					  sf[i].skip = roachless_frame_size[channel->rate];
-					  if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
-					  if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
-					  sf[i].var = channel->var;
+       strncpy(sf[i].field, channel->field, FIELD_LEN-1);
+       sf[i].type = superframe_type_array[channel->type];
+       sf[i].spf = get_spf(channel->rate);
+       sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
+       sf[i].skip = frame_size[channel->rate];
+       if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
+       if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
+       sf[i].var = channel->var;
 
-					  i++;
-        }
+       i++;
     }
 
     // null terminate
     sf[i].field[0] = '\0';
-
-    printf("Finished generating superframe entries\n");
 
     return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
 }
@@ -565,12 +576,11 @@ unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superfram
 
   // clear the frame if wrapping has occurred (ensures no split data)
   if (*frame_location == 0) {
-    memset(superframe+roachless_offset[rate], 0, roachless_frame_size[rate]*get_spf(rate));
+    memset(superframe+superframe_offset[rate], 0, frame_size[rate]*get_spf(rate));
   }
 
   // copy the frame to the superframe
-  memcpy(superframe+roachless_offset[rate]+roachless_frame_size[rate]*(*frame_location),
-              frame, roachless_frame_size[rate]);
+  memcpy(superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame, frame_size[rate]);
 
   // update the frame location
   *frame_location = ((*frame_location)+1)%get_spf(rate);
@@ -598,8 +608,7 @@ unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * sup
   }
 
   // copy the frame from the superframe
-  memcpy(frame, superframe+roachless_offset[rate]+roachless_frame_size[rate]*(*frame_location),
-                  roachless_frame_size[rate]);
+  memcpy(frame, superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame_size[rate]);
 
   // update the frame location
   *frame_location = ((*frame_location)+1)%get_spf(rate);
