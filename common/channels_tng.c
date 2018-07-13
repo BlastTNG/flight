@@ -472,6 +472,8 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   if (kid) *kid = roach_index;
 }
 
+#define MAX_ROACH_NAME 64
+
 void make_name_from_roach_index(unsigned int roach_index, char * name) {
   unsigned int roach = 0, kid = 0, rtype = 0;
   read_roach_index(&roach, &kid, &rtype, roach_index);
@@ -489,7 +491,7 @@ void make_name_from_roach_index(unsigned int roach_index, char * name) {
     return;
   }
 
-  snprintf(name, 64, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+  snprintf(name, MAX_ROACH_NAME, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
 }
 
 linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
@@ -511,7 +513,7 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
 
     // modify the linklist name
     strncpy(ll_hk->name, name, 63);
- 
+
     // modify the linklist size
     ll_hk->n_entries = count;
 
