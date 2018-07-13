@@ -503,7 +503,7 @@ linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
         if (ll_hk->items[i].tlm) {
             if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
                  (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
-                linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
+                // linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
                 break;
             }
         }
