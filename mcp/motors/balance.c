@@ -37,7 +37,6 @@
 #include "motors.h"
 
 #define BAL_EL_FILTER_LEN 150 // 30 seconds
-#define BAL_SLEEP 1000000
 
 typedef enum
 {
@@ -178,21 +177,22 @@ void DoBalance(struct ezbus* bus)
     char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
-       	blast_info("Init DoBalance");
-	balance_state.init = 0;
+        blast_info("Init DoBalance");
+        balance_state.init = 0;
         balance_state.ind = BALANCENUM;
         balance_state.addr = GetActAddr(balance_state.ind);
         /* Attempt to stop the balance motor */
         EZBus_Take(bus, balance_state.addr);
         blast_info("Making sure the balance system is not running on startup.");
-		EZBus_Stop(bus, balance_state.addr);
+        EZBus_Stop(bus, balance_state.addr);
         EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
-	EZBus_Release(bus, balance_state.addr);
+        EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
         balance_state.do_move = 0;
-	balance_state.lims = 0;
+        balance_state.lims = 0;
         firsttime = 0;
+        balance_state.init = 1;
      }
 
         /* update the Balance move parameters */
@@ -231,7 +231,6 @@ void DoBalance(struct ezbus* bus)
         balance_state.moving = 0;
     }
 
-    blast_info("lims = %d", balance_state.lims);
     if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
 	balance_state.do_move = 0;
 	// balance_state.moving = 0;
@@ -239,6 +238,4 @@ void DoBalance(struct ezbus* bus)
 
 // Write balance data
     WriteBalance_5Hz();
-
-    usleep(100000);
 }
