@@ -472,7 +472,9 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   if (kid) *kid = roach_index;
 }
 
-void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
+#define MAX_ROACH_NAME 64
+
+void make_name_from_roach_index(unsigned int roach_index, char * name) {
   unsigned int roach = 0, kid = 0, rtype = 0;
   read_roach_index(&roach, &kid, &rtype, roach_index);
 
@@ -489,7 +491,44 @@ void make_name_from_roach_index(unsigned int roach_index, char name[64]) {
     return;
   }
 
-  snprintf(name, sizeof(name), "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+  snprintf(name, MAX_ROACH_NAME, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+}
+
+linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
+    int i;
+    int count = 0;
+    unsigned int blk_size = 0;
+
+    for (i = 0; i < ll_hk->n_entries; i++) {
+        if (ll_hk->items[i].tlm) {
+            if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
+                 (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
+                // linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
+                break;
+            }
+        }
+        blk_size += ll_hk->items[i].blk_size;
+        count++;
+    }
+
+    // modify the linklist name
+    strncpy(ll_hk->name, name, 63);
+
+    // modify the linklist size
+    ll_hk->n_entries = count;
+
+    // modify the linklist bulk size
+    ll_hk->blk_size = blk_size;
+
+    // modify the serial
+    /*
+    for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+      if (!name[i]) break;
+      ll_hk->serial[i] ^= name[i];
+    }
+    */
+
+    return ll_hk;
 }
 
 #define EXTRA_SF_ENTRIES 2
@@ -522,8 +561,6 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
 
     // null terminate
     sf[i].field[0] = '\0';
-
-    printf("Finished generating superframe entries\n");
 
     return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
 }
