@@ -132,9 +132,9 @@ unsigned int get_spf(unsigned int);
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);
 superframe_t * channels_generate_superframe(const channel_t * const m_channel_list);
-void make_name_from_roach_index(unsigned int , char name[64]);
+void make_name_from_roach_index(unsigned int , char * name);
 int get_roach_index(unsigned int , unsigned int , unsigned int);
 void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
-
+linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
 
 #endif /* CHANNELS_V2_H_ */

@@ -191,6 +191,11 @@ derived_tng_t derived_list[] = {
     BITWORD("PUMPED_POT_INIT_ACTBUS", "status_actbus", 7, 1),
     BITWORD("PUMP_VALVE_INIT_ACTBUS", "status_actbus", 8, 1),
     BITWORD("FILL_VALVE_INIT_ACTBUS", "status_actbus", 9, 1),
+    BITWORD("DIR_BAL", "status_bal", 0, 2),
+    BITWORD("INIT_BAL", "status_bal", 2, 1),
+    BITWORD("DO_MOVE_BAL", "status_bal", 3, 1),
+    BITWORD("MOVING_BAL", "status_bal", 4, 1),
+    BITWORD("MODE_BAL", "status_bal", 5, 2),
 
       #endif
 
@@ -489,6 +494,11 @@ derived_tng_t derived_list[] = {
     BITWORD("NET_ST_SYNC_REC_ERROR_PIV", "network_status_piv", 10, 1),
     BITWORD("NET_ST_SYNC_TRANS_WARNING_PIVOT", "network_status_piv", 11, 1),
     BITWORD("NET_ST_SYNC_REC_WARNING_PIVOT", "network_status_piv", 12, 1),
+    BITWORD("MC_EC_CMD_RESET", "mc_cmd_status", 0, 1),
+    BITWORD("MC_EC_CMD_FIX_RW", "mc_cmd_status", 1, 1),
+    BITWORD("MC_EC_CMD_FIX_EL", "mc_cmd_status", 2, 1),
+    BITWORD("MC_EC_CMD_FIX_PIV", "mc_cmd_status", 3, 1),
+    BITWORD("MC_EC_CMD_FIX_HWPR", "mc_cmd_status", 4, 1),
 
 //  /* HWPR Control Info */
     BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 10, 1),
