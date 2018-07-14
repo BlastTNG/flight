@@ -163,7 +163,7 @@ void highrate_receive(void *arg) {
   uint32_t transmit_size;
   uint8_t *compressed_buffer = calloc(1, buffer_size);
 
-  uint8_t *local_superframe = calloc(1, superframe_size);
+  uint8_t *local_superframe = calloc(1, superframe->size);
   struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
@@ -238,17 +238,17 @@ void highrate_receive(void *arg) {
                       if ((retval == 0) && (ll != NULL))
                       {
                           // decompress the linklist
-                          if (read_allframe(local_superframe, compressed_buffer)) {
+                          if (read_allframe(local_superframe, superframe, compressed_buffer)) {
                               blast_info("[%s] Received an allframe :)\n", source_str);
                           } else {
                               if (transmit_size > ll->blk_size) {
-                                  blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, allframe_size);
+                                  blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
                                   transmit_size = ll->blk_size;
                               }
                               blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-                              decompress_linklist_by_size(local_superframe, ll, compressed_buffer, transmit_size);
-                              memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+                              decompress_linklist_opt(local_superframe, ll, compressed_buffer, transmit_size, 0);
+                              memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
                               groundhog_linklist_publish(ll, compressed_buffer);
 
                               incrementFifo(local_fifo);

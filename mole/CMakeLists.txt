@@ -24,7 +24,9 @@ function(define_file_basename_for_sources targetname)
     endforeach()
 endfunction()
 
-project (defricher)
+project (mole)
+
+find_package(OpenSSL REQUIRED)
 
 cmake_minimum_required (VERSION 2.8.8)
 
@@ -59,43 +61,6 @@ find_package (Threads)
 # Find ExternalProject module
 include (ExternalProject)
 
-# Find glib    
-pkg_check_modules(PC_GLIB  glib-2.0)
-set(GLIB_DEFINITIONS ${PC_GLIB_CFLAGS_OTHER})
-
-find_path(GLIB_INCLUDE_DIR NAMES glib.h
-          HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 REQUIRED)
-find_path(GLIBCONFIG_INCLUDE_DIR NAMES glibconfig.h
-          HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 REQUIRED)
-find_library(GLIB_LIBRARY NAMES glib-2.0 libglib-2.0
-            HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS} REQUIRED)
-IF(NOT GLIB_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find glib.h.  Is libglib2.0-dev installed?")
-ENDIF()
-IF(NOT GLIB_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libglib-2.0.  Is libglib2.0-0 installed?")
-ENDIF()
-include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
-
-# Find mosquitto    
-pkg_check_modules(PC_MOSQ QUIET mosquitto)
-set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
-
-find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
-          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
-          PATH_SUFFIXES mosquitto REQUIRED)
-find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
-            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
-IF(NOT MOSQ_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
-ENDIF()
-IF(NOT MOSQ_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
-ENDIF()
-include_directories(${MOSQ_INCLUDE_DIR})
-
 # Find getdata    
 pkg_check_modules(PC_GD QUIET getdata)
 
@@ -118,61 +83,38 @@ ExternalProject_Add(linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
   INSTALL_COMMAND ""
-  BUILD_ALWAYS 1)
+  )
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
-
-# configure a header file to pass some of the CMake settings to the source code
-configure_file (
-  "${PROJECT_SOURCE_DIR}/defricher_config.h.in"
-  "${PROJECT_BINARY_DIR}/include/defricher_config.h"
-  )
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
 
-# add the binary tree to the search path for include files so that we will find mcp_config.h
-include_directories ("${PROJECT_BINARY_DIR}/include")
-
-set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
-set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
-
 include_directories (
-    "${PROJECT_SOURCE_DIR}/include"
-    "${COMMON_DIR}/include"
-    "${CONFIG_DIR}/include"
+    "${PROJECT_SOURCE_DIR}"
     )
 
 # add common objects
-add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
-add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
-
-add_library (blast_common OBJECT ${DEFRICHER_COMMON_SRCS} ${DEFRICHER_COMMON_HEADERS})
-define_file_basename_for_sources(blast_common)
-
-add_executable (defricher 
-    $<TARGET_OBJECTS:blast_common>
-    ${PROJECT_SOURCE_DIR}/defricher.c
-    ${PROJECT_SOURCE_DIR}/defricher.h
-    ${PROJECT_SOURCE_DIR}/defricher_utils.c
-    ${PROJECT_SOURCE_DIR}/defricher_utils.h
-    ${PROJECT_SOURCE_DIR}/defricher_netreader.c
-    ${PROJECT_SOURCE_DIR}/defricher_netreader.h
-    ${PROJECT_SOURCE_DIR}/defricher_writer.c
-    ${PROJECT_SOURCE_DIR}/defricher_writer.h
+add_executable (mole 
+    ${PROJECT_SOURCE_DIR}/mole.c
     ) 
 
-add_dependencies(defricher linklist)
+add_dependencies(mole linklist)
 
-define_file_basename_for_sources(defricher)
+define_file_basename_for_sources(mole)
 
-target_link_libraries(defricher  
-    ${GLIB_LIBRARY}  
-    ${GD_LIBRARY}
-    ${MOSQ_LIBRARY} 
+target_link_libraries(mole
     ${LINKLIST_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
     ssl crypto
     m)
 
-install(TARGETS defricher DESTINATION bin)
+install(TARGETS mole DESTINATION bin)
+install(DIRECTORY DESTINATION "/data/rawdir"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+install(DIRECTORY DESTINATION "/data/mole"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+install(DIRECTORY DESTINATION "/data/etc"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
+install(DIRECTORY DESTINATION "/data/etc/downloaded_files"
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
