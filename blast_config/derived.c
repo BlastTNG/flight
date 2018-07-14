@@ -184,10 +184,13 @@ derived_tng_t derived_list[] = {
     BITWORD("ACT0_INIT_ACTBUS", "status_actbus", 0, 1),
     BITWORD("ACT1_INIT_ACTBUS", "status_actbus", 1, 1),
     BITWORD("ACT2_INIT_ACTBUS", "status_actbus", 2, 1),
-    BITWORD("BALANCE_INIT_ACTBUS", "status_actbus", 3, 1),
+    BITWORD("BAL_INIT_ACTBUS", "status_actbus", 3, 1),
     BITWORD("LOCK_INIT_ACTBUS", "status_actbus", 4, 1),
     BITWORD("HWPR_INIT_ACTBUS", "status_actbus", 5, 1),
     BITWORD("SHUTTER_INIT_ACTBUS", "status_actbus", 6, 1),
+    BITWORD("PUMPED_POT_INIT_ACTBUS", "status_actbus", 7, 1),
+    BITWORD("PUMP_VALVE_INIT_ACTBUS", "status_actbus", 8, 1),
+    BITWORD("FILL_VALVE_INIT_ACTBUS", "status_actbus", 9, 1),
 
       #endif
 
