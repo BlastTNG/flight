@@ -201,6 +201,7 @@ enum multiCommand {
   set_scan_params,   mag_cal,           pss_cal,          params_test,
   potvalve_set_vel, potvalve_set_current,
   potvalve_set_open_threshold, potvalve_set_loose_closed_threshold, potvalve_set_closed_threshold,
+  actuators_set_used,
   valves_set_vel, valves_set_current,
 
   xsc_is_new_window_period,

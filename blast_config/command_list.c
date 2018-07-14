@@ -569,7 +569,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_ACT | GR_LOCK | GR_HWPR, 2,
+    GR_ACT | GR_LOCK | GR_HWPR | GR_BAL, 2,
     {
       {"Address (1-3, 5, 8, 13, 33)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', "NONE"},
@@ -1153,6 +1153,20 @@ struct mcom mcommands[plugh + 2] = {
   //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
   //   }
   // },
+  {COMMAND(actuators_set_used), "Set each stepper as used (1) or not used (0)", GR_CRYO | GR_HWPR | GR_BAL | GR_ACT, 10,
+    {
+      {"Actuator #0", 0, 1, 'i', "NONE"},
+      {"Actuator #1", 0, 1, 'i', "NONE"},
+      {"Actuator #2", 0, 1, 'i', "NONE"},
+      {"Balance", 0, 1, 'i', "NONE"},
+      {"Lockpin", 0, 1, 'i', "NONE"},
+      {"HWPR", 0, 1, 'i', "NONE"},
+      {"Shutter", 0, 1, 'i', "NONE"},
+      {"Pumped Pot Valve", 0, 1, 'i', "NONE"},
+      {"Pump Valve", 0, 1, 'i', "NONE"},
+      {"Fill Valve", 0, 1, 'i', "NONE"},
+    }
+  },
 
   {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
     {
@@ -1167,21 +1181,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(potvalve_set_open_threshold), "Set pumped pot valve open threshold", GR_CRYO, 1,
-    {
-      {"Open threshold (8500-15000)", 8500, 15000, 'i', "NONE"}
-    }
-  },
-
-  {COMMAND(potvalve_set_loose_closed_threshold), "Set pumped pot valve loose closed threshold", GR_CRYO, 1,
-    {
-      {"Loose close threshold (5500-8000)", 5500, 8000, 'i', "NONE"}
-    }
-  },
-
-  {COMMAND(potvalve_set_closed_threshold), "Set pumped pot valve closed threshold", GR_CRYO, 1,
+  {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
       {"Closed threshold (1000-5000)", 1000, 5000, 'i', "NONE"}
+      {"Loose close threshold (5500-8000)", 5500, 8000, 'i', "NONE"}
+      {"Open threshold (8500-15000)", 8500, 15000, 'i', "NONE"}
     }
   },
 
