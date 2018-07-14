@@ -626,7 +626,6 @@ channel_t channel_list[] =
     { "i_hold_hwpr",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "pos_hwpr",             SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0 },
     { "enc_hwpr",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
-    { "mode_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "step_start_bias",      0.5,              0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "step_end_bias",        0.5,              0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "step_n_bias",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

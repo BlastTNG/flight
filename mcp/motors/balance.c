@@ -159,8 +159,6 @@ void WriteBalance_5Hz(void)
     SET_UINT16(accBalAddr, CommandData.balance.acc);
     SET_UINT16(iMoveBalAddr, CommandData.balance.move_i);
     SET_UINT16(iHoldBalAddr, CommandData.balance.hold_i);
-    SET_INT32(posBalAddr, balance_state.pos);
-    SET_UINT16(limBalAddr, balance_state.lims);
     SET_SCALED_VALUE(iLevelOnBalAddr, CommandData.balance.i_el_on_bal);
     SET_SCALED_VALUE(iLevelOffBalAddr, CommandData.balance.i_el_off_bal);
     SET_SCALED_VALUE(iElReqAvgBalAddr, balance_state.i_el_avg);
@@ -208,7 +206,8 @@ void DoBalance(struct ezbus* bus)
 // updating the status variables.
 
         // get (relative) position on the rail and read limit switches
-	// EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
+    // NOTE(laura 2018-07-13): This next line was commented out.  I have no idea why.
+    EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);
 
     if ((balance_state.do_move) && (!balance_state.moving)) {
