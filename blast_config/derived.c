@@ -192,7 +192,7 @@ derived_tng_t derived_list[] = {
     BITWORD("INIT_BAL", "status_bal", 2, 1),
     BITWORD("DO_MOVE_BAL", "status_bal", 3, 1),
     BITWORD("MOVING_BAL", "status_bal", 4, 1),
-    BITWORD("MODE_BAL", "status_bal", 4, 2),
+    BITWORD("MODE_BAL", "status_bal", 5, 2),
 
       #endif
 
