@@ -1048,10 +1048,10 @@ void store_5hz_acs(void)
         OffsetIFrollGYAddr = channels_find_by_name("offset_ifroll_gy");
         OffsetIFyawGYAddr = channels_find_by_name("offset_ifyaw_gy");
 
-        OffsetIFrollMagNGYAddr = channels_find_by_name("offset_ifrollmag_fc1_gy");
-        OffsetIFyawMagNGYAddr = channels_find_by_name("offset_ifyawmag_fc1_gy");
-        OffsetIFrollMagSGYAddr = channels_find_by_name("offset_ifrollmag_fc2_gy");
-        OffsetIFyawMagSGYAddr = channels_find_by_name("offset_ifyawmag_fc2_gy");
+        OffsetIFrollMagNGYAddr = channels_find_by_name("offset_ifrollmag1_gy");
+        OffsetIFyawMagNGYAddr = channels_find_by_name("offset_ifyawmag1_gy");
+        OffsetIFrollMagSGYAddr = channels_find_by_name("offset_ifrollmag2_gy");
+        OffsetIFyawMagSGYAddr = channels_find_by_name("offset_ifyawmag2_gy");
 
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");

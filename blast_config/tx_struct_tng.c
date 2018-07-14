@@ -581,8 +581,10 @@ channel_t channel_list[] =
     { "goal_sf",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "focus_sf",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
 
-    { "offset_ifrollmag_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
-    { "offset_ifyawmag_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
+    { "offset_ifrollmag1_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
+    { "offset_ifyawmag1_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
+    { "offset_ifrollmag2_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
+    { "offset_ifyawmag2_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "offset_ifrollpss_gy",  1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "offset_ifyawpss_gy",   1.0 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "next_i_hwpr_p",        SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },

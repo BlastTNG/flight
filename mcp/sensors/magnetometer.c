@@ -102,13 +102,13 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
     }
     if (!mag_x_channel) {
         if (mag_index == 0) { // We are North (fc1)
-            mag_x_channel = channels_find_by_name("x_mag_n");
-            mag_y_channel = channels_find_by_name("y_mag_n");
-            mag_z_channel = channels_find_by_name("z_mag_n");
+            mag_x_channel = channels_find_by_name("x_mag1_n");
+            mag_y_channel = channels_find_by_name("y_mag1_n");
+            mag_z_channel = channels_find_by_name("z_mag1_n");
         } else { // We are South (fc2)
-            mag_x_channel = channels_find_by_name("x_mag_s");
-            mag_y_channel = channels_find_by_name("y_mag_s");
-            mag_z_channel = channels_find_by_name("z_mag_s");
+            mag_x_channel = channels_find_by_name("x_mag2_s");
+            mag_y_channel = channels_find_by_name("y_mag2_s");
+            mag_z_channel = channels_find_by_name("z_mag2_s");
         }
     }
 
