@@ -26,6 +26,8 @@ endfunction()
 
 project (mole)
 
+find_package(OpenSSL REQUIRED)
+
 cmake_minimum_required (VERSION 2.8.8)
 
 option(USE_CLANG "build defricher using clang" OFF)

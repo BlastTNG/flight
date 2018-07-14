@@ -60,6 +60,8 @@ int main(int argc, char *argv[])
     printf("Unable to load linklists\n");
     exit(3);
   }
+  generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_array), ALL_TELEMETRY_NAME);
+  printf("Generate hk linklist\n");
 
   // check the parser and writer
 	linklist_t * ll = ll_array[0];  
