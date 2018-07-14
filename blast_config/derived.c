@@ -188,11 +188,11 @@ derived_tng_t derived_list[] = {
     BITWORD("LOCK_INIT_ACTBUS", "status_actbus", 4, 1),
     BITWORD("HWPR_INIT_ACTBUS", "status_actbus", 5, 1),
     BITWORD("SHUTTER_INIT_ACTBUS", "status_actbus", 6, 1),
-    BITWORD("DIR_BAL", "status_balance", 0, 2),
-    BITWORD("INIT_BAL", "status_balance", 2, 1),
-    BITWORD("DO_MOVE_BAL", "status_balance", 3, 1),
-    BITWORD("MOVING_BAL", "status_balance", 4, 1),
-    BITWORD("MODE_BAL", "status_balance", 4, 2),
+    BITWORD("DIR_BAL", "status_bal", 0, 2),
+    BITWORD("INIT_BAL", "status_bal", 2, 1),
+    BITWORD("DO_MOVE_BAL", "status_bal", 3, 1),
+    BITWORD("MOVING_BAL", "status_bal", 4, 1),
+    BITWORD("MODE_BAL", "status_bal", 4, 2),
 
       #endif
 
