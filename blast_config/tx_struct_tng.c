@@ -523,7 +523,8 @@ channel_t channel_list[] =
     { "trim_enc",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_motor_enc",       I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "trim_mag",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_mag1",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_mag2",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
 
     { "gain_bal",             1 / 1000.,        0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "el_clin",              I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
@@ -951,27 +952,44 @@ channel_t channel_list[] =
     { "dig43_das",            SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, U_V_V, 0 },
 
-    { "x_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "y_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "z_mag",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "x_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "y_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "z_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "x_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "y_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "z_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
 
     { "ifel_earth_gy",        0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "ifroll_earth_gy",      0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "ifyaw_earth_gy",       0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
 
-    { "az_mag",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
-    { "az_raw_mag",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
-    { "pitch_mag",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "az_mag1",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
+    { "az_raw_mag1",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
+    { "pitch_mag1",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
 
-    { "sigma_mag",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "sigma_mag1",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
-    { "declination_mag",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
-    { "dip_mag",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "declination_mag1",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "dip_mag1",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
 
-    { "cal_xmax_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_xmin_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymax_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymin_mag",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_xmax_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_xmin_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_ymax_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_ymin_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+
+    { "az_mag2",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
+    { "az_raw_mag2",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
+    { "pitch_mag2",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+
+    { "sigma_mag2",            I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+
+    { "declination_mag2",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "dip_mag2",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+
+    { "cal_xmax_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_xmin_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_ymax_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_ymin_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
 
 
     /** Motor Channels */

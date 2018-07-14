@@ -578,6 +578,7 @@ int main(int argc, char *argv[])
   bputs(startup, "System: Startup");
 
   /* Find out whether I'm north or south */
+  /* Note that South == fc2 */
   SouthIAm = AmISouth(&use_starcams);
 
   if (SouthIAm)
@@ -657,7 +658,9 @@ int main(int argc, char *argv[])
        xsc_networking_init(0);
        xsc_networking_init(1);
   }
+
   initialize_magnetometer();
+
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 

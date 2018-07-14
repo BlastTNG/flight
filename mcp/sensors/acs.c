@@ -375,6 +375,13 @@ void read_5hz_acs(void)
 {
   static channel_t* vPssAddr[NUM_PSS][NUM_PSS_V];
   static channel_t* elRawIfClinAddr;
+  static channel_t* mag_x_n_addr;
+  static channel_t* mag_y_n_addr;
+  static channel_t* mag_z_n_addr;
+  static channel_t* mag_x_s_addr;
+  static channel_t* mag_y_s_addr;
+  static channel_t* mag_z_s_addr;
+
   char channel_name[128] = {0};
 
   int i, j;
@@ -390,6 +397,12 @@ void read_5hz_acs(void)
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
+    mag_x_n_addr = channels_find_by_name("x_mag1_n");
+    mag_y_n_addr = channels_find_by_name("y_mag1_n");
+    mag_z_n_addr = channels_find_by_name("z_mag1_n");
+    mag_x_s_addr = channels_find_by_name("x_mag2_s");
+    mag_y_s_addr = channels_find_by_name("y_mag2_s");
+    mag_z_s_addr = channels_find_by_name("z_mag2_s");
   }
   for (i = 0; i < NUM_PSS; i++) {
     for (j = 0; j < NUM_PSS_V; j++) {
@@ -400,6 +413,12 @@ void read_5hz_acs(void)
   /// TODO(seth): Add PSS3-8 read functions
 
   ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
+  ACSData.mag_x[0] = GET_UINT16(mag_x_n_addr);
+  ACSData.mag_y[0] = GET_UINT16(mag_y_n_addr);
+  ACSData.mag_z[0] = GET_UINT16(mag_z_n_addr);
+  ACSData.mag_x[1] = GET_UINT16(mag_x_s_addr);
+  ACSData.mag_y[1] = GET_UINT16(mag_y_s_addr);
+  ACSData.mag_z[1] = GET_UINT16(mag_z_s_addr);
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores
@@ -923,8 +942,10 @@ void store_5hz_acs(void)
     static channel_t* OffsetIFyawGYoscAddr;
     static channel_t* OffsetIFrollGYAddr;
     static channel_t* OffsetIFyawGYAddr;
-    static channel_t* OffsetIFrollMagGYAddr;
-    static channel_t* OffsetIFyawMagGYAddr;
+    static channel_t* OffsetIFrollMagNGYAddr;
+    static channel_t* OffsetIFyawMagNGYAddr;
+    static channel_t* OffsetIFrollMagSGYAddr;
+    static channel_t* OffsetIFyawMagSGYAddr;
     static channel_t* OffsetIFrollPSSGYAddr;
     static channel_t* OffsetIFyawPSSGYAddr;
     static channel_t* IFyawEarthGyAddr;
@@ -938,15 +959,24 @@ void store_5hz_acs(void)
     static channel_t* lonAddr;
     static channel_t* lstAddr;
     static channel_t* azNullAddr;
-    static channel_t* azMagAddr;
-    static channel_t* azRawMagAddr;
-    static channel_t* declinationMagAddr;
-    static channel_t* elMagAddr;
-    static channel_t* dipMagAddr;
-    static channel_t* calXMaxMagAddr;
-    static channel_t* calXMinMagAddr;
-    static channel_t* calYMaxMagAddr;
-    static channel_t* calYMinMagAddr;
+    static channel_t* azMagNAddr;
+    static channel_t* azRawMagNAddr;
+    static channel_t* declinationMagNAddr;
+    static channel_t* elMagNAddr;
+    static channel_t* dipMagNAddr;
+    static channel_t* calXMaxMagNAddr;
+    static channel_t* calXMinMagNAddr;
+    static channel_t* calYMaxMagNAddr;
+    static channel_t* calYMinMagNAddr;
+    static channel_t* azMagSAddr;
+    static channel_t* azRawMagSAddr;
+    static channel_t* declinationMagSAddr;
+    static channel_t* elMagSAddr;
+    static channel_t* dipMagSAddr;
+    static channel_t* calXMaxMagSAddr;
+    static channel_t* calXMinMagSAddr;
+    static channel_t* calYMaxMagSAddr;
+    static channel_t* calYMinMagSAddr;
     static channel_t* calOffPss1Addr;
     static channel_t* calOffPss2Addr;
     static channel_t* calOffPss3Addr;
@@ -956,7 +986,8 @@ void store_5hz_acs(void)
     static channel_t* calDPss3Addr;
     static channel_t* calDPss4Addr;
     static channel_t* calIMinPssAddr;
-    static channel_t* sigmaMagAddr;
+    static channel_t* sigmaMagNAddr;
+    static channel_t* sigmaMagSAddr;
     static channel_t* sigmaPssAddr;
     static channel_t* azrawPss1Addr;
     static channel_t* azrawPss2Addr;
@@ -977,7 +1008,8 @@ void store_5hz_acs(void)
     static channel_t *trimEncAddr;
     static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
-    static channel_t *trimMagAddr;
+    static channel_t *trimMagNAddr;
+    static channel_t *trimMagSAddr;
     static channel_t *trimPssAddr;
 
     static channel_t *threshAtrimAddr;
@@ -1016,8 +1048,10 @@ void store_5hz_acs(void)
         OffsetIFrollGYAddr = channels_find_by_name("offset_ifroll_gy");
         OffsetIFyawGYAddr = channels_find_by_name("offset_ifyaw_gy");
 
-        OffsetIFrollMagGYAddr = channels_find_by_name("offset_ifrollmag_gy");
-        OffsetIFyawMagGYAddr = channels_find_by_name("offset_ifyawmag_gy");
+        OffsetIFrollMagNGYAddr = channels_find_by_name("offset_ifrollmag_fc1_gy");
+        OffsetIFyawMagNGYAddr = channels_find_by_name("offset_ifyawmag_fc1_gy");
+        OffsetIFrollMagSGYAddr = channels_find_by_name("offset_ifrollmag_fc2_gy");
+        OffsetIFyawMagSGYAddr = channels_find_by_name("offset_ifyawmag_fc2_gy");
 
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");
@@ -1037,17 +1071,30 @@ void store_5hz_acs(void)
         gy_totalvel_addr = channels_find_by_name("gy_total_vel");
         gy_totalaccel_addr = channels_find_by_name("gy_total_accel");
 
-        azMagAddr = channels_find_by_name("az_mag");
-        azRawMagAddr = channels_find_by_name("az_raw_mag");
-        declinationMagAddr = channels_find_by_name("declination_mag");
+        azMagNAddr = channels_find_by_name("az_mag1");
+        azRawMagNAddr = channels_find_by_name("az_raw_mag1");
+        declinationMagNAddr = channels_find_by_name("declination_mag1");
 
-        elMagAddr = channels_find_by_name("pitch_mag");
-        dipMagAddr = channels_find_by_name("dip_mag");
+        elMagNAddr = channels_find_by_name("pitch_mag1");
+        dipMagNAddr = channels_find_by_name("dip_mag1");
 
-        calXMaxMagAddr = channels_find_by_name("cal_xmax_mag");
-        calXMinMagAddr = channels_find_by_name("cal_xmin_mag");
-        calYMaxMagAddr = channels_find_by_name("cal_ymax_mag");
-        calYMinMagAddr = channels_find_by_name("cal_ymin_mag");
+        calXMaxMagNAddr = channels_find_by_name("cal_xmax_mag1");
+        calXMinMagNAddr = channels_find_by_name("cal_xmin_mag1");
+        calYMaxMagNAddr = channels_find_by_name("cal_ymax_mag1");
+        calYMinMagNAddr = channels_find_by_name("cal_ymin_mag1");
+
+        azMagSAddr = channels_find_by_name("az_mag2");
+        azRawMagSAddr = channels_find_by_name("az_raw_mag2");
+        declinationMagSAddr = channels_find_by_name("declination_mag2");
+
+        elMagSAddr = channels_find_by_name("pitch_mag2");
+        dipMagSAddr = channels_find_by_name("dip_mag2");
+
+        calXMaxMagSAddr = channels_find_by_name("cal_xmax_mag2");
+        calXMinMagSAddr = channels_find_by_name("cal_xmin_mag2");
+        calYMaxMagSAddr = channels_find_by_name("cal_ymax_mag2");
+        calYMinMagSAddr = channels_find_by_name("cal_ymin_mag2");
+
         calOffPss1Addr = channels_find_by_name("cal_off_pss1");
         calOffPss2Addr = channels_find_by_name("cal_off_pss2");
         calOffPss3Addr = channels_find_by_name("cal_off_pss3");
@@ -1057,7 +1104,8 @@ void store_5hz_acs(void)
         calDPss3Addr = channels_find_by_name("cal_d_pss3");
         calDPss4Addr = channels_find_by_name("cal_d_pss4");
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
-        sigmaMagAddr = channels_find_by_name("sigma_mag");
+        sigmaMagNAddr = channels_find_by_name("sigma_mag1");
+        sigmaMagSAddr = channels_find_by_name("sigma_mag2");
         azNullAddr = channels_find_by_name("az_null");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
@@ -1108,7 +1156,8 @@ void store_5hz_acs(void)
         trimEncAddr = channels_find_by_name("trim_enc");
         trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
-        trimMagAddr = channels_find_by_name("trim_mag");
+        trimMagNAddr = channels_find_by_name("trim_mag1");
+        trimMagSAddr = channels_find_by_name("trim_mag2");
         trimPssAddr = channels_find_by_name("trim_pss");
 
         threshAtrimAddr = channels_find_by_name("thresh_atrim");
@@ -1153,8 +1202,10 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
     SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
 
-    SET_SCALED_VALUE(OffsetIFrollMagGYAddr, PointingData[i_point].offset_ifrollmag_gy);
-    SET_SCALED_VALUE(OffsetIFyawMagGYAddr, PointingData[i_point].offset_ifyawmag_gy);
+    SET_SCALED_VALUE(OffsetIFrollMagNGYAddr, PointingData[i_point].offset_ifrollmag_gy[0]);
+    SET_SCALED_VALUE(OffsetIFyawMagNGYAddr, PointingData[i_point].offset_ifyawmag_gy[0]);
+    SET_SCALED_VALUE(OffsetIFrollMagSGYAddr, PointingData[i_point].offset_ifrollmag_gy[1]);
+    SET_SCALED_VALUE(OffsetIFyawMagSGYAddr, PointingData[i_point].offset_ifyawmag_gy[1]);
     SET_SCALED_VALUE(OffsetIFrollPSSGYAddr, PointingData[i_point].offset_ifrollpss_gy);
     SET_SCALED_VALUE(OffsetIFyawPSSGYAddr, PointingData[i_point].offset_ifyawpss_gy);
 
@@ -1171,17 +1222,29 @@ void store_5hz_acs(void)
     // TODO(seth): Update LST Schedule channel
     SET_SCALED_VALUE(lstSchedAddr, 0);
 
-    SET_SCALED_VALUE(azMagAddr, (PointingData[i_point].mag_az + CommandData.mag_az_trim));
-    SET_SCALED_VALUE(azRawMagAddr, (PointingData[i_point].mag_az_raw));
-    SET_SCALED_VALUE(declinationMagAddr, PointingData[i_point].mag_model_dec);
+    SET_SCALED_VALUE(azMagNAddr, (PointingData[i_point].mag_az[0] + CommandData.mag_az_trim[0]));
+    SET_SCALED_VALUE(azRawMagNAddr, (PointingData[i_point].mag_az_raw[0]));
+    SET_SCALED_VALUE(declinationMagNAddr, PointingData[i_point].mag_model_dec[0]);
 
-    SET_SCALED_VALUE(elMagAddr, PointingData[i_point].mag_el);
-    SET_SCALED_VALUE(dipMagAddr, PointingData[i_point].mag_model_dip);
+    SET_SCALED_VALUE(elMagNAddr, PointingData[i_point].mag_el[0]);
+    SET_SCALED_VALUE(dipMagNAddr, PointingData[i_point].mag_model_dip[0]);
 
-    SET_SCALED_VALUE(calXMaxMagAddr, CommandData.cal_xmax_mag);
-    SET_SCALED_VALUE(calXMinMagAddr, CommandData.cal_xmin_mag);
-    SET_SCALED_VALUE(calYMaxMagAddr, CommandData.cal_ymax_mag);
-    SET_SCALED_VALUE(calYMinMagAddr, CommandData.cal_ymin_mag);
+    SET_SCALED_VALUE(calXMaxMagNAddr, CommandData.cal_xmax_mag[0]);
+    SET_SCALED_VALUE(calXMinMagNAddr, CommandData.cal_xmin_mag[0]);
+    SET_SCALED_VALUE(calYMaxMagNAddr, CommandData.cal_ymax_mag[0]);
+    SET_SCALED_VALUE(calYMinMagNAddr, CommandData.cal_ymin_mag[0]);
+
+    SET_SCALED_VALUE(azMagSAddr, (PointingData[i_point].mag_az[1] + CommandData.mag_az_trim[1]));
+    SET_SCALED_VALUE(azRawMagSAddr, (PointingData[i_point].mag_az_raw[1]));
+    SET_SCALED_VALUE(declinationMagSAddr, PointingData[i_point].mag_model_dec[1]);
+
+    SET_SCALED_VALUE(elMagSAddr, PointingData[i_point].mag_el[1]);
+    SET_SCALED_VALUE(dipMagSAddr, PointingData[i_point].mag_model_dip[1]);
+
+    SET_SCALED_VALUE(calXMaxMagSAddr, CommandData.cal_xmax_mag[1]);
+    SET_SCALED_VALUE(calXMinMagSAddr, CommandData.cal_xmin_mag[1]);
+    SET_SCALED_VALUE(calYMaxMagSAddr, CommandData.cal_ymax_mag[1]);
+    SET_SCALED_VALUE(calYMinMagSAddr, CommandData.cal_ymin_mag[1]);
 
     SET_SCALED_VALUE(calOffPss1Addr, CommandData.cal_off_pss1);
     SET_SCALED_VALUE(calOffPss2Addr, CommandData.cal_off_pss2);
@@ -1193,8 +1256,10 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss4);
     SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
 
-    SET_SCALED_VALUE(sigmaMagAddr, PointingData[i_point].mag_sigma);
-    SET_SCALED_VALUE(trimMagAddr, CommandData.mag_az_trim);
+    SET_SCALED_VALUE(sigmaMagNAddr, PointingData[i_point].mag_sigma[0]);
+    SET_SCALED_VALUE(trimMagNAddr, CommandData.mag_az_trim[0]);
+    SET_SCALED_VALUE(sigmaMagSAddr, PointingData[i_point].mag_sigma[1]);
+    SET_SCALED_VALUE(trimMagSAddr, CommandData.mag_az_trim[1]);
 
     SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
     SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim);
@@ -1256,7 +1321,8 @@ void store_5hz_acs(void)
 
     sensor_veto = ((!CommandData.use_elmotenc))
     		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
-			| ((!CommandData.use_mag) << 3)  | ((!CommandData.use_elclin) << 5)
+			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
+			| ((!CommandData.use_elclin) << 5)
 			| ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
             | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12)
 			| ((!CommandData.use_pss) << 13);

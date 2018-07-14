@@ -42,7 +42,9 @@
 #define MAGCOM "/dev/ttyMAG"
 #define MAG_ERR_THRESHOLD 400
 
-ph_serial_t	*mag_comm = NULL;
+extern int16_t SouthIAm; // defined in mcp.c
+
+ph_serial_t *mag_comm = NULL;
 
 typedef enum {
 	MAG_WE_BIN = 0,
@@ -90,19 +92,33 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
     static channel_t *mag_y_channel = NULL;
     static channel_t *mag_z_channel = NULL;
 
+// Since each flight computer has its own magnetometer we only want to write to the channels
+// corresponding to that computer's magnetometer.
+    static uint8_t mag_index = 0;
+    static int firsttime = 1;
+
+    if (firsttime) {
+        mag_index = SouthIAm;
+    }
     if (!mag_x_channel) {
-        mag_x_channel = channels_find_by_name("x_mag");
-        mag_y_channel = channels_find_by_name("y_mag");
-        mag_z_channel = channels_find_by_name("z_mag");
+        if (mag_index == 0) { // We are North (fc1)
+            mag_x_channel = channels_find_by_name("x_mag_n");
+            mag_y_channel = channels_find_by_name("y_mag_n");
+            mag_z_channel = channels_find_by_name("z_mag_n");
+        } else { // We are South (fc2)
+            mag_x_channel = channels_find_by_name("x_mag_s");
+            mag_y_channel = channels_find_by_name("y_mag_s");
+            mag_z_channel = channels_find_by_name("z_mag_s");
+        }
     }
 
     // TODO(seth): Mag data should should be filtered (à la gyroscopes) and read by ACS.c
-    ACSData.mag_x = ((double)(int16_t)be16toh(m_magx))/15000.0;
-    SET_SCALED_VALUE(mag_x_channel, ACSData.mag_x);
-    ACSData.mag_y = ((double)(int16_t)be16toh(m_magy))/15000.0;
-    SET_SCALED_VALUE(mag_y_channel, ACSData.mag_y);
-    ACSData.mag_z = ((double)(int16_t)be16toh(m_magz))/15000.0;
-    SET_SCALED_VALUE(mag_z_channel, ACSData.mag_z);
+//    ACSData.mag_x = ((double)(int16_t)be16toh(m_magx))/15000.0;
+    SET_SCALED_VALUE(mag_x_channel, (double)(int16_t)be16toh(m_magx)/15000.0);
+//    ACSData.mag_y = ((double)(int16_t)be16toh(m_magy))/15000.0;
+    SET_SCALED_VALUE(mag_y_channel, (double)(int16_t)be16toh(m_magy)/15000.0);
+//    ACSData.mag_z = ((double)(int16_t)be16toh(m_magz))/15000.0;
+    SET_SCALED_VALUE(mag_z_channel, (double)(int16_t)be16toh(m_magz)/15000.0);
 }
 
 /**
@@ -220,7 +236,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
 /**
  * This initialization function can be called at anytime to close, re-open and initialize the magnetometer.
  */
-void initialize_magnetometer(void)
+void initialize_magnetometer()
 {
     if (mag_comm) ph_serial_free(mag_comm);
     mag_set_framedata(0, 0, 0);
