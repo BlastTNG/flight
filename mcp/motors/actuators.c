@@ -1258,7 +1258,7 @@ void StoreActBus(void)
     static channel_t* focusSfAddr;
 
     static channel_t* statusActbusAddr;
-    static channel_t* usedActsActbusAddr; 
+    static channel_t* usedActbusAddr; 
 
     if (firsttime) {
         firsttime = 0;
@@ -1317,7 +1317,7 @@ void StoreActBus(void)
         stepSlowShutterAddr = channels_find_by_name("steps_slow_shutter");
 
         statusActbusAddr = channels_find_by_name("status_actbus");
-	usedActsActbusAddr = channels_find_by_name("used_actuators");
+	usedActbusAddr = channels_find_by_name("used_actbus");
     }
 
     UpdateActFlags();
@@ -1393,7 +1393,7 @@ void StoreActBus(void)
     SET_UINT16(goalSfAddr, CommandData.actbus.focus);
 
     SET_UINT16(statusActbusAddr, actuators_init);
-    SET_UINT16(usedActsActbusAddr, CommandData.actbus.which_used);
+    SET_UINT16(usedActbusAddr, CommandData.actbus.which_used);
 }
 
 /************************************************************************/
