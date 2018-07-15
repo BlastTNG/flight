@@ -353,7 +353,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Mag Angle Offset", -180.0, 180.0, 'd', "cal_alignment_mag1"}
     }
   }, // 10 10 10.5 10.34
-  {COMMAND(mag_cal_fc2), "set fc2 magnetometer calibration", GR_TRIM, 4,
+  {COMMAND(mag_cal_fc2), "set fc2 magnetometer calibration", GR_TRIM, 5,
     {
       {"Max X", -20, 20, 'd', "cal_xmax_mag2"},
       {"Min X", -20, 20, 'd', "cal_xmin_mag2"},
