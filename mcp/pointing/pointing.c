@@ -314,10 +314,7 @@ static int MagConvert(double *mag_az, double *m_el) {
 #define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
 PSS6_ALIGNMENT, PSS7_ALIGNMENT, PSS8_ALIGNMENT}
 #define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
-#define  PSS1_PSI    -15.5
-#define  PSS2_PSI   11.
-#define  PSS3_PSI   0
-#define  PSS4_PSI   0
+#define  PSS_PSI     {-15.5, 11., 0., 0., 0., 0., 0., 0.}
 
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 // TODO(seth): Reenable PSSConvert
