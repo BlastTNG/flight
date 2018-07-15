@@ -197,6 +197,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     int i_point_read;
     static time_t oldt;
     static int firsttime = 1;
+    static uint32_t mag_count = 0;
 //    double magx_m, magx_b, magy_m, magy_b;
     int epochs = 1;
     int NumTerms, nMax = 0;
@@ -284,7 +285,6 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
 
 //    mvx = magx_m * (ACSData.mag_x - magx_b);
 //    mvy = magy_m * (ACSData.mag_y - magy_b);
-    mvz = MAGZ_M * (ACSData.mag_z[mag_index] - MAGZ_B);
 
     magx_m = (CommandData.cal_xmax_mag[mag_index]-CommandData.cal_xmin_mag[mag_index])/2.0;
     magx_b = (CommandData.cal_xmax_mag[mag_index]+CommandData.cal_xmin_mag[mag_index])/2.0;
@@ -300,6 +300,16 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     *mag_az = raw_mag_az + dec + CommandData.cal_mag_align[mag_index];
     *m_el = raw_mag_pitch + dip;
 
+    if (((mag_count % 2000) == 0) || ((mag_count % 2000) == 1)) {
+        blast_info("cal_xmin_mag = %f, cal_xmax_mag = %f, cal_ymin_mag = %f, cal_ymax_mag = %f",
+                   CommandData.cal_xmin_mag[mag_index], CommandData.cal_xmax_mag[mag_index],
+                   CommandData.cal_ymin_mag[mag_index], CommandData.cal_ymax_mag[mag_index]);
+        blast_info("magx_m = %f, magx_b = %f, magy_m = %f, magy_b = %f", magx_m, magx_b, magy_m, magy_b);
+        blast_info("mvx = %f, mvy = %f, mvz = %f", mvx, mvy, mvz);
+        blast_info("raw_mag_az = %f, dec = %f, cal_mag_align = %f, mag_az = %f",
+                   raw_mag_az, dec, CommandData.cal_mag_align[mag_index], *mag_az);
+    }
+
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
     dec = 0; // disable mag model.
@@ -311,6 +321,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     PointingData[point_index].mag_model_dec[mag_index] = dec;
     PointingData[point_index].mag_model_dip[mag_index] = dip;
 
+    mag_count++;
     return (1);
 }
 

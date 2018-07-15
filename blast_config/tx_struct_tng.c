@@ -975,11 +975,11 @@ channel_t channel_list[] =
     { "declination_mag1",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
     { "dip_mag1",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
 
-    { "cal_xmax_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_xmin_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymax_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymin_mag1",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_align_mag1",         0.1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "cal_xmax_mag1",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_xmin_mag1",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_ymax_mag1",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_ymin_mag1",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_align_mag1",        M_16UNI, B_16UNI, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     { "az_mag2",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
     { "az_raw_mag2",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
@@ -990,12 +990,11 @@ channel_t channel_list[] =
     { "declination_mag2",      I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
     { "dip_mag2",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
 
-    { "cal_xmax_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_xmin_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymax_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_ymin_mag2",         1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "cal_align_mag2",         0.1, 0.0,           TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-
+    { "cal_xmax_mag2",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_xmin_mag2",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_ymax_mag2",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_ymin_mag2",         M_32UNI, B_32UNI, TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "cal_align_mag2",        M_16UNI, B_16UNI, TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     /** Motor Channels */
     { "mc_rw_vel",           RW_ENCODER_SCALING * 0.1,  0.0, TYPE_INT32, RATE_100HZ, U_V_DPS, 0 },
