@@ -38,9 +38,11 @@
 #include "magnetometer.h"
 #include "mcp.h"
 #include "pointing_struct.h"
+#include "command_struct.h"
 
 #define MAGCOM "/dev/ttyMAG"
-#define MAG_ERR_THRESHOLD 400
+#define MAG_ERR_THRESHOLD 200
+#define MAG_TIMEOUT_THRESHOLD 100
 
 extern int16_t SouthIAm; // defined in mcp.c
 
@@ -74,6 +76,7 @@ typedef struct {
 	e_mag_status_t status;
 	uint16_t err_count;
 	uint16_t error_warned;
+	uint16_t timeout_count;
 } mag_state_t;
 
 mag_state_t mag_state = {0, 0, 0};
@@ -146,15 +149,26 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                  (uint8_t) why, (uint8_t) mag_state.cmd_state, (uint8_t) mag_state.status);
 #endif
 
+    // First check to see whether we have been asked to reset the magnetometer.
+    if (CommandData.mag_reset) {
+        mag_state.status = MAG_RESET;
+        CommandData.mag_reset = 0;
+        return;
+    }
     /**
      * If we timeout, then the assumption is that we need to re-initialize the
      * magnetometer stream
      */
-    if ((why & PH_IOMASK_TIME) || (mag_state.status == MAG_RESET)) {
+    if ((why & PH_IOMASK_TIME)) {
         mag_state.cmd_state = 0;
-        blast_info("Sending CMD '%s' to the MAG", state_cmd[mag_state.cmd_state].cmd);
+        blast_info("We timed out, why = %d, status = %d, Sending CMD '%s' to the MAG",
+                   why, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
         ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
+        mag_state.timeout_count++;
+        if (mag_state.timeout_count > MAG_TIMEOUT_THRESHOLD) {
+            mag_state.status = MAG_RESET;
+        }
         return;
     }
 
@@ -259,6 +273,8 @@ void initialize_magnetometer()
     ph_stm_flush(mag_comm->stream);
     ph_serial_enable(mag_comm, true);
 
+    mag_state.err_count = 0;
+    mag_state.timeout_count = 0;
     mag_state.status = MAG_INIT;
     blast_startup("Initialized Magnetometer");
 }
