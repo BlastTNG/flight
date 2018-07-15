@@ -49,6 +49,13 @@ extern "C" {
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
 
+
+/* Gains and offsets to normalize to -1 to 1: cal = (counts + B)*M */
+#define M_32UNI (1.0/2147483648.0)
+#define B_32UNI (-2147483648.0)
+#define M_16UNI (1.0/32768.0)
+#define B_16UNI (-32768.0)
+
 /* Gains and offsets for the labjack AIN channels: cal = (counts + B)*M */
 #define M_16LJAIN (10.8/32768.0)
 #define B_16LJAIN (-10.8)
