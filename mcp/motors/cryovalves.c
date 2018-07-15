@@ -34,10 +34,10 @@
 #include "actuators.h"
 #include "cryovalves.h"
 
-
-#define POTVALVE_OPEN 10000
-#define POTVALVE_CLOSED 4200
-#define POTVALVE_LOOSE_CLOSED 6500
+// removing these defines because now the commanded values are used
+// #define POTVALVE_OPEN 10000
+// #define POTVALVE_CLOSED 4200
+// #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
 
 typedef enum {
