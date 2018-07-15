@@ -350,7 +350,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Min X", -20, 20, 'd', "cal_xmin_mag1"},
       {"Max Y", -20, 20, 'd', "cal_ymax_mag1"},
       {"Min Y", -20, 20, 'd', "cal_ymin_mag1"},
-      {"Mag Angle Offset", -180.0, 180.0, 'd', "cal_alignment_mag1"}
+      {"Mag Angle Offset", -180.0, 180.0, 'f', "cal_alignment_mag1"}
     }
   }, // 10 10 10.5 10.34
   {COMMAND(mag_cal_fc2), "set fc2 magnetometer calibration", GR_TRIM, 5,
@@ -359,7 +359,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Min X", -20, 20, 'd', "cal_xmin_mag2"},
       {"Max Y", -20, 20, 'd', "cal_ymax_mag2"},
       {"Min Y", -20, 20, 'd', "cal_ymin_mag2"},
-      {"Mag Angle Offset", -180.0, 180.0, 'd', "cal_alignment_mag2"}
+      {"Mag Angle Offset", -180.0, 180.0, 'f', "cal_alignment_mag2"}
     }
   }, // 10 10 10.5 10.34
   {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
