@@ -42,7 +42,8 @@
 
 #define MAGCOM "/dev/ttyMAG"
 #define MAG_ERR_THRESHOLD 200
-#define MAG_TIMEOUT_THRESHOLD 100
+#define MAG_TIMEOUT_THRESHOLD 10
+#define MAG_RESET_THRESHOLD 5
 
 extern int16_t SouthIAm; // defined in mcp.c
 
@@ -77,6 +78,7 @@ typedef struct {
 	uint16_t err_count;
 	uint16_t error_warned;
 	uint16_t timeout_count;
+	uint16_t reset_count;
 } mag_state_t;
 
 mag_state_t mag_state = {0, 0, 0};
@@ -161,11 +163,11 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
      */
     if ((why & PH_IOMASK_TIME)) {
         mag_state.cmd_state = 0;
-        blast_info("We timed out, why = %d, status = %d, Sending CMD '%s' to the MAG",
-                   why, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
+        mag_state.timeout_count++;
+        blast_info("We timed out, count = %d , status = %d, Sending CMD '%s' to the MAG",
+                   mag_state.timeout_count, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
         ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
-        mag_state.timeout_count++;
         if (mag_state.timeout_count > MAG_TIMEOUT_THRESHOLD) {
             mag_state.status = MAG_RESET;
         }
@@ -252,6 +254,11 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
  */
 void initialize_magnetometer()
 {
+    static int firsttime = 1;
+    if (firsttime) {
+        mag_state.reset_count = 0;
+        firsttime = 0;
+    }
     if (mag_comm) ph_serial_free(mag_comm);
     mag_set_framedata(0, 0, 0);
 
@@ -283,12 +290,22 @@ void *monitor_magnetometer(void *m_arg)
 {
   while (!shutdown_mcp) {
     if (mag_state.status == MAG_RESET) {
+      if (mag_state.reset_count >= MAG_RESET_THRESHOLD) {
+          blast_info("We've tried resetting the magnetometer %d times.  Power cycling the magnetometers.",
+                     mag_state.reset_count);
+          mag_state.reset_count = 0;
+          // TODO(laura) this is mag_cycle. Functionalize this!
+          CommandData.Relays.cycle_of_11 = 1;
+          CommandData.Relays.cycled_of = 1;
+          CommandData.Relays.of_relays[10] = 1;
+      }
       blast_info("Received a request to reset the magnetometer communications.");
       ph_stm_printf(mag_comm->stream, "\e");
       ph_stm_flush(mag_comm->stream);
       usleep(1000);
       initialize_magnetometer();
-      blast_info("Magnetometer reset complete.");
+      mag_state.reset_count++;
+      blast_info("Magnetometer reset complete. reset counter = %d", mag_state.reset_count);
     }
     usleep(1000);
   }
