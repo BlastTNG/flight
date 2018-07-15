@@ -189,6 +189,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     float year;
     double mvx, mvy, mvz;
     double raw_mag_az, raw_mag_pitch;
+    static double magx_m, magy_m, magx_b, magy_b;
     static double dip;
     static double dec = 0;
     time_t t;
@@ -271,8 +272,8 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     /* Thus, depending on the sign convention, you have to either add or */
     /* subtract dec from az to get the true bearing. (Adam H.) */
 
-    mvx = (ACSData.mag_x[mag_index] - MAGX_B) / MAGX_M;
-    mvy = (ACSData.mag_y[mag_index] - MAGY_B) / MAGY_M;
+//    mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
+//    mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
 
     // TODO(seth): Reset calibration values to Reasonable for gauss
 //    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
@@ -285,9 +286,18 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
 //    mvy = magy_m * (ACSData.mag_y - magy_b);
     mvz = MAGZ_M * (ACSData.mag_z[mag_index] - MAGZ_B);
 
+    magx_m = (CommandData.cal_xmax_mag[mag_index]-CommandData.cal_xmin_mag[mag_index])/2.0;
+    magx_b = (CommandData.cal_xmax_mag[mag_index]+CommandData.cal_xmin_mag[mag_index])/2.0;
+    magy_m = (CommandData.cal_ymax_mag[mag_index]-CommandData.cal_ymin_mag[mag_index])/2.0;
+    magy_b = (CommandData.cal_ymax_mag[mag_index]+CommandData.cal_ymin_mag[mag_index])/2.0;
+
+    mvx = (ACSData.mag_x[mag_index]-magx_b)/magx_m;
+    mvy = (ACSData.mag_y[mag_index]-magy_b)/magy_m;
+    mvz = MAGZ_M * (ACSData.mag_z[mag_index] - MAGZ_B);
+
     raw_mag_az = (-1.0) * (180.0 / M_PI) * atan2(mvy, mvx);
     raw_mag_pitch = (180.0 / M_PI) * atan2(mvz, sqrt(mvx * mvx + mvy * mvy));
-    *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
+    *mag_az = raw_mag_az + dec + CommandData.cal_mag_align[mag_index];
     *m_el = raw_mag_pitch + dip;
 
 #if 0
