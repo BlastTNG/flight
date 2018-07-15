@@ -72,6 +72,9 @@ extern "C" {
 #define M_16R_DB (50.0/65536) // kHz
 #define B_16R_DB (0.0)
 
+/* Gains and offsets for pointing sensors: */
+#define M_16MAG (1.0/15000.0)
+
 /* bare thermometer conversion to Volts. No negative values allowed */
 #define M_16T (4.096/32768.0/2.0)
 #define B_16T (0.0)

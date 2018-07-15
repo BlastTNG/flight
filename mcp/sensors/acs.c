@@ -28,6 +28,7 @@
 
 #include <blast.h>
 
+#include <calibrate.h>
 #include <channel_macros.h>
 #include <conversions.h>
 #include <channels_tng.h>
@@ -412,13 +413,13 @@ void read_5hz_acs(void)
 
   /// TODO(seth): Add PSS3-8 read functions
 
-  ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
-  ACSData.mag_x[0] = GET_UINT16(mag_x_n_addr);
-  ACSData.mag_y[0] = GET_UINT16(mag_y_n_addr);
-  ACSData.mag_z[0] = GET_UINT16(mag_z_n_addr);
-  ACSData.mag_x[1] = GET_UINT16(mag_x_s_addr);
-  ACSData.mag_y[1] = GET_UINT16(mag_y_s_addr);
-  ACSData.mag_z[1] = GET_UINT16(mag_z_s_addr);
+  GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
+  ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
+  ACSData.mag_y[0] = ((double)GET_INT16(mag_y_n_addr))*M_16MAG;
+  ACSData.mag_z[0] = ((double)GET_INT16(mag_z_n_addr))*M_16MAG;
+  ACSData.mag_x[1] = ((double)GET_INT16(mag_x_s_addr))*M_16MAG;
+  ACSData.mag_y[1] = ((double)GET_INT16(mag_y_s_addr))*M_16MAG;
+  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG;
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores

@@ -304,6 +304,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
         blast_info("cal_xmin_mag = %f, cal_xmax_mag = %f, cal_ymin_mag = %f, cal_ymax_mag = %f",
                    CommandData.cal_xmin_mag[mag_index], CommandData.cal_xmax_mag[mag_index],
                    CommandData.cal_ymin_mag[mag_index], CommandData.cal_ymax_mag[mag_index]);
+        blast_info("ACSData.mag_x = %f, ACSData.mag_y = %f", ACSData.mag_x[mag_index], ACSData.mag_y[mag_index]);
         blast_info("magx_m = %f, magx_b = %f, magy_m = %f, magy_b = %f", magx_m, magx_b, magy_m, magy_b);
         blast_info("mvx = %f, mvy = %f, mvz = %f", mvx, mvy, mvz);
         blast_info("raw_mag_az = %f, dec = %f, cal_mag_align = %f, mag_az = %f",
