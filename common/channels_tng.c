@@ -51,15 +51,29 @@
 #include "PMurHash.h"
 #include "channels_tng.h"
 #include "derived.h"
+#include "linklist.h"
 
+char * ROACH_TYPES[NUM_RTYPES] = {"i", "q", "df"};
 static GHashTable *frame_table = NULL;
 static int channel_count[RATE_END][TYPE_END] = {{0}};
+int channels_count = 0;
 
 void *channel_data[RATE_END] = {0};
 size_t frame_size[RATE_END] = {0};
 static void *channel_ptr[RATE_END] = {0};
 
-static inline size_t channel_size(channel_t *m_channel)
+// conversion from channel type to superframe type
+uint8_t superframe_type_array[TYPE_END+1] = {
+  SF_UINT8, SF_UINT16, SF_UINT32, SF_UINT64,
+  SF_INT8, SF_INT16, SF_INT32, SF_INT64,
+  SF_FLOAT32, SF_FLOAT64, SF_NUM
+};
+double channel_data_to_double(uint8_t * data, uint8_t type);
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
+unsigned int superframe_offset[RATE_END] = {0};
+superframe_t * superframe = NULL;
+
+size_t channel_size(channel_t *m_channel)
 {
     size_t retsize = 0;
     switch (m_channel->type) {
@@ -86,6 +100,27 @@ static inline size_t channel_size(channel_t *m_channel)
     }
     return retsize;
 }
+unsigned int get_spf(unsigned int rate)
+{
+    switch (rate) {
+        case RATE_1HZ:
+            return 1;
+        case RATE_5HZ:
+            return 5;
+        case RATE_100HZ:
+            return 100;
+        case RATE_200HZ:
+            return 200;
+        case RATE_244HZ:
+            return 244;
+        case RATE_488HZ:
+            return 488;
+        default:
+            blast_err("Invalid rate %d", rate);
+            return 0;
+    }
+}
+
 static guint channel_hash(gconstpointer m_data)
 {
     const char *field_name = (const char*)m_data;
@@ -303,6 +338,16 @@ channel_t *channels_find_by_name(const char *m_name)
     return retval;
 }
 
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len)
+{
+	if (m_len != frame_size[m_rate]) {
+		blast_err("Size mismatch storing data for %s! Got %zu bytes, expected %zu",
+		        RATE_LOOKUP_TABLE[m_rate].text, m_len, frame_size[m_rate]);
+		return -1;
+	}
+    return 0;
+}
+
 int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len)
 {
 	if (m_len != frame_size[m_rate]) {
@@ -329,7 +374,9 @@ int channels_initialize(const channel_t * const m_channel_list)
     if (frame_table == NULL) return -1;
 
     for (int j = 0; j < RATE_END; j++) {
-        for (int k = 0; k < TYPE_END; k++) channel_count[j][k] = 0;
+        for (int k = 0; k < TYPE_END; k++) {
+          channel_count[j][k] = 0;
+        }
         if (channel_data[j]) {
             free(channel_data[j]);
             channel_data[j] = NULL;
@@ -340,6 +387,7 @@ int channels_initialize(const channel_t * const m_channel_list)
      * First Pass:  Add each entry in the channels array to a hash table for later lookup.
      * Then count each type of channel, separating by source, variable type and rate
      */
+    channels_count = 0;
     for (channel = m_channel_list; channel->field[0]; channel++) {
         g_hash_table_insert(frame_table, (gpointer)channel->field, (gpointer)channel);
         if (channel->rate < RATE_END && channel->type < TYPE_END) {
@@ -348,6 +396,7 @@ int channels_initialize(const channel_t * const m_channel_list)
             blast_fatal("Could not map %d and %d to rate and type!, %s", channel->rate, channel->type, channel->field);
             return 1;
         }
+        channels_count++;
     }
 
     /**
@@ -389,8 +438,240 @@ int channels_initialize(const channel_t * const m_channel_list)
      */
     g_hash_table_foreach(frame_table, channel_map_fields, NULL);
 
+    // generate superframe
+    superframe = channels_generate_superframe(m_channel_list);
 
     blast_startup("Successfully initialized Channels data structures");
     return 0;
+}
+
+int get_roach_index(unsigned int roach, unsigned int kid, unsigned int rtype) {
+  if (roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", roach);
+    return -1;
+  }
+  if (kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", kid);
+    return -1;
+  }
+  if (rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", rtype);
+    return -1;
+  }
+
+  return kid+(roach-1)*NUM_KIDS+rtype*NUM_ROACHES*NUM_KIDS;
+}
+
+void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtype, unsigned int roach_index) {
+  if (rtype) *rtype = roach_index/(NUM_ROACHES*NUM_KIDS);
+  roach_index %= NUM_ROACHES*NUM_KIDS;
+
+  if (roach) *roach = roach_index/(NUM_KIDS)+1;
+  roach_index %= NUM_KIDS;
+
+  if (kid) *kid = roach_index;
+}
+
+#define MAX_ROACH_NAME 64
+
+void make_name_from_roach_index(unsigned int roach_index, char * name) {
+  unsigned int roach = 0, kid = 0, rtype = 0;
+  read_roach_index(&roach, &kid, &rtype, roach_index);
+
+  if (roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", roach);
+    return;
+  }
+  if (kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", kid);
+    return;
+  }
+  if (rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", rtype);
+    return;
+  }
+
+  snprintf(name, MAX_ROACH_NAME, "%s_kid%.04d_roach%.01d", ROACH_TYPES[rtype], kid, roach);
+}
+
+linklist_t * generate_housekeeping_linklist(linklist_t * ll_hk, char * name) {
+    int i;
+    int count = 0;
+    unsigned int blk_size = 0;
+
+    for (i = 0; i < ll_hk->n_entries; i++) {
+        if (ll_hk->items[i].tlm) {
+            if ((strncmp(ll_hk->items[i].tlm->field+2, "kid", 3) == 0) &&
+                 (strncmp(ll_hk->items[i].tlm->field+10, "roach", 5) == 0)) {
+                // linklist_info("Starting to ignore fields after %s\n", ll_hk->items[i].tlm->field);
+                break;
+            }
+        }
+        blk_size += ll_hk->items[i].blk_size;
+        count++;
+    }
+
+    // modify the linklist name
+    strncpy(ll_hk->name, name, 63);
+
+    // modify the linklist size
+    ll_hk->n_entries = count;
+
+    // modify the linklist bulk size
+    ll_hk->blk_size = blk_size;
+
+    // modify the serial
+    /*
+    for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+      if (!name[i]) break;
+      ll_hk->serial[i] ^= name[i];
+    }
+    */
+
+    return ll_hk;
+}
+
+#define EXTRA_SF_ENTRIES 2
+
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list) {
+    superframe_entry_t * sf = calloc(channels_count+EXTRA_SF_ENTRIES+1, sizeof(superframe_entry_t));
+
+    unsigned int sf_size = 0;
+
+    int rate = 0;
+    for (rate = 0; rate < RATE_END; rate++) {
+      superframe_offset[rate] = sf_size;
+      sf_size += frame_size[rate]*get_spf(rate);
+    }
+
+    int i = 0;
+    const channel_t *channel;
+    for (channel = m_channel_list; channel->field[0]; channel++) {
+       strncpy(sf[i].field, channel->field, FIELD_LEN-1);
+       sf[i].type = superframe_type_array[channel->type];
+       sf[i].spf = get_spf(channel->rate);
+       sf[i].start = (int64_t) (channel->var-channel_data[channel->rate])+superframe_offset[channel->rate];
+       sf[i].skip = frame_size[channel->rate];
+       if (strlen(channel->quantity)) strncpy(sf[i].quantity, channel->quantity, UNITS_LEN-1);
+       if (strlen(channel->units)) strncpy(sf[i].units, channel->units, UNITS_LEN-1);
+       sf[i].var = channel->var;
+
+       i++;
+    }
+
+    // null terminate
+    sf[i].field[0] = '\0';
+
+    return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
+}
+
+/**
+ * add_frame_to_superframe
+ * 
+ * Takes a BLAST frame at a given rate and copies it to the superframe.
+ * -> frame: BLAST frame to be copied to the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int add_frame_to_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
+{
+  if (!superframe) {
+    blast_err("Superframe is not allocated. Fix!");
+    return 0;
+  }
+  if (!frame) {
+    blast_err("Frame pointer is NULL. Fix!");
+    return 0;
+  }
+
+  // clear the frame if wrapping has occurred (ensures no split data)
+  if (*frame_location == 0) {
+    memset(superframe+superframe_offset[rate], 0, frame_size[rate]*get_spf(rate));
+  }
+
+  // copy the frame to the superframe
+  memcpy(superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame, frame_size[rate]);
+
+  // update the frame location
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
+
+  // return the next frame location in the superframe
+  return *frame_location;
+}
+
+/**
+ * extract_frame_from_superframe
+ * 
+ * Extracts a BLAST frame at a given rate from superframe and copies it to a given buffer.
+ * -> frame: BLAST frame to be copied from the superframe
+ * -> rate: the rate type for the BLAST frame
+ */
+unsigned int extract_frame_from_superframe(void * frame, E_RATE rate, void * superframe, unsigned int * frame_location)
+{
+  if (!superframe) {
+    blast_err("Superframe is not allocated. Fix!");
+    return 0;
+  }
+  if (!frame) {
+    blast_err("Frame pointer is NULL. Fix!");
+    return 0;
+  }
+
+  // copy the frame from the superframe
+  memcpy(frame, superframe+superframe_offset[rate]+frame_size[rate]*(*frame_location), frame_size[rate]);
+
+  // update the frame location
+  *frame_location = ((*frame_location)+1)%get_spf(rate);
+
+  // return the next frame location in the superframe
+  return *frame_location;
+}
+
+double channel_data_to_double(uint8_t * data, uint8_t type)
+{
+  switch (type) {
+    case SF_FLOAT64 : return bedtoh(*((double *) data));
+    case SF_FLOAT32 : return beftoh(*((float *) data));
+    case SF_INT16 : return (int16_t) be16toh(*((int16_t *) data));
+    case SF_UINT16 : return be16toh(*((uint16_t *) data));
+    case SF_INT32 : return (int32_t) be32toh(*((int32_t *) data));
+    case SF_UINT32 : return be32toh(*((uint32_t *) data));
+    case SF_INT8 : return *((int8_t *) data);
+    case SF_UINT8 : return *((uint8_t *) data);
+    default : return 0;
+  }
+  return 0;
+}
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type)
+{
+  if (type == SF_FLOAT64) {
+    htobed(dub, *(uint64_t*) data);
+    return 8;
+  } else if (type == SF_FLOAT32) {
+    htobef(dub, *(uint32_t*) data)
+    return 4;
+  } else if (type == SF_INT16) {
+    int16_t s = dub;
+    *(int16_t*) data = htobe16(s);
+    return 2;
+  } else if (type == SF_UINT16) {
+    uint16_t u = dub;
+    *(uint16_t*) data = htobe16(u);
+    return 2;
+  } else if (type == SF_INT32) {
+    int32_t i = dub;
+    *(int32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_UINT32) {
+    uint32_t i = dub;
+    *(uint32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_INT8) {
+    *(int8_t*) data = dub;
+    return 1;
+  } else if (type == SF_UINT8) {
+    *(uint8_t*) data = dub;
+    return 1;
+  }
+  return 0;
 }
 

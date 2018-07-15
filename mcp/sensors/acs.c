@@ -29,7 +29,6 @@
 #include <blast.h>
 
 #include <channel_macros.h>
-#include <blast_sip_interface.h>
 #include <conversions.h>
 #include <channels_tng.h>
 #include <command_struct.h>
@@ -38,7 +37,7 @@
 #include <mcp.h>
 #include <pointing_struct.h>
 #include <dsp1760.h>
-
+#include "sip.h"
 #include "xsc_network.h"
 
 static const float gy_inv[64][3][6] =
@@ -383,17 +382,17 @@ void read_5hz_acs(void)
   static int firsttime = 1;
   if (firsttime) {
     firsttime = 0;
-    for (i = 1; i <= NUM_PSS; i++) {
-      for (j = 1; j <= NUM_PSS_V; j++) {
-	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j, i);
+    for (i = 0; i < NUM_PSS; i++) {
+      for (j = 0; j < NUM_PSS_V; j++) {
+	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
 	vPssAddr[i][j] = channels_find_by_name(channel_name);
 	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
   }
-  for (i = 1; i <= NUM_PSS; i++) {
-    for (j = 1; j <= NUM_PSS_V; j++) {
+  for (i = 0; i < NUM_PSS; i++) {
+    for (j = 0; j < NUM_PSS_V; j++) {
       ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
     }
   }
@@ -658,14 +657,16 @@ void store_1hz_xsc(int m_which)
     static channel_t *address_xN_image_hor_sigma_roll[2];
     static channel_t *address_xN_image_hor_sigma_pointing[2];
 
-    static channel_t *address_xN_image_num_blobs[2];
+    static channel_t *address_xN_image_num_blobs_found[2];
+    static channel_t *address_xN_image_num_blobs_matched[2];
 
     int i_point = GETREADINDEX(point_index);
 
     if (firsttime[m_which]) {
         firsttime[m_which] = false;
 
-        address_xN_image_num_blobs[m_which] = get_xsc_channel("image_num_blobs", m_which);
+        address_xN_image_num_blobs_found[m_which] = get_xsc_channel("image_num_blobs_found", m_which);
+        address_xN_image_num_blobs_matched[m_which] = get_xsc_channel("image_num_blobs_matched", m_which);
 
         address_xN_hk_temp_lens[m_which] = get_xsc_channel("hk_temp_lens", m_which);
         address_xN_hk_temp_comp[m_which] = get_xsc_channel("hk_temp_comp", m_which);
@@ -725,9 +726,10 @@ void store_1hz_xsc(int m_which)
         }
     }
 
-    SET_SCALED_VALUE(address_xN_image_num_blobs[m_which],
-                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_found << 6) |
-                     (XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched & 0b111111));
+    SET_SCALED_VALUE(address_xN_image_num_blobs_found[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_num_blobs_found);
+    SET_SCALED_VALUE(address_xN_image_num_blobs_matched[m_which],
+                     XSC_SERVER_DATA(m_which).channels.image_num_blobs_matched);
 
     SET_SCALED_VALUE(address_xN_hk_temp_lens[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_lens);
     SET_SCALED_VALUE(address_xN_hk_temp_comp[m_which], XSC_SERVER_DATA(m_which).channels.hk_temp_comp);
@@ -789,8 +791,8 @@ void store_1hz_xsc(int m_which)
     /// TODO(seth): Re-add local image saving
 //    SET_SCALED_VALUE(address_xN_num_images_saved[m_which], images_num_saved[m_which]);
     if (m_which == 0) {
-        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat*DEG2LI);
-        SET_SCALED_VALUE(address_xN_last_trig_lst       , xsc_pointing_state[m_which].last_trigger.lst);
+        SET_SCALED_VALUE(address_xN_last_trig_lat       , xsc_pointing_state[m_which].last_trigger.lat);
+        SET_VALUE(address_xN_last_trig_lst              , xsc_pointing_state[m_which].last_trigger.lst*SEC2LI);
     }
 }
 
@@ -935,6 +937,7 @@ void store_5hz_acs(void)
     static channel_t* latAddr;
     static channel_t* lonAddr;
     static channel_t* lstAddr;
+    static channel_t* azNullAddr;
     static channel_t* azMagAddr;
     static channel_t* azRawMagAddr;
     static channel_t* declinationMagAddr;
@@ -1055,6 +1058,7 @@ void store_5hz_acs(void)
         calDPss4Addr = channels_find_by_name("cal_d_pss4");
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagAddr = channels_find_by_name("sigma_mag");
+        azNullAddr = channels_find_by_name("az_null");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
         sigmaPssAddr = channels_find_by_name("sigma_pss");
@@ -1197,6 +1201,8 @@ void store_5hz_acs(void)
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
+
+    SET_SCALED_VALUE(azNullAddr, PointingData[i_point].null_az);
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
 

@@ -78,6 +78,7 @@ class Imaging::Lens
     void update();
     void run();
     void wait_for_quit();
+    int get_wait_ms(commands_t command, int command_value);
 
   private:
     Autofocuser autofocuser;
@@ -87,6 +88,7 @@ class Imaging::Lens
     boost::asio::deadline_timer read_timeout;
     bool enabled;
     bool init_on_startup;
+    std::string which_sensor;
     Tools::Timer find_device_timer;
     double find_device_period;
     std::vector<std::string> device_names;

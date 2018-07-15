@@ -102,11 +102,39 @@ labjack_state_t state[NUM_LABJACKS] = {
         .connected = 0,
     },
     {
-        .which = 5,
+        .which = 5, // multiplexed pss
         .address = "labjack6",
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
+        .initialized = 0,
+        .have_warned_write_reg = 0,
+    },
+    {
+        .which = 6, // multiplexed of
+        .address = "labjack7",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mult_labjack2",
+        .initialized = 0,
+        .have_warned_write_reg = 0,
+    },
+    {
+        .which = 7,
+        .address = "labjack8",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_highbay_labjack",
+        .initialized = 0,
+        .have_warned_write_reg = 0,
+    },
+    {
+        .which = 8,
+        .address = "labjack9",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_mapping_labjack",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     }
 };
@@ -274,230 +302,26 @@ void labjack_convert_stream_data(labjack_state_t *m_state, labjack_device_cal_t 
     int ret;
     for (int i = 0; i < n_data; i++) {
         if (raw_data->data[i] == 0xffff) {
-            blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
+            // blast_err("Labjack channel AIN%d received a dummy sample indicating we received an incomplete scan!", i);
         } else {
             ret = labjack_get_volts(m_labjack_cal, raw_data->data[i], m_gainlist[i], &(m_state->AIN[i]));
         }
     }
-}
-
-void labjack_reboot(int m_labjack) {
-    uint16_t data[2] = {0};
-    data[1] = 0x0000;
-    data[0] = 0x4c4a;
-    int ret;
-    static int max_tries = 10;
-    ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
-    if (ret < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
-            ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
-            if (ret > 0) {
-                break;
+    /*
+    if (m_state->which == 6) {
+        static int counter = 1;
+        if (counter == 1) {
+            for (int i = 0; i < 85; i++) {
+                blast_info("data for %d is value %f", i, m_state->AIN[i]);
             }
         }
-    }
-}
-
-void labjack_test_dac(float v_value, int m_labjack)
-{
-    uint16_t data[2];
-    int ret;
-    static int max_tries = 10;
-    labjack_set_float(v_value, data);
-    // data[1] = 0xffff;
-    // data[0] = 0x0000;
-    ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
-    if (ret < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
-            ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
-            if (ret > 0) {
-                break;
+            counter++;
+            if (counter > 200) {
+                counter = 1;
             }
         }
+     */
     }
-}
-
-void query_time(int m_labjack)
-{
-    uint16_t data[2] = {0};
-    uint32_t time_up;
-    int ret;
-    static int max_tries = 10;
-    ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
-    if (ret < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
-            ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
-            if (ret > 0) {
-                blast_warn("the system has been up for %u", data[1]);
-            }
-        }
-    } else {
-        blast_warn("the system has been up for %u", data[1]);
-    }
-}
-
-int labjack_dio(int m_labjack, int address, int command) {
-    int ret;
-    static int max_tries = 10;
-    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
-    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-    if (ret < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
-            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-            if (ret > 0) {
-                break;
-            }
-        }
-        return command;
-    } else {
-        return command;
-    }
-}
-
-
-uint16_t labjack_read_dio(int m_labjack, int address) {
-    uint16_t ret[1];
-    int works;
-    uint16_t value;
-    static int max_tries = 10;
-    works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
-    value = ret[0];
-    if (works < 0) {
-        int tries = 1;
-        while (tries < max_tries) {
-            tries++;
-            usleep(100);
-            works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
-            value = ret[0];
-            if (works > 0) {
-                break;
-            }
-        }
-        return value;
-    } else {
-        return value;
-    }
-}
-
-void heater_write(int m_labjack, int address, float command) {
-    int ret;
-    uint16_t retprime[1];
-    int works;
-    uint16_t value;
-    static int max_tries = 10;
-    uint16_t data[2];
-    labjack_set_float(command, data);
-    if (m_labjack != 1) {
-        if (address != 1000) {
-            blast_info("the address is %d", address);
-            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-            if (ret < 0) {
-                int tries = 1;
-                while (tries < max_tries) {
-                    tries++;
-                    usleep(100);
-                    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
-                    if (ret > 0) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            blast_info("writing to a DAC");
-            ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
-            if (ret < 0) {
-                int tries = 1;
-                while (tries < max_tries) {
-                    tries++;
-                    usleep(100);
-                    ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
-                    if (ret > 0) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    if (m_labjack == 1) {
-        works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
-        value = retprime[0];
-        if (works < 0) {
-            int tries = 1;
-            while (tries < max_tries) {
-                tries++;
-                usleep(100);
-                works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
-                value = retprime[0];
-                if (works > 0) {
-                    break;
-                }
-            }
-            switch (address) {
-                case 2009:
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
-                    break;
-                case 2010:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
-                    break;
-                case 2011:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
-                    break;
-                case 2013:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
-                    break;
-                case 2015:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
-                    break;
-                case 2016:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
-                    break;
-            }
-        } else {
-            switch (address) {
-                case 2009:
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
-                    break;
-                case 2010:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
-                    break;
-                case 2011:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
-                    break;
-                case 2013:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
-                    break;
-                case 2015:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
-                    break;
-                case 2016:
-                    // blast_info("writing to %d, value %d", address, value);
-                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
-                break;
-            }
-        }
-    }
-}
 // Correct for word swaps between mcp and the labjack
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
 {
@@ -643,6 +467,237 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
     }
     ph_buf_delref(buf);
 }
+// labjack functions from Ian are below
+
+void labjack_reboot(int m_labjack) {
+    uint16_t data[2] = {0};
+    data[1] = 0x0000;
+    data[0] = 0x4c4a;
+    int ret;
+    static int max_tries = 10;
+    ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, REBOOT_ADDR, 2, data);
+            if (ret > 0) {
+                break;
+            }
+        }
+    }
+}
+
+void labjack_test_dac(float v_value, int m_labjack)
+{
+    uint16_t data[2];
+    int ret;
+    static int max_tries = 10;
+    labjack_set_float(v_value, data);
+    // data[1] = 0xffff;
+    // data[0] = 0x0000;
+    ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, 1000, 2, data);
+            if (ret > 0) {
+                break;
+            }
+        }
+    }
+}
+
+void query_time(int m_labjack)
+{
+    uint16_t data[2] = {0};
+    uint32_t time_up;
+    int ret;
+    static int max_tries = 10;
+    ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_read_registers(state[m_labjack].cmd_mb, 61522, 2, data);
+            if (ret > 0) {
+                blast_warn("the system has been up for %u", data[1]);
+            }
+        }
+    } else {
+        blast_warn("the system has been up for %u", data[1]);
+    }
+}
+
+int labjack_dio(int m_labjack, int address, int command) {
+    int ret;
+    static int max_tries = 10;
+    uint16_t err_data[2] = {0}; // Used to read labjack specific error codes.
+    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+    if (ret < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+            if (ret > 0) {
+                break;
+            }
+        }
+        return command;
+    } else {
+        return command;
+    }
+}
 
 
+uint16_t labjack_read_dio(int m_labjack, int address) {
+    uint16_t ret[1];
+    int works;
+    uint16_t value;
+    static int max_tries = 10;
+    works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
+    value = ret[0];
+    if (works < 0) {
+        int tries = 1;
+        while (tries < max_tries) {
+            tries++;
+            usleep(100);
+            works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, ret);
+            value = ret[0];
+            if (works > 0) {
+                break;
+            }
+        }
+        return value;
+    } else {
+        return value;
+    }
+}
+
+void heater_write(int m_labjack, int address, float command) {
+    int ret;
+    uint16_t retprime[1];
+    int works;
+    uint16_t value;
+    static int max_tries = 10;
+    uint16_t data[2];
+    labjack_set_float(command, data);
+    if (m_labjack != 1) {
+        if (address != 1000) {
+            ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+            if (ret < 0) {
+                int tries = 1;
+                while (tries < max_tries) {
+                    tries++;
+                    usleep(100);
+                    ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                    if (ret > 0) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            // blast_info("writing to a DAC");
+            ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
+            if (ret < 0) {
+                int tries = 1;
+                while (tries < max_tries) {
+                    tries++;
+                    usleep(100);
+                    ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
+                    if (ret > 0) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (m_labjack == 1 && address > 2008) {
+        works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
+        value = retprime[0];
+        if (works < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                works = modbus_read_registers(state[m_labjack].cmd_mb, address, 1, retprime);
+                value = retprime[0];
+                if (works > 0) {
+                    break;
+                }
+            }
+            switch (address) {
+                case 2009:
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
+                    break;
+                case 2010:
+                    blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
+                    break;
+                case 2011:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
+                    break;
+                case 2013:
+                    blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
+                    break;
+                case 2015:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
+                    break;
+                case 2016:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
+                    break;
+            }
+        } else {
+            switch (address) {
+                case 2009:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_heater_Addr, value);
+                    break;
+                case 2010:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_250_LNA_Addr, value);
+                    break;
+                case 2011:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_1K_heater_Addr, value);
+                    break;
+                case 2013:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_charcoal_hs_Addr, value);
+                    break;
+                case 2015:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_350_LNA_Addr, value);
+                    break;
+                case 2016:
+                    // blast_info("writing to %d, value %d", address, value);
+                    SET_SCALED_VALUE(labjack_digital.status_500_LNA_Addr, value);
+                    break;
+            }
+        }
+    }
+    if (m_labjack == 1 && address <= 2008) {
+        ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+        if (ret < 0) {
+            int tries = 1;
+            while (tries < max_tries) {
+                tries++;
+                usleep(100);
+                ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
+                if (ret > 0) {
+                    break;
+                }
+            }
+        }
+    }
+}
 

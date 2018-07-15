@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <libusb-1.0/libusb.h>
+#include <sys/time.h>
 
 #include "binarybuffer.h"
 #include "mpsse.h"
@@ -134,7 +135,7 @@ static bool open_matching_device(struct mpsse_ctx *ctx, const uint16_t *vid, con
 		}
 
 		found = true;
-        blast_info("Succes opening MPSSE device with VID=%04x and PID=%04x", *vid, *pid);
+        blast_info("Succes opening MPSSE device with VID=%04x, PID=%04x and serial=%s", *vid, *pid, serial);
 
 		break;
 	}
@@ -739,6 +740,7 @@ static LIBUSB_CALL void write_cb(struct libusb_transfer *transfer)
 
 	// DEBUG_IO("transferred %d of %d", res->transferred, ctx->write_count);
 	// DEBUG_PRINT_BUF(transfer->buffer, transfer->actual_length);
+  blast_info("transferred %d of %d", res->transferred, ctx->write_count);
 
 	if (res->transferred == ctx->write_count) {
 		res->done = true;
@@ -797,12 +799,12 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 	/* Polling loop, more or less taken from libftdi */
 	while (!write_result.done || !read_result.done) {
 		retval = libusb_handle_events(ctx->usb_ctx);
-        // blast_dbg("is write_result.done after handl_events? %d", (int) write_result.done);
+    // blast_info("is write_result.done after handl_events? %d", (int) write_result.done);
 		///TODO: Evaluate GDB Keepalive function
 		//keep_alive();
 		if (retval != LIBUSB_SUCCESS && retval != LIBUSB_ERROR_INTERRUPTED) {
 			libusb_cancel_transfer(write_transfer);
-            blast_dbg("Cancelling transfer because retval = %d", retval);
+    //        blast_dbg("Cancelling transfer because retval = %d", retval);
 			if (read_transfer)
 				libusb_cancel_transfer(read_transfer);
 			while (!write_result.done || !read_result.done)
@@ -810,8 +812,6 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 					break;
 		}
 	}
-
-
 	if (retval != LIBUSB_SUCCESS) {
 		blast_err("libusb_handle_events() failed with %s", libusb_error_name(retval));
 		retval = ERROR_FAIL;
@@ -835,7 +835,6 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		bit_copy_discard(&ctx->read_queue);
 		retval = ERROR_OK;
 	}
-
 	libusb_free_transfer(write_transfer);
 	if (read_transfer)
 		libusb_free_transfer(read_transfer);
@@ -844,66 +843,4 @@ int mpsse_flush(struct mpsse_ctx *ctx)
 		mpsse_purge(ctx);
 
 	return retval;
-}
-
-/**
- * Writes data in Bi-phase format (doubling data bits)
- * @param ctx Valid MPSSE context pointer
- * @param out Pointer to the output data buffer
- * @param out_offset Offset in bytes into the output data buffer to begin reading
- * @param length Number of bytes to output
- */
-void mpsse_biphase_write_data(struct mpsse_ctx *ctx, const uint16_t *out, uint32_t length)
-{
-	// unsigned output_length = 2*length;
-	unsigned output_length = length;
-	uint8_t bit_doubler_buffer[output_length];
-
-    unsigned max_i = (unsigned) floor(length/2.0);
-    uint8_t msbs, lsbs;
-
-	//for (unsigned i = 0; i < length; i++) {
-	//	bit_doubler_buffer[i * 2] = (uint8_t)(bit_doubler[out[i]] & 0xff);
-	//	bit_doubler_buffer[i * 2 + 1] = (uint8_t)((bit_doubler[out[i]] >> 8) & 0xff);
-	//}
-	for (unsigned i = 0; i < max_i; i++) {
-        msbs = (uint8_t) ((out[i] >> 8) & 0xff);
-        lsbs = (uint8_t) out[i] & 0xff;
-	    bit_doubler_buffer[i*2] = msbs;
-	    bit_doubler_buffer[i*2 + 1] = lsbs;
-	    // bit_doubler_buffer[i*4] = (uint8_t)((bit_doubler[msbs] >> 8) & 0xff);
-	    // bit_doubler_buffer[i*4 + 1] = (uint8_t)(bit_doubler[msbs] & 0xff);
-	    // bit_doubler_buffer[i*4 + 2] = (uint8_t)((bit_doubler[lsbs] >> 8) & 0xff);
-	    // bit_doubler_buffer[i*4 + 3] = (uint8_t)(bit_doubler[lsbs] & 0xff);
-	}
-
-    // This somehow seems to be the change that stopped irregular streaming of data
-	// mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, POS_EDGE_OUT | MSB_FIRST);
-	mpsse_clock_data(ctx, bit_doubler_buffer, 0, NULL, 0, output_length * 8, NEG_EDGE_OUT | MSB_FIRST);
-}
-
-/**
- * Sets the watchdog toggle bit to a specified value
- * @param ctx Valid MPSSE context pointer
- */
-void mpsse_watchdog_ping(struct mpsse_ctx *ctx)
-{
-    // CLK, data, WD are bit 0, 1 and 7
-    // 0b10000011 = 0x83
-    // Note Joy tried from the other end 0b11000001 = 0xC1 and it's wrong
-	mpsse_read_data_bits_low_byte(ctx, &bits);
-	mpsse_flush(ctx);
-    mpsse_set_data_bits_low_byte(ctx, bits ^ (1 << 7), 0x83);
-    mpsse_flush(ctx);
-}
-
-/**
- * Gets the value of the incharge bit from the comms card
- * @param ctx Valid MPSSE context pointer
- * @return 0 = not inCharge, 1 = inCharge
- */
-int mpsse_watchdog_get_incharge(struct mpsse_ctx *ctx)
-{
-	if(ctx->retval) return 0;
-	return (bits >> 6) & 0x1;
 }

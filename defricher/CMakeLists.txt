@@ -111,6 +111,17 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
+# add linklist library
+set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
+ExternalProject_Add(linklist
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
+  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
+  URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
+  INSTALL_COMMAND ""
+  BUILD_ALWAYS 1)
+
+include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+
 # configure a header file to pass some of the CMake settings to the source code
 configure_file (
   "${PROJECT_SOURCE_DIR}/defricher_config.h.in"
@@ -124,19 +135,21 @@ include_directories ("/usr/include/machine")
 include_directories ("${PROJECT_BINARY_DIR}/include")
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 
 include_directories (
     "${PROJECT_SOURCE_DIR}/include"
     "${COMMON_DIR}/include"
+    "${CONFIG_DIR}/include"
     )
 
 # add common objects
 add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
+add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
 
 add_library (blast_common OBJECT ${DEFRICHER_COMMON_SRCS} ${DEFRICHER_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
 
-            
 add_executable (defricher 
     $<TARGET_OBJECTS:blast_common>
     ${PROJECT_SOURCE_DIR}/defricher.c
@@ -149,13 +162,17 @@ add_executable (defricher
     ${PROJECT_SOURCE_DIR}/defricher_writer.h
     ) 
 
+add_dependencies(defricher linklist)
+
 define_file_basename_for_sources(defricher)
 
 target_link_libraries(defricher  
     ${GLIB_LIBRARY}  
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
+    ${LINKLIST_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
+    ssl crypto
     m)
 
 install(TARGETS defricher DESTINATION bin)

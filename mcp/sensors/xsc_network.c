@@ -41,7 +41,6 @@
 
 #include "conversions.h"
 #include "blast.h"
-#include "blast_comms.h"
 #include "framing.h"
 #include "mcp.h"
 #include "angles.h"
@@ -109,6 +108,7 @@ static void xsc_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_dat
     if (data->xsc_protocol_version == XSC_PROTOCOL_VERSION) {
         memcpy(&xsc_mserver_data[state->which][array_index], data, sizeof(XSCServerData));
         xsc_server_index[state->which] = INC_INDEX(xsc_server_index[state->which]);
+        xsc_pointing_state[state->which].stars_response_counter++;
         state->have_warned_version = false;
     } else {
         if (!state->have_warned_version) {
@@ -151,15 +151,18 @@ void xsc_write_data(int which)
 
     /**
      * Pause here to allow STARS to get the new image from the camera.  MCP will increment
-     * its counter immediately after lowering the trigger.  We give STARS that much time again
-     * (exposure_time_cs) to allow the camera to retrieve and stamp the new image.
+     * its counter immediately after lowering the trigger.  We give STARS the
+     * exposure_time (cs) + a commandable delay) to allow the camera to retrieve and stamp the new image.
      */
-    if (get_100hz_framenum() > xsc_pointing_state[which].exposure_time_cs +
-            xsc_pointing_state[which].last_trigger_time) {
+
+    // int post_trigger_counter_mcp_share_delay_cs =
+    //          CommandData.XSC[which].trigger.post_trigger_counter_mcp_share_delay_cs;
+    // if (get_100hz_framenum() > (xsc_pointing_state[which].exposure_time_cs +
+    //         xsc_pointing_state[which].last_trigger_time + post_trigger_counter_mcp_share_delay_cs)) {
         xsc_client_data.counter_mcp = xsc_pointing_state[which].counter_mcp;
-    } else {
-        xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
-    }
+    // } else {
+    //     xsc_client_data.counter_mcp = xsc_pointing_state[which].last_counter_mcp;
+    // }
     /**
      * note: everything that must be valid, and doesn't come from CommandData.XSC.net,
      * must be set here or it will be overwritten by CommandData.XSC.net

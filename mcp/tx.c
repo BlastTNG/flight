@@ -42,7 +42,6 @@
 #include <sys/time.h>
 
 #include <conversions.h>
-#include <blast_sip_interface.h>
 #include <computer_sensors.h>
 
 #include "channels_tng.h"
@@ -50,7 +49,6 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "chrgctrl.h"
-#include "data_sharing.h"
 
 #include "motors.h"
 
@@ -69,7 +67,6 @@ extern struct chat_buf chatter_buffer;  /* mcp.c */
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
-void ControlPower(void);
 void VideoTx(void);
 
 /* in das.c */
@@ -96,8 +93,10 @@ void WriteAux(void)
 {
     static channel_t* timeAddr;
     static channel_t* timeUSecAddr;
-    static channel_t* rateTdrssAddr;
-    static channel_t* rateIridiumAddr;
+    static channel_t* rateHighrateAddr;
+    static channel_t* rateBiphaseAddr;
+    static channel_t* ratePilotAddr;
+    static channel_t* rateMPSSEClockAddr;
 
     static channel_t* statusMCCAddr;
     static channel_t* ploverAddr;
@@ -121,7 +120,6 @@ void WriteAux(void)
     static channel_t* count_cmd_addr[2];
 
     const char which_flc[2] = {'n', 's'};
-    data_sharing_t shared_data[2] = {{0}};
 
 #define ASSIGN_BOTH_FLC(_ch, _str) \
     ({ \
@@ -132,7 +130,6 @@ void WriteAux(void)
         _ch[1] = channels_find_by_name(buf); \
     })
 
-    static int incharge = -1;
     time_t t;
     int i_point;
     struct timeval tv;
@@ -143,6 +140,8 @@ void WriteAux(void)
     static int firsttime = 1;
     if (firsttime) {
         firsttime = 0;
+
+        // status and housekeeping information
         statusMCCAddr = channels_find_by_name("status_mcc");
 
         he4LevOldAddr = channels_find_by_name("he4_lev_old");
@@ -150,14 +149,19 @@ void WriteAux(void)
 
         timeAddr = channels_find_by_name("time");
         timeUSecAddr = channels_find_by_name("time_usec");
-        rateTdrssAddr = channels_find_by_name("rate_tdrss");
-        rateIridiumAddr = channels_find_by_name("rate_iridium");
+        rateHighrateAddr = channels_find_by_name("rate_highrate");
+        rateBiphaseAddr = channels_find_by_name("rate_biphase");
+        ratePilotAddr = channels_find_by_name("rate_pilot");
+        rateMPSSEClockAddr = channels_find_by_name("mpsse_clock_speed");
 
         ploverAddr = channels_find_by_name("plover");
         statusEthAddr = channels_find_by_name("status_eth");
         partsSchedAddr = channels_find_by_name("parts_sched");
         upslotSchedAddr = channels_find_by_name("upslot_sched");
 
+        // housekeeping info to be shared with other flight computer
+        // North/South specific (denoted ***_n or ***_s)
+        // names are automatically aliased with the correct computer
         ASSIGN_BOTH_FLC(tcpu0_flc_addr, "t_cpu0_flc");
         ASSIGN_BOTH_FLC(tcpu1_flc_addr, "t_cpu1_flc");
         ASSIGN_BOTH_FLC(v12_flc_addr, "v_12v_flc");
@@ -172,61 +176,20 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
     }
 
-    // InCharge = !(SouthIAm ^ (GET_UINT16(statusMCCAddr) & 0x1));
-
-    if (InCharge != incharge && InCharge) {
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-        blast_info("System: I, %s, have gained control.\n", SouthIAm ? "South" : "North");
-        CommandData.actbus.force_repoll = 1;
-    } else if (InCharge != incharge) {
-        blast_info("System: I, %s, have lost control.\n", SouthIAm ? "South" : "North");
-        blast_info("SouthIAm = %d, other = %u", SouthIAm, (GET_UINT16(statusMCCAddr) & 0x1));
-    }
-
-
-    incharge = InCharge;
-
     gettimeofday(&tv, &tz);
 
     SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
     SET_VALUE(timeUSecAddr, tv.tv_usec);
-
-    data_sharing_get_data(&(shared_data[1]));
     SET_VALUE(time_flc_addr[0], tv.tv_sec + TEMPORAL_OFFSET);
-    shared_data[0].time = tv.tv_sec + TEMPORAL_OFFSET;
-    SET_VALUE(time_flc_addr[1], shared_data[1].time);
-
     SET_VALUE(tcpu0_flc_addr[0], computer_sensors.core0_temp);
-    shared_data[0].t_cpu0 = computer_sensors.core0_temp;
-    SET_VALUE(tcpu0_flc_addr[1], shared_data[1].t_cpu0);
-
     SET_VALUE(tcpu1_flc_addr[0], computer_sensors.core1_temp);
-    shared_data[0].t_cpu0 = computer_sensors.core1_temp;
-    SET_VALUE(tcpu1_flc_addr[1], shared_data[1].t_cpu1);
-
     SET_VALUE(icurr_flc_addr[0], computer_sensors.curr_input);
-    shared_data[0].i_flc = computer_sensors.curr_input;
-    SET_VALUE(icurr_flc_addr[1], shared_data[1].i_flc);
-
     SET_VALUE(v12_flc_addr[0], computer_sensors.volt_12V);
-    shared_data[0].v_12 = computer_sensors.volt_12V;
-    SET_VALUE(v12_flc_addr[1], shared_data[1].v_12);
-
     SET_VALUE(v5_flc_addr[0], computer_sensors.volt_5V);
-    shared_data[0].v_5 = computer_sensors.volt_5V;
-    SET_VALUE(v5_flc_addr[1], shared_data[1].v_5);
-
     SET_VALUE(vbatt_flc_addr[0], computer_sensors.volt_battery);
-    shared_data[0].v_bat = computer_sensors.volt_battery;
-    SET_VALUE(vbatt_flc_addr[1], shared_data[1].v_bat);
-
     SET_VALUE(df_flc_addr[0], computer_sensors.disk_free);
-    shared_data[0].df = computer_sensors.disk_free;
-    SET_VALUE(df_flc_addr[1], shared_data[1].df);
-
     SET_VALUE(partsSchedAddr, CommandData.parts_sched & 0xffffff);
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
-
     i_point = GETREADINDEX(point_index);
 
 #ifdef BOLOTEST
@@ -237,16 +200,16 @@ void WriteAux(void)
 
     if (CommandData.pointing_mode.t > t) {
         SET_VALUE(timeout_addr[0], CommandData.pointing_mode.t - t);
-        shared_data[0].timeout = CommandData.pointing_mode.t - t;
     } else {
         SET_VALUE(timeout_addr[0], 0);
-        shared_data[0].timeout = 0;
     }
-    SET_VALUE(timeout_addr[1], shared_data[1].timeout);
 
     SET_VALUE(ploverAddr, CommandData.plover);
-    SET_VALUE(rateTdrssAddr, CommandData.tdrss_bw);
-    SET_VALUE(rateIridiumAddr, CommandData.iridium_bw);
+    SET_VALUE(rateHighrateAddr, CommandData.highrate_bw*8.0/1000.0); // Bps
+    SET_VALUE(rateBiphaseAddr, CommandData.biphase_bw*8.0/1000.0); // Bps
+    SET_VALUE(ratePilotAddr, CommandData.pilot_bw*8.0/1000.0); // Bps
+
+    SET_VALUE(rateMPSSEClockAddr, CommandData.biphase_clk_speed/1000.0);
 
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));
@@ -255,6 +218,7 @@ void WriteAux(void)
             (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
             (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
             (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
+            (InCharge ? 0x80 : 0x00) +               // 0x80
 //            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
             ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00
 
@@ -265,15 +229,8 @@ void WriteAux(void)
     }
 
     SET_VALUE(statusMCCAddr, mccstatus);
-
     SET_VALUE(last_cmd_addr[0], CommandData.last_command);
-    shared_data[0].last_command = CommandData.last_command;
-    SET_VALUE(last_cmd_addr[1], shared_data[1].last_command);
-
     SET_VALUE(count_cmd_addr[0], CommandData.command_count);
-    shared_data[0].command_count = CommandData.command_count;
-    SET_VALUE(count_cmd_addr[1], shared_data[1].command_count);
-    data_sharing_send_data(&(shared_data[0]));
 }
 
 void WriteChatter(void)
@@ -383,5 +340,3 @@ double ReadCalData(channel_t *m_ch)
     GET_VALUE(m_ch, retval);
     return (retval * m_ch->m_c2e + m_ch->b_e2e);
 }
-
-

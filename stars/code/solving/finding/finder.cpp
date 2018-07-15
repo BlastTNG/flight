@@ -107,7 +107,7 @@ bool Finder::is_local_max_in_smooth(int x, int y)
 }
 
 vector<Blob> Finder::search_for_peaks_in_cell(unsigned int cell_size, unsigned int ucell, unsigned int vcell, double threshold, double noise, unsigned int max_num_blobs) {
-    unsigned int validity_padding = 10;
+    unsigned int validity_padding = 5;
     unsigned int umin, umax, vmin, vmax;
     vector<Blob> cellblobs;
 
@@ -125,6 +125,7 @@ vector<Blob> Finder::search_for_peaks_in_cell(unsigned int cell_size, unsigned i
                     new_blob.correlated_peak = pixels_smoothed[v*image_width+u]
                         - pixels_leveled[v*image_width+u];
                     cellblobs.push_back(new_blob);
+                    u++;
                 }
             }
         }
@@ -148,10 +149,8 @@ vector<Blob> Finder::search_for_peaks(int halfwidth, double noise) {
     for (vcell=0; vcell<(unsigned int)image_height; vcell+=cell_skip) {
         for (ucell=0; ucell<(unsigned int)image_width; ucell+=cell_skip) {
             if (!shared_mask.cell_masked(ucell, vcell)) {
-                cell_blobs = search_for_peaks_in_cell(cell_skip, ucell, vcell, threshold, noise, shared_settings.max_num_blobs_per_cell);
+                cell_blobs = search_for_peaks_in_cell(cell_skip, ucell, vcell, threshold, noise, shared_settings.max_num_blobs_per_cell);   
                 blobs.insert(blobs.end(), cell_blobs.begin(), cell_blobs.end());
-                sort(blobs.begin(), blobs.end(), Blob::sort_by_correlated_peak);
-                crop_vector(blobs, 100);
             }
         }
     }
@@ -258,6 +257,8 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
         halfwidth = 1;
         sigma = 1.0;
         smoother.make_smooth(image, pixels_smoothed, 1, sigma);
+        logger.log(format("finder: smoothing image took %s s") % timer.time());
+        timer.start();
         possible_blobs = search_for_peaks(halfwidth, noise);
         blobs.insert(blobs.end(), possible_blobs.begin(), possible_blobs.end());
         logger.log(format("finder: finding possible small blobs took %s s")%timer.time());
@@ -303,15 +304,9 @@ vector<Blob> Finder::find_blobs(Shared::Image::Raw& image, double noise)
     }
     logger.log(format("finder: fitting blobs took %s s")%timer.time());
 
-/*
-    for (unsigned int i=0; i<blobs.size(); i++) {
-        cout << "blob[" << i << "].sigma_x is " << blobs[i].sigma_x << endl;
-    }
-*/
-
     timer.start();
     if (!done()) {
-		sort(blobs.begin(), blobs.end(), Blob::sort_by_flux_confidence);
+		sort(blobs.begin(), blobs.end(), Blob::sort_by_flux);
 		crop_vector(blobs, shared_settings.max_num_blobs);
         for (unsigned int i=0; i<blobs.size(); i++) {
             blobs[i].id = i;

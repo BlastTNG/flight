@@ -24,4 +24,12 @@ void test_cycle(void);
 void auto_cycle_mk2(void);
 void read_chopper(void);
 void set_dac(void);
+void init_array();
+void load_curve_300mk(void);
+void force_incharge();
+void periodic_cal_control(void);
+void level_toggle();
+void cryo_1hz(int setting_1hz);
+void cryo_200hz(int setting_200hz);
+void thermal_vac(void);
 #endif /* cryostat_h */

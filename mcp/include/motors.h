@@ -69,10 +69,12 @@ typedef struct
     int32_t position;             // Position used for calculations
     int32_t motor_position;       // Motor position
     uint32_t status;              // drive status
+    uint16_t network_status;      // network status
     uint32_t fault_reg;           // drive fault register
     uint16_t drive_info;          // motorinfo struct
     uint16_t state;               // commanded state
     uint32_t err_count;           // count of serious serial errors
+    uint8_t network_problem;         // check_for_network_problem returns 1
 } motor_data_t;
 
 extern motor_data_t RWMotorData[3];

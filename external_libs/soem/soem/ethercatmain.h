@@ -58,7 +58,7 @@ extern "C"
 /** max. length of readable name in slavelist and Object Description List */
 #define EC_MAXNAME        40
 /** max. number of slaves in array */
-#define EC_MAXSLAVE       4
+#define EC_MAXSLAVE       5  // change this if more slave devices are added!
 /** max. number of groups */
 #define EC_MAXGROUP       2
 /** max. number of IO segments per group */
@@ -474,7 +474,6 @@ boolean ec_poperror(ec_errort *Ec);
 boolean ec_iserror(void);
 void ec_packeterror(uint16 Slave, uint16 Index, uint8 SubIdx, uint16 ErrorCode);
 int ec_init(char * ifname);
-int ec_init_redundant(char *ifname, char *if2name);
 void ec_close(void);
 uint8 ec_siigetbyte(uint16 slave, uint16 address);
 int16 ec_siifind(uint16 slave, uint16 cat);
@@ -515,7 +514,6 @@ boolean ecx_poperror(ecx_contextt *context, ec_errort *Ec);
 boolean ecx_iserror(ecx_contextt *context);
 void ecx_packeterror(ecx_contextt *context, uint16 Slave, uint16 Index, uint8 SubIdx, uint16 ErrorCode);
 int ecx_init(ecx_contextt *context, char * ifname);
-int ecx_init_redundant(ecx_contextt *context, ecx_redportt *redport, char *ifname, char *if2name);
 void ecx_close(ecx_contextt *context);
 uint8 ecx_siigetbyte(ecx_contextt *context, uint16 slave, uint16 address);
 int16 ecx_siifind(ecx_contextt *context, uint16 slave, uint16 cat);

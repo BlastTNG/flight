@@ -48,6 +48,9 @@
 #define STREAM_TARGET_USB 0x02  // USB
 #define STREAM_TARGET_CR 0x10  // Command/Response
 
+#define LABJACK_MULT_OF 6
+#define LABJACK_MULT_PSS 5
+
 // Max samples per packet
 #define STREAM_MAX_SAMPLES_PER_PACKET_TCP 512
 #define STREAM_TYPE 16
@@ -93,9 +96,7 @@
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 4096
 
-// For now we only have one cyro readout Labjack
-// TODO(laura): Integrate PSS and OF Labjacks
-#define NUM_LABJACKS 6
+#define NUM_LABJACKS 9
 
 typedef struct { // temp names
     channel_t* status_charcoal_heater_Addr;
@@ -230,8 +231,6 @@ uint16_t labjack_read_dio(int m_labjack, int address);
 void heater_write(int m_labjack, int address, float command);
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
-
-
 
 
 #endif /* LABJACK_FUNCTIONS_H_ */
