@@ -200,6 +200,8 @@ enum multiCommand {
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal_fc1,       mag_cal_fc2,       pss_cal,
   potvalve_set_vel, potvalve_set_current, valves_set_vel, valves_set_current,
+  potvalve_set_thresholds,
+  actuators_set_used,
 
   xsc_is_new_window_period,
   xsc_offset,
