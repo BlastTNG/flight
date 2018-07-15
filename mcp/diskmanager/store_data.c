@@ -40,6 +40,10 @@
 #include <channel_macros.h>
 #include <store_data.h>
 
+#include <linklist.h>
+#include <linklist_compress.h>
+#include <linklist_writer.h>
+
 typedef struct {
     bool    header_written;
     bool    have_warned;
@@ -72,6 +76,11 @@ typedef struct {
 
 roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
 // >>>>>>> origin/master
+
+// housekeeping linklist
+#define LL_TMP_NAME "/tmp/TMP"
+linklist_t * ll_hk = NULL;
+
 
 int store_disks_ready() {
 	static bool disk_init = false;
@@ -140,6 +149,55 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
 	}
     return(0);
 }
+
+void copy_file_to_diskmanager(char * fileout, char * filein) {
+}
+
+void store_hk_data(store_file_info_t *m_storage) {
+    uint16_t bytes_written = 0;
+
+    static bool first_time = 1;
+    fileentry_t *fp_chlist;
+    if (!store_disks_ready() && !(m_storage->have_warned)) {
+        blast_info("store_disks_ready is not ready.");
+        m_storage->have_warned = true;
+        return;
+    }
+
+    if (first_time) {
+        // initialize the store_file_info struct
+	      m_storage->fp = NULL;
+	      snprintf(m_storage->type, sizeof(m_storage->type), "linklist");
+	      m_storage->mcp_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+	      m_storage->channels_pkg = NULL;
+	      m_storage->rate = RATE_1HZ;
+	      m_storage->nrate = 1;
+	      m_storage->init = true;
+
+        // open and write the temporary superframe, linklist, and calspecs format files
+        linklist_rawfile_t * ll_rawfile = open_linklist_rawfile(LL_TMP_NAME, ll_hk);
+        channels_write_calspecs(LL_TMP_NAME CALSPECS_FORMAT_EXT, derived_list);
+        close_and_free_linklist_rawfile(ll_rawfile);
+
+        // copy the format files to the diskmanager
+        char fileout_name[64] = {0};
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, m_storage->file_name);
+        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, m_storage->file_name);
+        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, m_storage->file_name);
+        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
+
+        first_time = 0;
+    }
+
+    // open the file if not open aleady
+    if (!(m_storage->fp)) {
+        blast_info("Opening %s", m_storage->file_name);
+    }
+}
+
 
 // Generic data storage routine that can be used for any rate or roach data;
 void store_rate_data(store_file_info_t *m_storage) {

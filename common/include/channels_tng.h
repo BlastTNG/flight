@@ -137,5 +137,6 @@ void make_name_from_roach_index(unsigned int , char * name);
 int get_roach_index(unsigned int , unsigned int , unsigned int);
 void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
 linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
+void channels_write_calspecs(char *, derived_tng_t *);
 
 #endif /* CHANNELS_V2_H_ */
