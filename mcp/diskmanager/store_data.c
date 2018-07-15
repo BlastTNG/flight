@@ -65,6 +65,7 @@ static store_file_info_t storage_info_1hz = {0};
 static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
+static store_file_info_t storage_info_hk = {0};
 // =======
 // #define MAX_NUM_FILENAME_CHARS 72
 typedef struct {
@@ -191,30 +192,30 @@ void make_hk_name(char * filename) {
     snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s/%s", archive_dir, tempname, tempname);
 }
 
-void store_hk_data(store_file_info_t *m_storage, uint8_t * sf_buffer) {
+void store_data_hk(uint8_t * sf_buffer) {
     uint16_t bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
 
     static int file_index = 0;
     static uint8_t * comp_buffer = NULL;
     static bool first_time = 1;
-    if (!store_disks_ready() && !(m_storage->have_warned)) {
+    if (!store_disks_ready() && !(storage_info_hk.have_warned)) {
         blast_info("store_disks_ready is not ready.");
-        m_storage->have_warned = true;
+        storage_info_hk.have_warned = true;
         return;
     }
 
     if (first_time) {
         // initialize the store_file_info struct
-	      m_storage->fp = NULL;
-	      snprintf(m_storage->type, sizeof(m_storage->type), "linklist");
-	      m_storage->mcp_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
-	      m_storage->channels_pkg = NULL;
-	      m_storage->rate = RATE_1HZ;
-	      m_storage->nrate = 1;
-	      m_storage->init = true;
-        m_storage->frames_stored = 0;
-        m_storage->fp = NULL;
+	      storage_info_hk.fp = NULL;
+	      snprintf(storage_info_hk.type, sizeof(storage_info_hk.type), "linklist");
+	      storage_info_hk.mcp_framenum_addr = channels_find_by_name("mcp_1hz_framecount");
+	      storage_info_hk.channels_pkg = NULL;
+	      storage_info_hk.rate = RATE_1HZ;
+	      storage_info_hk.nrate = 1;
+	      storage_info_hk.init = true;
+        storage_info_hk.frames_stored = 0;
+        storage_info_hk.fp = NULL;
 
         // allocate buffer
         comp_buffer = calloc(1, ll_hk->blk_size);
@@ -228,56 +229,56 @@ void store_hk_data(store_file_info_t *m_storage, uint8_t * sf_buffer) {
         close_and_free_linklist_rawfile(ll_rawfile);
 
         // copy the format files to the diskmanager
-        make_hk_name(m_storage->file_name);
-        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, m_storage->file_name);
+        make_hk_name(storage_info_hk.file_name);
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
 
-        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, m_storage->file_name);
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
-        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, m_storage->file_name);
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
 
         first_time = 0;
     }
 
     // close the file once enough frames are written
-    if (m_storage->frames_stored >= ll_rawfile_default_fpf) {
-	      bytes_written = file_write(m_storage->fp, (void*) &(m_storage->crc), sizeof(uint32_t));
-        file_close(m_storage->fp);
-        m_storage->fp = NULL;
+    if (storage_info_hk.frames_stored >= ll_rawfile_default_fpf) {
+	      bytes_written = file_write(storage_info_hk.fp, (void*) &(storage_info_hk.crc), sizeof(uint32_t));
+        file_close(storage_info_hk.fp);
+        storage_info_hk.fp = NULL;
     }
 
     // open the file if it hasn't been opened or was closed
-    if (!m_storage->fp) {
+    if (!storage_info_hk.fp) {
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_EXT ".%.2u",
-                                m_storage->file_name, file_index);
-        m_storage->frames_stored = 0;
-        m_storage->crc = BLAST_MAGIC32;
-        m_storage->fp = file_open(fileout_name, "w+");
+                                storage_info_hk.file_name, file_index);
+        storage_info_hk.frames_stored = 0;
+        storage_info_hk.crc = BLAST_MAGIC32;
+        storage_info_hk.fp = file_open(fileout_name, "w+");
         file_index++;
     }
 
     // write to the fie if opened
-    if (m_storage->fp) {
+    if (storage_info_hk.fp) {
         // compress the linklist
         compress_linklist(comp_buffer, ll_hk, sf_buffer);
-        bytes_written = file_write(m_storage->fp, (void *) comp_buffer, ll_hk->blk_size);
+        bytes_written = file_write(storage_info_hk.fp, (void *) comp_buffer, ll_hk->blk_size);
 		    if (bytes_written < ll_hk->blk_size) {
-            if (m_storage->have_warned) {
+            if (storage_info_hk.have_warned) {
                 blast_err("Compressed size is %u bytes but we were only able to write %u bytes",
                             ll_hk->blk_size, bytes_written);
-                m_storage->have_warned = true;
+                storage_info_hk.have_warned = true;
             }
 		    } else {
 		        // We wrote the frame successfully.
-            (m_storage->frames_stored)++;
-            m_storage->have_warned = false;
-            m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
+            (storage_info_hk.frames_stored)++;
+            storage_info_hk.have_warned = false;
+            storage_info_hk.crc = crc32(storage_info_hk.crc, comp_buffer, ll_hk->blk_size);
 		    }
 		} else {
-		  	if (m_storage->have_warned) {
-			  		blast_err("Failed to open file %s for writing.", m_storage->file_name);
-				  	m_storage->have_warned = true;
+		  	if (storage_info_hk.have_warned) {
+			  		blast_err("Failed to open file %s for writing.", storage_info_hk.file_name);
+				  	storage_info_hk.have_warned = true;
 		  	}
 		}
 }

@@ -36,3 +36,4 @@ void store_data_200hz(void);
 void store_data_100hz(void);
 void store_data_5hz(void);
 void store_data_1hz(void);
+void store_data_hk(uint8_t *);
