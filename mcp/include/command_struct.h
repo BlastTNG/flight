@@ -512,6 +512,7 @@ struct CommandDataStruct {
   double cal_xmin_mag[2];
   double cal_ymax_mag[2];
   double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
