@@ -395,13 +395,13 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
 		SET_UINT16(posPotValveAddr, potvalve_data.adc[0]);
-		SET_UINT16(statePotValveAddr, potvalve_data.current);
-		SET_UINT16(velPotValveAddr, CommandData.Cryo.potvalve_vel);
+		SET_UINT8(statePotValveAddr, potvalve_data.current);
+		SET_UINT32(velPotValveAddr, CommandData.Cryo.potvalve_vel);
 		SET_UINT8(openCurPotValveAddr, CommandData.Cryo.potvalve_opencurrent);
 		SET_UINT8(closeCurPotValveAddr, CommandData.Cryo.potvalve_closecurrent);
 		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_closed_threshold);
 		SET_UINT16(lclosedThresholdPotValveAddr, CommandData.Cryo.potvalve_lclosed_threshold);
-		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_open_threshold);
+		SET_UINT16(openThresholdPotValveAddr, CommandData.Cryo.potvalve_open_threshold);
 	}
 
 	for (i = 0; i < NVALVES; i++) {
