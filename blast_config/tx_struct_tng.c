@@ -955,12 +955,12 @@ channel_t channel_list[] =
     { "dig43_das",            SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     { "chopper",              CAL16(1.0, 0.0),          TYPE_UINT16, RATE_100HZ, U_V_V, 0 },
 
-    { "x_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "y_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "z_mag1_n",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "x_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "y_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
-    { "z_mag2_s",                1.0/15000.0,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "x_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "y_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "z_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "x_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "y_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "z_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
 
     { "ifel_earth_gy",        0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
     { "ifroll_earth_gy",      0.1 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_V_DPS, 0 },
