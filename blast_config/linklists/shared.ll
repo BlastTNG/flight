@@ -190,9 +190,12 @@ status_350_LNA
 status_300mk_heater
 status_cal_lamp
 
-x_mag
-y_mag
-z_mag
+x_mag1_n
+y_mag1_n
+z_mag1_n
+x_mag2_s
+y_mag2_s
+z_mag2_s
 
 #mc_rw_vel
 #mc_rw_pos

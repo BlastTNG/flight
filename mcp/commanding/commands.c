@@ -685,6 +685,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[9] = 0;
             break;
+        case mag_reset:
+            CommandData.mag_reset = 1;
+            break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -783,8 +786,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case xsc1_veto:
             CommandData.use_xsc1 = 0;
             break;
-        case mag_veto:
-            CommandData.use_mag = 0;
+        case mag_veto_fc1:
+            CommandData.use_mag1 = 0;
+            break;
+        case mag_veto_fc2:
+            CommandData.use_mag2 = 0;
             break;
         case elenc_veto:
             CommandData.use_elenc = 0;
@@ -805,8 +811,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case xsc1_allow:
             CommandData.use_xsc1 = 1;
             break;
-        case mag_allow:
-            CommandData.use_mag = 1;
+        case mag_allow_fc1:
+            CommandData.use_mag1 = 1;
+            break;
+        case mag_allow_fc2:
+            CommandData.use_mag2 = 1;
             break;
         case elenc_allow:
             CommandData.use_elenc = 1;
@@ -1431,11 +1440,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                        CommandData.slew_veto, CommandData.pointing_mode.nw);
       if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto;
       break;
-    case mag_cal:
-      CommandData.cal_xmax_mag = ivalues[0];
-      CommandData.cal_xmin_mag = ivalues[1];
-      CommandData.cal_ymax_mag = ivalues[2];
-      CommandData.cal_ymin_mag = ivalues[3];
+    case mag_cal_fc1:
+      CommandData.cal_xmax_mag[0] = ivalues[0];
+      CommandData.cal_xmin_mag[0] = ivalues[1];
+      CommandData.cal_ymax_mag[0] = ivalues[2];
+      CommandData.cal_ymin_mag[0] = ivalues[3];
+      break;
+    case mag_cal_fc2:
+      CommandData.cal_xmax_mag[1] = ivalues[0];
+      CommandData.cal_xmin_mag[1] = ivalues[1];
+      CommandData.cal_ymax_mag[1] = ivalues[2];
+      CommandData.cal_ymin_mag[1] = ivalues[3];
       break;
 
     case pss_cal:
@@ -2714,6 +2729,7 @@ void InitCommandData()
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
+    CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].calibrate_adc = 0;
@@ -3018,7 +3034,8 @@ void InitCommandData()
     CommandData.use_pss = 1;
     CommandData.use_xsc0 = 1;
     CommandData.use_xsc1 = 1;
-    CommandData.use_mag = 1;
+    CommandData.use_mag1 = 1;
+    CommandData.use_mag2 = 1;
     CommandData.lat_range = 1;
     CommandData.sucks = 1;
     CommandData.uplink_sched = 0;
@@ -3027,7 +3044,8 @@ void InitCommandData()
     CommandData.enc_el_trim = 0;
     CommandData.enc_motor_el_trim = 0;
     CommandData.null_az_trim = 0;
-    CommandData.mag_az_trim = 0;
+    CommandData.mag_az_trim[0] = 0;
+    CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
 
     CommandData.autotrim_enable = 0;
@@ -3035,10 +3053,15 @@ void InitCommandData()
     CommandData.autotrim_rate = 1.0;
     CommandData.autotrim_time = 60;
 
-    CommandData.cal_xmax_mag = 41587;
-    CommandData.cal_ymax_mag = 41300;
-    CommandData.cal_xmin_mag = 40659;
-    CommandData.cal_ymin_mag = 40650;
+    CommandData.cal_xmax_mag[0] = 41587;
+    CommandData.cal_ymax_mag[0] = 41300;
+    CommandData.cal_xmin_mag[0] = 40659;
+    CommandData.cal_ymin_mag[0] = 40650;
+
+    CommandData.cal_xmax_mag[1] = 41587;
+    CommandData.cal_ymax_mag[1] = 41300;
+    CommandData.cal_xmin_mag[1] = 40659;
+    CommandData.cal_ymin_mag[1] = 40650;
 
     CommandData.cal_off_pss1 = 0.0;
     CommandData.cal_off_pss2 = 2.7997;
