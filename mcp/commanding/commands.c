@@ -1445,12 +1445,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_xmin_mag[0] = ivalues[1];
       CommandData.cal_ymax_mag[0] = ivalues[2];
       CommandData.cal_ymin_mag[0] = ivalues[3];
+      CommandData.cal_mag_align[0] = rvalues[0];
       break;
     case mag_cal_fc2:
       CommandData.cal_xmax_mag[1] = ivalues[0];
       CommandData.cal_xmin_mag[1] = ivalues[1];
       CommandData.cal_ymax_mag[1] = ivalues[2];
       CommandData.cal_ymin_mag[1] = ivalues[3];
+      CommandData.cal_mag_align[1] = rvalues[0];
       break;
 
     case pss_cal:
@@ -3057,11 +3059,13 @@ void InitCommandData()
     CommandData.cal_ymax_mag[0] = 41300;
     CommandData.cal_xmin_mag[0] = 40659;
     CommandData.cal_ymin_mag[0] = 40650;
+    CommandData.cal_mag_align[0] = 0.0;
 
     CommandData.cal_xmax_mag[1] = 41587;
     CommandData.cal_ymax_mag[1] = 41300;
     CommandData.cal_xmin_mag[1] = 40659;
     CommandData.cal_ymin_mag[1] = 40650;
+    CommandData.cal_mag_align[1] = 0.0;
 
     CommandData.cal_off_pss1 = 0.0;
     CommandData.cal_off_pss2 = 2.7997;
