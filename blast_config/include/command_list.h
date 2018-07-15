@@ -144,7 +144,7 @@ enum singleCommand {
 	fc2_on, fc2_off, xsc0_on, xsc0_off,
 	gyros_on, gyros_off, data_transmit_on, data_transmit_off,
 	elmot_on, elmot_off, pivot_on, pivot_off,
-	mag_on, mag_off, rw_on, rw_off,
+	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
 	of_relay_15_on, of_relay_15_off, gps_timing_on, gps_timing_off,
 	if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
