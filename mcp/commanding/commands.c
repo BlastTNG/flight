@@ -1441,18 +1441,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto;
       break;
     case mag_cal_fc1:
-      CommandData.cal_xmax_mag[0] = ivalues[0];
-      CommandData.cal_xmin_mag[0] = ivalues[1];
-      CommandData.cal_ymax_mag[0] = ivalues[2];
-      CommandData.cal_ymin_mag[0] = ivalues[3];
+      CommandData.cal_xmax_mag[0] = rvalues[0];
+      CommandData.cal_xmin_mag[0] = rvalues[1];
+      CommandData.cal_ymax_mag[0] = rvalues[2];
+      CommandData.cal_ymin_mag[0] = rvalues[3];
       CommandData.cal_mag_align[0] = rvalues[0];
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f, align = %f",
+                 CommandData.cal_xmax_mag[0], CommandData.cal_xmin_mag[0],
+                 CommandData.cal_ymax_mag[0], CommandData.cal_ymin_mag[0], CommandData.cal_mag_align[0]);
       break;
     case mag_cal_fc2:
-      CommandData.cal_xmax_mag[1] = ivalues[0];
-      CommandData.cal_xmin_mag[1] = ivalues[1];
-      CommandData.cal_ymax_mag[1] = ivalues[2];
-      CommandData.cal_ymin_mag[1] = ivalues[3];
+      CommandData.cal_xmax_mag[1] = rvalues[0];
+      CommandData.cal_xmin_mag[1] = rvalues[1];
+      CommandData.cal_ymax_mag[1] = rvalues[2];
+      CommandData.cal_ymin_mag[1] = rvalues[3];
       CommandData.cal_mag_align[1] = rvalues[0];
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f",
+                 CommandData.cal_xmax_mag[1], CommandData.cal_xmin_mag[1],
+                 CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
 
     case pss_cal:
