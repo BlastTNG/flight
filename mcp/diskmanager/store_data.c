@@ -80,7 +80,7 @@ roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
 // housekeeping linklist
 #define LL_TMP_NAME "/tmp/TMP"
 linklist_t * ll_hk = NULL;
-
+extern unsigned int ll_rawfile_default_fpf;
 
 int store_disks_ready() {
 	static bool disk_init = false;
@@ -150,14 +150,54 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
     return(0);
 }
 
-void copy_file_to_diskmanager(char * fileout, char * filein) {
+unsigned int copy_file_to_diskmanager(char * fileout, char * filein) {
+    fileentry_t *fp_chlist = file_open(filein, "w+");
+    unsigned int bytes_written = 0;
+    unsigned int bytes_read = 0;
+
+    if (fp_chlist == NULL) {
+        return 0;
+    }
+
+    FILE * fp = fopen(filein, "r");
+    if (fp == NULL) {
+        file_close(fp_chlist);
+        return 0;
+    }
+
+    uint8_t buffer[1024] = {0};
+
+    while (!feof(fp)) {
+        bytes_read = fread(buffer, 1, sizeof(buffer), fp);
+        bytes_written += file_write(fp_chlist, (void *) buffer, bytes_read);
+        memset(buffer, 0, sizeof(buffer));
+    }
+
+    fclose(fp);
+    file_close(fp_chlist);
+
+    return bytes_written;
 }
 
-void store_hk_data(store_file_info_t *m_storage) {
-    uint16_t bytes_written = 0;
+void make_hk_name(char * filename) {
+    // get the date string for file saving
+    time_t now = time(0);
+    char datestring[80] = {0};
+    struct tm tm_t = {0};
+    localtime_r(&now, &tm_t);
+    strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", &tm_t);
+    char tempname[80] = {0};
+    snprintf(tempname, sizeof(tempname), "master_%s", datestring);
+    snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s/%s", archive_dir, tempname, tempname);
+}
 
+void store_hk_data(store_file_info_t *m_storage, uint8_t * sf_buffer) {
+    uint16_t bytes_written = 0;
+    char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
+
+    static int file_index = 0;
+    static uint8_t * comp_buffer = NULL;
     static bool first_time = 1;
-    fileentry_t *fp_chlist;
     if (!store_disks_ready() && !(m_storage->have_warned)) {
         blast_info("store_disks_ready is not ready.");
         m_storage->have_warned = true;
@@ -173,29 +213,73 @@ void store_hk_data(store_file_info_t *m_storage) {
 	      m_storage->rate = RATE_1HZ;
 	      m_storage->nrate = 1;
 	      m_storage->init = true;
+        m_storage->frames_stored = 0;
+        m_storage->fp = NULL;
+
+        // allocate buffer
+        comp_buffer = calloc(1, ll_hk->blk_size);
 
         // open and write the temporary superframe, linklist, and calspecs format files
+        snprintf(archive_dir, sizeof(archive_dir), "rawdir");
+        ll_rawfile_default_fpf = 900;
+
         linklist_rawfile_t * ll_rawfile = open_linklist_rawfile(LL_TMP_NAME, ll_hk);
         channels_write_calspecs(LL_TMP_NAME CALSPECS_FORMAT_EXT, derived_list);
         close_and_free_linklist_rawfile(ll_rawfile);
 
         // copy the format files to the diskmanager
-        char fileout_name[64] = {0};
+        make_hk_name(m_storage->file_name);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, m_storage->file_name);
-        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, m_storage->file_name);
-        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, m_storage->file_name);
-        copy_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
+        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
 
         first_time = 0;
     }
 
-    // open the file if not open aleady
-    if (!(m_storage->fp)) {
-        blast_info("Opening %s", m_storage->file_name);
+    // close the file once enough frames are written
+    if (m_storage->frames_stored >= ll_rawfile_default_fpf) {
+	      bytes_written = file_write(m_storage->fp, (void*) &(m_storage->crc), sizeof(uint32_t));
+        file_close(m_storage->fp);
+        m_storage->fp = NULL;
     }
+
+    // open the file if it hasn't been opened or was closed
+    if (!m_storage->fp) {
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_EXT ".%.2u",
+                                m_storage->file_name, file_index);
+        m_storage->frames_stored = 0;
+        m_storage->crc = BLAST_MAGIC32;
+        m_storage->fp = file_open(fileout_name, "w+");
+        file_index++;
+    }
+
+    // write to the fie if opened
+    if (m_storage->fp) {
+        // compress the linklist
+        compress_linklist(comp_buffer, ll_hk, sf_buffer);
+        bytes_written = file_write(m_storage->fp, (void *) comp_buffer, ll_hk->blk_size);
+		    if (bytes_written < ll_hk->blk_size) {
+            if (m_storage->have_warned) {
+                blast_err("Compressed size is %u bytes but we were only able to write %u bytes",
+                            ll_hk->blk_size, bytes_written);
+                m_storage->have_warned = true;
+            }
+		    } else {
+		        // We wrote the frame successfully.
+            (m_storage->frames_stored)++;
+            m_storage->have_warned = false;
+            m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
+		    }
+		} else {
+		  	if (m_storage->have_warned) {
+			  		blast_err("Failed to open file %s for writing.", m_storage->file_name);
+				  	m_storage->have_warned = true;
+		  	}
+		}
 }
 
 
