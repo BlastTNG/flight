@@ -2727,6 +2727,7 @@ void InitCommandData()
     CommandData.actbus.caddr[0] = 0;
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
+    CommandData.actbus.which_used = 1023; // 2^10-1, so that all ten actuators are enabled
 
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;

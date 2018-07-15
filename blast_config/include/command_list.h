@@ -200,7 +200,7 @@ enum multiCommand {
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal,           pss_cal,          params_test,
   potvalve_set_vel, potvalve_set_current,
-  potvalve_set_open_threshold, potvalve_set_loose_closed_threshold, potvalve_set_closed_threshold,
+  potvalve_set_thresholds,
   actuators_set_used,
   valves_set_vel, valves_set_current,
 

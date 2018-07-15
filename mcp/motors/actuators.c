@@ -411,6 +411,7 @@ static void DoActuators(void)
 {
   int delta;
 
+  blast_info("starting DoActuators");
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
   EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
   EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
@@ -1258,7 +1259,7 @@ void StoreActBus(void)
     static channel_t* focusSfAddr;
 
     static channel_t* statusActbusAddr;
-    static channel_t* usedActbusAddr; 
+    static channel_t* usedActbusAddr;
 
     if (firsttime) {
         firsttime = 0;
@@ -1499,7 +1500,6 @@ void *ActuatorBus(void *param)
 	} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
     	}
-
     }
 
     // I don't think this is necessary, it will always be called in the for loop --PAW 2018/06/20
@@ -1545,7 +1545,6 @@ void *ActuatorBus(void *param)
         }
 
 	which_act_used = CommandData.actbus.which_used;
-
         if (which_act_used & (0x1 << LOCKNUM)) {
             if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
 	        blast_info("calling DoLock"); // DEBUG PAW
@@ -1614,7 +1613,7 @@ void *ActuatorBus(void *param)
 	}
 
 	for (i = 0; i < 3; i++) {
-            if (which_act_used & (0x1 << valve_arr[i])) { 
+            if (which_act_used & (0x1 << valve_arr[i])) {
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {
@@ -1631,6 +1630,7 @@ void *ActuatorBus(void *param)
 	        blast_info("calling DoCryovalves"); // DEBUG PAW
 		DoCryovalves(&bus, actuators_init);
 	}
+
 /*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
 		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
 		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
@@ -1640,8 +1640,8 @@ void *ActuatorBus(void *param)
 	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
 	    all_ok = 0;
 	    actuators_init &= ~(0x1 << POTVALVE_NUM);
-	}*/
-
+	}
+*/
 	usleep(10000);
     }
 }
