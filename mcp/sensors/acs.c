@@ -412,13 +412,13 @@ void read_5hz_acs(void)
 
   /// TODO(seth): Add PSS3-8 read functions
 
-  ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
-  ACSData.mag_x[0] = GET_INT16(mag_x_n_addr);
-  ACSData.mag_y[0] = GET_INT16(mag_y_n_addr);
-  ACSData.mag_z[0] = GET_INT16(mag_z_n_addr);
-  ACSData.mag_x[1] = GET_INT16(mag_x_s_addr);
-  ACSData.mag_y[1] = GET_INT16(mag_y_s_addr);
-  ACSData.mag_z[1] = GET_INT16(mag_z_s_addr);
+  GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
+  GET_VALUE(mag_x_n_addr, ACSData.mag_x[0]);
+  GET_VALUE(mag_y_n_addr, ACSData.mag_y[0]);
+  GET_VALUE(mag_z_n_addr, ACSData.mag_z[0]);
+  GET_VALUE(mag_x_s_addr, ACSData.mag_x[1]);
+  GET_VALUE(mag_y_s_addr, ACSData.mag_y[1]);
+  GET_VALUE(mag_z_s_addr, ACSData.mag_z[1]);
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores
