@@ -45,6 +45,7 @@ typedef enum {
 } move_type_t;
 
 static struct potvalve_struct {
+	// int init;
 	int addr;
 	int pos;
 	int adc[4];
@@ -197,6 +198,7 @@ void DoPotValve(struct ezbus* bus)
 		// if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
 		// 	bputs(info, "Error initializing valve position");
 		firsttime = 0;
+		// potvalve_data.init = 1;
 	}
 
 	// blast_info("past firsttime loop"); // DEBUG PAW
@@ -334,7 +336,7 @@ int SetValveState(int tight_flag)
 
 	if ((potvalve_data.adc[0] <= CommandData.Cryo.potvalve_closed_threshold) && (tight_flag == 1)) {
 		potvalve_data.current = closed;
-	} else if (potvalve_data.adc[0] <= CommandData.Cryo.potvalve_loose_closed_threshold) {
+	} else if (potvalve_data.adc[0] <= CommandData.Cryo.potvalve_lclosed_threshold) {
 		potvalve_data.current = loose_closed;
 	} else if (potvalve_data.adc[0] >= CommandData.Cryo.potvalve_open_threshold) {
 		potvalve_data.current = opened;
@@ -363,6 +365,9 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* velPotValveAddr;
 	static channel_t* openCurPotValveAddr;
 	static channel_t* closeCurPotValveAddr;
+	static channel_t* closedThresholdPotValveAddr;
+	static channel_t* lclosedThresholdPotValveAddr;
+	static channel_t* openThresholdPotValveAddr;
 
 	static channel_t* limsPumpValveAddr;
 	static channel_t* velValveAddr;
@@ -377,6 +382,9 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		velPotValveAddr = channels_find_by_name("potvalve_vel");
 		openCurPotValveAddr = channels_find_by_name("potvalve_I_open");
 		closeCurPotValveAddr = channels_find_by_name("potvalve_I_close");
+		closedThresholdPotValveAddr = channels_find_by_name("potvalve_closed_thresh");
+	        lclosedThresholdPotValveAddr = channels_find_by_name("potvalve_lclosed_thresh");
+	        openThresholdPotValveAddr = channels_find_by_name("potvalve_open_thresh");
 
 		limsPumpValveAddr = channels_find_by_name("pumpvalve_lims");
 		velValveAddr = channels_find_by_name("valve_vel");
@@ -391,6 +399,9 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		SET_UINT16(velPotValveAddr, CommandData.Cryo.potvalve_vel);
 		SET_UINT8(openCurPotValveAddr, CommandData.Cryo.potvalve_opencurrent);
 		SET_UINT8(closeCurPotValveAddr, CommandData.Cryo.potvalve_closecurrent);
+		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_closed_threshold);
+		SET_UINT16(lclosedThresholdPotValveAddr, CommandData.Cryo.potvalve_lclosed_threshold);
+		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_open_threshold);
 	}
 
 	for (i = 0; i < NVALVES; i++) {

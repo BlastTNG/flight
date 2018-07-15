@@ -60,7 +60,7 @@ static balance_state_t balance_state;
 // Decides when the balance system should be turned on and off.
 void ControlBalance(void)
 {
-	double i_el = 0.0;
+    double i_el = 0.0;
     static int firsttime = 1;
     int i_motors = GETREADINDEX(motor_index);
 
@@ -205,7 +205,7 @@ void DoBalance(struct ezbus* bus)
 // TODO(laura): Add checking to make sure that the motor commands actually went through
 // updating the status variables.
 
-        // get (relative) position on the rail and read limit switches
+    // get (relative) position on the rail and read limit switches
     // NOTE(laura 2018-07-13): This next line was commented out.  I have no idea why.
     EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);

@@ -1677,7 +1677,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case potvalve_set_thresholds:
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
-      CommandData.Cryo.potvalve_loose_closed_threshold = ivalues[1];
+      CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
       CommandData.Cryo.potvalve_open_threshold = ivalues[2];
       break;
     case valves_set_vel:
@@ -2807,9 +2807,9 @@ void InitCommandData()
     CommandData.Cryo.potvalve_opencurrent = 25;
     CommandData.Cryo.potvalve_closecurrent = 20;
     CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_open_threshold = 10000;
-    CommandData.Cryo.potvalve_loose_closed_threshold = 6500;
     CommandData.Cryo.potvalve_closed_threshold = 4200;
+    CommandData.Cryo.potvalve_lclosed_threshold = 6500;
+    CommandData.Cryo.potvalve_open_threshold = 10000;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
@@ -3105,9 +3105,6 @@ void InitCommandData()
         // For saving short timestream
 	CommandData.roach_params[i].num_sec = 1.0;
     }
-    CommandData.balance.i_el_on_bal = 2.5;
-    CommandData.balance.i_el_off_bal = 1.0;
-    CommandData.balance.mode = bal_rest;
 
     CommandData.rox_bias.amp = 56;
     CommandData.rox_bias.status = 0;
@@ -3166,6 +3163,10 @@ void InitCommandData()
     CommandData.balance.acc = 4;
     CommandData.balance.move_i = 20;
     CommandData.balance.hold_i = 0;
+
+    CommandData.balance.i_el_on_bal = 2.5;
+    CommandData.balance.i_el_off_bal = 1.0;
+    CommandData.balance.mode = bal_rest;
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
