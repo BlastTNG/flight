@@ -271,6 +271,9 @@ typedef struct {
   int potvalve_on;
   valve_state_t potvalve_goal;
   uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
+  uint16_t potvalve_open_threshold;
+  uint16_t potvalve_loose_closed_threshold;
+  uint16_t potvalve_closed_threshold;
   valve_state_t valve_goals[2];
   uint16_t valve_vel, valve_current;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
@@ -540,6 +543,7 @@ struct CommandDataStruct {
   struct {
     int off;
     int force_repoll;
+    int which_used;
 
     /* arbitrary command */
     int cindex;

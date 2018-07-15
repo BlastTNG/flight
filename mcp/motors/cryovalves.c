@@ -38,7 +38,7 @@
 #define POTVALVE_OPEN 10000
 #define POTVALVE_CLOSED 4200
 #define POTVALVE_LOOSE_CLOSED 6500
-#define NVALVES 2
+#define NVALVES 2 // pump valve and fill valve, don't count pot valve here
 
 typedef enum {
 	no_move = 0, opening, closing, tighten
@@ -63,19 +63,24 @@ static struct valve_struct {
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
+	blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
 	int valve_addr[NVALVES] = {PUMPVALVE_NUM, FILLVALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
+		blast_info("calling DoPotValve"); // DEBUG PAW
 		DoPotValve(bus);
 	}
 
 	for (i = 0; i < NVALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
+		blast_info("calling DoValves"); // DEBUG PAW
 			DoValves(bus, i, valve_addr[i]);
 		}
 	}
+	blast_info("calling WriteValves"); // DEBUG PAW
 	WriteValves(actuators_init, valve_addr);
+	blast_info("called WriteValves"); // DEBUG PAW
 }
 
 void DoValves(struct ezbus* bus, int index, int addr)
@@ -157,20 +162,15 @@ void DoPotValve(struct ezbus* bus)
 	static int firsttime = 1;
 	static int pot_init = 0;
 	static int tight_flag;
-	int firstmove;
+	valve_state_t prev_goal;
+	int new_goal;
+	// int firstmove;
 	int newstate;
 	int do_move;
 	char buffer[EZ_BUS_BUF_LEN];
 
-	if (CommandData.Cryo.potvalve_goal == opened) {
-		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
-	} else if (CommandData.Cryo.potvalve_goal == closed) {
-		if ((potvalve_data.current == opened) || (potvalve_data.current == intermed)) {
-			potvalve_data.goal = loose_closed;
-		} else {
-			potvalve_data.goal = closed;
-		}
-	}
+	blast_info("Starting DoPotValve"); // DEBUG PAW
+
 	if (firsttime) {
 		blast_info("IN FIRSTTIME BLOCK"); // DEBUG PCA
 		potvalve_data.addr = GetActAddr(POTVALVE_NUM);
@@ -178,7 +178,8 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
-		EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
+		// I don't think there is any point to this PAW 2018/06/20
+		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
 
 
@@ -188,73 +189,117 @@ void DoPotValve(struct ezbus* bus)
 		potvalve_data.goal = 0;
 		potvalve_data.potvalve_move = 0;
 		newstate = 1;
-		firstmove = 1;
+		// firstmove = 1;
 		tight_flag = 1;
 
-		if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
-			bputs(info, "Error initializing valve position");
+		// this command always returns an error I think because it is supposed to be
+		// sent only after an A command (or other move?) also does nothing
+		// if(EZBus_Comm(bus, potvalve_data.addr, "z0R") != EZ_ERR_OK)
+		// 	bputs(info, "Error initializing valve position");
 		firsttime = 0;
 	}
 
-	// blast_info("Pot Valve address is %c", potvalve_data.addr); // DEBUG PAW
+	blast_info("past firsttime loop"); // DEBUG PAW
+	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
+
+	prev_goal = potvalve_data.goal;
+
+	if (CommandData.Cryo.potvalve_goal == opened) {
+		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
+		blast_info("set goal open"); // DEBUG PAW
+	} else if (CommandData.Cryo.potvalve_goal == closed) {
+		if ((potvalve_data.current == opened) || (potvalve_data.current == intermed)) {
+			potvalve_data.goal = loose_closed;
+			blast_info("set goal loose_closed"); // DEBUG PAW
+		} else {
+			potvalve_data.goal = closed;
+			blast_info("set goal closed"); // DEBUG PAW
+		}
+	}
 
 	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
 
+	blast_info("about to call GetPotValvePos"); // DEBUG PAW
 	GetPotValvePos(*bus);
+	blast_info("about to call SetValveState, newstate = %d", newstate); // DEBUG PAW
 	newstate = SetValveState(tight_flag);
+	blast_info("called SetValveState, newstate = %d", newstate); // DEBUG PAW
 
 	if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
 
 	if (potvalve_data.current == potvalve_data.goal) {
 		potvalve_data.potvalve_move = no_move;
 		potvalve_data.moving = 0;
+		blast_info("current = goal, so no move"); // DEBUG PAW
 
 		if (potvalve_data.current == loose_closed) {
 			blast_info("RESET GOAL CLOSED"); // DEBUG PCA
 			potvalve_data.goal = closed;
 			potvalve_data.potvalve_move = tighten;
+			blast_info("goal was loose_closed, now is closed"); // DEBUG PAW
 		}
 	} else {
 		if (potvalve_data.moving != 1) {
+			blast_info("not currently moving (according to pot valve struct)"); // DEBUG PAW
 			if (potvalve_data.current != opened && potvalve_data.goal == opened) {
 				potvalve_data.potvalve_move = opening;
+				blast_info("move type set to opening"); // DEBUG PAW
 			} else if (potvalve_data.current != closed && (potvalve_data.goal == closed || potvalve_data.goal == loose_closed)) {
 				potvalve_data.potvalve_move = closing;
+				blast_info("move type set to closing"); // DEBUG PAW
 			}
 		}
 	}
 
-	do_move = (newstate || firstmove);
-	// if (firstmove) blast_info("Pot Valve firstmove is true"); // DEBUG PAW
-	firstmove = 0;
+	new_goal = !(prev_goal == potvalve_data.goal);
+	blast_info("prev_goal = %d, current goal = %d", prev_goal, potvalve_data.goal); // DEBUG PAW
+	blast_info("compared previous and current goal, new_goal=%d", new_goal); // DEBUG PAW
+
+	do_move = (newstate || new_goal);
+	blast_info("Pot Valve do_move = %d", do_move); // DEBUG PAW
+	// firstmove = 0;
+	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	if(do_move) {
 	switch(potvalve_data.potvalve_move) {
 		case(no_move):
+			blast_info("in case no_move"); // DEBUG PAW
 			EZBus_Stop(bus, potvalve_data.addr);
+			blast_info("called EZBus_Stop"); // DEBUG PAW
 			potvalve_data.moving = 0;
 			break;
 		case(opening):
+			blast_info("in case opening"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_opencurrent);
+			blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MAX) != EZ_ERR_OK)
                         	bputs(info, "Error opening pot valve");
+			blast_info("called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			tight_flag = 0;
 			break;
 		case(closing):
+			blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
+			blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
 				bputs(info, "Error closing pot valve");
+			blast_info("called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			break;
 		case(tighten):
+			blast_info("in case tighten"); // DEBUG PAW
 			if(potvalve_data.moving == 0) { // if we're just starting to tighten
-				blast_info("BEGIN TIGHTEN"); // DEBUG PCA
+				blast_info("after checking that we aren't moving yet"); // DEBUG PCA
 				blast_info("tighten current: %d; goal: %d", potvalve_data.current, potvalve_data.goal);
 				EZBus_Stop(bus, potvalve_data.addr); // make sure we're actually stopped
+				blast_info("called EZBus_Stop"); // DEBUG PAW
 				EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
-				if(EZBus_StrComm(bus, potvalve_data.addr, sizeof(buffer), buffer, "D1000000R") != EZ_ERR_OK) // close by ~.5 turn
+				blast_info("called EZBus_SetIMove"); // DEBUG PAW
+				// usleep(500000);
+				if(EZBus_RelMove(bus, potvalve_data.addr, -1000000) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
+				blast_info("sent D1e6R to pot valve"); // DEBUG PAW
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
@@ -278,30 +323,34 @@ void GetPotValvePos(struct ezbus bus)
 	EZBus_Comm(&bus, potvalve_data.addr, "?aa");
 	sscanf(bus.buffer, "%i,%i,%i,%i", &potvalve_data.adc[0], &potvalve_data.adc[1],
 		&potvalve_data.adc[2], &potvalve_data.adc[3]);
-	// blast_info("Pot Valve encoder position is %i", potvalve_data.adc[0]); // DEBUG PAW
+	blast_info("Pot Valve encoder position is %i", potvalve_data.adc[0]); // DEBUG PAW
 }
 
 
 int SetValveState(int tight_flag)
 {
 	valve_state_t prev = potvalve_data.current;
+	int retval;
 
-	if ((potvalve_data.adc[0] <= POTVALVE_CLOSED) && (tight_flag == 1)) {
+	if ((potvalve_data.adc[0] <= CommandData.Cryo.potvalve_closed_threshold) && (tight_flag == 1)) {
 		potvalve_data.current = closed;
-	} else if (potvalve_data.adc[0] <= POTVALVE_LOOSE_CLOSED) {
+	} else if (potvalve_data.adc[0] <= CommandData.Cryo.potvalve_loose_closed_threshold) {
 		potvalve_data.current = loose_closed;
-	} else if (potvalve_data.adc[0] >= POTVALVE_OPEN) {
+	} else if (potvalve_data.adc[0] >= CommandData.Cryo.potvalve_open_threshold) {
 		potvalve_data.current = opened;
-	/* } else if (potvalve_data.adc[0] <= POTVALVE_LOOSE_CLOSED) {
-		potvalve_data.current = loose_closed;
-	} else if (potvalve_data.adc[0] <= POTVALVE_CLOSED) {
-		// && tight_flag == 1) { // only declare it closed if we went through tightening
-		potvalve_data.current = closed;*/
 	} else {
 		potvalve_data.current = intermed;
 	}
 
-	return (potvalve_data.current != prev);
+	retval = (potvalve_data.current != prev);
+
+	// if current state is intermed we don't want to set newstate because we don't need to send a new command
+	// unless the goal is also new
+	// Also don't send a command if we just un-tightened (started to open) otherwise we send open twice
+	// if (potvalve_data.current == intermed || (prev == closed && potvalve_data.current == loose_closed))  {
+	// 	retval = 0;
+	// }
+	return retval;
 }
 
 void WriteValves(unsigned int actuators_init, int* valve_addr)
