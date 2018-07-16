@@ -77,6 +77,12 @@ void data_sharing_init(linklist_t ** ll_array) {
   shared_ll = temp_ll;
 }
 
+void share_data_recv(void * arg) {
+  while (1) {
+  }
+
+}
+
 void share_superframe(uint8_t * superframe) {
   static int write_prevstatus_counter = 0;
   int retval;
