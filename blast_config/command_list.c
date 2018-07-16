@@ -183,6 +183,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(charge_on), "turn on the charge controller", GR_POWER},
   {COMMAND(charge_cycle), "power cycle the charge controller", GR_POWER | CONFIRM},
 
+  {COMMAND(mag_reset), "command a reset of the magnetometer", GRPOS_VETO | GRPOS_TRIM},
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_MOTOR},
@@ -204,8 +205,10 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(xsc0_allow), "un-veto star camera 0", GR_VETO},
   {COMMAND(xsc1_veto), "veto star camera 1", GR_VETO},
   {COMMAND(xsc1_allow), "un-veto star camera 1", GR_VETO},
-  {COMMAND(mag_veto), "veto magnotometer", GR_VETO},
-  {COMMAND(mag_allow), "un-veto magnetometer", GR_VETO},
+  {COMMAND(mag_veto_fc1), "veto magnotometer attached to fc1", GR_VETO},
+  {COMMAND(mag_allow_fc1), "un-veto magnetometer attached to fc1", GR_VETO},
+  {COMMAND(mag_veto_fc2), "veto magnotometer attached to fc2", GR_VETO},
+  {COMMAND(mag_allow_fc2), "un-veto magnetometer attached to fc2", GR_VETO},
   {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
   {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
@@ -341,12 +344,22 @@ struct mcom mcommands[plugh + 2] = {
       {"Elevation (deg)", 0, 90, 'f', "EL"}
     }
   },
-  {COMMAND(mag_cal), "set magnetometer calibration", GR_TRIM, 4,
+  {COMMAND(mag_cal_fc1), "set fc1 magnetometer calibration", GR_TRIM, 5,
     {
-      {"Max X", 0, 65535, 'i', "cal_xmax_mag"},
-      {"Min X", 0, 65535, 'i', "cal_xmin_mag"},
-      {"Max Y", 0, 65535, 'i', "cal_ymax_mag"},
-      {"Min Y", 0, 65535, 'i', "cal_ymin_mag"}
+      {"Max X", -20, 20, 'd', "cal_xmax_mag1"},
+      {"Min X", -20, 20, 'd', "cal_xmin_mag1"},
+      {"Max Y", -20, 20, 'd', "cal_ymax_mag1"},
+      {"Min Y", -20, 20, 'd', "cal_ymin_mag1"},
+      {"Mag Angle Offset", -180.0, 180.0, 'f', "cal_alignment_mag1"}
+    }
+  }, // 10 10 10.5 10.34
+  {COMMAND(mag_cal_fc2), "set fc2 magnetometer calibration", GR_TRIM, 5,
+    {
+      {"Max X", -20, 20, 'd', "cal_xmax_mag2"},
+      {"Min X", -20, 20, 'd', "cal_xmin_mag2"},
+      {"Max Y", -20, 20, 'd', "cal_ymax_mag2"},
+      {"Min Y", -20, 20, 'd', "cal_ymin_mag2"},
+      {"Mag Angle Offset", -180.0, 180.0, 'f', "cal_alignment_mag2"}
     }
   }, // 10 10 10.5 10.34
   {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
