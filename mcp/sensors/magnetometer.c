@@ -104,8 +104,6 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
 
     if (firsttime) {
         mag_index = SouthIAm;
-    }
-    if (!mag_x_channel) {
         if (mag_index == 0) { // We are North (fc1)
             mag_x_channel = channels_find_by_name("x_mag1_n");
             mag_y_channel = channels_find_by_name("y_mag1_n");
