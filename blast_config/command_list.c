@@ -894,10 +894,9 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(df_calc), "Force calculation of I,Q gradient, Delta F", GR_ROACH, 2,
+  {COMMAND(calc_df), "Calculate df for each channel", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"1 = Calc new ref grads & ref delta_f, 2 = calculate comparison delta_f", 1, 2, 'i', "NONE"}
     }
   },
   {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,
@@ -944,12 +943,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
     }
   },
-  {COMMAND(roach_state), "Change Roach state", GR_ROACH, 3,
+  {COMMAND(change_state), "Change Roach state", GR_ROACH, 3,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"ROACH status", 0, 11, 'i', "NONE"},
-    {"ROACH desired status", 0, 11, 'i', "NONE"},
+    {"ROACH new state", 0, 11, 'i', "NONE"},
+    {"ROACH desired state", 0, 11, 'i', "NONE"},
   }
+  },
+  {COMMAND(get_state), "Print current Roach state to MCP log", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
   },
   {COMMAND(calc_phase_centers), "Calculate channel phase centers from TARG sweep", GR_ROACH, 1,
     {
@@ -1001,6 +1005,21 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(load_freqs), "loads a list of tone freqs from file", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(new_ref_params), "calculates and saves ref params from last (or reference) target sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(retune), "Calculate df for each channel", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(check_retune), "Calculate df for each channel", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   /***************************************/

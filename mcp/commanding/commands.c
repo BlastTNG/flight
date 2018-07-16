@@ -1786,7 +1786,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case vna_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 2)) {
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_STREAMING;
-          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].change_roach_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
@@ -1805,20 +1805,29 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case targ_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_ARRAY_FREQS;
-          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].change_roach_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
     case reset_roach:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].new_state = ROACH_STATUS_BOOT;
-          CommandData.roach[ivalues[0]-1].change_state = 1;
+          CommandData.roach[ivalues[0]-1].change_roach_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
-    case df_calc:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 2)) {
-          CommandData.roach[ivalues[0]-1].df_calc = ivalues[1];
+    case calc_df:
+      if ((ivalues[0] > 0)) {
+          CommandData.roach[ivalues[0]-1].do_df_calc = 1;
+      }
+      break;
+    case check_retune:
+      if ((ivalues[0] > 0)) {
+          CommandData.roach[ivalues[0]-1].do_check_retune = 1;
+      }
+    case retune:
+      if ((ivalues[0] > 0)) {
+          CommandData.roach[ivalues[0]-1].do_retune = 1;
       }
       break;
     case auto_retune:
@@ -1864,12 +1873,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].test_tone = 1;
       }
       break;
-    case roach_state:
+    case change_state:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 11)
                            && ((ivalues[2] >= 0) && ivalues[2] <= 11)) {
           CommandData.roach[ivalues[0]-1].roach_new_state = ivalues[1];
           CommandData.roach[ivalues[0]-1].roach_desired_state = ivalues[2];
-          CommandData.roach[ivalues[0]-1].roach_state = 1;
+          CommandData.roach[ivalues[0]-1].change_roach_state = 1;
+      }
+      break;
+    case get_state:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].get_roach_state = 1;
       }
       break;
     case calc_phase_centers:
@@ -1924,6 +1938,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_master_chop = 1;
+      }
+      break;
+    case new_ref_params:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].calc_ref_params = 1;
       }
       break;
       /*************************************
@@ -2520,12 +2539,13 @@ void InitCommandData()
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].calibrate_adc = 0;
         CommandData.roach[i].set_attens = 0;
-        CommandData.roach[i].df_calc = 0; // Sets reference gradients
+        CommandData.roach[i].do_df_calc = 0;
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].do_cal_sweeps = 0;
         CommandData.roach[i].new_state = 0;
-        CommandData.roach[i].change_state = 0;
+        CommandData.roach[i].change_roach_state = 0;
+        CommandData.roach[i].get_roach_state = 0;
         CommandData.roach[i].roach_state = 0;
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
@@ -2541,6 +2561,8 @@ void InitCommandData()
         CommandData.roach[i].change_tone_amps = 0;
         CommandData.roach[i].do_master_chop = 0;
         CommandData.roach[i].load_new_freqs = 0;
+        CommandData.roach[i].calc_ref_params = 0;
+        CommandData.roach[i].do_retune = 0;
     }
 
     CommandData.Bias.biasRamp = 0;

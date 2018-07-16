@@ -324,8 +324,9 @@ typedef struct udp_roach
 typedef struct roach
 {
     unsigned int new_state;
-    unsigned int change_state;
-    unsigned int df_calc;
+    unsigned int change_roach_state;
+    unsigned int get_roach_state;
+    unsigned int do_df_calc;
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
@@ -349,6 +350,9 @@ typedef struct roach
     unsigned int change_tone_amps;
     unsigned int do_master_chop;
     unsigned int load_new_freqs;
+    unsigned int calc_ref_params;
+    unsigned int do_check_retune;
+    unsigned int do_retune;
 } roach_status_t;
 
 typedef struct roach_params

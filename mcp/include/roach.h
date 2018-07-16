@@ -68,22 +68,25 @@ typedef struct {
 
 typedef enum {
     ROACH_STATUS_BOOT = 0,
-    ROACH_STATUS_CONNECTED,
-    ROACH_STATUS_PROGRAMMED,
-    ROACH_STATUS_CONFIGURED,
-    ROACH_STATUS_CALIBRATED,
-    ROACH_STATUS_TONE,
-    ROACH_STATUS_STREAMING,
-    ROACH_STATUS_VNA,
-    ROACH_STATUS_ARRAY_FREQS,
-    ROACH_STATUS_TARG,
-    ROACH_STATUS_CAL_AMPS,
-    ROACH_STATUS_ACQUIRING,
+    ROACH_STATUS_CONNECTED = 1,
+    ROACH_STATUS_PROGRAMMED = 2,
+    ROACH_STATUS_CONFIGURED = 3,
+    ROACH_STATUS_CALIBRATED = 4,
+    ROACH_STATUS_GBE = 5,
+    ROACH_STATUS_TONES = 6,
+    ROACH_STATUS_STREAMING = 7,
+    ROACH_STATUS_ADC_CAL = 8,
+    ROACH_STATUS_VNA = 9,
+    ROACH_STATUS_ARRAY_FREQS = 10,
+    ROACH_STATUS_TARG = 11,
+    ROACH_STATUS_CAL_AMPS = 12,
+    ROACH_STATUS_ACQUIRING = 13,
 } e_roach_status;
 
 typedef enum {
     PI_STATUS_BOOT = 0,
-    PI_STATUS_INIT,
+    PI_STATUS_INIT = 1,
+    PI_STATUS_OK = 2,
 } e_pi_status;
 
 typedef enum {
@@ -154,20 +157,23 @@ typedef struct roach_state {
     double p_min_freq;
     double n_max_freq;
     double n_min_freq;
-    // VNA/TARG sweep file paths
+    // VNA/TARG/CAL sweep file paths
+    char *sweep_root_path;
     char *targ_path_root;
     char *last_vna_path;
     char *last_targ_path;
     char *channels_path;
+
     // For detector retune decision
+    int nflag_thresh; // num channels which need to be out of range for retune
     int has_ref; /* If 1, ref grads exist */
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
-    double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
-    double ref_df[MAX_CHANNELS_PER_ROACH]; // The reference delta f values
-    double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
-    double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
+    double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
+    double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
+    double *df;
+
     char *last_cal_path;
     // path to the last master chop directory
     char *last_chop_path;

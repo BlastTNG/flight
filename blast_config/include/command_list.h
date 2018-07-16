@@ -242,7 +242,7 @@ enum multiCommand {
   vna_sweep,
   targ_sweep,
   reset_roach,
-  df_calc,
+  calc_df,
   opt_tones,
   auto_retune,
   end_sweep,
@@ -250,7 +250,8 @@ enum multiCommand {
   load_new_vna_amps,
   load_new_targ_amps,
   cal_adc,
-  roach_state,
+  change_state,
+  get_state,
   set_attens,
   test_tone,
   find_kids,
@@ -270,8 +271,11 @@ enum multiCommand {
   chop_template,
   load_freqs,
   all_roach_ts,
-  plugh,                // plugh should be at the end of the list
-  sched_packet = 0xff   // not really a command, more of a placeholder
+  new_ref_params,
+  check_retune,
+  retune,
+  sched_packet = 0xff,   // not really a command, more of a placeholder
+  plugh    // plugh should be at the end of the list
 };
 
 #define N_SCOMMANDS (xyzzy + 1)
