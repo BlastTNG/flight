@@ -300,7 +300,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     *mag_az = raw_mag_az + dec + CommandData.cal_mag_align[mag_index];
     *m_el = raw_mag_pitch + dip;
 
-    if (((mag_count % 2000) == 0) || ((mag_count % 2000) == 1)) {
+    if (((mag_count % 20000) == 0) || ((mag_count % 20000) == 1)) {
         blast_info("cal_xmin_mag = %f, cal_xmax_mag = %f, cal_ymin_mag = %f, cal_ymax_mag = %f",
                    CommandData.cal_xmin_mag[mag_index], CommandData.cal_xmax_mag[mag_index],
                    CommandData.cal_ymin_mag[mag_index], CommandData.cal_ymax_mag[mag_index]);

@@ -87,7 +87,7 @@ static mag_state_cmd_t state_cmd[MAG_END] = {
 		[MAG_WE_BIN] = { "*99WE", "OK" },
 		[MAG_BIN] = { "*99A", "ASCII ON" },
 		[MAG_WE_RATE] = { "*99WE", "OK" },
-		[MAG_RATE] = { "*99R=100", "OK" },
+		[MAG_RATE] = { "*99R=20", "OK" },
 		[MAG_CONT] = { "*99C" },
 };
 
@@ -119,17 +119,18 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
 
     // TODO(seth): Mag data should should be filtered (à la gyroscopes) and read by ACS.c
 //    ACSData.mag_x = ((double)(int16_t)be16toh(m_magx))/15000.0;
-    SET_SCALED_VALUE(mag_x_channel, (double)(int16_t)be16toh(m_magx)/15000.0);
+    SET_SCALED_VALUE(mag_x_channel, ((double)m_magx)/15000.0);
 //    ACSData.mag_y = ((double)(int16_t)be16toh(m_magy))/15000.0;
-    SET_SCALED_VALUE(mag_y_channel, (double)(int16_t)be16toh(m_magy)/15000.0);
+    SET_SCALED_VALUE(mag_y_channel, ((double)m_magy)/15000.0);
 //    ACSData.mag_z = ((double)(int16_t)be16toh(m_magz))/15000.0;
-    SET_SCALED_VALUE(mag_z_channel, (double)(int16_t)be16toh(m_magz)/15000.0);
+    SET_SCALED_VALUE(mag_z_channel, ((double)m_magz)/15000.0);
 }
 
 static void mag_get_data(char *mag_buf, size_t len_mag_buf)
 {
     static int have_warned = 0;
     static int firsttime = 1;
+    static int counter = 0;
     char x2[2], x3[2], x4[2], x5[2];
     char y2[2], y3[2], y4[2], y5[2];
     char z2[2], z3[2], z4[2], z5[2];
@@ -140,8 +141,8 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
 
     if (len_mag_buf != 28) {
         if (!have_warned) {
-            blast_warn("We were only passed %d bytes of data instead of 28.", len_mag_buf);
-            have_warned = 0;
+            blast_warn("We were only passed %d bytes of data instead of 28.", (uint16_t)len_mag_buf);
+            have_warned = 1;
         }
         return;
     }
@@ -160,6 +161,7 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
     z3[0]=mag_buf[22]; // number
     z4[0]=mag_buf[23]; // number
     z5[0]=mag_buf[24]; // number
+    mag_buf[25]='\0';
     int x = 1000*(atoi(x2))+100*(atoi(x3))+10*(atoi(x4))+atoi(x5);
     int y = 1000*(atoi(y2))+100*(atoi(y3))+10*(atoi(y4))+atoi(y5);
     int z = 1000*(atoi(z2))+100*(atoi(z3))+10*(atoi(z4))+atoi(z5);
@@ -167,6 +169,11 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
     if (ysn == '-') y *= -1;
     if (zsn == '-') z *= -1;
     mag_set_framedata(x, y, z);
+    if ((counter % 200) == 0) {
+        blast_info("read %s", mag_buf);
+        blast_info("x = %f, y = %f, z = %f", (double)x/15000.0, (double)y/15000.0, (double)z/15000.0);
+    }
+    counter++;
 }
 
 
@@ -266,7 +273,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
             return;
         }
 
-        mag_get_data((char*)buf, sizeof(buf));
+        mag_get_data((char*)ph_buf_mem(buf), ph_buf_len(buf));
         ph_buf_delref(buf);
         mag_state.error_warned = 0;
     }
