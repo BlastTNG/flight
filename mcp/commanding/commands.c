@@ -3061,16 +3061,16 @@ void InitCommandData()
     CommandData.autotrim_rate = 1.0;
     CommandData.autotrim_time = 60;
 
-    CommandData.cal_xmax_mag[0] = 41587;
-    CommandData.cal_ymax_mag[0] = 41300;
-    CommandData.cal_xmin_mag[0] = 40659;
-    CommandData.cal_ymin_mag[0] = 40650;
+    CommandData.cal_xmax_mag[0] = 0.0115;
+    CommandData.cal_ymax_mag[0] = -0.3527;
+    CommandData.cal_xmin_mag[0] = 0.3835;
+    CommandData.cal_ymin_mag[0] = 0.2059;
     CommandData.cal_mag_align[0] = 0.0;
 
-    CommandData.cal_xmax_mag[1] = 41587;
-    CommandData.cal_ymax_mag[1] = 41300;
-    CommandData.cal_xmin_mag[1] = 40659;
-    CommandData.cal_ymin_mag[1] = 40650;
+    CommandData.cal_xmax_mag[1] = 0.0050;
+    CommandData.cal_ymax_mag[1] = -0.337;
+    CommandData.cal_xmin_mag[1] = 0.362;
+    CommandData.cal_ymin_mag[1] = 0.1898;
     CommandData.cal_mag_align[1] = 0.0;
 
     CommandData.cal_off_pss1 = 0.0;
