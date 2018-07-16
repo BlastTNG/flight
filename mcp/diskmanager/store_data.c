@@ -151,17 +151,19 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
     return(0);
 }
 
-unsigned int copy_file_to_diskmanager(char * fileout, char * filein) {
-    fileentry_t *fp_chlist = file_open(filein, "w+");
+unsigned int move_file_to_diskmanager(char * fileout, char * filein) {
+    fileentry_t *fp_chlist = file_open(fileout, "w+");
     unsigned int bytes_written = 0;
     unsigned int bytes_read = 0;
 
     if (fp_chlist == NULL) {
+        blast_err("Could not open %s", fileout);
         return 0;
     }
 
     FILE * fp = fopen(filein, "r");
     if (fp == NULL) {
+        blast_err("Could not open %s", filein);
         file_close(fp_chlist);
         return 0;
     }
@@ -177,6 +179,9 @@ unsigned int copy_file_to_diskmanager(char * fileout, char * filein) {
     fclose(fp);
     file_close(fp_chlist);
 
+    // unlink the file
+    unlink(filein);
+
     return bytes_written;
 }
 
@@ -189,11 +194,11 @@ void make_hk_name(char * filename) {
     strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", &tm_t);
     char tempname[80] = {0};
     snprintf(tempname, sizeof(tempname), "master_%s", datestring);
-    snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s/%s", archive_dir, tempname, tempname);
+    snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s", archive_dir, tempname);
 }
 
 void store_data_hk(uint8_t * sf_buffer) {
-    uint16_t bytes_written = 0;
+    unsigned int bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
 
     static int file_index = 0;
@@ -231,14 +236,15 @@ void store_data_hk(uint8_t * sf_buffer) {
         // copy the format files to the diskmanager
         make_hk_name(storage_info_hk.file_name);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, storage_info_hk.file_name);
-        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, storage_info_hk.file_name);
-        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, storage_info_hk.file_name);
-        bytes_written = copy_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
 
         first_time = 0;
+        printf("We are done initializing HK for the first time\n");
     }
 
     // close the file once enough frames are written
@@ -262,7 +268,9 @@ void store_data_hk(uint8_t * sf_buffer) {
     if (storage_info_hk.fp) {
         // compress the linklist
         compress_linklist(comp_buffer, ll_hk, sf_buffer);
-        bytes_written = file_write(storage_info_hk.fp, (void *) comp_buffer, ll_hk->blk_size);
+				bytes_written = file_write(storage_info_hk.fp, 
+																		(void *) (comp_buffer), 
+																		ll_hk->blk_size);
 		    if (bytes_written < ll_hk->blk_size) {
             if (storage_info_hk.have_warned) {
                 blast_err("Compressed size is %u bytes but we were only able to write %u bytes",

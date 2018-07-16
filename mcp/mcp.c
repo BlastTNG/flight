@@ -121,6 +121,7 @@ linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
+extern linklist_t * ll_hk;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -697,6 +698,7 @@ blast_info("Finished initializing Beaglebones..."); */
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, linklist_array, 0);
   generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, linklist_array), ALL_TELEMETRY_NAME);
   linklist_generate_lookup(linklist_array);
+  ll_hk = linklist_find_by_name(ALL_TELEMETRY_NAME, linklist_array);
 
   // load the latest linklist into telemetry
   telemetries_linklist[PILOT_TELEMETRY_INDEX] =
@@ -711,11 +713,12 @@ blast_info("Finished initializing Beaglebones..."); */
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
+
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();

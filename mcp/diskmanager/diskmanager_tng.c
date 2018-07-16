@@ -1334,6 +1334,13 @@ static int file_open_internal(fileentry_t *m_file) {
 }
 
 /**
+ * Returns a pointer to the string for the current disk mount point
+ */
+const char * get_current_disk_mnt_point() {
+    return s_diskpool.current_disk->mnt_point;
+}
+
+/**
  * Opens a new file on the local disk
  *
  * This function assumes the correct form of m_filename
