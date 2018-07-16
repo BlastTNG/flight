@@ -1543,7 +1543,7 @@ void *ActuatorBus(void *param)
             CommandData.actbus.caddr[my_cindex] = 0;
             bus.chatter = ACTBUS_CHATTER;
         }
-	// TODO(paul): which_act_used doesn't work because all steppers are added before the for loop starts 
+	// TODO(paul): which_act_used doesn't work because all steppers are added before the for loop starts
 	which_act_used = CommandData.actbus.which_used;
 
         if (which_act_used & (0x1 << LOCKNUM)) {
