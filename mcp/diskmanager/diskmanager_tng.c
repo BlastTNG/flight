@@ -48,6 +48,7 @@
 #include <ck_ht.h>
 
 #include "file_buffer_tng.h"
+#include "diskmanager_tng.h"
 #define HOME_DIR					"/data"
 #define MNT_DIR_PREFIX				"mcp_hd"
 #define NUM_USB_DISKS               16
@@ -93,23 +94,6 @@ typedef struct diskpool
 	diskentry_t     disk[NUM_USB_DISKS];
 } diskpool_t;
 
-
-/*
- *  fileentry structure is assigned to each file currently open on an disk manager volume.  Calls to operate
- * on files reference the index number of a fileentry in the #filepool
- */
-typedef struct fileentry
-{
-    FILE                *fp;                /**< fp File pointer used to write data to the file */
-    pthread_t           parent;             /**< parent pthread ID of the creating thread */
-    char                *filename;          /**< filename base file name of the file being written/read */
-    char                mode[4];            /**< mode One of "r", "w", "a" or with "+" appended */
-    diskentry_t         *disk;              /**< disk Pointer to file's disk */
-    filebuffer_t        buffer;             /**< buffer For file data caching in mcp */
-    ck_ht_hash_t        filehash;           /**< filehash Hash of filename, used for hash table */
-    uint32_t            is_closed;          /**< is_closed Set by the calling routine to make the entry for cleanup */
-    int32_t             last_error;         /**< last_error In the event of disk error, this is set to errno */
-} fileentry_t;
 
 // Hardware IDs for the drives connected by USB
 static const char drive_uuids[NUM_USB_DISKS][64] = {
@@ -1304,6 +1288,18 @@ int file_copy(const char *m_source, const char *m_dest) {
     return retval;
 }
 
+int make_local_symlink(char * filename) {
+    char * linkname = NULL ;
+    int i = 0;
+    for (i = strlen(filename)-1; i >= 0; i--) {
+      if (filename[i] == '/') break;
+    }
+    blast_tmp_sprintf(linkname, "/data/rawdir/%s", filename+i+1);
+    unlink(linkname);
+
+    printf("Linking %s to %s\n", linkname, filename);
+    return symlink(filename, linkname);
+}
 /**
  * Opens a pre-existing fileentry_t.
  * @param m_file
@@ -1329,6 +1325,7 @@ static int file_open_internal(fileentry_t *m_file) {
         return -1;
     }
     setvbuf(m_file->fp, NULL, _IONBF, 0);
+    make_local_symlink(filename);
 
     return 0;
 }

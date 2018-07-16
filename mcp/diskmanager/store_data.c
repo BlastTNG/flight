@@ -80,6 +80,9 @@ roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
 
 // housekeeping linklist
 #define LL_TMP_NAME "/tmp/TMP"
+#define LOCAL_RAWDIR "/data/rawdir"
+#define HK_PREFIX "master"
+
 linklist_t * ll_hk = NULL;
 extern unsigned int ll_rawfile_default_fpf;
 
@@ -176,6 +179,7 @@ unsigned int move_file_to_diskmanager(char * fileout, char * filein) {
         memset(buffer, 0, sizeof(buffer));
     }
 
+    // close files
     fclose(fp);
     file_close(fp_chlist);
 
@@ -193,7 +197,7 @@ void make_hk_name(char * filename) {
     localtime_r(&now, &tm_t);
     strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", &tm_t);
     char tempname[80] = {0};
-    snprintf(tempname, sizeof(tempname), "master_%s", datestring);
+    snprintf(tempname, sizeof(tempname), HK_PREFIX "_%s", datestring);
     snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s", archive_dir, tempname);
 }
 
