@@ -109,10 +109,12 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
             mag_y_channel = channels_find_by_name("y_mag1_n");
             mag_z_channel = channels_find_by_name("z_mag1_n");
         } else { // We are South (fc2)
+            blast_info("Guys we are South and writing to South's magnetometer.");
             mag_x_channel = channels_find_by_name("x_mag2_s");
             mag_y_channel = channels_find_by_name("y_mag2_s");
             mag_z_channel = channels_find_by_name("z_mag2_s");
         }
+        firsttime = 0;
     }
 
     // TODO(seth): Mag data should should be filtered (à la gyroscopes) and read by ACS.c
