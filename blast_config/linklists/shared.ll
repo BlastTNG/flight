@@ -197,6 +197,11 @@ x_mag2_s
 y_mag2_s
 z_mag2_s
 
+pos_lock
+state_lock
+pot_lock
+pin_in_lock
+
 #mc_rw_vel
 #mc_rw_pos
 #mc_el_vel
