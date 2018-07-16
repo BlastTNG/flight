@@ -121,6 +121,7 @@ linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
+extern linklist_t * ll_hk;
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -441,9 +442,9 @@ static void mcp_5hz_routines(void)
 
     share_data(RATE_5HZ);
     framing_publish_5hz();
+    // store_data_5hz();
     add_frame_to_superframe(channel_data[RATE_5HZ], RATE_5HZ, master_superframe_buffer,
                             &superframe_counter[RATE_5HZ]);
-//    store_data_5hz();
 }
 static void mcp_2hz_routines(void)
 {
@@ -484,10 +485,12 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
+    // store_data_1hz();
+    store_data_hk(master_superframe_buffer);
+
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
     // roach_timestamp_init(1);
-//    store_data_1hz();
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -696,6 +699,7 @@ blast_info("Finished initializing Beaglebones..."); */
   load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, linklist_array, 0);
   generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, linklist_array), ALL_TELEMETRY_NAME);
   linklist_generate_lookup(linklist_array);
+  ll_hk = linklist_find_by_name(ALL_TELEMETRY_NAME, linklist_array);
 
   // load the latest linklist into telemetry
   telemetries_linklist[PILOT_TELEMETRY_INDEX] =
@@ -710,11 +714,12 @@ blast_info("Finished initializing Beaglebones..."); */
   pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
-//  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
   signal(SIGHUP, close_mcp);
   signal(SIGINT, close_mcp);
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
+
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();

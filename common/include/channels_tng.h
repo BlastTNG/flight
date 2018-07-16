@@ -124,6 +124,7 @@ int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len);
 int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
+channel_header_t *channels_create_rate_map(channel_t *m_channel_list, E_RATE m_rate);
 size_t channel_size(channel_t *);
 unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
 unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
@@ -136,5 +137,6 @@ void make_name_from_roach_index(unsigned int , char * name);
 int get_roach_index(unsigned int , unsigned int , unsigned int);
 void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
 linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
+void channels_write_calspecs(char *, derived_tng_t *);
 
 #endif /* CHANNELS_V2_H_ */
