@@ -1289,7 +1289,7 @@ int file_copy(const char *m_source, const char *m_dest) {
 }
 
 int make_local_symlink(char * filename) {
-    char * linkname = NULL ;
+    char * linkname = NULL;
     int i = 0;
     for (i = strlen(filename)-1; i >= 0; i--) {
       if (filename[i] == '/') break;
@@ -1297,7 +1297,6 @@ int make_local_symlink(char * filename) {
     blast_tmp_sprintf(linkname, "/data/rawdir/%s", filename+i+1);
     unlink(linkname);
 
-    printf("Linking %s to %s\n", linkname, filename);
     return symlink(filename, linkname);
 }
 /**

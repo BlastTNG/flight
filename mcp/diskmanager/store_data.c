@@ -272,8 +272,8 @@ void store_data_hk(uint8_t * sf_buffer) {
     if (storage_info_hk.fp) {
         // compress the linklist
         compress_linklist(comp_buffer, ll_hk, sf_buffer);
-				bytes_written = file_write(storage_info_hk.fp, 
-																		(void *) (comp_buffer), 
+				bytes_written = file_write(storage_info_hk.fp,
+																		(void *) (comp_buffer),
 																		ll_hk->blk_size);
 		    if (bytes_written < ll_hk->blk_size) {
             if (storage_info_hk.have_warned) {
