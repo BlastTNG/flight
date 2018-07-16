@@ -109,7 +109,7 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
             mag_y_channel = channels_find_by_name("y_mag1_n");
             mag_z_channel = channels_find_by_name("z_mag1_n");
         } else { // We are South (fc2)
-            blast_info("Guys we are South and writing to South's magnetometer.");
+            // blast_info("Guys we are South and writing to South's magnetometer.");
             mag_x_channel = channels_find_by_name("x_mag2_s");
             mag_y_channel = channels_find_by_name("y_mag2_s");
             mag_z_channel = channels_find_by_name("z_mag2_s");
@@ -170,8 +170,8 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
     if (zsn == '-') z *= -1;
     mag_set_framedata(x, y, z);
     if ((counter % 200) == 0) {
-        blast_info("read %s", mag_buf);
-        blast_info("x = %f, y = %f, z = %f", (double)x/15000.0, (double)y/15000.0, (double)z/15000.0);
+        // blast_info("read %s", mag_buf);
+        // blast_info("x = %f, y = %f, z = %f", (double)x/15000.0, (double)y/15000.0, (double)z/15000.0);
     }
     counter++;
 }
@@ -242,7 +242,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                 if (!memcmp(ph_buf_mem(buf), state_cmd[mag_state.cmd_state].resp,
                                       strlen(state_cmd[mag_state.cmd_state].resp))) {
                     mag_state.cmd_state++;
-                    blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
+                    // blast_info("writing %s", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
                     ph_stm_flush(serial->stream);
 
