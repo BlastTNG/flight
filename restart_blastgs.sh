@@ -10,7 +10,7 @@ else
   GIT_BRANCH="$2"
 fi
 
-GIT_PULL_CMD="cd $REPO_DIR; git pull --rebase; git checkout $GIT_BRANCH; git pull origin $GIT_BRANCH"
+GIT_PULL_CMD="cd $REPO_DIR; git pull; git checkout $GIT_BRANCH; git pull origin $GIT_BRANCH"
 
 GROUNDHOG_BUILD_CMD="cd $GROUNDHOG_BUILD_DIR; cmake ../; make clean all; sudo make install"
 GROUNDHOG_RESTART_CMD="sudo pkill groundhog"

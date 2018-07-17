@@ -465,6 +465,19 @@ void store_200hz_acs(void)
     static uint32_t gyro_valid_count[2][3] = {{0}};
     static uint32_t gyro_valid_set[2][3] = {{0}};
 
+    static channel_t *newOffsetIFElMotEncAddr;
+    static channel_t *intIFElMotEncAddr;
+    static channel_t *newOffsetIFYawMag1Addr;
+    static channel_t *newOffsetIFRollMag1Addr;
+    static channel_t *intIFYawMag1Addr;
+    static channel_t *intIFRollMag1Addr;
+    static channel_t *dAzMag1Addr;
+    static channel_t *newOffsetIFYawMag2Addr;
+    static channel_t *newOffsetIFRollMag2Addr;
+    static channel_t *intIFYawMag2Addr;
+    static channel_t *intIFRollMag2Addr;
+    static channel_t *dAzMag2Addr;
+
     static int firsttime = 1;
     if (firsttime) {
       firsttime = 0;
@@ -487,6 +500,19 @@ void store_200hz_acs(void)
 
       mask_gy_addr = channels_find_by_name("mask_gy");
       fault_gy_addr = channels_find_by_name("fault_gy");
+
+        newOffsetIFElMotEncAddr = channels_find_by_name("new_offset_ifelmotorenc_gy");
+        intIFElMotEncAddr = channels_find_by_name("int_ifelmotorenc");
+        newOffsetIFYawMag1Addr = channels_find_by_name("new_offset_ifyawmag1_gy");
+        newOffsetIFRollMag1Addr = channels_find_by_name("new_offset_ifrollmag1_gy");
+        intIFYawMag1Addr = channels_find_by_name("int_ifyawmag1");
+        intIFRollMag1Addr = channels_find_by_name("int_ifrollmag1");
+        dAzMag1Addr =  channels_find_by_name("d_az_mag1");
+        newOffsetIFYawMag2Addr = channels_find_by_name("new_offset_ifyawmag2_gy");
+        newOffsetIFRollMag2Addr = channels_find_by_name("new_offset_ifrollmag2_gy");
+        intIFYawMag2Addr = channels_find_by_name("int_ifyawmag2");
+        intIFRollMag2Addr = channels_find_by_name("int_ifrollmag2");
+        dAzMag2Addr =  channels_find_by_name("d_az_mag2");
     }
 
     gymask = GET_UINT16(mask_gy_addr);
@@ -542,6 +568,18 @@ void store_200hz_acs(void)
     }
 
     SET_UINT16(fault_gy_addr, gyfault);
+    SET_SCALED_VALUE(newOffsetIFElMotEncAddr, PointingData[point_index].new_offset_ifel_elmotenc_gy);
+    SET_SCALED_VALUE(intIFElMotEncAddr, PointingData[point_index].int_ifel_elmotenc);
+    SET_SCALED_VALUE(newOffsetIFYawMag1Addr, PointingData[point_index].new_offset_ifyaw_mag1_gy);
+    SET_SCALED_VALUE(newOffsetIFRollMag1Addr, PointingData[point_index].new_offset_ifroll_mag1_gy);
+    SET_SCALED_VALUE(intIFYawMag1Addr, PointingData[point_index].int_ifyaw_mag1);
+    SET_SCALED_VALUE(intIFRollMag1Addr, PointingData[point_index].int_ifroll_mag1);
+    SET_SCALED_VALUE(dAzMag1Addr, PointingData[point_index].d_az_mag1);
+    SET_SCALED_VALUE(newOffsetIFYawMag2Addr, PointingData[point_index].new_offset_ifyaw_mag2_gy);
+    SET_SCALED_VALUE(newOffsetIFRollMag2Addr, PointingData[point_index].new_offset_ifroll_mag2_gy);
+    SET_SCALED_VALUE(intIFYawMag2Addr, PointingData[point_index].int_ifyaw_mag2);
+    SET_SCALED_VALUE(intIFRollMag2Addr, PointingData[point_index].int_ifroll_mag2);
+    SET_SCALED_VALUE(dAzMag2Addr, PointingData[point_index].d_az_mag2);
 }
 
 /**
@@ -1022,7 +1060,6 @@ void store_5hz_acs(void)
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
 
-
     int i_point;
     int sensor_veto;
 
@@ -1040,12 +1077,12 @@ void store_5hz_acs(void)
         mksHiSipAddr = channels_find_by_name("mks_hi_sip");
 
         OffsetIFelGYAddr = channels_find_by_name("offset_ifel_gy");
-        OffsetIFelGYiscAddr = channels_find_by_name("off_ifel_gy_xsc0");
-        OffsetIFrollGYiscAddr = channels_find_by_name("off_ifroll_gy_xsc0");
-        OffsetIFyawGYiscAddr = channels_find_by_name("off_ifyaw_gy_xsc0");
-        OffsetIFelGYoscAddr = channels_find_by_name("off_ifel_gy_xsc1");
-        OffsetIFrollGYoscAddr = channels_find_by_name("off_ifroll_gy_xsc1");
-        OffsetIFyawGYoscAddr = channels_find_by_name("off_ifyaw_gy_xsc1");
+        OffsetIFelGYiscAddr = channels_find_by_name("offset_ifelxsc0_gy");
+        OffsetIFrollGYiscAddr = channels_find_by_name("offset_ifrollxsc0_gy");
+        OffsetIFyawGYiscAddr = channels_find_by_name("offset_ifyawxsc0_gy");
+        OffsetIFelGYoscAddr = channels_find_by_name("offset_ifelxsc1_gy");
+        OffsetIFrollGYoscAddr = channels_find_by_name("offset_ifrollxsc1_gy");
+        OffsetIFyawGYoscAddr = channels_find_by_name("offset_ifyawxsc1_gy");
         OffsetIFrollGYAddr = channels_find_by_name("offset_ifroll_gy");
         OffsetIFyawGYAddr = channels_find_by_name("offset_ifyaw_gy");
 

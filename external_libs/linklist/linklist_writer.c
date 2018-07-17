@@ -41,6 +41,7 @@
 #include <pthread.h> // threads
 #include <openssl/md5.h>
 #include <float.h>
+#include <errno.h>
 
 #include "linklist.h"
 #include "linklist_compress.h"
@@ -271,10 +272,14 @@ linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   ll_dirfile->map = calloc(ll->superframe->n_entries, sizeof(uint8_t));
 
   // make the dir for the dirfile
-	if (mkdir(ll_dirfile->filename, 00755) < 0) {
-		linklist_info("%s dirfile exists. Appending data...\n", ll_dirfile->filename);
-	} else {
-		linklist_info("New dirfile %s.\n", ll_dirfile->filename);
+  if (mkdir(ll_dirfile->filename, 00755) < 0) {
+    if (errno == EEXIST) {
+      linklist_info("%s dirfile exists. Appending data...\n", ll_dirfile->filename);
+    } else {
+      linklist_err("Could not create dirfile %s (errno %d: %s)\n", ll_dirfile->filename, errno, strerror(errno));
+    }
+  } else {
+    linklist_info("New dirfile %s.\n", ll_dirfile->filename);
   }
 
   // open formatfile

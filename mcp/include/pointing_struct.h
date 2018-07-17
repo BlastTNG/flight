@@ -161,6 +161,20 @@ struct PointingDataStruct {
 
   bool requested_el_out_of_bounds;
   bool az_destination_capped;
+
+// TODO(laura): These next fields are just for debugging.  Remove from mcp before flight!
+  double new_offset_ifel_elmotenc_gy;
+  double int_ifel_elmotenc;
+  double new_offset_ifyaw_mag1_gy;
+  double new_offset_ifroll_mag1_gy;
+  double d_az_mag1;
+  double int_ifroll_mag1;
+  double int_ifyaw_mag1;
+  double new_offset_ifyaw_mag2_gy;
+  double new_offset_ifroll_mag2_gy;
+  double d_az_mag2;
+  double int_ifroll_mag2;
+  double int_ifyaw_mag2;
 };
 
 extern struct PointingDataStruct PointingData[3];
