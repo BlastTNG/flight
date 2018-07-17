@@ -495,7 +495,7 @@ static int initialized(void) {
 void labjack_choose_execute(void) {
     int init = initialized();
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
-        blast_info("setting cmd queue executor");
+        // blast_info("setting cmd queue executor");
         if (CommandData.Relays.labjack[0] == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;

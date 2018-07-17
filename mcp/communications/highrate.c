@@ -33,8 +33,9 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-#include "linklist.h"
-#include "linklist_compress.h"
+#include <linklist.h>
+#include <linklist_compress.h>
+
 #include "blast.h"
 #include "mcp.h"
 #include "command_struct.h"
@@ -52,7 +53,7 @@ void highrate_compress_and_send(void *arg) {
   linklist_t ** ll_array = arg;
   comms_serial_t * serial = comms_serial_new(NULL);
 
-  unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, allframe_size);
+  unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size);
   unsigned int csbf_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
   unsigned int buffer_size = ((fifosize-1)/datasize+1)*datasize;
@@ -99,7 +100,7 @@ void highrate_compress_and_send(void *arg) {
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
       if (!allframe_count) {
-          transmit_size = write_allframe(compressed_buffer, getFifoRead(&highrate_fifo));
+          transmit_size = write_allframe(compressed_buffer, superframe, getFifoRead(&highrate_fifo));
       } else {
 				// compress the linklist
 				compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));

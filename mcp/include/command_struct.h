@@ -286,7 +286,6 @@ typedef struct {
   uint16_t forced;
   int labjack, send_dac, load_curve, cycle_allowed;
   float dac_value;
-  // for the periodic cal Sam Grab these
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
@@ -339,10 +338,25 @@ typedef struct roach
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
-    unsigned int load_amps;
-    unsigned int set_rudats;
+    unsigned int new_atten;
+    unsigned int load_vna_amps;
+    unsigned int load_targ_amps;
+    unsigned int calibrate_adc;
     unsigned int set_attens;
     unsigned int find_kids;
+    unsigned int adc_rms;
+    unsigned int test_tone;
+    unsigned int roach_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
+    unsigned int do_cal_sweeps;
+    unsigned int get_phase_centers;
+    unsigned int get_timestream;
+    unsigned int chan;
+    unsigned int tune_chan;
+    unsigned int refit_res_freqs;
+    unsigned int change_tone_amps;
+    unsigned int do_master_chop;
 } roach_status_t;
 
 typedef struct roach_params
@@ -354,11 +368,21 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double new_out_atten;
+    double test_freq;
+    double atten_step;
+    double npoints;
+    double ncycles;
+    double num_sec;
 } roach_params_t;
 
 // Ethercat controller/device commands
 typedef struct {
     bool reset;
+    bool fix_rw;
+    bool fix_el;
+    bool fix_piv;
+    bool fix_hwpr;
 } ec_devices_struct_t;
 
 typedef struct {
@@ -382,6 +406,14 @@ typedef struct {
     bool reset;
 } cmd_rox_bias_t;
 
+typedef struct {
+    unsigned int kid;
+    unsigned int roach;
+    unsigned int rtype;
+    unsigned int index;
+    char name[64];
+} roach_tlm_t;
+
 struct CommandDataStruct {
   uint16_t command_count;
   uint16_t last_command;
@@ -404,6 +436,7 @@ struct CommandDataStruct {
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
+  roach_tlm_t roach_tlm[NUM_ROACH_TLM];
 
   enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
 
@@ -451,7 +484,8 @@ struct CommandDataStruct {
   unsigned char use_pss;
   unsigned char use_xsc0;
   unsigned char use_xsc1;
-  unsigned char use_mag;
+  unsigned char use_mag1;
+  unsigned char use_mag2;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -462,7 +496,7 @@ struct CommandDataStruct {
   double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
-  double mag_az_trim;
+  double mag_az_trim[2];
   double pss_az_trim;
 
   int autotrim_enable;
@@ -472,10 +506,11 @@ struct CommandDataStruct {
   time_t autotrim_xsc0_last_bad;
   time_t autotrim_xsc1_last_bad;
 
-  double cal_xmax_mag;
-  double cal_xmin_mag;
-  double cal_ymax_mag;
-  double cal_ymin_mag;
+  double cal_xmax_mag[2];
+  double cal_xmin_mag[2];
+  double cal_ymax_mag[2];
+  double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
@@ -573,6 +608,7 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+  int mag_reset;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
