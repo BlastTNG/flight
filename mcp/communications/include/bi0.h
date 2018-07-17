@@ -32,7 +32,7 @@
 // TODO(javier): make allframe period commandable
 #define BI0_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
-#define BI0_MAX_BUFFER_SIZE (2*superframe_size) // maximum frame size at 1 Hz (i.e. 2 Mbits)
+#define BI0_MAX_BUFFER_SIZE (2*superframe->size) // maximum frame size at 1 Hz (i.e. 2 Mbits)
 #define BI0_ZERO_PADDING 250 // number of bytes =0 to pad at the end of every packet sent 
 
 #define BI0LOS_FLC_ADDR "192.168.1.200"

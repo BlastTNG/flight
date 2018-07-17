@@ -228,8 +228,8 @@ void * recvDataThread(void *arg) {
 
     if (num_bytes <= 0) blast_err("recvfrom() failed!");
     else if (num_bytes > server->packet_maxsize) {
-      blast_err("Buffer overflow! Received %d bytes for %d byte buffer\n",
-        num_bytes, server->packet_maxsize);
+       blast_err("Buffer overflow! Received %d bytes for %d byte buffer\n",
+       num_bytes, server->packet_maxsize);
       // exit(2);
     }
 

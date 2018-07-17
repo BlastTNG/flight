@@ -47,6 +47,8 @@
 #define NUM_PSS 8
 #define NUM_PSS_V 4
 
+#define NUM_MAGS 2
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -54,9 +56,9 @@
 /*     Used: Main thread;                     */
 /*  Does not need to be a circular buffer...  */
 struct ACSDataStruct {
-  double mag_x;     // counts;
-  double mag_y;     // counts;
-  double mag_z;     // counts;
+  double mag_x[NUM_MAGS];     // counts;
+  double mag_y[NUM_MAGS];     // counts;
+  double mag_z[NUM_MAGS];     // counts;
   double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
@@ -107,16 +109,16 @@ struct PointingDataStruct {
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
 
-  double mag_az;   // degrees
-  double mag_az_raw;   // degrees
-  double mag_el;   // degrees
-  double mag_el_raw;   // degrees
-  double mag_model_dec; // degrees
-  double mag_model_dip; // degrees
-  double mag_sigma; // degrees
-  double mag_strength; // nanoTesla
-  double offset_ifrollmag_gy;
-  double offset_ifyawmag_gy;
+  double mag_az[NUM_MAGS];   // degrees
+  double mag_az_raw[NUM_MAGS];   // degrees
+  double mag_el[NUM_MAGS];   // degrees
+  double mag_el_raw[NUM_MAGS];   // degrees
+  double mag_model_dec[NUM_MAGS]; // degrees
+  double mag_model_dip[NUM_MAGS]; // degrees
+  double mag_sigma[NUM_MAGS]; // degrees
+  double mag_strength[NUM_MAGS]; // nanoTesla
+  double offset_ifrollmag_gy[NUM_MAGS];
+  double offset_ifyawmag_gy[NUM_MAGS];
 
   double null_az; // degrees
 

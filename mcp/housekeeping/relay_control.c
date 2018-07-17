@@ -205,7 +205,8 @@ static void rec_send_values(void) {
 void rec_control(void) {
     static int rec_startup = 1;
     static int rec_trigger = 0;
-    if (CommandData.Labjack_Queue.lj_q_on == 1) {
+    blast_info("state 1 connected = %d", state[1].connected);
+    if (CommandData.Labjack_Queue.lj_q_on == 1 && state[1].connected == 1) {
         if (rec_trigger == 3) { // turns off the power pulse after 1 second
             rec_init();
             rec_trigger = 0;
@@ -670,7 +671,7 @@ static void of_status(void) {
     for (i = 0; i < 16; i++) {
         if (CommandData.Relays.of_relays[i] == 1) {
             of_status += pow(2, i);
-            blast_info("added %f", pow(2, i));
+            // blast_info("added %f", pow(2, i));
         }
     }
     // blast_info("of status is: %u", of_status);
@@ -678,19 +679,19 @@ static void of_status(void) {
 }
 
 void relays(int setting) {
-    if (setting == 1 && state[3].initialized && state[2].initialized && state[4].initialized) {
+    if (setting == 1 && state[3].connected && state[2].connected && state[4].connected) {
         if_control();
         of_control();
         of_status();
     }
-    if (setting == 2 && state[1].initialized) {
+    if (setting == 2 && state[1].connected) {
         rec_control();
     }
-    if (setting == 3 && state[3].initialized && state[2].initialized && state[4].initialized) {
+    if (setting == 3 && state[3].connected && state[2].connected && state[4].connected) {
         if_control();
         of_control();
         of_status();
-        if (state[1].initialized) {
+        if (state[1].connected) {
             rec_control();
         }
     }

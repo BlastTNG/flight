@@ -484,7 +484,7 @@ void outer_frame_multiplexed(void) {
 }
 
 void outer_frame(int setting) {
-    if (setting == 1 && state[2].initialized && state[3].initialized && state[4].initialized) {
+    if (setting == 1 && state[2].connected && state[3].connected && state[4].connected) {
         update_current_sensors();
         update_thermistors();
         update_clinometers();

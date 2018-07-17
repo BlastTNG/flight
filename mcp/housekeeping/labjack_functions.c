@@ -107,6 +107,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack1",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -115,6 +116,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mult_labjack2",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -123,6 +125,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_highbay_labjack",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     },
     {
@@ -131,6 +134,7 @@ labjack_state_t state[NUM_LABJACKS] = {
         .port = LJ_DATA_PORT,
         .DAC = {0, 0},
         .channel_postfix = "_mapping_labjack",
+        .initialized = 0,
         .have_warned_write_reg = 0,
     }
 };
