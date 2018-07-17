@@ -309,6 +309,7 @@ typedef struct {
   float update_rec, update_of, update_if;
   uint16_t labjack[5];
   int of_relays[16], if_relays[10];
+  int update_video, video_trans;
 } relay_cmds_t;
 
 typedef struct {
