@@ -299,7 +299,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     raw_mag_pitch = (180.0 / M_PI) * atan2(mvz, sqrt(mvx * mvx + mvy * mvy));
     *mag_az = raw_mag_az + dec + CommandData.cal_mag_align[mag_index];
     *m_el = raw_mag_pitch + dip;
-
+/*
     if (((mag_count % 20000) == 0) || ((mag_count % 20000) == 1)) {
         blast_info("cal_xmin_mag = %f, cal_xmax_mag = %f, cal_ymin_mag = %f, cal_ymax_mag = %f",
                    CommandData.cal_xmin_mag[mag_index], CommandData.cal_xmax_mag[mag_index],
@@ -310,6 +310,7 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
         blast_info("raw_mag_az = %f, dec = %f, cal_mag_align = %f, mag_az = %f",
                    raw_mag_az, dec, CommandData.cal_mag_align[mag_index], *mag_az);
     }
+*/
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
