@@ -71,33 +71,14 @@ typedef enum {
     ROACH_STATUS_CONNECTED = 1,
     ROACH_STATUS_PROGRAMMED = 2,
     ROACH_STATUS_CONFIGURED = 3,
-    ROACH_STATUS_CALIBRATED = 4,
-    ROACH_STATUS_GBE = 5,
-    ROACH_STATUS_TONES = 6,
-    ROACH_STATUS_STREAMING = 7,
-    ROACH_STATUS_ADC_CAL = 8,
-    ROACH_STATUS_VNA = 9,
-    ROACH_STATUS_ARRAY_FREQS = 10,
-    ROACH_STATUS_TARG = 11,
-    ROACH_STATUS_CAL_AMPS = 12,
-    ROACH_STATUS_ACQUIRING = 13,
+    ROACH_STATUS_STREAMING = 4,
 } e_roach_status;
 
 typedef enum {
     PI_STATUS_BOOT = 0,
-    PI_STATUS_INIT = 1,
-    PI_STATUS_OK = 2,
+    PI_STATUS_CONNECTED = 1,
+    PI_STATUS_INIT = 2,
 } e_pi_status;
-
-typedef enum {
-    RUDAT_STATUS_BOOT = 0,
-    RUDAT_STATUS_HAS_ATTENS,
-} e_rudat_status;
-
-typedef enum {
-    VALON_STATUS_BOOT = 0,
-    VALON_STATUS_HAS_FREQS,
-} e_valon_status;
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
@@ -131,7 +112,11 @@ typedef struct roach_state {
     const char *last_err;
     char *address;
     uint16_t port;
+    bool has_qdr_cal;
+    bool has_tones;
+    bool has_targ_tones;
     bool is_streaming;
+    bool has_adc_cal;
     bool write_flag;
 
     double *freq_residuals;
@@ -207,18 +192,6 @@ typedef struct pi_state {
     e_pi_status desired_status;
     remote_serial_t *pi_comm;
 } pi_state_t;
-
-typedef struct rudat_state {
-    int which;
-    e_rudat_status status;
-    e_rudat_status desired_status;
-} rudat_state_t;
-
-typedef struct valon_state {
-    int which;
-    e_valon_status status;
-    e_valon_status desired_status;
-} valon_state_t;
 
 typedef struct {
     const char *firmware_file;
