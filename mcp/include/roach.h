@@ -116,6 +116,10 @@ typedef struct roach_state {
     bool has_tones;
     bool has_targ_tones;
     bool is_streaming;
+    bool is_sweeping;
+    bool has_vna_sweep;
+    bool has_targ_sweep;
+    bool has_amp_cal;
     bool has_adc_cal;
     bool write_flag;
 
