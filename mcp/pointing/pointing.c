@@ -93,6 +93,9 @@ struct ElSolutionStruct {
   int n_solutions; // number of angle inputs
   int since_last;
   struct FirStruct *fs;
+// TODO(laura): These next fields are for debugging and should be removed before flight.
+  double new_offset_ifel_gy;
+  double int_ifel;
 };
 
 struct AzSolutionStruct {
@@ -111,6 +114,12 @@ struct AzSolutionStruct {
   int since_last;
   struct FirStruct *fs2;
   struct FirStruct *fs3;
+// TODO(laura): These next fields are for debugging and should be removed before flight.
+  double new_offset_ifyaw_gy;
+  double new_offset_ifroll_gy;
+  double d_az;
+  double int_ifroll;
+  double int_ifyaw;
 };
 
 static struct {
@@ -815,6 +824,7 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   s->variance += GYRO_VAR;
 
   s->gy_int += gyro / SR; // in degrees
+  s->int_ifel = s->gy_int;
 
   if (new_reading) {
     w1 = 1.0 / (s->variance);
@@ -833,6 +843,7 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
 
         if (fabs(new_offset) > 500.0)
           new_offset = 0; // 5 deg step is bunk!
+        s->new_offset_ifel_gy = new_offset;
         s->offset_gy = fir_filter(new_offset, s->fs);
       }
       s->since_last = 0;
@@ -918,6 +929,8 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
 
   s->ifroll_gy_int += ifroll_gy / SR; // in degrees
   s->ifyaw_gy_int += ifyaw_gy / SR; // in degrees
+  s->int_ifroll = s->ifroll_gy_int;
+  s->int_ifyaw = s->ifyaw_gy_int;
 
   if (new_reading) {
     w1 = 1.0 / (s->variance);
@@ -931,15 +944,18 @@ static void EvolveAzSolution(struct AzSolutionStruct *s, double ifroll_gy,
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
 	daz = remainder(new_angle - s->last_input, 360.0);
+	s->d_az = daz;
 
 	/* Do Gyro_IFroll */
 	new_offset = -(daz * cos(el) + s->ifroll_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
+	s->new_offset_ifroll_gy = new_offset;
 	s->offset_ifroll_gy = fir_filter(new_offset, s->fs2);;
 
 	/* Do Gyro_IFyaw */
 	new_offset = -(daz * sin(el) + s->ifyaw_gy_int) /
 	  ((1.0/SR) * (double)s->since_last);
+	s->new_offset_ifyaw_gy = new_offset;
 	s->offset_ifyaw_gy = fir_filter(new_offset, s->fs3);;
       }
       s->since_last = 0;
@@ -1465,6 +1481,19 @@ void Pointing(void)
     PointingData[point_index].offset_ifel_gy_xsc[1] = OSCEl.offset_gy;
     PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyaw_gy_xsc[1] = OSCAz.offset_ifyaw_gy;
+
+    PointingData[point_index].new_offset_ifel_elmotenc_gy = EncMotEl.new_offset_ifel_gy;
+    PointingData[point_index].int_ifel_elmotenc = EncMotEl.int_ifel;
+    PointingData[point_index].new_offset_ifyaw_mag1_gy = MagAzN.new_offset_ifyaw_gy;
+    PointingData[point_index].new_offset_ifroll_mag1_gy = MagAzN.new_offset_ifroll_gy;
+    PointingData[point_index].d_az_mag1 = MagAzN.d_az;
+    PointingData[point_index].int_ifroll_mag1 = MagAzN.int_ifroll;
+    PointingData[point_index].int_ifyaw_mag1 = MagAzN.int_ifyaw;
+    PointingData[point_index].new_offset_ifyaw_mag2_gy = MagAzS.new_offset_ifyaw_gy;
+    PointingData[point_index].new_offset_ifroll_mag2_gy = MagAzS.new_offset_ifroll_gy;
+    PointingData[point_index].d_az_mag2 = MagAzS.d_az;
+    PointingData[point_index].int_ifroll_mag2 = MagAzS.int_ifroll;
+    PointingData[point_index].int_ifyaw_mag2 = MagAzS.int_ifyaw;
 
     xsc_calculate_full_pointing_estimated_location(0);
     xsc_calculate_full_pointing_estimated_location(1);
