@@ -1493,7 +1493,7 @@ struct mcom mcommands[plugh + 2] = {
               {"Mask field 3", 0, CMD_L_MAX, 'i', "NONE"},
       }
   },
-  {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC_PARAM, 6,
+  {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC_PARAM, 5,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"SNR Threshhold", 0.01, 10, 'f', "NONE"},
@@ -1539,8 +1539,8 @@ struct mcom mcommands[plugh + 2] = {
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Horizontal Roll Limit", 0, 1, 'i', "NONE"},
-              {"Minimum Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
-              {"Maximum Horizontal Roll (degrees)", -90.0, 90.0, 'f', "NONE"},
+              {"Minimum Horizontal Roll (degrees)", -180.0, 180.0, 'f', "NONE"},
+              {"Maximum Horizontal Roll (degrees)", -180.0, 180.0, 'f', "NONE"},
       }
   },
   {COMMAND(xsc_filter_el), "XSC Elevation Limit", GR_XSC_PARAM, 4,
