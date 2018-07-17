@@ -67,18 +67,18 @@ typedef struct {
 } __attribute__((packed)) udp_packet_t;
 
 typedef enum {
-    ROACH_STATUS_BOOT = 0,
-    ROACH_STATUS_CONNECTED = 1,
-    ROACH_STATUS_PROGRAMMED = 2,
-    ROACH_STATUS_CONFIGURED = 3,
-    ROACH_STATUS_STREAMING = 4,
-} e_roach_status;
+    ROACH_STATE_BOOT = 0,
+    ROACH_STATE_CONNECTED = 1,
+    ROACH_STATE_PROGRAMMED = 2,
+    ROACH_STATE_CONFIGURED = 3,
+    ROACH_STATE_STREAMING = 4,
+} e_roach_state;
 
 typedef enum {
-    PI_STATUS_BOOT = 0,
-    PI_STATUS_CONNECTED = 1,
-    PI_STATUS_INIT = 2,
-} e_pi_status;
+    PI_STATE_BOOT = 0,
+    PI_STATE_CONNECTED = 1,
+    PI_STATE_INIT = 2,
+} e_pi_state;
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
@@ -105,8 +105,8 @@ typedef struct roach_state {
     int array;
     int which;
     int katcp_fd;
-    e_roach_status status;
-    e_roach_status desired_status;
+    e_roach_state state;
+    e_roach_state desired_state;
 
     int has_error;
     const char *last_err;
@@ -192,8 +192,12 @@ typedef struct roach_state {
 
 typedef struct pi_state {
     int which;
-    e_pi_status status;
-    e_pi_status desired_status;
+    e_pi_state state;
+    e_pi_state desired_state;
+    uint16_t port;
+    bool has_valon;
+    bool has_input_atten;
+    bool has_output_atten;
     remote_serial_t *pi_comm;
 } pi_state_t;
 
@@ -270,7 +274,7 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
-int get_roach_status(uint16_t ind);
+int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
 
 // Defined in roach_udp.c

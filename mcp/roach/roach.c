@@ -216,10 +216,10 @@ static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
 void nameThread(const char*);
 
-int get_roach_status(uint16_t ind)
+int get_roach_state(uint16_t ind)
 {
-    int status = roach_state_table[ind].status;
-    return status;
+    int state = roach_state_table[ind].state;
+    return state;
 }
 
 int roach_read_1D_file(roach_state_t *m_roach, char *m_file_path, double *m_buffer, size_t m_freqlen)
@@ -986,8 +986,14 @@ int roach_write_QDR(roach_state_t *m_roach)
     }
     usleep(3000);
     roach_write_int(m_roach, "start_dac", 1, 0);
-    roach_write_int(m_roach, "downsamp_sync_accum_reset", 0, 0);
-    roach_write_int(m_roach, "downsamp_sync_accum_reset", 1, 0);
+    usleep(100);
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 0, 0) < 0)) {
+        return retval;
+    }
+    usleep(100);
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 1, 0) < 0)) {
+        return retval;
+    }
     retval = 0;
     return retval;
 }
@@ -1011,8 +1017,10 @@ int roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     if ((roach_write_QDR(m_roach) < 0)) {
         return retval;
     }
-    roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0);
-    usleep(1000);
+    if ((roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0) < 0)) {
+        return retval;
+    }
+    usleep(100);
     m_roach->current_ntones = m_freqlen;
     m_roach->write_flag = 0;
     m_roach->has_tones = 1;
@@ -1042,16 +1050,17 @@ void roach_write_saved(roach_state_t *m_roach)
 */
 int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
 {
-    blast_info("ROACH%d, Checking stream status...", m_roach->which - 1);
+    blast_info("ROACH%d, Checking stream status...", m_roach->which);
     int retval = -2;
     int m_last_packet_count = roach_udp[m_roach->which - 1].roach_packet_count;
     // blast_info("m_last_packet_count = % d", m_last_packet_count);
     int count = 0;
     while ((count < ntries)) {
-        blast_info("roach_packet_count = % d", roach_udp[m_roach->which - 1].roach_packet_count);
+        // blast_info("roach_ddpacket_count = % d", roach_udp[m_roach->which - 1].roach_packet_count);
         sleep(sec_timeout);
         if (roach_udp[m_roach->which - 1].roach_packet_count > m_last_packet_count) {
             retval = 0;
+            blast_info("ROACH%d, Streaming OK.", m_roach->which);
             break;
         } else {
             count += 1;
@@ -1114,7 +1123,9 @@ int pi_write_string(pi_state_t *m_pi, uint8_t *m_data, size_t m_len)
     m_data[m_len++] = '\n';
     // m_data[m_len] = 0;
     bytes_wrote = remote_serial_write_data(m_pi->pi_comm, m_data, m_len);
-    if (bytes_wrote) retval = bytes_wrote;
+    if (bytes_wrote) {
+        retval = bytes_wrote;
+    }
     return retval;
 }
 
@@ -1199,10 +1210,33 @@ int set_atten(pi_state_t *m_pi)
     char *m_command;
     char *m_command2;
     int ind = m_pi->which - 1;
-    // blast_info("Pi%d, attempting to set RUDATs...", ind + 1);
-    blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-        CommandData.roach_params[m_pi->which - 1].out_atten,
-        CommandData.roach_params[m_pi->which - 1].in_atten);
+    // the order of input and output attenuators is switched between PIs
+    if (ind == 0) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[m_pi->which - 1].out_atten,
+           CommandData.roach_params[m_pi->which - 1].in_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[m_pi->which - 1].in_atten,
+           CommandData.roach_params[m_pi->which - 1].out_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[m_pi->which - 1].in_atten,
+           CommandData.roach_params[m_pi->which - 1].out_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[m_pi->which - 1].out_atten,
+           CommandData.roach_params[m_pi->which - 1].in_atten);
+    }
+    // TODO(Sam) Verify order on Roach5 and then remove this comment
+    if (ind == 4) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[m_pi->which - 1].out_atten,
+           CommandData.roach_params[m_pi->which - 1].in_atten);
+    }
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
     pi_write_string(m_pi, (unsigned char*)m_command2, strlen(m_command2));
@@ -1316,7 +1350,7 @@ int init_valon(pi_state_t *m_pi)
     }
     // char *lo_command2;
     // blast_tmp_sprintf(lo_command2, "cat hello_world.log");
-    blast_info("Initializing Valon%d...", m_pi->which - 1);
+    blast_info("Initializing Valon%d...", m_pi->which);
     /* if (pi_write_string(&pi_state_table[ind], (unsigned char*)valon_init_pi, strlen(valon_init_pi)) >= 0) {
         usleep(3000);
     } else {
@@ -1325,6 +1359,7 @@ int init_valon(pi_state_t *m_pi)
     if (pi_write_string(m_pi, (unsigned char*)init_command, strlen(init_command)) >= 0) {
         if (pi_read_string(m_pi, PI_READ_NTRIES, INIT_VALON_TIMEOUT) < 0) {
             blast_info("Error setting Atten... reboot Pi%d?", m_pi->which);
+            return retval;
         } else {
             retval = 0;
         }
@@ -1463,7 +1498,7 @@ void roach_timestamp_init(uint16_t ind)
     // blast_info("%s", timestamp);
     // blast_info("%u", atoi(timestamp));
     if (roach_state_table[ind].write_flag || !roach_state_table[ind].katcp_fd
-                  || roach_state_table[ind].status < ROACH_STATUS_STREAMING) {
+                  || roach_state_table[ind].state < ROACH_STATE_STREAMING) {
         return;
     } else {
         roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0);
@@ -2392,15 +2427,15 @@ int cal_sweep_attens(roach_state_t *m_roach)
                 }
             } else if ((status == SWEEP_INTERRUPT)) {
                 blast_info("ROACH%d, Cal sweep interrupted by blastcmd", m_roach->which);
-                m_roach->status = ROACH_STATUS_STREAMING;
-                m_roach->desired_status = ROACH_STATUS_STREAMING;
+                m_roach->state = ROACH_STATE_STREAMING;
+                m_roach->desired_state = ROACH_STATE_STREAMING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
                 free(m_roach->last_cal_path);
                 return SWEEP_INTERRUPT;
             } else {
                 blast_info("ROACH%d, Cal sweep failed, will reattempt", m_roach->which);
-                m_roach->status = ROACH_STATUS_STREAMING;
-                m_roach->desired_status = ROACH_STATUS_STREAMING;
+                m_roach->state = ROACH_STATE_STREAMING;
+                m_roach->desired_state = ROACH_STATE_STREAMING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
                 free(m_roach->last_cal_path);
                 return SWEEP_FAIL;
@@ -2442,8 +2477,8 @@ int cal_sweep_amps(roach_state_t *m_roach)
             blast_info("ROACH%d, Cal sweep interrupted by blastcmd, writing default amps",
                    m_roach->which);
             roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-            m_roach->status = ROACH_STATUS_STREAMING;
-            m_roach->desired_status = ROACH_STATUS_STREAMING;
+            m_roach->state = ROACH_STATE_STREAMING;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
             CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
             free(m_roach->last_cal_path);
             return SWEEP_INTERRUPT;
@@ -2451,8 +2486,8 @@ int cal_sweep_amps(roach_state_t *m_roach)
         if ((status == SWEEP_FAIL)) {
             blast_info("ROACH%d, Cal sweep failed, writing default amps", m_roach->which);
             roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-            m_roach->status = ROACH_STATUS_STREAMING;
-            m_roach->desired_status = ROACH_STATUS_STREAMING;
+            m_roach->state = ROACH_STATE_STREAMING;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
             CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
             free(m_roach->last_cal_path);
             return SWEEP_FAIL;
@@ -2936,6 +2971,7 @@ int roach_upload_status(roach_state_t *m_roach)
 */
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
+    int retval = -1;
     srand48(time(NULL));
     firmware_state_t state = {
                               .firmware_file = m_filename,
@@ -2944,14 +2980,14 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                               .timeout.tv_usec = 0,
                               .roach = m_roach
     };
-    int retval = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
+    int result = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
                        KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
                        KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                        NULL);
-    if (retval != KATCP_RESULT_OK) {
+    if (result != KATCP_RESULT_OK) {
         blast_err("Could not request upload port for ROACH firmware on %s! retval = %i",
                m_roach->address, retval);
-        return -1;
+        return retval;
     }
     for (int loop = 0; loop < 2; loop++) {
         ph_sock_resolve_and_connect(state.roach->address, state.port, 0,
@@ -2959,17 +2995,22 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         while (state.result == ROACH_UPLOAD_RESULT_WORKING) {
             usleep(1000);
         }
-        if (state.result != ROACH_UPLOAD_CONN_REFUSED) break;
-        usleep(100000);
+        if (state.result != ROACH_UPLOAD_CONN_REFUSED) {
+            break;
+            usleep(100000);
+        }
     }
-    if ((state.result != ROACH_UPLOAD_RESULT_SUCCESS)) return -1;
+    if ((state.result != ROACH_UPLOAD_RESULT_SUCCESS)) {
+        retval = -1;
+    }
     if ((state.result = ROACH_UPLOAD_RESULT_SUCCESS)) {
         sleep(5);
         if (roach_upload_status(m_roach) < 0);
-            return 0;
+            retval = -1;
         } else {
-            return 1;
+            retval = 0;
     }
+    return retval;
 }
 
 /*
@@ -2995,38 +3036,38 @@ void shutdown_roaches(void)
     }
 }
 
-/** Function: state_handler
+/** Function: state_manager
  * ----------------------------
  * Takes the result of a function and pushes the roach status
  * to the proper state
  * @param m_roach a roach state structure
  * @param m_result the result of the input function
 **/
-void roach_state_handler(roach_state_t *m_roach, int result)
+void roach_state_manager(roach_state_t *m_roach, int result)
 {
-    int current_state = m_roach->status;
+    int current_state = m_roach->state;
     switch (current_state) {
-        case ROACH_STATUS_BOOT:
+        case ROACH_STATE_BOOT:
             // Check that Roach is powered on, establish KATCP link
             if (result == -1) {
                 // boot fail? KATCP fail?
                 break;
             }
             if (result == 0) {
-                m_roach->status = ROACH_STATUS_CONNECTED;
-                m_roach->desired_status = ROACH_STATUS_STREAMING;
+                m_roach->state = ROACH_STATE_CONNECTED;
+                m_roach->desired_state = ROACH_STATE_STREAMING;
             }
-        case ROACH_STATUS_CONNECTED:
+        case ROACH_STATE_CONNECTED:
             // Upoad firmare
             if (result == -1) {
                 break;
             }
             if (result == 0) {
-                m_roach->status = ROACH_STATUS_PROGRAMMED;
-                m_roach->desired_status = ROACH_STATUS_STREAMING;
+                m_roach->state = ROACH_STATE_PROGRAMMED;
+                m_roach->desired_state = ROACH_STATE_STREAMING;
             }
-        case ROACH_STATUS_PROGRAMMED:
-            // Program firmware registers, calibrate qdr RAM,
+        case ROACH_STATE_PROGRAMMED:
+            // Program firmware registers, calibrate QDR RAM,
             // Initialize GbE
             if (result == -1) {
                 // register write fail
@@ -3041,10 +3082,10 @@ void roach_state_handler(roach_state_t *m_roach, int result)
                 break;
             }
             if (result == 0) {
-                m_roach->status = ROACH_STATUS_CONFIGURED;
-                m_roach->desired_status = ROACH_STATUS_STREAMING;
+                m_roach->state = ROACH_STATE_CONFIGURED;
+                m_roach->desired_state = ROACH_STATE_STREAMING;
             }
-        case ROACH_STATUS_CONFIGURED:
+        case ROACH_STATE_CONFIGURED:
             if (result == -1) {
                 // error during tone writing
                 break;
@@ -3054,36 +3095,36 @@ void roach_state_handler(roach_state_t *m_roach, int result)
                 break;
             }
             if (result == 0) {
-               m_roach->status = ROACH_STATUS_STREAMING;
-               m_roach->desired_status = ROACH_STATUS_STREAMING;
+               m_roach->state = ROACH_STATE_STREAMING;
+               m_roach->desired_state = ROACH_STATE_STREAMING;
             }
-        case ROACH_STATUS_STREAMING:
+        case ROACH_STATE_STREAMING:
             // Calibrate input/output attenuators so that ADC V rms
             // is close to 100 mV in I and in Q
             if ((AUTO_CAL_ADC) && (!m_roach->has_adc_cal)) {
                 if (result == -1) {
-                    m_roach->status = ROACH_STATUS_STREAMING;
-                    m_roach->desired_status = ROACH_STATUS_STREAMING;
+                    m_roach->state = ROACH_STATE_STREAMING;
+                    m_roach->desired_state = ROACH_STATE_STREAMING;
                     break;
                 }
             }
     }
 }
 
-void pi_state_handler(pi_state_t *m_pi, int result)
+void pi_state_manager(pi_state_t *m_pi, int result)
 {
-    int current_state = m_pi->status;
+    int current_state = m_pi->state;
     switch (current_state) {
-        case PI_STATUS_BOOT:
+        case PI_STATE_BOOT:
             if (result == -1) {
                 // PI failed to boot? Remote serial fail?
                 break;
             }
             if (result == 0) {
-                m_pi->status = PI_STATUS_CONNECTED;
-                m_pi->desired_status = PI_STATUS_INIT;
+                m_pi->state = PI_STATE_CONNECTED;
+                m_pi->desired_state = PI_STATE_INIT;
             }
-        case PI_STATUS_INIT:
+        case PI_STATE_INIT:
             if (result == -1) {
                 // Attenuator problem
                 break;
@@ -3096,9 +3137,18 @@ void pi_state_handler(pi_state_t *m_pi, int result)
                 // Couldn't set LO
                 break;
             }
+            if (result == -4) {
+                // Couldn't read LO
+                break;
+            }
             if (result == 0) {
-                m_pi->status = PI_STATUS_INIT;
-                m_pi->desired_status = PI_STATUS_INIT;
+                // Final state for PI
+                // TODO(Sam) figure out how to distinguish attens
+                m_pi->has_valon = 1;
+                m_pi->has_output_atten = 1;
+                m_pi->has_input_atten = 1;
+                m_pi->state = PI_STATE_INIT;
+                m_pi->desired_state = PI_STATE_INIT;
             }
     }
 }
@@ -3109,7 +3159,6 @@ int roach_boot_sequence(roach_state_t *m_roach)
     blast_info("Attempting to connect to %s", m_roach->address);
     m_roach->katcp_fd = net_connect(m_roach->address,
                               0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
-    blast_info("fd:%d ", m_roach->katcp_fd);
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
     if (m_roach->katcp_fd > 0) {
         blast_info("ROACH%d, KATCP up", m_roach->which);
@@ -3121,17 +3170,22 @@ int roach_boot_sequence(roach_state_t *m_roach)
     return retval;
 }
 
-int pi_boot_sequence(pi_state_t *m_pi)
+int pi_boot_sequence(pi_state_t *m_pi, int m_ntries)
 {
     int retval = -1;
+    int count = 0;
     blast_info("Initializing Pi%d ...", m_pi->which);
-    m_pi->pi_comm = remote_serial_init(m_pi->which, NC1_PORT);
-    while (!m_pi->pi_comm->connected) {
-        blast_info("Waiting to connect to PI%d ...", m_pi->which);
-        usleep(2000);
+    m_pi->pi_comm = remote_serial_init(m_pi->which, m_pi->port);
+    while ((count < m_ntries)) {
+        if (!m_pi->pi_comm->connected) {
+            blast_info("Waiting to connect to PI%d ...", m_pi->which);
+            usleep(2000);
+            count += 1;
+        } else {
+            retval = 0;
+            blast_info("Pi%d initialized...", m_pi->which);
+        }
     }
-    retval = 0;
-    blast_info("Pi%d initialized...", m_pi->which);
     return retval;
 }
 
@@ -3157,6 +3211,8 @@ int pi_init_sequence(pi_state_t *m_pi)
     } else {
         if (pi_read_string(m_pi, PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
             blast_err("Error setting LO... reboot Pi%d?", m_pi->which);
+            retval = -4;
+            blast_info("PI%d: Read error", m_pi->which);
         }
     }
     retval = 0;
@@ -3167,55 +3223,55 @@ int roach_prog_registers(roach_state_t *m_roach)
 {
     int retval = -1;
     blast_info("ROACH%d, Configuring software registers...", m_roach->which - 1);
-    if ((roach_write_int(m_roach, "GbE_packet_info", 42, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_packet_info", 42, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "dds_shift", DDC_SHIFT, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "dds_shift", DDC_SHIFT, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "downsamp_sync_accum_len", accum_len, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_len", accum_len, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destip", dest_ip, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destip", dest_ip, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destport", m_roach->dest_port, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destport", m_roach->dest_port, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcport", m_roach->src_port, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcport", m_roach->src_port, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcip", m_roach->src_ip, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcip", m_roach->src_ip, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcmac0", srcmac0[m_roach->which - 1], 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcmac0", srcmac0[m_roach->which - 1], 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcmac1", srcmac1, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcmac1", srcmac1, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destmac0", destmac0, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destmac0", destmac0, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destmac1", destmac1, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destmac1", destmac1, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "dac_reset", 1, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "dac_reset", 1, 0) < 0)) {
         return retval;
     }
     // load_fir(&roach_state_table[i]);
@@ -3226,20 +3282,20 @@ int roach_prog_registers(roach_state_t *m_roach)
 int roach_init_gbe(roach_state_t *m_roach)
 {
     int retval = -1;
-    blast_info("ROACH%d, Calibration complete", m_roach->which - 1);
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) != KATCP_RESULT_OK)) {
+    blast_info("ROACH%d, Calibration complete", m_roach->which);
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 1, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 1, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) < 0)) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_pps_start", 1, 0) != KATCP_RESULT_OK)) {
+    if ((roach_write_int(m_roach, "GbE_pps_start", 1, 0) < 0)) {
         return retval;
     }
     retval = 0;
@@ -3267,15 +3323,13 @@ int roach_config_sequence(roach_state_t *m_roach)
 int roach_write_vna(roach_state_t *m_roach)
 {
     int retval = -1;
-    blast_info("ROACH%d, Generating search comb...", m_roach->which - 1);
-    blast_info("ROACH%d, Creating VNA Comb", m_roach->which - 1);
+    blast_info("ROACH%d, Generating VNA sweep comb...", m_roach->which);
     roach_vna_comb(m_roach);
-    blast_info("ROACH%d, VNA comb created", m_roach->which - 1);
-    blast_info("ROACH%d, Writing tones", m_roach->which - 1);
+    blast_info("ROACH%d, Writing tones", m_roach->which);
     if ((roach_write_tones(m_roach, m_roach->vna_comb, m_roach->vna_comb_len) < 0)) {
         return retval;
     }
-    blast_info("ROACH%d, Search comb uploaded", m_roach->which - 1);
+    blast_info("ROACH%d, Search comb uploaded", m_roach->which);
     m_roach->has_tones = 1;
     retval = 0;
     return retval;
@@ -3288,18 +3342,18 @@ int roach_vna_sweep(roach_state_t *m_roach)
         return retval;
     }
     usleep(3000);
-    blast_info("ROACH%d, Initializing VNA sweep", m_roach->which - 1);
-    blast_info("ROACH%d, Starting VNA sweep...", m_roach->which - 1);
+    blast_info("ROACH%d, Initializing VNA sweep", m_roach->which);
+    blast_info("ROACH%d, Starting VNA sweep...", m_roach->which);
     retval = roach_do_sweep(m_roach, VNA);
     if (retval == SWEEP_SUCCESS) {
-        blast_info("ROACH%d, VNA sweep complete", m_roach->which - 1);
+        blast_info("ROACH%d, VNA sweep complete", m_roach->which);
         m_roach->has_vna_sweep = 1;
         system("python /home/fc1user/sam_builds/sweep_list.py vna");
     } else if (retval == SWEEP_INTERRUPT) {
-        blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which - 1);
+        blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
         m_roach->has_vna_sweep = 0;
     } else {
-        blast_info("ROACH%d, VNA sweep failed, will reattempt", m_roach->which - 1);
+        blast_info("ROACH%d, VNA sweep failed, will reattempt", m_roach->which);
         m_roach->has_vna_sweep = 0;
     }
     return retval;
@@ -3310,19 +3364,19 @@ int roach_targ_sweep(roach_state_t *m_roach)
     int retval = -1;
     roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0);
     roach_read_int(m_roach, "PFB_fft_shift");
-    blast_info("ROACH%d, STARTING TARG sweep", m_roach->which - 1);
+    blast_info("ROACH%d, STARTING TARG sweep", m_roach->which);
     retval = roach_do_sweep(m_roach, TARG);
     if ((retval == SWEEP_SUCCESS)) {
         m_roach->has_targ_sweep = 1;
-        blast_info("ROACH%d, TARG sweep complete", m_roach->which - 1);
+        blast_info("ROACH%d, TARG sweep complete", m_roach->which);
         // creates file for downlinking sweep path to local machine
         system("python /home/fc1user/sam_builds/sweep_list.py targ");
     } else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
-        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which - 1);
+        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
         return retval;
     } else {
-        blast_info("ROACH%d, TARG sweep failed", m_roach->which - 1);
+        blast_info("ROACH%d, TARG sweep failed", m_roach->which);
         m_roach->has_targ_sweep = 0;
         return retval;
     }
@@ -3356,221 +3410,68 @@ void *roach_cmd_loop(void* ind)
         usleep(2000);
     }
     blast_info("Starting Roach Commanding Thread");
-    pi_state_table[i].status = PI_STATUS_CONNECTED;
-    pi_state_table[i].desired_status = PI_STATUS_INIT;
-    roach_state_table[i].status = ROACH_STATUS_BOOT;
-    roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
+    pi_state_table[i].state = PI_STATE_CONNECTED;
+    pi_state_table[i].desired_state = PI_STATE_INIT;
+    roach_state_table[i].state = ROACH_STATE_BOOT;
+    roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     while (!shutdown_mcp) {
-        // TODO(SAM/LAURA): Fix Roach 1/Add error handling
-        // Check for new roach status commands
-        if (CommandData.roach[i].calc_ref_params) {
-            save_ref_params(&roach_state_table[i]);
-            CommandData.roach[i].calc_ref_params = 0;
-        }
-        if (CommandData.roach[i].refit_res_freqs) {
-            roach_refit_freqs(&roach_state_table[i]);
-        }
-        if (CommandData.roach[i].get_timestream == 1) {
-            blast_info("Save timestream called");
-            save_timestream(&roach_state_table[i], CommandData.roach[i].chan,
-                          CommandData.roach_params[i].num_sec);
-        }
-        if (CommandData.roach[i].get_timestream == 2) {
-            blast_info("Saving all timestreams");
-            save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
-            // if (i == 0) CommandData.roach[2].get_timestream = 2;
-        }
-        if (CommandData.roach[i].do_master_chop) {
-            blast_info("Creating chop template");
-            master_chop(&roach_state_table[i], CommandData.roach_params[i].num_sec);
-        }
-        /*  if (CommandData.roach[i].tune_chan &&
-                  roach_state_table[i].status >= ROACH_STATUS_ARRAY_FREQS) {
-            blast_info("Chop_tune_chan called");
-            chop_tune(&roach_state_table[i], CommandData.roach[i].chan,
-                          CommandData.roach_params[i].num_sec);
-        } */
-        if (CommandData.roach[i].change_roach_state) {
-            roach_state_table[i].status = CommandData.roach[i].roach_new_state;
-            roach_state_table[i].desired_status = CommandData.roach[i].roach_desired_state;
-            blast_info("CHANGE STATE: %d, %d",
-                    CommandData.roach[i].roach_new_state,
-                    CommandData.roach[i].roach_desired_state);
-            CommandData.roach[i].roach_state = 0;
-        }
-        if (CommandData.roach[i].load_vna_amps && !CommandData.roach[i].do_sweeps) {
-            if (roach_state_table[i].status >= ROACH_STATUS_STREAMING) {
-                blast_info("ROACH%d, Generating search comb", i + 1);
-                roach_vna_comb(&roach_state_table[i]);
-                blast_info("%d", CommandData.roach[i].load_vna_amps);
-                roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
-                                               roach_state_table[i].vna_comb_len);
-                blast_info("ROACH%d, Search comb uploaded", i + 1);
-            } else {
-                blast_info("ROACH%d, Cannot load vna amps", i + 1);
-            }
-        }
-        if (CommandData.roach[i].load_targ_amps && !CommandData.roach[i].do_sweeps) {
-            blast_info("Load targ amps = %d", CommandData.roach[i].load_targ_amps);
-            if (roach_state_table[i].has_targ_tones) {
-                roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
-                                    roach_state_table[i].num_kids);
-            } else {
-                CommandData.roach[i].load_targ_amps = 0;
-                blast_info("ROACH%d, Cannot load targ amps", i + 1);
-            }
-        }
-        if (CommandData.roach[i].test_tone) {
-            blast_info("Roach%d: Writing test freq %g Hz", i + 1,
-                               CommandData.roach_params[i].test_freq);
-            roach_write_tones(&roach_state_table[i],
-                           &CommandData.roach_params[i].test_freq, 1);
-            CommandData.roach[i].test_tone = 0;
-        }
-        if (CommandData.roach[i].load_new_freqs) {
-            blast_info("Roach%d: Writing saved freqlist: %s", i + 1, roach_state_table[i].freqlist_path);
-            roach_write_saved(&roach_state_table[i]);
-            CommandData.roach[i].load_new_freqs = 0;
-        }
-        if (CommandData.roach[i].adc_rms) {
-            get_adc_rms(&roach_state_table[i]);
-            CommandData.roach[i].adc_rms = 0;
-        }
-        if (CommandData.roach[i].calibrate_adc) {
-            cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
-            CommandData.roach[i].calibrate_adc = 0;
-        }
-        if (CommandData.roach[i].change_roach_state) {
-            roach_state_table[i].status = CommandData.roach[i].new_state;
-            roach_state_table[i].desired_status = ROACH_STATUS_STREAMING;
-            CommandData.roach[i].change_roach_state = 0;
-        }
-        if (CommandData.roach[i].get_roach_state) {
-            blast_info("ROACH%d, current state = %u", i, get_roach_status(i));
-            CommandData.roach[i].get_roach_state = 0;
-        }
-        if (CommandData.roach[i].do_cal_sweeps &&
-                (roach_state_table[i].status >= ROACH_STATUS_STREAMING) &&
-                (roach_state_table[i].has_targ_tones)) {
-            blast_info("NCYCLES = %f", CommandData.roach_params[i].ncycles);
-            blast_info("NPOINTS = %f", CommandData.roach_params[i].npoints);
-            blast_info("ATTEN STEP = %f", CommandData.roach_params[i].atten_step);
-        }
-        // calculate df
-        if ((CommandData.roach[i].do_df_calc == 1) &&
-                  roach_state_table[i].status == ROACH_STATUS_STREAMING &&
-                  roach_state_table[i].has_targ_tones) {
-                if ((roach_df(&roach_state_table[i]) < 0)) {
-                    roach_state_table[i].status = ROACH_STATUS_STREAMING;
-                }
-        CommandData.roach[i].do_df_calc = 0;
-        }
-        // check for retune condition
-        if ((CommandData.roach[i].do_check_retune == 1) &&
-                  roach_state_table[i].status == ROACH_STATUS_STREAMING &&
-                  roach_state_table[i].has_targ_tones) {
-                if ((roach_check_retune(&roach_state_table[i]) < 0)) {
-                   blast_err("ROACH%d: Retune check failed", i + 1);
-                }
-        CommandData.roach[i].do_check_retune = 0;
-        }
-        // force retune
-        if ((CommandData.roach[i].do_retune == 1) &&
-                  roach_state_table[i].status == ROACH_STATUS_STREAMING &&
-                  roach_state_table[i].has_targ_tones) {
-            CommandData.roach[i].refit_res_freqs = 1;
-            CommandData.roach[i].do_retune = 0;
-        }
-        if (CommandData.roach[i].find_kids) {
-            if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
-                         roach_state_table[i].last_targ_path)) < 0) {
-                   blast_err("ROACH%d: Failed to find kids", i + 1);
-               }
-            CommandData.roach[i].find_kids = 0;
-        }
-        if (CommandData.roach[i].set_attens) {
-            if (set_atten(&pi_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
-            } else {
-                CommandData.roach[i].set_attens = 0;
-            }
-        }
-        if (CommandData.roach[i].new_atten) {
-            if (set_output_atten(&roach_state_table[i],
-                   CommandData.roach_params[i].new_out_atten) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
-            } else {
-                CommandData.roach[i].new_atten = 0;
-            }
+        if (pi_state_table[i].state == PI_STATE_BOOT &&
+                             pi_state_table[i].desired_state >= PI_STATE_BOOT) {
+            result = pi_boot_sequence(&pi_state_table[i], PI_READ_NTRIES);
+            pi_state_manager(&pi_state_table[i], result);
             break;
         }
-        if ((CommandData.roach[i].opt_tones) &&
-                             roach_state_table[i].has_targ_tones &&
-                             (roach_state_table[i].status >= ROACH_STATUS_STREAMING)) {
-            if (calc_grad_freqs(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
-                blast_info("ROACH%d: Opt tones success", i + 1);
-            } else {
-                 blast_info("ROACH%d: Failed to optimize target tones", i + 1);
-            }
-            CommandData.roach[i].opt_tones = 0;
-        }
-        if (pi_state_table[i].status == PI_STATUS_BOOT &&
-                             pi_state_table[i].desired_status >= PI_STATUS_BOOT) {
-            result = pi_boot_sequence(&pi_state_table[i]);
-            pi_state_handler(&pi_state_table[i], result);
-            break;
-        }
-        if (pi_state_table[i].status == PI_STATUS_CONNECTED &&
-                             pi_state_table[i].desired_status >= PI_STATUS_CONNECTED) {
+        if (pi_state_table[i].state == PI_STATE_CONNECTED &&
+                             pi_state_table[i].desired_state >= PI_STATE_CONNECTED) {
             result = pi_init_sequence(&pi_state_table[i]);
-            pi_state_handler(&pi_state_table[i], result);
+            pi_state_manager(&pi_state_table[i], result);
             break;
         }
-        if (roach_state_table[i].status == ROACH_STATUS_BOOT &&
-                                   roach_state_table[i].desired_status >= ROACH_STATUS_BOOT) {
+        if (roach_state_table[i].state == ROACH_STATE_BOOT &&
+                                   roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
             // establish a KATCP connection to the PPC
             result = roach_boot_sequence(&roach_state_table[i]);
-            roach_state_handler(&roach_state_table[i], result);
+            roach_state_manager(&roach_state_table[i], result);
             break;
         }
-        if (roach_state_table[i].status == ROACH_STATUS_CONNECTED &&
-            roach_state_table[i].desired_status >= ROACH_STATUS_CONNECTED) {
+        if (roach_state_table[i].state == ROACH_STATE_CONNECTED &&
+            roach_state_table[i].desired_state >= ROACH_STATE_CONNECTED) {
             // upload firmware
             result = roach_upload_fpg(&roach_state_table[i], roach_fpg);
-            roach_state_handler(&roach_state_table[i], result);
+            roach_state_manager(&roach_state_table[i], result);
             break;
         }
-        if (roach_state_table[i].status == ROACH_STATUS_PROGRAMMED &&
-            roach_state_table[i].desired_status >= ROACH_STATUS_PROGRAMMED) {
+        if (roach_state_table[i].state == ROACH_STATE_PROGRAMMED &&
+            roach_state_table[i].desired_state >= ROACH_STATE_PROGRAMMED) {
             // program registers, calibrate QDR RAM, initialize 1GbE
             result = roach_config_sequence(&roach_state_table[i]);
-            roach_state_handler(&roach_state_table[i], result);
+            roach_state_manager(&roach_state_table[i], result);
             break;
         }
-
-        if (roach_state_table[i].status == ROACH_STATUS_CONFIGURED &&
-                   roach_state_table[i].desired_status >= ROACH_STATUS_CONFIGURED) {
+        if (roach_state_table[i].state == ROACH_STATE_CONFIGURED &&
+                   roach_state_table[i].desired_state >= ROACH_STATE_CONFIGURED) {
             // write default VNA comb (this triggers UDP streaming, which
             // continues until shutdown
             result = roach_write_vna(&roach_state_table[i]);
             if (result < 0) {
-                roach_state_handler(&roach_state_table[i], result);
+                roach_state_manager(&roach_state_table[i], result);
             } else {
                 // if write succeeds, check streaming
                 result = roach_check_streaming(&roach_state_table[i], STREAM_NTRIES, STREAM_TIMEOUT);
             }
-            roach_state_handler(&roach_state_table[i], result);
+            roach_state_manager(&roach_state_table[i], result);
             break;
         }
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING) {
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
+            // if AUTO_CAL_ADC set, automatically adjust the attenuators to get 100 mV rms at ADCs
             if (AUTO_CAL_ADC && roach_state_table[i].has_adc_cal == 0) {
                 result = cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
-                roach_state_handler(&roach_state_table[i], result);
+                roach_state_manager(&roach_state_table[i], result);
             }
             break;
         }
         // if streaming and have tones, and AUTO_VNA_SWEEP, and NOT is_sweeping, do a sweep
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING &&
                 AUTO_VNA_SWEEP &&
                 !roach_state_table[i].is_sweeping &&
                 roach_state_table[i].has_tones) {
@@ -3578,7 +3479,7 @@ void *roach_cmd_loop(void* ind)
             break;
         }
         // if has_vna_sweep, and AUTO_FIND_KIDS, do find kids
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING &&
               roach_state_table[i].has_vna_sweep) {
               get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
                                     roach_state_table[i].last_targ_path);
@@ -3588,11 +3489,13 @@ void *roach_cmd_loop(void* ind)
             break;
         }
         // write targ tones
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING) {
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING &&
+            !roach_state_table[i].has_targ_tones &&
+            !roach_state_table[i].is_sweeping) {
             roach_write_targ_tones(&roach_state_table[i]);
         }
         // if has_targ_tones, and NOT is_sweeping, do a targ sweep
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING &&
                  roach_state_table[i].has_targ_tones &&
                  !roach_state_table[i].is_sweeping) {
             roach_targ_sweep(&roach_state_table[i]);
@@ -3604,7 +3507,7 @@ void *roach_cmd_loop(void* ind)
            In Python script: Choose tone amplitude which yields lowest alpha value,
            write list of tone amplitudes to be written.
            In C: Load list of tone amplitudes and write to Roach*/
-        if (roach_state_table[i].status == ROACH_STATUS_STREAMING &&
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING &&
                 !roach_state_table[i].is_sweeping &&
                 roach_state_table[i].has_tones) {
             blast_info("ROACH%d, Starting CAL sweeps...", i + 1);
@@ -3620,6 +3523,183 @@ void *roach_cmd_loop(void* ind)
             }
             optimize_amps(&roach_state_table[i]);
             break;
+        }
+        // Check for commands
+        // These commands can be executed in any Roach state
+        if (CommandData.roach[i].set_attens) {
+            if (set_atten(&pi_state_table[i]) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+            } else {
+                CommandData.roach[i].set_attens = 0;
+            }
+            break;
+        }
+        if (CommandData.roach[i].new_atten) {
+            if (set_output_atten(&roach_state_table[i],
+                   CommandData.roach_params[i].new_out_atten) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+            } else {
+                CommandData.roach[i].new_atten = 0;
+            }
+            break;
+        }
+        if (CommandData.roach[i].adc_rms) {
+            get_adc_rms(&roach_state_table[i]);
+            CommandData.roach[i].adc_rms = 0;
+            break;
+        }
+        if (CommandData.roach[i].calibrate_adc) {
+            cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
+            CommandData.roach[i].calibrate_adc = 0;
+            break;
+        }
+        if (CommandData.roach[i].change_roach_state) {
+            roach_state_table[i].state = CommandData.roach[i].new_state;
+            roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
+            CommandData.roach[i].change_roach_state = 0;
+            break;
+        }
+        if (CommandData.roach[i].get_roach_state) {
+            blast_info("ROACH%d, current state = %u", i, get_roach_state(i));
+            CommandData.roach[i].get_roach_state = 0;
+            break;
+        }
+        // These commmands require roach state to be streaming
+        if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
+            if (CommandData.roach[i].calc_ref_params) {
+                save_ref_params(&roach_state_table[i]);
+                CommandData.roach[i].calc_ref_params = 0;
+                break;
+            }
+            if (CommandData.roach[i].refit_res_freqs) {
+                roach_refit_freqs(&roach_state_table[i]);
+                break;
+            }
+            if (CommandData.roach[i].get_timestream == 1) {
+                blast_info("Save timestream called");
+                save_timestream(&roach_state_table[i], CommandData.roach[i].chan,
+                              CommandData.roach_params[i].num_sec);
+                break;
+            }
+            if (CommandData.roach[i].get_timestream == 2) {
+                blast_info("Saving all timestreams");
+                save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
+                // if (i == 0) CommandData.roach[2].get_timestream = 2;
+                break;
+            }
+            if (CommandData.roach[i].do_master_chop) {
+                blast_info("Creating chop template");
+                master_chop(&roach_state_table[i], CommandData.roach_params[i].num_sec);
+                break;
+            }
+            /*  if (CommandData.roach[i].tune_chan &&
+                      roach_state_table[i].state >= ROACH_STATE_ARRAY_FREQS) {
+                blast_info("Chop_tune_chan called");
+                chop_tune(&roach_state_table[i], CommandData.roach[i].chan,
+                              CommandData.roach_params[i].num_sec);
+            } */
+            if (CommandData.roach[i].change_roach_state) {
+                roach_state_table[i].state = CommandData.roach[i].roach_new_state;
+                roach_state_table[i].desired_state = CommandData.roach[i].roach_desired_state;
+                blast_info("CHANGE STATE: %d, %d",
+                        CommandData.roach[i].roach_new_state,
+                        CommandData.roach[i].roach_desired_state);
+                CommandData.roach[i].roach_state = 0;
+                break;
+            }
+            if (CommandData.roach[i].load_vna_amps && !CommandData.roach[i].do_sweeps) {
+                if (roach_state_table[i].state >= ROACH_STATE_STREAMING) {
+                    blast_info("ROACH%d, Generating search comb", i + 1);
+                    roach_vna_comb(&roach_state_table[i]);
+                    blast_info("%d", CommandData.roach[i].load_vna_amps);
+                    roach_write_tones(&roach_state_table[i], roach_state_table[i].vna_comb,
+                                                   roach_state_table[i].vna_comb_len);
+                    blast_info("ROACH%d, Search comb uploaded", i + 1);
+                } else {
+                    blast_info("ROACH%d, Cannot load vna amps", i + 1);
+                }
+                break;
+            }
+            if (CommandData.roach[i].load_targ_amps && !CommandData.roach[i].do_sweeps) {
+                blast_info("Load targ amps = %d", CommandData.roach[i].load_targ_amps);
+                if (roach_state_table[i].has_targ_tones) {
+                    roach_write_tones(&roach_state_table[i], roach_state_table[i].targ_tones,
+                                        roach_state_table[i].num_kids);
+                } else {
+                    CommandData.roach[i].load_targ_amps = 0;
+                    blast_info("ROACH%d, Cannot load targ amps", i + 1);
+                }
+                break;
+            }
+            if (CommandData.roach[i].test_tone) {
+                blast_info("Roach%d: Writing test freq %g Hz", i + 1,
+                                   CommandData.roach_params[i].test_freq);
+                roach_write_tones(&roach_state_table[i],
+                               &CommandData.roach_params[i].test_freq, 1);
+                CommandData.roach[i].test_tone = 0;
+                break;
+            }
+            if (CommandData.roach[i].load_new_freqs) {
+                blast_info("Roach%d: Writing saved freqlist: %s", i + 1, roach_state_table[i].freqlist_path);
+                roach_write_saved(&roach_state_table[i]);
+                CommandData.roach[i].load_new_freqs = 0;
+                break;
+            }
+            if (CommandData.roach[i].do_cal_sweeps &&
+                    (roach_state_table[i].state >= ROACH_STATE_STREAMING) &&
+                    (roach_state_table[i].has_targ_tones)) {
+                blast_info("NCYCLES = %f", CommandData.roach_params[i].ncycles);
+                blast_info("NPOINTS = %f", CommandData.roach_params[i].npoints);
+                blast_info("ATTEN STEP = %f", CommandData.roach_params[i].atten_step);
+                break;
+            }
+            // calculate df
+            if ((CommandData.roach[i].do_df_calc == 1) &&
+                      roach_state_table[i].state == ROACH_STATE_STREAMING &&
+                      roach_state_table[i].has_targ_tones) {
+                    if ((roach_df(&roach_state_table[i]) < 0)) {
+                        roach_state_table[i].state = ROACH_STATE_STREAMING;
+                    }
+                CommandData.roach[i].do_df_calc = 0;
+                break;
+            }
+            // check for retune condition
+            if ((CommandData.roach[i].do_check_retune == 1) &&
+                      roach_state_table[i].state == ROACH_STATE_STREAMING &&
+                      roach_state_table[i].has_targ_tones) {
+                    if ((roach_check_retune(&roach_state_table[i]) < 0)) {
+                       blast_err("ROACH%d: Retune check failed", i + 1);
+                    }
+                CommandData.roach[i].do_check_retune = 0;
+                break;
+            }
+            // force retune
+            if ((CommandData.roach[i].do_retune == 1) &&
+                      roach_state_table[i].state == ROACH_STATE_STREAMING &&
+                      roach_state_table[i].has_targ_tones) {
+                CommandData.roach[i].refit_res_freqs = 1;
+                CommandData.roach[i].do_retune = 0;
+                break;
+            }
+            if (CommandData.roach[i].find_kids) {
+                if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
+                             roach_state_table[i].last_targ_path)) < 0) {
+                       blast_err("ROACH%d: Failed to find kids", i + 1);
+                   }
+                CommandData.roach[i].find_kids = 0;
+                break;
+            }
+            if ((CommandData.roach[i].opt_tones) &&
+                                 roach_state_table[i].has_targ_tones &&
+                                 (roach_state_table[i].state >= ROACH_STATE_STREAMING)) {
+                if (calc_grad_freqs(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
+                    blast_info("ROACH%d: Opt tones success", i + 1);
+                } else {
+                     blast_info("ROACH%d: Failed to optimize target tones", i + 1);
+                }
+                CommandData.roach[i].opt_tones = 0;
+                break;
+            }
         }
         usleep(1000); // prevents mcp from eating up all the CPU.
     }
@@ -3726,6 +3806,7 @@ int init_roach(uint16_t ind)
     }
     roach_state_table[ind].which = ind + 1;
     pi_state_table[ind].which = ind + 1;
+    pi_state_table[ind].port = NC2_PORT;
     roach_state_table[ind].dest_port = 64000 + ind;
     roach_state_table[ind].src_port = 64000 + ind;
     roach_state_table[ind].src_ip = IPv4(192, 168, 40, 71 + ind);
@@ -3733,6 +3814,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_tones = 0;
     roach_state_table[ind].has_targ_tones = 0;
     roach_state_table[ind].has_adc_cal = 0;
+    roach_state_table[ind].has_ref = 0;
     roach_state_table[ind].is_streaming = 0;
     roach_state_table[ind].is_sweeping = 0;
     roach_state_table[ind].has_vna_sweep = 0;
@@ -3768,9 +3850,8 @@ void write_roach_channels_5hz(void)
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
-    char channel_name_roach_status[128] = { 0 };
-    char channel_name_pi_status[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
+    char channel_name_pi_state[128] = { 0 };
     char channel_name_roach_req_lo[128] = { 0 };
     char channel_name_roach_df[128] = { 0 };
     char channel_name_roach_read_lo[128] = { 0 };
@@ -3790,10 +3871,10 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
                     "packet_count_invalid_roach%d", i + 1);
-            snprintf(channel_name_roach_status,
-                    sizeof(channel_name_roach_status), "status_roach%d", i + 1);
-            snprintf(channel_name_pi_status,
-                    sizeof(channel_name_pi_status), "status_pi_roach%d", i + 1);
+            snprintf(channel_name_roach_state,
+                    sizeof(channel_name_roach_state), "state_roach%d", i + 1);
+            snprintf(channel_name_pi_state,
+                    sizeof(channel_name_pi_state), "state_pi_roach%d", i + 1);
             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_roach_req_lo,
@@ -3822,8 +3903,8 @@ void write_roach_channels_5hz(void)
                     channel_name_valid_pkt_ct);
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
-            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
-            PiStatusAddr[i] = channels_find_by_name(channel_name_pi_status);
+            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_state);
+            PiStatusAddr[i] = channels_find_by_name(channel_name_pi_state);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
             RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
             RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
@@ -3848,8 +3929,8 @@ void write_roach_channels_5hz(void)
         roach_udp[i].roach_valid_packet_count);
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
-        SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
-        SET_UINT16(PiStatusAddr[i], pi_state_table[i].status);
+        SET_UINT16(RoachStatusAddr[i], roach_state_table[i].state);
+        SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
         // TODO(laura/sam): Replace next write with a streaming status bitfield.
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
         SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
