@@ -263,7 +263,6 @@ void poll_socket(void)
     struct pollfd ufds[1];
     ufds[0].fd = roach_sock_fd;
     ufds[0].events = POLLIN; // Check for data on socket
-    rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
     while (1) {
         usleep(10);
         data_udp_packet_t m_packet;
@@ -271,16 +270,12 @@ void poll_socket(void)
         if (rv == -1) {
             blast_err("Roach socket poll error");
         } else {
-	    // blast_info("I am waiting for a poll event...");
             if (ufds[0].revents & POLLIN) { // check for events on socket
                 uint64_t bytes_read = recv(roach_sock_fd, m_packet.rcv_buffer,
                 ROACH_UDP_LEN, 0);
                 m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
                     + sizeof(struct ethhdr)
                     + sizeof(struct iphdr));
-                /* Filter destination address */
-		// blast_info("Before filt: R%d\t%d\t%d", m_roach_udp->which,
-                          // m_roach_udp->port, ntohs(m_packet.udp_header->dest));
                 for (int ind = 0; ind < NUM_ROACHES; ind++) {
                     roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
                     // blast_info("Roach udp %d, port = %d", m_roach_udp->which, m_roach_udp->port);
