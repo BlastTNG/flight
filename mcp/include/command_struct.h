@@ -438,7 +438,7 @@ struct CommandDataStruct {
   char highrate_linklist_name[32];
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
 
-  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
+  enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];

@@ -181,12 +181,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
     switch (command) {
 #ifndef BOLOTEST
         case vtx_xsc1:
-            CommandData.vtx_sel[0] = vtx_xsc1;
+            CommandData.vtx_sel[0] = VTX_XSC1;
             CommandData.Relays.video_trans = 1;
             CommandData.Relays.update_video = 1;
             break;
         case vtx_xsc0:
-            CommandData.vtx_sel[0] = vtx_xsc0;
+            CommandData.vtx_sel[0] = VTX_XSC0;
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
             break;
