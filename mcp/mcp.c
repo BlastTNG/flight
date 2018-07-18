@@ -359,7 +359,7 @@ void add_roach_tlm_488hz()
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-	// write_roach_channels_488hz();
+    write_roach_channels_488hz();
 #endif
     add_roach_tlm_488hz();
 

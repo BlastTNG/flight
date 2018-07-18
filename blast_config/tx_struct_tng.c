@@ -1109,6 +1109,26 @@ channel_t channel_list[] =
     { "mcp_488hz_framecount",   SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_488HZ, U_NONE, 0 },
 
 // Begin ROACH channels
+    { "ctime_packet_roach1",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "ctime_packet_roach2",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "ctime_packet_roach3",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "ctime_packet_roach4",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "ctime_packet_roach5",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "pps_count_roach1",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "pps_count_roach2",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "pps_count_roach3",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "pps_count_roach4",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "pps_count_roach5",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "clock_count_roach1",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "clock_count_roach2",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "clock_count_roach3",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "clock_count_roach4",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "clock_count_roach5",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "packet_count_roach1",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "packet_count_roach2",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "packet_count_roach3",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "packet_count_roach4",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
+    { "packet_count_roach5",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
     // roach diagnostic channels
     /*
     { "packet_count_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
