@@ -445,8 +445,10 @@ static void mcp_5hz_routines(void)
 }
 static void mcp_2hz_routines(void)
 {
-    xsc_write_data(0);
-    xsc_write_data(1);
+    if (InCharge) {
+      xsc_write_data(0);
+      xsc_write_data(1);
+   }
 }
 
 static void mcp_1hz_routines(void)
