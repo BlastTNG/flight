@@ -96,6 +96,7 @@ struct ElSolutionStruct {
 // TODO(laura): These next fields are for debugging and should be removed before flight.
   double new_offset_ifel_gy;
   double int_ifel;
+  double prev_sol_el;
 };
 
 struct AzSolutionStruct {
@@ -120,6 +121,7 @@ struct AzSolutionStruct {
   double d_az;
   double int_ifroll;
   double int_ifyaw;
+  double prev_sol_az;
 };
 
 static struct {
@@ -719,6 +721,10 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             + (m_rg->ifyaw_gy + m_rg->ifyaw_gy_offset) * cos(el_frame);
     a->angle += gy_az / SR;
     a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
+    a->int_ifroll += m_rg->ifroll_gy / SR;
+    a->int_ifyaw += m_rg->ifyaw_gy / SR;
+    e->int_ifel += m_rg->ifel_gy / SR;
+    a->since_last++;
 
     if ((trig_state = XSCHasNewSolution(which))) {
         double w1, w2;
@@ -744,11 +750,28 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             blast_dbg("Solution from XSC%i: Ra:%f, Dec:%f", which, to_degrees(from_hours(ra)), dec);
             blast_dbg("Solution from XSC%i: az:%f, el:%f", which, new_az, new_el);
 
+
             /* Add BDA offset -- there's a pole here at EL = 90 degrees! */
 
             new_az += to_degrees(approximate_az_from_cross_el(CommandData.XSC[which].cross_el_trim,
                                                               from_degrees(old_el)));
             new_el += to_degrees(CommandData.XSC[which].el_trim);
+
+            e->new_offset_ifel_gy = ((new_el - e->prev_sol_el) - e->int_ifel) /
+            ((1.0/SR) * (double)a->since_last);
+            a->d_az = remainder(new_az - a->prev_sol_az, 360.0);
+            a->new_offset_ifroll_gy = -(a->d_az * cos((new_el + e->prev_sol_el)/180.0*M_PI) + a->int_ifroll) /
+            ((1.0/SR) * (double)a->since_last);
+            a->new_offset_ifroll_gy = -(a->d_az * sin((new_el + e->prev_sol_el)/180.0*M_PI) + a->int_ifyaw) /
+            ((1.0/SR) * (double)a->since_last);
+
+            // Now that we have calculated the integrated gyros, reset the gyro integrations and prev solutions.
+            a->prev_sol_az = new_az;
+            a->int_ifroll = 0.0;
+            a->int_ifyaw = 0.0;
+            e->prev_sol_el = new_el;
+            e->int_ifel = 0.0;
+            a->since_last = 0;
 
             // This solution is xsc_pointing_data.age_last_stars_solution old: how much have we moved?
             gy_el_delta = 0;
@@ -1094,6 +1117,8 @@ void Pointing(void)
         .sys_var = M2DV(0.2), // systematic variance
         .offset_gy = OFFSET_GY_IFEL, // gy offset
         .FC = 0.0001, // filter constant
+        .prev_sol_el = 0.0,
+        .int_ifel = 0.0,
     };
     static struct ElSolutionStruct OSCEl = {
         .variance = 719.9 * 719.9, // starting variance
@@ -1101,6 +1126,8 @@ void Pointing(void)
         .sys_var = M2DV(0.2), // systematic variance
         .offset_gy = OFFSET_GY_IFEL, // gy offset
         .FC = 0.0001, // filter constant
+        .prev_sol_el = 0.0,
+        .int_ifel = 0.0,
     };
     static struct ElSolutionStruct MagElN = {
         .variance = 360.0 * 360.0,
@@ -1158,6 +1185,10 @@ void Pointing(void)
         .offset_ifroll_gy = OFFSET_GY_IFROLL,
         .offset_ifyaw_gy = OFFSET_GY_IFYAW,
         .FC = 0.0001, // filter constant
+        .prev_sol_az = 0.0,
+        .int_ifroll = 0.0,
+        .int_ifyaw = 0.0,
+        .since_last = 0,
     };
     static struct AzSolutionStruct OSCAz = {
         .variance = 360.0 * 360.0,
@@ -1166,6 +1197,10 @@ void Pointing(void)
         .offset_ifroll_gy = OFFSET_GY_IFROLL,
         .offset_ifyaw_gy = OFFSET_GY_IFYAW,
         .FC = 0.0001, // filter constant
+        .prev_sol_az = 0.0,
+        .int_ifroll = 0.0,
+        .int_ifyaw = 0.0,
+        .since_last = 0,
     };
 
   static gyro_history_t hs = {NULL};
@@ -1495,6 +1530,24 @@ void Pointing(void)
     PointingData[point_index].d_az_mag2 = MagAzS.d_az;
     PointingData[point_index].int_ifroll_mag2 = MagAzS.int_ifroll;
     PointingData[point_index].int_ifyaw_mag2 = MagAzS.int_ifyaw;
+    PointingData[point_index].new_offset_ifel_xsc0_gy = ISCEl.new_offset_ifel_gy;
+    PointingData[point_index].new_offset_ifroll_xsc0_gy = ISCAz.new_offset_ifroll_gy;
+    PointingData[point_index].new_offset_ifyaw_xsc0_gy = ISCAz.new_offset_ifyaw_gy;
+    PointingData[point_index].int_ifel_xsc0 = ISCEl.int_ifel;
+    PointingData[point_index].int_ifroll_xsc0 = ISCAz.int_ifroll;
+    PointingData[point_index].int_ifyaw_xsc0 = ISCAz.int_ifyaw;
+    PointingData[point_index].d_az_xsc0 = ISCAz.d_az;
+    PointingData[point_index].prev_sol_az_xsc0 = ISCAz.prev_sol_az;
+    PointingData[point_index].prev_sol_el_xsc0 = ISCEl.prev_sol_el;
+    PointingData[point_index].new_offset_ifel_xsc1_gy = OSCEl.new_offset_ifel_gy;
+    PointingData[point_index].new_offset_ifroll_xsc1_gy = OSCAz.new_offset_ifroll_gy;
+    PointingData[point_index].new_offset_ifyaw_xsc1_gy = OSCAz.new_offset_ifyaw_gy;
+    PointingData[point_index].int_ifel_xsc1 = OSCEl.int_ifel;
+    PointingData[point_index].int_ifroll_xsc1 = OSCAz.int_ifroll;
+    PointingData[point_index].int_ifyaw_xsc1 = OSCAz.int_ifyaw;
+    PointingData[point_index].d_az_xsc1 = OSCAz.d_az;
+    PointingData[point_index].prev_sol_az_xsc1 = OSCAz.prev_sol_az;
+    PointingData[point_index].prev_sol_el_xsc1 = OSCEl.prev_sol_el;
 
     xsc_calculate_full_pointing_estimated_location(0);
     xsc_calculate_full_pointing_estimated_location(1);
