@@ -506,15 +506,10 @@ static void *defricher_write_loop(void *m_arg)
                 channels = new_channels;
                 new_channels = NULL;
                 defricher_transfer_channel_list(channels);
-                ri.channels_ready = true;
-                dirfile_create_new = 1;
-                dirfile_offset = -1;
-                dirfile_ready = false;
 
                  /* Parse the linklist, if present, and put into linklist mode */
-                linklist_assign_channel_list(channels);
 								if (rc.linklist_file) {
-									rc.ll = parse_linklist(rc.linklist_file);
+									rc.ll = parse_linklist_format(superframe, rc.linklist_file);
 								}
 
                 // initialize FIFO buffer
@@ -528,6 +523,11 @@ static void *defricher_write_loop(void *m_arg)
                   }
                   allocFifo(&fifo_data[rate], num_elements_in_fifo, frame_size[rate]);
                 }
+
+                ri.channels_ready = true;
+                dirfile_create_new = 1;
+                dirfile_offset = -1;
+                dirfile_ready = false;
             }
             
 

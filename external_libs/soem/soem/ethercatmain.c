@@ -133,7 +133,6 @@ boolean                 EcatError = FALSE;
 int64                   ec_DCtime;
                                                    
 ecx_portt               ecx_port;
-ecx_redportt            ecx_redport;
 
 ecx_contextt  ecx_context = {
     &ecx_port,       // .port          =
@@ -323,32 +322,7 @@ static void ecx_mbxemergencyerror(ecx_contextt *context, uint16 Slave,uint16 Err
  */
 int ecx_init(ecx_contextt *context, char * ifname)
 {
-   return ecx_setupnic(context->port, ifname, FALSE);
-}
-
-/** Initialise lib in redundant NIC mode
- * @param[in]  context  = context struct
- * @param[in]  redport  = pointer to redport, redundant port data
- * @param[in]  ifname   = Primary Dev name, f.e. "eth0"
- * @param[in]  if2name  = Secondary Dev name, f.e. "eth1"
- * @return >0 if OK
- */
-int ecx_init_redundant(ecx_contextt *context, ecx_redportt *redport, char *ifname, char *if2name)
-{
-   int rval, zbuf;
-   ec_etherheadert *ehp;
-
-   context->port->redport = redport;
-   ecx_setupnic(context->port, ifname, FALSE);
-   rval = ecx_setupnic(context->port, if2name, TRUE);
-   /* prepare "dummy" BRD tx frame for redundant operation */
-   ehp = (ec_etherheadert *)&(context->port->txbuf2);
-   ehp->sa1 = oshw_htons(secMAC[0]);
-   zbuf = 0;
-   ecx_setupdatagram(context->port, &(context->port->txbuf2), EC_CMD_BRD, 0, 0x0000, 0x0000, 2, &zbuf);
-   context->port->txbuflength2 = ETH_HEADERSIZE + EC_HEADERSIZE + EC_WKCSIZE + 2;
-
-   return rval;
+   return ecx_setupnic(context->port, ifname);
 }
 
 /** Close lib.
@@ -838,7 +812,7 @@ uint16 ecx_statecheck(ecx_contextt *context, uint16 slave, uint16 reqstate, int 
 
    if ( slave > *(context->slavecount) )
    {
-      return 0;
+       return 0;
    }
    osal_timer_start(&timer, timeout);
    configadr = context->slavelist[slave].configadr;
@@ -861,7 +835,7 @@ uint16 ecx_statecheck(ecx_contextt *context, uint16 slave, uint16 reqstate, int 
       state = rval & 0x000f; /* read slave status */
       if (state != reqstate)
       {
-         osal_usleep(1000);
+	 osal_usleep(1000);
       }
    }
    while ((state != reqstate) && (osal_timer_is_expired(&timer) == FALSE));
@@ -1694,7 +1668,7 @@ int ecx_send_processdata_group(ecx_contextt *context, uint8 group)
                   first = FALSE;
                }
                /* send frame */
-               ecx_outframe_red(context->port, idx);
+               ecx_outframe(context->port, idx);
                /* push index and data pointer on stack */
                ecx_pushindex(context, idx, data, sublength);
                length -= sublength;
@@ -1732,7 +1706,7 @@ int ecx_send_processdata_group(ecx_contextt *context, uint8 group)
                   first = FALSE;
                }
                /* send frame */
-               ecx_outframe_red(context->port, idx);
+               ecx_outframe(context->port, idx);
                /* push index and data pointer on stack */
                ecx_pushindex(context, idx, data, sublength);
                length -= sublength;
@@ -1771,7 +1745,7 @@ int ecx_send_processdata_group(ecx_contextt *context, uint8 group)
                first = FALSE;
             }
             /* send frame */
-            ecx_outframe_red(context->port, idx);
+            ecx_outframe(context->port, idx);
             /* push index and data pointer on stack */
             ecx_pushindex(context, idx, data, sublength);
             length -= sublength;
@@ -1895,11 +1869,6 @@ void ec_packeterror(uint16 Slave, uint16 Index, uint8 SubIdx, uint16 ErrorCode)
 int ec_init(char * ifname)
 {
    return ecx_init(&ecx_context, ifname);
-}
-
-int ec_init_redundant(char *ifname, char *if2name)
-{
-   return ecx_init_redundant (&ecx_context, &ecx_redport, ifname, if2name);
 }
 
 void ec_close(void)

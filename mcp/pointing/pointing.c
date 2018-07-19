@@ -181,7 +181,7 @@ void SetSafeDAz(double ref, double *A)
 /*             to convert mag_x and mag_y to mag_az                     */
 /*                                                                      */
 /************************************************************************/
-static int MagConvert(double *mag_az, double *m_el) {
+static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     static MAGtype_MagneticModel * MagneticModels[1], *TimedMagneticModel;
     static MAGtype_Ellipsoid Ellip;
     static MAGtype_Geoid Geoid;
@@ -189,6 +189,7 @@ static int MagConvert(double *mag_az, double *m_el) {
     float year;
     double mvx, mvy, mvz;
     double raw_mag_az, raw_mag_pitch;
+    static double magx_m, magy_m, magx_b, magy_b;
     static double dip;
     static double dec = 0;
     time_t t;
@@ -196,6 +197,7 @@ static int MagConvert(double *mag_az, double *m_el) {
     int i_point_read;
     static time_t oldt;
     static int firsttime = 1;
+    static uint32_t mag_count = 0;
 //    double magx_m, magx_b, magy_m, magy_b;
     int epochs = 1;
     int NumTerms, nMax = 0;
@@ -260,7 +262,7 @@ static int MagConvert(double *mag_az, double *m_el) {
 
         dec = GeoMagneticElements.Decl;
         dip = GeoMagneticElements.Incl;
-        PointingData[point_index].mag_strength = GeoMagneticElements.H;
+        PointingData[point_index].mag_strength[mag_index] = GeoMagneticElements.H;
     }
 
     /* The dec is the correction to the azimuth of the magnetic field. */
@@ -271,8 +273,8 @@ static int MagConvert(double *mag_az, double *m_el) {
     /* Thus, depending on the sign convention, you have to either add or */
     /* subtract dec from az to get the true bearing. (Adam H.) */
 
-    mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
-    mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
+//    mvx = (ACSData.mag_x - MAGX_B) / MAGX_M;
+//    mvy = (ACSData.mag_y - MAGY_B) / MAGY_M;
 
     // TODO(seth): Reset calibration values to Reasonable for gauss
 //    magx_m = 1.0 / ((double) (CommandData.cal_xmax_mag - CommandData.cal_xmin_mag));
@@ -283,12 +285,32 @@ static int MagConvert(double *mag_az, double *m_el) {
 
 //    mvx = magx_m * (ACSData.mag_x - magx_b);
 //    mvy = magy_m * (ACSData.mag_y - magy_b);
-    mvz = MAGZ_M * (ACSData.mag_z - MAGZ_B);
+
+    magx_m = (CommandData.cal_xmax_mag[mag_index]-CommandData.cal_xmin_mag[mag_index])/2.0;
+    magx_b = (CommandData.cal_xmax_mag[mag_index]+CommandData.cal_xmin_mag[mag_index])/2.0;
+    magy_m = (CommandData.cal_ymax_mag[mag_index]-CommandData.cal_ymin_mag[mag_index])/2.0;
+    magy_b = (CommandData.cal_ymax_mag[mag_index]+CommandData.cal_ymin_mag[mag_index])/2.0;
+
+    mvx = (ACSData.mag_x[mag_index]-magx_b)/magx_m;
+    mvy = (ACSData.mag_y[mag_index]-magy_b)/magy_m;
+    mvz = MAGZ_M * (ACSData.mag_z[mag_index] - MAGZ_B);
 
     raw_mag_az = (-1.0) * (180.0 / M_PI) * atan2(mvy, mvx);
     raw_mag_pitch = (180.0 / M_PI) * atan2(mvz, sqrt(mvx * mvx + mvy * mvy));
-    *mag_az = raw_mag_az + dec + MAG_ALIGNMENT;
+    *mag_az = raw_mag_az + dec + CommandData.cal_mag_align[mag_index];
     *m_el = raw_mag_pitch + dip;
+/*
+    if (((mag_count % 20000) == 0) || ((mag_count % 20000) == 1)) {
+        blast_info("cal_xmin_mag = %f, cal_xmax_mag = %f, cal_ymin_mag = %f, cal_ymax_mag = %f",
+                   CommandData.cal_xmin_mag[mag_index], CommandData.cal_xmax_mag[mag_index],
+                   CommandData.cal_ymin_mag[mag_index], CommandData.cal_ymax_mag[mag_index]);
+        blast_info("ACSData.mag_x = %f, ACSData.mag_y = %f", ACSData.mag_x[mag_index], ACSData.mag_y[mag_index]);
+        blast_info("magx_m = %f, magx_b = %f, magy_m = %f, magy_b = %f", magx_m, magx_b, magy_m, magy_b);
+        blast_info("mvx = %f, mvy = %f, mvz = %f", mvx, mvy, mvz);
+        blast_info("raw_mag_az = %f, dec = %f, cal_mag_align = %f, mag_az = %f",
+                   raw_mag_az, dec, CommandData.cal_mag_align[mag_index], *mag_az);
+    }
+*/
 
 #if 0
 #warning THE MAGNETIC MODEL HAS BEEN DISABLED
@@ -298,9 +320,10 @@ static int MagConvert(double *mag_az, double *m_el) {
     NormalizeAngle(mag_az);
     NormalizeAngle(&dec);
 
-    PointingData[point_index].mag_model_dec = dec;
-    PointingData[point_index].mag_model_dip = dip;
+    PointingData[point_index].mag_model_dec[mag_index] = dec;
+    PointingData[point_index].mag_model_dip[mag_index] = dip;
 
+    mag_count++;
     return (1);
 }
 
@@ -581,36 +604,39 @@ static void record_gyro_history(int m_index, gyro_history_t *m_gyhist, gyro_read
     m_gyhist->i_history++;
 }
 
-int possible_solution(double az, double el, int i_point) {
-  double mag_az, enc_el, d_az;
-
-  // test for insanity
-  if (!finite(az)) return(0);
-  if (!finite(el)) return(0);
-  if (el > 70.0) return (0);
-  if (el < 0.0) return(0);
-
-  mag_az = PointingData[i_point].mag_az;
-
-  if (CommandData.use_elenc) {
-    enc_el = ACSData.enc_elev;
-    if (el - enc_el > 5.0) return (0);
-    if (enc_el - el > 5.0) return (0);
-  }
-
-  if (CommandData.use_mag) {
-    d_az = az - mag_az;
-
-    if (d_az > 180.0) d_az -= 360;
-    if (d_az < -180.0) d_az += 360;
-
-    if (d_az > 30.0) return (0);
-    if (d_az < -30.0) return (0);
-  }
-
-
-  return(1);
-}
+// TODO(laura): This function doesn't appear to be called by anything in mcp.
+// Is this BLASTPol code that Seth overwrote?
+//
+// int possible_solution(double az, double el, int i_point) {
+//   double mag_az, enc_el, d_az;
+//
+//   // test for insanity
+//   if (!finite(az)) return(0);
+//   if (!finite(el)) return(0);
+//   if (el > 70.0) return (0);
+//   if (el < 0.0) return(0);
+//
+//   mag_az = PointingData[i_point].mag_az;
+//
+//   if (CommandData.use_elenc) {
+//     enc_el = ACSData.enc_elev;
+//     if (el - enc_el > 5.0) return (0);
+//     if (enc_el - el > 5.0) return (0);
+//   }
+//
+//   if (CommandData.use_mag) {
+//     d_az = az - mag_az;
+//
+//     if (d_az > 180.0) d_az -= 360;
+//     if (d_az < -180.0) d_az += 360;
+//
+//     if (d_az > 30.0) return (0);
+//     if (d_az < -30.0) return (0);
+//   }
+//
+//
+//   return(1);
+// }
 
 static xsc_last_trigger_state_t *XSCHasNewSolution(int which)
 {
@@ -1000,11 +1026,14 @@ void Pointing(void)
     double ra, dec, az, el;
     static int j = 0;
 
-    int mag_ok;
+    int mag_ok_n;
+    int mag_ok_s;
     int pss_ok;
     static unsigned pss_since_ok = 500;
-    double mag_az;
-    double mag_el;
+    double mag_az_n;
+    double mag_az_s;
+    double mag_el_n;
+    double mag_el_s;
     double pss_az = 0;
     double pss_el = 0;
     double clin_elev;
@@ -1057,7 +1086,14 @@ void Pointing(void)
         .offset_gy = OFFSET_GY_IFEL, // gy offset
         .FC = 0.0001, // filter constant
     };
-    static struct ElSolutionStruct MagEl = {
+    static struct ElSolutionStruct MagElN = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(120),
+        .sys_var = M2DV(90), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
+    static struct ElSolutionStruct MagElS = {
         .variance = 360.0 * 360.0,
         .samp_weight = 1.0 / M2DV(120),
         .sys_var = M2DV(90), // systematic variance
@@ -1073,7 +1109,15 @@ void Pointing(void)
         .offset_ifyaw_gy = OFFSET_GY_IFYAW,
         .FC = 0.0001, // filter constant
     };
-    static struct AzSolutionStruct MagAz = {
+    static struct AzSolutionStruct MagAzN = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(120),
+        .sys_var = M2DV(90), // systematic variance
+        .offset_ifroll_gy = OFFSET_GY_IFROLL,
+        .offset_ifyaw_gy = OFFSET_GY_IFYAW,
+        .FC = 0.0001, // filter constant
+    };
+    static struct AzSolutionStruct MagAzS = {
         .variance = 360.0 * 360.0,
         .samp_weight = 1.0 / M2DV(120),
         .sys_var = M2DV(90), // systematic variance
@@ -1117,7 +1161,8 @@ void Pointing(void)
         EncEl.trim = CommandData.enc_el_trim;
         EncMotEl.trim = CommandData.enc_motor_el_trim;
         NullAz.trim = CommandData.null_az_trim;
-        MagAz.trim = CommandData.mag_az_trim;
+        MagAzN.trim = CommandData.mag_az_trim[0];
+        MagAzS.trim = CommandData.mag_az_trim[1];
         PSSAz.trim = CommandData.pss_az_trim;
 
         ClinEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1126,18 +1171,24 @@ void Pointing(void)
         init_fir(EncEl.fs, FIR_LENGTH, 0, 0);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(EncMotEl.fs, FIR_LENGTH, 0, 0);
-        MagEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        init_fir(MagEl.fs, FIR_LENGTH, 0, 0);
+        MagElN.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        init_fir(MagElN.fs, FIR_LENGTH, 0, 0);
+        MagElS.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        init_fir(MagElS.fs, FIR_LENGTH, 0, 0);
 
         NullAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         NullAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(NullAz.fs2, (int) (10), 0, 0); // not used
         init_fir(NullAz.fs3, (int) (10), 0, 0); // not used
 
-        MagAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        MagAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        init_fir(MagAz.fs2, FIR_LENGTH, 0, 0);
-        init_fir(MagAz.fs3, FIR_LENGTH, 0, 0);
+        MagAzN.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        MagAzN.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        MagAzS.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        MagAzS.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        init_fir(MagAzN.fs2, FIR_LENGTH, 0, 0);
+        init_fir(MagAzN.fs3, FIR_LENGTH, 0, 0);
+        init_fir(MagAzS.fs2, FIR_LENGTH, 0, 0);
+        init_fir(MagAzS.fs3, FIR_LENGTH, 0, 0);
 
         PSSAz.fs2 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         PSSAz.fs3 = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1233,11 +1284,13 @@ void Pointing(void)
     /**
      * Get the Magnetometer Data
      */
-    mag_ok = MagConvert(&mag_az, &mag_el);
+    mag_ok_n = MagConvert(&(mag_az_n), &(mag_el_n), 0);
+    mag_ok_s = MagConvert(&(mag_az_s), &(mag_el_s), 1);
 
-    PointingData[point_index].mag_az_raw = mag_az;
-    PointingData[point_index].mag_el_raw = mag_el;
-
+    PointingData[point_index].mag_az_raw[0] = mag_az_n;
+    PointingData[point_index].mag_el_raw[0] = mag_el_n;
+    PointingData[point_index].mag_az_raw[1] = mag_az_s;
+    PointingData[point_index].mag_el_raw[1] = mag_el_s;
     /*************************************/
     /**      do ISC Solution            **/
     EvolveXSCSolution(&ISCEl, &ISCAz, &RG, &hs, PointingData[i_point_read].el, 0);
@@ -1261,10 +1314,12 @@ void Pointing(void)
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             ACSData.enc_motor_elev, 1);
-    EvolveElSolution(&MagEl, RG.ifel_gy,
+    EvolveElSolution(&MagElN, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
-            mag_el, mag_ok);
-
+            mag_el_n, mag_ok_n);
+    EvolveElSolution(&MagElS, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            mag_el_s, mag_ok_s);
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
     }
@@ -1282,8 +1337,6 @@ void Pointing(void)
     if (CommandData.use_xsc1) {
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
-
-    // TODO(seth): Add magnetometer to veto el list
 
     if (CommandData.el_autogyro)
         PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
@@ -1310,12 +1363,18 @@ void Pointing(void)
         RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
         PointingData[point_index].el,
         0.0, 0);
-    /** MAG Az **/
-    EvolveAzSolution(&MagAz,
+    /** MAG Az from North **/
+    EvolveAzSolution(&MagAzN,
         RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
         RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
         PointingData[point_index].el,
-        mag_az, mag_ok);
+        mag_az_n, mag_ok_n);
+    /** MAG Az from South **/
+    EvolveAzSolution(&MagAzS,
+        RG.ifroll_gy, PointingData[i_point_read].offset_ifroll_gy,
+        RG.ifyaw_gy,  PointingData[i_point_read].offset_ifyaw_gy,
+        PointingData[point_index].el,
+        mag_az_s, mag_ok_s);
 
     /** PSS **/
     EvolveAzSolution(&PSSAz,
@@ -1332,8 +1391,11 @@ void Pointing(void)
 
     AddAzSolution(&AzAtt, &NullAz, 1);
     /** add az solutions **/
-    if (CommandData.use_mag) {
-        AddAzSolution(&AzAtt, &MagAz, 1);
+    if (CommandData.use_mag1) {
+        AddAzSolution(&AzAtt, &MagAzN, 1);
+    }
+    if (CommandData.use_mag2) {
+        AddAzSolution(&AzAtt, &MagAzS, 1);
     }
     if (CommandData.use_pss) {
         AddAzSolution(&AzAtt, &PSSAz, 1);
@@ -1345,8 +1407,10 @@ void Pointing(void)
         AddAzSolution(&AzAtt, &OSCAz, 0);
     }
 
-    PointingData[point_index].offset_ifrollmag_gy = MagAz.offset_ifroll_gy;
-    PointingData[point_index].offset_ifyawmag_gy = MagAz.offset_ifyaw_gy;
+    PointingData[point_index].offset_ifrollmag_gy[0] = MagAzN.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyawmag_gy[0] = MagAzN.offset_ifyaw_gy;
+    PointingData[point_index].offset_ifrollmag_gy[1] = MagAzS.offset_ifroll_gy;
+    PointingData[point_index].offset_ifyawmag_gy[1] = MagAzS.offset_ifyaw_gy;
 
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
@@ -1376,9 +1440,12 @@ void Pointing(void)
     PointingData[point_index].clin_el = ClinEl.angle;
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
-    PointingData[point_index].mag_az = MagAz.angle;
-    PointingData[point_index].mag_el = MagEl.angle;
-    PointingData[point_index].mag_sigma = sqrt(MagAz.variance + MagAz.sys_var);
+    PointingData[point_index].mag_az[0] = MagAzN.angle;
+    PointingData[point_index].mag_el[0] = MagElN.angle;
+    PointingData[point_index].mag_sigma[0] = sqrt(MagAzN.variance + MagAzN.sys_var);
+    PointingData[point_index].mag_az[1] = MagAzS.angle;
+    PointingData[point_index].mag_el[1] = MagElS.angle;
+    PointingData[point_index].mag_sigma[1] = sqrt(MagAzS.variance + MagAzS.sys_var);
 
     PointingData[point_index].null_az = NullAz.angle;
 
@@ -1412,7 +1479,8 @@ void Pointing(void)
         EncEl.trim = 0.0;
         EncMotEl.trim = 0.0;
         NullAz.trim = 0.0;
-        MagAz.trim = 0.0;
+        MagAzN.trim = 0.0;
+        MagAzS.trim = 0.0;
         PSSAz.trim = 0.0;
         NewAzEl.fresh = 0;
     }
@@ -1446,12 +1514,19 @@ void Pointing(void)
             trim_change = -NewAzEl.rate;
         NullAz.trim += trim_change;
 
-        trim_change = (NewAzEl.az - MagAz.angle) - MagAz.trim;
+        trim_change = (NewAzEl.az - MagAzN.angle) - MagAzN.trim;
         if (trim_change > NewAzEl.rate)
             trim_change = NewAzEl.rate;
         else if (trim_change < -NewAzEl.rate)
             trim_change = -NewAzEl.rate;
-        MagAz.trim += trim_change;
+        MagAzN.trim += trim_change;
+
+        trim_change = (NewAzEl.az - MagAzS.angle) - MagAzS.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        MagAzS.trim += trim_change;
 
         if (pss_since_ok < 500) {
             trim_change = (NewAzEl.az - PSSAz.angle) - PSSAz.trim;
@@ -1471,7 +1546,8 @@ void Pointing(void)
     CommandData.enc_el_trim = EncEl.trim;
     CommandData.enc_motor_el_trim = EncMotEl.trim;
     CommandData.null_az_trim = NullAz.trim;
-    CommandData.mag_az_trim = MagAz.trim;
+    CommandData.mag_az_trim[0] = MagAzN.trim;
+    CommandData.mag_az_trim[1] = MagAzS.trim;
     CommandData.pss_az_trim = PSSAz.trim;
     j++;
 

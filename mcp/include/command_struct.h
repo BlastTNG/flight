@@ -259,6 +259,8 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
+
 typedef struct {
   int16_t hwprPos;
   int hwpr_pos_old;
@@ -266,6 +268,12 @@ typedef struct {
   uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
+  int potvalve_on;
+  valve_state_t potvalve_goal;
+  uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
+  valve_state_t valve_goals[2];
+  uint16_t valve_vel, valve_current;
+  uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   int do_cal_pulse;
   int do_level_pulse;
   uint16_t level_length;
@@ -368,6 +376,15 @@ typedef struct roach_params
     double num_sec;
 } roach_params_t;
 
+// Ethercat controller/device commands
+typedef struct {
+    bool reset;
+    bool fix_rw;
+    bool fix_el;
+    bool fix_piv;
+    bool fix_hwpr;
+} ec_devices_struct_t;
+
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
     enum {neg = 0, no_bal, pos} bal_move_type;
@@ -388,6 +405,14 @@ typedef struct {
     int8_t status;
     bool reset;
 } cmd_rox_bias_t;
+
+typedef struct {
+    unsigned int kid;
+    unsigned int roach;
+    unsigned int rtype;
+    unsigned int index;
+    char name[64];
+} roach_tlm_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -411,6 +436,7 @@ struct CommandDataStruct {
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
+  roach_tlm_t roach_tlm[NUM_ROACH_TLM];
 
   enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
 
@@ -458,7 +484,8 @@ struct CommandDataStruct {
   unsigned char use_pss;
   unsigned char use_xsc0;
   unsigned char use_xsc1;
-  unsigned char use_mag;
+  unsigned char use_mag1;
+  unsigned char use_mag2;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -469,7 +496,7 @@ struct CommandDataStruct {
   double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
-  double mag_az_trim;
+  double mag_az_trim[2];
   double pss_az_trim;
 
   int autotrim_enable;
@@ -479,10 +506,11 @@ struct CommandDataStruct {
   time_t autotrim_xsc0_last_bad;
   time_t autotrim_xsc1_last_bad;
 
-  double cal_xmax_mag;
-  double cal_xmin_mag;
-  double cal_ymax_mag;
-  double cal_ymin_mag;
+  double cal_xmax_mag[2];
+  double cal_xmin_mag[2];
+  double cal_ymax_mag[2];
+  double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
@@ -509,6 +537,8 @@ struct CommandDataStruct {
   relay_cmds_t Relays;
 
   cmd_balance_t balance;
+
+  ec_devices_struct_t ec_devices;
 
   struct {
     int off;
@@ -578,6 +608,7 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+  int mag_reset;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;

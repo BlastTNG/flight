@@ -37,6 +37,7 @@
 #include "blast.h"
 #include "channels_tng.h"
 #include "FIFO.h"
+#include "linklist_writer.h"
 
 #include "defricher.h"
 #include "defricher_utils.h"
@@ -84,12 +85,22 @@ static void frame_handle_data(const char *m_rate, const void *m_data, const int 
     }
 }
 
-static void frame_handle_linklist_data(void * m_data, unsigned int m_len) {
+static void frame_handle_linklist_data(uint8_t * m_data, unsigned int m_len) {
     if (m_len != rc.ll->blk_size) {
         defricher_err("Packet data size mismatch: expected %d bytes and received %d bytes", rc.ll->blk_size, m_len);
         return;
     }
-    defricher_info("Received data from %s (size %d == %d)\n", rc.linklist_file, rc.ll->blk_size, m_len);
+
+    static int counter = 0;
+    static int first_time = 1;
+    static linklist_dirfile_t * ll_dirfile = NULL;
+    if (first_time) {
+        ll_dirfile = open_linklist_dirfile("test.DIR", rc.ll);
+        first_time = 0;
+    }
+
+    write_linklist_dirfile(ll_dirfile, m_data);
+    // defricher_info("Received data from %s (size %d == %d, frame = %d)\n", rc.linklist_file, rc.ll->blk_size, m_len, counter);
 }
 
 static void frame_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)

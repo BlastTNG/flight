@@ -14,19 +14,22 @@
 #include <string.h>
 #include <pthread.h> // threads
 #include <float.h>
+#include <ctype.h>
 
 #include "linklist.h"
 #include "linklist_compress.h"
+#include "linklist_writer.h"
+#include "linklist_connect.h"
 #include "blast.h"
 #include "groundhog_framing.h"
 #include "channels_tng.h"
+#include "derived.h"
 #include "groundhog.h"
 #include "pilot.h"
 #include "bi0.h"
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
-char datestring[80] = {0};
 int system_idled = 0;
 sigset_t signals;
 
@@ -62,19 +65,39 @@ void daemonize()
     chdir("/");
     freopen("/dev/null", "r", stdin);
     freopen(GROUNDHOG_LOG, "a", stdout);
+    setvbuf(stdout,NULL,_IONBF,0);
     freopen("/dev/null", "w", stderr);
     setsid();
 }
 
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile, linklist_t * ll, char * symname) {
+  if (ll_rawfile) {
+    close_and_free_linklist_rawfile(ll_rawfile);
+  } 
+  char filename[128];
+  make_linklist_rawfile_name(ll, filename);
+  ll_rawfile = open_linklist_rawfile(filename, ll);
+
+  char fname[128];
+  sprintf(fname, "%s/%s_live", archive_dir, symname);
+  create_rawfile_symlinks(ll_rawfile, fname);
+
+  sprintf(fname, "%s" CALSPECS_FORMAT_EXT, filename);
+  channels_write_calspecs(fname, derived_list);
+
+  return ll_rawfile;
+}
+
 
 int main(int argc, char * argv[]) {
-  channels_initialize(channel_list);
-  define_allframe();
+  sprintf(archive_dir, "/data/groundhog");
 
+  channels_initialize(channel_list);
   linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
-  load_all_linklists(DEFAULT_LINKLIST_DIR, ll_list);
+  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
+  generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), ALL_TELEMETRY_NAME);
   linklist_generate_lookup(ll_list);  
-  linklist_to_file(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
+  write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
   int pilot_on = 1;
   int bi0_on = 1;
@@ -102,10 +125,6 @@ int main(int argc, char * argv[]) {
   // initialize framing
   framing_init();
 
-  // get the date string for file saving
-  time_t now = time(0);
-  struct tm * tm_t = localtime(&now);
-  strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M", tm_t);
  
   // setup pilot receive udp struct
   struct UDPSetup pilot_setup = {"Pilot", 
@@ -130,6 +149,9 @@ int main(int argc, char * argv[]) {
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
 
+  // Serving up data received via telemetry
+  pthread_t server_thread;
+
   // publishing thread; handles all telemetry publishing to mosquitto
   pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
@@ -145,6 +167,9 @@ int main(int argc, char * argv[]) {
   if (highrate_on) {
     pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
   }
+
+  // start the server thread for mole clients
+  pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
   // The Joining
   pthread_join(groundhog_publish_worker, NULL);
