@@ -760,12 +760,19 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
             e->new_offset_ifel_gy = ((new_el - e->prev_sol_el) - e->int_ifel) /
             ((1.0/SR) * (double)a->since_last);
             a->d_az = remainder(new_az - a->prev_sol_az, 360.0);
-            a->new_offset_ifroll_gy = -(a->d_az * cos((new_el + e->prev_sol_el)/180.0*M_PI) + a->int_ifroll) /
+            a->new_offset_ifroll_gy = -(a->d_az * cos((new_el + e->prev_sol_el)/180.0/2.0*M_PI) + a->int_ifroll) /
             ((1.0/SR) * (double)a->since_last);
-            a->new_offset_ifroll_gy = -(a->d_az * sin((new_el + e->prev_sol_el)/180.0*M_PI) + a->int_ifyaw) /
+            a->new_offset_ifyaw_gy = -(a->d_az * sin((new_el + e->prev_sol_el)/180.0/2.0*M_PI) + a->int_ifyaw) /
             ((1.0/SR) * (double)a->since_last);
+            blast_info("new_offset_ifel_gy = %f, new_el = %f, prev_el = %f, int_if_el = %f, since_last = %f",
+                       e->new_offset_ifel_gy, new_el, e->prev_sol_el, e->int_ifel, (double)a->since_last);
+            blast_info("new_offset_ifroll_gy = %f, new_offset_ifyaw_gy = %f, d_az = %f",
+                       a->new_offset_ifroll_gy , a->new_offset_ifyaw_gy, a->d_az);
+            blast_info("int_if_yaw = %f, int_if_roll = %f, new_az = % f, prev_az = %f",
+                       a->int_ifyaw , a->int_ifroll, new_az, a->prev_sol_az);
 
             // Now that we have calculated the integrated gyros, reset the gyro integrations and prev solutions.
+            blast_info("Resetting, prev_sol, int_ifroll");
             a->prev_sol_az = new_az;
             a->int_ifroll = 0.0;
             a->int_ifyaw = 0.0;
