@@ -2841,8 +2841,8 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 3; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].in_atten = 29;
-        CommandData.roach_params[i].out_atten = 16;
+        CommandData.roach_params[i].in_atten = 10;
+        CommandData.roach_params[i].out_atten = 17;
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;

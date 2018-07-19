@@ -160,7 +160,8 @@ double test_freq[] = {10.0125e6};
 uint32_t destmac0 = 1577124330;
 uint32_t destmac1 = 256;
 
-static uint32_t dest_ip = IPv4(239, 1, 1, 234);
+// static uint32_t dest_ip = IPv4(239, 1, 1, 234);
+static uint32_t dest_ip = IPv4(192, 168, 40, 3);
 
 // const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v5_2018_Feb_12_1224.fpg";
 const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
@@ -1154,9 +1155,32 @@ int set_atten(rudat_state_t *m_rudat)
     char *m_command2;
     int ind = m_rudat->which - 1;
     // blast_info("Pi%d, attempting to set RUDATs...", ind + 1);
-    blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-        CommandData.roach_params[m_rudat->which - 1].out_atten,
-        CommandData.roach_params[m_rudat->which - 1].in_atten);
+    if (ind == 0) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    // TODO(Sam) Verify order on Roach5 and then remove this comment
+    if (ind == 4) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command, strlen(m_command));
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command2, strlen(m_command2));
@@ -2791,6 +2815,7 @@ int roach_upload_status(roach_state_t *m_roach)
  * @param m_roach roach state structure
  * @param m_filename name of firmware file
 */
+/*
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
 {
     srand48(time(NULL));
@@ -2827,6 +2852,41 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     	} else {
 		return 1;
     }
+}
+*/
+int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
+{
+    char *upload_command;
+    firmware_state_t state = {
+                          .firmware_file = m_filename,
+                          .port = (uint16_t) (drand48() * 500.0 + 5000),
+                          .timeout.tv_sec = 5,
+                          .timeout.tv_usec = 0,
+                          .roach = m_roach
+    };
+    blast_info("Getting permission to upload fpg...");
+    int retval = send_rpc_katcl(m_roach->rpc_conn, QDR_TIMEOUT,
+                   KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
+                   KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
+                   NULL);
+    if (retval != KATCP_RESULT_OK) {
+        return -1;
+        printf("Failed\n");
+    }
+    blast_info("Uploading fpg through netcat...");
+    asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
+    system(upload_command);
+    sleep(3);
+    int success_val = send_rpc_katcl(m_roach->rpc_conn, 1000,
+            KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
+        KATCP_FLAG_LAST | KATCP_FLAG_STRING, "",
+        NULL);
+    while (success_val != KATCP_RESULT_OK) {
+        usleep(1000);
+    }
+    char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
+    blast_info("FPGA programmed %s", ret);
+    return 0;
 }
 
 /*
@@ -3163,7 +3223,7 @@ void *roach_cmd_loop(void* ind)
             if ((status == SWEEP_SUCCESS)) {
                 blast_info("ROACH%d, VNA sweep complete", i + 1);
                 system("python /home/fc1user/sam_builds/sweep_list.py vna");
-                roach_state_table[i].status = ROACH_STATUS_VNA;
+                roach_state_table[i].status = ROACH_STATUS_ACQUIRING;
                 // roach_state_table[i].desired_status = ROACH_STATUS_ARRAY_FREQS;
                 roach_state_table[i].desired_status = ROACH_STATUS_ACQUIRING;
             } else if ((status == SWEEP_INTERRUPT)) {
@@ -3259,6 +3319,7 @@ int init_roach(uint16_t ind)
     memset(&rudat_state_table[ind], 0, sizeof(rudat_state_t));
     memset(&valon_state_table[ind], 0, sizeof(valon_state_t));
     asprintf(&roach_state_table[ind].address, "roach%d", ind + 1);
+    blast_info("*******************INSIDE INIT ROACH%d***************", ind);
     asprintf(&roach_state_table[ind].vna_path_root,
                       "/home/fc1user/sam_tests/sweeps/roach%d/vna", ind + 1);
     asprintf(&roach_state_table[ind].targ_path_root,
