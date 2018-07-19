@@ -263,7 +263,7 @@ static void close_mcp(int m_code)
     while (!ready_to_close) usleep(10000);
     watchdog_close();
     shutdown_bias_tone();
-    diskmanager_shutdown();
+    // diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -448,7 +448,7 @@ static void mcp_2hz_routines(void)
     if (InCharge) {
       xsc_write_data(0);
       xsc_write_data(1);
-   }
+    }
 }
 
 static void mcp_1hz_routines(void)
@@ -484,7 +484,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    store_data_hk(master_superframe_buffer);
+    // store_data_hk(master_superframe_buffer);
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
@@ -717,7 +717,7 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  // pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();
