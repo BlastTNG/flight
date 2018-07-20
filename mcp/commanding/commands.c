@@ -3037,7 +3037,8 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 1;
+    CommandData.use_elenc = 0;
+    CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
     CommandData.use_xsc0 = 1;
