@@ -1010,7 +1010,7 @@ channel_t channel_list[] =
     { "cal_xmin_mag1",         M_32UNI*20.0,          0.0, TYPE_INT32, RATE_1HZ, U_NONE, 0 },
     { "cal_ymax_mag1",         M_32UNI*20.0,          0.0, TYPE_INT32, RATE_1HZ, U_NONE, 0 },
     { "cal_ymin_mag1",         M_32UNI*20.0,          0.0, TYPE_INT32, RATE_1HZ, U_NONE, 0 },
-    { "cal_align_mag1",        M_32UNI*180.0,          0.0, TYPE_INT16, RATE_1HZ, U_NONE, 0 },
+    { "cal_align_mag1",        M_16UNI*180.0,          0.0, TYPE_INT16, RATE_1HZ, U_NONE, 0 },
 
     { "az_mag2",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
     { "az_raw_mag2",           I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
