@@ -180,6 +180,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case vtx_xsc1:
+            CommandData.vtx_sel[0] = VTX_XSC1;
+            CommandData.Relays.video_trans = 1;
+            CommandData.Relays.update_video = 1;
+            break;
+        case vtx_xsc0:
+            CommandData.vtx_sel[0] = VTX_XSC0;
+            CommandData.Relays.video_trans = 0;
+            CommandData.Relays.update_video = 1;
+            break;
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
@@ -1094,18 +1104,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case not_at_float:
             CommandData.at_float = 0;
-            break;
-        case vtx1_xsc0:
-            CommandData.vtx_sel[0] = vtx_xsc0;
-            break;
-        case vtx1_xsc1:
-            CommandData.vtx_sel[0] = vtx_xsc1;
-            break;
-        case vtx2_xsc0:
-            CommandData.vtx_sel[1] = vtx_xsc0;
-            break;
-        case vtx2_xsc1:
-            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
@@ -2970,6 +2968,7 @@ void InitCommandData()
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
+    CommandData.Relays.update_video = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2985,6 +2984,7 @@ void InitCommandData()
     bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
     /* prev_status overrides this stuff */
+    CommandData.Relays.video_trans = 0;
     CommandData.command_count = 0;
     CommandData.last_command = 0xffff;
 
