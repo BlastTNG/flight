@@ -440,7 +440,7 @@ void biphase_writer(void * arg)
         blast_warn("Error opening mpsse. Will retry in 5s");
 
         // default behaviour is fc1 is in charge
-        set_incharge(!SouthIAm);
+        set_incharge(DEFAULT_INCHARGE);
         blast_info("Defaulting to fc1 in charge");
 
         sleep(5);
@@ -480,7 +480,7 @@ void biphase_writer(void * arg)
                 blast_warn("Error opening mpsse. Will retry in 5s");
 
                 // default behaviour is fc1 is in charge
-                set_incharge(!SouthIAm);
+                set_incharge(DEFAULT_INCHARGE);
                 blast_info("Defaulting to fc1 in charge");
 
                 sleep(5);
@@ -500,7 +500,7 @@ void biphase_writer(void * arg)
                     blast_warn("Error opening mpsse. Will retry in 5s");
 
                     // default behaviour is fc1 is in charge
-                    set_incharge(!SouthIAm);
+                    set_incharge(DEFAULT_INCHARGE);
                     blast_info("Defaulting to fc1 in charge");
 
                     sleep(5);
