@@ -421,6 +421,7 @@ static void mcp_5hz_routines(void)
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
+    write_roach_channels_5hz();
     store_axes_mode_data();
     WriteAux();
     ControlBalance();

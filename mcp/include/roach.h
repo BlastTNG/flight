@@ -43,6 +43,7 @@
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
+#define ROACH_UDP_BUF_LEN 10*ROACH_UDP_LEN
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
 #define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
                                             (((b) & 0xff) << 16) | \
