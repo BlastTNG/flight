@@ -343,6 +343,7 @@ void add_roach_tlm_488hz()
     if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
       roach_indices[i] = CommandData.roach_tlm[i].index;
       read_roach_index(&RoachId[i], &KidId[i], &TypeId[i], roach_indices[i]);
+      RoachId[i] -= 1; // switch from 1 to 0 indexing
 
       if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", CommandData.roach_tlm[i].name, tlm[i]->field);
     }
