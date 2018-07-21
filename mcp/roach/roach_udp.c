@@ -84,12 +84,13 @@ uint16_t check_udp_packet(data_udp_packet_t* m_packet, roach_handle_data_t* m_ro
 {
     // blast_info("R%d packet count = %d", m_roach_udp->which, m_packet->packet_count);
     uint16_t retval = 0;
-    /* if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
-        blast_warn("roach%i: Packet sequence number is %i. Last sequence number was =%i!",
-                  m_roach_udp->which, m_packet->packet_count, m_roach_udp->seq_number);
+    if (m_packet->packet_count != (m_roach_udp->seq_number + 1)) {
+//        blast_warn("roach%i: Packet sequence number is %i. Last sequence number was =%i!",
+//                  m_roach_udp->which, m_packet->packet_count, m_roach_udp->seq_number);
         m_roach_udp->seq_error_count++;
-	    retval |= ROACH_UDP_SEQ_ERR;
-    } */
+        retval |= ROACH_UDP_SEQ_ERR;
+    }
+    // TODO(laura/adrian): Implement the new roach UDP packet checksum test.
     /* if (m_packet->checksum != ROACH_CHECKSUM) {
         blast_err("roach%i: checksum = %i failed!", m_roach_udp->which, m_packet->checksum);
         m_roach_udp->crc_error_count++;
@@ -159,11 +160,11 @@ int init_roach_socket(void)
  *
  * @param m_packet UDP packet structure
  */
-void parse_udp_packet(data_udp_packet_t* m_packet)
+void parse_udp_packet(data_udp_packet_t* m_packet, uint8_t* m_buf)
 {
     // static uint64_t i_packet = 0;
-    uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
-    uint8_t *buf = (payload + HEADER_LEN);
+    // uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
+    uint8_t *buf = (m_buf + HEADER_LEN);
     m_packet->ctime = (buf[8172] << 24) | (buf[8173] << 16) | (buf[8174] << 8) | buf[8175];
     m_packet->pps_count = (buf[8176] << 24) | (buf[8177] << 16) | (buf[8178] << 8) | buf[8179];
     m_packet->clock_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
@@ -235,9 +236,9 @@ void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t*
  * @param m_roach_udp roach UDP structure
  * @param m_packet UDP packet structure
  */
-void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m_packet)
+void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m_packet, uint8_t *m_buf)
 {
-    parse_udp_packet(m_packet);
+    parse_udp_packet(m_packet, m_buf);
     uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
     // store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
     if (udperr > 0) return;
@@ -264,6 +265,8 @@ void poll_socket(void)
     ufds[0].fd = roach_sock_fd;
     ufds[0].events = POLLIN; // Check for data on socket
     rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
+    uint16_t num_packets = 0;
+    uint8_t buf[ROACH_UDP_BUF_LEN];
     while (1) {
         usleep(10);
         data_udp_packet_t m_packet;
@@ -273,27 +276,46 @@ void poll_socket(void)
         } else {
 	    // blast_info("I am waiting for a poll event...");
             if (ufds[0].revents & POLLIN) { // check for events on socket
-                uint64_t bytes_read = recv(roach_sock_fd, m_packet.rcv_buffer,
-                ROACH_UDP_LEN, 0);
-                m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
-                    + sizeof(struct ethhdr)
-                    + sizeof(struct iphdr));
+                uint32_t bytes_read = recv(roach_sock_fd, &buf,
+                ROACH_UDP_BUF_LEN, 0);
+                // Don't even try to read the header if we read less than the size of a udp header struct.
+                if (bytes_read < (sizeof(struct udphdr) + sizeof(struct iphdr) + sizeof(struct ethhdr))) {
+                    blast_err("We read only %ud", bytes_read);
+                    continue;
+                }
+                num_packets = bytes_read/ROACH_UDP_LEN; // How many packets did we read?
+                for (int i_pkt =0; i_pkt < num_packets; i_pkt++) {
+                    m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
+                        + sizeof(struct ethhdr)
+                        + sizeof(struct iphdr) + ROACH_UDP_LEN*i_pkt);
                 /* Filter destination address */
 		// blast_info("Before filt: R%d\t%d\t%d", m_roach_udp->which,
                           // m_roach_udp->port, ntohs(m_packet.udp_header->dest));
-                for (int ind = 0; ind < NUM_ROACHES; ind++) {
-                    roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
+                    for (int ind = 0; ind < NUM_ROACHES; ind++) { // Figure out how to process this packet.
+                        roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
                     // blast_info("Roach udp %d, port = %d", m_roach_udp->which, m_roach_udp->port);
-                    if ((m_roach_udp->port != ntohs(m_packet.udp_header->dest))) {
-                        continue;
-                    } else if (bytes_read < ROACH_UDP_DATA_LEN) {
-                        blast_err("Roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
-                        m_roach_udp->roach_invalid_packet_count++;
-                        m_roach_udp->roach_packet_count++;
-                        continue;
+                        if ((m_roach_udp->port != ntohs(m_packet.udp_header->dest))) {
+                            continue;
+                        } else if (bytes_read < ROACH_UDP_DATA_LEN) {
+                        // This only works if the truncated packet is the only thing read,
+                        // Right now if, for example, the 3rd packet read is truncated we will be
+                        // out of sequence for the rest of the subsequent packets read out in buf.
+                        // TODO(laura): Test to see if this happens and if so write code to search
+                        // for the next packet.
+                            blast_err("Roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
+                            m_roach_udp->roach_invalid_packet_count++;
+                            m_roach_udp->roach_packet_count++;
+                            continue;
                         // blast_info("%d: These should match: %d\t%d", m_roach_udp->which,
                          // m_roach_udp->port, ntohs(m_packet.udp_header->dest));}
-                    } else { roach_process_stream(m_roach_udp, &m_packet);}
+                        } else {
+                            if (bytes_read < ROACH_UDP_DATA_LEN*(i_pkt+1)) {
+                                blast_err("We are being asked to read beyond the end of the data.");
+                            } else {
+                                roach_process_stream(m_roach_udp, &m_packet , (buf + i_pkt * ROACH_UDP_DATA_LEN));
+                            }
+                        }
+                    }
                 }
            }
        }
