@@ -57,6 +57,7 @@ struct Fifo libusb_fifo = {0};
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
+extern bool shutdown_mcp;
 struct Fifo bi0_fifo = {0};
 
 /******************** Main Biphase Loop **************************/
@@ -435,8 +436,13 @@ void biphase_writer(void * arg)
     uint8_t direction = 0xBF; 
     uint32_t previous_clock_speed = CommandData.biphase_clk_speed;
 
-    while (!setup_mpsse(&ctx, serial, direction)) {
+    while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
         blast_warn("Error opening mpsse. Will retry in 5s");
+
+        // default behaviour is fc1 is in charge
+        set_incharge(!SouthIAm);
+        blast_info("Defaultig to fc1 in charge");
+
         sleep(5);
     }
 
@@ -464,14 +470,19 @@ void biphase_writer(void * arg)
     // Start the loop of mpsse communication
     setup_libusb_transfers(); 
  
-    while (true) {
+    while (!shutdown_mcp) {
         // if changing mpsse clock, close and reopen the chip, restart transfer loops
         if (mpsse_disconnected) {
             blast_err("MPSSE is disconnected. Will try reconnecting");
             mpsse_closing = true;
             mpsse_close(ctx);
-            while (!setup_mpsse(&ctx, serial, direction)) {
+            while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
                 blast_warn("Error opening mpsse. Will retry in 5s");
+
+                // default behaviour is fc1 is in charge
+                set_incharge(!SouthIAm);
+                blast_info("Defaultig to fc1 in charge");
+
                 sleep(5);
             }
             usleep(1000);
@@ -485,8 +496,13 @@ void biphase_writer(void * arg)
                 sleep(1);
                 mpsse_reset_purge_close(ctx);
                 usleep(1000);
-                while (!setup_mpsse(&ctx, serial, direction)) {
+                while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
                     blast_warn("Error opening mpsse. Will retry in 5s");
+
+                    // default behaviour is fc1 is in charge
+                    set_incharge(!SouthIAm);
+                    blast_info("Defaultig to fc1 in charge");
+
                     sleep(5);
                 }
                 previous_clock_speed = CommandData.biphase_clk_speed;
@@ -528,15 +544,14 @@ void biphase_writer(void * arg)
             // bandwidth limit; frames are 1 Hz, so bandwidth == size
             transmit_size = MIN(transmit_size, bandwidth);
 
+            /*
             // send of BI0-LOS
             // memset(compbuffer, 0xaa, transmit_size);
             setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
             setBITSenderFramenum(&bi0lossender, transmit_size);
             sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
+            */
 
-
-/*
-// commented out since new UDP-LOS devices work
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -559,7 +574,6 @@ void biphase_writer(void * arg)
                 //printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
-*/
             allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);

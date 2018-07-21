@@ -257,7 +257,7 @@ time_t mcp_systime(time_t *t) {
 //
 // #endif
 
-static void close_mcp(int m_code)
+void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
