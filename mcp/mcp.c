@@ -671,7 +671,7 @@ blast_info("Finished initializing Beaglebones..."); */
   initialize_CPU_sensors();
 
   // force incharge for test cryo
-  // force_incharge();
+  force_incharge();
 
   if (use_starcams) {
       xsc_networking_init(0);

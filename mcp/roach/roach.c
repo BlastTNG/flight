@@ -545,7 +545,6 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
             m_roach->last_amps[i] = 1.0;
         }
     }
-    blast_info("LINE 549");
     // Load random phases (static file for testing)
     blast_info("Roach%d, Loading tone phases", m_roach->which);
     char *phase_path = m_roach->random_phase_path;
@@ -3562,6 +3561,12 @@ void *roach_cmd_loop(void* ind)
         }
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
+            if (CommandData.roach[i].do_sweeps == 1) {
+                    roach_vna_sweep(&roach_state_table[i]);
+            }
+            if (CommandData.roach[i].do_sweeps == 2) {
+                    roach_targ_sweep(&roach_state_table[i]);
+            }
             if (CommandData.roach[i].calc_ref_params) {
                 save_ref_params(&roach_state_table[i]);
                 CommandData.roach[i].calc_ref_params = 0;
