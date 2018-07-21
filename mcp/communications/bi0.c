@@ -439,9 +439,8 @@ void biphase_writer(void * arg)
     while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
         blast_warn("Error opening mpsse. Will retry in 5s");
 
-        // default behaviour is fc1 is in charge
-        set_incharge(DEFAULT_INCHARGE);
-        blast_info("Defaulting to fc1 in charge");
+        InCharge = DEFAULT_INCHARGE;
+        blast_info("Defaulting to fc%d in charge", DEFAULT_INCHARGE+1);
 
         sleep(5);
     }
@@ -479,8 +478,7 @@ void biphase_writer(void * arg)
             while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
                 blast_warn("Error opening mpsse. Will retry in 5s");
 
-                // default behaviour is fc1 is in charge
-                set_incharge(DEFAULT_INCHARGE);
+                InCharge = DEFAULT_INCHARGE;
                 blast_info("Defaulting to fc1 in charge");
 
                 sleep(5);
@@ -499,8 +497,7 @@ void biphase_writer(void * arg)
                 while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
                     blast_warn("Error opening mpsse. Will retry in 5s");
 
-                    // default behaviour is fc1 is in charge
-                    set_incharge(DEFAULT_INCHARGE);
+                    InCharge = DEFAULT_INCHARGE;
                     blast_info("Defaulting to fc1 in charge");
 
                     sleep(5);
