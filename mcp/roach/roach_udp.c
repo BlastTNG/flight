@@ -50,6 +50,8 @@
 #include <unistd.h>
 #include <fftw3.h>
 #include <pthread.h>
+#include <linklist.h>
+
 // include "portable_endian.h"
 #include "mcp.h"
 #include "katcp.h"
@@ -358,6 +360,75 @@ void roach_udp_networking_init(void)
     if (pthread_create(&poll_thread, NULL, (void*)&poll_socket, NULL)) {
         blast_err("Error creating recv_thread");
     }
+}
+
+/* Function: generate_roach_udp_linklist_format
+ * --------------------------------------------
+ * Generates a text file such that the raw binary roach udp data is
+ * readable from linklists.
+ */
+
+// this is a very specific macro written to loop over a structure
+#define ADD_STRUCT_ENTRY_TO_LINKLIST(_FIELD, _NAME)              \
+({                                                               \
+    void *__ptr = &(m_packet._FIELD);                            \
+    uint64_t pad = ((uint64_t) __ptr)-base-loc;                  \
+    if (pad) fprintf(fp, "_BYTE_PAD_ 255 %" PRIu64 "\n", pad);   \
+                                                                 \
+    loc += pad;                                                  \
+    fprintf(fp, "%s\n", _NAME);                                  \
+    loc += sizeof(m_packet._FIELD);                              \
+})
+
+linklist_t * generate_roach_udp_linklist(char * filename, int roach)
+{
+    FILE * fp = fopen(filename, "w+");
+    int j = 0;
+    linklist_t * ll = NULL;
+
+    char fieldname[128] = {0};
+
+    if (!fp) {
+        blast_err("Unable to open roach %d format file at %s\n", roach, filename);
+        return NULL;
+    }
+
+    // dummy udp packet for mapping
+    data_udp_packet_t m_packet;
+    uint64_t base = (uint64_t) &m_packet;
+    uint64_t loc = 0;
+
+    // --- STEP 1: generate the linklist format file --- //
+
+    // write the I channel fields to the file
+    for (j = 0; j < n_publish_roaches[roach]; j++) {
+      snprintf(fieldname, sizeof(fieldname), "i_kid%04d_roach%d", j, roach+1);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Ival[j], fieldname);
+    }
+
+    // write the Q channel fields to the file
+    for (j = 0; j < n_publish_roaches[roach]; j++) {
+      snprintf(fieldname, sizeof(fieldname), "q_kid%04d_roach%d", j, roach+1);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Qval[j], fieldname);
+    }
+    snprintf(fieldname, sizeof(fieldname), "ctime_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(ctime, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "pps_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(pps_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "clock_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(clock_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "packet_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(packet_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "status_reg_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(status_reg, fieldname);
+
+    fclose(fp);
+
+    return ll;
 }
 
 /* Function: write_roach_channels_488hz
