@@ -441,7 +441,7 @@ void biphase_writer(void * arg)
 
         // default behaviour is fc1 is in charge
         set_incharge(!SouthIAm);
-        blast_info("Defaultig to fc1 in charge");
+        blast_info("Defaulting to fc1 in charge");
 
         sleep(5);
     }
@@ -481,7 +481,7 @@ void biphase_writer(void * arg)
 
                 // default behaviour is fc1 is in charge
                 set_incharge(!SouthIAm);
-                blast_info("Defaultig to fc1 in charge");
+                blast_info("Defaulting to fc1 in charge");
 
                 sleep(5);
             }
@@ -501,7 +501,7 @@ void biphase_writer(void * arg)
 
                     // default behaviour is fc1 is in charge
                     set_incharge(!SouthIAm);
-                    blast_info("Defaultig to fc1 in charge");
+                    blast_info("Defaulting to fc1 in charge");
 
                     sleep(5);
                 }
