@@ -39,8 +39,8 @@ blastcmd @192.168.1.4 xsc_filter_eq_location 1 0 10
 #  xsc_filter_hor_roll which enabled min_deg max_deg
 # blastcmd @192.168.1.4 xsc_filter_hor_roll 0 1 -90 90
 # blastcmd @192.168.1.4 xsc_filter_hor_roll 1 1 -90 90
-blastcmd @192.168.1.4 xsc_filter_hor_roll 0 1 -90 90
-blastcmd @192.168.1.4 xsc_filter_hor_roll 1 1 -90 90
+# blastcmd @192.168.1.4 xsc_filter_hor_roll 0 1 -90 90
+# blastcmd @192.168.1.4 xsc_filter_hor_roll 1 1 -90 90
 
 #  xsc_filter_el which enabled min_deg max_deg
 blastcmd @192.168.1.4 xsc_filter_el 0 1 5 60
