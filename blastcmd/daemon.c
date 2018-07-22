@@ -323,12 +323,12 @@ int SIPRoute(int sock, int t_link, int t_route, char* buffer)
   return 1;
 }
 
-int ForwardRoute(char *buffer, int host)
+int ForwardRoute(char *buffer)
 {
   if (pilot_host[1] == NULL) /* No host forward defined */
     return 18;
 
-  if (NetCmdConnect(pilot_host[host], 1, 0))
+  if (NetCmdConnect(pilot_host[buffer[1] - '1'], 1, 0))
     return 18;
 
   /* lowercase ensures the downstream blastcmd won't elog it */
@@ -468,8 +468,7 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer, const char *user,
     if (link_disabled[(int)buffer[0]][(int)buffer[1] - '1'])
       result = 20; /* channel disabled by command server */
     else if (forward) {
-      result = ForwardRoute(buffer, 0);
-      result = ForwardRoute(buffer, 1);
+      result = ForwardRoute(buffer);
     } else if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
     else
