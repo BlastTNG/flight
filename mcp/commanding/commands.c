@@ -3006,22 +3006,22 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 1000;
-    CommandData.ele_gain.P = 1.2;
+    CommandData.ele_gain.I = 1.2;
+    CommandData.ele_gain.P = 1000;
     CommandData.ele_gain.D = 0;
-    CommandData.ele_gain.PT = 20;
+    CommandData.ele_gain.PT = 40;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 200;
-    CommandData.azi_gain.I = 200;
-    CommandData.azi_gain.PT = 200;
+    CommandData.azi_gain.P = 2500;
+    CommandData.azi_gain.I = 4;
+    CommandData.azi_gain.PT = 125;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 400;
-    CommandData.pivot_gain.IV = 10000;
+    CommandData.pivot_gain.PV = 12;
+    CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
-    CommandData.pivot_gain.F = 0.3;
+    CommandData.pivot_gain.F = 0.0;
 
     CommandData.ec_devices.reset = 0;
     // By default don't try to fix the Ethercat devices to an operational state.
@@ -3037,7 +3037,8 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 1;
+    CommandData.use_elenc = 0;
+    CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
     CommandData.use_xsc0 = 1;
