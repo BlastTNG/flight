@@ -77,7 +77,7 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
 
-#define POLL_TIMEOUT 25			/* 5s @ 5Hz */
+#define POLL_TIMEOUT 5			/* 1s @ 5Hz */
 #define	MAX_SERIAL_ERRORS 20		/* after this many, repoll bus */
 static int poll_timeout = POLL_TIMEOUT; /* track time since last repoll */
 static int actbus_reset = 1;		/* 1 means actbus is on */
@@ -1464,6 +1464,7 @@ void *ActuatorBus(void *param)
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
     }
+
     first_time = 1;
     while (!is_init) {
         if (first_time) {
