@@ -180,6 +180,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case vtx_xsc1:
+            CommandData.vtx_sel[0] = VTX_XSC1;
+            CommandData.Relays.video_trans = 1;
+            CommandData.Relays.update_video = 1;
+            break;
+        case vtx_xsc0:
+            CommandData.vtx_sel[0] = VTX_XSC0;
+            CommandData.Relays.video_trans = 0;
+            CommandData.Relays.update_video = 1;
+            break;
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
@@ -1094,18 +1104,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case not_at_float:
             CommandData.at_float = 0;
-            break;
-        case vtx1_xsc0:
-            CommandData.vtx_sel[0] = vtx_xsc0;
-            break;
-        case vtx1_xsc1:
-            CommandData.vtx_sel[0] = vtx_xsc1;
-            break;
-        case vtx2_xsc0:
-            CommandData.vtx_sel[1] = vtx_xsc0;
-            break;
-        case vtx2_xsc1:
-            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
@@ -2953,6 +2951,7 @@ void InitCommandData()
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
+    CommandData.Relays.update_video = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2968,6 +2967,7 @@ void InitCommandData()
     bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
     /* prev_status overrides this stuff */
+    CommandData.Relays.video_trans = 0;
     CommandData.command_count = 0;
     CommandData.last_command = 0xffff;
 
@@ -3006,22 +3006,22 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 1000;
-    CommandData.ele_gain.P = 1.2;
+    CommandData.ele_gain.I = 1.2;
+    CommandData.ele_gain.P = 1000;
     CommandData.ele_gain.D = 0;
-    CommandData.ele_gain.PT = 20;
+    CommandData.ele_gain.PT = 40;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 200;
-    CommandData.azi_gain.I = 200;
-    CommandData.azi_gain.PT = 200;
+    CommandData.azi_gain.P = 2500;
+    CommandData.azi_gain.I = 4;
+    CommandData.azi_gain.PT = 125;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 400;
-    CommandData.pivot_gain.IV = 10000;
+    CommandData.pivot_gain.PV = 12;
+    CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
-    CommandData.pivot_gain.F = 0.3;
+    CommandData.pivot_gain.F = 0.0;
 
     CommandData.ec_devices.reset = 0;
     // By default don't try to fix the Ethercat devices to an operational state.
@@ -3037,7 +3037,8 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 1;
+    CommandData.use_elenc = 0;
+    CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
     CommandData.use_xsc0 = 1;

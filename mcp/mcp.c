@@ -122,6 +122,7 @@ linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 extern linklist_t * ll_hk;
+extern char * ROACH_TYPES[NUM_RTYPES];
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -256,14 +257,14 @@ time_t mcp_systime(time_t *t) {
 //
 // #endif
 
-static void close_mcp(int m_code)
+void close_mcp(int m_code)
 {
     fprintf(stderr, "Closing MCP with signal %d\n", m_code);
     shutdown_mcp = true;
     while (!ready_to_close) usleep(10000);
     watchdog_close();
     shutdown_bias_tone();
-    diskmanager_shutdown();
+    // diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -315,11 +316,13 @@ unsigned int superframe_counter[RATE_END] = {0};
 // distributes and multiplexes commanded roach channels to compressed telemetry fields
 void add_roach_tlm_488hz()
 {
-  static channel_t * roach_chans[NUM_ROACH_TLM] = {NULL};
-  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
   static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
   static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
   static int first_time = 1;
+  static unsigned int RoachId[NUM_ROACH_TLM] = {0};
+  static unsigned int KidId[NUM_ROACH_TLM] = {0};
+  static unsigned int TypeId[NUM_ROACH_TLM] = {0};
+  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
 
   int i;
 
@@ -338,15 +341,26 @@ void add_roach_tlm_488hz()
 
   for (i = 0; i < NUM_ROACH_TLM; i++) {
     if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
-      roach_chans[i] = channels_find_by_name(CommandData.roach_tlm[i].name);
       roach_indices[i] = CommandData.roach_tlm[i].index;
-      if (roach_chans[i] && roach_indices[i]) blast_info("Telemetering \"%s\" -> \"%s\"",
-                                                        roach_chans[i]->field, tlm[i]->field);
+      read_roach_index(&RoachId[i], &KidId[i], &TypeId[i], roach_indices[i]);
+
+      if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", CommandData.roach_tlm[i].name, tlm[i]->field);
     }
-    // write the channel data to the multiplexed field
-    if (tlm[i] && roach_chans[i]) {
-      double value = 0;
-      GET_VALUE(roach_chans[i], value);
+
+    unsigned int i_udp_read = GETREADINDEX(roach_udp[RoachId[i]].index);
+    data_udp_packet_t *m_packet = &(roach_udp[RoachId[i]].last_pkts[i_udp_read]);
+
+    // write the roach data to the multiplexed field
+    if (tlm[i]) {
+      double value = -3.14159;
+      if (strcmp(ROACH_TYPES[TypeId[i]], "i") == 0) { // I comes from the UDP packet directly
+        value = m_packet->Ival[KidId[i]];
+      } else if (strcmp(ROACH_TYPES[TypeId[i]], "q") == 0) { // Q comes from the UDP packet directly
+        value = m_packet->Qval[KidId[i]];
+      } else if (strcmp(ROACH_TYPES[TypeId[i]], "df") == 0) { // df comes from the frame
+        GET_VALUE(channels_find_by_name(CommandData.roach_tlm[i].name), value);
+      }
+
       SET_FLOAT(tlm[i], value);
     }
     // write the multiplex index
@@ -445,8 +459,10 @@ static void mcp_5hz_routines(void)
 }
 static void mcp_2hz_routines(void)
 {
-    xsc_write_data(0);
-    xsc_write_data(1);
+    if (InCharge) {
+      xsc_write_data(0);
+      xsc_write_data(1);
+    }
 }
 
 static void mcp_1hz_routines(void)
@@ -482,7 +498,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    store_data_hk(master_superframe_buffer);
+    // store_data_hk(master_superframe_buffer);
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
@@ -715,7 +731,7 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  // pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();

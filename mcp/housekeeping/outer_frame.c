@@ -483,11 +483,29 @@ void outer_frame_multiplexed(void) {
     SET_SCALED_VALUE(thermistor_66_Addr, labjack_get_value(6, 4));
 }
 
+void update_status() {
+    static int first_time = 1;
+    static channel_t * labjack_conn_status_Addr = NULL;
+
+    if (first_time) {
+        labjack_conn_status_Addr = channels_find_by_name("labjack_conn_status");
+        first_time = 0;
+    }
+
+    uint16_t labjack_conn_status = 0;
+
+    for (int i = 0; i < NUM_LABJACKS; i++) {
+        labjack_conn_status |= state[i].connected << i;
+    }
+    SET_UINT16(labjack_conn_status_Addr, labjack_conn_status);
+}
+
 void outer_frame(int setting) {
     if (setting == 1 && state[2].connected && state[3].connected && state[4].connected) {
         update_current_sensors();
         update_thermistors();
         update_clinometers();
+        update_status();
     }
 }
 

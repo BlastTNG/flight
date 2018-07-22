@@ -530,6 +530,19 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   roach_index %= NUM_KIDS;
 
   if (kid) *kid = roach_index;
+
+  if (*roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", *roach);
+    *roach = 1;
+  }
+  if (*kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", *kid);
+    *kid = 0;
+  }
+  if (*rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", *rtype);
+    *rtype = 0;
+  }
 }
 
 #define MAX_ROACH_NAME 64
