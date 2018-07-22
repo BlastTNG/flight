@@ -180,11 +180,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
-        case video_trans_high:
+        case vtx_xsc1:
+            CommandData.vtx_sel[0] = VTX_XSC1;
             CommandData.Relays.video_trans = 1;
             CommandData.Relays.update_video = 1;
             break;
-        case video_trans_low:
+        case vtx_xsc0:
+            CommandData.vtx_sel[0] = VTX_XSC0;
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
             break;
@@ -1102,18 +1104,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case not_at_float:
             CommandData.at_float = 0;
-            break;
-        case vtx1_xsc0:
-            CommandData.vtx_sel[0] = vtx_xsc0;
-            break;
-        case vtx1_xsc1:
-            CommandData.vtx_sel[0] = vtx_xsc1;
-            break;
-        case vtx2_xsc0:
-            CommandData.vtx_sel[1] = vtx_xsc0;
-            break;
-        case vtx2_xsc1:
-            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
