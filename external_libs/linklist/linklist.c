@@ -504,7 +504,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       parse_line(line+st,temps,6);
       memset(&ll->items[ll->n_entries],0,sizeof(linkentry_t));
 
-      if (strcmp(temps[0], LL_PARSE_CHECKSUM) == 0) { 
+      if (strcmp(temps[0], LL_PARSE_CHECKSUM) == 0) { // special checksum field indicator
         blk_size = set_checksum_field(&(ll->items[ll->n_entries]),byteloc);
         chksm_count = 0;
       } else {

@@ -207,6 +207,7 @@ void parse_udp_packet(data_udp_packet_t* m_packet)
 void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t* m_packet)
 {
     static uint64_t packet_count = 0;
+    static uint64_t blksize = 0;
     data_udp_packet_t* local_packet;
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
@@ -219,11 +220,16 @@ void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t*
         }
         blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which, sizeof(*m_packet));
         m_roach_udp->first_packet = FALSE;
+        blksize = ((uint64_t) (&(m_packet->status_reg)))+sizeof(m_packet->status_reg)
+                   -((uint64_t) m_packet);
     }
     /* if (packet_count < 100) {
         blast_info("roach%i: Write index = %i", m_roach_udp->which, m_roach_udp->index);
     } */
     memcpy(&(m_roach_udp->last_pkts[m_roach_udp->index]), m_packet, sizeof(*m_packet));
+
+    store_data_roach_udp(m_packet, blksize, m_roach_udp->i_which);
+
     m_roach_udp->index = INC_INDEX(m_roach_udp->index);
     // blast_info("ROACH UDP IDX = %d", m_roach_udp->index);
     packet_count++;
@@ -265,7 +271,6 @@ void poll_socket(void)
     struct pollfd ufds[1];
     ufds[0].fd = roach_sock_fd;
     ufds[0].events = POLLIN; // Check for data on socket
-    rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
     while (1) {
         usleep(10);
         data_udp_packet_t m_packet;
@@ -368,23 +373,37 @@ void roach_udp_networking_init(void)
  * readable from linklists.
  */
 
-// this is a very specific macro written to loop over a structure
-#define ADD_STRUCT_ENTRY_TO_LINKLIST(_FIELD, _NAME)              \
-({                                                               \
-    void *__ptr = &(m_packet._FIELD);                            \
-    uint64_t pad = ((uint64_t) __ptr)-base-loc;                  \
-    if (pad) fprintf(fp, "_BYTE_PAD_ 255 %" PRIu64 "\n", pad);   \
-                                                                 \
-    loc += pad;                                                  \
-    fprintf(fp, "%s\n", _NAME);                                  \
-    loc += sizeof(m_packet._FIELD);                              \
+// this is a very specific macro written to loop over the roach udp structure
+#define ADD_STRUCT_ENTRY_TO_LINKLIST(_FIELD, _NAME, _TYPE)                     \
+({                                                                             \
+    void *__ptr = &(m_packet._FIELD);                                          \
+    uint64_t pad = ((uint64_t) __ptr)-base-loc;                                \
+    if (pad) fprintf(fp, "PADDING_AT_%" PRIu64 " B %" PRIu64 "\n", loc, pad);  \
+    loc += pad;                                                                \
+                                                                               \
+    strncpy(sfe[entry_i].field, _NAME, FIELD_LEN-1);                           \
+    sfe[entry_i].type = _TYPE;                                                 \
+    sfe[entry_i].spf = 1;                                                      \
+    sfe[entry_i].start = loc;                                                  \
+    sfe[entry_i].skip = blksize;                                               \
+    entry_i++;                                                                 \
+                                                                               \
+    fprintf(fp, "%s\n", _NAME);                                                \
+    loc += sizeof(m_packet._FIELD);                                            \
 })
+
+#define ROACH_STRUCT_SF_NUM_ENTRIES (MAX_CHANNELS_PER_ROACH*2+6)
 
 linklist_t * generate_roach_udp_linklist(char * filename, int roach)
 {
     FILE * fp = fopen(filename, "w+");
     int j = 0;
     linklist_t * ll = NULL;
+
+    static int first_time = 1;
+    static superframe_t * roach_sf = NULL;
+    static superframe_entry_t * sfe = NULL;
+    int entry_i = 0;
 
     char fieldname[128] = {0};
 
@@ -393,40 +412,64 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
         return NULL;
     }
 
+    // need to generate the superframe first time through
+    if (first_time) {
+        sfe = calloc(ROACH_STRUCT_SF_NUM_ENTRIES+1, sizeof(superframe_entry_t));
+    }
+
+
     // dummy udp packet for mapping
     data_udp_packet_t m_packet;
     uint64_t base = (uint64_t) &m_packet;
     uint64_t loc = 0;
+    uint64_t blksize = ((uint64_t) (&m_packet.status_reg))+sizeof(m_packet.status_reg)-base;
 
     // --- STEP 1: generate the linklist format file --- //
+
+    // set the no checksum flag
+    fprintf(fp, "%s\n", STR(LL_NO_AUTO_CHECKSUM));
 
     // write the I channel fields to the file
     for (j = 0; j < n_publish_roaches[roach]; j++) {
       snprintf(fieldname, sizeof(fieldname), "i_kid%04d_roach%d", j, roach+1);
-      ADD_STRUCT_ENTRY_TO_LINKLIST(Ival[j], fieldname);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Ival[j], fieldname, SF_FLOAT32);
     }
 
     // write the Q channel fields to the file
     for (j = 0; j < n_publish_roaches[roach]; j++) {
       snprintf(fieldname, sizeof(fieldname), "q_kid%04d_roach%d", j, roach+1);
-      ADD_STRUCT_ENTRY_TO_LINKLIST(Qval[j], fieldname);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Qval[j], fieldname, SF_FLOAT32);
     }
     snprintf(fieldname, sizeof(fieldname), "ctime_roach%d", roach+1);
-    ADD_STRUCT_ENTRY_TO_LINKLIST(ctime, fieldname);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(ctime, fieldname, SF_UINT32);
 
     snprintf(fieldname, sizeof(fieldname), "pps_count_roach%d", roach+1);
-    ADD_STRUCT_ENTRY_TO_LINKLIST(pps_count, fieldname);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(pps_count, fieldname, SF_UINT32);
 
     snprintf(fieldname, sizeof(fieldname), "clock_count_roach%d", roach+1);
-    ADD_STRUCT_ENTRY_TO_LINKLIST(clock_count, fieldname);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(clock_count, fieldname, SF_UINT32);
 
     snprintf(fieldname, sizeof(fieldname), "packet_count_roach%d", roach+1);
-    ADD_STRUCT_ENTRY_TO_LINKLIST(packet_count, fieldname);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(packet_count, fieldname, SF_UINT32);
 
     snprintf(fieldname, sizeof(fieldname), "status_reg_roach%d", roach+1);
-    ADD_STRUCT_ENTRY_TO_LINKLIST(status_reg, fieldname);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(status_reg, fieldname, SF_UINT32);
+
+    // the final entry must be NULL terminated
+    sfe[entry_i].field[0] = '\0';
 
     fclose(fp);
+
+    // --- STEP 2: generate the linklist --- //
+    // first time through, build the superframe
+    if (first_time) {
+        roach_sf = linklist_build_superframe(sfe, &channel_data_to_double, &channel_double_to_data);
+    }
+
+    // parse the newly made linklist file
+    ll = parse_linklist_format(roach_sf, filename);
+
+    first_time = 0;
 
     return ll;
 }

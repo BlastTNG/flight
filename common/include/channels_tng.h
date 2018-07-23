@@ -138,5 +138,7 @@ int get_roach_index(unsigned int , unsigned int , unsigned int);
 void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
 linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
 void channels_write_calspecs(char *, derived_tng_t *);
+double channel_data_to_double(uint8_t * data, uint8_t type);
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 
 #endif /* CHANNELS_V2_H_ */
