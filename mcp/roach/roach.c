@@ -98,7 +98,7 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 200.0e3 /* Target sweep span */
+#define TARG_SWEEP_SPAN 300.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define NC1_PORT 12345 /* Netcat port on Pi for FC1 */
@@ -147,14 +147,6 @@ uint32_t srcmac1 = 580;
 double test_freq[] = {10.0125e6};
 
 // UDP destination MAC addresses
-
-// FC1
-// uint32_t destmac0 = 2877007929;
-// uint32_t destmac1 = 11;
-
-// FC2
-// uint32_t destmac0 = 2876946759;
-// uint32_t destmac1 = 11;
 
 // MULTICAST
 uint32_t destmac0 = 1577124330;
@@ -1147,6 +1139,7 @@ void get_adc_rms(roach_state_t *m_roach)
  * @param m_rudat rudat state table
  *
 */
+
 int set_atten(rudat_state_t *m_rudat)
 {
     int retval = -1;
@@ -1154,9 +1147,32 @@ int set_atten(rudat_state_t *m_rudat)
     char *m_command2;
     int ind = m_rudat->which - 1;
     // blast_info("Pi%d, attempting to set RUDATs...", ind + 1);
-    blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-        CommandData.roach_params[m_rudat->which - 1].out_atten,
-        CommandData.roach_params[m_rudat->which - 1].in_atten);
+    if (ind == 0) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    // TODO(Sam) Verify order on Roach5 and then remove this comment
+    if (ind == 4) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command, strlen(m_command));
     pi_write_string(&pi_state_table[ind], (unsigned char*)m_command2, strlen(m_command2));
@@ -1762,6 +1778,26 @@ int recenter_lo(roach_state_t *m_roach)
     return 0;
 }
 
+int shift_lo(roach_state_t *m_roach)
+{
+    int retval = -1;
+    char *lo_command;
+    double shift = (double)CommandData.roach_params[m_roach->which - 1].lo_offset;
+    blast_info("LO SHIFT ======================== %g", shift);
+    double set_freq = (m_roach->lo_centerfreq + shift)/1.0e6;
+    blast_info("LO SET FREQ ======================== %g", set_freq);
+    pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
+    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g", set_freq);
+    pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
+    if (pi_read_string(m_pi, PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
+        blast_info("Error setting LO... reboot Pi%d?", m_roach->which);
+        return retval;
+    }
+    blast_info("ROACH%d, LO set to %g", m_roach->which, set_freq);
+    retval = 0;
+    return retval;
+}
+
 void phase_centers(roach_state_t *m_roach, char *m_targ_path)
 {
     if (!m_targ_path) {
@@ -2065,7 +2101,9 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     // Save last chop path
     system("python /home/fc1user/sam_builds/chop_list.py");
     blast_info("ROACH%d, timestream saved", m_roach->which);
-    CommandData.roach[m_roach->which - 1].get_timestream = 0;
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].get_timestream = 0;
+    }
     for (int i = 0; i < rows; i++) {
         free(I[i]);
         free(Q[i]);
@@ -2889,6 +2927,22 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // TODO(SAM/LAURA): Fix Roach 1/Add error handling
         // Check for new roach status commands
+        if (CommandData.roach[i].set_lo == 1) {
+            if (recenter_lo(&roach_state_table[i]) < 0) {
+                blast_info("Error recentering LO");
+            } else {
+                blast_info("Roach%d, LO recentered", i + 1);
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
+        if (CommandData.roach[i].set_lo == 2) {
+            if (shift_lo(&roach_state_table[i]) < 0) {
+                blast_info("Error shifting LO");
+            } else {
+                blast_info("Roach%d, LO shifted", i + 1);
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
         if (CommandData.roach[i].refit_res_freqs) {
             roach_refit_freqs(&roach_state_table[i]);
         }
@@ -2900,7 +2954,6 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].get_timestream == 2) {
             blast_info("Saving all timestreams");
             save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
-            // if (i == 0) CommandData.roach[2].get_timestream = 2;
         }
         if (CommandData.roach[i].do_master_chop) {
             blast_info("Creating chop template");
@@ -3177,7 +3230,7 @@ void *roach_cmd_loop(void* ind)
               if (get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
                                     roach_state_table[i].last_targ_path) < 0) {
                   blast_info("ROACH%d, Error finding TARG freqs", i + 1);
-              }
+           }
               /* if (get_targ_freqs(&roach_state_table[i], vna_search_path,
                                    roach_state_table[i].last_targ_path) < 0) {
                   blast_info("ROACH%d, Error finding TARG freqs", i + 1);
@@ -3326,8 +3379,8 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
     if ((ind == 4)) {
-        roach_state_table[ind].array = 500;
-        roach_state_table[ind].lo_centerfreq = 540.0e6;
+        roach_state_table[ind].array = 250;
+        roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].vna_comb_len = 1000;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;

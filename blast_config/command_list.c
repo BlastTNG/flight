@@ -1041,10 +1041,9 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 3,
+  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Channel no", 0, 1000, 'i', "NONE"},
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
@@ -1071,6 +1070,28 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(load_freqs), "loads a list of tone freqs from file", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(offset_lo), "shift LO by specified amount in Hz", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
+    }
+  },
+  {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
+    }
+  },
+  {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }

@@ -2080,20 +2080,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case all_timestreams:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)
-                    && ((rvalues[0] >= 0.0) && rvalues[0] <= 300.0)) {
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[0];
-          CommandData.roach[ivalues[0]-1].get_timestream = 2;
+                    && ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
           CommandData.roach[ivalues[0]-1].get_timestream = 2;
       }
     case all_roach_ts:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1000)
-                          && ((rvalues[2] >= 0.0) && rvalues[2] <= 300.0)) {
-          CommandData.roach_params[0].num_sec = rvalues[2];
-          CommandData.roach_params[2].num_sec = rvalues[2];
-          CommandData.roach_params[3].num_sec = rvalues[2];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+             ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
+          CommandData.roach_params[0].num_sec = rvalues[1];
+          CommandData.roach_params[1].num_sec = rvalues[1];
+          CommandData.roach_params[2].num_sec = rvalues[1];
+          CommandData.roach_params[3].num_sec = rvalues[1];
+          CommandData.roach_params[4].num_sec = rvalues[1];
           CommandData.roach[0].get_timestream = 2;
+          CommandData.roach[1].get_timestream = 2;
           CommandData.roach[2].get_timestream = 2;
           CommandData.roach[3].get_timestream = 2;
+          CommandData.roach[4].get_timestream = 2;
       }
     case chop_tune_chan:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
@@ -2117,6 +2120,33 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_master_chop = 1;
+      }
+      break;
+    case offset_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].set_lo = 2;
+          CommandData.roach_params[ivalues[0]-1].lo_offset = rvalues[1];
+      }
+      break;
+    case offset_lo_all:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].set_lo = 2;
+              CommandData.roach_params[i].lo_offset = rvalues[1];
+          }
+      }
+      break;
+    case center_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].set_lo = 1;
+      }
+      break;
+    case center_lo_all:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].set_lo = 1;
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].set_lo = 1;
+          }
       }
       break;
       /*************************************
@@ -2777,6 +2807,7 @@ void InitCommandData()
         CommandData.roach[i].change_tone_amps = 0;
         CommandData.roach[i].do_master_chop = 0;
         CommandData.roach[i].load_new_freqs = 0;
+        CommandData.roach[i].set_lo = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -3125,14 +3156,15 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 3; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        CommandData.roach_params[i].in_atten = 29;
-        CommandData.roach_params[i].out_atten = 16;
+        CommandData.roach_params[i].in_atten = 10;
+        CommandData.roach_params[i].out_atten = 17;
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
         CommandData.roach_params[i].ncycles = 3;
         // For saving short timestream
         CommandData.roach_params[i].num_sec = 3.0;
+        CommandData.roach_params[i].lo_offset = 1000.;
     }
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
