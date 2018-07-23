@@ -226,11 +226,14 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
     unsigned int bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
 
-    if (!store_disks_ready() &&(!storage_info_roaches[roach].have_warned)) {
-        blast_info("store_disks_ready is not ready for roach %d", roach+1);
-        // storage_info_roaches[roach].have_warned = true;
+    if (!store_disks_ready()) {
+        if (!storage_info_roaches[roach].have_warned) {
+            blast_info("store_disks_ready is not ready for roach %d", roach+1);
+            storage_info_roaches[roach].have_warned = true;
+        }
         return;
     }
+    storage_info_roaches[roach].have_warned = false;
 
     if (!storage_info_roaches[roach].init) {
         // initialize the store_file_info struct
@@ -317,11 +320,14 @@ void store_data_hk(uint8_t * sf_buffer) {
     static int file_index = 0;
     static uint8_t * comp_buffer = NULL;
     static bool first_time = 1;
-    if (!store_disks_ready() && !(storage_info_hk.have_warned)) {
-        blast_info("store_disks_ready is not ready.");
-        storage_info_hk.have_warned = true;
+    if (!store_disks_ready()) {
+        if (!storage_info_hk.have_warned) {
+            blast_info("store_disks_ready is not ready.");
+            storage_info_hk.have_warned = true;
+        }
         return;
     }
+    storage_info_hk.have_warned = false;
 
     if (first_time) {
         // initialize the store_file_info struct
