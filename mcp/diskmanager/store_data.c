@@ -268,7 +268,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
     }
 
     // close the file once enough frames are written
-    if (storage_info_roaches[roach].frames_stored >= 
+    if (storage_info_roaches[roach].frames_stored >=
          (ll_rawfile_default_fpf*storage_info_roaches[roach].nrate)) {
 	      bytes_written = file_write(storage_info_roaches[roach].fp,
                                (void*) &(storage_info_roaches[roach].crc),
