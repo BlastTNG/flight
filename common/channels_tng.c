@@ -46,6 +46,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <math.h>
+#include <ctype.h>
 
 #include "blast.h"
 #include "PMurHash.h"
@@ -194,6 +196,64 @@ channel_header_t *channels_create_map(channel_t *m_channel_list)
     return new_pkt;
 }
 
+/**
+ * Takes an aligned channel list for a single down sample rate and re-packs it into a
+ * packed structure for sharing over MQTT or writing as a head in the data files stored
+ * on the external HDs.
+ * @param m_channel_list Pointer to the aligned channel list
+ * @param m_rate Pointer to the aligned channel list
+ * @return Newly allocated channel_header_t structure or NULL on failure
+ */
+channel_header_t *channels_create_rate_map(channel_t *m_channel_list, E_RATE m_rate)
+{
+    channel_header_t *new_pkt = NULL;
+    size_t channels_count, total_channels_count;
+    uint32_t i_channels, i_rate = 0;
+
+	for (total_channels_count = 0; m_channel_list[total_channels_count].field[0]; total_channels_count++)
+        continue;
+    total_channels_count++; // Add one extra channel to allow for the NULL terminating field
+
+	channels_count = (channel_count[m_rate][TYPE_INT8]+channel_count[m_rate][TYPE_UINT8]) +
+                       2 * (channel_count[m_rate][TYPE_INT16]+channel_count[m_rate][TYPE_UINT16]) +
+                       4 * (channel_count[m_rate][TYPE_INT32]+channel_count[m_rate][TYPE_UINT32] +
+                            channel_count[m_rate][TYPE_FLOAT]) +
+                       8 * (channel_count[m_rate][TYPE_INT64]+channel_count[m_rate][TYPE_UINT64] +
+                            channel_count[m_rate][TYPE_DOUBLE]);
+    new_pkt = balloc(err, sizeof(channel_header_t) + sizeof(struct channel_packed) * channels_count);
+    if (!new_pkt) return NULL;
+    memset(new_pkt, 0, sizeof(channel_header_t) + sizeof(struct channel_packed) * channels_count);
+
+    new_pkt->magic = BLAST_MAGIC32;
+    new_pkt->version = BLAST_TNG_CH_VERSION;
+    new_pkt->length = channels_count;
+    new_pkt->crc = 0;
+
+    /**
+     * Copy over the data values one at a time from the aligned to the packed structure
+     */
+    for (i_channels = 0; i_channels < total_channels_count; i_channels++) {
+    	if (m_channel_list[i_channels].rate == m_rate) {
+	    	if (i_rate >= channels_count) {
+    			blast_err("More channels found with rate index %i (>=%i) than allocated (%i)",
+    					   (uint16_t) m_rate, (uint32_t) i_rate, (uint32_t) total_channels_count);
+    			return(new_pkt);
+    		}
+    	    memcpy(new_pkt->data[i_rate].field, m_channel_list[i_channels].field, FIELD_LEN);
+            new_pkt->data[i_rate].m_c2e = m_channel_list[i_channels].m_c2e;
+            new_pkt->data[i_rate].b_e2e = m_channel_list[i_channels].b_e2e;
+            new_pkt->data[i_rate].type = m_channel_list[i_channels].type;
+            new_pkt->data[i_rate].rate = m_channel_list[i_channels].rate;
+            memcpy(new_pkt->data[i_rate].quantity, m_channel_list[i_channels].quantity, UNITS_LEN);
+            memcpy(new_pkt->data[i_rate].units, m_channel_list[i_channels].units, UNITS_LEN);
+            i_rate++;
+    	}
+	}
+    new_pkt->crc = PMurHash32(BLAST_MAGIC32, new_pkt, sizeof(channel_header_t) +
+                              sizeof(struct channel_packed) * channels_count);
+
+    return new_pkt;
+}
 
 /**
  * Takes an aligned channel list and re-packs it into a packed structure for sharing over
@@ -470,6 +530,19 @@ void read_roach_index(unsigned int *roach, unsigned int *kid, unsigned int *rtyp
   roach_index %= NUM_KIDS;
 
   if (kid) *kid = roach_index;
+
+  if (*roach > NUM_ROACHES) {
+    blast_err("Invalid roach %d", *roach);
+    *roach = 1;
+  }
+  if (*kid >= NUM_KIDS) {
+    blast_err("Invalid kid %d", *kid);
+    *kid = 0;
+  }
+  if (*rtype >= NUM_RTYPES) {
+    blast_err("Invalid rtype %d", *rtype);
+    *rtype = 0;
+  }
 }
 
 #define MAX_ROACH_NAME 64
@@ -675,3 +748,146 @@ int channel_double_to_data(uint8_t * data, double dub, uint8_t type)
   return 0;
 }
 
+void channels_write_calspecs_item(FILE *calspecsfile, derived_tng_t *derived) {
+    int j;
+
+    switch (derived->type) {
+      case 'w':
+      case 'b':
+        fprintf(calspecsfile, "%s BIT %s %u %u\n", derived->bitword.field, derived->bitword.source,
+                           derived->bitword.offset, derived->bitword.length);
+        break;
+      case 't':
+        fprintf(calspecsfile, "%s LINTERP %s %s\n", derived->linterp.field, derived->linterp.source,
+                          derived->linterp.lut);
+        break;
+      case 'c':
+        fprintf(calspecsfile, "%s LINCOM 1 %s %.16f %.16f\n", derived->lincom.field,
+                          derived->lincom.source, derived->lincom.m_c2e, derived->lincom.b_e2e);
+        break;
+      case '2':
+        fprintf(calspecsfile, "%s LINCOM 2 %s %.16f %.16f %s %.16f %.16f\n", derived->lincom2.field,
+          derived->lincom2.source, derived->lincom2.m_c2e, derived->lincom2.b_e2e,
+          derived->lincom2.source2, derived->lincom2.m2_c2e, derived->lincom2.b2_e2e);
+        break;
+      case '#':
+        break;
+      case 'u':
+        if (derived->units.quantity[0]) {
+          fprintf(calspecsfile, "%s/quantity STRING \"", derived->units.source);
+          for (j = 0; j < strlen(derived->units.quantity); j++) {
+            if (derived->units.quantity[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+            fprintf(calspecsfile, "%c", derived->units.quantity[j]);
+          }
+          fprintf(calspecsfile, "\"\n");
+        }
+        if (derived->units.units[0]) {
+          fprintf(calspecsfile, "%s/units STRING \"", derived->units.source);
+          for (j = 0; j < strlen(derived->units.units); j++) {
+            if (derived->units.units[j] == 92) fprintf(calspecsfile, "\\"); // fix getdata escape
+            fprintf(calspecsfile, "%c", derived->units.units[j]);
+          }
+          fprintf(calspecsfile, "\"\n");
+        }
+        break;
+      case 'p':
+        fprintf(calspecsfile, "%s PHASE %s %d\n", derived->phase.field, derived->phase.source, derived->phase.shift);
+        break;
+      case 'r':
+        fprintf(calspecsfile, "%s RECIP %s %.16f\n", derived->recip.field, derived->recip.source,
+                           derived->recip.dividend);
+        break;
+      case '*':
+        fprintf(calspecsfile, "%s MULTIPLY %s %s\n", derived->math.field, derived->math.source, derived->math.source2);
+        break;
+      case '/':
+        fprintf(calspecsfile, "%s DIVIDE %s %s\n", derived->math.field, derived->math.source, derived->math.source2);
+        break;
+      case 'x':
+        fprintf(calspecsfile, "%s MPLEX %s %s %d %d\n", derived->mplex.field, derived->mplex.source,
+                                derived->mplex.index, derived->mplex.value, derived->mplex.max);
+        break;
+      default:
+        blast_warn("Unknown type %c", derived->type);
+        break;
+    }
+}
+
+void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
+{
+  FILE * calspecsfile = fopen(fname, "w");
+  if (!calspecsfile) {
+    blast_err("Could not open \"%s\" as calspecs file\n", fname);
+    return;
+  }
+
+  for (derived_tng_t *derived = m_derived; derived && derived->type != DERIVED_EOC_MARKER; derived++) {
+    channels_write_calspecs_item(calspecsfile, derived);
+  }
+
+  derived_tng_t derived = {0};
+  char tmp_str[128] = {0};
+  for (channel_t *channel = channel_list; channel->field[0]; channel++) {
+    snprintf(tmp_str, sizeof(tmp_str), "%s", channel->field);
+    double m = channel->m_c2e;
+    double b = channel->b_e2e;
+
+    // don't do roach channels; we have something special for that (see below)
+    if ((strstr(tmp_str, "roach") != NULL) && (strstr(tmp_str, "kid") != NULL)) {
+      continue;
+    }
+
+    /// By default we set the converted field to upper case
+    for (int i = 0; tmp_str[i]; i++) tmp_str[i] = toupper(tmp_str[i]);
+    /// If our scale/offset are unity/zero respectively, tell defile to use the easier zero-phase
+    if (fabs(m - 1.0) <= DBL_EPSILON && fabs(b - 0.0) <= DBL_EPSILON) {
+      derived.type = 'p';
+      snprintf(derived.phase.field, sizeof(tmp_str), "%s", tmp_str);
+      snprintf(derived.phase.source, sizeof(tmp_str), "%s", channel->field);
+      derived.phase.shift = 0;
+    } else {
+      derived.type = 'c';
+      snprintf(derived.lincom.field, sizeof(tmp_str), "%s", tmp_str);
+      snprintf(derived.lincom.source, sizeof(tmp_str), "%s", channel->field);
+      derived.lincom.m_c2e = m;
+      derived.lincom.b_e2e = b;
+    }
+    channels_write_calspecs_item(calspecsfile, &derived);
+  }
+
+  // something special: generate an array of derived fields for each roach channel
+  // multiplex roach index fields will point to the corresponding name for display in kst
+  fprintf(calspecsfile, "ROACH_NAMES SARRAY");
+
+  int kid = 0, roach = 1, rtype = 0;
+  for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
+    for (roach = 1; roach <= NUM_ROACHES; roach++) {
+      for (kid = 0; kid < NUM_KIDS; kid++) {
+        char tlm_name[64] = {0};
+        unsigned int index = get_roach_index(roach, kid, rtype);
+        make_name_from_roach_index(index, tlm_name);
+        for (int i = 0; tlm_name[i]; i++) tlm_name[i] = toupper(tlm_name[i]);
+        fprintf(calspecsfile, " '%s'", tlm_name);
+/*
+        derived.type = 'x';
+        make_name_from_roach_index(index, derived.mplex.field);
+        for (int i = 0; derived.mplex.field[i]; i++) derived.mplex.field[i] = toupper(derived.mplex.field[i]);
+        strcpy(derived.mplex.source, ROACH_CHANNEL_BLOCK_NAME);
+        strcpy(derived.mplex.index, ROACH_CHANNEL_BLOCK_INDEX_NAME);
+        derived.mplex.value = index;
+        derived.mplex.max = 0;
+        channels_write_calspecs_item(calspecsfile, &derived);
+*/
+      }
+    }
+  }
+  fprintf(calspecsfile, "\n");
+  for (int i = 0; i < NUM_ROACH_TLM; i++) {
+    char c = 65+i;
+    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
+  }
+
+
+  fflush(calspecsfile);
+  fclose(calspecsfile);
+}
