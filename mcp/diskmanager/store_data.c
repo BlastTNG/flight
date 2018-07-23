@@ -268,7 +268,8 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
     }
 
     // close the file once enough frames are written
-    if (storage_info_roaches[roach].frames_stored >= ll_rawfile_default_fpf) {
+    if (storage_info_roaches[roach].frames_stored >= 
+         (ll_rawfile_default_fpf*storage_info_roaches[roach].nrate)) {
 	      bytes_written = file_write(storage_info_roaches[roach].fp,
                                (void*) &(storage_info_roaches[roach].crc),
                                sizeof(uint32_t));
@@ -366,7 +367,7 @@ void store_data_hk(uint8_t * sf_buffer) {
     }
 
     // close the file once enough frames are written
-    if (storage_info_hk.frames_stored >= ll_rawfile_default_fpf) {
+    if (storage_info_hk.frames_stored >= (ll_rawfile_default_fpf*storage_info_hk.nrate)) {
 	      bytes_written = file_write(storage_info_hk.fp, (void*) &(storage_info_hk.crc), sizeof(uint32_t));
         file_close(storage_info_hk.fp);
         storage_info_hk.fp = NULL;
