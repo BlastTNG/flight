@@ -164,6 +164,10 @@ int init_roach_socket(void)
  */
 void parse_udp_packet(data_udp_packet_t* m_packet, uint8_t* m_buf)
 {
+    static int debug_count = 0;
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+        blast_info("starting parse_udp_packet");
+    }
     // static uint64_t i_packet = 0;
     // uint8_t *payload = (uint8_t *)(m_packet->rcv_buffer);
     uint8_t *buf = (m_buf + HEADER_LEN);
@@ -172,6 +176,11 @@ void parse_udp_packet(data_udp_packet_t* m_packet, uint8_t* m_buf)
     m_packet->clock_count = (buf[8180] << 24) | (buf[8181] << 16) | (buf[8182] << 8) | buf[8183];
     m_packet->packet_count = (buf[8184] << 24) | (buf[8185] << 16) | (buf[8186] << 8) | buf[8187];
     m_packet->status_reg = (buf[8188] << 24) | (buf[8189] << 16) | (buf[8190] << 8) | buf[8191];
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+        blast_info("ctime =%u, pps_count =%u, clock_count =%u, packet_count =%u, status_reg =%u",
+                   m_packet->ctime, m_packet->pps_count, m_packet->clock_count,
+                   m_packet->packet_count, m_packet->status_reg);
+    }
     // I, Q
     for (int i = 0; i < 1016; i += 1) {
         int j;
@@ -193,7 +202,7 @@ void parse_udp_packet(data_udp_packet_t* m_packet, uint8_t* m_buf)
                     m_packet->packet_count, m_packet->status_reg);
         }*/
     }
-    // i_packet++;
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) debug_count++;
 }
 
 /* Function: udp_store_to_structure
@@ -240,12 +249,22 @@ void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t*
  */
 void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m_packet, uint8_t *m_buf)
 {
+    static int debug_count = 0;
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+        blast_info("starting roach_process_stream");
+    }
     parse_udp_packet(m_packet, m_buf);
     uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+        blast_info("check_udp_packet = %u", udperr);
+    }
     // store_roach_udp_packet(m_packet, m_roach_udp, udperr); // Writes packet to harddrive.
     if (udperr > 0) return;
     udp_store_to_structure(m_roach_udp, m_packet);
     m_roach_udp->have_warned = 0;
+        if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+        debug_count++;
+    }
 }
 
 /* Function: poll_socket
@@ -255,6 +274,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
 void poll_socket(void)
 {
     init_roach_socket();
+    int debug_count = 0;
     blast_info("Roach socket file descriptor is %i", roach_sock_fd);
     if (!roach_sock_fd) {
        blast_err("Failed to open Socket");
@@ -266,7 +286,6 @@ void poll_socket(void)
     struct pollfd ufds[1];
     ufds[0].fd = roach_sock_fd;
     ufds[0].events = POLLIN; // Check for data on socket
-    rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
     uint16_t num_packets = 0;
     uint8_t buf[ROACH_UDP_BUF_LEN];
     while (1) {
@@ -278,16 +297,19 @@ void poll_socket(void)
         } else {
 	    // blast_info("I am waiting for a poll event...");
             if (ufds[0].revents & POLLIN) { // check for events on socket
-                uint32_t bytes_read = recv(roach_sock_fd, &buf,
+                if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("roach_udp poll event!");
+                uint32_t bytes_read = recv(roach_sock_fd, buf,
                 ROACH_UDP_BUF_LEN, 0);
+                if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("bytes read = %u!", bytes_read);
                 // Don't even try to read the header if we read less than the size of a udp header struct.
                 if (bytes_read < (sizeof(struct udphdr) + sizeof(struct iphdr) + sizeof(struct ethhdr))) {
                     blast_err("We read only %ud", bytes_read);
                     continue;
                 }
                 num_packets = bytes_read/ROACH_UDP_LEN; // How many packets did we read?
+                if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("num_packets = %u!", num_packets);
                 for (int i_pkt =0; i_pkt < num_packets; i_pkt++) {
-                    m_packet.udp_header = (struct udphdr *)(m_packet.rcv_buffer
+                    m_packet.udp_header = (struct udphdr *)(buf
                         + sizeof(struct ethhdr)
                         + sizeof(struct iphdr) + ROACH_UDP_LEN*i_pkt);
                 /* Filter destination address */
@@ -295,6 +317,10 @@ void poll_socket(void)
                           // m_roach_udp->port, ntohs(m_packet.udp_header->dest));
                     for (int ind = 0; ind < NUM_ROACHES; ind++) { // Figure out how to process this packet.
                         roach_handle_data_t *m_roach_udp = (roach_handle_data_t*)&roach_udp[ind];
+                        if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+                            blast_info("i_pkt = %d, roach = %d, port = %u, header dest = %u",
+                                       i_pkt, ind+1, m_roach_udp->port, ntohs(m_packet.udp_header->dest));
+                        }
                     // blast_info("Roach udp %d, port = %d", m_roach_udp->which, m_roach_udp->port);
                         if ((m_roach_udp->port != ntohs(m_packet.udp_header->dest))) {
                             continue;
@@ -312,13 +338,19 @@ void poll_socket(void)
                          // m_roach_udp->port, ntohs(m_packet.udp_header->dest));}
                         } else {
                             if (bytes_read < ROACH_UDP_DATA_LEN*(i_pkt+1)) {
-                                blast_err("We are being asked to read beyond the end of the data.");
+                                blast_err("We are being asked to read beyond the end of the data length of %d.",
+                                          ROACH_UDP_DATA_LEN*(i_pkt+1));
                             } else {
+                                if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+                                    blast_info("Sending packet for processing: ptr offset = %d",
+                                               i_pkt * ROACH_UDP_DATA_LEN);
+                                }
                                 roach_process_stream(m_roach_udp, &m_packet , (buf + i_pkt * ROACH_UDP_DATA_LEN));
                             }
                         }
                     }
                 }
+                if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) debug_count++;
            }
        }
     }
