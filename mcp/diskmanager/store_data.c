@@ -260,11 +260,13 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
         make_roach_name(storage_info_roaches[roach].file_name, roach);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
-        bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT);
+        printf("Wrote %d bytes for ll format\n", bytes_written);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
-        bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        printf("Wrote %d bytes for ll format\n", bytes_written);
     }
 
     // close the file once enough frames are written
