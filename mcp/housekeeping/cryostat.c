@@ -581,9 +581,9 @@ static void init_cycle_values(void) {
     cycle_state.burning_counter = 0;
     cycle_state.reheating = 0;
     blast_info("values written");
-    cycle_state.tcrit_charcoal = 49400; // temp of charcoal
-    cycle_state.tmin_charcoal = 49498;
-    cycle_state.tcrit_fpa = 30342; // changed for the new cycle using fridge temp
+    cycle_state.tcrit_charcoal = 50925; // temp of charcoal
+    cycle_state.tmin_charcoal = 51000;
+    cycle_state.tcrit_fpa = 8587; // changed for the new cycle using fridge temp(295 mk)
 }
 // performs the startup operations of the cycle,
 // averaging the temperatures for 60 seconds before any other actions

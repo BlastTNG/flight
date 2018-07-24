@@ -248,7 +248,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(hwpr_enc_off), "HWP rotation sensor off", GR_CRYO | GR_HWPR},
   {COMMAND(hwpr_enc_pulse), "HWP rotation sensor pulse", GR_CRYO | GR_HWPR},
 
-  // Old commands, should we delete? PAW 03/27/2018
+  // Old commands, should we delete? PAW 2018/03/27
   // {COMMAND(ln_valve_on), "ln tank valve on", GR_CRYO},
   // {COMMAND(ln_valve_off), "ln tank valve off", GR_CRYO},
   // {COMMAND(he_valve_on), "he4 tank valve on", GR_CRYO},
@@ -594,9 +594,9 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(general), "send a general command string to the lock or actuators",
-    GR_ACT | GR_LOCK | GR_HWPR, 2,
+    GR_ACT | GR_LOCK | GR_HWPR | GR_BAL, 2,
     {
-      {"Address (1-3, 5, 8, 13, 33)", 1, 0x2F, 'i', "1.0"},
+      {"Address (1-10)", 1, 0x2F, 'i', "1.0"},
       {"Command", 0, 32, 's', "NONE"},
     }
   },
@@ -1222,6 +1222,20 @@ struct mcom mcommands[plugh + 2] = {
   //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
   //   }
   // },
+  {COMMAND(actuators_set_used), "Set each stepper as used (1) or not used (0)", GR_CRYO | GR_HWPR | GR_BAL | GR_ACT, 10,
+    {
+      {"Actuator #0", 0, 1, 'i', "NONE"},
+      {"Actuator #1", 0, 1, 'i', "NONE"},
+      {"Actuator #2", 0, 1, 'i', "NONE"},
+      {"Balance", 0, 1, 'i', "NONE"},
+      {"Lockpin", 0, 1, 'i', "NONE"},
+      {"HWPR", 0, 1, 'i', "NONE"},
+      {"Shutter", 0, 1, 'i', "NONE"},
+      {"Pumped Pot Valve", 0, 1, 'i', "NONE"},
+      {"Pump Valve", 0, 1, 'i', "NONE"},
+      {"Fill Valve", 0, 1, 'i', "NONE"},
+    }
+  },
 
   {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
     {
@@ -1233,6 +1247,14 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"Pot valve open current (% max)", 0, 100, 'i', "POTVALVE_I_OPEN"},
       {"Pot valve close current (% max)", 0, 100, 'i', "POTVALVE_I_CLOSE"}
+    }
+  },
+
+  {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
+    {
+      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "POTVALVE_CLOSED_THRESH"},
+      {"Loose close threshold (5500-10000)", 5500, 10000, 'i', "POTVALVE_LCLOSED_THRESH"},
+      {"Open threshold (8500-16000)", 8500, 16000, 'i', "POTVALVE_OPEN_THRESH"},
     }
   },
 

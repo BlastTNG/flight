@@ -75,15 +75,15 @@ channel_t channel_list[] =
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
 
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
-    { "tr_fpa_1k",        SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_250_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_1k_plate",      SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_300mk_strap",   SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_350_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_he4_pot",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_he3_fridge",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "tr_500_fpa",       SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
-    { "rox_bias",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    { "tr_fpa_1k",        SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_250_fpa",       SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_1k_plate",      SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_300mk_strap",   SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_350_fpa",       SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_he4_pot",       SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_he3_fridge",    SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "tr_500_fpa",       SCALE(CRYO_R), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
+    { "rox_bias",         SCALE(CRYO_R), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "bias_alsa_state_rox", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     // highbay gauges
     { "n2_flow_v",   SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
@@ -226,13 +226,6 @@ channel_t channel_list[] =
     { "status_350_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "status_300mk_heater",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "status_cal_lamp",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    // thermal vac test channels
-    { "vac_test_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_3",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_4",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_5",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_6",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
@@ -458,10 +451,13 @@ channel_t channel_list[] =
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
     {"potvalve_pos",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"potvalve_state",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"potvalve_vel",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_state",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"potvalve_vel",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0},
     {"potvalve_I_open",       SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"potvalve_I_close",      SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"potvalve_closed_thresh",      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_lclosed_thresh",      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_open_thresh",      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     {"pumpvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"fillvalve_lims",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
@@ -843,6 +839,8 @@ channel_t channel_list[] =
     { "dr_2_act",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "tol_act",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "status_actbus",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "used_actbus",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+
     { "pot_err_hwpr",         1.0 / 32767.0,    0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "blob_idx_sbsc",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
