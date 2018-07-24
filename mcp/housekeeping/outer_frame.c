@@ -361,7 +361,7 @@ void update_current_sensors(void) {
     SET_SCALED_VALUE(current_loop_16_Addr, labjack_get_value(LABJACK_MULT_OF, 72)*CURLOOP_CONV);
     SET_SCALED_VALUE(current_loop_17_Addr, labjack_get_value(LABJACK_MULT_OF, 74)*CURLOOP_CONV);
 }
-
+/*
 void outer_frame_multiplexed(void) {
     static channel_t* thermistor_29_Addr;
     static channel_t* thermistor_30_Addr;
@@ -442,6 +442,15 @@ void outer_frame_multiplexed(void) {
         thermistor_64_Addr = channels_find_by_name("thermistor_64");
         thermistor_65_Addr = channels_find_by_name("thermistor_65");
         thermistor_66_Addr = channels_find_by_name("thermistor_66");
+        thermistor_67_Addr = channels_find_by_name("thermistor_67");
+        thermistor_68_Addr = channels_find_by_name("thermistor_68");
+        thermistor_69_Addr = channels_find_by_name("thermistor_69");
+        thermistor_70_Addr = channels_find_by_name("thermistor_70");
+        thermistor_71_Addr = channels_find_by_name("thermistor_71");
+        thermistor_72_Addr = channels_find_by_name("thermistor_72");
+        thermistor_73_Addr = channels_find_by_name("thermistor_73");
+        thermistor_74_Addr = channels_find_by_name("thermistor_74");
+
     }
     SET_SCALED_VALUE(thermistor_29_Addr, labjack_get_value(6, 4));
     SET_SCALED_VALUE(thermistor_30_Addr, labjack_get_value(6, 4));
@@ -481,6 +490,32 @@ void outer_frame_multiplexed(void) {
     SET_SCALED_VALUE(thermistor_64_Addr, labjack_get_value(6, 4));
     SET_SCALED_VALUE(thermistor_65_Addr, labjack_get_value(6, 4));
     SET_SCALED_VALUE(thermistor_66_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_67_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_68_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_69_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_70_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_71_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_72_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_73_Addr, labjack_get_value(6, 4));
+    SET_SCALED_VALUE(thermistor_74_Addr, labjack_get_value(6, 4));
+}
+*/
+
+void update_status() {
+    static int first_time = 1;
+    static channel_t * labjack_conn_status_Addr = NULL;
+
+    if (first_time) {
+        labjack_conn_status_Addr = channels_find_by_name("labjack_conn_status");
+        first_time = 0;
+    }
+
+    uint16_t labjack_conn_status = 0;
+
+    for (int i = 0; i < NUM_LABJACKS; i++) {
+        labjack_conn_status |= state[i].connected << i;
+    }
+    SET_UINT16(labjack_conn_status_Addr, labjack_conn_status);
 }
 
 void outer_frame(int setting) {
@@ -488,6 +523,7 @@ void outer_frame(int setting) {
         update_current_sensors();
         update_thermistors();
         update_clinometers();
+        update_status();
     }
 }
 

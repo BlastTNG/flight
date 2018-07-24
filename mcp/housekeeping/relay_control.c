@@ -236,6 +236,18 @@ void rec_control(void) {
         }
     }
 }
+
+static void video_control(void) {
+    if (CommandData.Relays.update_video == 1) {
+        CommandData.Relays.update_video = 0;
+        labjack_queue_command(LABJACK_OF_3, 2006, CommandData.Relays.video_trans);
+        // should send the current value of CommandData.Relays.video_trans to FIO6 on LJ 5
+        // is checked every second as to whether it needs to update the signal or not
+    }
+}
+
+
+
 // initializes the OF relay structure
 static void of_init(void) {
     of_state.of_1_on = 0;
@@ -683,6 +695,7 @@ void relays(int setting) {
         if_control();
         of_control();
         of_status();
+        video_control();
     }
     if (setting == 2 && state[1].connected) {
         rec_control();
@@ -691,6 +704,7 @@ void relays(int setting) {
         if_control();
         of_control();
         of_status();
+        video_control();
         if (state[1].connected) {
             rec_control();
         }

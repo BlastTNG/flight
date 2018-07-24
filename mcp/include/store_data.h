@@ -30,4 +30,10 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
                             uint16_t packet_err);
 
 #define STORE_DATA_FRAMES_PER_FILE 300 // Store 5 minutes worth of data in one file.
+#define MAX_NUM_FILENAME_CHARS 72
 #endif /* INCLUDE_STORE_DATA_H_ */
+void store_data_200hz(void);
+void store_data_100hz(void);
+void store_data_5hz(void);
+void store_data_1hz(void);
+void store_data_hk(uint8_t *);

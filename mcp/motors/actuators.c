@@ -77,7 +77,7 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
 
-#define POLL_TIMEOUT 25			/* 5s @ 5Hz */
+#define POLL_TIMEOUT 5			/* 1s @ 5Hz */
 #define	MAX_SERIAL_ERRORS 20		/* after this many, repoll bus */
 static int poll_timeout = POLL_TIMEOUT; /* track time since last repoll */
 static int actbus_reset = 1;		/* 1 means actbus is on */
@@ -1464,6 +1464,7 @@ void *ActuatorBus(void *param)
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
     }
+
     first_time = 1;
     while (!is_init) {
         if (first_time) {
@@ -1478,9 +1479,9 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
-    blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
-              LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
+    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
+    // blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
+    //           LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
@@ -1509,7 +1510,7 @@ void *ActuatorBus(void *param)
     for (;;) {
         /* Repoll bus if necessary */
         if (CommandData.actbus.force_repoll || bus.err_count > MAX_SERIAL_ERRORS) {
-	    blast_info("forcing repoll of entire actuator bus (or polling first time)"); // DEBUG PAW
+	    // blast_info("forcing repoll of entire actuator bus (or polling first time)"); // DEBUG PAW
             for (i = 0; i < NACT; i++)
                 EZBus_ForceRepoll(&bus, id[i]);
             poll_timeout = 0;
@@ -1522,9 +1523,9 @@ void *ActuatorBus(void *param)
 	    // blast_info("supressing non-errors during repoll"); // DEBUG PAW
             // bus.chatter = EZ_CHAT_ERR;
 	    // for now, not changing chatter during repoll
-	    blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
+	    // blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
             all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
-	    blast_info("done repolling"); // DEBUG PAW
+	    // blast_info("done repolling"); // DEBUG PAW
             bus.chatter = ACTBUS_CHATTER;
             poll_timeout = POLL_TIMEOUT;
         }
@@ -1535,8 +1536,8 @@ void *ActuatorBus(void *param)
         for (i = 0; i < NACT; i++)
             if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
         if (caddr_match) {
-            blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
-                       CommandData.actbus.caddr[my_cindex]);
+            // blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+            //            CommandData.actbus.caddr[my_cindex]);
             // increase print level for uplinked manual commands
             bus.chatter = EZ_CHAT_BUS;
             EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
@@ -1628,7 +1629,7 @@ void *ActuatorBus(void *param)
 	}
 
 	if (valve_check & actuators_init) {
-	        blast_info("calling DoCryovalves"); // DEBUG PAW
+	        // blast_info("calling DoCryovalves"); // DEBUG PAW
 		DoCryovalves(&bus, actuators_init);
 	}
 
