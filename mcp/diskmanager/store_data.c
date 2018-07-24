@@ -261,12 +261,13 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT);
-        printf("Wrote %d bytes for ll format\n", bytes_written);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME SUPERFRAME_FORMAT_EXT);
-        printf("Wrote %d bytes for ll format\n", bytes_written);
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT,
+                   storage_info_roaches[roach].file_name);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME CALSPECS_FORMAT_EXT);
     }
 
     // close the file once enough frames are written
@@ -308,6 +309,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
                                                      m_packet,
                                                      buffersize);
 		    }
+        file_write(storage_info_roaches[roach].fp, (void *) &pad, sizeof(pad)); // final pad for checksum
 		} else {
 		  	if (storage_info_roaches[roach].have_warned) {
 			  		blast_err("Failed to open file %s for writing.", storage_info_roaches[roach].file_name);

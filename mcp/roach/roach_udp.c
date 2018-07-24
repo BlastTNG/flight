@@ -442,7 +442,7 @@ void roach_udp_networking_init(void)
     sfe[entry_i].type = _TYPE;                                                 \
     sfe[entry_i].spf = 1;                                                      \
     sfe[entry_i].start = loc;                                                  \
-    sfe[entry_i].skip = sizeof(sfe[entry_i].field);                            \
+    sfe[entry_i].skip = sizeof(m_packet._FIELD);                               \
     entry_i++;                                                                 \
                                                                                \
     fprintf(fp, "%s\n", _NAME);                                                \
@@ -501,6 +501,13 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
       snprintf(fieldname, sizeof(fieldname), "q_kid%04d_roach%d", j, roach+1);
       ADD_STRUCT_ENTRY_TO_LINKLIST(Qval[j], fieldname, SF_FLOAT32);
     }
+    snprintf(fieldname, sizeof(fieldname), "header_roach%d", roach+1);
+    if (sizeof(m_packet.udp_header) == 8) {
+      ADD_STRUCT_ENTRY_TO_LINKLIST(udp_header, fieldname, SF_UINT64);
+    } else {
+      ADD_STRUCT_ENTRY_TO_LINKLIST(udp_header, fieldname, SF_UINT32);
+    }
+
     snprintf(fieldname, sizeof(fieldname), "ctime_roach%d", roach+1);
     ADD_STRUCT_ENTRY_TO_LINKLIST(ctime, fieldname, SF_UINT32);
 
