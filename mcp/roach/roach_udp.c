@@ -385,7 +385,7 @@ void roach_udp_networking_init(void)
     sfe[entry_i].type = _TYPE;                                                 \
     sfe[entry_i].spf = 1;                                                      \
     sfe[entry_i].start = loc;                                                  \
-    sfe[entry_i].skip = blksize;                                               \
+    sfe[entry_i].skip = sizeof(sfe[entry_i].field);                            \
     entry_i++;                                                                 \
                                                                                \
     fprintf(fp, "%s\n", _NAME);                                                \
@@ -422,7 +422,6 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
     data_udp_packet_t m_packet;
     uint64_t base = (uint64_t) &m_packet;
     uint64_t loc = 0;
-    uint64_t blksize = ((uint64_t) (&m_packet.status_reg))+sizeof(m_packet.status_reg)-base;
 
     // --- STEP 1: generate the linklist format file --- //
 
