@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
-  unsigned int ll_flags = 0;
+  unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
 
   // initialization variables
   uint32_t req_serial = 0;

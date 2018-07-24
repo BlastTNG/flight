@@ -147,6 +147,55 @@ int def_doubletodata(uint8_t * data, double dub, uint8_t type)
   return 0;
 }
 
+double def_datatodouble_be(uint8_t * data, uint8_t type)
+{
+  switch (type) {
+    case SF_FLOAT64 : return bedtoh(*((double *) data));
+    case SF_FLOAT32 : return beftoh(*((float *) data));
+    case SF_INT16 : return (int16_t) be16toh(*((int16_t *) data));
+    case SF_UINT16 : return be16toh(*((uint16_t *) data));
+    case SF_INT32 : return (int32_t) be32toh(*((int32_t *) data));
+    case SF_UINT32 : return be32toh(*((uint32_t *) data));
+    case SF_INT8 : return *((int8_t *) data);
+    case SF_UINT8 : return *((uint8_t *) data);
+    default : return 0;
+  }
+  return 0;
+}
+int def_doubletodata_be(uint8_t * data, double dub, uint8_t type)
+{
+  if (type == SF_FLOAT64) {
+    htobed(dub, *(uint64_t*) data);
+    return 8;
+  } else if (type == SF_FLOAT32) {
+    htobef(dub, *(uint32_t*) data)
+    return 4;
+  } else if (type == SF_INT16) {
+    int16_t s = dub;
+    *(int16_t*) data = htobe16(s);
+    return 2;
+  } else if (type == SF_UINT16) {
+    uint16_t u = dub;
+    *(uint16_t*) data = htobe16(u);
+    return 2;
+  } else if (type == SF_INT32) {
+    int32_t i = dub;
+    *(int32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_UINT32) {
+    uint32_t i = dub;
+    *(uint32_t*) data = htobe32(i);
+    return 4;
+  } else if (type == SF_INT8) {
+    *(int8_t*) data = dub;
+    return 1;
+  } else if (type == SF_UINT8) {
+    *(uint8_t*) data = dub;
+    return 1;
+  }
+  return 0;
+}
+
 void linklist_assign_datatodouble(superframe_t * superframe, double (*func)(uint8_t *, uint8_t)) {
   if (func) {
     superframe->datatodouble = func;
@@ -993,8 +1042,13 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   fclose(cf);
 
   sf[n_entries].field[0] = '\0';
- 
-  superframe_t * superframe = linklist_build_superframe(sf, NULL, NULL);
+
+  superframe_t * superframe = NULL;
+  if (flags & LL_USE_BIG_ENDIAN) {
+    superframe = linklist_build_superframe(sf, &def_datatodouble_be, &def_doubletodata_be);
+  } else {
+    superframe = linklist_build_superframe(sf, NULL, NULL);
+  }
 
   if (superframe->serial != serial) {
     linklist_err("Parsed serial 0x%.8lx does not match file serial 0x%.8lx\n", superframe->serial, serial);
