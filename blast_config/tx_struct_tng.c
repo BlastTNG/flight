@@ -226,13 +226,6 @@ channel_t channel_list[] =
     { "status_350_LNA", 1, 0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "status_300mk_heater",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "status_cal_lamp",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    // thermal vac test channels
-    { "vac_test_1",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_2",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_3",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_4",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_5",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "vac_test_6",      SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     {"x0_point_az_raw", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     {"x0_point_az", SCALE(CONVERT_ANGLE_DEG), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
