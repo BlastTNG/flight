@@ -140,8 +140,11 @@ extern "C" {
 #define CRYO_A2_B (-1.032198E1 )
 /* Cryo Diode Voltage Calibration */
 /* Modified by Ian Summer 2017 */
-#define CRYO_D_M ( 10.8/32768)
-#define CRYO_D_B (-10.8)
+#define CRYO_D_M ( 10.34/32768)
+#define CRYO_D_B (-10.5869)
+/* modified Ian and Mark Palestine */
+#define CRYO_R_M ( 1.034/32768 )
+#define CRYO_R_B (-1.05869 )
 /* M3 was not measured (spider cable broken) so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)
 #define CRYO_M3_B            (-24293.822)
