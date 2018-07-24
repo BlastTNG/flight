@@ -311,6 +311,11 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(vna_sweep_all), "Peform a VNA sweep on all Roaches", GR_ROACH},
+  {COMMAND(targ_sweep_all), "Peform a TARG sweep on all Roaches", GR_ROACH},
+  {COMMAND(refit_freqs_all), "Refit freqs on all Roaches", GR_ROACH},
+  {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
+  {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1039,15 +1044,8 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_timestreams), "Save IQ timestreams for all channels", GR_ROACH, 2,
+  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
-    }
-  },
-  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 2,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
@@ -1078,7 +1076,6 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-<<<<<<< HEAD
   {COMMAND(new_ref_params), "calculates and saves ref params from last (or reference) target sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -1092,16 +1089,16 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(check_retune), "Calculate df for each channel", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-=======
+    }
+  },
   {COMMAND(offset_lo), "shift LO by specified amount in Hz", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
     }
   },
-  {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 2,
+  {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 1,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"},
       {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
     }
   },
@@ -1110,10 +1107,9 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH, 1,
+  {COMMAND(find_kids_default), "Find res freqs from VNA sweeps using default params", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
->>>>>>> roach_data_tests
     }
   },
   /***************************************/

@@ -1138,6 +1138,31 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 if (system("/sbin/reboot") < 0) berror(fatal, "Commands: failed to reboot, dying\n");
             }
             break;
+        case vna_sweep_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].do_sweeps = 1;
+            }
+            break;
+        case targ_sweep_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].do_sweeps = 2;
+            }
+            break;
+        case refit_freqs_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].refit_res_freqs = 1;
+            }
+            break;
+        case find_kids_default_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].find_kids_default = 1;
+            }
+            break;
+        case center_lo_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].set_lo = 1;
+            }
+          break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -2053,6 +2078,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].find_kids = 1;
       }
       break;
+    case find_kids_default:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].find_kids_default = 1;
+      }
+      break;
+    case find_kids_default_all:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].find_kids_default = 1;
+          }
+      }
+      break;
     case show_adc_rms:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].adc_rms = 1;
@@ -2090,25 +2127,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].get_timestream = 1;
       }
       break;
-    case all_timestreams:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)
-                    && ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
-          CommandData.roach[ivalues[0]-1].get_timestream = 2;
-      }
     case all_roach_ts:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
-             ((rvalues[1] >= 0.0) && rvalues[1] <= 300.0)) {
-          CommandData.roach_params[0].num_sec = rvalues[1];
-          CommandData.roach_params[1].num_sec = rvalues[1];
-          CommandData.roach_params[2].num_sec = rvalues[1];
-          CommandData.roach_params[3].num_sec = rvalues[1];
-          CommandData.roach_params[4].num_sec = rvalues[1];
-          CommandData.roach[0].get_timestream = 2;
-          CommandData.roach[1].get_timestream = 2;
-          CommandData.roach[2].get_timestream = 2;
-          CommandData.roach[3].get_timestream = 2;
-          CommandData.roach[4].get_timestream = 2;
+      if ((rvalues[1] >= 0.0) && (rvalues[1] <= 300.0)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].num_sec = rvalues[1];
+              CommandData.roach[i].get_timestream = 2;
+          }
       }
     case chop_tune_chan:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
@@ -2137,6 +2161,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case new_ref_params:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].calc_ref_params = 1;
+      }
+      break;
     case offset_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].set_lo = 2;
@@ -2154,15 +2180,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case center_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].set_lo = 1;
-      }
-      break;
-    case center_lo_all:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].set_lo = 1;
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].set_lo = 1;
-          }
->>>>>>> roach_data_tests
       }
       break;
       /*************************************
@@ -2827,6 +2844,7 @@ void InitCommandData()
         CommandData.roach[i].calc_ref_params = 0;
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
+        CommandData.roach[i].find_kids_default = 0;
     }
 
     CommandData.Bias.biasRamp = 0;

@@ -198,6 +198,7 @@ char bb_targ_freqs_path[] = "/home/fc1user/sam_tests/sweeps";
 // char find_kids_350[] = "/data/etc/blast/roachPython/find_kids_350.py";
 // char find_kids_500[] = "/data/etc/blast/roachPython/find_kids_500.py";
 char find_kids_script[] = "/data/etc/blast/roachPython/findKidsMcp.py";
+char find_kids_default_script[] = "/data/etc/blast/roachPython/findKidsDefault.py";
 char center_phase_script[] = "/data/etc/blast/roachPython/center_phase.py";
 char chop_snr_script[] = "/data/etc/blast/roachPython/fit_mcp_chop.py";
 char refit_freqs_script[] = "/data/etc/blast/roachPython/fit_res.py";
@@ -1665,7 +1666,7 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
  * @parm m_last_targ the path for saving the TARG sweep
  *
 */
-int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
+int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path, bool m_use_default_params)
 {
     /* if (!m_targ_path) {
         if (create_sweepdir(m_roach, TARG)) {
@@ -1692,16 +1693,26 @@ int get_targ_freqs(roach_state_t *m_roach, char *m_vna_path, char* m_targ_path)
     double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
     char m_line[READ_LINE];
     blast_info("Calling Python script...");
-    blast_tmp_sprintf(py_command, "python %s %d %s %g %g %g %g %g > %s",
-        find_kids_script,
-        m_roach->which,
-        m_vna_path,
-        CommandData.roach_params[m_roach->which - 1].smoothing_scale,
-        CommandData.roach_params[m_roach->which - 1].peak_threshold,
-        CommandData.roach_params[m_roach->which - 1].spacing_threshold,
-        m_roach->lo_centerfreq,
-        (double)LO_STEP/1000.,
-        m_roach->find_kids_log);
+    if (!m_use_default_params) {
+        blast_tmp_sprintf(py_command, "python %s %d %s %g %g %g %g %g > %s",
+            find_kids_script,
+            m_roach->which,
+            m_vna_path,
+            CommandData.roach_params[m_roach->which - 1].smoothing_scale,
+            CommandData.roach_params[m_roach->which - 1].peak_threshold,
+            CommandData.roach_params[m_roach->which - 1].spacing_threshold,
+            m_roach->lo_centerfreq,
+            (double)LO_STEP/1000.,
+            m_roach->find_kids_log);
+    } else {
+        blast_tmp_sprintf(py_command, "python %s %d %s %g %g > %s",
+            find_kids_default_script,
+            m_roach->which,
+            m_vna_path,
+            m_roach->lo_centerfreq,
+            (double)LO_STEP/1000.,
+            m_roach->find_kids_log);
+    }
     blast_info("%s", py_command);
     system(py_command);
     sleep(3);
@@ -3340,7 +3351,7 @@ int pi_init_sequence(pi_state_t *m_pi)
 int roach_prog_registers(roach_state_t *m_roach)
 {
     int retval = -1;
-    blast_info("ROACH%d, Configuring software registers...", m_roach->which - 1);
+    blast_info("ROACH%d, Configuring software registers...", m_roach->which);
     if ((roach_write_int(m_roach, "GbE_packet_info", 42, 0) < 0)) {
         return retval;
     }
@@ -3521,13 +3532,13 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    while (!InCharge) {
+    /* while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
-            first_time = 0;
+             first_time = 0;
         }
         usleep(2000);
-    }
+    } */
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
     pi_state_table[i].desired_state = PI_STATE_INIT;
@@ -3659,10 +3670,17 @@ void *roach_cmd_loop(void* ind)
             }
             if (CommandData.roach[i].find_kids) {
                 if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
-                             roach_state_table[i].last_targ_path)) < 0) {
+                             roach_state_table[i].last_targ_path, 0)) < 0) {
                        blast_err("ROACH%d: Failed to find kids", i + 1);
                    }
                 CommandData.roach[i].find_kids = 0;
+            }
+            if (CommandData.roach[i].find_kids_default) {
+                if ((get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
+                             roach_state_table[i].last_targ_path, 1)) < 0) {
+                       blast_err("ROACH%d: Failed to find kids", i + 1);
+                   }
+                CommandData.roach[i].find_kids_default = 0;
             }
             if ((CommandData.roach[i].opt_tones) && roach_state_table[i].has_targ_tones) {
                 if (calc_grad_freqs(&roach_state_table[i], roach_state_table[i].last_targ_path)) {
@@ -3732,7 +3750,7 @@ void *roach_cmd_loop(void* ind)
                 if (AUTO_FIND_KIDS &&
                        roach_state_table[i].has_vna_sweep) {
                     get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_vna_path,
-                                            roach_state_table[i].last_targ_path);
+                                            roach_state_table[i].last_targ_path, 1);
                     /* if (AUTO_CAL_ADC) {
                         cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
                     }*/
@@ -3892,6 +3910,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].is_sweeping = 0;
     roach_state_table[ind].has_vna_sweep = 0;
     roach_state_table[ind].has_targ_sweep = 0;
+    blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
     blast_info("Spawned command thread for roach%i", ind + 1);
     return 0;

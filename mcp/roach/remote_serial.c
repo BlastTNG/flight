@@ -93,7 +93,7 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
 int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len)
 {
     uint64_t written;
-    if (!InCharge) return -2;
+    // if (!InCharge) return -2;
     if (!m_serial->connected) {
         blast_info("Socket not connected");
 	m_serial->timeout.tv_sec = 5;
@@ -117,21 +117,21 @@ int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t
 {
     ph_buf_t *buf;
     int retval = -1;
-    blast_info("InCharge = %i", InCharge);
-    blast_info("Connected = %d", m_serial->connected);
-    if (!InCharge) return -2;
+    // blast_info("InCharge = %i", InCharge);
+    // blast_info("Connected = %d", m_serial->connected);
+    // if (!InCharge) return -2;
     if (!m_serial->connected) return -1;
 
     while (m_serial->connected) {
         // blast_info("attempting to read %zd of % " PRId64 " bytes", m_size, ph_bufq_len(m_serial->input_buffer));
-	buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
-	if (buf) {
-    	    // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
-            memcpy(m_buffer, ph_buf_mem(buf), m_size);
-	    ph_buf_delref(buf);
-            retval = m_size;
-	    break;
-        }
+    buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
+    if (buf) {
+        // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
+        memcpy(m_buffer, ph_buf_mem(buf), m_size);
+        ph_buf_delref(buf);
+        retval = m_size;
+        break;
+    }
         usleep(1000);
     }
     return retval;

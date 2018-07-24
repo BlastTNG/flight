@@ -363,6 +363,7 @@ typedef struct roach
     unsigned int do_check_retune;
     unsigned int do_retune;
     unsigned int set_lo;
+    unsigned int find_kids_default;
 } roach_status_t;
 
 typedef struct roach_params
