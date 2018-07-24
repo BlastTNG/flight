@@ -144,6 +144,8 @@ int main(int argc, char *argv[]) {
       rewind = atoi(argv[++i]);
     } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
       ll_flags |= LL_IGNORE_CHECKSUM;
+    } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
+      ll_flags &= ~LL_USE_BIG_ENDIAN;
     } else {
       printf("Unrecognized option \"%s\"\n", argv[i]);
       exit(1);
