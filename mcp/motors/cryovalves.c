@@ -39,6 +39,7 @@
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+#define POTVALVE_STEP_ADC_RATIO 318.75
 
 typedef enum {
 	no_move = 0, opening, closing, tighten
@@ -164,6 +165,7 @@ void DoPotValve(struct ezbus* bus)
 	static int pot_init = 0;
 	static int tight_flag;
 	valve_state_t prev_goal;
+	int delta = 0;
 	int new_goal;
 	// int firstmove;
 	int newstate;
@@ -266,7 +268,7 @@ void DoPotValve(struct ezbus* bus)
 	switch(potvalve_data.potvalve_move) {
 		case(no_move):
 			// blast_info("in case no_move"); // DEBUG PAW
-			EZBus_Stop(bus, potvalve_data.addr);
+			if (potvalve_data.current != closed) EZBus_Stop(bus, potvalve_data.addr);
 			// blast_info("called EZBus_Stop"); // DEBUG PAW
 			potvalve_data.moving = 0;
 			break;
@@ -281,7 +283,7 @@ void DoPotValve(struct ezbus* bus)
 			tight_flag = 0;
 			break;
 		case(closing):
-			// blast_info("in case closing"); // DEBUG PAW
+			blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
@@ -290,8 +292,12 @@ void DoPotValve(struct ezbus* bus)
 			potvalve_data.moving = 1;
 			break;
 		case(tighten):
-			// blast_info("in case tighten"); // DEBUG PAW
+			blast_info("in case tighten"); // DEBUG PAW
 			if(potvalve_data.moving == 0) { // if we're just starting to tighten
+				GetPotValvePos(*bus); // check location before tightening
+				delta = (int)(-1 * POTVALVE_STEP_ADC_RATIO *
+					MAX((potvalve_data.adc[0] - CommandData.Cryo.potvalve_closed_threshold), 0) - 750000);
+
 				// blast_info("after checking that we aren't moving yet"); // DEBUG PCA
 				// blast_info("tighten current: %d; goal: %d", potvalve_data.current, potvalve_data.goal);
 				EZBus_Stop(bus, potvalve_data.addr); // make sure we're actually stopped
@@ -299,8 +305,9 @@ void DoPotValve(struct ezbus* bus)
 				EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 				// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 				// usleep(500000);
-				if(EZBus_RelMove(bus, potvalve_data.addr, -1000000) != EZ_ERR_OK) // close by ~.5 turn
+				if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
+				blast_info("command tighten move of size %d, ADC = %f", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
 				// blast_info("sent D1e6R to pot valve"); // DEBUG PAW
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
