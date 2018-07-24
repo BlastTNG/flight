@@ -66,7 +66,8 @@ void ControlBalance(void)
 
 //  Initialize balance state
     if (firsttime) {
-        balance_state.i_el_avg = 0.0;
+       	blast_info("Init ControlBalance");
+	balance_state.i_el_avg = 0.0;
         firsttime = 0;
     }
 
@@ -120,7 +121,7 @@ void ControlBalance(void)
 	       }
            }
        } else {
-           balance_state.do_move = 0;
+	   balance_state.do_move = 0;
       	   balance_state.dir = no_move;
        }
 }
@@ -150,6 +151,8 @@ void WriteBalance_5Hz(void)
       iLevelOffBalAddr = channels_find_by_name("i_level_off_bal");
       iElReqAvgBalAddr = channels_find_by_name("i_el_req_avg_bal");
       statusBalAddr = channels_find_by_name("status_bal");
+      posBalAddr = channels_find_by_name("pos_bal");
+      limBalAddr = channels_find_by_name("lim_bal");
     }
     SET_UINT32(velBalAddr, CommandData.balance.vel);
     SET_UINT16(accBalAddr, CommandData.balance.acc);
@@ -171,31 +174,39 @@ void WriteBalance_5Hz(void)
 void DoBalance(struct ezbus* bus)
 {
     static int firsttime = 1;
+    char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
+        blast_info("Init DoBalance");
         balance_state.init = 0;
         balance_state.ind = BALANCENUM;
         balance_state.addr = GetActAddr(balance_state.ind);
         /* Attempt to stop the balance motor */
         EZBus_Take(bus, balance_state.addr);
         blast_info("Making sure the balance system is not running on startup.");
-		EZBus_Stop(bus, balance_state.addr);
+        EZBus_Stop(bus, balance_state.addr);
         EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
-	EZBus_Release(bus, balance_state.addr);
+        EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
         balance_state.do_move = 0;
-	balance_state.lims = 0;
+        balance_state.lims = 0;
         firsttime = 0;
+        balance_state.init = 1;
      }
 
         /* update the Balance move parameters */
+    // EZBus_SetPreamble(bus, balance_state.addr, BALANCE_PREAMBLE);
     EZBus_SetVel(bus, balance_state.addr, CommandData.balance.vel);
     EZBus_SetAccel(bus, balance_state.addr, CommandData.balance.acc);
     EZBus_SetIMove(bus, balance_state.addr, CommandData.balance.move_i);
     EZBus_SetIHold(bus, balance_state.addr, CommandData.balance.hold_i);
 
-	// get (relative) position on the rail and read limit switches
+// TODO(laura): Add checking to make sure that the motor commands actually went through
+// updating the status variables.
+
+        // get (relative) position on the rail and read limit switches
+    // NOTE(laura 2018-07-13): This next line was commented out.  I have no idea why.
     EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);
 
@@ -219,8 +230,12 @@ void DoBalance(struct ezbus* bus)
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
     }
+
+    if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
+	balance_state.do_move = 0;
+	// balance_state.moving = 0;
+    }
+
 // Write balance data
     WriteBalance_5Hz();
-
-    usleep(100000);
 }

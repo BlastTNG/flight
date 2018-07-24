@@ -29,8 +29,30 @@
 
 #include <stdint.h>
 #include <sys/stat.h>
+#include <ck_ht.h>
 
+#include "file_buffer_tng.h"
+
+/*
+ *  fileentry structure is assigned to each file currently open on an disk manager volume.  Calls to operate
+ * on files reference the index number of a fileentry in the #filepool
+ */
+typedef struct diskentry diskentry_t;
 typedef struct fileentry fileentry_t;
+
+typedef struct fileentry
+{
+    FILE                *fp;                /**< fp File pointer used to write data to the file */
+    pthread_t           parent;             /**< parent pthread ID of the creating thread */
+    char                *filename;          /**< filename base file name of the file being written/read */
+    char                mode[4];            /**< mode One of "r", "w", "a" or with "+" appended */
+    diskentry_t         *disk;              /**< disk Pointer to file's disk */
+    filebuffer_t        buffer;             /**< buffer For file data caching in mcp */
+    ck_ht_hash_t        filehash;           /**< filehash Hash of filename, used for hash table */
+    uint32_t            is_closed;          /**< is_closed Set by the calling routine to make the entry for cleanup */
+    int32_t             last_error;         /**< last_error In the event of disk error, this is set to errno */
+} fileentry_t;
+
 
 fileentry_t *file_open(const char*, const char *m_mode);
 int file_close(fileentry_t*);

@@ -25,9 +25,9 @@
  *
  * Success is indicated by EZ_BUS_OK, which should always be 0
  */
-#define EZ_ERROR     0x0F
-#define EZ_READY     0x20
-#define EZ_STATUS    0x40
+#define EZ_ERROR     0x0F /* mask to look at just the two bit error codes (0-15, below) */
+#define EZ_READY     0x20 /* set when ready to accept a command */
+#define EZ_STATUS    0x40 /* always set */
 #define EZ_SERR_NONE    0 /* No error */
 #define EZ_SERR_INIT    1 /* Initialisation error */
 #define EZ_SERR_BADCMD  2 /* Bad command */
@@ -40,11 +40,11 @@
 
 #define EZ_ERR_OK	    0x0000  // everything is okay
 #define EZ_ERR_OOD	    0x0100  // unexpected out of data
-#define EZ_ERR_TIMEOUT	0x0200  // timeout
+#define EZ_ERR_TIMEOUT	    0x0200  // timeout
 #define EZ_ERR_TTY	    0x0400  // serial error (open or write, so far)
-#define EZ_ERR_BAD_WHO	0x0800  // bad 'who' value. NOT always checked
+#define EZ_ERR_BAD_WHO	    0x0800  // bad 'who' value. NOT always checked
 #define	EZ_ERR_BUSY	    0x1000  // bus busy (as per Take/Release)
-#define	EZ_ERR_RESPONSE	0x2000  // malformed response from device/bad checksum
+#define	EZ_ERR_RESPONSE	    0x2000  // malformed response from device/bad checksum
 #define EZ_ERR_POLL	    0x4000  // not all polled steppers found
 
 /* Who:
@@ -88,12 +88,12 @@
 
 /* Chatter:
  * The verbosity level of the EZStep library.
- * The levels are cumultive, printing everything from all lower levels
+ * The levels are cumulative, printing everything from all lower levels
  */
-#define	EZ_CHAT_NONE	0   // print absolutely nothing
+#define	EZ_CHAT_NONE	    0   // print absolutely nothing
 #define	EZ_CHAT_ERR	    1   // print only errors and warnings
 #define	EZ_CHAT_ACT	    2   // also print bus actions
-#define	EZ_CHAT_SEIZE	3   // indicate when the bus is seized
+#define	EZ_CHAT_SEIZE  	    3   // indicate when the bus is seized
 #define EZ_CHAT_BUS	    4   // also print all bus chatter
 
 /* Status:
@@ -144,7 +144,7 @@ struct ezbus {
  * bus: struct ezbus to initialize
  * tty: name of tty device for communications 
  * name: bus name. prepended to messages
- * inhibit_chatter: chatter level
+ * chatter: chatter level
  */
 int EZBus_Init(struct ezbus* bus, const char *tty, const char* name, int chatter);
 
@@ -245,7 +245,7 @@ int EZBus_SetVel(struct ezbus* bus, char who, int vel);
  */
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble);
 
-/* sets acceleration for simple motion moves (in steps/s)
+/* sets acceleration for simple motion moves (in steps/s/s)
  */
 int EZBus_SetAccel(struct ezbus* bus, char who, int acc);
 

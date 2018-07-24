@@ -58,6 +58,16 @@ static void frame_log_callback(struct mosquitto *mosq, void *userdata, int level
         blast_info("%s\n", str);
 }
 
+// publishes a compressed linklist buffer to the mqtt server
+void linklist_publish(struct mosquitto *mosq, linklist_t * ll, uint8_t * buffer) {
+		if (!ll || !buffer) return;
+
+		char frame_name[32] = {0};
+		sprintf(frame_name, "linklists/%s", ll->name);
+
+		mosquitto_publish(mosq, NULL, frame_name, ll->blk_size, buffer, 0, false);
+}
+
 void groundhog_linklist_publish(linklist_t * ll, uint8_t * buffer) {
     pthread_mutex_lock(&mqqt_lock);
     linklist_publish(mosq, ll, buffer);
@@ -165,7 +175,7 @@ int framing_init(void)
         rate_name[strlen(rate_name)-1] = 'z';
 
         for (int i = 0; i < NUM_DOWNLINKS; i++) {
-            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe_size);
+            if (rate == 0) allocFifo(&downlink[i].fifo, NUM_FRAMES, superframe->size);
             downlink[i].data[rate] = calloc(1, allocated_size);
 
             sprintf(downlink[i].frame_name[rate], "frames/%s/%s", downlink[i].name, rate_name);

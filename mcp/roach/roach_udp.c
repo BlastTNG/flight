@@ -50,6 +50,8 @@
 #include <unistd.h>
 #include <fftw3.h>
 #include <pthread.h>
+#include <linklist.h>
+
 // include "portable_endian.h"
 #include "mcp.h"
 #include "katcp.h"
@@ -355,6 +357,75 @@ void roach_udp_networking_init(void)
     }
 }
 
+/* Function: generate_roach_udp_linklist_format
+ * --------------------------------------------
+ * Generates a text file such that the raw binary roach udp data is
+ * readable from linklists.
+ */
+
+// this is a very specific macro written to loop over a structure
+#define ADD_STRUCT_ENTRY_TO_LINKLIST(_FIELD, _NAME)              \
+({                                                               \
+    void *__ptr = &(m_packet._FIELD);                            \
+    uint64_t pad = ((uint64_t) __ptr)-base-loc;                  \
+    if (pad) fprintf(fp, "_BYTE_PAD_ 255 %" PRIu64 "\n", pad);   \
+                                                                 \
+    loc += pad;                                                  \
+    fprintf(fp, "%s\n", _NAME);                                  \
+    loc += sizeof(m_packet._FIELD);                              \
+})
+
+linklist_t * generate_roach_udp_linklist(char * filename, int roach)
+{
+    FILE * fp = fopen(filename, "w+");
+    int j = 0;
+    linklist_t * ll = NULL;
+
+    char fieldname[128] = {0};
+
+    if (!fp) {
+        blast_err("Unable to open roach %d format file at %s\n", roach, filename);
+        return NULL;
+    }
+
+    // dummy udp packet for mapping
+    data_udp_packet_t m_packet;
+    uint64_t base = (uint64_t) &m_packet;
+    uint64_t loc = 0;
+
+    // --- STEP 1: generate the linklist format file --- //
+
+    // write the I channel fields to the file
+    for (j = 0; j < n_publish_roaches[roach]; j++) {
+      snprintf(fieldname, sizeof(fieldname), "i_kid%04d_roach%d", j, roach+1);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Ival[j], fieldname);
+    }
+
+    // write the Q channel fields to the file
+    for (j = 0; j < n_publish_roaches[roach]; j++) {
+      snprintf(fieldname, sizeof(fieldname), "q_kid%04d_roach%d", j, roach+1);
+      ADD_STRUCT_ENTRY_TO_LINKLIST(Qval[j], fieldname);
+    }
+    snprintf(fieldname, sizeof(fieldname), "ctime_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(ctime, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "pps_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(pps_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "clock_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(clock_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "packet_count_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(packet_count, fieldname);
+
+    snprintf(fieldname, sizeof(fieldname), "status_reg_roach%d", roach+1);
+    ADD_STRUCT_ENTRY_TO_LINKLIST(status_reg, fieldname);
+
+    fclose(fp);
+
+    return ll;
+}
+
 /* Function: write_roach_channels_488hz
  * ------------------------------------
  * Populates 488 Hz frame fields
@@ -362,34 +433,37 @@ void roach_udp_networking_init(void)
 void write_roach_channels_488hz(void)
 {
     uint8_t i_udp_read;
-	static channel_t *RoachQAddr[NUM_ROACHES][NUM_ROACH_UDP_CHANNELS];
-	static channel_t *RoachIAddr[NUM_ROACHES][NUM_ROACH_UDP_CHANNELS];
-    char channel_name_i[128] = {0};
-    char channel_name_q[128] = {0};
-	int i, j;
+    static channel_t *RoachCTimeAddr[NUM_ROACHES];
+    static channel_t *RoachPPSCountAddr[NUM_ROACHES];
+    static channel_t *RoachClockCountAddr[NUM_ROACHES];
+    static channel_t *RoachPacketCountAddr[NUM_ROACHES];
+    char channel_name_ctime[128] = {0};
+    char channel_name_pps_count[128] = {0};
+    char channel_name_clock_count[128] = {0};
+    char channel_name_packet_count[128] = {0};
+	int i;
     static int firsttime = 1;
 
     if (firsttime) {
         blast_info("Starting write_roach_channels_488hz");
         firsttime = 0;
-	for (i = 0; i < NUM_ROACHES; i++) {
-            for (j = 0; j < n_publish_roaches[i]; j++) {
-                snprintf(channel_name_i, sizeof(channel_name_i), "i_kid%04d_roach%d", j, i+1);
-                RoachIAddr[i][j] = channels_find_by_name(channel_name_i);
-                snprintf(channel_name_q, sizeof(channel_name_q), "q_kid%04d_roach%d", j, i+1);
-                RoachQAddr[i][j] = channels_find_by_name(channel_name_q);
-            }
-        }
+    }
+    for (i = 0; i < NUM_ROACHES; i++) {
+        snprintf(channel_name_ctime, sizeof(channel_name_ctime), "ctime_packet_roach%d", i+1);
+        RoachCTimeAddr[i] = channels_find_by_name(channel_name_ctime);
+        snprintf(channel_name_pps_count, sizeof(channel_name_pps_count), "pps_count_roach%d", i+1);
+        RoachPPSCountAddr[i] = channels_find_by_name(channel_name_pps_count);
+        snprintf(channel_name_clock_count, sizeof(channel_name_clock_count), "clock_count_roach%d", i+1);
+        RoachClockCountAddr[i] = channels_find_by_name(channel_name_clock_count);
+        snprintf(channel_name_packet_count, sizeof(channel_name_packet_count), "packet_count_roach%d", i+1);
+        RoachPacketCountAddr[i] = channels_find_by_name(channel_name_packet_count);
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         i_udp_read = GETREADINDEX(roach_udp[i].index);
         data_udp_packet_t* m_packet = &(roach_udp[i].last_pkts[i_udp_read]);
-        for (j = 0; j < n_publish_roaches[i]; j++) {
-            SET_FLOAT(RoachIAddr[i][j], m_packet->Ival[j]);
-            SET_FLOAT(RoachQAddr[i][j], m_packet->Qval[j]);
-//            if ((j == 0) && ((roach_udp[i].roach_packet_count % 500) == 0)) {
-//                blast_info("Ival = %f, Qval = %f", m_packet->Ival[j], m_packet->Qval[j]);
-//            }
-        }
+        SET_UINT32(RoachCTimeAddr[i], m_packet->ctime);
+        SET_UINT32(RoachPPSCountAddr[i], m_packet->pps_count);
+        SET_UINT32(RoachClockCountAddr[i], m_packet->clock_count);
+        SET_UINT32(RoachPacketCountAddr[i], m_packet->packet_count);
     }
 }

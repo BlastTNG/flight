@@ -35,6 +35,7 @@
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 #include "remote_serial.h"
+#include "linklist.h"
 
 #define ROACH_UDP_CRC_ERR 0x01
 #define ROACH_UDP_SEQ_ERR 0x02
@@ -285,5 +286,7 @@ void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
 void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
+
+linklist_t * generate_roach_udp_linklist(char *, int);
 
 #endif /* INCLUDE_ROACH_H_ */

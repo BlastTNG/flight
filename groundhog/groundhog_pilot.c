@@ -18,9 +18,11 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "bitserver.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
+#include "linklist_writer.h"
+
+#include "bitserver.h"
 #include "blast.h"
 #include "blast_time.h"
 #include "pilot.h"
@@ -40,16 +42,20 @@ void udp_receive(void *arg) {
   uint32_t blk_size = 0;
   uint32_t transmit_size = 0;
 
-  // open a file to save all the raw linklist data
-  FILE * rawsave = NULL;
-
-  uint8_t *local_superframe = calloc(1, superframe_size);
+  uint8_t *local_superframe = calloc(1, superframe->size);
+  uint8_t *local_allframe = calloc(1, superframe->allframe_size);
   struct Fifo *local_fifo = &downlink[id].fifo; 
+
+  // open a file to save all the raw linklist data
+  linklist_rawfile_t * ll_rawfile = NULL;
 
   uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
   initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
+
+  int bad_serial_count = 0;
+  int good_serial_count = 0;
 
   while (true) {
     do {
@@ -58,34 +64,19 @@ void udp_receive(void *arg) {
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
+        if ((bad_serial_count % 60) == 0) {
+          blast_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
+        }
+        bad_serial_count++;
       } else {
+        bad_serial_count = 0;
         break;
       }
     } while (true);
 
-#if 0
     if (serial != prev_serial) {
-      char fname[80] = {0}, basename[80] = {0};
-
-      if (rawsave) {
-        fclose(rawsave);
-        rawsave = NULL;
-      }
-      TODO(javier): fix directory tree for file saves
-      sprintf(basename, "%s/%s/%s_%s", FILE_SAVE_DIR, udpsetup->sf, datestring, ll->name);
-
-      // open a new file to write raw linklist data to
-      sprintf(fname, "%s.gnddata", basename);
-      blast_info("Opening file \"%s\"", fname);
-      rawsave = fpreopenb(fname);
-      if (!rawsave) blast_err("Failed to open file");
-      
-      // copy linklist file to the directory
-      blast_info("Generating linklist format file to \"%s\"", basename);
-      linklist_to_file(ll, basename);
+      ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
     }
-#endif
-
     prev_serial = serial;
 
     // set the linklist serial
@@ -107,28 +98,26 @@ void udp_receive(void *arg) {
     }
 
     // decompress the linklist
-    if (read_allframe(local_superframe, compbuffer)) { // just a regular frame
-      blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+    if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
+      // blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+      memcpy(local_allframe, compbuffer, superframe->allframe_size);
     } else {
-      blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+      if ((good_serial_count % 60) == 0) {
+        blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+      }
+      good_serial_count++;
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
       // write the linklist data to disk
-      if (rawsave) {
-        fwrite(compbuffer, 1, ll->blk_size, rawsave);
-        fflush(rawsave); 
+      if (ll_rawfile) {
+        memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+        write_linklist_rawfile(ll_rawfile, compbuffer);
       }
 
       // decompress
-      decompress_linklist_by_size(local_superframe, ll, compbuffer, transmit_size); 
-      memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
+      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0); 
+      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
       groundhog_linklist_publish(ll, compbuffer);
-      /*
-      printf("Start\n");
-      for (int i = 0; i < 5; i++) {
-        printf("%d\n", (int32_t) be32toh(*((int32_t *) (compbuffer+119+i*4))));
-      }
-      */
 
       incrementFifo(local_fifo);
     }

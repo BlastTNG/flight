@@ -15,7 +15,7 @@ status_rudat_roach2	3 5
 status_rudat_roach3	3 5
 status_rudat_roach4	3 5
 status_rudat_roach5	3 5
-#packet_status_reg	3 5
+packet_status_reg	3 5
 atten_in_roach1	3 5
 atten_in_roach2	3 5
 atten_in_roach3	3 5
