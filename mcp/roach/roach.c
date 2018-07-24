@@ -3403,111 +3403,113 @@ int init_roach(uint16_t ind)
  * ----------------------------------
  * Populates 5 Hz frame data
  */
+// TODO(laura/sam/adrian): A lot of these diagnositic fields have been commented out in the
+// code, presumably because they have been changed.  Update and remove or reimplement the write calls.
 void write_roach_channels_5hz(void)
 {
-    int i, j;
+    int i;
     static int firsttime = 1;
     int n_write_kids_df = 20; // For now only write the delta_freqs for the first 20 KIDs.
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
-    static channel_t *RoachStatusAddr[NUM_ROACHES];
-    static channel_t *PiStatusAddr[NUM_ROACHES];
-    static channel_t *RudatStatusAddr[NUM_ROACHES];
-    static channel_t *ValonStatusAddr[NUM_ROACHES];
-    static channel_t *RoachStateAddr[NUM_ROACHES];
-    static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
-    static channel_t *RoachReadLOFreqAddr[NUM_ROACHES];
-    static channel_t *RoachDfAddr[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
-    static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParInAttenAddr[NUM_ROACHES];
-    static channel_t *CmdRoachParOutAttenAddr[NUM_ROACHES];
+//     static channel_t *RoachStatusAddr[NUM_ROACHES];
+//     static channel_t *PiStatusAddr[NUM_ROACHES];
+//     static channel_t *RudatStatusAddr[NUM_ROACHES];
+//     static channel_t *ValonStatusAddr[NUM_ROACHES];
+//     static channel_t *RoachStateAddr[NUM_ROACHES];
+//     static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
+//     static channel_t *RoachReadLOFreqAddr[NUM_ROACHES];
+//     static channel_t *RoachDfAddr[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
+//     static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
+//     static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
+//     static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
+//     static channel_t *CmdRoachParInAttenAddr[NUM_ROACHES];
+//     static channel_t *CmdRoachParOutAttenAddr[NUM_ROACHES];
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
-    char channel_name_roach_status[128] = { 0 };
-    char channel_name_valon_status[128] = { 0 };
-    char channel_name_pi_status[128] = { 0 };
-    char channel_name_rudat_status[128] = { 0 };
-    char channel_name_roach_state[128] = { 0 };
-    char channel_name_roach_req_lo[128] = { 0 };
-    char channel_name_roach_df[128] = { 0 };
-    char channel_name_roach_read_lo[128] = { 0 };
-    char channel_name_cmd_roach_par_smooth[128] = { 0 };
-    char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_out_atten[128] = { 0 };
+//     char channel_name_roach_status[128] = { 0 };
+//     char channel_name_valon_status[128] = { 0 };
+//     char channel_name_pi_status[128] = { 0 };
+//     char channel_name_rudat_status[128] = { 0 };
+//     char channel_name_roach_state[128] = { 0 };
+//     char channel_name_roach_req_lo[128] = { 0 };
+//     char channel_name_roach_df[128] = { 0 };
+//     char channel_name_roach_read_lo[128] = { 0 };
+//     char channel_name_cmd_roach_par_smooth[128] = { 0 };
+//     char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
+//     char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
+//     char channel_name_cmd_roach_par_in_atten[128] = { 0 };
+//     char channel_name_cmd_roach_par_out_atten[128] = { 0 };
     if (firsttime) {
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
             snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
-                    "packet_count_roach%d", i + 1);
+                    "packet_count_mcp_roach%d", i + 1);
             snprintf(channel_name_valid_pkt_ct,
                     sizeof(channel_name_valid_pkt_ct),
-                    "packet_count_valid_roach%d", i + 1);
+                    "packet_count_valid_mcp_roach%d", i + 1);
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
-                    "packet_count_invalid_roach%d", i + 1);
-            snprintf(channel_name_roach_status,
-                    sizeof(channel_name_roach_status), "status_roach%d", i + 1);
-            snprintf(channel_name_valon_status,
-                    sizeof(channel_name_valon_status), "status_valon_roach%d", i + 1);
-            snprintf(channel_name_pi_status,
-                    sizeof(channel_name_pi_status), "status_pi_roach%d", i + 1);
-            snprintf(channel_name_rudat_status,
-                    sizeof(channel_name_rudat_status), "status_rudat_roach%d", i + 1);
-            snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
-                    "stream_state_roach%d", i + 1);
-            snprintf(channel_name_roach_req_lo,
-                    sizeof(channel_name_roach_req_lo), "freq_lo_req_roach%d",
-                    i + 1);
-            snprintf(channel_name_roach_read_lo,
-                    sizeof(channel_name_roach_read_lo), "freq_lo_read_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_smooth,
-                    sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_peak_thresh,
-                    sizeof(channel_name_cmd_roach_par_peak_thresh), "fk_peak_thresh_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_space_thresh,
-                    sizeof(channel_name_cmd_roach_par_space_thresh), "fk_space_thresh_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_in_atten,
-                    sizeof(channel_name_cmd_roach_par_in_atten), "atten_in_roach%d",
-                    i + 1);
-            snprintf(channel_name_cmd_roach_par_out_atten,
-                    sizeof(channel_name_cmd_roach_par_out_atten), "atten_out_roach%d",
-                    i + 1);
+                    "packet_count_invalid_mcp_roach%d", i + 1);
+//             snprintf(channel_name_roach_status,
+//                     sizeof(channel_name_roach_status), "status_roach%d", i + 1);
+//             snprintf(channel_name_valon_status,
+//                     sizeof(channel_name_valon_status), "status_valon_roach%d", i + 1);
+//             snprintf(channel_name_pi_status,
+//                     sizeof(channel_name_pi_status), "status_pi_roach%d", i + 1);
+//             snprintf(channel_name_rudat_status,
+//                     sizeof(channel_name_rudat_status), "status_rudat_roach%d", i + 1);
+//             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
+//                     "stream_state_roach%d", i + 1);
+//             snprintf(channel_name_roach_req_lo,
+//                     sizeof(channel_name_roach_req_lo), "freq_lo_req_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_roach_read_lo,
+//                     sizeof(channel_name_roach_read_lo), "freq_lo_read_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_cmd_roach_par_smooth,
+//                     sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_cmd_roach_par_peak_thresh,
+//                     sizeof(channel_name_cmd_roach_par_peak_thresh), "fk_peak_thresh_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_cmd_roach_par_space_thresh,
+//                     sizeof(channel_name_cmd_roach_par_space_thresh), "fk_space_thresh_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_cmd_roach_par_in_atten,
+//                     sizeof(channel_name_cmd_roach_par_in_atten), "atten_in_roach%d",
+//                     i + 1);
+//             snprintf(channel_name_cmd_roach_par_out_atten,
+//                     sizeof(channel_name_cmd_roach_par_out_atten), "atten_out_roach%d",
+//                     i + 1);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
                     channel_name_valid_pkt_ct);
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
-            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
-            ValonStatusAddr[i] = channels_find_by_name(channel_name_valon_status);
-            PiStatusAddr[i] = channels_find_by_name(channel_name_pi_status);
-            RudatStatusAddr[i] = channels_find_by_name(channel_name_rudat_status);
-            RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
-            RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
-            RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
-            CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
-            CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
-            CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
-            CmdRoachParInAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_in_atten);
-            CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
-            for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
-                if (j < n_write_kids_df) {
-                    snprintf(channel_name_roach_df,
-                             sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
-                             j , i + 1);
-                    RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
-                }
-            }
-        }
+//             RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_status);
+//             ValonStatusAddr[i] = channels_find_by_name(channel_name_valon_status);
+//             PiStatusAddr[i] = channels_find_by_name(channel_name_pi_status);
+//             RudatStatusAddr[i] = channels_find_by_name(channel_name_rudat_status);
+//             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
+//             RoachReqLOFreqAddr[i] = channels_find_by_name(channel_name_roach_req_lo);
+//             RoachReadLOFreqAddr[i] = channels_find_by_name(channel_name_roach_read_lo);
+//             CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
+//             CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
+//             CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
+//             CmdRoachParInAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_in_atten);
+//             CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
+//             for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
+//                 if (j < n_write_kids_df) {
+//                     snprintf(channel_name_roach_df,
+//                              sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
+//                              j , i + 1);
+//                     RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
+//                 }
+//             }
+         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
@@ -3515,24 +3517,24 @@ void write_roach_channels_5hz(void)
         roach_udp[i].roach_valid_packet_count);
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
-        SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
-        SET_UINT16(ValonStatusAddr[i], valon_state_table[i].status);
-        SET_UINT16(RudatStatusAddr[i], rudat_state_table[i].status);
-        SET_UINT16(PiStatusAddr[i], pi_state_table[i].status);
-        // TODO(laura/sam): Replace next write with a streaming status bitfield.
-        SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
-        SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
-        SET_SCALED_VALUE(RoachReadLOFreqAddr[i], roach_state_table[i].lo_centerfreq);
-        SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
-        SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
-        SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
-        SET_SCALED_VALUE(CmdRoachParInAttenAddr[i], CommandData.roach_params[i].in_atten);
-        SET_SCALED_VALUE(CmdRoachParOutAttenAddr[i], CommandData.roach_params[i].out_atten);
-        for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
-            if (j < n_write_kids_df) {
-                SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
-            }
-        }
+//         SET_UINT16(RoachStatusAddr[i], roach_state_table[i].status);
+//         SET_UINT16(ValonStatusAddr[i], valon_state_table[i].status);
+//         SET_UINT16(RudatStatusAddr[i], rudat_state_table[i].status);
+//         SET_UINT16(PiStatusAddr[i], pi_state_table[i].status);
+//         // TODO(laura/sam): Replace next write with a streaming status bitfield.
+//         SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
+//         SET_SCALED_VALUE(RoachReqLOFreqAddr[i], roach_state_table[i].lo_freq_req);
+//         SET_SCALED_VALUE(RoachReadLOFreqAddr[i], roach_state_table[i].lo_centerfreq);
+//         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
+//         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
+//         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
+//         SET_SCALED_VALUE(CmdRoachParInAttenAddr[i], CommandData.roach_params[i].in_atten);
+//         SET_SCALED_VALUE(CmdRoachParOutAttenAddr[i], CommandData.roach_params[i].out_atten);
+//         for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
+//             if (j < n_write_kids_df) {
+//                 SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df_diff[j]);
+//             }
+//         }
 //        if (i == 0) {
 //            blast_info("roach%i, lo_freq_req = %f, lo_centerfreq = %f",
 //                       i+1, roach_state_table[i].lo_freq_req, roach_state_table[i].lo_centerfreq);
