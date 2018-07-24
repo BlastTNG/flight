@@ -204,6 +204,7 @@ char chop_snr_script[] = "/data/etc/blast/roachPython/fit_mcp_chop.py";
 char refit_freqs_script[] = "/data/etc/blast/roachPython/fit_res.py";
 char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
+char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
@@ -1655,6 +1656,19 @@ int create_sweepdir(roach_state_t *m_roach, int sweep_type)
     return retval;
 }
 
+
+/* Function: save targ transfer function */
+// TODO(Sam) error handling
+int save_output_trf(roach_state_t *m_roach)
+{
+    char *py_command;
+    blast_tmp_sprintf(py_command,
+          "python %s %d", gen_output_trf_script, m_roach->which);
+    blast_info("ROACH%d, Saving output transfer function", m_roach->which);
+    system(py_command);
+    return 0;
+}
+
 /* Function: get_targ_freqs
  * ----------------------------
  * After running a VNA sweep. Calls python script find_kids_blast.py.
@@ -1794,8 +1808,10 @@ int roach_write_saved(roach_state_t *m_roach)
     blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
     // blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which);
     // cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
+    m_roach->has_targ_tones = 1;
+    save_output_trf(m_roach);
     retval = 0;
-    return 0;
+    return retval;
 }
 
 int roach_write_targ_tones(roach_state_t *m_roach)
@@ -1980,17 +1996,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         blast_tmp_sprintf(save_bbfreqs_command, "cp %s/roach%d/bb_targ_freqs.dat %s",
                         bb_targ_freqs_path, m_roach->which, m_roach->last_targ_path);
         system(save_bbfreqs_command);
-        // Save initial transfer function into targ sweep dir
-        blast_tmp_sprintf(save_targ_trf_command, "cp %s/roach%d/first_targ_trf.dat %s",
-                        bb_targ_freqs_path, m_roach->which, m_roach->last_targ_path);
-        system(save_targ_trf_command);
         blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
         blast_info("Sweep freq fname = %s", sweep_freq_fname);
-        // TODO(Sam) if not testing, uncomment the following
-        /* if (save_freqs(m_roach, targ_freq_fname, m_roach->targ_tones, m_roach->num_kids) < 0) {
-            blast_err("Sweep freqs could not be saved to disk");
-            return SWEEP_FAIL;
-        }*/
         comb_len = m_roach->num_kids;
     }
     /* Determine sweep frequencies */
@@ -2508,15 +2515,11 @@ int cal_sweep_attens(roach_state_t *m_roach)
                 }
             } else if ((status == SWEEP_INTERRUPT)) {
                 blast_info("ROACH%d, Cal sweep interrupted by blastcmd", m_roach->which);
-                m_roach->state = ROACH_STATE_STREAMING;
-                m_roach->desired_state = ROACH_STATE_STREAMING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
                 free(m_roach->last_cal_path);
                 return SWEEP_INTERRUPT;
             } else {
                 blast_info("ROACH%d, Cal sweep failed, will reattempt", m_roach->which);
-                m_roach->state = ROACH_STATE_STREAMING;
-                m_roach->desired_state = ROACH_STATE_STREAMING;
                 CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
                 free(m_roach->last_cal_path);
                 return SWEEP_FAIL;
@@ -2558,8 +2561,6 @@ int cal_sweep_amps(roach_state_t *m_roach)
             blast_info("ROACH%d, Cal sweep interrupted by blastcmd, writing default amps",
                    m_roach->which);
             roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-            m_roach->state = ROACH_STATE_STREAMING;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
             CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
             free(m_roach->last_cal_path);
             return SWEEP_INTERRUPT;
@@ -2567,8 +2568,6 @@ int cal_sweep_amps(roach_state_t *m_roach)
         if ((status == SWEEP_FAIL)) {
             blast_info("ROACH%d, Cal sweep failed, writing default amps", m_roach->which);
             roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-            m_roach->state = ROACH_STATE_STREAMING;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
             CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
             free(m_roach->last_cal_path);
             return SWEEP_FAIL;
@@ -3485,6 +3484,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, VNA sweep failed, will reattempt", m_roach->which);
         m_roach->has_vna_sweep = 0;
     }
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     return retval;
 }
 
@@ -3504,13 +3504,11 @@ int roach_targ_sweep(roach_state_t *m_roach)
     } else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
-        return retval;
     } else {
         blast_info("ROACH%d, TARG sweep failed", m_roach->which);
         m_roach->has_targ_sweep = 0;
-        return retval;
     }
-    retval = 0;
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     return retval;
 }
 
@@ -3588,9 +3586,15 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             if (CommandData.roach[i].do_sweeps == 1) {
                     roach_vna_sweep(&roach_state_table[i]);
+                    CommandData.roach[i].do_sweeps = 0;
             }
             if (CommandData.roach[i].do_sweeps == 2) {
+                if (roach_state_table[i].has_targ_tones) {
                     roach_targ_sweep(&roach_state_table[i]);
+                } else {
+                    blast_info("ROACH%d: Must write targ tones before doing targ sweep", i + 1);
+                }
+                CommandData.roach[i].do_sweeps = 0;
             }
             if (CommandData.roach[i].calc_ref_params) {
                 save_ref_params(&roach_state_table[i]);
@@ -3827,7 +3831,7 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].targ_amps_path[0],
                       "/home/fc1user/sam_tests/roach%d_default_targ_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[1],
-                      "/home/fc1user/sam_tests/sweeps/roach%d/first_targ_trf.dat", ind + 1);
+                      "/home/fc1user/sam_tests/sweeps/roach%d/targ_trf.dat", ind + 1);
     asprintf(&roach_state_table[ind].targ_amps_path[2],
                       "/home/fc1user/sam_tests/sweeps/roach%d/last_targ_amps.dat", ind + 1);
     asprintf(&roach_state_table[ind].chop_path_root,
