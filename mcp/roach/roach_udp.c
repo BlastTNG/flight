@@ -479,10 +479,15 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
     data_udp_packet_t m_packet;
     uint64_t base = (uint64_t) &m_packet;
     uint64_t loc = 0;
+    uint64_t blksize = ((uint64_t) (&(m_packet.status_reg)))+sizeof(m_packet.status_reg)-((uint64_t) &m_packet);
 
     // --- STEP 1: generate the linklist format file --- //
 
     // set the no checksum flag
+    fprintf(fp, LINKLIST_FILE_SERIAL_IND "%.08x\n", 0xaddfaded); // format specifier
+    fprintf(fp, LINKLIST_FILE_SIZE_IND "%" PRIu64 "\n", blksize+4); // blk_size = bulk size (+4 for checksums)
+    fprintf(fp, LINKLIST_FRAMES_PER_FILE_IND "%d\n", 488*STORE_DATA_FRAMES_PER_FILE); // number of frames per file
+    fprintf(fp, "#\n");
     fprintf(fp, "%s\n", STR(LL_NO_AUTO_CHECKSUM));
 
     // write the I channel fields to the file

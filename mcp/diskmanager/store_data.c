@@ -250,7 +250,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
 
         // open and write the temporary superframe, linklist, and calspecs format files
         snprintf(archive_dir, sizeof(archive_dir), "rawdir");
-        ll_rawfile_default_fpf = 900;
+        ll_rawfile_default_fpf = STORE_DATA_FRAMES_PER_FILE;
 
         // generate superframe and linklist format for roach data
         ll_roach[roach] = generate_roach_udp_linklist(LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT, roach);
@@ -349,7 +349,7 @@ void store_data_hk(uint8_t * sf_buffer) {
 
         // open and write the temporary superframe, linklist, and calspecs format files
         snprintf(archive_dir, sizeof(archive_dir), "rawdir");
-        ll_rawfile_default_fpf = 900;
+        ll_rawfile_default_fpf = STORE_DATA_FRAMES_PER_FILE;
 
         linklist_rawfile_t * ll_rawfile = open_linklist_rawfile(LL_TMP_NAME, ll_hk);
         channels_write_calspecs(LL_TMP_NAME CALSPECS_FORMAT_EXT, derived_list);
