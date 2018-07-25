@@ -1163,6 +1163,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].set_lo = 1;
             }
           break;
+        case load_freqs_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].load_new_freqs = 1;
+            }
+            break;
+        case calc_dfs:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].do_df_calc = 2;
+            }
+            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD

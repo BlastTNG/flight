@@ -316,6 +316,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(refit_freqs_all), "Refit freqs on all Roaches", GR_ROACH},
   {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
   {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
+  {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -971,9 +972,10 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(calc_df), "Calculate df for each channel", GR_ROACH, 1,
+  {COMMAND(calc_df), "Calculate df for each channel", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel number", 0, 1015, 'i', "NONE"},
     }
   },
   {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,

@@ -167,8 +167,9 @@ const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
-/* Beaglebone/Pi state structure, see roach.h */
+/* Pi state structure, see roach.h */
 static pi_state_t pi_state_table[NUM_ROACHES];
+static mole_state_t mole_state_table[NUM_ROACHES];
 /* Initialization scripts that live on Pi */
 char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char valon_init_pi_extref[] = "python /home/pi/device_control/init_valon_ext.py";
@@ -1145,7 +1146,7 @@ int pi_write_string(pi_state_t *m_pi, uint8_t *m_data, size_t m_len)
     int retval = -1;
     m_data[m_len++] = '\n';
     // m_data[m_len] = 0;
-    // blast_info("PI_COM_PORT ============================ %u", m_pi->pi_comm->port);
+    // blast_info("PI_COM_PORT ************************** %u", m_pi->pi_comm->port);
     bytes_wrote = remote_serial_write_data(m_pi->pi_comm, m_data, m_len);
     if (bytes_wrote) {
         retval = bytes_wrote;
@@ -2820,13 +2821,10 @@ int save_ref_params(roach_state_t *m_roach)
                 m_roach->sweep_root_path);
     blast_info("%s", py_command);
     system(py_command);
-    sleep(10.);
     // get reference gradients
     if ((roach_read_2D_file(m_roach, path_to_ref_grads,
               m_roach->ref_grads, m_roach->num_kids) < 0)) {
         return retval;
-    } else {
-        retval = 0;
     }
     if ((roach_read_2D_file(m_roach, path_to_ref_vals,
                m_roach->ref_vals, m_roach->num_kids) < 0)) {
@@ -2834,17 +2832,16 @@ int save_ref_params(roach_state_t *m_roach)
     } else {
         // set 'has ref' flag
         m_roach->has_ref = 1;
-        retval = 0;
     }
+    retval = 0;
     return retval;
 }
 
-// calculate delta f for each channel
-int roach_df(roach_state_t* m_roach)
+int roach_dfs(roach_state_t* m_roach)
 {
     int retval = -1;
     // check for ref params
-    if ((m_roach->has_ref < 1)) {
+    if ((!m_roach->has_ref)) {
         blast_err("ROACH%d, No ref params found", m_roach->which);
         return retval;
     }
@@ -2852,12 +2849,12 @@ int roach_df(roach_state_t* m_roach)
     // Store in comp_vals
     double comp_vals[m_roach->num_kids][2];
     int m_num_received = 0;
+    int n_avg = 10;
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     uint8_t i_udp_read;
     double *I_sum = calloc(m_roach->num_kids, sizeof(double));
     double *Q_sum = calloc(m_roach->num_kids, sizeof(double));
-    while (m_num_received < N_AVG) {
-        usleep(3000);
+    while (m_num_received < n_avg) {
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -2870,8 +2867,8 @@ int roach_df(roach_state_t* m_roach)
         m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     }
     for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
-        comp_vals[chan][0] = I_sum[chan] / N_AVG;
-        comp_vals[chan][1] = Q_sum[chan] / N_AVG;
+        comp_vals[chan][0] = I_sum[chan] / n_avg;
+        comp_vals[chan][1] = Q_sum[chan] / n_avg;
     }
     free(I_sum);
     free(Q_sum);
@@ -2887,6 +2884,91 @@ int roach_df(roach_state_t* m_roach)
     retval = 0;
     return retval;
 }
+
+int roach_df(roach_state_t* m_roach)
+{
+    int retval = -1;
+    // check for ref params
+    if ((!m_roach->has_ref)) {
+        blast_err("ROACH%d, No ref params found", m_roach->which);
+        return retval;
+    }
+    int chan = CommandData.roach[m_roach->which - 1].chan;
+    // Store in comp_vals
+    // Get I and Q vals from packets. Average NUM_AVG values
+    // Store in comp_vals
+    double comp_vals[2];
+    int m_num_received = 0;
+    int n_avg = 10;
+    int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    uint8_t i_udp_read;
+    double I_sum = 0;
+    double Q_sum = 0;
+    while (m_num_received < n_avg) {
+        if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
+            m_num_received++;
+            i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
+            data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
+            I_sum +=  m_packet.Ival[chan];
+            Q_sum +=  m_packet.Qval[chan];
+        }
+        m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    }
+    comp_vals[0] = I_sum / n_avg;
+    comp_vals[1] = Q_sum / n_avg;
+    // calculate df for each selected channel
+    double deltaI = comp_vals[0] - m_roach->ref_vals[chan][0];
+    double deltaQ = comp_vals[1] - m_roach->ref_vals[chan][1];
+    m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
+            (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
+                      m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
+    blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, chan, m_roach->df[chan]);
+    retval = 0;
+    return retval;
+}
+
+// calculate delta f for channels selected by mole
+/*
+int roach_df_mole(roach_state_t* m_roach)
+{
+    int retval = -1;
+    // check for ref params
+    if ((!m_roach->has_ref)) {
+        blast_err("ROACH%d, No ref params found", m_roach->which);
+        return retval;
+    }
+    // allocate a buffer for df values
+    int n_avg = 10;
+    double *df_buffer = calloc(->n_avg, sizeof(double));
+    int chan = CommandData.roach_tlm[m_roach->which - 1].kid;
+    double comp_vals[2];
+    int m_num_received = 0;
+    int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    uint8_t i_udp_read;
+    double I_sum = 0;
+    double Q_sum = 0;
+    while (m_num_received < n_avg) {
+        if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
+            m_num_received++;
+            i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
+            data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
+            I_sum +=  m_packet.Ival[chan];
+            Q_sum +=  m_packet.Qval[chan];
+        }
+        m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
+    }
+    comp_vals[0] = I_sum / n_avg;
+    comp_vals[1] = Q_sum / n_avg;
+    // calculate df for each selected channel
+    double deltaI = comp_vals[0] - m_roach->ref_vals[chan][0];
+    double deltaQ = comp_vals[1] - m_roach->ref_vals[chan][1];
+    m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
+            (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
+                      m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
+    retval = 0;
+    return retval;
+}
+*/
 
 /* Function: roach_check_retune
  * ----------------------------
@@ -2909,7 +2991,7 @@ static int roach_check_retune(roach_state_t *m_roach)
     int nflags;
     if ((CommandData.roach[m_roach->which - 1].do_df_calc == 1) && (m_roach->has_ref)) {
         // calculate df
-        if ((roach_df(m_roach) < 0)) {
+        if ((roach_dfs(m_roach) < 0)) {
             blast_err("ROACH%d: Failed to calculate DF...", m_roach->which - 1);
             CommandData.roach[m_roach->which - 1].do_df_calc = 0;
             return retval;
@@ -3314,7 +3396,6 @@ int pi_boot_sequence(pi_state_t *m_pi, int m_ntries)
     int count = 0;
     blast_info("Initializing Pi%d ...", m_pi->which);
     m_pi->pi_comm = remote_serial_init(m_pi->which - 1, m_pi->port);
-    // blast_info("PI_COMM_PORT ============================ %u", m_pi->pi_comm->port);
     while ((count < m_ntries)) {
         if (!m_pi->pi_comm->connected) {
             blast_info("Waiting to connect to PI%d ...", m_pi->which);
@@ -3602,6 +3683,18 @@ void *roach_cmd_loop(void* ind)
             if ((CommandData.roach[i].change_tone_amps == 1)) {
                 shift_tone_amp(&roach_state_table[i]);
             }
+            if ((CommandData.roach[i].do_df_calc == 1) && roach_state_table[i].has_targ_tones) {
+                    if ((roach_df(&roach_state_table[i]) < 0)) {
+                        continue;
+                    }
+                CommandData.roach[i].do_df_calc = 0;
+            }
+            if ((CommandData.roach[i].do_df_calc == 2) && roach_state_table[i].has_targ_tones) {
+                    if ((roach_dfs(&roach_state_table[i]) < 0)) {
+                        continue;
+                    }
+                CommandData.roach[i].do_df_calc = 0;
+            }
             if (CommandData.roach[i].do_sweeps == 1) {
                     roach_vna_sweep(&roach_state_table[i]);
                     CommandData.roach[i].do_sweeps = 0;
@@ -3671,8 +3764,7 @@ void *roach_cmd_loop(void* ind)
             }
             // calculate df
             if ((CommandData.roach[i].do_df_calc == 1) && roach_state_table[i].has_targ_tones) {
-                    if ((roach_df(&roach_state_table[i]) < 0)) {
-                        CommandData.roach[i].do_df_calc = 0;
+                    if ((roach_dfs(&roach_state_table[i]) < 0)) {
                         continue;
                     }
                 CommandData.roach[i].do_df_calc = 0;
@@ -3833,6 +3925,7 @@ int init_roach(uint16_t ind)
     }
     memset(&roach_state_table[ind], 0, sizeof(roach_state_t));
     memset(&pi_state_table[ind], 0, sizeof(pi_state_t));
+    memset(&mole_state_table[ind], 0, sizeof(mole_state_t));
     asprintf(&roach_state_table[ind].address, "roach%d", ind + 1);
     asprintf(&roach_state_table[ind].sweep_root_path,
                       "/home/fc1user/sam_tests/sweeps/roach%d", ind + 1);
@@ -3919,7 +4012,6 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].which = ind + 1;
     pi_state_table[ind].which = ind + 1;
     pi_state_table[ind].port = NC2_PORT;
-    blast_info("PI PORT =========================== %u", pi_state_table[ind].port);
     roach_state_table[ind].dest_port = 64000 + ind;
     roach_state_table[ind].src_port = 64000 + ind;
     roach_state_table[ind].src_ip = IPv4(192, 168, 40, 71 + ind);
