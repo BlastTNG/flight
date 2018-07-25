@@ -2888,6 +2888,7 @@ int roach_dfs(roach_state_t* m_roach)
         m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
         (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
         m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
+        blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, chan, m_roach->df[chan]);
     }
     // TODO(Sam) add error handling
     retval = 0;
@@ -3726,7 +3727,7 @@ void *roach_cmd_loop(void* ind)
             }
             if ((CommandData.roach[i].do_df_calc == 2) && roach_state_table[i].has_targ_tones) {
                     if ((roach_dfs(&roach_state_table[i]) < 0)) {
-                        continue;
+                        CommandData.roach[i].do_df_calc = 0;
                     }
                 CommandData.roach[i].do_df_calc = 0;
             }
