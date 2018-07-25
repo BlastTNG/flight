@@ -28,6 +28,7 @@
 
 #include <blast.h>
 
+#include <calibrate.h>
 #include <channel_macros.h>
 #include <conversions.h>
 #include <channels_tng.h>
@@ -412,13 +413,13 @@ void read_5hz_acs(void)
 
   /// TODO(seth): Add PSS3-8 read functions
 
-  ACSData.clin_elev = GET_UINT16(elRawIfClinAddr);
-  ACSData.mag_x[0] = GET_UINT16(mag_x_n_addr);
-  ACSData.mag_y[0] = GET_UINT16(mag_y_n_addr);
-  ACSData.mag_z[0] = GET_UINT16(mag_z_n_addr);
-  ACSData.mag_x[1] = GET_UINT16(mag_x_s_addr);
-  ACSData.mag_y[1] = GET_UINT16(mag_y_s_addr);
-  ACSData.mag_z[1] = GET_UINT16(mag_z_s_addr);
+  GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
+  ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
+  ACSData.mag_y[0] = ((double)GET_INT16(mag_y_n_addr))*M_16MAG;
+  ACSData.mag_z[0] = ((double)GET_INT16(mag_z_n_addr))*M_16MAG;
+  ACSData.mag_x[1] = ((double)GET_INT16(mag_x_s_addr))*M_16MAG;
+  ACSData.mag_y[1] = ((double)GET_INT16(mag_y_s_addr))*M_16MAG;
+  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG;
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores
@@ -563,6 +564,37 @@ void store_100hz_acs(void)
     static channel_t *vel_piv_addr;
     static channel_t *pos_piv_addr;
 
+    static channel_t *newOffsetIFElMotEncAddr;
+    static channel_t *intIFElMotEncAddr;
+    static channel_t *newOffsetIFYawMag1Addr;
+    static channel_t *newOffsetIFRollMag1Addr;
+    static channel_t *intIFYawMag1Addr;
+    static channel_t *intIFRollMag1Addr;
+    static channel_t *dAzMag1Addr;
+    static channel_t *newOffsetIFYawMag2Addr;
+    static channel_t *newOffsetIFRollMag2Addr;
+    static channel_t *intIFYawMag2Addr;
+    static channel_t *intIFRollMag2Addr;
+    static channel_t *dAzMag2Addr;
+    static channel_t *newOffsetIFElXSC0Addr;
+    static channel_t *newOffsetIFYawXSC0Addr;
+    static channel_t *newOffsetIFRollXSC0Addr;
+    static channel_t *dAzRollXSC0Addr;
+    static channel_t *intIFYawXSC0Addr;
+    static channel_t *intIFRollXSC0Addr;
+    static channel_t *intIFElXSC0Addr;
+    static channel_t *prevSolAzXSC0Addr;
+    static channel_t *prevSolElXSC0Addr;
+    static channel_t *newOffsetIFElXSC1Addr;
+    static channel_t *newOffsetIFYawXSC1Addr;
+    static channel_t *newOffsetIFRollXSC1Addr;
+    static channel_t *dAzRollXSC1Addr;
+    static channel_t *intIFYawXSC1Addr;
+    static channel_t *intIFRollXSC1Addr;
+    static channel_t *intIFElXSC1Addr;
+    static channel_t *prevSolAzXSC1Addr;
+    static channel_t *prevSolElXSC1Addr;
+
     static int firsttime = 1;
     int i_point;
     int i_motors;
@@ -587,6 +619,37 @@ void store_100hz_acs(void)
 
         vel_piv_addr = channels_find_by_name("mc_piv_vel");
         pos_piv_addr = channels_find_by_name("mc_piv_pos");
+
+        newOffsetIFElMotEncAddr = channels_find_by_name("new_offset_ifelmotorenc_gy");
+        intIFElMotEncAddr = channels_find_by_name("int_ifelmotorenc");
+        newOffsetIFYawMag1Addr = channels_find_by_name("new_offset_ifyawmag1_gy");
+        newOffsetIFRollMag1Addr = channels_find_by_name("new_offset_ifrollmag1_gy");
+        intIFYawMag1Addr = channels_find_by_name("int_ifyawmag1");
+        intIFRollMag1Addr = channels_find_by_name("int_ifrollmag1");
+        dAzMag1Addr =  channels_find_by_name("d_az_mag1");
+        newOffsetIFYawMag2Addr = channels_find_by_name("new_offset_ifyawmag2_gy");
+        newOffsetIFRollMag2Addr = channels_find_by_name("new_offset_ifrollmag2_gy");
+        intIFYawMag2Addr = channels_find_by_name("int_ifyawmag2");
+        intIFRollMag2Addr = channels_find_by_name("int_ifrollmag2");
+        dAzMag2Addr =  channels_find_by_name("d_az_mag2");
+        newOffsetIFElXSC0Addr = channels_find_by_name("new_offset_ifelxsc0_gy");
+        newOffsetIFYawXSC0Addr = channels_find_by_name("new_offset_ifyawxsc0_gy");
+        newOffsetIFRollXSC0Addr = channels_find_by_name("new_offset_ifrollxsc0_gy");
+        dAzRollXSC0Addr =  channels_find_by_name("d_az_xsc0");
+        intIFYawXSC0Addr = channels_find_by_name("int_ifyawxsc0");
+        intIFRollXSC0Addr = channels_find_by_name("int_ifrollxsc0");
+        intIFElXSC0Addr = channels_find_by_name("int_ifelxsc0");
+        prevSolAzXSC0Addr = channels_find_by_name("prev_soln_az_xsc0");
+        prevSolElXSC0Addr = channels_find_by_name("prev_soln_el_xsc0");
+        newOffsetIFElXSC1Addr = channels_find_by_name("new_offset_ifelxsc1_gy");
+        newOffsetIFYawXSC1Addr = channels_find_by_name("new_offset_ifyawxsc1_gy");
+        newOffsetIFRollXSC1Addr = channels_find_by_name("new_offset_ifrollxsc1_gy");
+        dAzRollXSC1Addr =  channels_find_by_name("d_az_xsc1");
+        intIFYawXSC1Addr = channels_find_by_name("int_ifyawxsc1");
+        intIFRollXSC1Addr = channels_find_by_name("int_ifrollxsc1");
+        intIFElXSC1Addr = channels_find_by_name("int_ifelxsc1");
+        prevSolAzXSC1Addr = channels_find_by_name("prev_soln_az_xsc1");
+        prevSolElXSC1Addr = channels_find_by_name("prev_soln_el_xsc1");
     }
     i_point = GETREADINDEX(point_index);
     i_motors = GETREADINDEX(motor_index);
@@ -606,6 +669,38 @@ void store_100hz_acs(void)
     SET_INT32(pos_motor_el_addr, ElevMotorData[i_motors].motor_position);
     SET_INT32(vel_piv_addr, PivotMotorData[i_motors].velocity);
     SET_INT32(pos_piv_addr, PivotMotorData[i_motors].position);
+
+    SET_SCALED_VALUE(newOffsetIFElMotEncAddr, PointingData[i_point].new_offset_ifel_elmotenc_gy);
+    SET_SCALED_VALUE(intIFElMotEncAddr, PointingData[i_point].int_ifel_elmotenc);
+    SET_SCALED_VALUE(newOffsetIFYawMag1Addr, PointingData[i_point].new_offset_ifyaw_mag1_gy);
+    SET_SCALED_VALUE(newOffsetIFRollMag1Addr, PointingData[i_point].new_offset_ifroll_mag1_gy);
+    SET_SCALED_VALUE(intIFYawMag1Addr, PointingData[i_point].int_ifyaw_mag1);
+    SET_SCALED_VALUE(intIFRollMag1Addr, PointingData[i_point].int_ifroll_mag1);
+    SET_SCALED_VALUE(dAzMag1Addr, PointingData[i_point].d_az_mag1);
+    SET_SCALED_VALUE(newOffsetIFYawMag2Addr, PointingData[i_point].new_offset_ifyaw_mag2_gy);
+    SET_SCALED_VALUE(newOffsetIFRollMag2Addr, PointingData[i_point].new_offset_ifroll_mag2_gy);
+    SET_SCALED_VALUE(intIFYawMag2Addr, PointingData[i_point].int_ifyaw_mag2);
+    SET_SCALED_VALUE(intIFRollMag2Addr, PointingData[i_point].int_ifroll_mag2);
+    SET_SCALED_VALUE(dAzMag2Addr, PointingData[i_point].d_az_mag2);
+
+    SET_SCALED_VALUE(newOffsetIFElXSC0Addr, PointingData[i_point].new_offset_ifel_xsc0_gy);
+    SET_SCALED_VALUE(newOffsetIFYawXSC0Addr, PointingData[i_point].new_offset_ifyaw_xsc0_gy);
+    SET_SCALED_VALUE(newOffsetIFRollXSC0Addr, PointingData[i_point].new_offset_ifroll_xsc0_gy);
+    SET_SCALED_VALUE(dAzRollXSC0Addr, PointingData[i_point].d_az_xsc0);
+    SET_SCALED_VALUE(intIFYawXSC0Addr, PointingData[i_point].int_ifyaw_xsc0);
+    SET_SCALED_VALUE(intIFRollXSC0Addr, PointingData[i_point].int_ifroll_xsc0);
+    SET_SCALED_VALUE(intIFElXSC0Addr, PointingData[i_point].int_ifel_xsc0);
+    SET_SCALED_VALUE(prevSolAzXSC0Addr, PointingData[i_point].prev_sol_az_xsc0);
+    SET_SCALED_VALUE(prevSolElXSC0Addr, PointingData[i_point].prev_sol_el_xsc0);
+    SET_SCALED_VALUE(newOffsetIFElXSC1Addr, PointingData[i_point].new_offset_ifel_xsc1_gy);
+    SET_SCALED_VALUE(newOffsetIFYawXSC1Addr, PointingData[i_point].new_offset_ifyaw_xsc1_gy);
+    SET_SCALED_VALUE(newOffsetIFRollXSC1Addr, PointingData[i_point].new_offset_ifroll_xsc1_gy);
+    SET_SCALED_VALUE(dAzRollXSC1Addr, PointingData[i_point].d_az_xsc1);
+    SET_SCALED_VALUE(intIFYawXSC1Addr, PointingData[i_point].int_ifyaw_xsc1);
+    SET_SCALED_VALUE(intIFRollXSC1Addr, PointingData[i_point].int_ifroll_xsc1);
+    SET_SCALED_VALUE(intIFElXSC1Addr, PointingData[i_point].int_ifel_xsc1);
+    SET_SCALED_VALUE(prevSolAzXSC1Addr, PointingData[i_point].prev_sol_az_xsc1);
+    SET_SCALED_VALUE(prevSolElXSC1Addr, PointingData[i_point].prev_sol_el_xsc1);
 }
 
 static inline channel_t* get_xsc_channel(const char *m_field, int m_which)
@@ -1021,7 +1116,6 @@ void store_5hz_acs(void)
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
 
-
     int i_point;
     int sensor_veto;
 
@@ -1039,12 +1133,12 @@ void store_5hz_acs(void)
         mksHiSipAddr = channels_find_by_name("mks_hi_sip");
 
         OffsetIFelGYAddr = channels_find_by_name("offset_ifel_gy");
-        OffsetIFelGYiscAddr = channels_find_by_name("off_ifel_gy_xsc0");
-        OffsetIFrollGYiscAddr = channels_find_by_name("off_ifroll_gy_xsc0");
-        OffsetIFyawGYiscAddr = channels_find_by_name("off_ifyaw_gy_xsc0");
-        OffsetIFelGYoscAddr = channels_find_by_name("off_ifel_gy_xsc1");
-        OffsetIFrollGYoscAddr = channels_find_by_name("off_ifroll_gy_xsc1");
-        OffsetIFyawGYoscAddr = channels_find_by_name("off_ifyaw_gy_xsc1");
+        OffsetIFelGYiscAddr = channels_find_by_name("offset_ifelxsc0_gy");
+        OffsetIFrollGYiscAddr = channels_find_by_name("offset_ifrollxsc0_gy");
+        OffsetIFyawGYiscAddr = channels_find_by_name("offset_ifyawxsc0_gy");
+        OffsetIFelGYoscAddr = channels_find_by_name("offset_ifelxsc1_gy");
+        OffsetIFrollGYoscAddr = channels_find_by_name("offset_ifrollxsc1_gy");
+        OffsetIFyawGYoscAddr = channels_find_by_name("offset_ifyawxsc1_gy");
         OffsetIFrollGYAddr = channels_find_by_name("offset_ifroll_gy");
         OffsetIFyawGYAddr = channels_find_by_name("offset_ifyaw_gy");
 
