@@ -66,7 +66,6 @@ static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
 static store_file_info_t storage_info_hk = {0};
-// =======
 // #define MAX_NUM_FILENAME_CHARS 72
 typedef struct {
     fileentry_t *fp;
@@ -76,7 +75,6 @@ typedef struct {
 } roach_udp_write_info_t;
 
 roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
-// >>>>>>> origin/master
 
 // housekeeping linklist
 #define LL_TMP_NAME "/tmp/TMP"
@@ -123,21 +121,6 @@ void get_write_file_name(char* fname, char* chlist, char* type, uint32_t index)
 int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char *m_type) {
     size_t pkg_size = sizeof(channel_header_t) + m_channels_pkg->length * sizeof(struct channel_packed);
     size_t bytes_written = 0;
-// =======
-// // Handles the file_open, file_write, and file_close calls.
-// static int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
-//                 int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
-// {
-//     uint16_t bytes_written = 0;
-//     if ((*m_counter) >= STORE_DATA_FRAMES_PER_FILE * m_freq) {
-//     	blast_info("Closing %s", m_file);
-//         file_close(*m_fp);
-//         get_write_file_name(m_file, m_type, m_frame_number);
-// 		blast_info("Opening %s", m_file);
-//         *m_fp = file_open(m_file, "w+");
-//         (*m_counter) = 0;
-//     }
-// >>>>>>> origin/master
     if (*m_fp) {
         bytes_written = file_write(*m_fp, (void*) m_channels_pkg, pkg_size);
 		if (bytes_written < pkg_size) {
@@ -365,11 +348,6 @@ void store_rate_data(store_file_info_t *m_storage) {
                 m_storage->have_warned = false;
                 m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
 		    }
-// =======
-// 	    if (temp_fp) {
-//            store_data(&temp_fp, file_name, type_1hz, RATE_1HZ,
-//                                    mcp_1hz_framenum, &frames_stored_to_1hz, 1);
-// >>>>>>> origin/master
         } else {
 	        if (m_storage->have_warned) {
 	            blast_err("Failed to open file %s for writing.", m_storage->file_name);
@@ -472,7 +450,6 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     if (!store_disks_ready()) return;
 
      m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->i_which]);
-// >>>>>>> origin/master
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);
