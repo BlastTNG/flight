@@ -348,6 +348,9 @@ void add_roach_tlm_488hz()
       if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", CommandData.roach_tlm[i].name, tlm[i]->field);
     }
 
+    // invalid roach selection
+    if ((RoachId[i] >= NUM_ROACH_TLM) || (RoachId[i] < 0)) continue;
+
     unsigned int i_udp_read = GETREADINDEX(roach_udp[RoachId[i]].index);
     data_udp_packet_t *m_packet = &(roach_udp[RoachId[i]].last_pkts[i_udp_read]);
 
