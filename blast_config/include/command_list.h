@@ -154,7 +154,7 @@ enum singleCommand {
 	if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
     vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
-    refit_freqs_all, center_lo_all, load_freqs_all, calc_dfs,
+    refit_freqs_all, center_lo_all, calc_dfs, change_amps, load_freqs_all,
   xyzzy
 };
 
@@ -277,7 +277,6 @@ enum multiCommand {
   timestream,
   chop_tune_chan,
   refit_freqs,
-  change_amps,
   chop_template,
   load_freqs,
   new_ref_params,
@@ -289,6 +288,7 @@ enum multiCommand {
   offset_lo_all,
   find_kids_default,
   change_amp,
+  change_freq,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

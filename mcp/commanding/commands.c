@@ -1173,6 +1173,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_df_calc = 2;
             }
             break;
+        case change_amps:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].change_tone_amps = 1;
+            }
+            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -2061,6 +2066,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case calc_df:
       if ((ivalues[0] > 0)) {
           CommandData.roach[ivalues[0]-1].do_df_calc = 1;
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
       }
       break;
     case check_retune:
@@ -2107,13 +2113,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case find_kids_default:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].find_kids_default = 1;
-      }
-      break;
-    case find_kids_default_all:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].find_kids_default = 1;
-          }
       }
       break;
     case show_adc_rms:
@@ -2174,11 +2173,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
       }
       break;
-    case change_amps:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
-      }
-      break;
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_master_chop = 1;
@@ -2213,6 +2207,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
           CommandData.roach_params[ivalues[0]-1].delta_amp = rvalues[2];
+      }
+      break;
+    case change_freq:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_targ_freq = 1;
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
       }
       break;
       /*************************************
@@ -2880,6 +2880,7 @@ void InitCommandData()
         CommandData.roach[i].set_lo = 0;
         CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
+        CommandData.roach[i].change_targ_freq = 0;
     }
 
     CommandData.Bias.biasRamp = 0;

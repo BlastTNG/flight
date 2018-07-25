@@ -317,6 +317,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
   {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
   {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
+  {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
+  {COMMAND(load_freqs_all), "Write all saved targ freqs to Roaches", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1063,11 +1065,6 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"}
-    }
-  },
   {COMMAND(chop_template), "Saves timestreams for all channel and calculates avg chop", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -1119,6 +1116,12 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
       {"delta_amp", -5, 5, 'f', "NONE"},
+    }
+  },
+  {COMMAND(change_freq), "Shifts freq of single chan by m_roach->df", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel number", 0, 1015, 'i', "NONE"},
     }
   },
   /***************************************/

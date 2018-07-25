@@ -165,7 +165,7 @@ typedef struct roach_state {
 
     double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
     double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
-    double *df;
+    double df[MAX_CHANNELS_PER_ROACH];
 
     char *last_cal_path;
     // path to the last master chop directory
