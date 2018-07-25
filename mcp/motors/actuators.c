@@ -1635,5 +1635,4 @@ void *ActuatorBus(void *param)
 	}
 */
 	usleep(10000);
-    }
 }

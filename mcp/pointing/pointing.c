@@ -424,10 +424,14 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 ////  }
 //
 //  // Define pss_d (distance to pinhole)
-//  pss_d[0] = PSS1_D + CommandData.cal_d_pss1;
-//  pss_d[1] = PSS2_D + CommandData.cal_d_pss2;
-//  pss_d[2] = PSS3_D + CommandData.cal_d_pss3;
-//  pss_d[3] = PSS4_D + CommandData.cal_d_pss4;
+//  pss_d[0] = PSS1_D[0] + CommandData.cal_d_pss1;
+//  pss_d[1] = PSS2_D[1] + CommandData.cal_d_pss2;
+//  pss_d[2] = PSS3_D[2] + CommandData.cal_d_pss3;
+//  pss_d[3] = PSS4_D[3] + CommandData.cal_d_pss4;
+//  pss_d[4] = PSS4_D[4] + CommandData.cal_d_pss5;
+//  pss_d[5] = PSS4_D[5] + CommandData.cal_d_pss6;
+//  pss_d[6] = PSS4_D[6] + CommandData.cal_d_pss7;
+//  pss_d[7] = PSS4_D[7] + CommandData.cal_d_pss8;
 //
 //  for (i=0; i<4; i++) {
 //  	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
