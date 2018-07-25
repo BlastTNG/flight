@@ -1258,8 +1258,8 @@ int set_atten(pi_state_t *m_pi)
     // TODO(Sam) Verify order on Roach5 and then remove this comment
     if (ind == 4) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].out_atten,
-           CommandData.roach_params[ind].in_atten);
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
     }
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
@@ -1663,7 +1663,8 @@ int save_output_trf(roach_state_t *m_roach)
 {
     char *py_command;
     blast_tmp_sprintf(py_command,
-          "python %s %d", gen_output_trf_script, m_roach->which);
+          "python %s %d %s %g", gen_output_trf_script, m_roach->which,
+             m_roach->sweep_root_path, m_roach->lo_centerfreq);
     blast_info("ROACH%d, Saving output transfer function", m_roach->which);
     system(py_command);
     return 0;
@@ -2267,7 +2268,6 @@ int change_targ_amps(roach_state_t *m_roach, double *m_delta_amps, int *m_channe
     return retval;
 }
 
-// TODO(Sam) add error handling?
 int shift_tone_amps(roach_state_t *m_roach)
 {
     int retval;
@@ -2277,8 +2277,23 @@ int shift_tone_amps(roach_state_t *m_roach)
     for (size_t i = 0; i < m_roach->num_kids; i++) {
         m_roach->last_amps[i] += (double)DELTA_AMP;
     }
-    CommandData.roach[m_roach->which - 1].change_tone_amps = 1;
     retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    CommandData.roach[m_roach->which - 1].change_tone_amps = 0;
+    return retval;
+}
+
+// shift amplitue of single tone
+int shift_tone_amp(roach_state_t *m_roach)
+{
+    int retval;
+    int chan = CommandData.roach[m_roach->which - 1].chan;
+    double delta_amp = CommandData.roach_params[m_roach->which - 1].delta_amp;
+    if (!m_roach->last_amps) {
+        m_roach->last_amps = calloc(m_roach->num_kids, sizeof(double));
+    }
+    m_roach->last_amps[chan] += delta_amp;
+    retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    blast_info("ROACH%d, Shifing chan %d amp by %g", m_roach->which, chan, delta_amp);
     CommandData.roach[m_roach->which - 1].change_tone_amps = 0;
     return retval;
 }
@@ -3546,7 +3561,7 @@ void *roach_cmd_loop(void* ind)
         // Check for commands
         // These commands can be executed in any Roach state
         if (CommandData.roach[i].get_roach_state) {
-            blast_info("ROACH%d, current state = %u", i, get_roach_state(i));
+            blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));
             CommandData.roach[i].get_roach_state = 0;
         }
         if (CommandData.roach[i].change_roach_state) {
@@ -3584,6 +3599,9 @@ void *roach_cmd_loop(void* ind)
         }
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
+            if ((CommandData.roach[i].change_tone_amps == 1)) {
+                shift_tone_amp(&roach_state_table[i]);
+            }
             if (CommandData.roach[i].do_sweeps == 1) {
                     roach_vna_sweep(&roach_state_table[i]);
                     CommandData.roach[i].do_sweeps = 0;

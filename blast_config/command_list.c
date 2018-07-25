@@ -1112,6 +1112,13 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(change_amp), "Shifts the amplitude of specified channel bias by delta amp", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel number", 0, 1015, 'i', "NONE"},
+      {"delta_amp", -5, 5, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

@@ -2146,7 +2146,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case all_roach_ts:
       if ((rvalues[1] >= 0.0) && (rvalues[1] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach_params[i].num_sec = rvalues[1];
+              CommandData.roach_params[i].num_sec = rvalues[0];
               CommandData.roach[i].get_timestream = 2;
           }
       }
@@ -2196,6 +2196,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case center_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].set_lo = 1;
+      }
+      break;
+    case change_amp:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].delta_amp = rvalues[2];
       }
       break;
       /*************************************
@@ -2862,6 +2869,7 @@ void InitCommandData()
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
         CommandData.roach[i].find_kids_default = 0;
+        CommandData.roach[i].chan = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -3223,6 +3231,7 @@ void InitCommandData()
         // For saving short timestream
         CommandData.roach_params[i].num_sec = 3.0;
         CommandData.roach_params[i].lo_offset = 1000.;
+        CommandData.roach_params[i].delta_amp = 0.0;
     }
 
     CommandData.rox_bias.amp = 56;

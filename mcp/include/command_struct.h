@@ -384,6 +384,7 @@ typedef struct roach_params
     double ncycles;
     double num_sec;
     double lo_offset;
+    double delta_amp;
 } roach_params_t;
 
 // Ethercat controller/device commands

@@ -1552,7 +1552,7 @@ void *ActuatorBus(void *param)
                 DoLock();
                 actuators_init |= 0x1 << LOCKNUM;
             } else {
-	        blast_info("forcing repoll of lockpin"); // DEBUG PAW
+	        // blast_info("forcing repoll of lockpin"); // DEBUG PAW
                 EZBus_ForceRepoll(&bus, id[LOCKNUM]);
                 all_ok = 0;
                 actuators_init &= ~(0x1 << LOCKNUM);
@@ -1565,7 +1565,7 @@ void *ActuatorBus(void *param)
                 DoShutter();
                 actuators_init |= 0x1 << SHUTTERNUM;
             } else {
-	        blast_info("forcing repoll of shutter"); // DEBUG PAW
+	        // blast_info("forcing repoll of shutter"); // DEBUG PAW
                 EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
                 all_ok = 0;
                 actuators_init &= ~(0x1 << SHUTTERNUM);
@@ -1606,7 +1606,7 @@ void *ActuatorBus(void *param)
                 DoBalance(&bus);
                 actuators_init |= 0x1 << BALANCENUM;
             } else {
-	        blast_info("forcing repoll of balance"); // DEBUG PAW
+	        // blast_info("forcing repoll of balance"); // DEBUG PAW
                 EZBus_ForceRepoll(&bus, id[BALANCENUM]);
                 all_ok = 0;
                 actuators_init &= ~(0x1 << BALANCENUM);
@@ -1618,7 +1618,7 @@ void *ActuatorBus(void *param)
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {
-	    	    blast_info("forcing repoll of valves"); // DEBUG PAW
+	    	    // blast_info("forcing repoll of valves"); // DEBUG PAW
 		    EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
 		    all_ok = 0;
 		    actuators_init &= ~(0x1 << valve_arr[i]);
