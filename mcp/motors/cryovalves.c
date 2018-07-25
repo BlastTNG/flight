@@ -160,7 +160,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 	}
 }
 
-void ControlPotValve(void) 
+void ControlPotValve(struct ezbus* bus)
 {
 	static int firsttime = 1;
 	static int tight_flag;
@@ -169,25 +169,21 @@ void ControlPotValve(void)
 	if (firsttime) {
 		tight_flag = 1;
 		new_goal = 0;
-		firstttime = 0;
+		firsttime = 0;
 	}
 	// update prev_goal and goal, test to see if they are the same
 	potvalve_data.prev_goal = potvalve_data.goal;
 	potvalve_data.goal = CommandData.Cryo.potvalve_goal;
 	new_goal = !(potvalve_data.prev_goal == potvalve_data.goal);
 
-	GetPotValvePos(*bus)
-	SetValveState(tight_flag)
+	GetPotValvePos(*bus);
+	SetValveState(tight_flag);
 
 	if (potvalve_data.state != potvalve_data.goal) {
 		potvalve_data.do_move = 1;
-		
-		
-		}
 	} else {
 		potvalve_data.do_move = 0;
 	}
-
 }
 
 void DoPotValve(struct ezbus* bus)
@@ -300,7 +296,7 @@ void DoPotValve(struct ezbus* bus)
 	switch(potvalve_data.potvalve_move) {
 		case(no_move):
 			// blast_info("in case no_move"); // DEBUG PAW
-			if (potvalve_data.current != closed) EZBus_Stop(bus, potvalve_data.addr);
+			if (potvalve_data.state != closed) EZBus_Stop(bus, potvalve_data.addr);
 			// blast_info("called EZBus_Stop"); // DEBUG PAW
 			potvalve_data.moving = 0;
 			break;
