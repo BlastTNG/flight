@@ -363,18 +363,20 @@ void add_roach_tlm_488hz()
                   ind_roach, ind_rtype, NUM_ROACHES, NUM_RTYPES);
         have_warned = 1;
     } else {
-        switch (ind_roach) {
-            case 0: // I values
-                roach_df_telem[ind_roach].i_cur = m_packet->Ival[KidId[i]];
-                break;
-            case 1: // Q values
-                roach_df_telem[ind_roach].q_cur = m_packet->Qval[KidId[i]];
-                break;
-            case 2: // calc df values
-                roach_df_telem[ind_roach].ind_kid = KidId[i];
-                roach_df_telem[ind_roach].ind_roach = ind_roach;
-                roach_df_continuous(&(roach_df_telem));
-                break;
+        if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
+            switch (ind_roach) {
+                case 0: // I values
+                    roach_df_telem[ind_roach].i_cur = m_packet->Ival[KidId[i]];
+                    break;
+                case 1: // Q values
+                    roach_df_telem[ind_roach].q_cur = m_packet->Qval[KidId[i]];
+                    break;
+                case 2: // calc df values
+                    roach_df_telem[ind_roach].ind_kid = KidId[i];
+                    roach_df_telem[ind_roach].ind_roach = ind_roach;
+                    roach_df_continuous(&(roach_df_telem));
+                    break;
+            }
         }
         have_warned = 0;
     }
@@ -386,7 +388,9 @@ void add_roach_tlm_488hz()
       } else if (strcmp(ROACH_TYPES[TypeId[i]], "q") == 0) { // Q comes from the UDP packet directly
         value = m_packet->Qval[KidId[i]];
       } else if (strcmp(ROACH_TYPES[TypeId[i]], "df") == 0) { // df comes from the frame
-        value = roach_df_telem[ind_roach].df;
+        if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
+          value = roach_df_telem[ind_roach].df;
+        }
         channel_t * df_chan = channels_find_by_name(CommandData.roach_tlm[i].name);
         if (df_chan) GET_VALUE(df_chan, value);
       }

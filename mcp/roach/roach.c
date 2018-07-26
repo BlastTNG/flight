@@ -2951,7 +2951,7 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
     int retval = -1;
     // check for ref params
     if ((!m_roach->has_ref)) {
-        blast_err("ROACH%d, No ref params found", m_roach->which);
+        // Don't try to calculate df until the references are set.
         return;
     }
     m_roach_df->i_sum -= m_roach_df->ibuf[m_roach_df->ind_last] + m_roach_df->i_cur;
