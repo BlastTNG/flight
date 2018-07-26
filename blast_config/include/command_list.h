@@ -199,7 +199,6 @@ enum multiCommand {
   hwpr_repeat,      hwpr_define_pos,          params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
-  params_test,
   potvalve_set_thresholds,
   actuators_set_used,
   set_scan_params,   mag_cal_fc1,       mag_cal_fc2,       pss_cal,
