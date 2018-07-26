@@ -167,6 +167,8 @@ struct PivGainStruct {
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
 
+#define ROACH_TLM_IQDF 1
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -451,6 +453,7 @@ struct CommandDataStruct {
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
+  char roach_tlm_mode;
 
   enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 

@@ -41,7 +41,7 @@
 #define NUM_KIDS 1024
 #define NUM_ROACHES 5
 #define NUM_RTYPES 3
-#define NUM_ROACH_TLM 10
+#define NUM_ROACH_TLM 15
 
 #include "derived.h"
 
