@@ -1923,6 +1923,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                                                          CommandData.roach_tlm[i].rtype);
         make_name_from_roach_index(CommandData.roach_tlm[i].index,
                                    CommandData.roach_tlm[i].name);
+        CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
       }
       break;
     case slot_sched:  // change uplinked schedule file
