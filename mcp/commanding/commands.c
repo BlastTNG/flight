@@ -2132,7 +2132,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].set_lo = 2;
-              CommandData.roach_params[i].lo_offset = rvalues[1];
+              CommandData.roach_params[i].lo_offset = rvalues[0];
           }
       }
       break;
