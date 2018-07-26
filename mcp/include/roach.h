@@ -196,11 +196,6 @@ typedef struct roach_state {
     struct katcl_line *rpc_conn;
 } roach_state_t;
 
-typedef struct mole_state {
-    double *df_buffer;
-    double *df;
-} mole_state_t;
-
 typedef struct pi_state {
     int which;
     e_pi_state state;

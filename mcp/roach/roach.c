@@ -163,15 +163,13 @@ uint32_t destmac1 = 256;
 
 static uint32_t dest_ip = IPv4(239, 1, 1, 234);
 
-// const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v5_2018_Feb_12_1224.fpg";
-const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
-// const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
+// const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
+const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
 /* Pi state structure, see roach.h */
 static pi_state_t pi_state_table[NUM_ROACHES];
-static mole_state_t mole_state_table[NUM_ROACHES];
 /* Initialization scripts that live on Pi */
 char valon_init_pi[] = "python /home/pi/device_control/init_valon.py";
 char valon_init_pi_extref[] = "python /home/pi/device_control/init_valon_ext.py";
@@ -2888,6 +2886,7 @@ int roach_dfs(roach_state_t* m_roach)
         m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
         (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
         m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
+        blast_info("*************** ROACH%d, chan %zd df = %g", m_roach->which, chan, m_roach->df[chan]);
     }
     // TODO(Sam) add error handling
     retval = 0;
@@ -3526,7 +3525,7 @@ int roach_prog_registers(roach_state_t *m_roach)
     if ((roach_write_int(m_roach, "dac_reset", 1, 0) < 0)) {
         return retval;
     }
-    // load_fir(&roach_state_table[i]);
+    load_fir(m_roach);
     retval = 0;
     return retval;
 }
@@ -3726,7 +3725,7 @@ void *roach_cmd_loop(void* ind)
             }
             if ((CommandData.roach[i].do_df_calc == 2) && roach_state_table[i].has_targ_tones) {
                     if ((roach_dfs(&roach_state_table[i]) < 0)) {
-                        continue;
+                        CommandData.roach[i].do_df_calc = 0;
                     }
                 CommandData.roach[i].do_df_calc = 0;
             }
@@ -3953,7 +3952,6 @@ int init_roach(uint16_t ind)
     }
     memset(&roach_state_table[ind], 0, sizeof(roach_state_t));
     memset(&pi_state_table[ind], 0, sizeof(pi_state_t));
-    memset(&mole_state_table[ind], 0, sizeof(mole_state_t));
     asprintf(&roach_state_table[ind].address, "roach%d", ind + 1);
     asprintf(&roach_state_table[ind].sweep_root_path,
                       "/home/fc1user/sam_tests/sweeps/roach%d", ind + 1);
