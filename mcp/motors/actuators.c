@@ -1544,27 +1544,32 @@ void *ActuatorBus(void *param)
             bus.chatter = ACTBUS_CHATTER;
         }
 
-        if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-	    // blast_info("calling DoLock"); // DEBUG PAW
-            DoLock();
-            actuators_init |= 0x1 << LOCKNUM;
-        } else {
-	    // blast_info("forcing repoll of lockpin"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[LOCKNUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << LOCKNUM);
-        }
+	which_act_used = CommandData.actbus.which_used;
+        if (which_act_used & (0x1 << LOCKNUM)) {
+            if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+	        // blast_info("calling DoLock"); // DEBUG PAW
+                DoLock();
+                actuators_init |= 0x1 << LOCKNUM;
+            } else {
+	        // blast_info("forcing repoll of lockpin"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << LOCKNUM);
+            }
+	}
 
-        if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
-	    // blast_info("calling DoShutter"); // DEBUG PAW
-            DoShutter();
-            actuators_init |= 0x1 << SHUTTERNUM;
-        } else {
-	    // blast_info("forcing repoll of shutter"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << SHUTTERNUM);
-        }
+        if (which_act_used & (0x1 << SHUTTERNUM)) {
+            if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
+	        // blast_info("calling DoShutter"); // DEBUG PAW
+                DoShutter();
+                actuators_init |= 0x1 << SHUTTERNUM;
+            } else {
+	        // blast_info("forcing repoll of shutter"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << SHUTTERNUM);
+            }
+	}
 
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
@@ -1594,25 +1599,28 @@ void *ActuatorBus(void *param)
             }
         }
 
-        if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
-	    // blast_info("calling DoBalance"); // DEBUG PAW
-            DoBalance(&bus);
-            actuators_init |= 0x1 << BALANCENUM;
-        } else {
-	    // blast_info("forcing repoll of balance"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[BALANCENUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << BALANCENUM);
-        }
+        if (which_act_used & (0x1 << BALANCENUM)) {
+            if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+	        // blast_info("calling DoBalance"); // DEBUG PAW
+                DoBalance(&bus);
+                actuators_init |= 0x1 << BALANCENUM;
+            } else {
+	        // blast_info("forcing repoll of balance"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[BALANCENUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << BALANCENUM);
+            }
+	}
 
 	for (i = 0; i < 3; i++) {
-		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
-			actuators_init |= 0x1 << valve_arr[i];
-		} else {
-	    		// blast_info("forcing repoll of valves"); // DEBUG PAW
-			EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
-			all_ok = 0;
-			actuators_init &= ~(0x1 << valve_arr[i]);
+            if (which_act_used & (0x1 << valve_arr[i])) {
+	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
+		    actuators_init |= 0x1 << valve_arr[i];
+	        } else {
+	    	    blast_info("forcing repoll of valves"); // DEBUG PAW
+		    EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
+		    all_ok = 0;
+		    actuators_init &= ~(0x1 << valve_arr[i]);
 		}
 		valve_check |= 0x1 << valve_arr[i];
 	    }
@@ -1623,16 +1631,6 @@ void *ActuatorBus(void *param)
 		DoCryovalves(&bus, actuators_init);
 	}
 
-/*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
-	    DoCryovalves(&bus, actuators_init);
-	    actuators_init |= 0x1 << POTVALVE_NUM;
-	} else {
-	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
-	    all_ok = 0;
-	    actuators_init &= ~(0x1 << POTVALVE_NUM);
-	}
-*/
 	usleep(10000);
+    }
 }
