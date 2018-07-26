@@ -185,6 +185,7 @@ typedef struct roach_state {
     // Path to tone amplitudes file
     char *amps_path[2];
     double *last_amps;
+    double *last_phases;
     char *vna_amps_path[2];
     char *targ_amps_path[2];
     char *random_phase_path;

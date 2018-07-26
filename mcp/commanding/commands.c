@@ -2132,7 +2132,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].set_lo = 2;
-              CommandData.roach_params[i].lo_offset = rvalues[1];
+              CommandData.roach_params[i].lo_offset = rvalues[0];
           }
       }
       break;
@@ -2146,6 +2146,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
           CommandData.roach_params[ivalues[0]-1].delta_amp = rvalues[2];
+      }
+      break;
+    case change_phase:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_tone_phase = 1;
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].delta_phase = rvalues[2];
       }
       break;
     case change_freq:
@@ -2820,6 +2827,7 @@ void InitCommandData()
         CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
+        CommandData.roach[i].change_tone_phase = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -3169,7 +3177,7 @@ void InitCommandData()
         CommandData.udp_roach[i].publish_udp = 1;
         // find_kids
         CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
-        CommandData.roach_params[i].peak_threshold = 3; // dB
+        CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
         // these settings will give ~ -60/dBm per tone 1000 tones
@@ -3183,6 +3191,7 @@ void InitCommandData()
         CommandData.roach_params[i].num_sec = 3.0;
         CommandData.roach_params[i].lo_offset = 1000.;
         CommandData.roach_params[i].delta_amp = 0.0;
+        CommandData.roach_params[i].delta_phase = 0.0;
     }
 
     CommandData.rox_bias.amp = 56;
