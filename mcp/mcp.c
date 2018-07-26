@@ -391,8 +391,6 @@ void add_roach_tlm_488hz()
         if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
           value = roach_df_telem[ind_roach].df;
         }
-        channel_t * df_chan = channels_find_by_name(CommandData.roach_tlm[i].name);
-        if (df_chan) GET_VALUE(df_chan, value);
       }
 
       SET_FLOAT(tlm[i], value);
