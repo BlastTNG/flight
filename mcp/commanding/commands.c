@@ -180,6 +180,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case vtx_xsc1:
+            CommandData.vtx_sel[0] = VTX_XSC1;
+            CommandData.Relays.video_trans = 1;
+            CommandData.Relays.update_video = 1;
+            break;
+        case vtx_xsc0:
+            CommandData.vtx_sel[0] = VTX_XSC0;
+            CommandData.Relays.video_trans = 0;
+            CommandData.Relays.update_video = 1;
+            break;
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
@@ -685,6 +695,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[9] = 0;
             break;
+        case mag_reset:
+            CommandData.mag_reset = 1;
+            break;
         case stop:  // Pointing abort
             CommandData.pointing_mode.nw = CommandData.slew_veto;
             CommandData.pointing_mode.mode = P_DRIFT;
@@ -783,8 +796,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case xsc1_veto:
             CommandData.use_xsc1 = 0;
             break;
-        case mag_veto:
-            CommandData.use_mag = 0;
+        case mag_veto_fc1:
+            CommandData.use_mag1 = 0;
+            break;
+        case mag_veto_fc2:
+            CommandData.use_mag2 = 0;
             break;
         case elenc_veto:
             CommandData.use_elenc = 0;
@@ -805,8 +821,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case xsc1_allow:
             CommandData.use_xsc1 = 1;
             break;
-        case mag_allow:
-            CommandData.use_mag = 1;
+        case mag_allow_fc1:
+            CommandData.use_mag1 = 1;
+            break;
+        case mag_allow_fc2:
+            CommandData.use_mag2 = 1;
             break;
         case elenc_allow:
             CommandData.use_elenc = 1;
@@ -1085,18 +1104,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case not_at_float:
             CommandData.at_float = 0;
-            break;
-        case vtx1_xsc0:
-            CommandData.vtx_sel[0] = vtx_xsc0;
-            break;
-        case vtx1_xsc1:
-            CommandData.vtx_sel[0] = vtx_xsc1;
-            break;
-        case vtx2_xsc0:
-            CommandData.vtx_sel[1] = vtx_xsc0;
-            break;
-        case vtx2_xsc1:
-            CommandData.vtx_sel[1] = vtx_xsc1;
             break;
 #endif
         case hwpr_step:
@@ -1431,11 +1438,25 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                        CommandData.slew_veto, CommandData.pointing_mode.nw);
       if (CommandData.pointing_mode.nw > CommandData.slew_veto) CommandData.pointing_mode.nw = CommandData.slew_veto;
       break;
-    case mag_cal:
-      CommandData.cal_xmax_mag = ivalues[0];
-      CommandData.cal_xmin_mag = ivalues[1];
-      CommandData.cal_ymax_mag = ivalues[2];
-      CommandData.cal_ymin_mag = ivalues[3];
+    case mag_cal_fc1:
+      CommandData.cal_xmax_mag[0] = rvalues[0];
+      CommandData.cal_xmin_mag[0] = rvalues[1];
+      CommandData.cal_ymax_mag[0] = rvalues[2];
+      CommandData.cal_ymin_mag[0] = rvalues[3];
+      CommandData.cal_mag_align[0] = rvalues[4];
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f, align = %f",
+                 CommandData.cal_xmax_mag[0], CommandData.cal_xmin_mag[0],
+                 CommandData.cal_ymax_mag[0], CommandData.cal_ymin_mag[0], CommandData.cal_mag_align[0]);
+      break;
+    case mag_cal_fc2:
+      CommandData.cal_xmax_mag[1] = rvalues[0];
+      CommandData.cal_xmin_mag[1] = rvalues[1];
+      CommandData.cal_ymax_mag[1] = rvalues[2];
+      CommandData.cal_ymin_mag[1] = rvalues[3];
+      CommandData.cal_mag_align[1] = rvalues[4];
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f",
+                 CommandData.cal_xmax_mag[1], CommandData.cal_xmin_mag[1],
+                 CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
 
     case pss_cal:
@@ -2732,6 +2753,7 @@ void InitCommandData()
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
+    CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].calibrate_adc = 0;
@@ -2950,6 +2972,7 @@ void InitCommandData()
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
+    CommandData.Relays.update_video = 0;
 
     /* return if we successfully read the previous status */
     if (n_read != sizeof(struct CommandDataStruct))
@@ -2965,6 +2988,7 @@ void InitCommandData()
     bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
     /* prev_status overrides this stuff */
+    CommandData.Relays.video_trans = 0;
     CommandData.command_count = 0;
     CommandData.last_command = 0xffff;
 
@@ -3003,22 +3027,22 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 1000;
-    CommandData.ele_gain.P = 1.2;
+    CommandData.ele_gain.I = 1.2;
+    CommandData.ele_gain.P = 1000;
     CommandData.ele_gain.D = 0;
-    CommandData.ele_gain.PT = 20;
+    CommandData.ele_gain.PT = 40;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 200;
-    CommandData.azi_gain.I = 200;
-    CommandData.azi_gain.PT = 200;
+    CommandData.azi_gain.P = 2500;
+    CommandData.azi_gain.I = 4;
+    CommandData.azi_gain.PT = 125;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 400;
-    CommandData.pivot_gain.IV = 10000;
+    CommandData.pivot_gain.PV = 12;
+    CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
-    CommandData.pivot_gain.F = 0.3;
+    CommandData.pivot_gain.F = 0.0;
 
     CommandData.ec_devices.reset = 0;
     // By default don't try to fix the Ethercat devices to an operational state.
@@ -3034,12 +3058,14 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 1;
+    CommandData.use_elenc = 0;
+    CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
     CommandData.use_xsc0 = 1;
     CommandData.use_xsc1 = 1;
-    CommandData.use_mag = 1;
+    CommandData.use_mag1 = 1;
+    CommandData.use_mag2 = 1;
     CommandData.lat_range = 1;
     CommandData.sucks = 1;
     CommandData.uplink_sched = 0;
@@ -3048,7 +3074,8 @@ void InitCommandData()
     CommandData.enc_el_trim = 0;
     CommandData.enc_motor_el_trim = 0;
     CommandData.null_az_trim = 0;
-    CommandData.mag_az_trim = 0;
+    CommandData.mag_az_trim[0] = 0;
+    CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
 
     CommandData.autotrim_enable = 0;
@@ -3056,10 +3083,17 @@ void InitCommandData()
     CommandData.autotrim_rate = 1.0;
     CommandData.autotrim_time = 60;
 
-    CommandData.cal_xmax_mag = 41587;
-    CommandData.cal_ymax_mag = 41300;
-    CommandData.cal_xmin_mag = 40659;
-    CommandData.cal_ymin_mag = 40650;
+    CommandData.cal_xmax_mag[0] = 0.0115;
+    CommandData.cal_ymax_mag[0] = -0.3527;
+    CommandData.cal_xmin_mag[0] = 0.3835;
+    CommandData.cal_ymin_mag[0] = 0.2059;
+    CommandData.cal_mag_align[0] = 0.0;
+
+    CommandData.cal_xmax_mag[1] = 0.0050;
+    CommandData.cal_ymax_mag[1] = -0.337;
+    CommandData.cal_xmin_mag[1] = 0.362;
+    CommandData.cal_ymin_mag[1] = 0.1898;
+    CommandData.cal_mag_align[1] = 0.0;
 
     CommandData.cal_off_pss1 = 0.0;
     CommandData.cal_off_pss2 = 2.7997;

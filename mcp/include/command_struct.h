@@ -311,6 +311,7 @@ typedef struct {
   float update_rec, update_of, update_if;
   uint16_t labjack[5];
   int of_relays[16], if_relays[10];
+  int update_video, video_trans;
 } relay_cmds_t;
 
 typedef struct {
@@ -440,7 +441,7 @@ struct CommandDataStruct {
   char highrate_linklist_name[32];
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
 
-  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
+  enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
@@ -486,7 +487,8 @@ struct CommandDataStruct {
   unsigned char use_pss;
   unsigned char use_xsc0;
   unsigned char use_xsc1;
-  unsigned char use_mag;
+  unsigned char use_mag1;
+  unsigned char use_mag2;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -497,7 +499,7 @@ struct CommandDataStruct {
   double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
-  double mag_az_trim;
+  double mag_az_trim[2];
   double pss_az_trim;
 
   int autotrim_enable;
@@ -507,10 +509,11 @@ struct CommandDataStruct {
   time_t autotrim_xsc0_last_bad;
   time_t autotrim_xsc1_last_bad;
 
-  double cal_xmax_mag;
-  double cal_xmin_mag;
-  double cal_ymax_mag;
-  double cal_ymin_mag;
+  double cal_xmax_mag[2];
+  double cal_xmin_mag[2];
+  double cal_ymax_mag[2];
+  double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
@@ -609,6 +612,7 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+  int mag_reset;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;

@@ -529,14 +529,6 @@ static void initialize_el_dither()
         CommandData.pointing_mode.next_i_dith = -1;
     }
 
-    if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
-        CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
-        CommandData.hwpr.mode = HWPR_GOTO_I;
-        CommandData.hwpr.is_new = 1;
-        CommandData.pointing_mode.next_i_hwpr = -1;
-    } else {
-        CommandData.pointing_mode.next_i_hwpr = -1;
-    }
     calculate_el_dither(NO_DITH_INC);
 }
 
@@ -914,7 +906,7 @@ static void do_mode_new_cap(void)
     static double v_el = 0;
     static double targ_el = 0.0;
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1083,13 +1075,7 @@ static void do_mode_new_cap(void)
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
 
-        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
@@ -1119,7 +1105,7 @@ static void do_mode_el_box(void)
     static double v_az = 0;
     static double targ_az = 0.0;
 
-    // Stuff for hwpr rotation triggering
+    // Stuff for dither triggering (right now no dither is implemented)
     static int az_dir_last = 0;
     static int n_scan = 0;
     static int az_next_dir = 0.0;
@@ -1259,20 +1245,6 @@ static void do_mode_el_box(void)
         return;
     }
 
-    if (((axes_mode.az_dir - az_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-        n_scan += 1;
-        blast_info("DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        //    if(n_scan % 4 == 0 && n_scan != 0) {
-        //      GetElDither(DITH_INC);
-        //      blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-        //    }
-    }
-
     az_dir_last = axes_mode.az_dir;
 
     if (!turn_az) {
@@ -1300,7 +1272,7 @@ static void do_mode_new_box(void)
     static double v_el = 0;
     static double targ_el = 0.0;
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1449,13 +1421,7 @@ static void do_mode_new_box(void)
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
-        blast_info("DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
@@ -1487,7 +1453,7 @@ void do_mode_quad(void) // aka radbox
     static double v_el = 0;
     static double targ_el = 0.0; // targ_el is in degrees from bottom
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1632,13 +1598,7 @@ void do_mode_quad(void) // aka radbox
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
-        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
