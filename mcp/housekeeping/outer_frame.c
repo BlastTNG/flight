@@ -523,8 +523,8 @@ void outer_frame(int setting) {
         update_current_sensors();
         update_thermistors();
         update_clinometers();
-        update_status();
     }
+    update_status();
 }
 
 // below is only used for testing the multiplexed labjack in the thermal vac chamber
