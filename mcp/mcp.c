@@ -297,6 +297,7 @@ void * lj_connection_handler(void *arg) {
     // order is CRYO1 CRYO2 OF1 OF2 OF3
     init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
+    mult_labjack_networking_init(LABJACK_MULT_PSS, 84, 1);
     // 7 is for highbay labjack
     labjack_networking_init(7, 14, 1);
     initialize_labjack_commands(7);
@@ -306,6 +307,7 @@ void * lj_connection_handler(void *arg) {
     // initialize_labjack_commands(8);
     // switch to this thread for flight
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
+    mult_initialize_labjack_commands(5);
     ph_thread_join(cmd_thread, NULL);
 
     return NULL;
@@ -750,6 +752,16 @@ blast_info("Finished initializing Beaglebones..."); */
   }
 
   initialize_magnetometer();
+  // inits heater setup to nominal operating conditions, used for roach testing safety
+  CommandData.Cryo.heater_300mk = 0;
+  CommandData.Cryo.charcoal_hs = 1;
+  CommandData.Cryo.charcoal = 0;
+  CommandData.Cryo.lna_250 = 1;
+  CommandData.Cryo.lna_350 = 1;
+  CommandData.Cryo.lna_500 = 1;
+  CommandData.Cryo.heater_1k = 0;
+  CommandData.Cryo.heater_update = 1;
+
 
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);

@@ -366,8 +366,8 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_1, RELAY_6_OFF, of_state.of_6_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_7_ON, of_state.of_7_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_7_OFF, of_state.of_7_off);
-    labjack_queue_command(LABJACK_OF_2, RELAY_8_ON, of_state.of_8_on);
-    labjack_queue_command(LABJACK_OF_2, RELAY_8_OFF, of_state.of_8_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_8_ON, of_state.of_8_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_8_OFF, of_state.of_8_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_9_ON, of_state.of_9_on);
     labjack_queue_command(LABJACK_OF_2, RELAY_9_OFF, of_state.of_9_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_10_ON, of_state.of_10_on);
@@ -382,8 +382,8 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_2, RELAY_14_OFF, of_state.of_14_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_15_ON, of_state.of_15_on);
     labjack_queue_command(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
-    labjack_queue_command(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
-    labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_16_ON, of_state.of_16_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_16_OFF, of_state.of_16_off);
 }
 //
 

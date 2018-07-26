@@ -47,10 +47,6 @@
 /*************************************************************************/
 /* CryoControl: Control valves, heaters, and calibrator (a fast control) */
 /*************************************************************************/
-// TODO(IAN): add use of InCharge global variable so only incharge comp runs
-// TODO(IAN): write cal_length to the frame, add periodic option
-// write level length, do_cal_pulse, everything!
-
 
 extern int16_t InCharge;
 extern labjack_state_t state[NUM_LABJACKS];
