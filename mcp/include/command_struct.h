@@ -367,6 +367,7 @@ typedef struct roach
     unsigned int set_lo;
     unsigned int find_kids_default;
     unsigned int change_targ_freq;
+    unsigned int change_tone_phase;
 } roach_status_t;
 
 typedef struct roach_params
@@ -386,6 +387,7 @@ typedef struct roach_params
     double num_sec;
     double lo_offset;
     double delta_amp;
+    double delta_phase;
 } roach_params_t;
 
 // Ethercat controller/device commands

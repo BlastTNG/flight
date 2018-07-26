@@ -289,6 +289,7 @@ enum multiCommand {
   find_kids_default,
   change_amp,
   change_freq,
+  change_phase,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

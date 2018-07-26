@@ -163,8 +163,8 @@ uint32_t destmac1 = 256;
 
 static uint32_t dest_ip = IPv4(239, 1, 1, 234);
 
-// const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
-const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
+const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb_19_1053.fpg";
+// const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
 
 /* Roach2 state structure, see roach.h */
 static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
@@ -516,56 +516,69 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
     if (!m_roach->last_amps) {
         m_roach->last_amps = calloc(m_freqlen, sizeof(double));
-        for (size_t i = 0; i < m_freqlen; i++) {
-            m_roach->last_amps[i] = 1.0;
-        }
     }
-    // Load random phases (static file for testing)
+    if (!m_roach->last_phases) {
+        m_roach->last_phases = calloc(m_freqlen, sizeof(double));
+    }
+    // Load random phases file
     blast_info("Roach%d, Loading tone phases", m_roach->which);
-    char *phase_path = m_roach->random_phase_path;
     // If can't load file, use random phases
-    if ((roach_read_1D_file(m_roach, phase_path, phases, m_freqlen)) < 0) {
+    if ((roach_read_1D_file(m_roach, m_roach->random_phase_path, phases, m_freqlen)) < 0) {
         srand48(time(NULL));
         for (size_t i = 0; i < m_freqlen; i++) {
             phases[i] = drand48() * 2.0 * M_PI;
         }
     }
+    if (CommandData.roach[m_roach->which - 1].change_tone_phase) {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            phases[i] = m_roach->last_phases[i];
+            blast_info("phases = %g", m_roach->last_phases[i]);
+        }
+    } else {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            m_roach->last_phases[i] = phases[i];
+        }
+    }
+    // if (CommandData.roach[m_roach->which - 1].change_phase) {
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
         blast_info("Roach%d, Loading VNA AMPS", m_roach->which);
+        // If can't load file, use all 1
         char *amps_path = m_roach->vna_amps_path[CommandData.roach[m_roach->which - 1].load_vna_amps - 1];
         if ((roach_read_1D_file(m_roach, amps_path, amps, m_freqlen) < 0)) {
             for (size_t i = 0; i < m_freqlen; i++) {
                 amps[i] = 1.0;
             }
         }
-    CommandData.roach[m_roach->which - 1].load_vna_amps = 0;
+        CommandData.roach[m_roach->which - 1].load_vna_amps = 0;
     }
     if (CommandData.roach[m_roach->which - 1].load_targ_amps) {
         blast_info("Roach%d, Loading TARG AMPS", m_roach->which);
         char *amps_path = m_roach->targ_amps_path[CommandData.roach[m_roach->which - 1].load_targ_amps - 1];
+        // If can't load file, use all 1
         if ((roach_read_1D_file(m_roach, amps_path, amps, m_freqlen) < 0)) {
             for (size_t i = 0; i < m_freqlen; i++) {
                 amps[i] = 1.0;
             }
         }
-    CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
+        CommandData.roach[m_roach->which - 1].load_targ_amps = 0;
     }
-
     if (CommandData.roach[m_roach->which - 1].change_tone_amps) {
         for (size_t i = 0; i < m_freqlen; i++) {
             amps[i] = m_roach->last_amps[i];
             blast_info("amps = %g", m_roach->last_amps[i]);
         }
+    } else {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            m_roach->last_amps[i] = amps[i];
+        }
     }
-    // save amps to m_roach->last_targ_amps
     for (size_t i = 0; i < m_freqlen; i++) {
         m_freqs[i] = round(m_freqs[i] / DAC_FREQ_RES) * DAC_FREQ_RES;
         // blast_info("m_freq = %g", m_freqs[i]);
     }
-
-    /* for (size_t i = 0; i < m_freqlen; i++) {
+    for (size_t i = 0; i < m_freqlen; i++) {
         blast_info("amps = %g", amps[i]);
-    }*/
+    }
     comb_fft_len = LUT_BUFFER_LEN;
     complex double *spec = calloc(comb_fft_len, sizeof(complex double));
     complex double *wave = calloc(comb_fft_len, sizeof(complex double));
@@ -638,7 +651,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     fftw_free(spec);
     fftw_free(wave);
     return 0; */
-}
+    }
 
 /* Function: roach_ddc_comb
  * ----------------------------
@@ -2277,11 +2290,10 @@ int shift_tone_amps(roach_state_t *m_roach)
         m_roach->last_amps[i] += (double)DELTA_AMP;
     }
     retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
-    CommandData.roach[m_roach->which - 1].change_tone_amps = 0;
     return retval;
 }
 
-// shift amplitue of single tone
+// shift amplitude of single tone
 int shift_tone_amp(roach_state_t *m_roach)
 {
     int retval;
@@ -2291,9 +2303,23 @@ int shift_tone_amp(roach_state_t *m_roach)
         m_roach->last_amps = calloc(m_roach->num_kids, sizeof(double));
     }
     m_roach->last_amps[chan] += delta_amp;
-    retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
     blast_info("ROACH%d, Shifing chan %d amp by %g", m_roach->which, chan, delta_amp);
-    CommandData.roach[m_roach->which - 1].change_tone_amps = 0;
+    retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    return retval;
+}
+
+// shift amplitue of single tone
+int shift_tone_phase(roach_state_t *m_roach)
+{
+    int retval;
+    int chan = CommandData.roach[m_roach->which - 1].chan;
+    double delta_phase = CommandData.roach_params[m_roach->which - 1].delta_phase;
+    if (!m_roach->last_phases) {
+        m_roach->last_phases = calloc(m_roach->num_kids, sizeof(double));
+    }
+    m_roach->last_phases[chan] += delta_phase;
+    retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    blast_info("ROACH%d, Shifing chan %d phase by %g", m_roach->which, chan, delta_phase);
     return retval;
 }
 
@@ -3525,7 +3551,7 @@ int roach_prog_registers(roach_state_t *m_roach)
     if ((roach_write_int(m_roach, "dac_reset", 1, 0) < 0)) {
         return retval;
     }
-    load_fir(m_roach);
+    // load_fir(m_roach);
     retval = 0;
     return retval;
 }
@@ -3670,8 +3696,23 @@ void *roach_cmd_loop(void* ind)
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     while (!shutdown_mcp) {
-        // Check for commands
         // These commands can be executed in any Roach state
+        if (CommandData.roach[i].set_lo == 1) {
+            if (recenter_lo(&roach_state_table[i]) < 0) {
+                blast_info("Error recentering LO");
+            } else {
+                blast_info("Roach%d, LO recentered", i + 1);
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
+        if (CommandData.roach[i].set_lo == 2) {
+            if (shift_lo(&roach_state_table[i]) < 0) {
+                blast_info("Error shifting LO");
+            } else {
+                blast_info("Roach%d, LO shifted", i + 1);
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
         if (CommandData.roach[i].get_roach_state) {
             blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));
             CommandData.roach[i].get_roach_state = 0;
@@ -3713,6 +3754,11 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             if ((CommandData.roach[i].change_tone_amps == 1)) {
                 shift_tone_amp(&roach_state_table[i]);
+                CommandData.roach[i].change_tone_amps = 0;
+            }
+            if ((CommandData.roach[i].change_tone_phase == 1)) {
+                shift_tone_phase(&roach_state_table[i]);
+                CommandData.roach[i].change_tone_phase = 0;
             }
             if ((CommandData.roach[i].change_targ_freq == 1)) {
                 shift_freq(&roach_state_table[i]);
@@ -3982,7 +4028,7 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].opt_tones_log,
                       "/home/fc1user/sam_tests/roach%d_opt_tones.log", ind + 1);
     asprintf(&roach_state_table[ind].random_phase_path,
-                      "/home/fc1user/sam_tests/random_phases.dat");
+                      "/home/fc1user/sam_tests/roach%d/random_phases.dat", ind + 1);
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
