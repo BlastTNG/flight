@@ -257,12 +257,18 @@ typedef struct {
 typedef struct {
     float ibuf[ROACH_DF_FILT_LEN];
     float qbuf[ROACH_DF_FILT_LEN];
-    int i_last;
-    float i_avg;
-    float q_avg;
+    int ind_last;
+    int ind_roach;
+    int ind_kid;
+    float i_sum;
+    float q_sum;
+    float i_cur;
+    float q_cur;
+    float df;
+    int first_call;
 } roach_df_calc_t;
 
-roach_df_calc_t roach_df_telem[NUM_ROACH_TLM];
+roach_df_calc_t roach_df_telem[NUM_ROACHES];
 
 roach_handle_data_t roach_udp[NUM_ROACHES];
 
