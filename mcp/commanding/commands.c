@@ -1923,6 +1923,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                                                          CommandData.roach_tlm[i].rtype);
         make_name_from_roach_index(CommandData.roach_tlm[i].index,
                                    CommandData.roach_tlm[i].name);
+        CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
       }
       break;
     case slot_sched:  // change uplinked schedule file
@@ -3047,6 +3048,7 @@ void InitCommandData()
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
+    CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
