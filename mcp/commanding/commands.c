@@ -2161,6 +2161,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
       }
       break;
+    case offset_freq:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].change_tone_freq = 1;
+          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].freq_offset = rvalues[2];
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2828,6 +2835,7 @@ void InitCommandData()
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
         CommandData.roach[i].change_tone_phase = 0;
+        CommandData.roach[i].change_tone_freq = 0;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -3192,6 +3200,7 @@ void InitCommandData()
         CommandData.roach_params[i].lo_offset = 1000.;
         CommandData.roach_params[i].delta_amp = 0.0;
         CommandData.roach_params[i].delta_phase = 0.0;
+        CommandData.roach_params[i].freq_offset = 0.0;
     }
 
     CommandData.rox_bias.amp = 56;

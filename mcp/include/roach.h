@@ -184,6 +184,7 @@ typedef struct roach_state {
     char *amps_path[2];
     double *last_amps;
     double *last_phases;
+    double *last_freqs;
     char *vna_amps_path[2];
     char *targ_amps_path[2];
     char *random_phase_path;

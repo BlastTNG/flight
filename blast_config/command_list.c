@@ -1103,6 +1103,13 @@ struct mcom mcommands[plugh + 2] = {
       {"delta_phase", -3.14159, 3.14159, 'f', "NONE"},
     }
   },
+  {COMMAND(offset_freq), "Shifts the freq of specified channel by freq offset", GR_ROACH, 3,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Channel number", 0, 1015, 'i', "NONE"},
+      {"delta_freq", -1000000.0, 1000000.0, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

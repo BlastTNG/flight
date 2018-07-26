@@ -98,7 +98,7 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 300.0e3 /* Target sweep span */
+#define TARG_SWEEP_SPAN 150.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define SWEEP_INTERRUPT (-1)
@@ -520,6 +520,9 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     if (!m_roach->last_phases) {
         m_roach->last_phases = calloc(m_freqlen, sizeof(double));
     }
+    if (!m_roach->last_freqs) {
+        m_roach->last_freqs = calloc(m_freqlen, sizeof(double));
+    }
     // Load random phases file
     blast_info("Roach%d, Loading tone phases", m_roach->which);
     // If can't load file, use random phases
@@ -539,7 +542,16 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
             m_roach->last_phases[i] = phases[i];
         }
     }
-    // if (CommandData.roach[m_roach->which - 1].change_phase) {
+    if (CommandData.roach[m_roach->which - 1].change_tone_freq) {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            m_freqs[i] = m_roach->last_freqs[i];
+            blast_info("freqs = %g", m_roach->last_freqs[i]);
+        }
+    } else {
+        for (size_t i = 0; i < m_freqlen; i++) {
+            m_roach->last_freqs[i] = m_freqs[i];
+        }
+    }
     if (CommandData.roach[m_roach->which - 1].load_vna_amps) {
         blast_info("Roach%d, Loading VNA AMPS", m_roach->which);
         // If can't load file, use all 1
@@ -1955,7 +1967,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     double m_span;
     char *sweep_freq_fname;
     char *save_path;
-    char *path_ref;
+    // char *path_ref;
     size_t comb_len;
     // struct stat dir_stat;
     // int stat_return;
@@ -1969,19 +1981,19 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_err("Sweep freqs could not be saved to disk");
                 return SWEEP_FAIL;
             }
-            blast_tmp_sprintf(path_ref, "%s", m_roach->last_vna_path);
+            /*blast_tmp_sprintf(path_ref, "%s", m_roach->last_vna_path);
             FILE *fd = fopen(path_ref, "w");
             if (fd) {
                 fprintf(fd, "%s", m_roach->last_vna_path);
                 fclose(fd);
             } else {
                 blast_strerror("Could not open %s for writing", path_ref);
-            }
+            }*/
             save_path = m_roach->last_vna_path;
             comb_len = m_roach->vna_comb_len;
-         } else {
-             return SWEEP_FAIL;
-         }
+            } else {
+                return SWEEP_FAIL;
+            }
     }
     if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
@@ -1995,7 +2007,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         // }
         save_path = m_roach->last_targ_path;
         // write last_targ_path to file in m_roach->roach_sweep_root
-        blast_tmp_sprintf(path_ref, "%s", m_roach->last_targ_path);
+        /* blast_tmp_sprintf(path_ref, "%s", m_roach->last_targ_path);
         FILE *fd = fopen(path_ref, "w");
         if (fd) {
             fprintf(fd, "%s", m_roach->last_targ_path);
@@ -2004,7 +2016,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
             blast_strerror("Could not open %s for writing", path_ref);
         }
         fprintf(fd, "%s", m_roach->last_targ_path);
-        fclose(fd);
+        fclose(fd);*/
         // Copy bb_targ_freqs.dat to new TARG sweep dir
         blast_tmp_sprintf(save_bbfreqs_command, "cp %s/roach%d/bb_targ_freqs.dat %s",
                         bb_targ_freqs_path, m_roach->which, m_roach->last_targ_path);
@@ -2320,6 +2332,21 @@ int shift_tone_phase(roach_state_t *m_roach)
     m_roach->last_phases[chan] += delta_phase;
     retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
     blast_info("ROACH%d, Shifing chan %d phase by %g", m_roach->which, chan, delta_phase);
+    return retval;
+}
+
+// shift freq of single tone
+int shift_tone_freq(roach_state_t *m_roach)
+{
+    int retval;
+    int chan = CommandData.roach[m_roach->which - 1].chan;
+    double freq_offset = CommandData.roach_params[m_roach->which - 1].freq_offset;
+    if (!m_roach->last_freqs) {
+        m_roach->last_freqs = calloc(m_roach->num_kids, sizeof(double));
+    }
+    m_roach->last_freqs[chan] += freq_offset;
+    retval = roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
+    blast_info("ROACH%d, Shifing chan %d freq by %g", m_roach->which, chan, freq_offset);
     return retval;
 }
 
@@ -3755,6 +3782,10 @@ void *roach_cmd_loop(void* ind)
             if ((CommandData.roach[i].change_tone_amps == 1)) {
                 shift_tone_amp(&roach_state_table[i]);
                 CommandData.roach[i].change_tone_amps = 0;
+            }
+            if ((CommandData.roach[i].change_tone_freq == 1)) {
+                shift_tone_freq(&roach_state_table[i]);
+                CommandData.roach[i].change_tone_freq = 0;
             }
             if ((CommandData.roach[i].change_tone_phase == 1)) {
                 shift_tone_phase(&roach_state_table[i]);
