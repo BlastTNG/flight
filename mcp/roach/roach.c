@@ -4186,7 +4186,7 @@ void write_roach_channels_5hz(void)
                     "packet_count_valid_mcp_roach%d", i + 1);
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
-                    "packet_count_invalid_roach%d", i + 1);
+                    "packet_count_invalid_mcp_roach%d", i + 1);
             snprintf(channel_name_roach_state,
                     sizeof(channel_name_roach_state), "state_roach%d", i + 1);
             snprintf(channel_name_pi_state,
