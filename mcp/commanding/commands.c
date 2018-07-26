@@ -1914,8 +1914,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
-        CommandData.roach_tlm[i].kid = ivalues[(i/3)+0];
-        CommandData.roach_tlm[i].roach = ivalues[(i/3)+1];
+        CommandData.roach_tlm[i].kid = ivalues[(i/3)*2+0];
+        CommandData.roach_tlm[i].roach = ivalues[(i/3)*2+1];
         CommandData.roach_tlm[i].rtype = i%3;
 
         CommandData.roach_tlm[i].index = get_roach_index(CommandData.roach_tlm[i].roach,
