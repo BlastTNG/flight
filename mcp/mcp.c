@@ -360,7 +360,7 @@ void add_roach_tlm_488hz()
       } else if (strcmp(ROACH_TYPES[TypeId[i]], "q") == 0) { // Q comes from the UDP packet directly
         value = m_packet->Qval[KidId[i]];
       } else if (strcmp(ROACH_TYPES[TypeId[i]], "df") == 0) { // df comes from the frame
-        GET_VALUE(channels_find_by_name(CommandData.roach_tlm[i].name), value);
+        // GET_VALUE(channels_find_by_name(CommandData.roach_tlm[i].name), value);
       }
 
       SET_FLOAT(tlm[i], value);
@@ -433,8 +433,8 @@ static void mcp_5hz_routines(void)
     watchdog_ping();
     // Tickles software WD 2.5x as fast as timeout
 
-    // update_sun_sensors();
-    read_5hz_acs();
+    update_sun_sensors();
+    // read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
     store_axes_mode_data();
