@@ -3721,13 +3721,13 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    /* while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
              first_time = 0;
         }
         usleep(2000);
-    } */
+    }
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
     pi_state_table[i].desired_state = PI_STATE_INIT;

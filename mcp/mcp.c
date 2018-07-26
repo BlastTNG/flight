@@ -264,7 +264,7 @@ void close_mcp(int m_code)
     while (!ready_to_close) usleep(10000);
     watchdog_close();
     shutdown_bias_tone();
-    // diskmanager_shutdown();
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -767,7 +767,7 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  // pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();
