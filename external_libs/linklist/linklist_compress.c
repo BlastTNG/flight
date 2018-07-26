@@ -433,9 +433,10 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     {
       if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+
         break;
         // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
-      } else if ((checksum != 0) && !(flags && LL_IGNORE_CHECKSUM)) { // bad data block
+      } else if ((checksum != 0) && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
         // clear/replace bad data from output buffer
         if (flags & LL_VERBOSE) linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
@@ -475,7 +476,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
       }
     }
   }
-  if (!prechecksum) // all the checksums were zero; must be blank frame
+  if (!prechecksum && !(flags & LL_IGNORE_CHECKSUM)) // all the checksums were zero; must be blank frame
   {
     fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
     // ret = 0;

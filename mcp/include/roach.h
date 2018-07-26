@@ -36,6 +36,7 @@
 #include "phenom/buffer.h"
 #include "remote_serial.h"
 #include "linklist.h"
+#include "channels_tng.h"
 
 #define ROACH_UDP_CRC_ERR 0x01
 #define ROACH_UDP_SEQ_ERR 0x02
@@ -44,6 +45,9 @@
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
+#define ROACH_DF_FILT_LEN 10
+#define ROACH_UDP_DEBUG_PRINT_COUNT 1
+#define ROACH_UDP_BUF_LEN 10*ROACH_UDP_LEN
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
 #define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
                                             (((b) & 0xff) << 16) | \
@@ -253,6 +257,22 @@ typedef struct {
     int sock; // the socket file descriptor
     struct timeval  timeout;
 } roach_handle_data_t;
+
+typedef struct {
+    float ibuf[ROACH_DF_FILT_LEN];
+    float qbuf[ROACH_DF_FILT_LEN];
+    int ind_last;
+    int ind_roach;
+    int ind_kid;
+    float i_sum;
+    float q_sum;
+    float i_cur;
+    float q_cur;
+    float df;
+    int first_call;
+} roach_df_calc_t;
+
+roach_df_calc_t roach_df_telem[NUM_ROACHES];
 
 roach_handle_data_t roach_udp[NUM_ROACHES];
 

@@ -70,8 +70,6 @@ uint8_t superframe_type_array[TYPE_END+1] = {
   SF_INT8, SF_INT16, SF_INT32, SF_INT64,
   SF_FLOAT32, SF_FLOAT64, SF_NUM
 };
-double channel_data_to_double(uint8_t * data, uint8_t type);
-int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 unsigned int superframe_offset[RATE_END] = {0};
 superframe_t * superframe = NULL;
 

@@ -2988,6 +2988,44 @@ int roach_df(roach_state_t* m_roach)
     return retval;
 }
 
+void roach_df_continuous(roach_df_calc_t* m_roach_df)
+{
+    int i;
+    roach_state_t* m_roach = &(roach_state_table[m_roach_df->ind_roach]);
+    if (m_roach_df->first_call) { // initialize structure
+        for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->ibuf[i] = 0.0;
+        for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->qbuf[i] = 0.0;
+        m_roach_df->ind_last = 0;
+        m_roach_df->i_sum = 0.0;
+        m_roach_df->q_sum = 0.0;
+        m_roach_df->df = 0.0;
+        m_roach_df->first_call = 0;
+    }
+    int retval = -1;
+    // check for ref params
+    if ((!m_roach->has_ref)) {
+        // Don't try to calculate df until the references are set.
+        return;
+    }
+    m_roach_df->i_sum -= m_roach_df->ibuf[m_roach_df->ind_last] + m_roach_df->i_cur;
+    m_roach_df->q_sum -= m_roach_df->qbuf[m_roach_df->ind_last] + m_roach_df->q_cur;
+    m_roach_df->ind_last = ((m_roach_df->ind_last) + 1) % ROACH_DF_FILT_LEN;
+    // Store in comp_vals
+    // Get I and Q vals from packets. Average NUM_AVG values
+    // Store in comp_vals
+    double comp_vals[2];
+    comp_vals[0] = m_roach_df->i_sum / ROACH_DF_FILT_LEN;
+    comp_vals[1] = m_roach_df->q_sum / ROACH_DF_FILT_LEN;
+    // calculate df for each selected channel
+    double deltaI = comp_vals[0] - m_roach->ref_vals[m_roach_df->ind_kid][0];
+    double deltaQ = comp_vals[1] - m_roach->ref_vals[m_roach_df->ind_kid][1];
+    m_roach_df->df =  -1. * ((m_roach->ref_grads[m_roach_df->ind_kid][0] * deltaI) +
+                     (m_roach->ref_grads[m_roach_df->ind_kid][1] * deltaQ)) /
+                     (m_roach->ref_grads[m_roach_df->ind_kid][0]*m_roach->ref_grads[m_roach_df->ind_kid][0] +
+                      m_roach->ref_grads[m_roach_df->ind_kid][1]*m_roach->ref_grads[m_roach_df->ind_kid][1]);
+//    blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, ind_kid, m_roach->df[ind_kid]);
+}
+
 int shift_freq(roach_state_t *m_roach)
 {
     int retval = -1;
@@ -3710,13 +3748,13 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    /* while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
              first_time = 0;
         }
         usleep(2000);
-    } */
+    }
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
     pi_state_table[i].desired_state = PI_STATE_INIT;
@@ -4135,6 +4173,8 @@ int init_roach(uint16_t ind)
  * ----------------------------------
  * Populates 5 Hz frame data
  */
+// TODO(laura/sam/adrian): A lot of these diagnositic fields have been commented out in the
+// code, presumably because they have been changed.  Update and remove or reimplement the write calls.
 void write_roach_channels_5hz(void)
 {
     int i, j;
@@ -4171,13 +4211,13 @@ void write_roach_channels_5hz(void)
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
             snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
-                    "packet_count_roach%d", i + 1);
+                    "packet_count_mcp_roach%d", i + 1);
             snprintf(channel_name_valid_pkt_ct,
                     sizeof(channel_name_valid_pkt_ct),
-                    "packet_count_valid_roach%d", i + 1);
+                    "packet_count_valid_mcp_roach%d", i + 1);
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
-                    "packet_count_invalid_roach%d", i + 1);
+                    "packet_count_invalid_mcp_roach%d", i + 1);
             snprintf(channel_name_roach_state,
                     sizeof(channel_name_roach_state), "state_roach%d", i + 1);
             snprintf(channel_name_pi_state,
