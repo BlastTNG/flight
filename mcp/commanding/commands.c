@@ -3047,6 +3047,7 @@ void InitCommandData()
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
+    CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
