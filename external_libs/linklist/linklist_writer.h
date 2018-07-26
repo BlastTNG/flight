@@ -7,6 +7,7 @@
 struct linklist_dirfile {
   char filename[80];
   unsigned int framenum;
+  unsigned int flags;
   linklist_t * ll;
   uint8_t * map;
   FILE * format;
@@ -29,6 +30,7 @@ typedef struct linklist_dirfile_meta linklist_dirfile_meta_t;
 
 int seek_linklist_dirfile(linklist_dirfile_t *, unsigned int);
 linklist_dirfile_t * open_linklist_dirfile(char *, linklist_t *);
+linklist_dirfile_t * open_linklist_dirfile_opt(char *, linklist_t *, unsigned int);
 void close_and_free_linklist_dirfile(linklist_dirfile_t *);
 double write_linklist_dirfile(linklist_dirfile_t *, uint8_t *);
 

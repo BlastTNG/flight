@@ -4142,6 +4142,8 @@ int init_roach(uint16_t ind)
  * ----------------------------------
  * Populates 5 Hz frame data
  */
+// TODO(laura/sam/adrian): A lot of these diagnositic fields have been commented out in the
+// code, presumably because they have been changed.  Update and remove or reimplement the write calls.
 void write_roach_channels_5hz(void)
 {
     int i, j;
@@ -4178,10 +4180,10 @@ void write_roach_channels_5hz(void)
         firsttime = 0;
         for (i = 0; i < NUM_ROACHES; i++) {
             snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
-                    "packet_count_roach%d", i + 1);
+                    "packet_count_mcp_roach%d", i + 1);
             snprintf(channel_name_valid_pkt_ct,
                     sizeof(channel_name_valid_pkt_ct),
-                    "packet_count_valid_roach%d", i + 1);
+                    "packet_count_valid_mcp_roach%d", i + 1);
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
                     "packet_count_invalid_roach%d", i + 1);

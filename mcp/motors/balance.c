@@ -107,7 +107,7 @@ void ControlBalance(void)
 	       }
            } else if (balance_state.i_el_avg < 0) {
                if (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
-                   blast_info("Setting the balance system to move in the positive direction.");
+                   // blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
                    balance_state.dir = positive;
                } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {

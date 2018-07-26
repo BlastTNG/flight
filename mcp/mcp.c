@@ -467,6 +467,7 @@ static void mcp_5hz_routines(void)
     read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
+    write_roach_channels_5hz();
     store_axes_mode_data();
     WriteAux();
     ControlBalance();
@@ -530,7 +531,7 @@ static void mcp_1hz_routines(void)
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    // store_data_hk(master_superframe_buffer);
+    store_data_hk(master_superframe_buffer);
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
@@ -753,7 +754,8 @@ blast_info("Finished initializing Beaglebones..."); */
   telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
 
-  generate_roach_udp_linklist("test.ll", 0);
+  linklist_t * testll = generate_roach_udp_linklist("roach1.ll", 0);
+  write_superframe_format(testll->superframe, "roach1.sf");
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);

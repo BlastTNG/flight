@@ -1450,21 +1450,20 @@ void *ActuatorBus(void *param)
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
 
-    /* while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("Not in charge.  Waiting.");
             first_time = 0;
         }
         usleep(1000000);
-        CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control *
+        CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
-        SetLockState(1); /* to ensure the NiC MCC knows the pin state *
-        SyncDR(); /* get encoder absolute state from the ICC *
+        // SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+        // SyncDR(); /* get encoder absolute state from the ICC */
 
-        CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands *
-        CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC *
+        // CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
+        // CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
     }
-*/
     first_time = 1;
     while (!is_init) {
         if (first_time) {
@@ -1548,7 +1547,7 @@ void *ActuatorBus(void *param)
 	which_act_used = CommandData.actbus.which_used;
         if (which_act_used & (0x1 << LOCKNUM)) {
             if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-	        blast_info("calling DoLock"); // DEBUG PAW
+	        // blast_info("calling DoLock"); // DEBUG PAW
                 DoLock();
                 actuators_init |= 0x1 << LOCKNUM;
             } else {
@@ -1561,7 +1560,7 @@ void *ActuatorBus(void *param)
 
         if (which_act_used & (0x1 << SHUTTERNUM)) {
             if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
-	        blast_info("calling DoShutter"); // DEBUG PAW
+	        // blast_info("calling DoShutter"); // DEBUG PAW
                 DoShutter();
                 actuators_init |= 0x1 << SHUTTERNUM;
             } else {
@@ -1590,7 +1589,7 @@ void *ActuatorBus(void *param)
 
         if (which_act_used & (0x1 << HWPRNUM)) {
             if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
-	        blast_info("calling DoHWPR"); // DEBUG PAW
+	        // blast_info("calling DoHWPR"); // DEBUG PAW
 	        DoHWPR(&bus);
                 actuators_init |= 0x1 << HWPRNUM;
             } else {
@@ -1602,7 +1601,7 @@ void *ActuatorBus(void *param)
 
         if (which_act_used & (0x1 << BALANCENUM)) {
             if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
-	        blast_info("calling DoBalance"); // DEBUG PAW
+	        // blast_info("calling DoBalance"); // DEBUG PAW
                 DoBalance(&bus);
                 actuators_init |= 0x1 << BALANCENUM;
             } else {
