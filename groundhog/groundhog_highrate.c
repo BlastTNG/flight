@@ -137,8 +137,9 @@ void read_gse_sync_frame(int fd, uint8_t * buffer, struct CSBFHeader * header) {
 
 void highrate_receive(void *arg) {
   // Open serial port
+  char * theport = (char *) arg;
   comms_serial_t *serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, HIGHRATE_PORT);
+  comms_serial_connect(serial, theport);
   comms_serial_setspeed(serial, B115200);
   int fd = serial->sock->fd; 
 

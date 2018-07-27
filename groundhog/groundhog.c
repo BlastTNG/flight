@@ -27,6 +27,7 @@
 #include "groundhog.h"
 #include "pilot.h"
 #include "bi0.h"
+#include "highrate.h"
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
@@ -148,6 +149,7 @@ int main(int argc, char * argv[]) {
   pthread_t pilot_receive_worker;
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
+  pthread_t direct_receive_worker;
 
   // Serving up data received via telemetry
   pthread_t server_thread;
@@ -165,7 +167,10 @@ int main(int argc, char * argv[]) {
   }
 
   if (highrate_on) {
-    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, NULL);
+    char highrate_dev[80] = HIGHRATE_PORT;
+    char direct_dev[80] = DIRECT_PORT; 
+    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, (void *) highrate_dev);
+    pthread_create(&direct_receive_worker, NULL, (void *) &highrate_receive, (void *) direct_dev);
   }
 
   // start the server thread for mole clients
