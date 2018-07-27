@@ -344,12 +344,12 @@ void update_current_sensors(void) {
     static channel_t* current_loop_9_Addr;
     static channel_t* current_loop_10_Addr;
     static channel_t* current_loop_11_Addr;
-    static channel_t* current_loop_12_Addr;
-    static channel_t* current_loop_13_Addr;
-    static channel_t* current_loop_14_Addr;
-    static channel_t* current_loop_15_Addr;
-    static channel_t* current_loop_16_Addr;
-    static channel_t* current_loop_17_Addr;
+//     static channel_t* current_loop_12_Addr;
+//     static channel_t* current_loop_13_Addr;
+//     static channel_t* current_loop_14_Addr;
+//     static channel_t* current_loop_15_Addr;
+//     static channel_t* current_loop_16_Addr;
+//     static channel_t* current_loop_17_Addr;
     if (first_time_current == 1) {
         first_time_current = 0;
         current_loop_1_Addr = channels_find_by_name("current_eth_switch");
@@ -363,12 +363,12 @@ void update_current_sensors(void) {
         current_loop_9_Addr = channels_find_by_name("current_hd_pv");
         current_loop_10_Addr = channels_find_by_name("current_gyros");
         current_loop_11_Addr = channels_find_by_name("current_data_transmit");
-        current_loop_12_Addr = channels_find_by_name("current_if1");
-        current_loop_13_Addr = channels_find_by_name("current_if2");
-        current_loop_14_Addr = channels_find_by_name("current_if3");
-        current_loop_15_Addr = channels_find_by_name("current_if4");
-        current_loop_16_Addr = channels_find_by_name("current_if5");
-        current_loop_17_Addr = channels_find_by_name("current_if6");
+        // current_loop_12_Addr = channels_find_by_name("current_if1");
+        // current_loop_13_Addr = channels_find_by_name("current_if2");
+        // current_loop_14_Addr = channels_find_by_name("current_if3");
+        // current_loop_15_Addr = channels_find_by_name("current_if4");
+        // current_loop_16_Addr = channels_find_by_name("current_if5");
+        // current_loop_17_Addr = channels_find_by_name("current_if6");
         for (int i = 0; i < 17; i++) {
             init_labjack_10hz_filter(&OFCurFilt[i]);
         }
@@ -386,12 +386,13 @@ void update_current_sensors(void) {
     SET_SCALED_VALUE(current_loop_9_Addr, OFCurFilt[8].filt_val);
     SET_SCALED_VALUE(current_loop_10_Addr, OFCurFilt[9].filt_val);
     SET_SCALED_VALUE(current_loop_11_Addr, OFCurFilt[10].filt_val);
-    SET_SCALED_VALUE(current_loop_12_Addr, OFCurFilt[11].filt_val);
-    SET_SCALED_VALUE(current_loop_13_Addr, OFCurFilt[12].filt_val);
-    SET_SCALED_VALUE(current_loop_14_Addr, OFCurFilt[13].filt_val);
-    SET_SCALED_VALUE(current_loop_15_Addr, OFCurFilt[14].filt_val);
-    SET_SCALED_VALUE(current_loop_16_Addr, OFCurFilt[15].filt_val);
-    SET_SCALED_VALUE(current_loop_17_Addr, OFCurFilt[16].filt_val);
+// These are current sensing loops that don't exist
+//    SET_SCALED_VALUE(current_loop_12_Addr, OFCurFilt[11].filt_val);
+//     SET_SCALED_VALUE(current_loop_13_Addr, OFCurFilt[12].filt_val);
+//     SET_SCALED_VALUE(current_loop_14_Addr, OFCurFilt[13].filt_val);
+//     SET_SCALED_VALUE(current_loop_15_Addr, OFCurFilt[14].filt_val);
+//     SET_SCALED_VALUE(current_loop_16_Addr, OFCurFilt[15].filt_val);
+//     SET_SCALED_VALUE(current_loop_17_Addr, OFCurFilt[16].filt_val);
 }
 /*
 void outer_frame_multiplexed(void) {
@@ -570,14 +571,23 @@ void outer_frame_1hz(int setting) {
 void update_mult_vac(void) {
     static int counter = 1;
     if (counter == 1 && state[6].connected) {
+        blast_info("multiplexed");
         for (int i = 0; i < 84; i++) {
             blast_info(" %d is %f", i, labjack_get_value(6, i));
         }
+        blast_info("of1");
+        for (int j = 0; j < 14; j++) {
+            blast_info(" %d is %f", j, labjack_get_value(2, j));
+        }
+        blast_info("of2");
+        for (int k = 0; k < 14; k++) {
+            blast_info(" %d is %f", k, labjack_get_value(3, k));
+        }
     }
-    if (counter < 150) {
+    if (counter < 50) {
         counter++;
     }
-    if (counter == 150) {
+    if (counter == 50) {
         counter = 1;
     }
 }
