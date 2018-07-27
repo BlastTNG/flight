@@ -531,15 +531,15 @@ void outer_frame(int setting) {
 
 void update_mult_vac(void) {
     static int counter = 1;
-    if (counter == 1) {
+    if (counter == 1 && state[6].connected) {
         for (int i = 0; i < 84; i++) {
             blast_info(" %d is %f", i, labjack_get_value(6, i));
         }
     }
-    if (counter < 5) {
+    if (counter < 150) {
         counter ++;
     }
-    if (counter == 5) {
+    if (counter == 150) {
         counter = 1;
     }
 }
