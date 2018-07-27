@@ -66,19 +66,6 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 			     EZ_WHO_S7, EZ_WHO_S8, EZ_WHO_S9,
 			     EZ_WHO_S10};
 
-// Set which steppers are used
-static int which_used[NACT] = {1,   // Actuator #0
-	   		       1,   // Actuator #1
-			       1,   // Actuator #2
-			       1,   // Balance
-			       1,   // Lockpin
-			       1,   // HWPR
-			       1,   // Shutter
-			       1,   // Pot Valve
-			       1,   // Pump Valve
-			       1};  // Fill Valve
-
-
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
@@ -424,6 +411,7 @@ static void DoActuators(void)
 {
   int delta;
 
+  blast_info("starting DoActuators");
   EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
   EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
   EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
@@ -1271,6 +1259,7 @@ void StoreActBus(void)
     static channel_t* focusSfAddr;
 
     static channel_t* statusActbusAddr;
+    static channel_t* usedActbusAddr;
 
     if (firsttime) {
         firsttime = 0;
@@ -1329,6 +1318,7 @@ void StoreActBus(void)
         stepSlowShutterAddr = channels_find_by_name("steps_slow_shutter");
 
         statusActbusAddr = channels_find_by_name("status_actbus");
+	usedActbusAddr = channels_find_by_name("used_actbus");
     }
 
     UpdateActFlags();
@@ -1404,6 +1394,7 @@ void StoreActBus(void)
     SET_UINT16(goalSfAddr, CommandData.actbus.focus);
 
     SET_UINT16(statusActbusAddr, actuators_init);
+    SET_UINT16(usedActbusAddr, CommandData.actbus.which_used);
 }
 
 /************************************************************************/
@@ -1452,6 +1443,7 @@ void *ActuatorBus(void *param)
     int first_time = 1;
     int sf_ok;
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
+    int which_act_used;
 
     int hwp_pos; // DEBUG PCA
 
@@ -1490,30 +1482,29 @@ void *ActuatorBus(void *param)
     // blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
     //           LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
-	if (which_used[i]) {
-            blast_info("Actuator %i, id[i] =%i", i, id[i]);
-            blast_info("name[i] = %s", name[i]);
-            EZBus_Add(&bus, id[i], name[i]);
-            if (i == BALANCENUM) {
-                EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
-	    } else if (i == LOCKNUM) {
-                EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
-            } else if (i == SHUTTERNUM) {
-                EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
-            } else if (i == HWPRNUM) {
-                EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
-            } else if (i == POTVALVE_NUM) {
-	        EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-	    } else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
-	        EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
-	    } else {
-                EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
-    	    }
-	}
+        blast_info("Actuator %i, id[i] =%i", i, id[i]);
+        blast_info("name[i] = %s", name[i]);
+         EZBus_Add(&bus, id[i], name[i]);
+        if (i == BALANCENUM) {
+            EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
+	} else if (i == LOCKNUM) {
+            EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
+        } else if (i == SHUTTERNUM) {
+            EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
+        } else if (i == HWPRNUM) {
+            EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
+        } else if (i == POTVALVE_NUM) {
+	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
+	} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
+	} else {
+            EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
+    	}
     }
 
     // I don't think this is necessary, it will always be called in the for loop --PAW 2018/06/20
-    // all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+    // using now because the loop will poll based on which steppers are commanded to be used
+    all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
 
     for (;;) {
         /* Repoll bus if necessary */
@@ -1553,87 +1544,92 @@ void *ActuatorBus(void *param)
             bus.chatter = ACTBUS_CHATTER;
         }
 
-        if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
-	    // blast_info("calling DoLock"); // DEBUG PAW
-            DoLock();
-            actuators_init |= 0x1 << LOCKNUM;
-        } else {
-	    // blast_info("forcing repoll of lockpin"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[LOCKNUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << LOCKNUM);
-        }
+	which_act_used = CommandData.actbus.which_used;
+        if (which_act_used & (0x1 << LOCKNUM)) {
+            if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+	        // blast_info("calling DoLock"); // DEBUG PAW
+                DoLock();
+                actuators_init |= 0x1 << LOCKNUM;
+            } else {
+	        // blast_info("forcing repoll of lockpin"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << LOCKNUM);
+            }
+	}
 
-        if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
-	    // blast_info("calling DoShutter"); // DEBUG PAW
-            DoShutter();
-            actuators_init |= 0x1 << SHUTTERNUM;
-        } else {
-	    // blast_info("forcing repoll of shutter"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << SHUTTERNUM);
-        }
+        if (which_act_used & (0x1 << SHUTTERNUM)) {
+            if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
+	        // blast_info("calling DoShutter"); // DEBUG PAW
+                DoShutter();
+                actuators_init |= 0x1 << SHUTTERNUM;
+            } else {
+	        // blast_info("forcing repoll of shutter"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << SHUTTERNUM);
+            }
+	}
 
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
-            if (EZBus_IsUsable(&bus, id[i])) {
-                actuators_init |= 0x1 << i;
-            } else {
-                EZBus_ForceRepoll(&bus, id[i]);
-                all_ok = 0;
-                sf_ok = 0;
-                actuators_init &= ~(0x1 << i);
-            }
-        }
+            if (which_act_used & (0x1 << i)) {
+                if (EZBus_IsUsable(&bus, id[i])) {
+                    actuators_init |= 0x1 << i;
+                } else {
+                    EZBus_ForceRepoll(&bus, id[i]);
+                    all_ok = 0;
+                    sf_ok = 0;
+                    actuators_init &= ~(0x1 << i);
+                }
+	    }
+	}
+
         if (sf_ok) DoActuators();
 
-        if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
-	    DoHWPR(&bus);
-            actuators_init |= 0x1 << HWPRNUM;
-        } else {
-            EZBus_ForceRepoll(&bus, id[HWPRNUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << HWPRNUM);
+        if (which_act_used & (0x1 << HWPRNUM)) {
+            if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
+	        blast_info("calling DoHWPR"); // DEBUG PAW
+	        DoHWPR(&bus);
+                actuators_init |= 0x1 << HWPRNUM;
+            } else {
+                EZBus_ForceRepoll(&bus, id[HWPRNUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << HWPRNUM);
+            }
         }
 
-        if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
-	    // blast_info("calling DoBalance"); // DEBUG PAW
-            DoBalance(&bus);
-            actuators_init |= 0x1 << BALANCENUM;
-        } else {
-	    // blast_info("forcing repoll of balance"); // DEBUG PAW
-            EZBus_ForceRepoll(&bus, id[BALANCENUM]);
-            all_ok = 0;
-            actuators_init &= ~(0x1 << BALANCENUM);
-        }
+        if (which_act_used & (0x1 << BALANCENUM)) {
+            if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+	        // blast_info("calling DoBalance"); // DEBUG PAW
+                DoBalance(&bus);
+                actuators_init |= 0x1 << BALANCENUM;
+            } else {
+	        // blast_info("forcing repoll of balance"); // DEBUG PAW
+                EZBus_ForceRepoll(&bus, id[BALANCENUM]);
+                all_ok = 0;
+                actuators_init &= ~(0x1 << BALANCENUM);
+            }
+	}
 
 	for (i = 0; i < 3; i++) {
-		if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
-			actuators_init |= 0x1 << valve_arr[i];
-		} else {
-	    		// blast_info("forcing repoll of valves"); // DEBUG PAW
-			EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
-			all_ok = 0;
-			actuators_init &= ~(0x1 << valve_arr[i]);
+            if (which_act_used & (0x1 << valve_arr[i])) {
+	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
+		    actuators_init |= 0x1 << valve_arr[i];
+	        } else {
+	    	    blast_info("forcing repoll of valves"); // DEBUG PAW
+		    EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
+		    all_ok = 0;
+		    actuators_init &= ~(0x1 << valve_arr[i]);
 		}
 		valve_check |= 0x1 << valve_arr[i];
+	    }
 	}
 
 	if (valve_check & actuators_init) {
 	        // blast_info("calling DoCryovalves"); // DEBUG PAW
 		DoCryovalves(&bus, actuators_init);
 	}
-/*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
-	    DoCryovalves(&bus, actuators_init);
-	    actuators_init |= 0x1 << POTVALVE_NUM;
-	} else {
-	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
-	    all_ok = 0;
-	    actuators_init &= ~(0x1 << POTVALVE_NUM);
-	}*/
 
 	usleep(10000);
     }

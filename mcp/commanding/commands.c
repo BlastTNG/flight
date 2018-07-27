@@ -957,7 +957,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
         // case bda_off:
             // CommandData.Cryo.BDAHeat = 0;
             // break;
-        case pot_valve_open:
+        // cryo valves
+	case pot_valve_open:
             CommandData.Cryo.potvalve_goal = opened;
             break;
         case pot_valve_close:
@@ -1042,7 +1043,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.xystage.force_repoll = 1;
 #endif
             break;
-// .
             // Shutter
         case shutter_init:
             CommandData.actbus.shutter_goal = SHUTTER_INIT;
@@ -1526,6 +1526,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
      /*************************************
       ********* Lock / Actuators  *********/
+    case actuators_set_used:
+      CommandData.actbus.which_used = ivalues[0] << 0;
+      CommandData.actbus.which_used = ivalues[1] << 1;
+      CommandData.actbus.which_used = ivalues[2] << 2;
+      CommandData.actbus.which_used = ivalues[3] << 3;
+      CommandData.actbus.which_used = ivalues[4] << 4;
+      CommandData.actbus.which_used = ivalues[5] << 5;
+      CommandData.actbus.which_used = ivalues[6] << 6;
+      CommandData.actbus.which_used = ivalues[7] << 7;
+      CommandData.actbus.which_used = ivalues[8] << 8;
+      CommandData.actbus.which_used = ivalues[9] << 9;
+      break;
     case lock:   // Lock Inner Frame
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
@@ -1682,6 +1694,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case potvalve_set_current:
       CommandData.Cryo.potvalve_opencurrent = ivalues[0];
       CommandData.Cryo.potvalve_closecurrent = ivalues[1];
+      break;
+    case potvalve_set_thresholds:
+      CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
+      CommandData.Cryo.potvalve_loose_closed_threshold = ivalues[1];
+      CommandData.Cryo.potvalve_open_threshold = ivalues[2];
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
@@ -2734,6 +2751,7 @@ void InitCommandData()
     CommandData.actbus.caddr[0] = 0;
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
+    CommandData.actbus.which_used = 1023; // 2^10-1, so that all ten actuators are enabled
 
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
@@ -2808,11 +2826,14 @@ void InitCommandData()
     CommandData.Cryo.potvalve_goal = intermed;
     CommandData.Cryo.lhevalve_on = 0;
     CommandData.Cryo.lvalve_open = 0;
-    CommandData.Cryo.lvalve_close = 0;
+    CommandData.Cryo.lvalve_close =0;
     CommandData.Cryo.lnvalve_on = 0;
     CommandData.Cryo.potvalve_opencurrent = 25;
     CommandData.Cryo.potvalve_closecurrent = 20;
     CommandData.Cryo.potvalve_vel = 50000;
+    CommandData.Cryo.potvalve_open_threshold = 10000;
+    CommandData.Cryo.potvalve_loose_closed_threshold = 6500;
+    CommandData.Cryo.potvalve_closed_threshold = 4200;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
