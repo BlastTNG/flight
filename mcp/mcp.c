@@ -364,7 +364,7 @@ void add_roach_tlm_488hz()
         have_warned = 1;
     } else {
         if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
-            switch (ind_roach) {
+            switch (ind_rtype) {
                 case 0: // I values
                     roach_df_telem[ind_roach].i_cur = m_packet->Ival[KidId[i]];
                     break;
@@ -374,7 +374,7 @@ void add_roach_tlm_488hz()
                 case 2: // calc df values
                     roach_df_telem[ind_roach].ind_kid = KidId[i];
                     roach_df_telem[ind_roach].ind_roach = ind_roach;
-                    roach_df_continuous(&(roach_df_telem));
+                    roach_df_continuous(&(roach_df_telem[ind_roach]));
                     break;
             }
         }
