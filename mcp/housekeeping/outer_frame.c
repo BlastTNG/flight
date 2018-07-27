@@ -530,130 +530,18 @@ void outer_frame(int setting) {
 // below is only used for testing the multiplexed labjack in the thermal vac chamber
 
 void update_mult_vac(void) {
-    static int firsttime = 1;
-    static channel_t* v1_1_Addr;
-    static channel_t* v2_1_Addr;
-    static channel_t* v3_1_Addr;
-    static channel_t* v4_1_Addr;
-    static channel_t* v5_1_Addr;
-    static channel_t* v1_2_Addr;
-    static channel_t* v2_2_Addr;
-    static channel_t* v3_2_Addr;
-    static channel_t* v4_2_Addr;
-    static channel_t* v5_2_Addr;
-    static channel_t* v1_3_Addr;
-    static channel_t* v2_3_Addr;
-    static channel_t* v3_3_Addr;
-    static channel_t* v4_3_Addr;
-    static channel_t* v5_3_Addr;
-    static channel_t* v1_4_Addr;
-    static channel_t* v2_4_Addr;
-    static channel_t* v3_4_Addr;
-    static channel_t* v4_4_Addr;
-    static channel_t* v5_4_Addr;
-    static channel_t* v1_5_Addr;
-    static channel_t* v2_5_Addr;
-    static channel_t* v3_5_Addr;
-    static channel_t* v4_5_Addr;
-    static channel_t* v5_5_Addr;
-    static channel_t* v1_6_Addr;
-    static channel_t* v2_6_Addr;
-    static channel_t* v3_6_Addr;
-    static channel_t* v4_6_Addr;
-    static channel_t* v5_6_Addr;
-    static channel_t* v1_7_Addr;
-    static channel_t* v2_7_Addr;
-    static channel_t* v3_7_Addr;
-    static channel_t* v4_7_Addr;
-    static channel_t* v5_7_Addr;
-    static channel_t* v1_8_Addr;
-    static channel_t* v2_8_Addr;
-    static channel_t* v3_8_Addr;
-    static channel_t* v4_8_Addr;
-    static channel_t* v5_8_Addr;
-    if (firsttime == 1) {
-        firsttime = 0;
-        v1_1_Addr = channels_find_by_name("v1_1_pss");
-        v2_1_Addr = channels_find_by_name("v2_1_pss");
-        v3_1_Addr = channels_find_by_name("v3_1_pss");
-        v4_1_Addr = channels_find_by_name("v4_1_pss");
-        v5_1_Addr = channels_find_by_name("v5_1_pss");
-        v1_2_Addr = channels_find_by_name("v1_2_pss");
-        v2_2_Addr = channels_find_by_name("v2_2_pss");
-        v3_2_Addr = channels_find_by_name("v3_2_pss");
-        v4_2_Addr = channels_find_by_name("v4_2_pss");
-        v5_2_Addr = channels_find_by_name("v5_2_pss");
-        v1_3_Addr = channels_find_by_name("v1_3_pss");
-        v2_3_Addr = channels_find_by_name("v2_3_pss");
-        v3_3_Addr = channels_find_by_name("v3_3_pss");
-        v4_3_Addr = channels_find_by_name("v4_3_pss");
-        v5_3_Addr = channels_find_by_name("v5_3_pss");
-        v1_4_Addr = channels_find_by_name("v1_4_pss");
-        v2_4_Addr = channels_find_by_name("v2_4_pss");
-        v3_4_Addr = channels_find_by_name("v3_4_pss");
-        v4_4_Addr = channels_find_by_name("v4_4_pss");
-        v5_4_Addr = channels_find_by_name("v5_4_pss");
-        v1_5_Addr = channels_find_by_name("v1_5_pss");
-        v2_5_Addr = channels_find_by_name("v2_5_pss");
-        v3_5_Addr = channels_find_by_name("v3_5_pss");
-        v4_5_Addr = channels_find_by_name("v4_5_pss");
-        v5_5_Addr = channels_find_by_name("v5_5_pss");
-        v1_6_Addr = channels_find_by_name("v1_6_pss");
-        v2_6_Addr = channels_find_by_name("v2_6_pss");
-        v3_6_Addr = channels_find_by_name("v3_6_pss");
-        v4_6_Addr = channels_find_by_name("v4_6_pss");
-        v5_6_Addr = channels_find_by_name("v5_6_pss");
-        v1_7_Addr = channels_find_by_name("v1_7_pss");
-        v2_7_Addr = channels_find_by_name("v2_7_pss");
-        v3_7_Addr = channels_find_by_name("v3_7_pss");
-        v4_7_Addr = channels_find_by_name("v4_7_pss");
-        v5_7_Addr = channels_find_by_name("v5_7_pss");
-        v1_8_Addr = channels_find_by_name("v1_8_pss");
-        v2_8_Addr = channels_find_by_name("v2_8_pss");
-        v3_8_Addr = channels_find_by_name("v3_8_pss");
-        v4_8_Addr = channels_find_by_name("v4_8_pss");
-        v5_8_Addr = channels_find_by_name("v5_8_pss");
+    static int counter = 1;
+    if (counter == 1 && state[6].connected) {
+        for (int i = 0; i < 84; i++) {
+            blast_info(" %d is %f", i, labjack_get_value(6, i));
+        }
     }
-    SET_SCALED_VALUE(v1_1_Addr, labjack_get_value(6, 4));
-    SET_SCALED_VALUE(v2_1_Addr, labjack_get_value(6, 5));
-    SET_SCALED_VALUE(v3_1_Addr, labjack_get_value(6, 6));
-    SET_SCALED_VALUE(v4_1_Addr, labjack_get_value(6, 7));
-    SET_SCALED_VALUE(v5_1_Addr, labjack_get_value(6, 8));
-    SET_SCALED_VALUE(v1_2_Addr, labjack_get_value(6, 9));
-    SET_SCALED_VALUE(v2_2_Addr, labjack_get_value(6, 10));
-    SET_SCALED_VALUE(v3_2_Addr, labjack_get_value(6, 11));
-    SET_SCALED_VALUE(v4_2_Addr, labjack_get_value(6, 12));
-    SET_SCALED_VALUE(v5_2_Addr, labjack_get_value(6, 13));
-    SET_SCALED_VALUE(v1_3_Addr, labjack_get_value(6, 14));
-    SET_SCALED_VALUE(v2_3_Addr, labjack_get_value(6, 15));
-    SET_SCALED_VALUE(v3_3_Addr, labjack_get_value(6, 16));
-    SET_SCALED_VALUE(v4_3_Addr, labjack_get_value(6, 17));
-    SET_SCALED_VALUE(v5_3_Addr, labjack_get_value(6, 18));
-    SET_SCALED_VALUE(v1_4_Addr, labjack_get_value(6, 19));
-    SET_SCALED_VALUE(v2_4_Addr, labjack_get_value(6, 20));
-    SET_SCALED_VALUE(v3_4_Addr, labjack_get_value(6, 21));
-    SET_SCALED_VALUE(v4_4_Addr, labjack_get_value(6, 22));
-    SET_SCALED_VALUE(v5_4_Addr, labjack_get_value(6, 23));
-    SET_SCALED_VALUE(v1_5_Addr, labjack_get_value(6, 24));
-    SET_SCALED_VALUE(v2_5_Addr, labjack_get_value(6, 25));
-    SET_SCALED_VALUE(v3_5_Addr, labjack_get_value(6, 26));
-    SET_SCALED_VALUE(v4_5_Addr, labjack_get_value(6, 27));
-    SET_SCALED_VALUE(v5_5_Addr, labjack_get_value(6, 28));
-    SET_SCALED_VALUE(v1_6_Addr, labjack_get_value(6, 29));
-    SET_SCALED_VALUE(v2_6_Addr, labjack_get_value(6, 30));
-    SET_SCALED_VALUE(v3_6_Addr, labjack_get_value(6, 31));
-    SET_SCALED_VALUE(v4_6_Addr, labjack_get_value(6, 32));
-    SET_SCALED_VALUE(v5_6_Addr, labjack_get_value(6, 33));
-    SET_SCALED_VALUE(v1_7_Addr, labjack_get_value(6, 34));
-    SET_SCALED_VALUE(v2_7_Addr, labjack_get_value(6, 35));
-    SET_SCALED_VALUE(v3_7_Addr, labjack_get_value(6, 36));
-    SET_SCALED_VALUE(v4_7_Addr, labjack_get_value(6, 37));
-    SET_SCALED_VALUE(v5_7_Addr, labjack_get_value(6, 38));
-    SET_SCALED_VALUE(v1_8_Addr, labjack_get_value(6, 39));
-    SET_SCALED_VALUE(v2_8_Addr, labjack_get_value(6, 40));
-    SET_SCALED_VALUE(v3_8_Addr, labjack_get_value(6, 41));
-    SET_SCALED_VALUE(v4_8_Addr, labjack_get_value(6, 42));
-    SET_SCALED_VALUE(v5_8_Addr, labjack_get_value(6, 43));
+    if (counter < 150) {
+        counter ++;
+    }
+    if (counter == 150) {
+        counter = 1;
+    }
 }
 
 

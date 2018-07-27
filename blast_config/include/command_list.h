@@ -181,6 +181,7 @@ enum multiCommand {
   request_file,      set_roach_iq_chan,
   set_roach_df_chan_1,
   set_roach_df_chan_2,
+  set_queue_execute,
 
   // t_gyro_gain,
   timeout,           vcap,
