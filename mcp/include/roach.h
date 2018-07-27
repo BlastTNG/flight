@@ -157,6 +157,8 @@ typedef struct roach_state {
     double n_min_freq;
     // VNA/TARG/CAL sweep file paths
     char *sweep_root_path;
+    char *vna_path_ref;
+    char *targ_path_ref;
     char *targ_path_root;
     char *last_vna_path;
     char *last_targ_path;
@@ -189,6 +191,7 @@ typedef struct roach_state {
     char *amps_path[2];
     double *last_amps;
     double *last_phases;
+    double *last_freqs;
     char *vna_amps_path[2];
     char *targ_amps_path[2];
     char *random_phase_path;
