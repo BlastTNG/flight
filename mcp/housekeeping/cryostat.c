@@ -822,14 +822,14 @@ void cryo_1hz(int setting_1hz) {
     if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
-        load_curve_300mk();
-        set_dac();
+        // load_curve_300mk();
+        // set_dac();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
     if (setting_200hz == 1 && state[0].connected && state[1].connected) {
-        cal_control();
+        // cal_control();
         read_thermometers();
     }
     if (setting_200hz == 2 && state[0].connected && state[1].connected) {
