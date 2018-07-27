@@ -2964,6 +2964,8 @@ int roach_df(roach_state_t* m_roach)
 void roach_df_continuous(roach_df_calc_t* m_roach_df)
 {
     int i;
+    static uint32_t i_ct = 0;
+    static int first_pass = 1;
     roach_state_t* m_roach = &(roach_state_table[m_roach_df->ind_roach]);
     if (m_roach_df->first_call) { // initialize structure
         for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->ibuf[i] = 0.0;
@@ -2977,12 +2979,35 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
     int retval = -1;
     // check for ref params
     if ((!m_roach->has_ref)) {
-        // Don't try to calculate df until the references are set.
+//         if ((i_ct % ROACH_FILT_DEBUG_FREQ) == 0) {
+//             blast_info("roach%d ikid%d The references aren't set...exiting roach_df_continuous",
+//                        m_roach_df->ind_roach, m_roach_df->ind_kid);
+//         }
+//         // Don't try to calculate df until the references are set.
+//         i_ct++;
         return;
+    }
+    if (first_pass) {
+        i_ct = 0;
+        first_pass = 0;
     }
     m_roach_df->i_sum -= m_roach_df->ibuf[m_roach_df->ind_last] + m_roach_df->i_cur;
     m_roach_df->q_sum -= m_roach_df->qbuf[m_roach_df->ind_last] + m_roach_df->q_cur;
+    m_roach_df->qbuf[m_roach_df->ind_last] = m_roach_df->q_cur;
+    m_roach_df->ibuf[m_roach_df->ind_last] = m_roach_df->i_cur;
+//     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
+//         blast_info("roach%d ikid%d i_sum = %f, i_cur = %f, ind_last = %f",
+//                    m_roach_df->ind_roach, m_roach_df->ind_kid,
+//                    m_roach_df->i_sum, m_roach_df->ibuf[m_roach_df->ind_last], m_roach_df->i_cur);
+//         blast_info("roach%d ikid%d q_sum = %f, q_cur = %f, qbuf last = %f, new_ind = %d",
+//                    m_roach_df->ind_roach, m_roach_df->ind_kid,
+//                    m_roach_df->q_sum, m_roach_df->qbuf[m_roach_df->ind_last], m_roach_df->q_cur);
+//     }
     m_roach_df->ind_last = ((m_roach_df->ind_last) + 1) % ROACH_DF_FILT_LEN;
+//     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
+//          blast_info("roach%d ikid%d new_index = %d",
+//                     m_roach_df->ind_roach, m_roach_df->ind_kid, m_roach_df->ind_last);
+//     }
     // Store in comp_vals
     // Get I and Q vals from packets. Average NUM_AVG values
     // Store in comp_vals
@@ -2996,6 +3021,14 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
                      (m_roach->ref_grads[m_roach_df->ind_kid][1] * deltaQ)) /
                      (m_roach->ref_grads[m_roach_df->ind_kid][0]*m_roach->ref_grads[m_roach_df->ind_kid][0] +
                       m_roach->ref_grads[m_roach_df->ind_kid][1]*m_roach->ref_grads[m_roach_df->ind_kid][1]);
+//     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
+//         blast_info("roach%d ikid%d comp_vals = %f %f ref_vals %f %f delta I Q %f %f ref_grads %f %f",
+//                    m_roach_df->ind_roach, m_roach_df->ind_kid, comp_vals[0], comp_vals[1],
+//                    m_roach->ref_vals[m_roach_df->ind_kid][0],
+//                    m_roach->ref_vals[m_roach_df->ind_kid][0], deltaI, deltaQ,
+//                    m_roach->ref_grads[m_roach_df->ind_kid][0], m_roach->ref_grads[m_roach_df->ind_kid][1]);
+//     }
+//     i_ct++;
 //    blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, ind_kid, m_roach->df[ind_kid]);
 }
 
