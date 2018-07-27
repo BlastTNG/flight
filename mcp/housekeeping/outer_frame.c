@@ -335,12 +335,12 @@ void update_current_sensors(void) {
         current_loop_9_Addr = channels_find_by_name("current_hd_pv");
         current_loop_10_Addr = channels_find_by_name("current_gyros");
         current_loop_11_Addr = channels_find_by_name("current_data_transmit");
-        current_loop_12_Addr = channels_find_by_name("current_if1");
-        current_loop_13_Addr = channels_find_by_name("current_if2");
-        current_loop_14_Addr = channels_find_by_name("current_if3");
-        current_loop_15_Addr = channels_find_by_name("current_if4");
-        current_loop_16_Addr = channels_find_by_name("current_if5");
-        current_loop_17_Addr = channels_find_by_name("current_if6");
+        // current_loop_12_Addr = channels_find_by_name("current_if1");
+        // current_loop_13_Addr = channels_find_by_name("current_if2");
+        // current_loop_14_Addr = channels_find_by_name("current_if3");
+        // current_loop_15_Addr = channels_find_by_name("current_if4");
+        // current_loop_16_Addr = channels_find_by_name("current_if5");
+        // current_loop_17_Addr = channels_find_by_name("current_if6");
         for (int i = 0; i < 17; i++) {
             init_labjack_10hz_filter(&OFCurFilt[i]);
         }
@@ -369,7 +369,7 @@ void update_current_sensors(void) {
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_OF_3, 9)*CURLOOP_CONV, &OFCurFilt[9]));
     SET_SCALED_VALUE(current_loop_11_Addr,
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_OF, 48)*CURLOOP_CONV, &OFCurFilt[10]));
-    SET_SCALED_VALUE(current_loop_12_Addr,
+    /* SET_SCALED_VALUE(current_loop_12_Addr,
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_OF, 52)*CURLOOP_CONV, &OFCurFilt[11]));
     SET_SCALED_VALUE(current_loop_13_Addr,
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_OF, 53)*CURLOOP_CONV, &OFCurFilt[12]));
@@ -381,6 +381,7 @@ void update_current_sensors(void) {
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_OF, 72)*CURLOOP_CONV, &OFCurFilt[15]));
     SET_SCALED_VALUE(current_loop_17_Addr,
         filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_OF, 74)*CURLOOP_CONV, &OFCurFilt[16]));
+     */
 }
 /*
 void outer_frame_multiplexed(void) {
@@ -553,14 +554,23 @@ void outer_frame(int setting) {
 void update_mult_vac(void) {
     static int counter = 1;
     if (counter == 1 && state[6].connected) {
+        blast_info("multiplexed");
         for (int i = 0; i < 84; i++) {
             blast_info(" %d is %f", i, labjack_get_value(6, i));
         }
+        blast_info("of1");
+        for (int j = 0; j < 14; j++) {
+            blast_info(" %d is %f", j, labjack_get_value(2, j));
+        }
+        blast_info("of2");
+        for (int k = 0; k < 14; k++) {
+            blast_info(" %d is %f", k, labjack_get_value(3, k));
+        }
     }
-    if (counter < 150) {
+    if (counter < 50) {
         counter++;
     }
-    if (counter == 150) {
+    if (counter == 50) {
         counter = 1;
     }
 }
