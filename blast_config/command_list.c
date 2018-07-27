@@ -319,6 +319,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
   {COMMAND(load_freqs_all), "Write all saved targ freqs to Roaches", GR_ROACH},
+  {COMMAND(reload_vna_all), "Reload vna freqs and vna trf for all Roaches", GR_ROACH},
+  {COMMAND(end_sweeps_all), "End all sweeps", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 

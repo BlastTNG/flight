@@ -1178,6 +1178,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].change_tone_amps = 1;
             }
             break;
+        case reload_vna_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].load_vna_amps = 2;
+            }
+            break;
+        case end_sweeps_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].do_sweeps = 0;
+            }
+            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD

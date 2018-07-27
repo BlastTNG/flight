@@ -155,6 +155,7 @@ enum singleCommand {
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
     vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
     refit_freqs_all, center_lo_all, calc_dfs, change_amps, load_freqs_all,
+    reload_vna_all, end_sweeps_all,
   xyzzy
 };
 
