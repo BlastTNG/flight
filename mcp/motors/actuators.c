@@ -1631,17 +1631,6 @@ void *ActuatorBus(void *param)
 		DoCryovalves(&bus, actuators_init);
 	}
 
-/*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
-	    DoCryovalves(&bus, actuators_init);
-	    actuators_init |= 0x1 << POTVALVE_NUM;
-	} else {
-	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
-	    all_ok = 0;
-	    actuators_init &= ~(0x1 << POTVALVE_NUM);
-	}
-*/
 	usleep(10000);
     }
 }

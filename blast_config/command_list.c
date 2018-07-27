@@ -1197,6 +1197,11 @@ struct mcom mcommands[plugh + 2] = {
           {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
       }
   },
+  {COMMAND(set_queue_execute), "command queue changed", GR_CRYO, 1,
+      {
+          {"Labjack to execute queue", 0, 4, 'i', "LJ"},
+      }
+  },
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",
