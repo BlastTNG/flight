@@ -202,12 +202,12 @@ channel_t channel_list[] =
     { "current_hd_pv",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_gyros",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "current_data_transmit",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if1",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if2",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if3",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if4",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if5",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
-    { "current_if6",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if1",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if2",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if3",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if4",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if5",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
+    // { "current_if6",      SCALE(CURLOOP_D), TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
 
     // ADD CLINOMETER CHANNELS
     { "clin_of_x", SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0},
