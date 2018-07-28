@@ -134,11 +134,13 @@ void set_incharge(int in_charge_from_wd) {
                 CommandData.actbus.force_repoll = 1;
             }
         } else {
+            /*
             // if you had been in charge, then you lost control and should reset
             if (InCharge) {
                 blast_info("Had control and lost it. Shutting down.\n");
                 close_mcp(0);
             }
+            */
 
             InCharge = 0;
             if (incharge_old != in_charge) {
