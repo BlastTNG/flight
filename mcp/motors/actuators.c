@@ -356,20 +356,25 @@ static void ServoActuators(int* goal)
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;
 
-  EZBus_Take(&bus, ID_ALL_ACT);
-
+  for (i = 0; i < 3; ++i) {
+      EZBus_Take(&bus, id[i]);
+  }
   UpdateDR(goal);
 
   // stop any current action
-  EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
-
   for (i = 0; i < 3; ++i) {
-    // send command to each actuator, but don't run yet
-    EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], sizeof(buf), buf, "A%d", goal[i]));
+      EZBus_Stop(&bus, id[i]); /* terminate all strings */
   }
-  EZBus_Comm(&bus, ID_ALL_ACT, "R");	  // run all act commands at once
-
-  EZBus_Release(&bus, ID_ALL_ACT);
+  for (i = 0; i < 3; ++i) {
+      // send command to each actuator, but don't run yet
+      EZBus_Comm(&bus, id[i], EZBus_StrComm(&bus, id[i], sizeof(buf), buf, "A%d", goal[i]));
+  }
+  for (i = 0; i < 3; ++i) {
+      EZBus_Comm(&bus, id[i], "R");	// run act commands as simultaneously as possible
+  }
+  for (i = 0; i < 3; ++i) {
+      EZBus_Release(&bus, id[i]);
+  }
 }
 
 static void DeltaActuators(void)
@@ -411,19 +416,23 @@ static int ThermalCompensation(void)
 static void DoActuators(void)
 {
   int delta;
+  int i;
 
   blast_info("starting DoActuators");
-  EZBus_SetVel(&bus, ID_ALL_ACT, CommandData.actbus.act_vel);
-  EZBus_SetAccel(&bus, ID_ALL_ACT, CommandData.actbus.act_acc);
-  EZBus_SetIMove(&bus, ID_ALL_ACT, CommandData.actbus.act_move_i);
-  EZBus_SetIHold(&bus, ID_ALL_ACT, CommandData.actbus.act_hold_i);
-  EZBus_SetPreamble(&bus, ID_ALL_ACT, actPreamble(CommandData.actbus.act_tol));
-
+  for (i = 0; i < 3; ++i) {
+      EZBus_SetVel(&bus, id[i], CommandData.actbus.act_vel);
+      EZBus_SetAccel(&bus, id[i], CommandData.actbus.act_acc);
+      EZBus_SetIMove(&bus, id[i], CommandData.actbus.act_move_i);
+      EZBus_SetIHold(&bus, id[i], CommandData.actbus.act_hold_i);
+      EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
+  }
   switch (CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
       bputs(warning, "Actuator Panic");
-      EZBus_Stop(&bus, ID_ALL_ACT); /* terminate all strings */
-      EZBus_Comm(&bus, ID_ALL_ACT, "n0R");	/* also stop fine correction */
+      for (i = 0; i < 3; ++i) {
+          EZBus_Stop(&bus, id[i]); /* terminate all strings */
+          EZBus_Comm(&bus, id[i], "n0R");	/* also stop fine correction */
+      }
       CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP;
       break;
     case ACTBUS_FM_DELTA:
@@ -472,14 +481,14 @@ void RecalcOffset(double new_gp, double new_gs)
     (t_secondary - T_SECONDARY_FOCUS) ) / ACTENC_TO_UM;
 }
 
-static int InitialiseActuator(struct ezbus* thebus, char who)
+static int InitializeActuator(struct ezbus* thebus, char who)
 {
     char buffer[EZ_BUS_BUF_LEN];
     int i;
 
     for (i = 0; i < 3; i++) {
         if (id[i] == who) {	  // only operate on actautors
-            blast_info("Inside InitialiseActuator, Initialising %s...", name[i]);
+            blast_info("Inside InitializeActuator, Initialising %s...", name[i]);
             ReadDR();	  // inefficient,
 
             /* Set the encoder */
@@ -1457,10 +1466,10 @@ void *ActuatorBus(void *param)
             first_time = 0;
         }
         usleep(1000000);
-        CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control *
+        CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control
 
-        SetLockState(1); /* to ensure the NiC MCC knows the pin state *
-        SyncDR(); /* get encoder absolute state from the ICC *
+        SetLockState(1); /* to ensure the NiC MCC knows the pin state
+        SyncDR(); /* get encoder absolute state from the ICC
 
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands *
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC *
@@ -1506,7 +1515,7 @@ void *ActuatorBus(void *param)
 
     // I don't think this is necessary, it will always be called in the for loop --PAW 2018/06/20
     // using now because the loop will poll based on which steppers are commanded to be used
-    all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+    all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
 
     for (;;) {
         /* Repoll bus if necessary */
@@ -1525,7 +1534,7 @@ void *ActuatorBus(void *param)
             // bus.chatter = EZ_CHAT_ERR;
 	    // for now, not changing chatter during repoll
 	    // blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
-            all_ok = !(EZBus_PollInit(&bus, InitialiseActuator) & EZ_ERR_POLL);
+            all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
 	    // blast_info("done repolling"); // DEBUG PAW
             bus.chatter = ACTBUS_CHATTER;
             poll_timeout = POLL_TIMEOUT;

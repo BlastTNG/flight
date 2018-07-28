@@ -123,9 +123,9 @@ void update_sun_sensors(void) {
         v5_8_Addr = channels_find_by_name("v5_8_pss");
     }
     if (state[5].connected) {
-	blast_info("Sending data from labjack6 to channels");
+	// blast_info("Sending data from labjack6 to channels");
         SET_FLOAT(v1_1_Addr, labjack_get_value(LABJACK_MULT_PSS, 26));
-	blast_info("%f", labjack_get_value(5, 26));
+	// blast_info("%f", labjack_get_value(5, 26));
         SET_FLOAT(v2_1_Addr, labjack_get_value(LABJACK_MULT_PSS, 24));
         SET_FLOAT(v3_1_Addr, labjack_get_value(LABJACK_MULT_PSS, 22));
         SET_FLOAT(v4_1_Addr, labjack_get_value(LABJACK_MULT_PSS, 20));
