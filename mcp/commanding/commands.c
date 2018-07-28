@@ -3203,7 +3203,6 @@ void InitCommandData()
     CommandData.balance.mode = bal_rest;
     CommandData.actbus.shutter_step = 4224;
     CommandData.actbus.shutter_step_slow = 300;
-    CommandData.actbus.shutter_move_i = 100;
     CommandData.actbus.shutter_move_i = 50;
     CommandData.actbus.shutter_vel = 20;
     CommandData.actbus.shutter_acc = 1;

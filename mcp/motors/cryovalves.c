@@ -63,6 +63,7 @@ static struct valve_struct {
 	char addr;
 	int limit;
 	int ready;
+	valve_state_t goal;
 } valve_data[NVALVES];
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
@@ -102,7 +103,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Stop(bus, valve_data[index].addr);
 		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
-		CommandData.Cryo.valve_goals[index] = 0;
+		// CommandData.Cryo.valve_goals[index] = 0;
 		firsttime_pump_valve = 0;
 	}
 
@@ -116,11 +117,12 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Stop(bus, valve_data[index].addr);
 		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
-		CommandData.Cryo.valve_goals[index] = 0;
+		// CommandData.Cryo.valve_goals[index] = 0;
 		firsttime_fill_valve = 0;
 	}
 	// blast_info("Valve %d address is %c", index, valve_data[index].addr);
 
+	valve_data[index].goal = CommandData.Cryo.valve_goals[index];
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
 
@@ -138,7 +140,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	// blast_info("limit switch for %c = %d", valve_data[index].addr, valve_data[index].limit);
 	valve_data[index].ready = !(EZBus_IsBusy(bus, valve_data[index].addr));
 
-	if ((CommandData.Cryo.valve_goals[index] == opened) && (valve_data[index].limit != 11)) {
+	if ((valve_data[index].goal == opened) && (valve_data[index].limit != 11)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
@@ -147,7 +149,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		} else {
 			blast_info("Valve %d opening...", index);
 		}
-	} else if ((CommandData.Cryo.valve_goals[index] == closed) && (valve_data[index].limit != 7)) {
+	} else if ((valve_data[index].goal == closed) && (valve_data[index].limit != 7)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
@@ -157,7 +159,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			blast_info("Valve %d closing...", index);
 		}
 	} else if (valve_data[index].limit == 7 || valve_data[index].limit == 11) {
-		CommandData.Cryo.valve_goals[index] = 0;
+		valve_data[index].goal = 0;
 	}
 }
 
