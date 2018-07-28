@@ -3188,8 +3188,8 @@ void InitCommandData()
     CommandData.actbus.lock_move_i = 50;
     CommandData.actbus.lock_hold_i = 0;
 
-    CommandData.hwpr.vel = 1600;
-    CommandData.hwpr.acc = 4;
+    CommandData.hwpr.vel = 20000;
+    CommandData.hwpr.acc = 40;
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 

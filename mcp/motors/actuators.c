@@ -42,7 +42,7 @@
 #include "tx.h"
 #include "hwpr.h"
 #include "cryovalves.h"
-
+#include "actuators.h"
 #include "ec_motors.h"
 
 void nameThread(const char*);		/* mcp.c */

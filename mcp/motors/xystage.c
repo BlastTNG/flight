@@ -38,7 +38,7 @@
 #include "tx.h"
 #include "ezstep.h"
 #include "mcp.h"
-
+#include "xystage.h"
 
 
 /* EZBus setup parameters */
