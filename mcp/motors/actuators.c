@@ -74,7 +74,7 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 // fine correction tolerance (ac%d), stall retries (au5),
 // enable encoder feedback mode (n8)
 // NB: this is a printf template now, requires a move tolerance (ac) to be set
- #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
+#define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 
 static struct ezbus bus;
 
