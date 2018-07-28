@@ -23,8 +23,10 @@
 #include "bitserver.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
+#include "linklist_writer.h"
 #include "blast.h"
 #include "blast_time.h"
+#include "groundhog.h"
 #include "groundhog_framing.h"
 #include "highrate.h"
 #include "comms_serial.h"
@@ -134,16 +136,44 @@ void read_gse_sync_frame(int fd, uint8_t * buffer, struct CSBFHeader * header) {
   }
 }
 
+// grabs a packet from the gse stripped of it gse header
+void read_gse_sync_frame_direct(int fd, uint8_t * buffer, unsigned int length) {
+  uint8_t byte = 0;
+  unsigned int bytes_read = 0;
+
+  while (true) {
+      if (read(fd, &byte, 1) == 1) {
+          if (bytes_read < length) { // keep reading to the buffer 
+              buffer[bytes_read++] = byte;
+          } else {
+              return;
+          }
+      } else { // nothing read
+          usleep(1000);
+      }
+  }
+}
 
 void highrate_receive(void *arg) {
   // Open serial port
-  char * theport = (char *) arg;
+  unsigned int serial_mode = (unsigned long long) arg;
   comms_serial_t *serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, theport);
+  char linkname[80];
+  if (serial_mode) { // direct
+      comms_serial_connect(serial, DIRECT_PORT);
+      sprintf(linkname, "TDRSSDirect");
+  } else { // highrate
+      comms_serial_connect(serial, HIGHRATE_PORT);
+      sprintf(linkname, "HighRate");
+  }
   comms_serial_setspeed(serial, B115200);
   int fd = serial->sock->fd; 
 
   linklist_t * ll = NULL;
+
+  // open a file to save all the raw linklist data
+  linklist_rawfile_t * ll_rawfile = NULL;
+  uint32_t ser = 0, prev_ser = 0;
 
   // packet sizes
   unsigned int payload_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
@@ -162,9 +192,10 @@ void highrate_receive(void *arg) {
   uint16_t *i_pkt, *n_pkt;
   uint32_t *frame_number;
   uint32_t transmit_size;
-  uint8_t *compressed_buffer = calloc(1, buffer_size);
+  uint8_t *compbuffer = calloc(1, buffer_size);
 
   uint8_t *local_superframe = calloc(1, superframe->size);
+  uint8_t *local_allframe = calloc(1, superframe->allframe_size);
   struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
@@ -186,16 +217,28 @@ void highrate_receive(void *arg) {
       // printf("-------------START (lock = %d)---------\n", payload_packet_lock);
 
       // get the sync frame from the gse
-      read_gse_sync_frame(fd, gse_packet, &gse_packet_header);
+      if (serial_mode) { // direct
+          // mimic the return header values for highrate
+          gse_packet_header.size = 2048;
+          gse_packet_header.origin = 0xe;
+          sprintf(gse_packet_header.namestr, "Direct");
+
+          read_gse_sync_frame_direct(fd, gse_packet, gse_packet_header.size);
+      } else { // highrate
+          read_gse_sync_frame(fd, gse_packet, &gse_packet_header);
+      }
+
       gse_read = 0;
       source_str = gse_packet_header.namestr;
-/* 
+
+      /* 
       for (int i = 0; i < gse_packet_header.size; i++) {
           if (i%32 == 0) printf("\n%.3d : ", i/32);
           printf("0x%.2x ", gse_packet[i]);
       }
       printf("\n");
-*/
+      */
+
       // printf("Got a GSE packet size %d origin 0x%x\n", gse_packet_header.size, gse_packet_header.origin);
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
@@ -223,13 +266,19 @@ void highrate_receive(void *arg) {
                       transmit_size = *frame_number;
 
                       if (!(ll = linklist_lookup_by_serial(*serial_number))) {
-                          blast_err("Could not find linklist with serial 0x%.4x", *serial_number);
+                          blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *serial_number);
                           continue; 
                       }
+                      ser = *serial_number;
+
+                      if (ser != prev_ser) {
+                        ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, linkname);
+                      }
+                      prev_ser = ser;
 
                       // blast_info("Transmit size=%d, blk_size=%d, payload_size=%d, datasize=%d, i=%d, n=%d", transmit_size, ll->blk_size, payload_size, datasize, *i_pkt, *n_pkt);
 
-                      retval = depacketizeBuffer(compressed_buffer, &recv_size, 
+                      retval = depacketizeBuffer(compbuffer, &recv_size, 
                                            HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE,
                                            i_pkt, n_pkt, data_buffer);
 
@@ -239,22 +288,30 @@ void highrate_receive(void *arg) {
                       if ((retval == 0) && (ll != NULL))
                       {
                           // decompress the linklist
-                          if (read_allframe(local_superframe, superframe, compressed_buffer)) {
+                          if (read_allframe(local_superframe, superframe, compbuffer)) {
                               blast_info("[%s] Received an allframe :)\n", source_str);
+                              memcpy(local_allframe, compbuffer, superframe->allframe_size);
                           } else {
                               if (transmit_size > ll->blk_size) {
                                   blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
                                   transmit_size = ll->blk_size;
                               }
                               blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
+
+                              // write the linklist data to disk
+                              if (ll_rawfile) {
+                                  memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                                  write_linklist_rawfile(ll_rawfile, compbuffer);
+                              }
+
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-                              decompress_linklist_opt(local_superframe, ll, compressed_buffer, transmit_size, 0);
+                              decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
                               memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                              groundhog_linklist_publish(ll, compressed_buffer);
+                              groundhog_linklist_publish(ll, compbuffer);
 
                               incrementFifo(local_fifo);
                           }
-                          memset(compressed_buffer, 0, buffer_size);
+                          memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
                       }
                   }

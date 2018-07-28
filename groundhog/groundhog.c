@@ -167,10 +167,8 @@ int main(int argc, char * argv[]) {
   }
 
   if (highrate_on) {
-    char highrate_dev[80] = HIGHRATE_PORT;
-    char direct_dev[80] = DIRECT_PORT; 
-    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, (void *) highrate_dev);
-    pthread_create(&direct_receive_worker, NULL, (void *) &highrate_receive, (void *) direct_dev);
+    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, (void *) 0);
+    pthread_create(&direct_receive_worker, NULL, (void *) &highrate_receive, (void *) 1);
   }
 
   // start the server thread for mole clients
