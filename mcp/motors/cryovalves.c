@@ -47,7 +47,7 @@ typedef enum {
 
 static struct potvalve_struct {
 	int init;
-	int addr;
+	char addr;
 	int pos;
 	int adc[4];
 	int moving;
@@ -60,7 +60,7 @@ static struct potvalve_struct {
 } potvalve_data;
 
 static struct valve_struct {
-	int addr;
+	char addr;
 	int limit;
 	int ready;
 } valve_data[NVALVES];
@@ -87,13 +87,13 @@ void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 	// blast_info("called WriteValves"); // DEBUG PAW
 }
 
-void DoValves(struct ezbus* bus, int index, int addr)
+void DoValves(struct ezbus* bus, int index, char addr)
 {
 	static int firsttime_pump_valve = 1;
 	static int firsttime_fill_valve = 1;
 
 	if (firsttime_pump_valve && (index == 0)) {
-		valve_data[index].addr = GetActAddr(addr);
+		valve_data[index].addr = (char) GetActAddr(addr);
 		// Debug PAW 04/24/2018
 		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
 
@@ -107,7 +107,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 	}
 
 	if (firsttime_fill_valve && (index == 1)) {
-		valve_data[index].addr = GetActAddr(addr);
+		valve_data[index].addr = (char) GetActAddr(addr);
 		// Debug PAW 04/24/2018
 		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
 
@@ -135,6 +135,7 @@ void DoValves(struct ezbus* bus, int index, int addr)
 
 	// ?4 returns status of all 4 inputs, Bit 2 = opto 1, Bit 3 = opto 2
 	EZBus_ReadInt(bus, valve_data[index].addr, "?4", &(valve_data[index].limit));
+	// blast_info("limit switch for %c = %d", valve_data[index].addr, valve_data[index].limit);
 	valve_data[index].ready = !(EZBus_IsBusy(bus, valve_data[index].addr));
 
 	if ((CommandData.Cryo.valve_goals[index] == opened) && (valve_data[index].limit != 11)) {
@@ -204,7 +205,7 @@ void DoPotValve(struct ezbus* bus)
 	if (firsttime) {
 		potvalve_data.init = 0;
 		blast_info("IN FIRSTTIME BLOCK"); // DEBUG PCA
-		potvalve_data.addr = GetActAddr(POTVALVE_NUM);
+		potvalve_data.addr = (char) GetActAddr(POTVALVE_NUM);
 
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
