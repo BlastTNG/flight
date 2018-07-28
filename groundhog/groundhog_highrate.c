@@ -143,9 +143,9 @@ void read_gse_sync_frame_direct(int fd, uint8_t * buffer, unsigned int length) {
 
   while (true) {
       if (read(fd, &byte, 1) == 1) {
-          if (bytes_read < length) { // keep reading to the buffer 
-              buffer[bytes_read++] = byte;
-          } else {
+          buffer[bytes_read++] = byte;
+
+          if (bytes_read >= length) { // done reading from the buffer 
               return;
           }
       } else { // nothing read
@@ -164,7 +164,7 @@ void highrate_receive(void *arg) {
       sprintf(linkname, "TDRSSDirect");
   } else { // highrate
       comms_serial_connect(serial, HIGHRATE_PORT);
-      sprintf(linkname, "HighRate");
+      sprintf(linkname, "SerHighRate");
   }
   comms_serial_setspeed(serial, B115200);
   int fd = serial->sock->fd; 
