@@ -429,6 +429,8 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
+    outer_frame_200hz(1);
+    process_sun_sensors();
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
@@ -518,8 +520,8 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(1);
-    update_mult_vac();
+    outer_frame_1hz(1);
+    // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);
     // highbay will be rewritten as all on or off when box is complete

@@ -175,6 +175,7 @@ typedef struct {
     double val_buf[LJ_10HZ_BUFFER_LEN];
     int ind_last;
     double sum;
+    double filt_val;
 } labjack_10hz_filter_t;
 
 typedef struct {
@@ -238,7 +239,7 @@ void heater_write(int m_labjack, int address, float command);
 int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 
-float filter_labjack_channel_10hz(float new_val, labjack_10hz_filter_t *m_lj_filter);
+void filter_labjack_channel_10hz(float new_val, labjack_10hz_filter_t *m_lj_filter);
 void init_labjack_10hz_filter(labjack_10hz_filter_t *m_lj_filter);
 
 #endif /* LABJACK_FUNCTIONS_H_ */

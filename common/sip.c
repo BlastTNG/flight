@@ -296,7 +296,7 @@ static void GPSPosition(unsigned char *indata)
     lat = ParseGPS(indata + 4);
     if (fabs(lat) > 20) {
         SIPData.GPSpos.lat = lat;
-        SIPData.GPSpos.lon = -ParseGPS(indata); /* sip sends east lon */
+        SIPData.GPSpos.lon = ParseGPS(indata); /* sip sends east lon */
         /* end of hack */
 
         SIPData.GPSpos.alt = ParseGPS(indata + 8);

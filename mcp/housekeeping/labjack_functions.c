@@ -707,9 +707,9 @@ void init_labjack_10hz_filter(labjack_10hz_filter_t *m_lj_filter) {
     m_lj_filter->sum = 0.0;
 }
 
-float filter_labjack_channel_10hz(float new_val, labjack_10hz_filter_t *m_lj_filter) {
+void filter_labjack_channel_10hz(float new_val, labjack_10hz_filter_t *m_lj_filter) {
     m_lj_filter->sum = m_lj_filter->sum + new_val - m_lj_filter->val_buf[m_lj_filter->ind_last];
     m_lj_filter->val_buf[m_lj_filter->ind_last] = new_val;
     m_lj_filter->ind_last = (++(m_lj_filter->ind_last)) % LJ_10HZ_BUFFER_LEN;
-    return(m_lj_filter->sum / LJ_10HZ_BUFFER_LEN);
+    m_lj_filter->filt_val = m_lj_filter->sum / LJ_10HZ_BUFFER_LEN;
 }
