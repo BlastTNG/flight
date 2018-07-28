@@ -69,11 +69,11 @@ static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 #define ID_ALL_ACT  EZ_WHO_G1_4
 // set microstep resolution
 #define LOCK_PREAMBLE "j256"
-#define SHUTTER_PREAMBLE "j64"
+#define SHUTTER_PREAMBLE "j256"
 // set encoder/microstep ratio (aE25600), coarse correction band (aC50),
 // fine correction tolerance (ac%d), stall retries (au5),
 // enable encoder feedback mode (n8)
-// NB: this is a printf template now, requires a move tolerance (ac) to be set
+// NB: this is a printf template now, requires a move tolerance (ac) to be set, default is 2
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 static struct ezbus bus;
 
@@ -105,7 +105,7 @@ static struct lock_struct {
 #define  SHUTTER_TIMEOUT 3000         /* 30 seconds */
 #define  SHUTTER_CLOSED_BIT 0x04      // /7?4 returns 15 when shutter is closed and
                                       // returns 11 when shutter is not closed
-// #define  SHUTTER_OPEN 7               // The choice of 7 is arbitrary
+// #define  SHUTTER_OPEN 7            // The choice of 7 is arbitrary
 #define SHUTTER_SLEEP 100000 /* 100 milliseconds */
 // #define  SHUTTER_SLEEP 50000
 #define  SHUTTER_IS_CLOSED 2
@@ -518,8 +518,8 @@ static void InitializeShutter()
   if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK)
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK)
     bputs(info, "InitializeShutter: Error initializing shutter");
-  CommandData.actbus.shutter_step = 4224;
-  CommandData.actbus.shutter_step_slow = 300;
+  // CommandData.actbus.shutter_step = 4224;
+  // CommandData.actbus.shutter_step_slow = 300;
   // CommandData.actbus.shutter_move_i = 100;
   // CommandData.actbus.shutter_move_i = 50;
   // CommandData.actbus.shutter_vel = 20;

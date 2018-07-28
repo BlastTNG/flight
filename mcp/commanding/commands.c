@@ -3201,6 +3201,13 @@ void InitCommandData()
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
     CommandData.balance.mode = bal_rest;
+    CommandData.actbus.shutter_step = 4224;
+    CommandData.actbus.shutter_step_slow = 300;
+    CommandData.actbus.shutter_move_i = 100;
+    CommandData.actbus.shutter_move_i = 50;
+    CommandData.actbus.shutter_vel = 20;
+    CommandData.actbus.shutter_acc = 1;
+
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
