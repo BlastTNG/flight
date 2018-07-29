@@ -106,8 +106,8 @@ int send_biphase_writes() {
     params.mode = MGSL_MODE_RAW;
     params.loopback = 0;
     params.flags = HDLC_FLAG_RXC_BRG + HDLC_FLAG_TXC_BRG;
-    //params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
-    params.encoding = HDLC_ENCODING_NRZ;
+    params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
+    //params.encoding = HDLC_ENCODING_NRZ;
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
@@ -141,7 +141,8 @@ int send_biphase_writes() {
     if (data_to_write) {
         *data_to_write = 0xEB90;
         for (int i = 1; i < ((int) bytes_to_write/2); i++) {
-            *(data_to_write+i) = 0xFFFF;
+            *(data_to_write+i) = i;
+            //*(data_to_write+i) = 0xffff;
         }
     } else {
        close(fd); 

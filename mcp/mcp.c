@@ -631,8 +631,8 @@ int main(int argc, char *argv[])
   pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
-  pthread_t bi0_send_worker;
-  // pthread_t biphase_writer_id;
+  // pthread_t bi0_send_worker;
+  ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
 
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
@@ -764,7 +764,9 @@ blast_info("Finished initializing Beaglebones..."); */
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
-  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
+//  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
+  bi0_send_worker = ph_thread_spawn((void *) &biphase_writer, (void *) telemetries_linklist);
+
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   signal(SIGHUP, close_mcp);
