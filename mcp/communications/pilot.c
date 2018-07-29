@@ -115,8 +115,15 @@ void pilot_compress_and_send(void *arg) {
       // commendeer the framenum for total transmit size
       setBITSenderFramenum(&pilotsender, transmit_size);
 
-      // send the data to the ground station via bitsender
-      sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
+      if (CommandData.pilot_oth) {
+        // send the data to pilot oth via bitsender
+        for (int i = 0; i < 2; i++) {
+          sendToBITSender(&pilotothsender[2], compbuffer, transmit_size, 0);
+        }
+      } else {
+        // send the data to the ground station via bitsender
+        sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
+      }
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
       allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
