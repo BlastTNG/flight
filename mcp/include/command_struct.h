@@ -454,6 +454,7 @@ struct CommandDataStruct {
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
+  uint32_t pilot_oth;
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
   char roach_tlm_mode;
 

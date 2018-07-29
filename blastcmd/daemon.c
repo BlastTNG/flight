@@ -340,6 +340,7 @@ int ForwardRoute(char *buffer)
     return 18;
 
   int ack = NetCmdSendAndReceive(buffer, 1, 0, NULL);
+  printf("Forwarded to %s\n", pilot_host[buffer[1]-'1']);
 
   WriteLogFile(0, NULL, ack);
 

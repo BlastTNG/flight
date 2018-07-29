@@ -1187,6 +1187,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].do_sweeps = 0;
             }
+        case pilot_oth_on:
+            CommandData.pilot_oth = 1;
+            blast_info("Switched to Pilot OTH\n");
+            break;
+        case pilot_oth_off:
+            CommandData.pilot_oth = 0;
+            blast_info("Switch to Pilot GND\n");
             break;
         case xyzzy:
             break;
@@ -3078,6 +3085,7 @@ void InitCommandData()
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    CommandData.pilot_oth = 0;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 
