@@ -94,7 +94,7 @@ void pilot_compress_and_send(void *arg) {
     // get the current bandwidth
     bandwidth = CommandData.pilot_bw;
 
-    if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
+    if (!fifoIsEmpty(&pilot_fifo) && ll) {// && InCharge) { // data is ready to be sent
 
       // send allframe if necessary
       if (!allframe_count) {
@@ -109,18 +109,27 @@ void pilot_compress_and_send(void *arg) {
       // bandwidth limit; frames are 1 Hz, so bandwidth == size
       transmit_size = MIN(transmit_size, bandwidth);  
 
-      // have packet header serials match the linklist serials
-      setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
-
-      // commendeer the framenum for total transmit size
-      setBITSenderFramenum(&pilotsender, transmit_size);
 
       if (CommandData.pilot_oth) {
+        printf("Send to OTH\n");
         // send the data to pilot oth via bitsender
         for (int i = 0; i < 2; i++) {
-          sendToBITSender(&pilotothsender[2], compbuffer, transmit_size, 0);
+				  // have packet header serials match the linklist serials
+				  setBITSenderSerial(&pilotothsender[i], *(uint32_t *) ll->serial);
+
+				  // commendeer the framenum for total transmit size
+				  setBITSenderFramenum(&pilotothsender[i], transmit_size);
+
+          // send the data over pilot via bitsender
+          sendToBITSender(&pilotothsender[i], compbuffer, transmit_size, 0);
         }
       } else {
+				// have packet header serials match the linklist serials
+				setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
+
+				// commendeer the framenum for total transmit size
+				setBITSenderFramenum(&pilotsender, transmit_size);
+
         // send the data to the ground station via bitsender
         sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
       }
