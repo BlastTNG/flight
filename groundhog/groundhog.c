@@ -135,6 +135,13 @@ int main(int argc, char * argv[]) {
                                  PILOT_MAX_PACKET_SIZE,
                                  PILOT};
 
+  struct UDPSetup pilot_setup2 = {"Pilot 2", 
+                                 PILOT_ADDR, 
+                                 PILOT_PORT+1, 
+                                 PILOT_MAX_SIZE, 
+                                 PILOT_MAX_PACKET_SIZE,
+                                 PILOT};
+
   struct UDPSetup udplos_setup = {"BI0-LOS", 
                                   BI0LOS_GND_ADDR, 
                                   BI0LOS_GND_PORT, 
@@ -146,7 +153,7 @@ int main(int argc, char * argv[]) {
   pthread_t groundhog_publish_worker;
 
   // Receiving data from telemetry
-  pthread_t pilot_receive_worker;
+  pthread_t pilot_receive_worker[2];
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
   pthread_t direct_receive_worker;
@@ -158,7 +165,8 @@ int main(int argc, char * argv[]) {
   pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
   if (pilot_on) {
-    pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker[0], NULL, (void *) &udp_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker[1], NULL, (void *) &udp_receive, (void *) &pilot_setup2);
   }
 
   if (bi0_on) {
@@ -178,7 +186,8 @@ int main(int argc, char * argv[]) {
   pthread_join(groundhog_publish_worker, NULL);
 
   if (pilot_on) {
-    pthread_join(pilot_receive_worker, NULL);
+    pthread_join(pilot_receive_worker[0], NULL);
+    pthread_join(pilot_receive_worker[1], NULL);
   }
 
   if (bi0_on) {
