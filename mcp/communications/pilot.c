@@ -111,7 +111,6 @@ void pilot_compress_and_send(void *arg) {
 
 
       if (CommandData.pilot_oth) {
-        printf("Send to OTH\n");
         // send the data to pilot oth via bitsender
         for (int i = 0; i < 2; i++) {
 				  // have packet header serials match the linklist serials
