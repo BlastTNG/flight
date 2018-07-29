@@ -190,6 +190,17 @@ static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
 void nameThread(const char*);
 
+// Generic function to handle system calls for python scripts with additional niceness.
+void pyblast_system(char* cmd)
+{
+    char* new_cmd;
+//    blast_tmp_sprintf(new_cmd, "%s",
+//                      cmd);
+     blast_tmp_sprintf(new_cmd, "nice -11 %s",
+                       cmd);
+    system(new_cmd);
+}
+
 int get_roach_state(uint16_t ind)
 {
     int state = roach_state_table[ind].state;
@@ -287,7 +298,7 @@ int roach_qdr_cal(roach_state_t *m_roach)
     blast_tmp_sprintf(m_cal_command, "python /data/etc/blast/roachPython/cal_roach_qdr.py %s > %s",
                                     m_roach->address, m_roach->qdr_log);
     blast_info("ROACH%d, Calibrating QDR RAM", m_roach->which);
-    system(m_cal_command);
+    pyblast_system(m_cal_command);
     sleep(5);
     FILE *fd = fopen(m_roach->qdr_log, "r");
     if (!fd) {
@@ -1647,7 +1658,7 @@ int save_output_trf(roach_state_t *m_roach)
           "python %s %d %s %g", gen_output_trf_script, m_roach->which,
              m_roach->sweep_root_path, m_roach->lo_centerfreq);
     blast_info("ROACH%d, Saving output transfer function", m_roach->which);
-    system(py_command);
+    pyblast_system(py_command);
     return 0;
 }
 
@@ -1746,7 +1757,7 @@ int get_targ_freqs(roach_state_t *m_roach, char* m_targ_path, bool m_use_default
             m_roach->find_kids_log);
     }
     blast_info("%s", py_command);
-    system(py_command);
+    pyblast_system(py_command);
     sleep(3);
     FILE *log = fopen(m_roach->find_kids_log, "r");
     if (!log) {
@@ -1870,7 +1881,7 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
             "python /data/etc/blast/roachPython/optimize_freqs_mcp.py %s > %s",
             m_last_targ_path, m_roach->opt_tones_log);
     blast_info("%s", py_command);
-    system(py_command);
+    pyblast_system(py_command);
     sleep(3);
     FILE *log = fopen(m_roach->opt_tones_log, "r");
     if (!log) {
@@ -2017,7 +2028,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         // Copy bb_targ_freqs.dat to new TARG sweep dir
         blast_tmp_sprintf(save_bbfreqs_command, "cp %s/roach%d/bb_targ_freqs.dat %s",
                         bb_targ_freqs_path, m_roach->which, m_roach->last_targ_path);
-        system(save_bbfreqs_command);
+        pyblast_system(save_bbfreqs_command);
         blast_tmp_sprintf(sweep_freq_fname, "%s/sweep_freqs.dat", m_roach->last_targ_path);
         blast_info("Sweep freq fname = %s", sweep_freq_fname);
         comb_len = m_roach->num_kids;
@@ -2155,7 +2166,7 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     }
     fclose(fd);
     // Save last chop path
-    system("python /home/fc1user/sam_builds/chop_list.py");
+    pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
     blast_info("ROACH%d, timestream saved", m_roach->which);
     CommandData.roach[m_roach->which - 1].get_timestream = 0;
     return 0;
@@ -2216,7 +2227,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
         fclose(fd);
     }
     // Save last chop path
-    system("python /home/fc1user/sam_builds/chop_list.py");
+    pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
     blast_info("ROACH%d, timestream saved", m_roach->which);
     for (int i = 0; i < rows; i++) {
         free(I[i]);
@@ -2233,7 +2244,7 @@ void check_chop_data(roach_state_t *m_roach)
     char *py_command;
     blast_tmp_sprintf(py_command, "python %s > %s %s", script_path,
               m_roach->last_chop_path, save_path);
-    // system(py_command);
+    // pyblast_system(py_command);
 }
 
 // get the chop_snr for the timestream saved in save_timestream
@@ -2245,7 +2256,7 @@ int chop_snr(roach_state_t *m_roach, double *m_buffer)
     blast_tmp_sprintf(py_command, "python %s > %s %d", chop_snr_script,
               chop_snr_log, m_roach->which);
     // Call fit_mcp_chop.py and read response from log
-    system(py_command);
+    pyblast_system(py_command);
     FILE *fd = fopen(chop_snr_log, "r");
     if (!fd) {
         blast_err("Error opening file");
@@ -2352,7 +2363,7 @@ int optimize_amps(roach_state_t *m_roach)
     blast_info("ROACH%d, Calculating nonlinearity params and new tone amps", m_roach->which);
     blast_tmp_sprintf(py_command, "python %s %s", cal_amps_script, m_roach->last_cal_path);
     blast_info("Command: %s", py_command);
-    system(py_command);
+    pyblast_system(py_command);
     double amps[m_roach->num_kids];
     blast_info("Roach%d, Loading new amps", m_roach->which);
     if ((roach_read_1D_file(m_roach, m_roach->last_cal_path, amps, m_roach->num_kids) < 0)) {
@@ -2422,7 +2433,7 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
         // Save bb_targ_freqs.dat in CAL dir
         blast_tmp_sprintf(save_bbfreqs_command, "cp %s/roach%d/bb_targ_freqs.dat %s",
                         bb_targ_freqs_path, m_roach->which, m_roach->last_cal_path);
-        system(save_bbfreqs_command);
+        pyblast_system(save_bbfreqs_command);
         } else {
             blast_info("ROACH%d, Could not create CAL dir", m_roach->which);
             return SWEEP_FAIL;
@@ -2492,7 +2503,7 @@ int roach_refit_freqs(roach_state_t *m_roach)
     blast_info("ROACH%d, Fit sweep complete, calculating new freqs", m_roach->which);
     blast_tmp_sprintf(py_command, "python %s %s", refit_freqs_script, m_roach->last_targ_path);
     blast_info("Command: %s", py_command);
-    system(py_command);
+    pyblast_system(py_command);
     sleep(5);
     blast_tmp_sprintf(load_path, "%s/new_freqs.dat", m_roach->last_targ_path);
     if ((roach_read_1D_file(m_roach, load_path, new_freqs, m_roach->num_kids) < 0)) {
@@ -2508,7 +2519,7 @@ int roach_refit_freqs(roach_state_t *m_roach)
     }
     blast_tmp_sprintf(copy_command, "cp %s %s/bb_targ_freqs.dat",
             load_path, m_roach->sweep_root_path);
-    system(copy_command);
+    pyblast_system(copy_command);
     if ((roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids) < 0)) {
         return retval;
     }
@@ -2777,7 +2788,7 @@ int calc_grad_freqs(roach_state_t *m_roach, char *m_targ_path)
            m_targ_path,
            m_roach->lo_centerfreq);
     blast_info("%s", calc_freqs_command);
-    system(calc_freqs_command);
+    pyblast_system(calc_freqs_command);
     sleep(6);
     blast_tmp_sprintf(m_targ_freq_path, "%s/gradient_freqs.dat", m_targ_path);
     blast_info("Opening gradient freqs for reading...");
@@ -2883,7 +2894,7 @@ int save_ref_params(roach_state_t *m_roach)
     blast_tmp_sprintf(py_command, "python %s %s", ref_grads_script,
             m_roach->last_targ_path);
     blast_info("%s", py_command);
-    system(py_command);
+    pyblast_system(py_command);
     // get reference gradients
     if ((roach_read_2D_file(m_roach, path_to_ref_grads,
               m_roach->ref_grads, m_roach->num_kids) < 0)) {
@@ -3372,7 +3383,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     }
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
-    system(upload_command);
+    pyblast_system(upload_command);
     sleep(3);
     int success_val = send_rpc_katcl(m_roach->rpc_conn, 1000,
             KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
@@ -3735,7 +3746,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
     if (retval == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
         m_roach->has_vna_sweep = 1;
-        system("python /home/fc1user/sam_builds/sweep_list.py vna");
+        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
     } else if (retval == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
         m_roach->has_vna_sweep = 0;
@@ -3759,7 +3770,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
         m_roach->has_targ_sweep = 1;
         blast_info("ROACH%d, TARG sweep complete", m_roach->which);
         // creates file for downlinking sweep path to local machine
-        system("python /home/fc1user/sam_builds/sweep_list.py targ");
+        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
     } else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
@@ -4073,7 +4084,7 @@ void *roach_cmd_loop(void* ind)
             result = cal_sweep_amps(&roach_state_table[i]);
             if ((result == SWEEP_SUCCESS)) {
                 // Save the paths to last sweeps for data analysis
-                system("python /home/fc1user/sam_builds/sweep_list.py cal");
+                pyblast_system("python /home/fc1user/sam_builds/sweep_list.py cal");
                 blast_info("ROACH%d, CAL sweeps complete", i + 1);
             } else if ((result == SWEEP_INTERRUPT)) {
                 blast_info("ROACH%d, Cal sweep interrupted by blastcmd", i + 1);
