@@ -409,7 +409,7 @@ static void DoActuators(void)
   int delta;
   int i;
 
-  blast_info("starting DoActuators");
+  // blast_info("starting DoActuators");
   for (i = 0; i < 3; ++i) {
       EZBus_SetVel(&bus, id[i], CommandData.actbus.act_vel);
       EZBus_SetAccel(&bus, id[i], CommandData.actbus.act_acc);
@@ -516,9 +516,9 @@ static void InitializeShutter()
 {
   // Set move current and speed
   bputs(info, "InitializeShutter:...");
-  if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK)
-  // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK)
-    bputs(info, "InitializeShutter: Error initializing shutter");
+  // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK) // removing because has old settings
+  // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK) // removing because has old settings
+  // bputs(info, "InitializeShutter: Error initializing shutter");
   // CommandData.actbus.shutter_step = 4224;
   // CommandData.actbus.shutter_step_slow = 300;
   // CommandData.actbus.shutter_move_i = 100;
@@ -580,9 +580,9 @@ static void OpenCloseShutter()
 
 static void CloseShutter()
 {
-  char        cmd[80];
+  char cmd[80];
 
-  int  shutter_timeout = 0;
+  int shutter_timeout = 0;
 
   if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.in) != EZ_ERR_OK)
     bputs(info, "CloseShutter: 1. Error polling opto switch");
@@ -590,7 +590,7 @@ static void CloseShutter()
     ;
 
   // This code does new style closing of the shutter
-  // If the shutter is not closed, then turn of the shutter (it will fall
+  // If the shutter is not closed, then turn off the shutter (it will fall
   // open), drive against limit switch then close quickly.
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
     bputs(info, "CloseShutter: closing shutter...");
@@ -629,7 +629,7 @@ static void CloseSlowShutter()
   // blast_info("%d %d %d", shutter_data.in, shutter_data.in & SHUTTER_CLOSED_BIT,
   //        SHUTTER_CLOSED_BIT);
 
-  // This code does the old style clsing of the shutter
+  // This code does the old style closing of the shutter
   // Close shutter a little, check the opto, close the shutter a little,
   // check the opto... until shutter is closed
   if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
@@ -1594,7 +1594,7 @@ void *ActuatorBus(void *param)
 
         if (which_act_used & (0x1 << HWPRNUM)) {
             if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
-	        blast_info("calling DoHWPR"); // DEBUG PAW
+	        // blast_info("calling DoHWPR"); // DEBUG PAW
 	        DoHWPR(&bus);
                 actuators_init |= 0x1 << HWPRNUM;
             } else {

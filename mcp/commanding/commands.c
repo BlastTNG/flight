@@ -3213,9 +3213,10 @@ void InitCommandData()
 
     CommandData.actbus.shutter_step = 4224;
     CommandData.actbus.shutter_step_slow = 300;
-    CommandData.actbus.shutter_move_i = 50;
-    CommandData.actbus.shutter_vel = 20;
-    CommandData.actbus.shutter_acc = 1;
+    CommandData.actbus.shutter_move_i = 40;
+    CommandData.actbus.shutter_hold_i = 40;
+    CommandData.actbus.shutter_vel = 5000;
+    CommandData.actbus.shutter_acc = 1000;
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
