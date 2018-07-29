@@ -1138,6 +1138,15 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 if (system("/sbin/reboot") < 0) berror(fatal, "Commands: failed to reboot, dying\n");
             }
             break;
+
+        case pilot_oth_on:
+            CommandData.pilot_oth = 1;
+            blast_info("Switched to Pilot OTH\n");
+            break;
+        case pilot_oth_off:
+            CommandData.pilot_oth = 0;
+            blast_info("Switch to Pilot GND\n");
+            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -3006,6 +3015,7 @@ void InitCommandData()
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
+    CommandData.pilot_oth = 0;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
 

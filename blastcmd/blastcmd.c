@@ -61,6 +61,8 @@ double round(double x);
 #define INPUT_TTY "/dev/ttyCMD"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
+static char *pilot_oth_host[2] = { "109.233.44.229:41414", "109.233.44.229:41514" };
+
 char err_message[ERR_MESSAGE_LEN];
 
 int silent = 0;
@@ -772,6 +774,11 @@ int main(int argc, char *argv[]) {
           USAGE(0);
       } else
         USAGE(0);
+    } else if (strcmp(argv[i], "-oth") == 0) {
+      daemon_pilot[0] = pilot_oth_host[0];
+      daemon_pilot[1] = pilot_oth_host[1];
+      printf("Routing to OTH %s\n", pilot_oth_host[0]);
+      printf("Routing to OTH %s\n", pilot_oth_host[1]);
     } else if (strcmp(argv[i], "-fw") == 0) {
       if (i < (argc - 1)) {
         char *ptr;
