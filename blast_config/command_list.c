@@ -1227,7 +1227,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Cryostat valves move current (% max)", 0, 100, 'i', "VALVES_I"}
     }
   },
-//  <!-- XSC general -->
+
+  {COMMAND(valves_set_acc), "Set cryostat valves acceleration", GR_CRYO, 1,
+    {
+      {"Cryostat valves acceleration", 0, 6000, 'i', "VALVES_ACC"}
+    }
+  },
+
+  //  <!-- XSC general -->
 
 
 

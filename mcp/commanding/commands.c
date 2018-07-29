@@ -1716,6 +1716,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_current:
       CommandData.Cryo.valve_current = ivalues[0];
       break;
+    case valves_set_acc:
+      CommandData.Cryo.valve_acc = ivalues[0];
+      break;
 
 // .
     // XY STAGE
@@ -3226,6 +3229,7 @@ void InitCommandData()
     CommandData.Cryo.potvalve_open_threshold = 12000;
     CommandData.Cryo.valve_vel = 50000;
     CommandData.Cryo.valve_current = 75;
+    CommandData.Cryo.valve_acc = 16;
 
 
     /* hwpr positions separated by 22.5 degs.

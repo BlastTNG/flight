@@ -125,6 +125,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	valve_data[index].goal = CommandData.Cryo.valve_goals[index];
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
+	EZBus_SetAccel(bus, valve_data[index].addr, CommandData.Cryo.valve_acc);
 
 	// Debug PAW 04/24/2018
 	// blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
@@ -410,6 +411,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* velValveAddr;
 	static channel_t* currentValveAddr;
 	static channel_t* limsFillValveAddr;
+	static channel_t* accValveAddr;
 
 	static int firsttime = 1;
 
@@ -427,6 +429,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		velValveAddr = channels_find_by_name("valve_vel");
 		currentValveAddr = channels_find_by_name("valve_current");
 		limsFillValveAddr = channels_find_by_name("fillvalve_lims");
+		accValveAddr = channels_find_by_name("valve_acc");
 		firsttime = 0;
 	}
 
@@ -455,5 +458,6 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	if (valve_flag == 1) {
 		SET_UINT16(velValveAddr, CommandData.Cryo.valve_vel);
 		SET_UINT8(currentValveAddr, CommandData.Cryo.valve_current);
+		SET_UINT16(accValveAddr, CommandData.Cryo.valve_acc);
 	}
 }
