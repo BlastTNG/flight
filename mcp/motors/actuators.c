@@ -1458,11 +1458,11 @@ void *ActuatorBus(void *param)
         usleep(1000000);
         CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
-        // SetLockState(1); /* to ensure the NiC MCC knows the pin state */
+        SetLockState(1); /* to ensure the NiC MCC knows the pin state */
         // SyncDR(); /* get encoder absolute state from the ICC */
 
-        // CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
-        // CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
+        CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
+        CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
     }
     first_time = 1;
     while (!is_init) {
@@ -1631,17 +1631,6 @@ void *ActuatorBus(void *param)
 		DoCryovalves(&bus, actuators_init);
 	}
 
-/*	if (EZBus_IsUsable(&bus, id[POTVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[PUMPVALVE_NUM]) ||
-		EZBus_IsUsable(&bus, id[FILLVALVE_NUM])) {
-	    DoCryovalves(&bus, actuators_init);
-	    actuators_init |= 0x1 << POTVALVE_NUM;
-	} else {
-	    EZBus_ForceRepoll(&bus, id[POTVALVE_NUM]);
-	    all_ok = 0;
-	    actuators_init &= ~(0x1 << POTVALVE_NUM);
-	}
-*/
 	usleep(10000);
     }
 }

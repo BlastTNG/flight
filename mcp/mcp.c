@@ -297,6 +297,7 @@ void * lj_connection_handler(void *arg) {
     // order is CRYO1 CRYO2 OF1 OF2 OF3
     init_labjacks(1, 1, 1, 1, 1, 1);
     mult_labjack_networking_init(LABJACK_MULT_OF, 84, 1);
+    mult_labjack_networking_init(LABJACK_MULT_PSS, 84, 1);
     // 7 is for highbay labjack
     labjack_networking_init(7, 14, 1);
     initialize_labjack_commands(7);
@@ -306,6 +307,7 @@ void * lj_connection_handler(void *arg) {
     // initialize_labjack_commands(8);
     // switch to this thread for flight
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
+    mult_initialize_labjack_commands(5);
     ph_thread_join(cmd_thread, NULL);
 
     return NULL;
@@ -427,6 +429,8 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
+    outer_frame_200hz(1);
+    process_sun_sensors();
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
@@ -463,8 +467,8 @@ static void mcp_5hz_routines(void)
     watchdog_ping();
     // Tickles software WD 2.5x as fast as timeout
 
-    // update_sun_sensors();
-    read_5hz_acs();
+    update_sun_sensors();
+    // read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
     write_roach_channels_5hz();
@@ -516,7 +520,8 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(1);
+    outer_frame_1hz(1);
+    // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);
     // highbay will be rewritten as all on or off when box is complete

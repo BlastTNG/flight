@@ -181,6 +181,9 @@ enum multiCommand {
   highrate_bw,       pilot_bw,         biphase_bw,
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,
+  set_roach_df_chan_1,
+  set_roach_df_chan_2,
+  set_queue_execute,
 
   // t_gyro_gain,
   timeout,           vcap,
@@ -200,10 +203,9 @@ enum multiCommand {
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
-  potvalve_set_vel, potvalve_set_current,
-  potvalve_set_thresholds,
   actuators_set_used,
-  valves_set_vel, valves_set_current,
+  potvalve_set_thresholds,
+  potvalve_set_vel, potvalve_set_current, valves_set_vel, valves_set_current,
 
   xsc_is_new_window_period,
   xsc_offset,
