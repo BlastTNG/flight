@@ -61,11 +61,18 @@ extern int16_t InCharge;
 
 struct Fifo pilot_fifo = {0};
 
+char * pilot_oth_addr[2] = {"67.239.76.162", "67.239.76.163"};
+unsigned int pilot_oth_port[2] = {PILOT_PORT, PILOT_PORT+1};
+
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
+  struct BITSender pilotothsender[2] = {{0}};
   unsigned int fifosize = MAX(PILOT_MAX_SIZE, superframe->allframe_size);
   initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
+  for (int i = 0; i < 2; i++) {  
+    initBITSender(&pilotothsender[i], pilot_oth_addr[i], pilot_oth_port[i], 10, fifosize, PILOT_MAX_PACKET_SIZE);
+  }
   linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
 
