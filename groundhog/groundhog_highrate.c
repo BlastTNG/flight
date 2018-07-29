@@ -176,7 +176,7 @@ void highrate_receive(void *arg) {
   uint32_t ser = 0, prev_ser = 0;
 
   // packet sizes
-  unsigned int payload_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
+  unsigned int payload_packet_size = (HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1)*2;
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
   uint32_t buffer_size = ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize;
 
@@ -199,7 +199,7 @@ void highrate_receive(void *arg) {
   struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
-  uint8_t * gse_packet = calloc(1, 2048);
+  uint8_t * gse_packet = calloc(1, 4096);
   unsigned int gse_read = 0;
 
   struct CSBFHeader payload_packet_header = {0};
@@ -328,6 +328,11 @@ void highrate_receive(void *arg) {
           } else { // housekeeping packet
               // TODO(javier): deal with housekeeping packets
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
+              for (int i = 0; i < gse_packet_header.size; i++) {
+                if (i % 16 == 0) printf("\n%.04d: ", i/16);
+                printf("0x%.02x ", gse_packet[i]);
+              }
+              printf("\n");
               gse_read += gse_packet_header.size;
           }
       }
