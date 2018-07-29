@@ -1452,7 +1452,7 @@ void *ActuatorBus(void *param)
     bputs(startup, "ActuatorBus startup.");
 
     // Commented out beginning and end of while(!InCharge) for tests on fc1 when fc2 is InCharge
-    // while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("Not in charge.  Waiting.");
             first_time = 0;
@@ -1465,7 +1465,7 @@ void *ActuatorBus(void *param)
 
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
-    // }
+    }
 
     first_time = 1;
     while (!is_init) {
