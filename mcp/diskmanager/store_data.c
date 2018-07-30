@@ -65,7 +65,6 @@ static store_file_info_t storage_info_1hz = {0};
 static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
-static store_file_info_t storage_info_hk = {0};
 
 // #define MAX_NUM_FILENAME_CHARS 72
 typedef struct {
