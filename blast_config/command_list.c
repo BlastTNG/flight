@@ -258,10 +258,10 @@ struct scom scommands[xyzzy + 1] = {
   // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
   // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
 
-  {COMMAND(pot_valve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(pot_valve_off), "He4 pot valve off", GR_CRYO},
-  {COMMAND(pot_valve_open), "set He4 pot valve direction open", GR_CRYO},
-  {COMMAND(pot_valve_close), "set He4 pot valve direction close", GR_CRYO},
+  {COMMAND(potvalve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
+  {COMMAND(potvalve_off), "He4 pot valve off", GR_CRYO},
+  {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO},
+  {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
   {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
@@ -1263,8 +1263,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
       {"Closed threshold (1000-8000)", 1000, 8000, 'i', "POTVALVE_CLOSED_THRESH"},
-      {"Loose close threshold (5500-10000)", 5500, 10000, 'i', "POTVALVE_LCLOSED_THRESH"},
-      {"Open threshold (8500-16000)", 8500, 16000, 'i', "POTVALVE_OPEN_THRESH"},
+      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "POTVALVE_LCLOSED_THRESH"},
+      {"Open threshold (10100-16000)", 10200, 16000, 'i', "POTVALVE_OPEN_THRESH"},
     }
   },
 

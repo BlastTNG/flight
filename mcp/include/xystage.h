@@ -27,6 +27,8 @@
 #ifndef INCLUDE_XYSTAGE_H_
 #define INCLUDE_XYSTAGE_H_
 
+#define XYSTAGE_PREAMBLE "j2n2" // set microstep res, use limit switches
+
 void StoreStageBus(int index);
 void GoWait(struct ezbus *bus, int dest, int vel, int is_y);
 void Raster(struct ezbus *bus, int start, int end, int is_y, int y,

@@ -762,10 +762,10 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc)
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
 {
     char i;
-    blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
+    // blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
-	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
-	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
+	    // blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
+	    //           i, iWho(i), preamble, EZ_BUS_BUF_LEN);
         strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }

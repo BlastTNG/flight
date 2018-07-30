@@ -958,16 +958,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-	case pot_valve_open:
+	case potvalve_open:
             CommandData.Cryo.potvalve_goal = opened;
             break;
-        case pot_valve_close:
+        case potvalve_close:
             CommandData.Cryo.potvalve_goal = closed;
             break;
-        case pot_valve_on:
+        case potvalve_on:
             CommandData.Cryo.potvalve_on = 1;
             break;
-        case pot_valve_off:
+        case potvalve_off:
             CommandData.Cryo.potvalve_on = 0;
             break;
         case pump_valve_open:
@@ -2898,20 +2898,16 @@ void InitCommandData()
 
     // CommandData.Cryo.BDAHeat = 0;
 
-    CommandData.Cryo.potvalve_on = 0;
+    CommandData.Cryo.potvalve_on = 1;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
-    CommandData.Cryo.lhevalve_on = 0;
-    CommandData.Cryo.lvalve_open = 0;
-    CommandData.Cryo.lvalve_close =0;
-    CommandData.Cryo.lnvalve_on = 0;
-    CommandData.Cryo.potvalve_opencurrent = 25;
-    CommandData.Cryo.potvalve_closecurrent = 20;
-    CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 4200;
-    CommandData.Cryo.potvalve_lclosed_threshold = 6500;
-    CommandData.Cryo.potvalve_open_threshold = 10000;
+
+    // BLAST-Pol stuff
+    // CommandData.Cryo.lhevalve_on = 0;
+    // CommandData.Cryo.lvalve_open = 0;
+    // CommandData.Cryo.lvalve_close =0;
+    // CommandData.Cryo.lnvalve_on = 0;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
@@ -3271,29 +3267,46 @@ void InitCommandData()
     CommandData.actbus.sf_offset = 6667;
 
     CommandData.actbus.act_vel = 20;
-    CommandData.actbus.act_acc = 1;
-    CommandData.actbus.act_move_i = 85;
-    CommandData.actbus.act_hold_i = 40;
-    CommandData.actbus.act_tol = 2;
+    CommandData.actbus.act_acc = 500;
+    CommandData.actbus.act_move_i = 75;
+    CommandData.actbus.act_hold_i = 50;
+    CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;
     CommandData.actbus.lock_acc = 100;
     CommandData.actbus.lock_move_i = 50;
     CommandData.actbus.lock_hold_i = 0;
 
-    CommandData.hwpr.vel = 1600;
-    CommandData.hwpr.acc = 4;
+    CommandData.hwpr.vel = 20000;
+    CommandData.hwpr.acc = 1000;
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 
     CommandData.balance.vel = 1600;
-    CommandData.balance.acc = 4;
+    CommandData.balance.acc = 1000;
     CommandData.balance.move_i = 20;
     CommandData.balance.hold_i = 0;
 
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
     CommandData.balance.mode = bal_rest;
+
+    CommandData.actbus.shutter_step = 4224;
+    CommandData.actbus.shutter_step_slow = 300;
+    CommandData.actbus.shutter_move_i = 40;
+    CommandData.actbus.shutter_hold_i = 40;
+    CommandData.actbus.shutter_vel = 5000;
+    CommandData.actbus.shutter_acc = 1000;
+
+    CommandData.Cryo.potvalve_opencurrent = 75;
+    CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_vel = 50000;
+    CommandData.Cryo.potvalve_closed_threshold = 6000;
+    CommandData.Cryo.potvalve_lclosed_threshold = 8000;
+    CommandData.Cryo.potvalve_open_threshold = 12000;
+    CommandData.Cryo.valve_vel = 50000;
+    CommandData.Cryo.valve_current = 75;
+
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */

@@ -618,6 +618,10 @@ struct CommandDataStruct {
     int shutter_step;
     int shutter_step_slow;
     int shutter_out;
+    int shutter_move_i;
+    int shutter_hold_i;
+    int shutter_vel;
+    int shutter_acc;
 
     uint32_t  shutter_goal;
   } actbus;
