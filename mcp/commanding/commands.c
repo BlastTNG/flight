@@ -1187,6 +1187,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].do_sweeps = 0;
             }
+            break;
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
