@@ -86,7 +86,7 @@ enum singleCommand {
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
   xsc0_veto,        xsc0_allow,
-  xsc1_veto,        xsc1_allow,
+  xsc1_veto,        xsc1_allow,         dgps_veto,        dgps_allow,
   mag_allow_fc1,      mag_veto_fc1,           mag_allow_fc2,        mag_veto_fc2,
   pin_in,  ramp,               reset_trims,
   stop,             pss_veto,		    trim_xsc0_to_xsc1,

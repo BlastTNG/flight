@@ -767,13 +767,14 @@ blast_info("Finished initializing Beaglebones..."); */
 
 
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+
+  // This is our (BLAST) GPS, used for timing and position.
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
-
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
@@ -783,6 +784,9 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  initialize the data sharing server
   data_sharing_init(linklist_array);
+
+// Get attitude and position information from the CSBF GPS
+  initialize_csbf_gps_monitor();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD

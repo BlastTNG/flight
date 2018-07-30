@@ -27,6 +27,8 @@
 #ifndef INCLUDE_GPS_H_
 #define INCLUDE_GPS_H_
 
+#define GPS_MINS_TO_DEG (1.0/60.0)
+
 struct GPSInfoStruct {
   double latitude; // [deg] +ve north
   double longitude; // [deg] +ve east
@@ -39,7 +41,8 @@ struct GPSInfoStruct {
 };
 
 extern struct GPSInfoStruct GPSData;
-
+extern struct GPSInfoStruct CSBFGPSData;
+extern struct DGPSAttStruct CSBFGPSAz;
 void * GPSMonitor(void *);
 
 #endif

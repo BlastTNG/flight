@@ -489,6 +489,7 @@ struct CommandDataStruct {
   unsigned char use_xsc1;
   unsigned char use_mag1;
   unsigned char use_mag2;
+  unsigned char use_dgps;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -501,6 +502,7 @@ struct CommandDataStruct {
   double null_az_trim;
   double mag_az_trim[2];
   double pss_az_trim;
+  double dgps_az_trim;
 
   int autotrim_enable;
   double autotrim_thresh;    // in sc sigma
