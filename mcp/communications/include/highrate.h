@@ -22,11 +22,9 @@
 #ifndef INCLUDE_HIGHRATE_H
 #define INCLUDE_HIGHRATE_H
 
-// TODO(javier): make allframe period commandable
 #define HIGHRATE_MAX_SIZE 1150000
 #define HIGHRATE_PORT "/dev/ttyHighRate"
 #define DIRECT_PORT "/dev/ttyDirect"
-#define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
 
 #define CSBF_HEADER_SIZE 6
 #define HIGHRATE_DATA_PACKET_SIZE 2034 // 11500 

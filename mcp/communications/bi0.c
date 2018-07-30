@@ -512,8 +512,9 @@ void biphase_writer(void * arg)
     // setup linklists
     linklist_t ** ll_array = arg;
     linklist_t * ll = NULL, * ll_old = NULL;
-    int allframe_count = 0;
-    uint32_t bandwidth = 0, transmit_size = 0;
+    unsigned int allframe_bytes = 0; 
+    double bandwidth = 0; 
+    uint32_t transmit_size = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE); 
 
     // BI0-LOS variables
@@ -581,29 +582,30 @@ void biphase_writer(void * arg)
         ll_old = ll;
 
         // get the current bandwidth
+        if (bandwidth != CommandData.biphase_bw) allframe_bytes = 0;
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
-            /* commented out allframes because biphase nominally doesn't need it */
             // send allframe if necessary
-            // if (!allframe_count) {
-            //     transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
-            // } else {
+            if (allframe_bytes >= bandwidth) {
+                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
+                allframe_bytes = 0;
+            } else {
                 // compress the linklist to compbuffer
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
                 decrementFifo(&bi0_fifo);
-                transmit_size = ll->blk_size;  
-            // }
+
+								// bandwidth limit; frames are 1 Hz, so bandwidth == size
+								transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
+                allframe_bytes += bandwidth-transmit_size;
+            }
 
             // randomized NRZ
             // if (CommandData.biphase_rnrz) {
             //     randomized_buffer(compbuffer, transmit_size, BI0LOS_RNRZ_SEED);
             // }
-
-            // bandwidth limit; frames are 1 Hz, so bandwidth == size
-            transmit_size = MIN(transmit_size, bandwidth);
 
             /*
             // send of BI0-LOS
@@ -637,7 +639,6 @@ void biphase_writer(void * arg)
                 usleep(1000);
             }
             fifo_free = 1; // unlock the fifo for the writer thread
-            allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);
         }

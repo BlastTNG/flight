@@ -1236,7 +1236,7 @@ static inline void copysvalue(char* dest, const char* src)
 void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-  int i, j, k;
+  int i;
   int is_new;
 
 //   Update CommandData struct with new info
@@ -1920,17 +1920,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case highrate_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
+      CommandData.highrate_allframe_fraction = rvalues[1];
+      blast_info("Changed highrate bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case pilot_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
+      CommandData.pilot_allframe_fraction = rvalues[1];
+      blast_info("Changed pilot bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case biphase_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+      CommandData.biphase_allframe_fraction = rvalues[1];
+      blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
@@ -3073,9 +3076,15 @@ void InitCommandData()
     CommandData.at_float = 0;
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
+
     CommandData.highrate_bw = 6000/8.0; /* Bps */
     CommandData.pilot_bw = 8000000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
+
+    CommandData.highrate_allframe_fraction = 0.1;
+    CommandData.pilot_allframe_fraction = 0.1;
+    CommandData.biphase_allframe_fraction = 0.1;
+
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;

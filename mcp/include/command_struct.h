@@ -445,9 +445,15 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
+
   uint32_t highrate_bw;
   uint32_t pilot_bw;
   uint32_t biphase_bw;
+
+  float highrate_allframe_fraction;
+  float pilot_allframe_fraction;
+  float biphase_allframe_fraction;
+
   uint32_t biphase_clk_speed;
   bool biphase_rnrz;
   bool highrate_through_tdrss;
