@@ -32,5 +32,8 @@ void biphase_reverse_bytes(const uint16_t *out, uint32_t length, uint8_t *bit_do
 void reverse_bits(const size_t bytes_to_write, const uint16_t *msb_data, uint16_t *lsb_data_out);
 int setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction);
 
+void synclink_close(void);
+int get_synclink_fd(void);
+int setup_synclink();
 
 #endif /* INCLUDE_BIPHASE_INTERFACE */

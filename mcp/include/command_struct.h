@@ -167,6 +167,8 @@ struct PivGainStruct {
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
 
+#define ROACH_TLM_IQDF 1
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -335,8 +337,9 @@ typedef struct udp_roach
 typedef struct roach
 {
     unsigned int new_state;
-    unsigned int change_state;
-    unsigned int df_calc;
+    unsigned int change_roach_state;
+    unsigned int get_roach_state;
+    unsigned int do_df_calc;
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
@@ -359,6 +362,15 @@ typedef struct roach
     unsigned int refit_res_freqs;
     unsigned int change_tone_amps;
     unsigned int do_master_chop;
+    unsigned int load_new_freqs;
+    unsigned int calc_ref_params;
+    unsigned int do_check_retune;
+    unsigned int do_retune;
+    unsigned int set_lo;
+    unsigned int find_kids_default;
+    unsigned int change_targ_freq;
+    unsigned int change_tone_phase;
+    unsigned int change_tone_freq;
 } roach_status_t;
 
 typedef struct roach_params
@@ -376,6 +388,10 @@ typedef struct roach_params
     double npoints;
     double ncycles;
     double num_sec;
+    double lo_offset;
+    double delta_amp;
+    double delta_phase;
+    double freq_offset;
 } roach_params_t;
 
 // Ethercat controller/device commands
@@ -429,9 +445,15 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
+
   uint32_t highrate_bw;
   uint32_t pilot_bw;
   uint32_t biphase_bw;
+
+  float highrate_allframe_fraction;
+  float pilot_allframe_fraction;
+  float biphase_allframe_fraction;
+
   uint32_t biphase_clk_speed;
   bool biphase_rnrz;
   bool highrate_through_tdrss;
@@ -440,6 +462,7 @@ struct CommandDataStruct {
   char highrate_linklist_name[32];
   uint32_t pilot_oth;
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
+  char roach_tlm_mode;
 
   enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 

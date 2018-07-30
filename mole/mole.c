@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
+  unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
 
   // initialization variables
   uint32_t req_serial = 0;
@@ -141,6 +142,12 @@ int main(int argc, char *argv[]) {
       client_mode = 0;
     } else if (strcmp(argv[i], "-w") == 0) { // rewind value 
       rewind = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-v") == 0) { // verbose mode
+      ll_flags |= LL_VERBOSE;
+    } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
+      ll_flags |= LL_IGNORE_CHECKSUM;
+    } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
+      ll_flags &= ~LL_USE_BIG_ENDIAN;
     } else {
       printf("Unrecognized option \"%s\"\n", argv[i]);
       exit(1);
@@ -174,7 +181,7 @@ int main(int argc, char *argv[]) {
 				// open linklist dirfile
 				sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
-				ll_dirfile = open_linklist_dirfile(filename, linklist);
+				ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_flags);
 				unlink(symdir_name);
 				symlink(filename, symdir_name);  
 

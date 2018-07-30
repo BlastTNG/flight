@@ -354,9 +354,8 @@ void DoPotValve(struct ezbus* bus)
 	} // end if(do_move)
 
 
-
-	blast_info("pos: %d, current: %d, goal: %d, moving: %d, tight: %d",
-		potvalve_data.adc[0], potvalve_data.state, potvalve_data.goal, potvalve_data.moving, tight_flag); // DEBUG PAW
+	// blast_info("pos: %d, current: %d, goal: %d, moving: %d, tight: %d",
+	// potvalve_data.adc[0], potvalve_data.state, potvalve_data.goal, potvalve_data.moving, tight_flag); // DEBUG PAW
 
 	usleep(10000);
 }

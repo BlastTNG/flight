@@ -1,5 +1,4 @@
 # Timestreams for noise PSD
-# No downsampling or compression specified
 
 kidA_roachN NONE 61
 kidB_roachN NONE 61

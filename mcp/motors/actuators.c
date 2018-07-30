@@ -1451,7 +1451,6 @@ void *ActuatorBus(void *param)
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
 
-    // Commented out beginning and end of while(!InCharge) for tests on fc1 when fc2 is InCharge
     while (!InCharge) {
         if (first_time) {
             blast_info("Not in charge.  Waiting.");
@@ -1461,7 +1460,7 @@ void *ActuatorBus(void *param)
         CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
         SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-        SyncDR(); /* get encoder absolute state from the ICC */
+        // SyncDR(); /* get encoder absolute state from the ICC */
 
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
@@ -1622,7 +1621,7 @@ void *ActuatorBus(void *param)
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {
-	    	    blast_info("forcing repoll of valves"); // DEBUG PAW
+	    	    // blast_info("forcing repoll of valves"); // DEBUG PAW
 		    EZBus_ForceRepoll(&bus, id[valve_arr[i]]);
 		    all_ok = 0;
 		    actuators_init &= ~(0x1 << valve_arr[i]);
