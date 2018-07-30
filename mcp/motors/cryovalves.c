@@ -144,6 +144,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	if ((valve_data[index].goal == opened) && (valve_data[index].limit != 11)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
+			EZBus_Stop(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
 			EZBus_Release(bus, valve_data[index].addr);
 			blast_info("Starting to open Valve %d", index); // debug PAW
@@ -153,6 +154,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	} else if ((valve_data[index].goal == closed) && (valve_data[index].limit != 7)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
+			EZBus_Stop(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
 			EZBus_Release(bus, valve_data[index].addr);
                         blast_info("Starting to close Valve %d", index); // debug PAW
