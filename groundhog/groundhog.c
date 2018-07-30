@@ -31,6 +31,7 @@
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
+int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
 
@@ -113,6 +114,7 @@ int main(int argc, char * argv[]) {
     else if (strcmp(argv[i], "-bi0_only") == 0) highrate_on = pilot_on = 0;
     else if (strcmp(argv[i], "-highrate_only") == 0) pilot_on = bi0_on = 0;
     else if (strcmp(argv[i], "-d") == 0) daemon = 1;
+    else if (strcmp(argv[i], "-quiet") == 0) verbose = 0;
     else {
       blast_err("Unrecognized option \"%s\"", argv[i]);
       exit(1);

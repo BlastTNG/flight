@@ -64,9 +64,7 @@ void udp_receive(void *arg) {
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
-        if ((bad_serial_count % 60) == 0) {
-          blast_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
-        }
+        if (verbose) blast_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
         bad_serial_count++;
       } else {
         bad_serial_count = 0;
@@ -102,8 +100,8 @@ void udp_receive(void *arg) {
       // blast_info("[%s] Received an allframe :)\n", udpsetup->name);
       memcpy(local_allframe, compbuffer, superframe->allframe_size);
     } else {
-      if ((good_serial_count % 60) == 0) {
-        blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+      if ((good_serial_count % 1) == 0) {
+        if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
       }
       good_serial_count++;
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
