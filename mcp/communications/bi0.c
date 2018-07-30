@@ -582,7 +582,8 @@ void biphase_writer(void * arg)
         ll_old = ll;
 
         // get the current bandwidth
-        if (bandwidth != CommandData.biphase_bw) allframe_bytes = 0;
+        if ((bandwidth != CommandData.biphase_bw) ||
+             (CommandData.biphase_allframe_fraction < 0.001)) allframe_bytes = 0;
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so

@@ -93,7 +93,8 @@ void pilot_compress_and_send(void *arg) {
     ll_old = ll;
 
     // get the current bandwidth
-    if (bandwidth != CommandData.pilot_bw) allframe_bytes = 0;
+    if ((bandwidth != CommandData.pilot_bw) ||
+         (CommandData.pilot_allframe_fraction < 0.001)) allframe_bytes = 0;
     bandwidth = CommandData.pilot_bw;
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
