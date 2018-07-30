@@ -416,20 +416,20 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static int firsttime = 1;
 
 	if (firsttime) {
-		posPotValveAddr = channels_find_by_name("potvalve_pos");
-		statePotValveAddr = channels_find_by_name("potvalve_state");
-		velPotValveAddr = channels_find_by_name("potvalve_vel");
-		openCurPotValveAddr = channels_find_by_name("potvalve_I_open");
-		closeCurPotValveAddr = channels_find_by_name("potvalve_I_close");
-		closedThresholdPotValveAddr = channels_find_by_name("potvalve_closed_thresh");
-	        lclosedThresholdPotValveAddr = channels_find_by_name("potvalve_lclosed_thresh");
-	        openThresholdPotValveAddr = channels_find_by_name("potvalve_open_thresh");
+		posPotValveAddr = channels_find_by_name("pos_potvalve");
+		statePotValveAddr = channels_find_by_name("state_potvalve");
+		velPotValveAddr = channels_find_by_name("vel_potvalve");
+		openCurPotValveAddr = channels_find_by_name("I_open_potvalve");
+		closeCurPotValveAddr = channels_find_by_name("I_close_potvalve");
+		closedThresholdPotValveAddr = channels_find_by_name("thresh_closed_potvalve");
+	        lclosedThresholdPotValveAddr = channels_find_by_name("thresh_lclosed_potvalve");
+	        openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
 
-		limsPumpValveAddr = channels_find_by_name("pumpvalve_lims");
-		velValveAddr = channels_find_by_name("valve_vel");
-		currentValveAddr = channels_find_by_name("valve_current");
-		limsFillValveAddr = channels_find_by_name("fillvalve_lims");
-		accValveAddr = channels_find_by_name("valve_acc");
+		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
+		velValveAddr = channels_find_by_name("vel_valve");
+		currentValveAddr = channels_find_by_name("current_valve");
+		limsFillValveAddr = channels_find_by_name("lims_fillvalve");
+		accValveAddr = channels_find_by_name("acc_valve");
 		firsttime = 0;
 	}
 
