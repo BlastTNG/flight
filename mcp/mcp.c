@@ -590,6 +590,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
   ph_thread_t *gps_thread = NULL;
+  ph_thread_t *dgps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -771,6 +772,9 @@ blast_info("Finished initializing Beaglebones..."); */
   // This is our (BLAST) GPS, used for timing and position.
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
+  // This is the DPGS we get over serial from CSBF
+  dgps_thread = ph_thread_spawn(DGPSMonitor, NULL);
+
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
@@ -786,7 +790,7 @@ blast_info("Finished initializing Beaglebones..."); */
   data_sharing_init(linklist_array);
 
 // Get attitude and position information from the CSBF GPS
-  initialize_csbf_gps_monitor();
+//  initialize_csbf_gps_monitor();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD

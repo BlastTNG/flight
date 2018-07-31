@@ -28,6 +28,10 @@
 #define INCLUDE_GPS_H_
 
 #define GPS_MINS_TO_DEG (1.0/60.0)
+typedef enum {
+    DGPS_WAIT_FOR_START = 0,
+    DGPS_READING_PKT,
+} e_dgps_read_status;
 
 struct GPSInfoStruct {
   double latitude; // [deg] +ve north
@@ -40,9 +44,13 @@ struct GPSInfoStruct {
   int reading;
 };
 
+// in gps.c
 extern struct GPSInfoStruct GPSData;
-extern struct GPSInfoStruct CSBFGPSData;
-extern struct DGPSAttStruct CSBFGPSAz;
 void * GPSMonitor(void *);
+
+// in csbf_dgps.c
+extern struct DGPSAttStruct CSBFGPSAz;
+extern struct GPSInfoStruct CSBFGPSData;
+void * DGPSMonitor(void *);
 
 #endif

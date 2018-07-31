@@ -31,6 +31,10 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pthread.h>
 
 #include <blast.h>
 #include <comms_serial.h>
@@ -50,48 +54,74 @@ struct GPSInfoStruct CSBFGPSData = {.longitude = 0.0};
 // should we write it to the frame?
 time_t csbf_gps_time;
 
+int csbf_setserial(const char *input_tty)
+{
+  int fd;
+  struct termios term;
+
+  blast_info("Connecting to sip port %s...", input_tty);
+
+  if ((fd = open(input_tty, O_RDWR)) < 0) {
+    blast_err("Unable to open serial port");
+    return -1;
+  }
+  if (tcgetattr(fd, &term)) {
+    blast_err("Unable to get serial device attributes");
+    return -1;
+  }
+
+  term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+  term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+  term.c_iflag |= INPCK;
+  term.c_cc[VMIN] = 0;
+  term.c_cc[VTIME] = 0;
+
+  term.c_cflag &= ~(CSTOPB | CSIZE);
+  term.c_oflag &= ~(OPOST);
+  term.c_cflag |= CS8;
+
+  if (cfsetospeed(&term, B19200)) {          /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial output speed");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
+
+  if (cfsetispeed(&term, B19200)) {         /*  <======= SET THE SPEED HERE */
+    blast_err("Error setting serial input speed");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
+
+  if (tcsetattr(fd, TCSANOW, &term)) {
+    blast_err("Unable to set serial attributes");
+    if (fd >= 0) close(fd);
+    return -1;
+  }
+  return fd;
+}
+
 static bool csbf_gps_verify_checksum(const char *m_buf, size_t m_linelen)
 {
     uint8_t checksum = 0;
-    uint8_t recv_checksum = (uint8_t) strtol(&(m_buf[m_linelen - 3]), (char **)NULL, 16);
+    uint8_t recv_checksum = (uint8_t) strtol(&(m_buf[m_linelen - 2]), (char **)NULL, 16);
 
     // Start from index 1 because the first character ($) should not be included in the checksum.s
     for (size_t i = 1; i < m_linelen && m_buf[i] != '*'; i++) {
         checksum ^= m_buf[i];
     }
     if (recv_checksum != checksum) {
-        blast_info("Received invalid checksum from CSBF GPS Data!");
+        blast_info("Received invalid checksum from CSBF GPS Data! Expecting = %2x", recv_checksum);
         return false;
     }
     return true;
 }
 
-// static void process_gppat(const char *m_data) {
-//     if (sscanf(m_data,
-//             "$GPPAT,"
-//                     "%*f,"      // UTC hhmmss.ss
-//                     "%*f,%*c,"  // Latitude ddmm.mmmmm N/S
-//                     "%*f,%*c,"  // Longitude dddmm.mmmmm E/W
-//                     "%*f,"      // Altitude
-//                     "%lf,"      // Heading
-//                     "%lf,"      // Pitch
-//                     "%lf,"      // Roll
-//                     "%lf,"      // MRMS
-//                     "%lf,"      // BRMS
-//                     "%d",       // Reset Flag
-//             &csbf_gps_att[csbf_dgpsatt_index].az, &csbf_gps_att[csbf_dgpsatt_index].pitch,
-//             &csbf_gps_att[csbf_dgpsatt_index].roll, &csbf_gps_att[csbf_dgpsatt_index].mrms,
-//             &csbf_gps_att[csbf_dgpsatt_index].brms, &csbf_gps_att[csbf_dgpsatt_index].att_ok) == 6) {
-//         csbf_gps_att[csbf_dgpsatt_index].att_ok ^= 1;  // GPS flag 0 = good, but we're using opposite
-//         csbf_dgpsatt_index = INC_INDEX(csbf_dgpsatt_index);
-//     }
-// }
-
 static void process_gngga(const char *m_data) {
     char lat_ns;
     char lon_ew;
-    double lat, lat_mm;
-    double lon, lon_mm;
+    int lat, lon;
+    double lat_mm;
+    double lon_mm;
     float age_gps;
     if (sscanf(m_data,
             "$GNGGA,"
@@ -109,13 +139,13 @@ static void process_gngga(const char *m_data) {
             &lon, &lon_mm, &lon_ew,
             &(CSBFGPSData.quality), &(CSBFGPSData.num_sat),
             &(CSBFGPSData.altitude), &age_gps) == 10) {
-            CSBFGPSData.latitude = lat + lat_mm*GPS_MINS_TO_DEG;
-            CSBFGPSData.longitude = lon + lon_mm*GPS_MINS_TO_DEG;
+            CSBFGPSData.latitude = (double)lat + lat_mm*GPS_MINS_TO_DEG;
+            CSBFGPSData.longitude = (double)lon + lon_mm*GPS_MINS_TO_DEG;
             if (lat_ns == 'S') CSBFGPSData.latitude *= -1.0;
             if (lon_ew == 'W') CSBFGPSData.longitude *= -1.0;
-        blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
-                  CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
-                  CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+//         blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
+//                   CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
+//                   CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
         CSBFGPSData.isnew = 1;
     } else {
         blast_info("Read error: %s", m_data);
@@ -136,7 +166,7 @@ static void process_gnhdt(const char *m_data)
             "%lf," // Heading (deg) x.x
             "%*c,", // True
             &CSBFGPSAz.az);
-            blast_info("Read heading = %lf", CSBFGPSAz.az);
+//             blast_info("Read heading = %lf", CSBFGPSAz.az);
     }
 }
 
@@ -163,19 +193,23 @@ static void process_gnzda(const char *m_data)
 
     ts.tm_isdst = 0;
     ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
-    blast_info("Read GPSZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
-                  ts.tm_hour, ts.tm_min, ts.tm_sec,
-                  ts.tm_mday, ts.tm_mon, ts.tm_year);
+//     blast_info("Read GPSZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
+//                   ts.tm_hour, ts.tm_min, ts.tm_sec,
+//                   ts.tm_mday, ts.tm_mon, ts.tm_year);
 
     csbf_gps_time = mktime(&ts);
 }
 
-static void csbf_gps_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
+void * DGPSMonitor(void * arg)
 {
-    ph_unused_parameter(why);
-    ph_unused_parameter(m_data);
-    size_t line_len = 0;
-
+    char tname[6];
+    int get_serial_fd = 1;
+    int tty_fd;
+    int timer = 0;
+    unsigned char buf;
+    char indata[128];
+    uint16_t i_char = 0;
+    e_dgps_read_status readstage = DGPS_WAIT_FOR_START;
     typedef struct
     {
         void (*proc)(const char*);
@@ -186,42 +220,46 @@ static void csbf_gps_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_
                                   { process_gnhdt, "$GNHDT," }, // date and time
                                   { process_gnzda, "$GNZDA," }, // heading
                                   { NULL, "" } };
+    snprintf(tname, sizeof(tname), "DGPS");
+    nameThread(tname);
 
-    char *bufp;
-    ph_buf_t *buf;
-
-    if (!(buf = ph_serial_read_record(serial, "\r", 1))) return;
-
-    bufp = (char*) ph_buf_mem(buf);
-    line_len = ph_buf_len(buf);
-
-    /// Replace the terminating '\r' with a NULL for C-string functions.
-    bufp[line_len - 1] = 0;
-//    blast_info("%s, line_len = %u", bufp, line_len);
-
-    while (*bufp != '$') {
-        /// This is a partial string case where we missed the starting '$'
-        if (!--line_len) return;
-        bufp++;
+    for (;;) {
+        // wait for a valid file descriptor
+    		while (get_serial_fd) {
+            if ((tty_fd = csbf_setserial(CSBFGPSCOM)) >= 0) {
+                break;
+            }
+            sleep(5);
+        }
+        get_serial_fd = 0;
+        /* Loop until data come in */
+        while (read(tty_fd, &buf, 1) <= 0) {
+            timer++;
+        }
+        if (get_serial_fd) break;
+        if (buf == '$') {
+            readstage = DGPS_READING_PKT;
+            i_char = 0;
+        }
+        if (readstage == DGPS_WAIT_FOR_START) continue; // still haven't found start byte
+        if (i_char >= 128) {
+            blast_err("Read from DGPS a packet longer than the buffer. %s", indata);
+            readstage = DGPS_WAIT_FOR_START;
+            continue;
+        }
+        indata[i_char] = buf;
+        if (buf == '\r') {
+            indata[i_char] = '\0'; // Terminate with '\0' instead of '\r'
+//            blast_info("Finished reading packet %s", indata);
+            if (!csbf_gps_verify_checksum(indata, i_char)) {
+                blast_err("checksum failed");
+            } else {
+                for (nmea_handler_t *handler = handlers; handler->proc; handler++) {
+                    if (!strncmp(indata, handler->str, (int) strlen(handler->str)-1)) handler->proc(indata);
+                }
+            }
+        }
+        i_char++;
+        usleep(10000); /* sleep for 10ms */
     }
-
-    if (!csbf_gps_verify_checksum(bufp, line_len)) return;
-    for (nmea_handler_t *handler = handlers; handler->proc; handler++) {
-//        blast_info("buffer: %s, handler: %s (len: %d)", bufp, handler->str, strlen(handler->str)-1);
-        if (!strncmp(bufp, handler->str, strlen(handler->str)-1)) handler->proc(bufp);
-    }
-    ph_buf_delref(buf);
-}
-
-void initialize_csbf_gps_monitor(void)
-{
-    if (csbf_gps_comm) ph_serial_free(csbf_gps_comm);
-    csbf_gps_comm = ph_serial_open(CSBFGPSCOM, NULL, NULL);
-
-    csbf_gps_comm->callback = csbf_gps_process_data;
-
-    ph_serial_setspeed(csbf_gps_comm, B19200);
-    ph_serial_enable(csbf_gps_comm, true);
-
-    blast_startup("Initialized csbf gps status monitor");
 }
