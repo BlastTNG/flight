@@ -493,6 +493,7 @@ static void mcp_1hz_routines(void)
     relays(3);
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
+    store_1hz_acs();
     // thermal_vac();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();

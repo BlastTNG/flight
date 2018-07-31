@@ -39,6 +39,7 @@
 #include <pointing_struct.h>
 #include <dsp1760.h>
 #include "sip.h"
+#include "gps.h"
 #include "xsc_network.h"
 
 static const float gy_inv[64][3][6] =
@@ -1447,12 +1448,27 @@ void store_1hz_acs(void)
     static int firsttime = 1;
     static channel_t *OffsetIFrollDGPSGYAddr;
     static channel_t *OffsetIFyawDGPSGYAddr;
+    static channel_t *latDGPSAddr;
+    static channel_t *lonDGPSAddr;
+    static channel_t *altDGPSAddr;
+    static channel_t *qualityDGPSAddr;
+    static channel_t *numSatDGPSAddr;
     if (firsttime) {
         OffsetIFrollDGPSGYAddr = channels_find_by_name("offset_ifrolldgps_gy");
         OffsetIFyawDGPSGYAddr = channels_find_by_name("offset_ifyawdgps_gy");
+        latDGPSAddr = channels_find_by_name("lat_dgps");
+        lonDGPSAddr = channels_find_by_name("lon_dgps");
+        altDGPSAddr = channels_find_by_name("alt_dgps");
+        qualityDGPSAddr = channels_find_by_name("quality_dgps");
+        numSatDGPSAddr = channels_find_by_name("num_sat_dgps");
         firsttime = 0;
     }
     i_point = GETREADINDEX(point_index);
     SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
     SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifrolldgps_gy);
+    SET_SCALED_VALUE(latDGPSAddr, CSBFGPSData.latitude);
+    SET_SCALED_VALUE(lonDGPSAddr, CSBFGPSData.longitude);
+    SET_SCALED_VALUE(altDGPSAddr, CSBFGPSData.altitude);
+    SET_INT8(qualityDGPSAddr, CSBFGPSData.quality);
+    SET_INT8(numSatDGPSAddr, CSBFGPSData.num_sat);
 }
