@@ -790,6 +790,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case pss_veto:
             CommandData.use_pss = 0;
             break;
+        case dgps_veto:
+            CommandData.use_dgps = 0;
+            break;
         case xsc0_veto:
             CommandData.use_xsc0 = 0;
             break;
@@ -814,6 +817,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
         case pss_allow:
             CommandData.use_pss = 1;
+            break;
+        case dgps_allow:
+            CommandData.use_dgps = 1;
             break;
         case xsc0_allow:
             CommandData.use_xsc0 = 1;
@@ -3151,6 +3157,7 @@ void InitCommandData()
     CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
+    CommandData.use_dgps = 0;
     CommandData.use_xsc0 = 1;
     CommandData.use_xsc1 = 1;
     CommandData.use_mag1 = 1;
@@ -3166,6 +3173,7 @@ void InitCommandData()
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
+    CommandData.dgps_az_trim = 0;
 
     CommandData.autotrim_enable = 0;
     CommandData.autotrim_thresh = 0.05;

@@ -526,6 +526,7 @@ static void mcp_1hz_routines(void)
     relays(3);
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
+    store_1hz_acs();
     // thermal_vac();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
@@ -623,6 +624,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
   ph_thread_t *gps_thread = NULL;
+  ph_thread_t *dgps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -805,13 +807,17 @@ blast_info("Finished initializing Beaglebones..."); */
 
 
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+
+  // This is our (BLAST) GPS, used for timing and position.
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
+
+  // This is the DPGS we get over serial from CSBF
+  dgps_thread = ph_thread_spawn(DGPSMonitor, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
-
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
@@ -821,6 +827,9 @@ blast_info("Finished initializing Beaglebones..."); */
 
 //  initialize the data sharing server
   data_sharing_init(linklist_array);
+
+// Get attitude and position information from the CSBF GPS
+//  initialize_csbf_gps_monitor();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
 #ifdef USE_XY_THREAD

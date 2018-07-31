@@ -39,6 +39,7 @@
 #include <pointing_struct.h>
 #include <dsp1760.h>
 #include "sip.h"
+#include "gps.h"
 #include "xsc_network.h"
 
 static const float gy_inv[64][3][6] =
@@ -1097,6 +1098,9 @@ void store_5hz_acs(void)
     static channel_t* elClinAddr;
     static channel_t* elLutClinAddr;
     static channel_t* sigmaClinAddr;
+    static channel_t* DGPSAzAddr;
+    static channel_t* DGPSSigmaAzAddr;
+    static channel_t *DGPSRawAzAddr;
 
     /* trim fields */
     static channel_t *trimClinAddr;
@@ -1106,6 +1110,7 @@ void store_5hz_acs(void)
     static channel_t *trimMagNAddr;
     static channel_t *trimMagSAddr;
     static channel_t *trimPssAddr;
+    static channel_t *trimDGPSAddr;
 
     static channel_t *threshAtrimAddr;
     static channel_t *timeAtrimAddr;
@@ -1253,10 +1258,14 @@ void store_5hz_acs(void)
         trimMagNAddr = channels_find_by_name("trim_mag1");
         trimMagSAddr = channels_find_by_name("trim_mag2");
         trimPssAddr = channels_find_by_name("trim_pss");
+        trimDGPSAddr = channels_find_by_name("trim_dgps");
 
         threshAtrimAddr = channels_find_by_name("thresh_atrim");
         timeAtrimAddr = channels_find_by_name("time_atrim");
         rateAtrimAddr = channels_find_by_name("rate_atrim");
+        DGPSRawAzAddr = channels_find_by_name("az_raw_dgps");
+        DGPSAzAddr = channels_find_by_name("az_dgps");
+        DGPSSigmaAzAddr = channels_find_by_name("sigma_dgps");
     }
 
     i_point = GETREADINDEX(point_index);
@@ -1357,6 +1366,7 @@ void store_5hz_acs(void)
 
     SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
     SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim);
+    SET_SCALED_VALUE(trimDGPSAddr, CommandData.dgps_az_trim);
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
@@ -1397,6 +1407,10 @@ void store_5hz_acs(void)
     else
     	SET_VALUE(xPAddr, (int) (CommandData.pointing_mode.X * H2I));
 
+    SET_SCALED_VALUE(DGPSRawAzAddr, PointingData[i_point].dgps_az_raw);
+    SET_SCALED_VALUE(DGPSAzAddr, PointingData[i_point].dgps_az + CommandData.dgps_az_trim);
+    SET_SCALED_VALUE(DGPSSigmaAzAddr, PointingData[i_point].dgps_sigma);
+
     SET_SCALED_VALUE(yPAddr, CommandData.pointing_mode.Y);
     SET_SCALED_VALUE(velAzPAddr, CommandData.pointing_mode.vaz);
     SET_SCALED_VALUE(velElPAddr, CommandData.pointing_mode.vel);
@@ -1412,7 +1426,6 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(dec3PAddr, CommandData.pointing_mode.dec[2]);
     SET_SCALED_VALUE(ra4PAddr, CommandData.pointing_mode.ra[3]);
     SET_SCALED_VALUE(dec4PAddr, CommandData.pointing_mode.dec[3]);
-
     sensor_veto = ((!CommandData.use_elmotenc))
     		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
 			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
@@ -1428,4 +1441,34 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.el_autogyro << 9);
 
     SET_UINT16(vetoSensorAddr, sensor_veto);
+}
+void store_1hz_acs(void)
+{
+    int i_point;
+    static int firsttime = 1;
+    static channel_t *OffsetIFrollDGPSGYAddr;
+    static channel_t *OffsetIFyawDGPSGYAddr;
+    static channel_t *latDGPSAddr;
+    static channel_t *lonDGPSAddr;
+    static channel_t *altDGPSAddr;
+    static channel_t *qualityDGPSAddr;
+    static channel_t *numSatDGPSAddr;
+    if (firsttime) {
+        OffsetIFrollDGPSGYAddr = channels_find_by_name("offset_ifrolldgps_gy");
+        OffsetIFyawDGPSGYAddr = channels_find_by_name("offset_ifyawdgps_gy");
+        latDGPSAddr = channels_find_by_name("lat_dgps");
+        lonDGPSAddr = channels_find_by_name("lon_dgps");
+        altDGPSAddr = channels_find_by_name("alt_dgps");
+        qualityDGPSAddr = channels_find_by_name("quality_dgps");
+        numSatDGPSAddr = channels_find_by_name("num_sat_dgps");
+        firsttime = 0;
+    }
+    i_point = GETREADINDEX(point_index);
+    SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
+    SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifrolldgps_gy);
+    SET_SCALED_VALUE(latDGPSAddr, CSBFGPSData.latitude);
+    SET_SCALED_VALUE(lonDGPSAddr, CSBFGPSData.longitude);
+    SET_SCALED_VALUE(altDGPSAddr, CSBFGPSData.altitude);
+    SET_INT8(qualityDGPSAddr, CSBFGPSData.quality);
+    SET_INT8(numSatDGPSAddr, CSBFGPSData.num_sat);
 }
