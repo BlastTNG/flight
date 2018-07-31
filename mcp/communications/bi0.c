@@ -523,15 +523,16 @@ void biphase_writer(void * arg)
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
+            /* commented out allframes because biphase nominally doesn't need it */
             // send allframe if necessary
-            if (!allframe_count) {
-                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
-            } else {
+            // if (!allframe_count) {
+            //     transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
+            // } else {
                 // compress the linklist to compbuffer
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
                 decrementFifo(&bi0_fifo);
                 transmit_size = ll->blk_size;  
-            }
+            // }
 
             // randomized NRZ
             if (CommandData.biphase_rnrz) {
