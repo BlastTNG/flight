@@ -38,7 +38,7 @@
 #include "tx.h"
 #include "ezstep.h"
 #include "mcp.h"
-
+#include "xystage.h"
 
 
 /* EZBus setup parameters */
@@ -52,7 +52,6 @@
 #define STAGE_BUS_ACCEL 2
 #define STAGE_BUS_IHOLD 20
 #define STAGE_BUS_IMOVE 50
-#define XYSTAGE_PREAMBLE "j2n2" // set microstep res, use limit switches
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1

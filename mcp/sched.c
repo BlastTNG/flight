@@ -503,10 +503,10 @@ void DoSched(void)
     /* enable hwpr autostepping */
     event.command = hwpr_step_on;
     ScheduledCommand(&event);
-    /* pot_valve_open */
-    event.command = pot_valve_open;
+    /* potvalve_open */
+    event.command = potvalve_open;
     ScheduledCommand(&event);
-    event.command = pot_valve_on;
+    event.command = potvalve_on;
     ScheduledCommand(&event);
     /* turn off lock motor hold current */
     event.command = lock_i;

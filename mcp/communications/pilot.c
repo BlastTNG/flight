@@ -77,8 +77,9 @@ void pilot_compress_and_send(void *arg) {
   linklist_t ** ll_array = arg;
 
   uint8_t * compbuffer = calloc(1, fifosize);
-  int allframe_count = 0;
-  uint32_t bandwidth = 0, transmit_size = 0;
+  unsigned int allframe_bytes = 0;
+  double bandwidth = 0;
+  uint32_t transmit_size = 0;
 
   nameThread("Pilot");
 
@@ -92,22 +93,26 @@ void pilot_compress_and_send(void *arg) {
     ll_old = ll;
 
     // get the current bandwidth
+    if ((bandwidth != CommandData.pilot_bw) ||
+         (CommandData.pilot_allframe_fraction < 0.001)) allframe_bytes = 0;
     bandwidth = CommandData.pilot_bw;
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
       // send allframe if necessary
-      if (!allframe_count) {
+      if (allframe_bytes >= bandwidth) {
         transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
+        allframe_bytes = 0;
       } else {
         // compress the linklist
         compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
         decrementFifo(&pilot_fifo);
-        transmit_size = ll->blk_size;
+
+        // bandwidth limit; frames are 1 Hz, so bandwidth == size
+        transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.pilot_allframe_fraction));  
+        allframe_bytes += bandwidth-transmit_size;
       }
 
-      // bandwidth limit; frames are 1 Hz, so bandwidth == size
-      transmit_size = MIN(transmit_size, bandwidth);  
 
 
       if (CommandData.pilot_oth) {
@@ -134,7 +139,6 @@ void pilot_compress_and_send(void *arg) {
       }
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

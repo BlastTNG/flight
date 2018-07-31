@@ -12,8 +12,8 @@
 #include "slowdl.h"
 
 struct SlowDlStruct slowDLList[] = {
+  {"plover", 'u', SDL_RAW},
   {"time", 'U', SDL_RAW},
-  {"t_acs", 'c', SDL_SCALE, 70.0, -45.0},
   {""}
 };
 

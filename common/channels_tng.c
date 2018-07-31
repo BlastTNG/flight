@@ -70,8 +70,6 @@ uint8_t superframe_type_array[TYPE_END+1] = {
   SF_INT8, SF_INT16, SF_INT32, SF_INT64,
   SF_FLOAT32, SF_FLOAT64, SF_NUM
 };
-double channel_data_to_double(uint8_t * data, uint8_t type);
-int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 unsigned int superframe_offset[RATE_END] = {0};
 superframe_t * superframe = NULL;
 
@@ -868,23 +866,13 @@ void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
         make_name_from_roach_index(index, tlm_name);
         for (int i = 0; tlm_name[i]; i++) tlm_name[i] = toupper(tlm_name[i]);
         fprintf(calspecsfile, " '%s'", tlm_name);
-/*
-        derived.type = 'x';
-        make_name_from_roach_index(index, derived.mplex.field);
-        for (int i = 0; derived.mplex.field[i]; i++) derived.mplex.field[i] = toupper(derived.mplex.field[i]);
-        strcpy(derived.mplex.source, ROACH_CHANNEL_BLOCK_NAME);
-        strcpy(derived.mplex.index, ROACH_CHANNEL_BLOCK_INDEX_NAME);
-        derived.mplex.value = index;
-        derived.mplex.max = 0;
-        channels_write_calspecs_item(calspecsfile, &derived);
-*/
       }
     }
   }
   fprintf(calspecsfile, "\n");
   for (int i = 0; i < NUM_ROACH_TLM; i++) {
     char c = 65+i;
-    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
+    fprintf(calspecsfile, "KID%c_ROACHX_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
   }
 
 

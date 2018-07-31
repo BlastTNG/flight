@@ -34,8 +34,18 @@
 #include <blast.h>
 #include <command_struct.h>
 
+#include <fcntl.h>
+#include <signal.h>
+#include <termios.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <linux/types.h>
+
 #include "biphase_hardware.h"
 #include "mpsse.h"
+#include "synclink.h"
+
+static int synclink_fd = -1;
 
 int setup_mpsse(struct mpsse_ctx **ctx_ptr, const char *serial, uint8_t direction)
 {
@@ -95,6 +105,85 @@ void biphase_reverse_bytes(const uint16_t *out, uint32_t length, uint8_t *bit_do
 }
 
 
+/******************* Synclink Functions *******************/
+
+/**
+ * Close the synclink device before exiting mcp.
+ */
+void synclink_close(void)
+{
+    int rc = -1;
+    int sigs = TIOCM_RTS + TIOCM_DTR;
+    if (synclink_fd != -1) {
+        rc = ioctl(synclink_fd, TIOCMBIC, &sigs);
+        usleep(10000);
+        rc = close(synclink_fd);
+        blast_dbg("Closed synclink with return value %d", rc);
+    }
+    synclink_fd = -1;
+}
+
+int get_synclink_fd(void)
+{
+    return synclink_fd;
+}
+
+int setup_synclink()
+{
+    int rc;
+    int enable = 1;
+    int sigs;
+    MGSL_PARAMS params;
+
+    if (synclink_fd > 0) close(synclink_fd);
+    synclink_fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    if (synclink_fd < 0) {
+        blast_warn("Error Opening synclink. Stopped Biphase Downlink Thread");
+        pthread_exit(0);
+    }
+    usleep(1000);
+    rc = ioctl(synclink_fd, MGSL_IOCRXENABLE, enable);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+
+    /* Set parameters */
+    rc = ioctl(synclink_fd, MGSL_IOCGPARAMS, &params);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+    params.mode = MGSL_MODE_RAW;
+    params.loopback = 0;
+    params.flags = HDLC_FLAG_RXC_BRG + HDLC_FLAG_TXC_BRG;
+    params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
+    // params.encoding = HDLC_ENCODING_NRZ;
+    params.clock_speed = 1000000;
+    params.crc_type = HDLC_CRC_NONE;
+    rc = ioctl(synclink_fd, MGSL_IOCSPARAMS, &params);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+    int mode = MGSL_INTERFACE_RS422;
+    // mode += MGSL_INTERFACE_MSB_FIRST;
+    rc = ioctl(synclink_fd, MGSL_IOCSIF, mode);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+    // Blocking mode for read and writes
+    fcntl(synclink_fd, F_SETFL, fcntl(synclink_fd, F_GETFL) & ~O_NONBLOCK);
+    // Request to Send and Data Terminal Ready
+    sigs = TIOCM_RTS + TIOCM_DTR;
+    rc = ioctl(synclink_fd, TIOCMBIS, &sigs);
+    if (rc < 0) {
+        blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
+        return rc;
+    }
+    return rc;
+}
 
 /*
  Synclink sends LSB first, but decom MSB, this is used to reverse the bits before sending

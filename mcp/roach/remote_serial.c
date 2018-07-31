@@ -23,6 +23,7 @@
  *      Author: seth
  */
 
+#include <roach.h>
 #include <remote_serial.h>
 #include <inttypes.h>
 #include <unistd.h>
@@ -37,7 +38,7 @@
 static const char addresses[5][16] = {"192.168.40.61", "192.168.40.62", "192.168.40.63",
                                                  "192.168.40.64", "192.168.40.65"};
 
-static const uint16_t port = 12345; /* telnet port on Pi */
+static const uint16_t port = NC2_PORT; /* telnet port on Pi */
 
 static const uint32_t min_backoff_sec = 5;
 static const uint32_t max_backoff_sec = 30;
@@ -58,7 +59,7 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
     remote_serial_t *state = (remote_serial_t*) m_data;
     uint64_t buflen;
     /**
-     * If we have an error, or do not receive data from the beaglebone in the expected
+     * If we have an error, or do not receive data from the Pi in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
     if (m_why & PH_IOMASK_ERR) {
@@ -92,7 +93,7 @@ static void remote_serial_process_packet(ph_sock_t *m_sock, ph_iomask_t m_why, v
 int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t m_len)
 {
     uint64_t written;
-    if (!InCharge) return -2;
+    // if (!InCharge) return -2;
     if (!m_serial->connected) {
         blast_info("Socket not connected");
 	m_serial->timeout.tv_sec = 5;
@@ -118,19 +119,19 @@ int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t
     int retval = -1;
     // blast_info("InCharge = %i", InCharge);
     // blast_info("Connected = %d", m_serial->connected);
-    if (!InCharge) return -2;
+    // if (!InCharge) return -2;
     if (!m_serial->connected) return -1;
 
     while (m_serial->connected) {
         // blast_info("attempting to read %zd of % " PRId64 " bytes", m_size, ph_bufq_len(m_serial->input_buffer));
-	buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
-	if (buf) {
-    	    // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
-            memcpy(m_buffer, ph_buf_mem(buf), m_size);
-	    ph_buf_delref(buf);
-            retval = m_size;
-	    break;
-        }
+    buf = ph_bufq_consume_bytes(m_serial->input_buffer, m_size);
+    if (buf) {
+        // blast_info("read data buffer length = %" PRId64, ph_buf_len(buf));
+        memcpy(m_buffer, ph_buf_mem(buf), m_size);
+        ph_buf_delref(buf);
+        retval = m_size;
+        break;
+    }
         usleep(1000);
     }
     return retval;
@@ -172,7 +173,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
             return;
     }
 
-    blast_info("Connected to Beaglebone%d at %s", state->which + 1, addresses[state->which]);
+    blast_info("Connected to PI%d at %s", state->which + 1, addresses[state->which]);
 
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock && m_sock != state->sock) ph_sock_free(state->sock);
@@ -231,9 +232,9 @@ void remote_serial_shutdown(remote_serial_t *m_serial)
 
 /**
  * Initialize the remote serial I/O routine.  The state variable tracks each
- * beaglebone connection and is passed to the connect job.
+ * Pi connection and is passed to the connect job.
  *
- * @param m_which 0,1,2,3 for BB1, BB2, BB3 or BB4
+ * @param m_which 0,1,2,3 for PI1, PI2, PI3, PI4 or PI5
  */
 remote_serial_t *remote_serial_init(int m_which, int m_port)
 {
@@ -250,6 +251,7 @@ remote_serial_t *remote_serial_init(int m_which, int m_port)
     ph_job_init(&(new_port->connect_job));
     new_port->connect_job.data = new_port;
     new_port->connect_job.callback = connect_remote_serial;
+    new_port->port = m_port;
 
     ph_job_dispatch_now(&(new_port->connect_job));
     return new_port;
