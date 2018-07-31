@@ -264,7 +264,7 @@ void DoPotValve(struct ezbus* bus)
 	newstate = SetValveState(tight_flag);
 	// blast_info("called SetValveState, newstate = %d", newstate); // DEBUG PAW
 
-	if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
+	// if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
 
 	if (potvalve_data.state == potvalve_data.goal) {
 		potvalve_data.potvalve_move = no_move;
