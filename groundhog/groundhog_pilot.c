@@ -102,6 +102,7 @@ void udp_receive(void *arg) {
     } else {
       if ((good_serial_count % 1) == 0) {
         if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+        blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
       }
       good_serial_count++;
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
