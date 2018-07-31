@@ -215,6 +215,7 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
+	        EZBus_SetAccel(bus, potvalve_data.addr, 1000);
 		// I don't think there is any point to this PAW 2018/06/20
 		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
@@ -342,7 +343,6 @@ void DoPotValve(struct ezbus* bus)
 				if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
 				blast_info("command tighten move of size %d, ADC = %f", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
-				// blast_info("sent D1e6R to pot valve"); // DEBUG PAW
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
