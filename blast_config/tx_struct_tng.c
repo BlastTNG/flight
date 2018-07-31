@@ -461,9 +461,9 @@ channel_t channel_list[] =
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"lims_fillvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
-    {"vel_valve",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"current_valve",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
-    {"acc_valve",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"vel_valves",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"current_valves",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"acc_valves",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

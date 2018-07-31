@@ -1270,19 +1270,19 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(valves_set_vel), "Set cryostat valves velocity", GR_CRYO, 1,
     {
-      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VALVES_VEL"}
+      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VEL_VALVES"}
     }
   },
 
   {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
     {
-      {"Cryostat valves move current (% max)", 0, 100, 'i', "VALVES_I"}
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
     }
   },
 
   {COMMAND(valves_set_acc), "Set cryostat valves acceleration", GR_CRYO, 1,
     {
-      {"Cryostat valves acceleration", 0, 6000, 'i', "VALVES_ACC"}
+      {"Cryostat valves acceleration", 0, 6000, 'i', "ACC_VALVES"}
     }
   },
 
