@@ -982,11 +982,19 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case pump_valve_close:
 	    CommandData.Cryo.valve_goals[0] = closed;
 	    break;
+	case pump_valve_stop:
+	    CommandData.Cryo.valve_goals[0] = 0;
+	    CommandData.Cryo.valve_stop[0] = 1;
+	    break;
 	case fill_valve_open:
 	    CommandData.Cryo.valve_goals[1] = opened;
 	    break;
 	case fill_valve_close:
 	    CommandData.Cryo.valve_goals[1] = closed;
+	    break;
+	case fill_valve_stop:
+	    CommandData.Cryo.valve_goals[1] = 0;
+	    CommandData.Cryo.valve_stop[1] = 1;
 	    break;
 	case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;

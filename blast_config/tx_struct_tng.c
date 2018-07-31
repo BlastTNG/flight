@@ -450,7 +450,8 @@ channel_t channel_list[] =
     { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
-    {"pos_potvalve",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"enc_potvalve",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"pos_potvalve",            SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
     {"state_potvalve",          SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"vel_potvalve",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0},
     {"i_open_potvalve",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
@@ -460,10 +461,12 @@ channel_t channel_list[] =
     {"thresh_open_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"pos_pumpvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
     {"lims_fillvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
-    {"vel_valves",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"i_valves",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
-    {"acc_valves",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"pos_fillvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
+    {"vel_valves",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"i_valves",              SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
+    {"acc_valves",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "acc_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
