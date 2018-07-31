@@ -96,7 +96,8 @@ void highrate_compress_and_send(void *arg) {
 		ll_old = ll;
 
     // get the current bandwidth
-    if (bandwidth != CommandData.highrate_bw) allframe_bytes = 0;
+    if ((bandwidth != CommandData.highrate_bw) ||
+         (CommandData.highrate_allframe_fraction < 0.001)) allframe_bytes = 0;
     bandwidth = CommandData.highrate_bw;
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent

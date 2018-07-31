@@ -372,13 +372,15 @@ static void MKSAltitude(unsigned char *indata)
 
 static void SendDownData(char tty_fd)
 {
-  unsigned char buffer[3 + SLOWDL_LEN + 1];
+  unsigned char buffer[3 + SLOWDL_LEN + 1] = {0};
 
   buffer[0] = SLOWDL_DLE;
   buffer[1] = SLOWDL_SYNC;
   buffer[2] = SLOWDL_LEN;
-//  fillDLData(buffer+3, SLOWDL_LEN);
-//
+  updateSlowDL();
+  fillDLData(buffer+3, SLOWDL_LEN);
+  blast_info("Sending slowdl data\n");
+
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
   if (write(tty_fd, buffer, 3 + SLOWDL_LEN + 1) < 0) {
     berror(warning, "Error writing to SlowDL\n");

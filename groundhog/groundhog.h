@@ -33,6 +33,7 @@ void groundhog_write_calspecs(char *, derived_tng_t *);
 linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
 
 extern char datestring[80];
+extern int verbose;
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))

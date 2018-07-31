@@ -30,7 +30,7 @@
 #define PILOT_PORT 31213 // port that pilot data is sent to
 #define PILOT_ADDR "192.168.1.55" // address that pilot data is sent to (blastgs1 for gnd ops)
 // #define PILOT_ADDR "192.168.1.56" // address that pilot data is sent to (blastgs2 for gnd ops)
-#define PILOT_MAX_PACKET_SIZE 1024 // maximum size of a packet to be sent over Pilot
+#define PILOT_MAX_PACKET_SIZE 512 // maximum size of a packet to be sent over Pilot
 #define PILOT_MAX_SIZE (superframe->size*2) // maximum compressed frame size to be send over Pilot
 
 extern struct Fifo pilot_fifo;

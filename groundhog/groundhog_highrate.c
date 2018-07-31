@@ -289,14 +289,14 @@ void highrate_receive(void *arg) {
                       {
                           // decompress the linklist
                           if (read_allframe(local_superframe, superframe, compbuffer)) {
-                              blast_info("[%s] Received an allframe :)\n", source_str);
+                              if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
                               memcpy(local_allframe, compbuffer, superframe->allframe_size);
                           } else {
                               if (transmit_size > ll->blk_size) {
                                   blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
                                   transmit_size = ll->blk_size;
                               }
-                              blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
+                              if (verbose) blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
 
                               // write the linklist data to disk
                               if (ll_rawfile) {
@@ -328,11 +328,13 @@ void highrate_receive(void *arg) {
           } else { // housekeeping packet
               // TODO(javier): deal with housekeeping packets
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
-              for (int i = 0; i < gse_packet_header.size; i++) {
-                if (i % 16 == 0) printf("\n%.04d: ", i/16);
-                printf("0x%.02x ", gse_packet[i]);
+              if (verbose) {
+									for (int i = 0; i < gse_packet_header.size; i++) {
+										if (i % 16 == 0) printf("\n%.04d: ", i/16);
+										printf("0x%.02x ", gse_packet[i]);
+									}
+									printf("\n");
               }
-              printf("\n");
               gse_read += gse_packet_header.size;
           }
       }
