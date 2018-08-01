@@ -215,6 +215,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(mag_allow_fc2), "un-veto magnetometer attached to fc2", GR_VETO},
   {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
   {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
+  {COMMAND(dgps_veto), "veto CSBF DGPS sensor", GR_VETO},
+  {COMMAND(dgps_allow), "un-veto CSBF DGPS sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_1_gy_veto), "disable ifroll_1_gy", GR_VETO},
   {COMMAND(ifroll_2_gy_allow), "enable ifroll_2_gy", GR_VETO},
@@ -1269,24 +1271,31 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
-      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "POTVALVE_CLOSED_THRESH"},
-      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "POTVALVE_LCLOSED_THRESH"},
-      {"Open threshold (10100-16000)", 10200, 16000, 'i', "POTVALVE_OPEN_THRESH"},
+      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "THRESH_CLOSED_POTVALVE"},
+      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "THRESH_LCLOSED_POTVALVE"},
+      {"Open threshold (10100-16000)", 10200, 16000, 'i', "THRESH_OPEN_POTVALVE"},
     }
   },
 
   {COMMAND(valves_set_vel), "Set cryostat valves velocity", GR_CRYO, 1,
     {
-      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VALVES_VEL"}
+      {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VEL_VALVES"}
     }
   },
 
   {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
     {
-      {"Cryostat valves move current (% max)", 0, 100, 'i', "VALVES_I"}
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
     }
   },
-//  <!-- XSC general -->
+
+  {COMMAND(valves_set_acc), "Set cryostat valves acceleration", GR_CRYO, 1,
+    {
+      {"Cryostat valves acceleration", 0, 6000, 'i', "ACC_VALVES"}
+    }
+  },
+
+  //  <!-- XSC general -->
 
 
 

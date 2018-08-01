@@ -276,7 +276,7 @@ typedef struct {
   uint16_t potvalve_opencurrent, potvalve_closecurrent;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   valve_state_t valve_goals[2];
-  uint16_t valve_vel, valve_current;
+  uint16_t valve_vel, valve_current, valve_acc;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   int do_cal_pulse;
   int do_level_pulse;
@@ -514,6 +514,7 @@ struct CommandDataStruct {
   unsigned char use_xsc1;
   unsigned char use_mag1;
   unsigned char use_mag2;
+  unsigned char use_dgps;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -526,6 +527,7 @@ struct CommandDataStruct {
   double null_az_trim;
   double mag_az_trim[2];
   double pss_az_trim;
+  double dgps_az_trim;
 
   int autotrim_enable;
   double autotrim_thresh;    // in sc sigma

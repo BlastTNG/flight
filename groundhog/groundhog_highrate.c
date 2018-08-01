@@ -30,6 +30,7 @@
 #include "groundhog_framing.h"
 #include "highrate.h"
 #include "comms_serial.h"
+#include "slowdl.h"
 
 enum HeaderType{NONE, IRID_OMNI, TD_OMNI, IRID_SLOW, PAYLOAD};
 
@@ -243,7 +244,8 @@ void highrate_receive(void *arg) {
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if (gse_packet_header.origin & 0xe) { // packet not from the hk stack
+          if (!(gse_packet_header.origin & 0x01) || 
+               ((gse_packet_header.origin & 0x03) && (gse_packet_header.route == HIGHRATE_IRIDIUM_SYNC2))) { // packet not from the hk stack
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
@@ -328,12 +330,17 @@ void highrate_receive(void *arg) {
           } else { // housekeeping packet
               // TODO(javier): deal with housekeeping packets
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
-              if (verbose) {
-									for (int i = 0; i < gse_packet_header.size; i++) {
-										if (i % 16 == 0) printf("\n%.04d: ", i/16);
-										printf("0x%.02x ", gse_packet[i]);
-									}
-									printf("\n");
+              if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
+                  blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
+                  if (verbose) {
+                      for (int i = 0; i < gse_packet_header.size; i++) {
+                        if (i % 16 == 0) printf("\n%.04d: ", i/16);
+                        printf("0x%.02x ", gse_packet[i]);
+                      }
+                      printf("\n");
+                  }
+              } else {
+                  blast_info("[%s] Bad syncword 0x%.08x\n", source_str, *(uint32_t *) gse_packet);
               }
               gse_read += gse_packet_header.size;
           }

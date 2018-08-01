@@ -86,7 +86,7 @@ enum singleCommand {
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
   xsc0_veto,        xsc0_allow,
-  xsc1_veto,        xsc1_allow,
+  xsc1_veto,        xsc1_allow,         dgps_veto,        dgps_allow,
   mag_allow_fc1,      mag_veto_fc1,           mag_allow_fc2,        mag_veto_fc2,
   pin_in,  ramp,               reset_trims,
   stop,             pss_veto,		    trim_xsc0_to_xsc1,
@@ -206,7 +206,7 @@ enum multiCommand {
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
   actuators_set_used,
   potvalve_set_thresholds,
-  potvalve_set_vel, potvalve_set_current, valves_set_vel, valves_set_current,
+  potvalve_set_vel, potvalve_set_current, valves_set_vel, valves_set_current, valves_set_acc,
 
   xsc_is_new_window_period,
   xsc_offset,

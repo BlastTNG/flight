@@ -125,6 +125,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	valve_data[index].goal = CommandData.Cryo.valve_goals[index];
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
+	EZBus_SetAccel(bus, valve_data[index].addr, CommandData.Cryo.valve_acc);
 
 	// Debug PAW 04/24/2018
 	// blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
@@ -143,6 +144,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	if ((valve_data[index].goal == opened) && (valve_data[index].limit != 11)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
+			EZBus_Stop(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
 			EZBus_Release(bus, valve_data[index].addr);
 			blast_info("Starting to open Valve %d", index); // debug PAW
@@ -152,6 +154,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	} else if ((valve_data[index].goal == closed) && (valve_data[index].limit != 7)) {
 		if (valve_data[index].ready) {
 			EZBus_Take(bus, valve_data[index].addr);
+			EZBus_Stop(bus, valve_data[index].addr);
 			EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
 			EZBus_Release(bus, valve_data[index].addr);
                         blast_info("Starting to close Valve %d", index); // debug PAW
@@ -212,6 +215,7 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
+	        EZBus_SetAccel(bus, potvalve_data.addr, 1000);
 		// I don't think there is any point to this PAW 2018/06/20
 		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
@@ -260,7 +264,7 @@ void DoPotValve(struct ezbus* bus)
 	newstate = SetValveState(tight_flag);
 	// blast_info("called SetValveState, newstate = %d", newstate); // DEBUG PAW
 
-	if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
+	// if (newstate) blast_info("POT VALVE NEW STATE"); // DEBUG PCA
 
 	if (potvalve_data.state == potvalve_data.goal) {
 		potvalve_data.potvalve_move = no_move;
@@ -339,7 +343,6 @@ void DoPotValve(struct ezbus* bus)
 				if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK) // close by ~.5 turn
 					bputs(info, "Error tightening pot valve");
 				blast_info("command tighten move of size %d, ADC = %f", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
-				// blast_info("sent D1e6R to pot valve"); // DEBUG PAW
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
@@ -409,23 +412,25 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* velValveAddr;
 	static channel_t* currentValveAddr;
 	static channel_t* limsFillValveAddr;
+	static channel_t* accValveAddr;
 
 	static int firsttime = 1;
 
 	if (firsttime) {
-		posPotValveAddr = channels_find_by_name("potvalve_pos");
-		statePotValveAddr = channels_find_by_name("potvalve_state");
-		velPotValveAddr = channels_find_by_name("potvalve_vel");
-		openCurPotValveAddr = channels_find_by_name("potvalve_I_open");
-		closeCurPotValveAddr = channels_find_by_name("potvalve_I_close");
-		closedThresholdPotValveAddr = channels_find_by_name("potvalve_closed_thresh");
-	        lclosedThresholdPotValveAddr = channels_find_by_name("potvalve_lclosed_thresh");
-	        openThresholdPotValveAddr = channels_find_by_name("potvalve_open_thresh");
+		posPotValveAddr = channels_find_by_name("pos_potvalve");
+		statePotValveAddr = channels_find_by_name("state_potvalve");
+		velPotValveAddr = channels_find_by_name("vel_potvalve");
+		openCurPotValveAddr = channels_find_by_name("I_open_potvalve");
+		closeCurPotValveAddr = channels_find_by_name("I_close_potvalve");
+		closedThresholdPotValveAddr = channels_find_by_name("thresh_closed_potvalve");
+	        lclosedThresholdPotValveAddr = channels_find_by_name("thresh_lclosed_potvalve");
+	        openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
 
-		limsPumpValveAddr = channels_find_by_name("pumpvalve_lims");
-		velValveAddr = channels_find_by_name("valve_vel");
-		currentValveAddr = channels_find_by_name("valve_current");
-		limsFillValveAddr = channels_find_by_name("fillvalve_lims");
+		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
+		velValveAddr = channels_find_by_name("vel_valves");
+		currentValveAddr = channels_find_by_name("current_valves");
+		limsFillValveAddr = channels_find_by_name("lims_fillvalve");
+		accValveAddr = channels_find_by_name("acc_valves");
 		firsttime = 0;
 	}
 
@@ -454,5 +459,6 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	if (valve_flag == 1) {
 		SET_UINT16(velValveAddr, CommandData.Cryo.valve_vel);
 		SET_UINT8(currentValveAddr, CommandData.Cryo.valve_current);
+		SET_UINT16(accValveAddr, CommandData.Cryo.valve_acc);
 	}
 }

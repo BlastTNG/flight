@@ -119,13 +119,18 @@ struct PointingDataStruct {
   double mag_strength[NUM_MAGS]; // nanoTesla
   double offset_ifrollmag_gy[NUM_MAGS];
   double offset_ifyawmag_gy[NUM_MAGS];
-
+  double offset_ifrolldgps_gy;
+  double offset_ifyawdgps_gy;
+  double dgps_az_raw;   // degrees
+  double dgps_az;   // degrees
+  double dgps_sigma;   // degrees
   double null_az; // degrees
 
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
 
   int pss_ok;
+  int dgps_ok;
   double pss_az;
   double pss_el;
 
@@ -201,15 +206,10 @@ extern int point_index;
 /**********************************************/
 /*  DGPS Attittude struct                     */
 /*  Purpose: Store dgps attitude info         */
-/*   Source: dgps thread: dgps.c              */
+/*   Source: dgps thread: csbf_dgps.c              */
 /*     Used: Main thread;                     */
 struct DGPSAttStruct {
   double az;
-  double pitch;
-  double roll;
-  double mrms;
-  double brms;
-  unsigned int ant[4];
   int att_ok;
 };
 

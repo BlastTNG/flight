@@ -531,11 +531,11 @@ static void InitializeShutter()
   // Set position to 5000 z5000
   // Move to activate limit switch D424
   // Set position to 0 z0
-  // EZBus_Comm(&bus, id[SHUTTERNUM], "j64h50R");
-  // EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
-  // EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
-  // EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
-  // EZBus_SetAccel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_acc);
+  EZBus_Comm(&bus, id[SHUTTERNUM], "j256");
+  EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
+  EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
+  EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
+  EZBus_SetAccel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_acc);
 }
 
 
