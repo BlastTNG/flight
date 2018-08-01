@@ -268,8 +268,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
   {COMMAND(pump_valve_stop), "stop pump valve, reset goal to 0", GR_CRYO},
   {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
-  {COMMAND(fill_valve_stop), "stop fill valve, reset goal to 0", GR_CRYO},
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
+  {COMMAND(fill_valve_stop), "stop fill valve, reset goal to 0", GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
