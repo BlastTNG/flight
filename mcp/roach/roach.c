@@ -1295,7 +1295,6 @@ int set_atten(pi_state_t *m_pi)
            CommandData.roach_params[ind].out_atten,
            CommandData.roach_params[ind].in_atten);
     }
-    // TODO(Sam) Verify order on Roach5 and then remove this comment
     if (ind == 4) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
            CommandData.roach_params[ind].in_atten,
