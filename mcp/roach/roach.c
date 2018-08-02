@@ -2019,6 +2019,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     if (!CommandData.roach[ind].do_sweeps) {
         return SWEEP_INTERRUPT;
     }
+    blast_info("INSIDE DO SWEEPS");
     char *save_bbfreqs_command;
     // char *save_vna_trf_command;
     double m_span;
@@ -2103,23 +2104,29 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     blast_info("ROACH%d Starting new sweep...", m_roach->which);
     /* Sweep and save data */
     for (size_t i = 0; i < m_num_sweep_freqs; i++) {
+        blast_info("i = %u", i);
+        blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
         if (CommandData.roach[ind].do_sweeps) {
+            blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
             pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
             // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
             if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
+                blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 blast_info("Error setting LO... reboot Pi%d?", ind + 1);
                 return PI_READ_ERROR;
             }
+            blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
+                blast_info("FAIL");
+                blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 return SWEEP_FAIL;
             }
         } else {
             blast_info("Sweep interrupted by command");
-            CommandData.roach[ind].do_sweeps = 0;
             return SWEEP_INTERRUPT;
         }
     }
@@ -2245,7 +2252,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     uint8_t i_udp_read;
     blast_info("Getting data...");
     for (int i = 0; i < npoints; i++) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -3921,9 +3928,9 @@ int roach_targ_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, TARG sweep complete", m_roach->which);
         // creates file for downlinking sweep path to local machine
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
-    } else if ((retval == SWEEP_INTERRUPT)) {
+    /*} else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
-        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
+        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);*/
     } else {
         blast_info("ROACH%d, TARG sweep failed", m_roach->which);
         m_roach->has_targ_sweep = 0;

@@ -2121,12 +2121,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case all_roach_ts:
-      if ((rvalues[1] >= 0.0) && (rvalues[1] <= 300.0)) {
+      if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
               CommandData.roach[i].get_timestream = 2;
           }
       }
+      break;
     case cal_amps:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
@@ -2165,11 +2166,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case offset_lo_all:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].set_lo = 2;
-              CommandData.roach_params[i].lo_offset = rvalues[0];
-          }
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].set_lo = 2;
+          CommandData.roach_params[i].lo_offset = rvalues[0];
       }
       break;
     case center_lo:
