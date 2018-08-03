@@ -127,14 +127,15 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	valve_data[index].goal = CommandData.Cryo.valve_goals[index];
 	valve_data[index].stop = CommandData.Cryo.valve_stop[index];
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
-	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_current);
+	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_move_i);
+	EZBus_SetIHold(bus, valve_data[index].addr, CommandData.Cryo.valve_hold_i);
 	EZBus_SetAccel(bus, valve_data[index].addr, CommandData.Cryo.valve_acc);
 
 	// Debug PAW 04/24/2018
 	// blast_info("commanded valve velocity is %d", CommandData.Cryo.valve_vel);
 	// blast_info("actual valve 9 velocity is %d", bus->stepper[8].vel);
 	// blast_info("actual valve 10 velocity is %d", bus->stepper[9].vel);
-	// blast_info("commanded valve current is %d", CommandData.Cryo.valve_current);
+	// blast_info("commanded valve current is %d", CommandData.Cryo.valve_move_i);
 	// blast_info("actual valve 9 current is %d", bus->stepper[8].imove);
 	// blast_info("actual valve 10 current is %d", bus->stepper[9].imove);
 
@@ -425,7 +426,8 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* posPumpValveAddr;
 	static channel_t* posFillValveAddr;
 	static channel_t* velValveAddr;
-	static channel_t* iValveAddr;
+	static channel_t* imoveValveAddr;
+	static channel_t* iholdValveAddr;
 	static channel_t* accValveAddr;
 
 	static int firsttime = 1;
@@ -446,7 +448,8 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		posPumpValveAddr = channels_find_by_name("pos_pumpvalve");
 		posFillValveAddr = channels_find_by_name("pos_fillvalve");
 		velValveAddr = channels_find_by_name("vel_valves");
-		iValveAddr = channels_find_by_name("i_valves");
+		imoveValveAddr = channels_find_by_name("i_move_valves");
+		iholdValveAddr = channels_find_by_name("i_hold_valves");
 		accValveAddr = channels_find_by_name("acc_valves");
 		firsttime = 0;
 	}
@@ -478,7 +481,8 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 
 	if (valve_flag == 1) {
 		SET_UINT16(velValveAddr, CommandData.Cryo.valve_vel);
-		SET_UINT8(iValveAddr, CommandData.Cryo.valve_current);
+		SET_UINT8(imoveValveAddr, CommandData.Cryo.valve_move_i);
+		SET_UINT8(iholdValveAddr, CommandData.Cryo.valve_hold_i);
 		SET_UINT16(accValveAddr, CommandData.Cryo.valve_acc);
 	}
 }

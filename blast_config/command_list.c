@@ -266,10 +266,12 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
-  {COMMAND(pump_valve_stop), "stop pump valve, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_valve_off), "stop pump valve, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_valve_on), "re-enable pump valve", GR_CRYO},
   {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
-  {COMMAND(fill_valve_stop), "stop fill valve, reset goal to 0", GR_CRYO},
+  {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
+  {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -1278,9 +1280,15 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
+  {COMMAND(valves_set_move_i), "Set cryostat valves move current", GR_CRYO, 1,
     {
       {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
+    }
+  },
+
+  {COMMAND(valves_set_hold_i), "Set cryostat valves hold current", GR_CRYO, 1,
+    {
+      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "CURRENT_VALVES"}
     }
   },
 

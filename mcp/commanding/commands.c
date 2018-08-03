@@ -1773,6 +1773,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_opencurrent = ivalues[0];
       CommandData.Cryo.potvalve_closecurrent = ivalues[1];
       break;
+    case potvalve_set_hold_current:
+      CommandData.Cryo.potvalve_hold_i = ivalues[0];
+      break;
     case potvalve_set_thresholds:
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
@@ -1781,8 +1784,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
       break;
-    case valves_set_current:
-      CommandData.Cryo.valve_current = ivalues[0];
+    case valves_set_move_i:
+      CommandData.Cryo.valve_move_i = ivalues[0];
+      break;
+    case valves_set_hold_i:
+      CommandData.Cryo.valve_hold_i = ivalues[0];
       break;
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
@@ -3325,12 +3331,14 @@ void InitCommandData()
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
     CommandData.Cryo.potvalve_closed_threshold = 6000;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 12000;
     CommandData.Cryo.valve_vel = 50000;
-    CommandData.Cryo.valve_current = 75;
+    CommandData.Cryo.valve_move_i = 75;
+    CommandData.Cryo.valve_hold_i = 0;
     CommandData.Cryo.valve_acc = 16;
 
 
