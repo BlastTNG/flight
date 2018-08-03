@@ -208,6 +208,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
 
     unsigned int bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
+    char symlink_name[MAX_NUM_FILENAME_CHARS] = {0};
 
     if (!store_disks_ready()) {
         if (!storage_info_roaches[roach].have_warned) {
@@ -241,16 +242,27 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
 
         // copy the format files to the diskmanager
         make_roach_name(storage_info_roaches[roach].file_name, roach);
+
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" LINKLIST_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" SUPERFRAME_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT,
                    storage_info_roaches[roach].file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME CALSPECS_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" CALSPECS_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
     }
 
     // close the file once enough frames are written
@@ -304,6 +316,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
 void store_data_hk(uint8_t * sf_buffer) {
     unsigned int bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
+    char symlink_name[MAX_NUM_FILENAME_CHARS] = {0};
 
     static int file_index = 0;
     static uint8_t * comp_buffer = NULL;
@@ -344,11 +357,21 @@ void store_data_hk(uint8_t * sf_buffer) {
         make_hk_name(storage_info_hk.file_name);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" LINKLIST_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" SUPERFRAME_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" CALSPECS_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
 
         first_time = 0;
     }
