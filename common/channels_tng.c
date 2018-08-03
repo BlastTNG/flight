@@ -872,8 +872,10 @@ void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
   fprintf(calspecsfile, "\n");
   for (int i = 0; i < NUM_ROACH_TLM; i++) {
     char c = 65+i;
-    fprintf(calspecsfile, "KID%c_ROACHX_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
+    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
   }
+
+
 
 
   fflush(calspecsfile);
