@@ -269,6 +269,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
+	EZBus_SetIHold(bus, potvalve_data.addr, CommandData.Cryo.potvalve_hold_i);
 
 	// blast_info("about to call GetPotValvePos"); // DEBUG PAW
 	GetPotValvePos(bus);
@@ -417,6 +418,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* velPotValveAddr;
 	static channel_t* openCurPotValveAddr;
 	static channel_t* closeCurPotValveAddr;
+	static channel_t* holdCurPotValveAddr;
 	static channel_t* closedThresholdPotValveAddr;
 	static channel_t* lclosedThresholdPotValveAddr;
 	static channel_t* openThresholdPotValveAddr;
@@ -439,6 +441,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		velPotValveAddr = channels_find_by_name("vel_potvalve");
 		openCurPotValveAddr = channels_find_by_name("i_open_potvalve");
 		closeCurPotValveAddr = channels_find_by_name("i_close_potvalve");
+		holdCurPotValveAddr = channels_find_by_name("i_hold_potvalve");
 		closedThresholdPotValveAddr = channels_find_by_name("thresh_closed_potvalve");
 	        lclosedThresholdPotValveAddr = channels_find_by_name("thresh_lclosed_potvalve");
 	        openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
@@ -461,6 +464,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		SET_UINT32(velPotValveAddr, CommandData.Cryo.potvalve_vel);
 		SET_UINT8(openCurPotValveAddr, CommandData.Cryo.potvalve_opencurrent);
 		SET_UINT8(closeCurPotValveAddr, CommandData.Cryo.potvalve_closecurrent);
+		SET_UINT8(holdCurPotValveAddr, CommandData.Cryo.potvalve_hold_i);
 		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_closed_threshold);
 		SET_UINT16(lclosedThresholdPotValveAddr, CommandData.Cryo.potvalve_lclosed_threshold);
 		SET_UINT16(openThresholdPotValveAddr, CommandData.Cryo.potvalve_open_threshold);

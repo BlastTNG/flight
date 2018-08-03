@@ -273,7 +273,7 @@ typedef struct {
   int potvalve_on;
   valve_state_t potvalve_goal;
   uint32_t potvalve_vel;
-  uint16_t potvalve_opencurrent, potvalve_closecurrent;
+  uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   valve_state_t valve_goals[2];
   int valve_stop[2];
