@@ -46,6 +46,7 @@
 #include "blast.h"
 #include "command_list.h"
 #include "command_struct.h"
+#include "derived.h"
 #include "mcp.h"
 #include "roach.h"
 
@@ -79,7 +80,27 @@ void add_roach_tlm_488hz()
     first_time = 0;
   }
 
-  // channel selectio0n
+  // Set multiplex for all channels here
+  // -----------------------------------
+
+  for (int j = 0; j < NUM_ROACHES; j++) {
+		if (CommandData.num_channels_all_roaches[j]) {
+			for (int i = 0; i < 3; i++) {
+        int tlm_ind = j*3+i;
+        if (tlm_ind >= NUM_ROACH_TLM) continue;
+				// set kid and roach counters for I, Q, and df multiplex
+        RoachId[tlm_ind] = j;
+				KidId[tlm_ind] = (KidId[tlm_ind]+1)%MIN(CommandData.num_channels_all_roaches[j], MAX_CHANNELS_PER_ROACH);
+        TypeId[tlm_ind] = i;
+			}
+		}
+  }
+
+  // ------------------------------------------------
+  // --------- Multiplexed Channel selection --------
+  // ------------------------------------------------
+  // Channels are selected by commands and multiplexed based on a unique roach channel Id.
+  // Channels are identified in getdata/kst from an indexed string array.
   for (i = 0; i < NUM_ROACH_TLM; i++) {
     int ind_rtype = i % NUM_RTYPES;
     int ind_roach = i / NUM_RTYPES;
@@ -103,7 +124,7 @@ void add_roach_tlm_488hz()
                   ind_roach, ind_rtype, NUM_ROACHES, NUM_RTYPES);
         have_warned = 1;
     } else {
-        if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
+        if (CommandData.roach_tlm_mode & ROACH_TLM_IQDF) {
             switch (ind_rtype) {
                 case 0: // I values
                     roach_df_telem[ind_roach].i_cur = m_packet->Ival[KidId[i]];

@@ -855,7 +855,7 @@ void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
 
   // something special: generate an array of derived fields for each roach channel
   // multiplex roach index fields will point to the corresponding name for display in kst
-  fprintf(calspecsfile, "ROACH_NAMES SARRAY");
+  fprintf(calspecsfile, ROACH_NAME_SARRAY " SARRAY");
 
   int kid = 0, roach = 1, rtype = 0;
   for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
@@ -872,7 +872,7 @@ void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
   fprintf(calspecsfile, "\n");
   for (int i = 0; i < NUM_ROACH_TLM; i++) {
     char c = 65+i;
-    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index ROACH_NAMES\n", c, c);
+    fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index " ROACH_NAME_SARRAY "\n", c, c);
   }
 
 

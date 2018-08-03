@@ -468,13 +468,13 @@ static void *mcp_main_loop(void *m_arg)
     //
     // Start values are chosen so that all the routines are spaced over the 50 mcp pulses per
     // 488 Hz routine, which is the fastest rate.
-    int counter_488hz = 1;
-    int counter_244hz = 10;
-    int counter_200hz = 11;
-    int counter_100hz = 17;
-    int counter_5hz = 23;
-    int counter_2hz = 30;
-    int counter_1hz = 31;
+    int counter_488hz = 40;
+    int counter_244hz = 39; // 10;
+    int counter_200hz = 33; // 11;
+    int counter_100hz = 27; // 17;
+    int counter_5hz = 20; // 23;
+    int counter_2hz = 19; // 30;
+    int counter_1hz = 1; // 31;
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
