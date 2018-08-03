@@ -193,7 +193,7 @@ typedef struct roach_state {
     double *last_phases;
     double *last_freqs;
     char *vna_amps_path[2];
-    char *targ_amps_path[2];
+    char *targ_amps_path[3];
     char *random_phase_path;
     char *phase_centers_path;
     char *freqlist_path;

@@ -224,6 +224,7 @@ void * DGPSMonitor(void * arg)
     nameThread(tname);
 
     for (;;) {
+        usleep(10000); /* sleep for 10ms */
         // wait for a valid file descriptor
     		while (get_serial_fd) {
             if ((tty_fd = csbf_setserial(CSBFGPSCOM)) >= 0) {
@@ -234,6 +235,7 @@ void * DGPSMonitor(void * arg)
         get_serial_fd = 0;
         /* Loop until data come in */
         while (read(tty_fd, &buf, 1) <= 0) {
+            usleep(10000); /* sleep for 1ms */
             timer++;
         }
         if (get_serial_fd) break;
@@ -260,6 +262,5 @@ void * DGPSMonitor(void * arg)
             }
         }
         i_char++;
-        usleep(10000); /* sleep for 10ms */
     }
 }
