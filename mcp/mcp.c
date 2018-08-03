@@ -555,7 +555,7 @@ static void *mcp_main_loop(void *m_arg)
     //
     // For 24400 mcp counts per second, there are 50, 100, 122, 244, 4880, 12200, and 24400
     // mcp counts per 488 Hz, 244 Hz, 200 Hz, 100 Hz, 5 Hz, and 1 Hz routine, respectively.
-    // 
+    //
     // Start values are chosen so that all the routines are spaced over the 50 mcp pulses per
     // 488 Hz routine, which is the fastest rate.
     int counter_488hz = 1;
