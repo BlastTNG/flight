@@ -244,7 +244,8 @@ void highrate_receive(void *arg) {
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if (!(gse_packet_header.origin & 0x01)) { // packet not from the hk stack
+          if (!(gse_packet_header.origin & 0x01) || 
+               ((gse_packet_header.origin & 0x03) && (gse_packet_header.route == HIGHRATE_IRIDIUM_SYNC2))) { // packet not from the hk stack
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
