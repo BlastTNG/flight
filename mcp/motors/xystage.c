@@ -43,7 +43,7 @@
 
 /* EZBus setup parameters */
 #define STAGE_BUS_TTY "/dev/ttystage"
-#define STAGE_BUS_CHATTER EZ_CHAT_ACT
+#define STAGE_BUS_CHATTER EZ_CHAT_BUS
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
 #define STAGEX_ID EZ_WHO_S6

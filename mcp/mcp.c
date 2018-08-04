@@ -715,9 +715,6 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDataFIFO, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-#ifdef USE_XY_THREAD
-  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
-#endif
 
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
