@@ -37,12 +37,11 @@
 #include "motors.h"
 
 #define BAL_EL_FILTER_LEN 150 // 30 seconds
-#define BAL_SLEEP 1000000
 
 typedef enum
 {
     negative = 0, no_move, positive
-} move_type_t;
+} bal_move_type_t;
 
 typedef struct {
 	uint16_t init;
@@ -50,7 +49,7 @@ typedef struct {
 	int ind;
     	int do_move;
 	int moving;
-	move_type_t dir;
+	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
 	uint8_t lims;
@@ -61,7 +60,7 @@ static balance_state_t balance_state;
 // Decides when the balance system should be turned on and off.
 void ControlBalance(void)
 {
-	double i_el = 0.0;
+    double i_el = 0.0;
     static int firsttime = 1;
     int i_motors = GETREADINDEX(motor_index);
 
@@ -108,7 +107,7 @@ void ControlBalance(void)
 	       }
            } else if (balance_state.i_el_avg < 0) {
                if (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
-                   blast_info("Setting the balance system to move in the positive direction.");
+                   // blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
                    balance_state.dir = positive;
                } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
@@ -159,8 +158,6 @@ void WriteBalance_5Hz(void)
     SET_UINT16(accBalAddr, CommandData.balance.acc);
     SET_UINT16(iMoveBalAddr, CommandData.balance.move_i);
     SET_UINT16(iHoldBalAddr, CommandData.balance.hold_i);
-    SET_INT32(posBalAddr, balance_state.pos);
-    SET_UINT16(limBalAddr, balance_state.lims);
     SET_SCALED_VALUE(iLevelOnBalAddr, CommandData.balance.i_el_on_bal);
     SET_SCALED_VALUE(iLevelOffBalAddr, CommandData.balance.i_el_off_bal);
     SET_SCALED_VALUE(iElReqAvgBalAddr, balance_state.i_el_avg);
@@ -180,21 +177,23 @@ void DoBalance(struct ezbus* bus)
     char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
-       	blast_info("Init DoBalance");
-	balance_state.init = 0;
+        blast_info("Init DoBalance");
+        balance_state.init = 0;
         balance_state.ind = BALANCENUM;
         balance_state.addr = GetActAddr(balance_state.ind);
         /* Attempt to stop the balance motor */
         EZBus_Take(bus, balance_state.addr);
         blast_info("Making sure the balance system is not running on startup.");
-		EZBus_Stop(bus, balance_state.addr);
-        EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
-	EZBus_Release(bus, balance_state.addr);
+        EZBus_Stop(bus, balance_state.addr);
+	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
+        // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
+        EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
         balance_state.do_move = 0;
-	balance_state.lims = 0;
+        balance_state.lims = 0;
         firsttime = 0;
+        balance_state.init = 1;
      }
 
         /* update the Balance move parameters */
@@ -207,8 +206,9 @@ void DoBalance(struct ezbus* bus)
 // TODO(laura): Add checking to make sure that the motor commands actually went through
 // updating the status variables.
 
-        // get (relative) position on the rail and read limit switches
-	// EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
+    // get (relative) position on the rail and read limit switches
+    // NOTE(laura 2018-07-13): This next line was commented out.  I have no idea why.
+    EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);
 
     if ((balance_state.do_move) && (!balance_state.moving)) {
@@ -232,7 +232,6 @@ void DoBalance(struct ezbus* bus)
         balance_state.moving = 0;
     }
 
-    blast_info("lims = %d", balance_state.lims);
     if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
 	balance_state.do_move = 0;
 	// balance_state.moving = 0;
@@ -240,6 +239,4 @@ void DoBalance(struct ezbus* bus)
 
 // Write balance data
     WriteBalance_5Hz();
-
-    usleep(100000);
 }

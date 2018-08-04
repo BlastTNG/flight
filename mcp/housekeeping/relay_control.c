@@ -236,6 +236,18 @@ void rec_control(void) {
         }
     }
 }
+
+static void video_control(void) {
+    if (CommandData.Relays.update_video == 1) {
+        CommandData.Relays.update_video = 0;
+        labjack_queue_command(LABJACK_OF_3, 2006, CommandData.Relays.video_trans);
+        // should send the current value of CommandData.Relays.video_trans to FIO6 on LJ 5
+        // is checked every second as to whether it needs to update the signal or not
+    }
+}
+
+
+
 // initializes the OF relay structure
 static void of_init(void) {
     of_state.of_1_on = 0;
@@ -354,8 +366,8 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_1, RELAY_6_OFF, of_state.of_6_off);
     labjack_queue_command(LABJACK_OF_1, RELAY_7_ON, of_state.of_7_on);
     labjack_queue_command(LABJACK_OF_1, RELAY_7_OFF, of_state.of_7_off);
-    labjack_queue_command(LABJACK_OF_2, RELAY_8_ON, of_state.of_8_on);
-    labjack_queue_command(LABJACK_OF_2, RELAY_8_OFF, of_state.of_8_off);
+    labjack_queue_command(LABJACK_OF_1, RELAY_8_ON, of_state.of_8_on);
+    labjack_queue_command(LABJACK_OF_1, RELAY_8_OFF, of_state.of_8_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_9_ON, of_state.of_9_on);
     labjack_queue_command(LABJACK_OF_2, RELAY_9_OFF, of_state.of_9_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_10_ON, of_state.of_10_on);
@@ -370,8 +382,8 @@ static void of_send_values(void) {
     labjack_queue_command(LABJACK_OF_2, RELAY_14_OFF, of_state.of_14_off);
     labjack_queue_command(LABJACK_OF_2, RELAY_15_ON, of_state.of_15_on);
     labjack_queue_command(LABJACK_OF_2, RELAY_15_OFF, of_state.of_15_off);
-    labjack_queue_command(LABJACK_OF_1, RELAY_16_ON, of_state.of_16_on);
-    labjack_queue_command(LABJACK_OF_1, RELAY_16_OFF, of_state.of_16_off);
+    labjack_queue_command(LABJACK_OF_2, RELAY_16_ON, of_state.of_16_on);
+    labjack_queue_command(LABJACK_OF_2, RELAY_16_OFF, of_state.of_16_off);
 }
 //
 
@@ -683,6 +695,7 @@ void relays(int setting) {
         if_control();
         of_control();
         of_status();
+        video_control();
     }
     if (setting == 2 && state[1].connected) {
         rec_control();
@@ -691,6 +704,7 @@ void relays(int setting) {
         if_control();
         of_control();
         of_status();
+        video_control();
         if (state[1].connected) {
             rec_control();
         }

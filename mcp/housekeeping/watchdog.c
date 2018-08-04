@@ -45,7 +45,8 @@
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
-
+extern bool shutdown_mcp;
+void close_mcp(int);
 static const char watchdog_magic = 'V';
 
 static int watchdog_fd = -1;
@@ -133,6 +134,14 @@ void set_incharge(int in_charge_from_wd) {
                 CommandData.actbus.force_repoll = 1;
             }
         } else {
+            /*
+            // if you had been in charge, then you lost control and should reset
+            if (InCharge) {
+                blast_info("Had control and lost it. Shutting down.\n");
+                close_mcp(0);
+            }
+            */
+
             InCharge = 0;
             if (incharge_old != in_charge) {
                 if (SouthIAm == 1) {

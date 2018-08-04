@@ -45,6 +45,11 @@
 #define PIV_DEFAULT_CURRENT_I    200
 #define PIV_DEFAULT_CURRENT_OFF  (0)
 
+#define HEARTBEAT_MS    0 // Period of heartbeat sent by devices in milliseconds
+#define LIFETIME_FACTOR_EC    10 // require a connection every second (10 x 100 ms)
+                                 // or trigger a heartbeat error.
+#define NETWORK_ERR_RESET_THRESH (500 * 20) // After this many network status errors
+                                            // we will attempt to reset the Ethercat connection.
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller
@@ -101,14 +106,28 @@ static inline uint8_t object_subindex(uint16_t m_index, uint8_t m_subindex)
 }
 
 typedef enum {
+    ECAT_DEV_COLD,           //!< ECAT_MOTOR_COLD
+    ECAT_DEV_FOUND,          //!< ECAT_MOTOR_FOUND
+    ECAT_DEV_MAPPED,         //!< ECAT_MOTOR_MAPPED
+    ECAT_DEV_RUNNING,        //!< ECAT_MOTOR_RUNNING
+    ECAT_DEV_LOST,
+} ec_motor_state_t;
+
+typedef enum {
     ECAT_MOTOR_COLD,           //!< ECAT_MOTOR_COLD
     ECAT_MOTOR_INIT,           //!< ECAT_MOTOR_INIT
     ECAT_MOTOR_FOUND_PARTIAL,  //!< ECAT_MOTOR_FOUND_PARTIAL
     ECAT_MOTOR_FOUND,          //!< ECAT_MOTOR_FOUND
     ECAT_MOTOR_RUNNING_PARTIAL,//!< ECAT_MOTOR_RUNNING_PARTIAL
     ECAT_MOTOR_RUNNING         //!< ECAT_MOTOR_RUNNING
-} ec_motor_state_t;
+} ec_contol_status_t;
 
+typedef struct {
+	int8_t n_found;
+	int8_t slave_count;
+	uint16_t network_error_count;
+	ec_contol_status_t status;
+} ec_state_t;
 
 #define COPLEY_ETHERCAT_VENDOR 0x000000ab
 #define AEP_090_036_PRODCODE 0x00000380
@@ -160,6 +179,8 @@ typedef enum {
 #define ECAT_LOAD_POSITION 0x2242, 0 /* Load Encoder position in counts INT32 */
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
+
+#define ECAT_FUCHS_POSITION 0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
 #  define ECAT_STATUS_SHORTCIRCUIT          (1<<0)
@@ -238,6 +259,21 @@ typedef enum {
 #  define ECAT_CTL_HALT                     (1<<8)
 
 #define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
+#  define ECAT_NET_NODE_STATUS      (1<<0) /* This is two bits */
+#  define ECAT_NET_SYNC_MISSING     (1<<4)
+#  define ECAT_NET_GUARD_ERROR      (1<<5)
+#  define ECAT_NET_BUS_OFF          (1<<8)
+#  define ECAT_NET_TRANSMIT_ERROR   (1<<9)
+#  define ECAT_NET_RECEIVE_ERROR    (1<<10)
+#  define ECAT_NET_TRANSMIT_WARNING (1<<11)
+#  define ECAT_NET_RECEIVE_WARNING  (1<<12)
+
+# define ECAT_NET_NODE_CHECK  0x0003
+# define ECAT_NET_SYNC_CHECK  0x0010
+# define ECAT_NET_COBUS_OFF_CHECK  0x0100
+
+#define ECAT_HEARTBEAT_TIME 0x1017, 0 /* Heartbeat period (ms) */
+#define ECAT_LIFETIME_FACTOR 0x100D, 0 /* */
 
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);
@@ -247,6 +283,8 @@ double rw_get_velocity_dps(void);
 double el_get_velocity_dps(void);
 double piv_get_velocity_dps(void);
 
+uint32_t hwp_get_position(void);
+uint16_t hwp_get_state(void);
 uint32_t rw_get_latched(void);
 uint32_t el_get_latched(void);
 uint32_t piv_get_latched(void);
@@ -289,6 +327,6 @@ void rw_reset_fault(void);
 void el_reset_fault(void);
 void piv_reset_fault(void);
 
-void initialize_motors(void);
+int initialize_motors(void);
 
 #endif /* INCLUDE_EC_MOTORS_H_ */

@@ -46,6 +46,8 @@ struct chat_buf {
 
 extern struct tm start_time;
 
+#define DEFAULT_INCHARGE !SouthIAm
+
 #define MCP_FREQ 24400
 #define MCP_NS_PERIOD (1000000000 / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))

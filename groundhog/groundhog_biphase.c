@@ -18,10 +18,12 @@
 #include <netinet/tcp.h>
 #include <pthread.h>
 
-#include "bbc_pci.h"
-#include "decom_pci.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
+#include "linklist_writer.h"
+
+#include "bbc_pci.h"
+#include "decom_pci.h"
 #include "bi0.h"
 #include "crc.h"
 #include "blast.h"
@@ -95,16 +97,23 @@ void biphase_receive(void *args)
   uint16_t receive_buffer[BI0_FRAME_SIZE];
   uint16_t anti_receive_buffer[BI0_FRAME_SIZE];
   uint8_t receive_buffer_stripped[BIPHASE_PACKET_SIZE];
-  uint8_t *compressed_linklist = calloc(1, BI0_MAX_BUFFER_SIZE);
-  uint32_t compressed_linklist_size = 0;
+  uint8_t *compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
+  uint32_t compbuffer_size = 0;
 
   linklist_t *ll = NULL;
   uint16_t *i_pkt;
   uint16_t *n_pkt;
   uint32_t *frame_number;
   int retval;
-  uint8_t *local_superframe = calloc(1, superframe_size);
+
+  uint8_t *local_superframe = calloc(1, superframe->size);
+  uint8_t *local_allframe = calloc(1, superframe->allframe_size);
   struct Fifo *local_fifo = &downlink[BI0].fifo;
+
+  // open a file to save all the raw linklist data
+  linklist_rawfile_t * ll_rawfile = NULL;
+  uint32_t prev_serial = 0;
+
   bool normal_polarity = true;
 
   // buos_use_stdio();
@@ -140,13 +149,18 @@ void biphase_receive(void *args)
           } else if ((i_word) == (BI0_FRAME_SIZE-1)) {
               get_stripped_packet(&normal_polarity, receive_buffer_stripped, receive_buffer, anti_receive_buffer, 
                                  &ll, &frame_number, &i_pkt, &n_pkt);
-              retval = depacketizeBuffer(compressed_linklist, &compressed_linklist_size, 
+              retval = depacketizeBuffer(compbuffer, &compbuffer_size, 
                                        BIPHASE_PACKET_SIZE-BI0_ZERO_PADDING, 
                                        i_pkt, n_pkt, receive_buffer_stripped);
               memset(receive_buffer_stripped, 0, BIPHASE_PACKET_SIZE);
 
        
               if ((retval == 0) && (ll != NULL)) {
+                  if (*(uint32_t *) ll->serial != prev_serial) {
+                    ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, "BI0");
+                  }
+                  prev_serial = *(uint32_t *) ll->serial;
+
                   // hijack the frame number for transmit size
                   transmit_size = *frame_number;
                   if (transmit_size > ll->blk_size) {
@@ -156,19 +170,27 @@ void biphase_receive(void *args)
 
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
 
-                  if (read_allframe(local_superframe, compressed_linklist)) {
-                      printf("[Biphase] Received an allframe :)\n");
+                  if (read_allframe(local_superframe, superframe, compbuffer)) {
+                      if (verbose) blast_info("[Biphase] Received an allframe :)\n");
+                      memcpy(local_allframe, compbuffer, superframe->allframe_size);
                   } else {
                       // The compressed linklist has been fully reconstructed
-                      blast_info("[Biphase] Received linklist \"%s\"", ll->name);
+                      if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
-                      decompress_linklist_by_size(local_superframe, ll, compressed_linklist, transmit_size);
-                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe_size);
-                      groundhog_linklist_publish(ll, compressed_linklist);
+
+                      // write the linklist data to disk
+                      if (ll_rawfile) {
+                        memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                        write_linklist_rawfile(ll_rawfile, compbuffer);
+                      }
+
+                      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
+                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
+                      groundhog_linklist_publish(ll, compbuffer);
 
                       incrementFifo(local_fifo);
-                      memset(compressed_linklist, 0, BI0_MAX_BUFFER_SIZE);
-                      compressed_linklist_size = 0;
+                      memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
+                      compbuffer_size = 0;
                   } 
               }
           }

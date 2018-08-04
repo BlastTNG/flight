@@ -44,6 +44,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include "daemon.h"
 #include "netcmd.h"
@@ -59,6 +60,8 @@ double round(double x);
 
 #define INPUT_TTY "/dev/ttyCMD"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
+
+static char *pilot_oth_host[2] = { "109.233.44.229:41414", "109.233.44.229:41514" };
 
 char err_message[ERR_MESSAGE_LEN];
 
@@ -656,6 +659,10 @@ void PrintVersion(void)
   exit(0);
 }
 
+static int one(const struct dirent *unused) {
+  return 1;
+}
+
 int main(int argc, char *argv[]) {
   char t_link, t_route;
   int i;
@@ -671,6 +678,44 @@ int main(int argc, char *argv[]) {
 
   t_link = LINK_DEFAULT_CHAR;
   t_route = ROUTING_DEFAULT_CHAR;
+
+  /* --- Start of Convenience hack for linklist --- */
+  struct dirent **dir;
+  int n = scandir("/data/etc/linklists/", &dir, one, alphasort);
+  int num_ll = 0;
+  char * linklist_nt[64] = {NULL};
+
+  // get the list of linklists in the directory
+  for (i = 0; i < n; i++) {
+    if (num_ll >= 63) {
+      printf("Reached maximum linklists for dropdown\n");
+      break;
+    }
+    int len = strlen(dir[i]->d_name);
+    if ((len >=3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
+      linklist_nt[num_ll] = calloc(1, 80);
+      strncpy(linklist_nt[num_ll], dir[i]->d_name, 64);
+      num_ll++;
+    }
+  }
+  // assign the list of linklists to the parameters that have linklist dropdowns
+  if (num_ll > 0) {
+		for (i = 0; i < N_MCOMMANDS; i++) { 
+			int p;
+			for (p = 0; p < mcommands[i].numparams; p++) {
+				if (strcmp(mcommands[i].params[p].name, "Linklist") == 0) {
+					mcommands[i].params[p].nt = (const char **) linklist_nt;
+				} 
+			}   
+		}
+    linklist_nt[num_ll] = calloc(1, 80);
+    sprintf(linklist_nt[num_ll++], "all_telemetry.ll");
+    linklist_nt[num_ll] = calloc(1, 80);
+    sprintf(linklist_nt[num_ll++], "no_linklist");
+  } 
+
+
+  /* --- End of Convenience hack for linklists --- */
 
   /* Parse switches */
   for (i = 1; i < argc; i++) {
@@ -729,6 +774,11 @@ int main(int argc, char *argv[]) {
           USAGE(0);
       } else
         USAGE(0);
+    } else if (strcmp(argv[i], "-oth") == 0) {
+      daemon_pilot[0] = pilot_oth_host[0];
+      daemon_pilot[1] = pilot_oth_host[1];
+      printf("Routing to OTH %s\n", pilot_oth_host[0]);
+      printf("Routing to OTH %s\n", pilot_oth_host[1]);
     } else if (strcmp(argv[i], "-fw") == 0) {
       if (i < (argc - 1)) {
         char *ptr;

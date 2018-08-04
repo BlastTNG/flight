@@ -184,6 +184,16 @@ typedef struct channel channel_t;
     SET_VALUE(__ch,_new_val);                	\
 })
 
+#define GET_SCALED_VALUE(_channel,val)         \
+({                                              \
+    channel_t *__ch = (_channel);               \
+    double _new_val;                            \
+    GET_VALUE(__ch,_new_val);                	  \
+    _new_val = _new_val * __ch->m_c2e;          \
+    _new_val = _new_val + __ch->b_e2e;            \
+   (val) = _new_val;                             \
+})
+
 /**
  * Provides a type-agnostic value setting function
  */
