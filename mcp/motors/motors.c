@@ -29,6 +29,7 @@
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "channels_tng.h"
 #include "tx.h"
@@ -267,6 +268,7 @@ static double get_az_vel(void)
 /************************************************************************/
 void write_motor_channels_5hz(void)
 {
+    uint8_t ec_cmd_status_field = 0;
     static channel_t* gPElAddr;
     static channel_t* gIElAddr;
     static channel_t* gDElAddr;
@@ -288,23 +290,31 @@ void write_motor_channels_5hz(void)
     /* Motor data read out over motor thread in ec_motors.c */
     static channel_t *tMCRWAddr;
     static channel_t *statusRWAddr;
+    static channel_t *networkStatusRWAddr;
+    static channel_t *networkProblemRWAddr;
     static channel_t *stateRWAddr;
     static channel_t *ctl_word_read_rw_addr;
     static channel_t *latched_fault_rw_addr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
+    static channel_t *networkStatusElAddr;
+    static channel_t *networkProblemElAddr;
     static channel_t *stateElAddr;
     static channel_t *ctl_word_read_el_addr;
     static channel_t *latched_fault_el_addr;
 
     static channel_t *tMCPivAddr;
     static channel_t *statusPivAddr;
+    static channel_t *networkStatusPivAddr;
+    static channel_t *networkProblemPivAddr;
     static channel_t *statePivAddr;
     static channel_t *ctl_word_read_piv_addr;
     static channel_t *latched_fault_piv_addr;
 
     int i_motors;
+
+    static channel_t *ethercat_cmds_addr;
 
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
@@ -333,21 +343,29 @@ void write_motor_channels_5hz(void)
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
         statusRWAddr = channels_find_by_name("status_rw");
+        networkStatusRWAddr = channels_find_by_name("network_status_rw");
+        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
         stateRWAddr = channels_find_by_name("state_rw");
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
+        networkStatusElAddr = channels_find_by_name("network_status_el");
+        networkProblemElAddr = channels_find_by_name("network_problem_el");
         stateElAddr = channels_find_by_name("state_el");
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
         statusPivAddr = channels_find_by_name("status_piv");
+        networkStatusPivAddr = channels_find_by_name("network_status_piv");
+        networkProblemPivAddr = channels_find_by_name("network_problem_piv");
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
+
+        ethercat_cmds_addr = channels_find_by_name("mc_cmd_status");
     }
 
     /***************************************************/
@@ -398,21 +416,34 @@ void write_motor_channels_5hz(void)
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
     SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
+    SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
     SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].state);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
+    SET_UINT16(networkStatusElAddr, ElevMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemElAddr, ElevMotorData[i_motors].network_problem);
     SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].state);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
     SET_UINT32(statusPivAddr, PivotMotorData[i_motors].status);
+    SET_UINT16(networkStatusPivAddr, PivotMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemPivAddr, PivotMotorData[i_motors].network_problem);
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
+
+    ec_cmd_status_field = ((uint8_t)CommandData.ec_devices.reset) +
+                          ((uint8_t)CommandData.ec_devices.fix_rw << 1) +
+                          ((uint8_t)CommandData.ec_devices.fix_el << 2) +
+                          ((uint8_t)CommandData.ec_devices.fix_piv << 3) +
+                          ((uint8_t)CommandData.ec_devices.fix_hwpr << 4);
+    SET_UINT8(ethercat_cmds_addr, ec_cmd_status_field);
 }
 
 void write_motor_channels_200hz(void)
@@ -498,14 +529,6 @@ static void initialize_el_dither()
         CommandData.pointing_mode.next_i_dith = -1;
     }
 
-    if (CommandData.pointing_mode.next_i_hwpr >= 0 && CommandData.pointing_mode.next_i_hwpr < 4) {
-        CommandData.hwpr.i_pos = CommandData.pointing_mode.next_i_hwpr;
-        CommandData.hwpr.mode = HWPR_GOTO_I;
-        CommandData.hwpr.is_new = 1;
-        CommandData.pointing_mode.next_i_hwpr = -1;
-    } else {
-        CommandData.pointing_mode.next_i_hwpr = -1;
-    }
     calculate_el_dither(NO_DITH_INC);
 }
 
@@ -883,7 +906,7 @@ static void do_mode_new_cap(void)
     static double v_el = 0;
     static double targ_el = 0.0;
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1052,13 +1075,7 @@ static void do_mode_new_cap(void)
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
 
-        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
@@ -1088,7 +1105,7 @@ static void do_mode_el_box(void)
     static double v_az = 0;
     static double targ_az = 0.0;
 
-    // Stuff for hwpr rotation triggering
+    // Stuff for dither triggering (right now no dither is implemented)
     static int az_dir_last = 0;
     static int n_scan = 0;
     static int az_next_dir = 0.0;
@@ -1228,20 +1245,6 @@ static void do_mode_el_box(void)
         return;
     }
 
-    if (((axes_mode.az_dir - az_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-        n_scan += 1;
-        blast_info("DoElBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        //    if(n_scan % 4 == 0 && n_scan != 0) {
-        //      GetElDither(DITH_INC);
-        //      blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-        //    }
-    }
-
     az_dir_last = axes_mode.az_dir;
 
     if (!turn_az) {
@@ -1269,7 +1272,7 @@ static void do_mode_new_box(void)
     static double v_el = 0;
     static double targ_el = 0.0;
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1418,13 +1421,7 @@ static void do_mode_new_box(void)
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
-        blast_info("DoNewBoxMode: Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }
@@ -1456,7 +1453,7 @@ void do_mode_quad(void) // aka radbox
     static double v_el = 0;
     static double targ_el = 0.0; // targ_el is in degrees from bottom
 
-    // Stuff for the elevation offset/hwpr trigger
+    // Stuff for the elevation offset
     static int el_dir_last = 0;
     static int n_scan = 0;
     static int el_next_dir = 0.0;
@@ -1601,13 +1598,7 @@ void do_mode_quad(void) // aka radbox
 
     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
         n_scan += 1;
-        blast_info("Sending signal to rotate HWPR. n_scan = %i", n_scan);
-
-        /* Set flags to rotate the HWPR */
-        CommandData.hwpr.mode = HWPR_STEP;
-        CommandData.hwpr.is_new = HWPR_STEP;
-
-        if (n_scan % 4 == 0 && n_scan != 0) {
+        if (n_scan != 0) {
             calculate_el_dither(DITH_INC);
             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
         }

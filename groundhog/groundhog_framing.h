@@ -27,6 +27,7 @@
 #define INCLUDE_FRAMING_H_
 
 #define NUM_FRAMES 20 
+#include "channels_tng.h"
 #include "FIFO.h"
 #include "linklist.h"
 

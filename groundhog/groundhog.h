@@ -1,8 +1,14 @@
 #ifndef INCLUDE_GROUNDHOG_H
 #define INCLUDE_GROUNDHOG_H
 
-#define FILE_SAVE_DIR "/data/groundhog"
+#define GROUNDHOG_MAX_FRAMES_RESET 900
 
+#define ROACH_CHANNEL_REF_NAME "kidA_roachN"
+#define ROACH_CHANNEL_REF_INDEX_NAME "kidA_roachN_index"
+
+#include "linklist.h"
+#include "linklist_writer.h"
+#include "derived.h"
 #include "groundhog_framing.h"
 
 struct UDPSetup {
@@ -23,7 +29,11 @@ void biphase_publish(void *arg);
 void highrate_receive(void *arg);
 void highrate_publish(void *arg);
 
+void groundhog_write_calspecs(char *, derived_tng_t *);
+linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
+
 extern char datestring[80];
+extern int verbose;
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))

@@ -340,6 +340,7 @@ int ForwardRoute(char *buffer)
     return 18;
 
   int ack = NetCmdSendAndReceive(buffer, 1, 0, NULL);
+  printf("Forwarded to %s\n", pilot_host[buffer[1]-'1']);
 
   WriteLogFile(0, NULL, ack);
 
@@ -467,9 +468,9 @@ int ExecuteCommand(int sock, int fd, int route, char* buffer, const char *user,
   if (result == 0) {
     if (link_disabled[(int)buffer[0]][(int)buffer[1] - '1'])
       result = 20; /* channel disabled by command server */
-    else if (forward)
+    else if (forward) {
       result = ForwardRoute(buffer);
-    else if (route)
+    } else if (route)
       result = SimpleRoute(sock, fd, &buffer[3]);
     else
       result = SIPRoute(sock, t_link, t_route, &buffer[3]);

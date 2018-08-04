@@ -48,9 +48,10 @@
 #include <ck_ht.h>
 
 #include "file_buffer_tng.h"
+#include "diskmanager_tng.h"
 #define HOME_DIR					"/data"
 #define MNT_DIR_PREFIX				"mcp_hd"
-#define NUM_USB_DISKS               8
+#define NUM_USB_DISKS               16
 #define DISK_MAX_NUMBER             NUM_USB_DISKS+1
 #define DISK_MAX_FILES				100	/** Maximum number of concurrently open files */
 #define DISK_MIN_FREE_SPACE			50  /** Minimum amount of free space in MB for a disk to be used */
@@ -94,25 +95,8 @@ typedef struct diskpool
 } diskpool_t;
 
 
-/*
- *  fileentry structure is assigned to each file currently open on an disk manager volume.  Calls to operate
- * on files reference the index number of a fileentry in the #filepool
- */
-typedef struct fileentry
-{
-    FILE                *fp;                /**< fp File pointer used to write data to the file */
-    pthread_t           parent;             /**< parent pthread ID of the creating thread */
-    char                *filename;          /**< filename base file name of the file being written/read */
-    char                mode[4];            /**< mode One of "r", "w", "a" or with "+" appended */
-    diskentry_t         *disk;              /**< disk Pointer to file's disk */
-    filebuffer_t        buffer;             /**< buffer For file data caching in mcp */
-    ck_ht_hash_t        filehash;           /**< filehash Hash of filename, used for hash table */
-    uint32_t            is_closed;          /**< is_closed Set by the calling routine to make the entry for cleanup */
-    int32_t             last_error;         /**< last_error In the event of disk error, this is set to errno */
-} fileentry_t;
-
 // Hardware IDs for the drives connected by USB
-static const char drive_uuids[2][NUM_USB_DISKS][64] = {{
+static const char drive_uuids[NUM_USB_DISKS][64] = {
 		"ccbff6e7-8e51-49e4-a987-9ebf5644813e",
         "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
         "67e991c8-1e1e-4f77-84f1-9273c050e385",
@@ -120,15 +104,15 @@ static const char drive_uuids[2][NUM_USB_DISKS][64] = {{
         "94ac1984-a52b-4be6-afb7-cb8302d249e0",
         "993e105e-1cbc-4913-abca-29540242c57e",
         "6846dffc-cf41-447a-a576-4ab34cad7974",
-        "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c"},
-        {"ccbff6e7-8e51-49e4-a987-9ebf5644813e",
-        "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
-        "67e991c8-1e1e-4f77-84f1-9273c050e385",
-        "22804e9d-a3e1-4cf8-a5b2-ff2fcf22bc5e",
-        "94ac1984-a52b-4be6-afb7-cb8302d249e0",
-        "993e105e-1cbc-4913-abca-29540242c57e",
-        "6846dffc-cf41-447a-a576-4ab34cad7974",
-        "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c"}};
+        "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c",
+        "", // sdb1
+        "", // sdc1
+        "", // sdd1
+        "", // sde1
+        "f841003d-53c5-454e-915b-9e477c2f085e", // sdf1
+        "548fa9fd-b0c5-46e7-b80a-553d0dd01221", // sdg1
+        "1506c53d-d16c-4063-a182-5d167fa968c7", // sdh1
+        "f1fd4434-15b2-48aa-bead-8af2394bc1db"}; // sdi1
 
 static int file_change_disk(fileentry_t*, diskentry_t*);
 static int file_reopen_on_new_disk(fileentry_t*, diskentry_t*);
@@ -230,8 +214,8 @@ static int diskpool_add_init_usb_info(const char *m_uuid, int m_pos) {
 static void drivepool_init_usb_info() {
     int i = 0;
     for (i = 0; i < NUM_USB_DISKS; i++) {
-        if (strlen(drive_uuids[SouthIAm][i]) > 0) {
-            diskpool_add_init_usb_info(drive_uuids[SouthIAm][i], i);
+        if (strlen(drive_uuids[i]) > 0) {
+            diskpool_add_init_usb_info(drive_uuids[i], i);
         }
     }
 }
@@ -615,11 +599,12 @@ static diskentry_t *diskpool_mount_new(void) {
  */
 static void diskpool_mount_primary() {
     s_diskpool.current_disk = diskpool_mount_new();
-
     if (!s_diskpool.current_disk) {
         blast_fatal("Could not mount primary disk");
         exit(1);
     }
+    blast_info("New primary disk mounted (index = %u) at mount point %s",
+               (s_diskpool.current_disk)->index, (s_diskpool.current_disk)->mnt_point);
 }
 
 /**
@@ -790,11 +775,12 @@ static void file_free_fileentry(fileentry_t *m_file) {
  * @return -1 on error, 0 on success
  */
 static int file_change_disk(fileentry_t *m_file, diskentry_t *m_disk) {
+	blast_info("Attempting to change the disk for file %s", m_file->filename);
     int retval = -1;
 
     if ((m_file && m_disk) && (diskmanager_dev_is_mounted(m_disk->dev, NULL))) {
         if (m_file->fp)
-            file_close_internal(m_file, true);
+            file_close_internal(m_file, true); // This does not remove the file from the filepool.
         m_file->last_error = 0;
 
         if (m_file->mode[0] != 'r')
@@ -831,6 +817,8 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     char *substr = NULL;
     int name_len;
     int val = 1;
+    int success = 0;
+    ck_ht_entry_t ent;
     if (s_diskmanager_exit) {
         return -1;
     }
@@ -854,6 +842,12 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     if (diskpool_mkdir_file(filename, true) != 0) {
         return -1;
     }
+    // Remove old entry from the hashtable.
+    ck_ht_entry_set(&ent, m_file->filehash, m_file->filename,
+                    strlen(m_file->filename), m_file);
+    if (!ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent)) {
+        blast_err("Could not remove old entry %s from file hash table", m_file->filename);
+    }
 
     blast_tmp_sprintf(full_filename, "%s/%s",
             s_diskpool.current_disk->mnt_point, filename);
@@ -872,7 +866,15 @@ static int file_reopen_on_new_disk(fileentry_t *m_file, diskentry_t *m_disk) {
     BLAST_SAFE_FREE(m_file->filename);
     m_file->filename = filename;
     m_file->disk = m_disk;
-
+    // Now we add back the entry into the filepool hashtable
+    ck_ht_hash(&m_file->filehash, &s_filepool, m_file->filename,
+                strlen(m_file->filename));
+    ck_ht_entry_set(&ent, m_file->filehash, m_file->filename,
+                strlen(m_file->filename), m_file);
+    success = ck_ht_put_spmc(&s_filepool, m_file->filehash, &ent);
+    if (!success) {
+    	blast_info("Could not insert entry %s back into the hashtable.", m_file->filename);
+    }
     return retval;
 }
 
@@ -891,15 +893,18 @@ static void filepool_handle_disk_error(diskentry_t *m_disk) {
     ck_ht_entry_t *entry;
     pthread_t unmount_thread;
 
-    blast_info("Beginning disk error handling");
+    blast_info("Beginning disk error handling for disk %u, free_space = %d, mnt_point = %s",
+               m_disk->index, m_disk->free_space, m_disk->mnt_point);
 
     m_disk->fail_count++;
     if (m_disk == s_diskpool.current_disk) {
+    	blast_info("Problem with current disk, attempting to mount a new disk");
         diskpool_mount_primary();
     }
 
     while (ck_ht_next(&s_filepool, &iter, &entry)) {
         file = (fileentry_t*) ck_ht_entry_value(entry);
+        blast_info("Moving to next entry in the filepool hashtable. name = %s", file->filename);
         if ((file->disk == m_disk)
                 && (file_change_disk(file, s_diskpool.current_disk) == -1)) {
             blast_err("Could not re-open %s of %s",
@@ -996,7 +1001,9 @@ static void filepool_close_file(fileentry_t *m_file) {
     if (!ck_ht_remove_spmc(&s_filepool, m_file->filehash, &ent)) {
         blast_err("Could not remove %s from file hash table", m_file->filename);
     }
+    blast_info("Calling file_close_internal for %s", m_file->filename);
     file_close_internal(m_file, false);
+    blast_info("Freeing the hashtag entry");
     file_free_fileentry(m_file);
 }
 
@@ -1010,13 +1017,17 @@ static int filepool_flush_buffers(void) {
     size_t length;
     ck_ht_iterator_t iter = CK_HT_ITERATOR_INITIALIZER;
     ck_ht_entry_t *entry;
+	uint16_t filepool_counter = 0;
 
+	// Move through the hashtable.
     while (ck_ht_next(&s_filepool, &iter, &entry)) {
+		// blast_info("Moving to next entry in the filepool hashtable.");
         file = (fileentry_t*) ck_ht_entry_value(entry);
-
+        diskentry_t *disk = (diskentry_t*) file->disk;
         file->last_error = 0;
         length = filebuffer_len(&(file->buffer));
         if (length > 0) {
+            // blast_info("Attempting to open %s", file->filename);
             if (!file->fp && (file_open_internal(file) < 0)) {
                 blast_err("Couldn't open %s: %s", file->filename,
                         strerror(file->last_error));
@@ -1025,14 +1036,19 @@ static int filepool_flush_buffers(void) {
 
             if (filebuffer_writeout(&(file->buffer), file->fp) < 0) {
                 file->last_error = errno;
+                blast_info("Error writing to file %s, %s on disk %u at mount point %s",
+                           file->filename, strerror(errno), disk->index, disk->mnt_point);
                 return -file->last_error;
             }
             increment_total_bytes(length);
         }
 
         if (file->is_closed) {
+            blast_info("Closing the %uth entry in the hash table", filepool_counter);
+            blast_info("Attempting to close file %s at mount point %s", file->filename, disk->mnt_point);
             filepool_close_file(file);
         }
+        filepool_counter++;
     }
     return 0;
 }
@@ -1272,6 +1288,17 @@ int file_copy(const char *m_source, const char *m_dest) {
     return retval;
 }
 
+int make_local_symlink(char * filename) {
+    char * linkname = NULL;
+    int i = 0;
+    for (i = strlen(filename)-1; i >= 0; i--) {
+      if (filename[i] == '/') break;
+    }
+    blast_tmp_sprintf(linkname, "/data/rawdir/%s", filename+i+1);
+    unlink(linkname);
+
+    return symlink(filename, linkname);
+}
 /**
  * Opens a pre-existing fileentry_t.
  * @param m_file
@@ -1286,6 +1313,7 @@ static int file_open_internal(fileentry_t *m_file) {
 
     blast_tmp_sprintf(filename, "%s/%s", s_diskpool.current_disk->mnt_point,
             m_file->filename);
+    blast_info("Opening %s", filename);
     errno = 0;
     m_file->fp = fopen(filename, m_file->mode);
     m_file->disk = s_diskpool.current_disk;
@@ -1296,8 +1324,16 @@ static int file_open_internal(fileentry_t *m_file) {
         return -1;
     }
     setvbuf(m_file->fp, NULL, _IONBF, 0);
+    make_local_symlink(filename);
 
     return 0;
+}
+
+/**
+ * Returns a pointer to the string for the current disk mount point
+ */
+const char * get_current_disk_mnt_point() {
+    return s_diskpool.current_disk->mnt_point;
 }
 
 /**

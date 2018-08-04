@@ -49,6 +49,13 @@ extern "C" {
 #define M_16PRE (10.24/32768.0)
 #define B_16PRE (-32768.0)
 
+
+/* Gains and offsets to normalize to -1 to 1: cal = (counts + B)*M */
+#define M_32UNI (1.0/2147483648.0)
+#define B_32UNI (-2147483648.0)
+#define M_16UNI (1.0/32768.0)
+#define B_16UNI (-32768.0)
+
 /* Gains and offsets for the labjack AIN channels: cal = (counts + B)*M */
 #define M_16LJAIN (10.8/32768.0)
 #define B_16LJAIN (-10.8)
@@ -65,6 +72,9 @@ extern "C" {
 #define M_16R_DB (50.0/65536) // kHz
 #define B_16R_DB (0.0)
 
+/* Gains and offsets for pointing sensors: */
+#define M_16MAG (1.0/15000.0)
+
 /* bare thermometer conversion to Volts. No negative values allowed */
 #define M_16T (4.096/32768.0/2.0)
 #define B_16T (0.0)
@@ -74,8 +84,10 @@ extern "C" {
 
 /* offset of encoder.  Reset if encoder has been unmounted. */
 /* This is the elevation at which the encoder wraps around */
-#define ENC_RAW_EL_OFFSET (291.84) //PCA 11-May-2017
-                                   /* Note this is referenced relative to lock pin hole 0*/
+#define ENC_RAW_EL_OFFSET (142.09) //LMF 13-July-2018
+                                   /* Note this is referenced relative to lock pin hole 25*/
+// #define ENC_RAW_EL_OFFSET (291.84) //PCA 11-May-2017
+//                                    /* Note this is referenced relative to lock pin hole 0*/
 
 /* to get proper wrapping in KST, the encoder elevation type should be
  * 'u' for 135 <= ENC_EL_RAW_OFFSET < 315 and 's' otherwise */
@@ -128,8 +140,11 @@ extern "C" {
 #define CRYO_A2_B (-1.032198E1 )
 /* Cryo Diode Voltage Calibration */
 /* Modified by Ian Summer 2017 */
-#define CRYO_D_M ( 10.8/32768)
-#define CRYO_D_B (-10.8)
+#define CRYO_D_M ( 10.34/32768)
+#define CRYO_D_B (-10.5869)
+/* modified Ian and Mark Palestine */
+#define CRYO_R_M ( 1.034/32768 )
+#define CRYO_R_B (-1.05869 )
 /* M3 was not measured (spider cable broken) so is an estimate */
 #define CRYO_M3_M            (1.1319609e-05)
 #define CRYO_M3_B            (-24293.822)

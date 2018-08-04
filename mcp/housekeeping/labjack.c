@@ -495,26 +495,36 @@ static int initialized(void) {
 void labjack_choose_execute(void) {
     int init = initialized();
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
-        blast_info("setting cmd queue executor");
-        if (CommandData.Relays.labjack[0] == 1) {
+        // blast_info("setting cmd queue executor");
+        if (state[0].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;
-        } else if (CommandData.Relays.labjack[1] == 1) {
+        } else if (state[1].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[1] = 1;
-        } else if (CommandData.Relays.labjack[2] == 1) {
+        } else if (state[2].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[2] = 1;
-        } else if (CommandData.Relays.labjack[3] == 1) {
+        } else if (state[3].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[3] = 1;
-        } else if (CommandData.Relays.labjack[4] == 1) {
+        } else if (state[4].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
         } else {
             blast_info("no queue selected, trying again in 1s");
         }
     }
+}
+
+void set_execute(int which) {
+    // resetting executor
+    CommandData.Labjack_Queue.which_q[0] = 0;
+    CommandData.Labjack_Queue.which_q[1] = 0;
+    CommandData.Labjack_Queue.which_q[2] = 0;
+    CommandData.Labjack_Queue.which_q[3] = 0;
+    CommandData.Labjack_Queue.which_q[4] = 0;
+    CommandData.Labjack_Queue.which_q[which] = 1;
 }
 
 void *labjack_cmd_thread(void *m_lj) {

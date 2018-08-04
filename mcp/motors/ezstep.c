@@ -351,7 +351,7 @@ int EZBus_Send(struct ezbus *bus, char who, const char* what)
         if (bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: Serial error madness! err_count=%i", bus->err_count);
     } else {
         bus->err_count = 0;
-        // if(bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: No serial error! Resetting error count to 0.");
+        if (bus->chatter >= EZ_CHAT_BUS) blast_err("EZBus_Send: No serial error! Resetting error count to 0.");
     }
 
     return (bus->error = retval);
@@ -675,10 +675,12 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char))
         }
 
         if ((bus->stepper[iWho(i)].status & EZ_STEP_OK) && !(bus->stepper[iWho(i)].status & EZ_STEP_INIT)) {
-            if (ezinit(bus, i))
+            if (ezinit(bus, i)) {
+		blast_info("setting EZ_STEP_INIT for %s", stepName(bus, i));
                 bus->stepper[iWho(i)].status |= EZ_STEP_INIT;
-            else
+	    } else {
                 bus->stepper[iWho(i)].status &= ~EZ_STEP_INIT;
+	    }
             sleep(1); // TODO(BLAST-Pol OK): belongs in library? may prevent many-init
         }
     }
@@ -760,10 +762,10 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc)
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
 {
     char i;
-    blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
+    // blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
-	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
-	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
+	    // blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
+	    //           i, iWho(i), preamble, EZ_BUS_BUF_LEN);
         strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }
@@ -803,7 +805,7 @@ int EZBus_MoveComm(struct ezbus* bus, char who, const char* what)
     char buf[EZ_BUS_BUF_LEN];
     char i;
     int retval;
-    if (!isWhoGroup(who)) {     // ingle stepper
+    if (!isWhoGroup(who)) {     // single stepper
         return EZBus_Comm(bus, who, EZBus_StrComm(bus, who, sizeof(buf), buf, "%sR", what));
     } else {
         for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
