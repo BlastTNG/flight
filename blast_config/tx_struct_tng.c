@@ -1600,5 +1600,10 @@ channel_t channel_list[] =
      { "flags_kids0976_roach5",       SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
      { "flags_kids0992_roach5",       SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
      { "flags_kids1008_roach5",       SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+
+     /* ----------------------- */
+     /* NULL TERMINATE THE LIST */
+     /* ----------------------- */
+     { {0} }
   };
 
