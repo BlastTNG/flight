@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
   int use_starcams = 0;
 
 #ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  // pthread_t xy_id;
+  pthread_t xy_id;
 #endif
 
   if (argc == 1) {
@@ -716,7 +716,7 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
 #ifdef USE_XY_THREAD
-  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
+  pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
 #endif
 
 #ifndef BOLOTEST
