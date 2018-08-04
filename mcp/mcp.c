@@ -787,7 +787,7 @@ blast_info("Finished initializing Beaglebones..."); */
   initialize_CPU_sensors();
 
   // force incharge for test cryo
-  force_incharge();
+  // force_incharge();
 
   if (use_starcams) {
        xsc_networking_init(0);
@@ -816,8 +816,10 @@ blast_info("Finished initializing Beaglebones..."); */
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-
+#ifndef USE_XY_THREAD
+  // putting actuator bus thread here so we only use the actbus or the xy-stage bus
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
+#endif
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
