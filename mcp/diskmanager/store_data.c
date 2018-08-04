@@ -282,6 +282,12 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
         storage_info_roaches[roach].frames_stored = 0;
         storage_info_roaches[roach].crc = BLAST_MAGIC32;
         storage_info_roaches[roach].fp = file_open(fileout_name, "w+");
+        if (!file_index[roach]) {
+            snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" LINKLIST_EXT ".%.2u",
+                     roach+1, file_index[roach]);
+            unlink(symlink_name);
+            symlink(fileout_name, symlink_name);
+        }
         file_index[roach]++;
     }
     // write to the fie if opened
@@ -390,6 +396,12 @@ void store_data_hk(uint8_t * sf_buffer) {
         storage_info_hk.frames_stored = 0;
         storage_info_hk.crc = BLAST_MAGIC32;
         storage_info_hk.fp = file_open(fileout_name, "w+");
+        if (!file_index) {
+            snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" LINKLIST_EXT ".%.2u",
+                      file_index);
+            unlink(symlink_name);
+            symlink(fileout_name, symlink_name);
+        }
         file_index++;
     }
 
