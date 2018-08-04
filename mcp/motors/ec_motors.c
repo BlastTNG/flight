@@ -55,6 +55,7 @@
 
 static ph_thread_t *motor_ctl_id;
 static ph_thread_t *ecmonitor_ctl_id;
+
 extern int16_t InCharge;
 
 // device node Serial Numbers
