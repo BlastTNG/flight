@@ -42,7 +42,7 @@
 #define POTVALVE_STEP_ADC_RATIO 318.75
 
 typedef enum {
-	no_move = 0, opening, closing, tighten
+	no_move = 0, opening, closing, tighten, valve_stop
 } valve_move_type_t;
 
 static struct potvalve_struct {
@@ -54,6 +54,7 @@ static struct potvalve_struct {
 	int open_i;
 	int close_i;
 	int do_move;
+	int on;
 	valve_state_t state, goal;
 	valve_state_t prev_state, prev_goal;
 	valve_move_type_t potvalve_move;
@@ -126,6 +127,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 
 	valve_data[index].goal = CommandData.Cryo.valve_goals[index];
 	valve_data[index].stop = CommandData.Cryo.valve_stop[index];
+	if (valve_data[index].stop) valve_data[index].goal = 0;
 	EZBus_SetVel(bus, valve_data[index].addr, CommandData.Cryo.valve_vel);
 	EZBus_SetIMove(bus, valve_data[index].addr, CommandData.Cryo.valve_move_i);
 	EZBus_SetIHold(bus, valve_data[index].addr, CommandData.Cryo.valve_hold_i);
@@ -151,7 +153,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_Stop(bus, valve_data[index].addr);
 			// EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
-			EZBus_RelMove(bus, valve_data[index].addr, 1000000);
+			EZBus_RelMove(bus, valve_data[index].addr, 800000);
 			EZBus_Release(bus, valve_data[index].addr);
 			blast_info("Starting to open Valve %d", index); // debug PAW
 		} else {
@@ -162,7 +164,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_Stop(bus, valve_data[index].addr);
 			// EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
-			EZBus_RelMove(bus, valve_data[index].addr, -1000000);
+			EZBus_RelMove(bus, valve_data[index].addr, -800000);
 			EZBus_Release(bus, valve_data[index].addr);
                         blast_info("Starting to close Valve %d", index); // debug PAW
 		} else {
@@ -254,6 +256,9 @@ void DoPotValve(struct ezbus* bus)
 	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
 	prev_goal = potvalve_data.goal;
+	potvalve_data.on = CommandData.Cryo.potvalve_on;
+	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
+	EZBus_SetIHold(bus, potvalve_data.addr, CommandData.Cryo.potvalve_hold_i);
 
 	if (CommandData.Cryo.potvalve_goal == opened) {
 		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
@@ -268,8 +273,6 @@ void DoPotValve(struct ezbus* bus)
 		}
 	}
 
-	EZBus_SetVel(bus, potvalve_data.addr, CommandData.Cryo.potvalve_vel);
-	EZBus_SetIHold(bus, potvalve_data.addr, CommandData.Cryo.potvalve_hold_i);
 
 	// blast_info("about to call GetPotValvePos"); // DEBUG PAW
 	GetPotValvePos(bus);
@@ -312,10 +315,21 @@ void DoPotValve(struct ezbus* bus)
 	// firstmove = 0;
 	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
-	if(potvalve_data.do_move) {
-	switch(potvalve_data.potvalve_move) {
+	if ((potvalve_data.on == 0) && (potvalve_data.moving == 1)) {
+	    // this if statement overrides everything else if the potvalve is turned off and moving
+	    potvalve_data.do_move = 1;
+	    potvalve_data.potvalve_move = valve_stop;
+	    potvalve_data.goal = 0;
+	}
+
+	if (potvalve_data.do_move) {
+	switch (potvalve_data.potvalve_move) {
+		case(valve_stop):
+	                if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
+			break;
 		case(no_move):
 			// blast_info("in case no_move"); // DEBUG PAW
+                        // don't stop if closed, want to hit torque limit
 			if (potvalve_data.state != closed) EZBus_Stop(bus, potvalve_data.addr);
 			// blast_info("called EZBus_Stop"); // DEBUG PAW
 			potvalve_data.moving = 0;
@@ -331,7 +345,7 @@ void DoPotValve(struct ezbus* bus)
 			tight_flag = 0;
 			break;
 		case(closing):
-			blast_info("in case closing"); // DEBUG PAW
+			// blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
@@ -340,7 +354,7 @@ void DoPotValve(struct ezbus* bus)
 			potvalve_data.moving = 1;
 			break;
 		case(tighten):
-			blast_info("in case tighten"); // DEBUG PAW
+			// blast_info("in case tighten"); // DEBUG PAW
 			if(potvalve_data.moving == 0) { // if we're just starting to tighten
 				GetPotValvePos(bus); // check location before tightening
 				delta = (int)(-1 * POTVALVE_STEP_ADC_RATIO *

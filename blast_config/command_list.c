@@ -260,8 +260,8 @@ struct scom scommands[xyzzy + 1] = {
   // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
   // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
 
-  {COMMAND(potvalve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(potvalve_off), "He4 pot valve off", GR_CRYO},
+  {COMMAND(potvalve_on), "Turn He4 pot valve on (will accept move commands)", GR_CRYO | CONFIRM},
+  {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
