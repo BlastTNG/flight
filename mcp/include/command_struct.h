@@ -273,11 +273,11 @@ typedef struct {
   int potvalve_on;
   valve_state_t potvalve_goal;
   uint32_t potvalve_vel;
-  uint16_t potvalve_opencurrent, potvalve_closecurrent;
+  uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   valve_state_t valve_goals[2];
   int valve_stop[2];
-  uint16_t valve_vel, valve_current, valve_acc;
+  uint16_t valve_vel, valve_move_i, valve_hold_i, valve_acc;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   int do_cal_pulse;
   int do_level_pulse;
@@ -359,7 +359,7 @@ typedef struct roach
     unsigned int get_phase_centers;
     unsigned int get_timestream;
     unsigned int chan;
-    unsigned int tune_chan;
+    unsigned int tune_amps;
     unsigned int refit_res_freqs;
     unsigned int change_tone_amps;
     unsigned int do_master_chop;
@@ -372,6 +372,7 @@ typedef struct roach
     unsigned int change_targ_freq;
     unsigned int change_tone_phase;
     unsigned int change_tone_freq;
+    unsigned int on_res;
 } roach_status_t;
 
 typedef struct roach_params
@@ -387,12 +388,13 @@ typedef struct roach_params
     double test_freq;
     double atten_step;
     double npoints;
-    double ncycles;
+    int ncycles;
     double num_sec;
     double lo_offset;
     double delta_amp;
     double delta_phase;
     double freq_offset;
+    int resp_thresh;
 } roach_params_t;
 
 // Ethercat controller/device commands

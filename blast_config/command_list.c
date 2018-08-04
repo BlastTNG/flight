@@ -260,16 +260,18 @@ struct scom scommands[xyzzy + 1] = {
   // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
   // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
 
-  {COMMAND(potvalve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(potvalve_off), "He4 pot valve off", GR_CRYO},
+  {COMMAND(potvalve_on), "Turn He4 pot valve on (will accept move commands)", GR_CRYO | CONFIRM},
+  {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
-  {COMMAND(pump_valve_stop), "stop pump valve, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_valve_off), "stop pump valve, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_valve_on), "re-enable pump valve", GR_CRYO},
   {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
-  {COMMAND(fill_valve_stop), "stop fill valve, reset goal to 0", GR_CRYO},
+  {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
+  {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -319,7 +321,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
   {COMMAND(vna_sweep_all), "Peform a VNA sweep on all Roaches", GR_ROACH},
   {COMMAND(targ_sweep_all), "Peform a TARG sweep on all Roaches", GR_ROACH},
-  {COMMAND(refit_freqs_all), "Refit freqs on all Roaches", GR_ROACH},
   {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
   {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
   {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
@@ -915,13 +916,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(load_new_vna_amps), "loads new VNA amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"APPLY TRF FILE[0 = default, 1 = apply first, 2 = apply new]", 1, 2, 'i', "NONE"},
+      {"APPLY TRF FILE[1 = default (all 1), 2 = apply trf]", 1, 2, 'i', "NONE"},
     }
   },
   {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"APPLY TRF FILE[1 = default, 2 = apply first, 3 = apply new]", 1, 3, 'i', "NONE"},
+      {"APPLY TRF FILE[1 = default, 2 = apply trf, 3 = apply last]", 1, 3, 'i', "NONE"},
     }
   },
   {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
@@ -944,7 +945,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Atten step (dB)", 0.5, 6.0, 'f', "NONE"},
       {"Number of sweep points", 5, 101, 'f', "NONE"},
-      {"Number of cycles (sweeps)", 2, 20, 'f', "NONE"},
+      {"Number of cycles (sweeps)", 2, 20, 'i', "NONE"},
     }
   },
   {COMMAND(targ_sweep), "perform a new TARG sweep", GR_ROACH, 1,
@@ -1036,16 +1037,24 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(chop_tune_chan), "Tune channel responsivity with optical chop", GR_ROACH, 3,
+  {COMMAND(cal_amps), "Tune channel responsivity with optical chop", GR_ROACH, 5,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Channel no", 0, 1000, 'i', "NONE"},
-      {"Number of sec to stream", 0, 10, 'f', "NONE"},
+      {"Number of seconds to avg data", 0, 10.0, 'f', "NONE"},
+      {"Number of cycles for cal", 0, 10.0, 'i', "NONE"},
+      {"Delta amp", 0, 10.0, 'f', "NONE"},
+      {"Desired response threshold", 0, 30000, 'i', "NONE"},
     }
   },
-  {COMMAND(refit_freqs), "Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 1,
+  {COMMAND(refit_freqs), "Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 2,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"}
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(refit_freqs_all), "Refit freqs on all Roaches", GR_ROACH, 1,
+    {
+      {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
   {COMMAND(chop_template), "Saves timestreams for all channel and calculates avg chop", GR_ROACH, 1,
@@ -1278,9 +1287,15 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
+  {COMMAND(valves_set_move_i), "Set cryostat valves move current", GR_CRYO, 1,
     {
       {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
+    }
+  },
+
+  {COMMAND(valves_set_hold_i), "Set cryostat valves hold current", GR_CRYO, 1,
+    {
+      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "CURRENT_VALVES"}
     }
   },
 

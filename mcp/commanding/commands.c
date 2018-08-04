@@ -972,9 +972,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case potvalve_on:
             CommandData.Cryo.potvalve_on = 1;
+	    CommandData.Cryo.potvalve_goal = 0;
             break;
         case potvalve_off:
             CommandData.Cryo.potvalve_on = 0;
+	    CommandData.Cryo.potvalve_goal = 0;
             break;
         case pump_valve_open:
 	    CommandData.Cryo.valve_goals[0] = opened;
@@ -987,6 +989,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    CommandData.Cryo.valve_stop[0] = 1;
 	    break;
 	case pump_valve_on:
+	    CommandData.Cryo.valve_goals[0] = 0;
 	    CommandData.Cryo.valve_stop[0] = 0;
 	case fill_valve_open:
 	    CommandData.Cryo.valve_goals[1] = opened;
@@ -999,6 +1002,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    CommandData.Cryo.valve_stop[1] = 1;
 	    break;
 	case fill_valve_on:
+	    CommandData.Cryo.valve_goals[1] = 0;
 	    CommandData.Cryo.valve_stop[1] = 0;
 	    break;
 	case l_valve_open:
@@ -1165,11 +1169,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case targ_sweep_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].do_sweeps = 2;
-            }
-            break;
-        case refit_freqs_all:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].refit_res_freqs = 1;
             }
             break;
         case find_kids_default_all:
@@ -1773,6 +1772,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_opencurrent = ivalues[0];
       CommandData.Cryo.potvalve_closecurrent = ivalues[1];
       break;
+    case potvalve_set_hold_current:
+      CommandData.Cryo.potvalve_hold_i = ivalues[0];
+      break;
     case potvalve_set_thresholds:
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
@@ -1781,8 +1783,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
       break;
-    case valves_set_current:
-      CommandData.Cryo.valve_current = ivalues[0];
+    case valves_set_move_i:
+      CommandData.Cryo.valve_move_i = ivalues[0];
+      break;
+    case valves_set_hold_i:
+      CommandData.Cryo.valve_hold_i = ivalues[0];
       break;
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
@@ -1999,8 +2004,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case load_new_targ_amps:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 3)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
+          blast_info("LOAD TARG AMPS: %u", CommandData.roach[ivalues[0]-1].load_targ_amps);
       }
       break;
     case load_freqs:
@@ -2138,26 +2144,34 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case all_roach_ts:
-      if ((rvalues[1] >= 0.0) && (rvalues[1] <= 300.0)) {
+      if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
               CommandData.roach[i].get_timestream = 2;
           }
       }
-    case chop_tune_chan:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
-                     ((ivalues[1] >= 0) && ivalues[1] <= 1000) &&
-                     ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
-          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
-          CommandData.roach[ivalues[0]-1].tune_chan = 1;
+      break;
+    case cal_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].ncycles = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].delta_amp = rvalues[3];
+          CommandData.roach_params[ivalues[0]-1].resp_thresh = rvalues[4];
+          CommandData.roach[ivalues[0]-1].tune_amps = 1;
       }
       break;
     case refit_freqs:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+          CommandData.roach[ivalues[0]-1].on_res = ivalues[1];
       }
       break;
+    case refit_freqs_all:
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            CommandData.roach[i].refit_res_freqs = 1;
+        }
+        CommandData.roach[ivalues[0]-1].on_res = ivalues[0];
+        break;
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_master_chop = 1;
@@ -2175,11 +2189,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case offset_lo_all:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].set_lo = 2;
-              CommandData.roach_params[i].lo_offset = rvalues[0];
-          }
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].set_lo = 2;
+          CommandData.roach_params[i].lo_offset = rvalues[0];
       }
       break;
     case center_lo:
@@ -2869,7 +2881,7 @@ void InitCommandData()
         CommandData.roach[i].load_targ_amps = 0;
         CommandData.roach[i].get_phase_centers = 0;
         CommandData.roach[i].get_timestream = 0;
-        CommandData.roach[i].tune_chan = 0;
+        CommandData.roach[i].tune_amps = 0;
         CommandData.roach[i].refit_res_freqs = 0;
         CommandData.roach[i].change_tone_amps = 0;
         CommandData.roach[i].do_master_chop = 0;
@@ -2882,6 +2894,7 @@ void InitCommandData()
         CommandData.roach[i].change_targ_freq = 0;
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
+        CommandData.roach[i].on_res = 1;
     }
 
     CommandData.Bias.biasRamp = 0;
@@ -3252,6 +3265,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_amp = 0.0;
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
+        CommandData.roach_params[i].resp_thresh = 2000;
     }
 
     CommandData.rox_bias.amp = 56;
@@ -3325,12 +3339,14 @@ void InitCommandData()
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
     CommandData.Cryo.potvalve_closed_threshold = 6000;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 12000;
     CommandData.Cryo.valve_vel = 50000;
-    CommandData.Cryo.valve_current = 75;
+    CommandData.Cryo.valve_move_i = 75;
+    CommandData.Cryo.valve_hold_i = 0;
     CommandData.Cryo.valve_acc = 16;
 
 
