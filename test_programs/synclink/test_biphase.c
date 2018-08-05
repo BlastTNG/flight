@@ -68,14 +68,14 @@ int send_biphase_writes() {
     uint16_t small_counter=0;
 
     /* Open device */
-    fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    fd = open("/dev/ttyMicrogate", O_RDWR, 0);
     if (fd < 0) {
         blast_err("open error=%d %s", errno, strerror(errno));
         return fd;
     }
     usleep(1000);
     close(fd);
-    fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    fd = open("/dev/ttyMicrogate", O_RDWR, 0);
     usleep(1000);
     rc = ioctl(fd, MGSL_IOCGSTATS, 0);
     if (rc < 0) {
@@ -84,14 +84,7 @@ int send_biphase_writes() {
     }
     // Disable transmitter
     int enable = 0;
-    rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
-    if (rc < 0) {
-        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
-        return rc;
-    }
-    // Enable transmitter
-    enable = 1;
-    rc = ioctl(fd, MGSL_IOCRXENABLE, enable);
+    rc = ioctl(fd, MGSL_IOCTXENABLE, enable);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
@@ -110,6 +103,7 @@ int send_biphase_writes() {
     //params.encoding = HDLC_ENCODING_NRZ;
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
+    params.addr_filter = 0xff;
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
@@ -126,9 +120,12 @@ int send_biphase_writes() {
     int idlemode;
     rc = ioctl(fd, MGSL_IOCGTXIDLE, &idlemode);
     blast_info("The current idlemode is %04x", idlemode);
-    idlemode = HDLC_TXIDLE_CUSTOM_16 + 0xAA;
-    rc = ioctl(fd, MGSL_IOCGTXIDLE, idlemode);
-    blast_info("The current idlemode is %04x", idlemode);
+    // idlemode = HDLC_TXIDLE_ZEROS;
+    idlemode = HDLC_TXIDLE_CUSTOM_16+0x0000;
+    blast_info("Setting mode to %04x", idlemode);
+    rc = ioctl(fd, MGSL_IOCSTXIDLE, idlemode);
+    rc = ioctl(fd, MGSL_IOCGTXIDLE, &idlemode);
+    blast_info("The new idlemode is %04x", idlemode);
 
     // Making an array of data (0xFFFFFFFF...) with sync word and CRC
     uint16_t *data_to_write = NULL;
@@ -137,7 +134,7 @@ int send_biphase_writes() {
 
 
     data_to_write = malloc(bytes_to_write); 
-    lsb_data_to_write = malloc(bytes_to_write); 
+    lsb_data_to_write = malloc(bytes_to_write*2); 
     if (data_to_write) {
         *data_to_write = 0xEB90;
         for (int i = 1; i < ((int) bytes_to_write/2); i++) {
@@ -157,24 +154,41 @@ int send_biphase_writes() {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
     // fcntl(fd, F_SETFL, fcntl(fd, F_GETFL));
     // Request to Send and Data Terminal Ready
+    /*
     sigs = TIOCM_RTS + TIOCM_DTR;
     rc = ioctl(fd, TIOCMBIS, &sigs);
     if (rc < 0) {
         blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
         return rc;
     }
+    */
 
+    // Enable transmitter
+    enable = 1;
+    rc = ioctl(fd, MGSL_IOCTXENABLE, enable);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+
+    // set fd options for termios
+    system("stty --file=/dev/ttyMicrogate 921600 -icanon -echo -echoctl -echonl -isig -noflsh -iexten -onlcr -opost -olcuc -onocr -ocrnl -onlret -icrnl -inpck -istrip -iuclc -ixoff -ixon -igncr -hupcl cs8 -parenb -cstopb -crtscts clocal cread min 1 time 0");
+
+    sleep(3);
     for (int j=0; j>-1; j++) {
         data_to_write[2] = small_counter;
         if (j%2 == 0) {
             data_to_write[0] = 0xEB90;
             data_to_write[1] = 0xFFFF;
-            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
         } else {
             data_to_write[1] = 0xF1FF;
-            crc_calculated = crc16(CRC16_SEED, data_to_write, bytes_to_write-2);
             data_to_write[0] = 0x146F;
         }
+				crc_calculated = 0;
+				for (int k=0; k<(bytes_to_write/2)-1; k++) {
+            crc_calculated ^= data_to_write[k];
+				}
+        small_counter ++;
         *(data_to_write+last_word) = crc_calculated;
         reverse_bits(bytes_to_write, data_to_write, lsb_data_to_write);
         gettimeofday(&begin, NULL);
@@ -186,19 +200,22 @@ int send_biphase_writes() {
         } else {
             printf("\n");
             for (int k=0; k<((int) bytes_to_write/2); k++) {
+                if (!(k%32)) printf("\n");
                 printf("%04x ", data_to_write[k]);
             }
         }
         printf("\nWrote %d bytes", rc);
-        small_counter ++;
-        rc = tcdrain(fd);
+        if (j%2) rc = tcdrain(fd);
         gettimeofday(&end, NULL);
+        /*
         if ((counter % 10) == 0) {
             blast_info("The CRC calculated is %04x", crc_calculated);
             blast_dbg("It took %f second to write %zd bytes", (end.tv_usec - begin.tv_usec)/1000000.0, bytes_to_write);
         }
+        */
         counter += 1;
-        // usleep(10000);
+        // sleep(1);
+        usleep(100);
     } 
     // Closing
     // sigs = TIOCM_RTS + TIOCM_DTR;
