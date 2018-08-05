@@ -874,6 +874,26 @@ void channels_write_calspecs(char * fname, derived_tng_t *m_derived)
     char c = 65+i;
     fprintf(calspecsfile, "KID%c_ROACHN_NAME SINDIR kid%c_roachN_index " ROACH_NAME_SARRAY "\n", c, c);
   }
+  // link multiplexed fields to derived fields
+  for (rtype = 0; rtype < NUM_RTYPES; rtype++) {
+    for (roach = 1; roach <= NUM_ROACHES; roach++) {
+      for (kid = 0; kid < NUM_KIDS; kid++) {
+        int index = get_roach_index(roach, kid, rtype);
+        derived.type = 'x';
+        make_name_from_roach_index(index, derived.mplex.field);
+        for (int i = 0; derived.mplex.field[i]; i++) {
+          derived.mplex.field[i] = toupper(derived.mplex.field[i]);
+        }
+        char c = 65+((roach-1)*3)+rtype;
+        snprintf(derived.mplex.source, sizeof(derived.mplex.source), "kid%c_roachN", c);
+        snprintf(derived.mplex.index, sizeof(derived.mplex.index), "kid%c_roachN_index", c);
+        derived.mplex.value = index;
+        derived.mplex.max = 0;
+
+        channels_write_calspecs_item(calspecsfile, &derived);
+      }
+    }
+  }
 
 
 
