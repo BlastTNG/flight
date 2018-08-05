@@ -35,7 +35,7 @@
 #define HWPR_NAME "HWPR Motor"
 // #define HWPR_ADDR 6 // 13
 #define HWPRNUM 5
-#define HWPR_PREAMBLE "j256" // "aE64000"
+#define HWPR_PREAMBLE "j256" // "aE64000" is this from Blast-Pol? PAW
 
 #define HWPR_CHECK_NONE 0
 #define HWPR_CHECK_BEFORE 1

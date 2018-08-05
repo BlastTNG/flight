@@ -38,7 +38,8 @@
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init);
 void DoPotValve(struct ezbus* bus);
-void DoValves(struct ezbus* bus, int index, int addr);
+void ControlPotValve(struct ezbus* bus);
+void DoValves(struct ezbus* bus, int index, char addr);
 void GetPotValvePos(struct ezbus bus);
 int SetValveState(int tight_flag);
 void WriteValves(unsigned int actuators_init, int* valve_addr);

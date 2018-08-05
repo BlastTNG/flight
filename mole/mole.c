@@ -142,6 +142,8 @@ int main(int argc, char *argv[]) {
       client_mode = 0;
     } else if (strcmp(argv[i], "-w") == 0) { // rewind value 
       rewind = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-v") == 0) { // verbose mode
+      ll_flags |= LL_VERBOSE;
     } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
       ll_flags |= LL_IGNORE_CHECKSUM;
     } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian

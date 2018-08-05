@@ -42,6 +42,7 @@
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
+#define NUM_FLAG_CHANNELS_PER_ROACH MAX_CHANNELS_PER_ROACH/16
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
@@ -123,6 +124,7 @@ typedef struct roach_state {
     uint16_t port;
     bool has_qdr_cal;
     bool has_tones;
+    bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
     bool is_sweeping;
@@ -193,7 +195,7 @@ typedef struct roach_state {
     double *last_phases;
     double *last_freqs;
     char *vna_amps_path[2];
-    char *targ_amps_path[2];
+    char *targ_amps_path[3];
     char *random_phase_path;
     char *phase_centers_path;
     char *freqlist_path;

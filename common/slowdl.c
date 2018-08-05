@@ -27,11 +27,11 @@ void updateSlowDL() {
   int i_ch;
   static int first_time = 1;
   int i_w;
-  
+
   if (first_time) {
     int size = 0;
-    for (i_ch = 0; slowDLList[i_ch].name[0]!='\0'; i_ch++) {
-      slowDLList[i_ch].bi0s = GetBiPhaseAddr(slowDLList[i_ch].name);
+    for (i_ch = 0; slowDLList[i_ch].name[0] != '\0'; i_ch++) {
+      slowDLList[i_ch].bi0s = channels_find_by_name(slowDLList[i_ch].name);
       switch (slowDLList[i_ch].type) {
         case 'c':
           size++;
@@ -45,11 +45,11 @@ void updateSlowDL() {
           size += 4;
           break;
         default:
-          blast_fatal("%c: unknown var type in slow dl field %s", 
+          blast_fatal("%c: unknown var type in slow dl field %s",
                   slowDLList[i_ch].type, slowDLList[i_ch].name);
           break;
       }
-      if (size>255) {
+      if (size > 255) {
         blast_fatal("slow downlink structure too large (%d > 255)", size);
       }
     }
@@ -58,15 +58,18 @@ void updateSlowDL() {
   }
 
   i_w = slow_dl_read_index+1;
-  if (i_w==3) i_w = 0;
-  
-  for (i_ch = 0; slowDLList[i_ch].name[0]!='\0'; i_ch++) {
+  if (i_w == 3) i_w = 0;
+
+  for (i_ch = 0; slowDLList[i_ch].name[0] != '\0'; i_ch++) {
     if (slowDLList[i_ch].encode == SDL_RAW) {
-      slowDLList[i_ch].iX[i_w] = ReadData(slowDLList[i_ch].bi0s);
+      GET_VALUE(slowDLList[i_ch].bi0s, slowDLList[i_ch].iX[i_w]);
+      // slowDLList[i_ch].iX[i_w] = ReadData(slowDLList[i_ch].bi0s);
     } else if (slowDLList[i_ch].encode == SDL_SCALE) {
-      slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
+      GET_SCALED_VALUE(slowDLList[i_ch].bi0s, slowDLList[i_ch].X[i_w]);
+      // slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
     } else if (slowDLList[i_ch].encode == SDL_LOG) {
-      slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
+      GET_SCALED_VALUE(slowDLList[i_ch].bi0s, slowDLList[i_ch].X[i_w]);
+      // slowDLList[i_ch].X[i_w] = ReadCalData(slowDLList[i_ch].bi0s);
     }
   }
   slow_dl_read_index = i_w;
@@ -81,34 +84,34 @@ void fillDLData(unsigned char *b, int len) {
   unsigned *U;
   double x;
   unsigned char *b_end;
-  
+
   b_end = b+len-4; // FIXME: wasted space if last field is not 32bit.
-    
+
   i_r = slow_dl_read_index;
 
   U = (unsigned  *)b;
   *U = SLOWDLSYNCWORD;
   b+=4;
-  
-  for (i_ch = 0; (slowDLList[i_ch].name[0]!='\0') && (b<b_end); i_ch++) {
+
+  for (i_ch = 0; (slowDLList[i_ch].name[0] != '\0') && (b < b_end); i_ch++) {
     if ((slowDLList[i_ch].encode == SDL_SCALE) || (slowDLList[i_ch].encode == SDL_LOG)) {
       double min, max;
-      
+
       min = slowDLList[i_ch].min;
       max = slowDLList[i_ch].max;
       x = slowDLList[i_ch].X[i_r];
-      
+
       if (slowDLList[i_ch].encode == SDL_LOG) {
         min = log(min);
         max = log(max);
         x = log(x);
       }
-      
+
       /* scale between 0 and 1 */
-      x = (x - min)/(max - min);      
-      if (x>1.0) x = 1.0;
-      if (x<0) x = 0;
-      
+      x = (x - min)/(max - min);
+      if (x > 1.0) x = 1.0;
+      if (x < 0) x = 0;
+
       /* scale to fit in unsigned type.  s vs u is ignored. */
       switch (slowDLList[i_ch].type) {
         case 'c':
@@ -127,7 +130,7 @@ void fillDLData(unsigned char *b, int len) {
           break;
       }
     }
-    
+
     switch (slowDLList[i_ch].type) {
       case 'c':
         *b = (unsigned char)(0xff & slowDLList[i_ch].iX[i_r]);
@@ -150,9 +153,8 @@ void fillDLData(unsigned char *b, int len) {
         break;
     }
   }
-  while (b<b_end) {
+  while (b < b_end) {
     *b = i_ch++;
     b++;
   }
-  
 }

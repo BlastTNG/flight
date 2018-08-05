@@ -19,6 +19,7 @@ moc_*
 qrc_*
 ui_*
 cow/cow
+cow/Makefile
 owl/other_makefile/
 owl/owl
 owl/Makefile

@@ -41,7 +41,7 @@
 typedef enum
 {
     negative = 0, no_move, positive
-} move_type_t;
+} bal_move_type_t;
 
 typedef struct {
 	uint16_t init;
@@ -49,7 +49,7 @@ typedef struct {
 	int ind;
     	int do_move;
 	int moving;
-	move_type_t dir;
+	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
 	uint8_t lims;
@@ -185,7 +185,8 @@ void DoBalance(struct ezbus* bus)
         EZBus_Take(bus, balance_state.addr);
         blast_info("Making sure the balance system is not running on startup.");
         EZBus_Stop(bus, balance_state.addr);
-        EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
+	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
+        // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;

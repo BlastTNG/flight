@@ -790,6 +790,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case pss_veto:
             CommandData.use_pss = 0;
             break;
+        case dgps_veto:
+            CommandData.use_dgps = 0;
+            break;
         case xsc0_veto:
             CommandData.use_xsc0 = 0;
             break;
@@ -814,6 +817,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
         case pss_allow:
             CommandData.use_pss = 1;
+            break;
+        case dgps_allow:
+            CommandData.use_dgps = 1;
             break;
         case xsc0_allow:
             CommandData.use_xsc0 = 1;
@@ -958,16 +964,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-	case pot_valve_open:
+	case potvalve_open:
             CommandData.Cryo.potvalve_goal = opened;
             break;
-        case pot_valve_close:
+        case potvalve_close:
             CommandData.Cryo.potvalve_goal = closed;
             break;
-        case pot_valve_on:
+        case potvalve_on:
             CommandData.Cryo.potvalve_on = 1;
             break;
-        case pot_valve_off:
+        case potvalve_off:
             CommandData.Cryo.potvalve_on = 0;
             break;
         case pump_valve_open:
@@ -1148,11 +1154,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_sweeps = 2;
             }
             break;
-        case refit_freqs_all:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].refit_res_freqs = 1;
-            }
-            break;
         case find_kids_default_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].find_kids_default = 1;
@@ -1187,6 +1188,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].do_sweeps = 0;
             }
+            break;
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -1236,7 +1238,7 @@ static inline void copysvalue(char* dest, const char* src)
 void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled)
 {
-  int i, j, k;
+  int i;
   int is_new;
 
 //   Update CommandData struct with new info
@@ -1764,6 +1766,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_current:
       CommandData.Cryo.valve_current = ivalues[0];
       break;
+    case valves_set_acc:
+      CommandData.Cryo.valve_acc = ivalues[0];
+      break;
 
 // .
     // XY STAGE
@@ -1920,17 +1925,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case highrate_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.highrate_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed highrate bw to %f kbps", rvalues[0]);
+      CommandData.highrate_allframe_fraction = rvalues[1];
+      blast_info("Changed highrate bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case pilot_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.pilot_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed pilot bw to %f kbps", rvalues[0]);
+      CommandData.pilot_allframe_fraction = rvalues[1];
+      blast_info("Changed pilot bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case biphase_bw:
       // Value entered by user in kbps but stored in Bps
       CommandData.biphase_bw = rvalues[0]*1000.0/8.0;
-      blast_info("Changed biphase bw to %f kbps", rvalues[0]);
+      CommandData.biphase_allframe_fraction = rvalues[1];
+      blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
@@ -1973,8 +1981,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case load_new_targ_amps:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 1) && ivalues[1] <= 3)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];
+          blast_info("LOAD TARG AMPS: %u", CommandData.roach[ivalues[0]-1].load_targ_amps);
       }
       break;
     case load_freqs:
@@ -2112,26 +2121,34 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case all_roach_ts:
-      if ((rvalues[1] >= 0.0) && (rvalues[1] <= 300.0)) {
+      if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
               CommandData.roach[i].get_timestream = 2;
           }
       }
-    case chop_tune_chan:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
-                     ((ivalues[1] >= 0) && ivalues[1] <= 1000) &&
-                     ((rvalues[2] >= 0.0) && rvalues[2] <= 10.0)) {
-          CommandData.roach[ivalues[0]-1].chan = ivalues[1];
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
-          CommandData.roach[ivalues[0]-1].tune_chan = 1;
+      break;
+    case cal_amps:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].ncycles = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].delta_amp = rvalues[3];
+          CommandData.roach_params[ivalues[0]-1].resp_thresh = rvalues[4];
+          CommandData.roach[ivalues[0]-1].tune_amps = 1;
       }
       break;
     case refit_freqs:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+          CommandData.roach[ivalues[0]-1].on_res = ivalues[1];
       }
       break;
+    case refit_freqs_all:
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            CommandData.roach[i].refit_res_freqs = 1;
+        }
+        CommandData.roach[ivalues[0]-1].on_res = ivalues[0];
+        break;
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_master_chop = 1;
@@ -2149,11 +2166,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case offset_lo_all:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].set_lo = 2;
-              CommandData.roach_params[i].lo_offset = rvalues[0];
-          }
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].set_lo = 2;
+          CommandData.roach_params[i].lo_offset = rvalues[0];
       }
       break;
     case center_lo:
@@ -2843,7 +2858,7 @@ void InitCommandData()
         CommandData.roach[i].load_targ_amps = 0;
         CommandData.roach[i].get_phase_centers = 0;
         CommandData.roach[i].get_timestream = 0;
-        CommandData.roach[i].tune_chan = 0;
+        CommandData.roach[i].tune_amps = 0;
         CommandData.roach[i].refit_res_freqs = 0;
         CommandData.roach[i].change_tone_amps = 0;
         CommandData.roach[i].do_master_chop = 0;
@@ -2856,7 +2871,14 @@ void InitCommandData()
         CommandData.roach[i].change_targ_freq = 0;
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
+        CommandData.roach[i].on_res = 1;
+        CommandData.roach_params[i].in_atten = 16;
     }
+    CommandData.roach_params[0].out_atten = 7;
+    CommandData.roach_params[1].out_atten = 2;
+    CommandData.roach_params[2].out_atten = 3;
+    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[4].out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -2895,20 +2917,16 @@ void InitCommandData()
 
     // CommandData.Cryo.BDAHeat = 0;
 
-    CommandData.Cryo.potvalve_on = 0;
+    CommandData.Cryo.potvalve_on = 1;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
-    CommandData.Cryo.lhevalve_on = 0;
-    CommandData.Cryo.lvalve_open = 0;
-    CommandData.Cryo.lvalve_close =0;
-    CommandData.Cryo.lnvalve_on = 0;
-    CommandData.Cryo.potvalve_opencurrent = 25;
-    CommandData.Cryo.potvalve_closecurrent = 20;
-    CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 4200;
-    CommandData.Cryo.potvalve_lclosed_threshold = 6500;
-    CommandData.Cryo.potvalve_open_threshold = 10000;
+
+    // BLAST-Pol stuff
+    // CommandData.Cryo.lhevalve_on = 0;
+    // CommandData.Cryo.lvalve_open = 0;
+    // CommandData.Cryo.lvalve_close =0;
+    // CommandData.Cryo.lnvalve_on = 0;
 
     CommandData.uei_command.uei_of_dio_432_out = 0;
     /* don't use the fast gy offset calculator */
@@ -3073,9 +3091,15 @@ void InitCommandData()
     CommandData.at_float = 0;
     CommandData.timeout = 3600;
     CommandData.slot_sched = 0;
+
     CommandData.highrate_bw = 6000/8.0; /* Bps */
     CommandData.pilot_bw = 8000000/8.0; /* Bps */
     CommandData.biphase_bw = 1000000/8.0; /* Bps */
+
+    CommandData.highrate_allframe_fraction = 0.1;
+    CommandData.pilot_allframe_fraction = 0.1;
+    CommandData.biphase_allframe_fraction = 0.1;
+
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;
@@ -3142,6 +3166,7 @@ void InitCommandData()
     CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
+    CommandData.use_dgps = 0;
     CommandData.use_xsc0 = 1;
     CommandData.use_xsc1 = 1;
     CommandData.use_mag1 = 1;
@@ -3157,6 +3182,7 @@ void InitCommandData()
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
+    CommandData.dgps_az_trim = 0;
 
     CommandData.autotrim_enable = 0;
     CommandData.autotrim_thresh = 0.05;
@@ -3209,9 +3235,7 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        // these settings will give ~ -60/dBm per tone 1000 tones
-        CommandData.roach_params[i].out_atten = 17;
-        CommandData.roach_params[i].in_atten = 10;
+        // these settings were determined on August 2, 2018 (Palestine)
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
@@ -3222,6 +3246,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_amp = 0.0;
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
+        CommandData.roach_params[i].resp_thresh = 2000;
     }
 
     CommandData.rox_bias.amp = 56;
@@ -3262,29 +3287,47 @@ void InitCommandData()
     CommandData.actbus.sf_offset = 6667;
 
     CommandData.actbus.act_vel = 20;
-    CommandData.actbus.act_acc = 1;
-    CommandData.actbus.act_move_i = 85;
-    CommandData.actbus.act_hold_i = 40;
-    CommandData.actbus.act_tol = 2;
+    CommandData.actbus.act_acc = 500;
+    CommandData.actbus.act_move_i = 75;
+    CommandData.actbus.act_hold_i = 50;
+    CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;
     CommandData.actbus.lock_acc = 100;
     CommandData.actbus.lock_move_i = 50;
     CommandData.actbus.lock_hold_i = 0;
 
-    CommandData.hwpr.vel = 1600;
-    CommandData.hwpr.acc = 4;
+    CommandData.hwpr.vel = 20000;
+    CommandData.hwpr.acc = 1000;
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 
     CommandData.balance.vel = 1600;
-    CommandData.balance.acc = 4;
+    CommandData.balance.acc = 1000;
     CommandData.balance.move_i = 20;
     CommandData.balance.hold_i = 0;
 
     CommandData.balance.i_el_on_bal = 2.5;
     CommandData.balance.i_el_off_bal = 1.0;
     CommandData.balance.mode = bal_rest;
+
+    CommandData.actbus.shutter_step = 4224;
+    CommandData.actbus.shutter_step_slow = 300;
+    CommandData.actbus.shutter_move_i = 40;
+    CommandData.actbus.shutter_hold_i = 40;
+    CommandData.actbus.shutter_vel = 5000;
+    CommandData.actbus.shutter_acc = 1000;
+
+    CommandData.Cryo.potvalve_opencurrent = 75;
+    CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_vel = 50000;
+    CommandData.Cryo.potvalve_closed_threshold = 6000;
+    CommandData.Cryo.potvalve_lclosed_threshold = 8000;
+    CommandData.Cryo.potvalve_open_threshold = 12000;
+    CommandData.Cryo.valve_vel = 50000;
+    CommandData.Cryo.valve_current = 75;
+    CommandData.Cryo.valve_acc = 16;
+
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
