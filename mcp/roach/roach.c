@@ -4378,7 +4378,6 @@ void write_roach_channels_5hz(void)
 {
     int i, j;
     static int firsttime = 1;
-    int n_write_kids_df = 20; // For now only write the delta_freqs for the first 20 KIDs.
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
@@ -4387,7 +4386,6 @@ void write_roach_channels_5hz(void)
     static channel_t *RoachStateAddr[NUM_ROACHES];
     static channel_t *RoachReqLOFreqAddr[NUM_ROACHES];
     static channel_t *RoachReadLOFreqAddr[NUM_ROACHES];
-    static channel_t *RoachDfAddr[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
     static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
     static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
@@ -4399,7 +4397,6 @@ void write_roach_channels_5hz(void)
     char channel_name_roach_state[128] = { 0 };
     char channel_name_pi_state[128] = { 0 };
     char channel_name_roach_req_lo[128] = { 0 };
-    char channel_name_roach_df[128] = { 0 };
     char channel_name_roach_read_lo[128] = { 0 };
     char channel_name_cmd_roach_par_smooth[128] = { 0 };
     char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
@@ -4459,14 +4456,6 @@ void write_roach_channels_5hz(void)
             CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
             CmdRoachParInAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_in_atten);
             CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
-            for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
-                if (j < n_write_kids_df) {
-                    snprintf(channel_name_roach_df,
-                             sizeof(channel_name_roach_df), "df_kid%04d_roach%d",
-                             j , i + 1);
-                    RoachDfAddr[i][j] = channels_find_by_name(channel_name_roach_df);
-                }
-            }
         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
@@ -4486,10 +4475,38 @@ void write_roach_channels_5hz(void)
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
         SET_SCALED_VALUE(CmdRoachParInAttenAddr[i], CommandData.roach_params[i].in_atten);
         SET_SCALED_VALUE(CmdRoachParOutAttenAddr[i], CommandData.roach_params[i].out_atten);
-        for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
-            if (j < n_write_kids_df) {
-                SET_SCALED_VALUE(RoachDfAddr[i][j], roach_state_table[i].df[j]);
+    }
+}
+
+
+/* Function: write_roach_channels_1hz
+ * ----------------------------------
+ * Populates 1 Hz frame data
+ */
+void write_roach_channels_1hz(void)
+{
+    int i, j, k;
+    static int firsttime = 1;
+    static channel_t *FlagsKidsAddr[NUM_ROACHES][16];
+    char channel_name_flags_kids[128] = { 0 };
+    uint16_t flag = 0;
+    if (firsttime) {
+        firsttime = 0;
+        for (i = 0; i < NUM_ROACHES; i++) {
+            for (j = 0; j < NUM_FLAG_CHANNELS_PER_ROACH; j++) {
+                snprintf(channel_name_flags_kids, sizeof(channel_name_flags_kids),
+                        "flags_kids%04d_roach1%d", j*16, i + 1);
+                FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+        }
+    }
+    for (i = 0; i < NUM_ROACHES; i++) {
+        for (j = 0; j < NUM_FLAG_CHANNELS_PER_ROACH; j++) {
+            flag = 0;
+            for (k = 0; k < 16; k++) {
+                flag |= (((uint16_t)roach_state_table[i].out_of_range) << k);
+            }
+            SET_UINT16(FlagsKidsAddr[i][j], flag);
         }
     }
 }
