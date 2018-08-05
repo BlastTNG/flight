@@ -42,7 +42,7 @@
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
-#define NUM_FLAG_CHANNELS_PER_ROACH MAX_CHANNELS_PER_ROACH/16
+#define NUM_FLAG_CHANNELS_PER_ROACH (MAX_CHANNELS_PER_ROACH/16 + 1)
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
@@ -167,9 +167,9 @@ typedef struct roach_state {
     char *channels_path;
 
     // For detector retune decision
-    int nflag_thresh; // num channels which need to be out of range for retune
-    int has_ref; /* If 1, ref grads exist */
-    int retune_flag; // 1 if retune is recommended
+    uint16_t nflag_thresh; // num channels which need to be out of range for retune
+    bool has_ref; /* If 1, ref grads exist */
+    bool retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
     double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values

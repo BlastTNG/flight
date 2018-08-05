@@ -444,6 +444,7 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
+    write_roach_channels_1hz();
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
@@ -731,6 +732,7 @@ blast_info("Finished initializing Beaglebones..."); */
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // This is the DPGS we get over serial from CSBF
+
   dgps_thread = ph_thread_spawn(DGPSMonitor, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
