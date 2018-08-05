@@ -2895,7 +2895,13 @@ void InitCommandData()
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
+        CommandData.roach_params[i].in_atten = 16;
     }
+    CommandData.roach_params[0].out_atten = 7;
+    CommandData.roach_params[1].out_atten = 2;
+    CommandData.roach_params[2].out_atten = 3;
+    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[4].out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -3253,7 +3259,6 @@ void InitCommandData()
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
         // these settings were determined on August 2, 2018 (Palestine)
-        CommandData.roach_params[i].in_atten = 16;
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
@@ -3266,11 +3271,6 @@ void InitCommandData()
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
     }
-    CommandData.roach_params[0].out_atten = 7;
-    CommandData.roach_params[1].out_atten = 2;
-    CommandData.roach_params[2].out_atten = 3;
-    CommandData.roach_params[3].out_atten = 5;
-    CommandData.roach_params[4].out_atten = 4;
 
     CommandData.rox_bias.amp = 56;
     CommandData.rox_bias.status = 0;
