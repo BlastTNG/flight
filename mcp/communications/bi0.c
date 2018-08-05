@@ -322,6 +322,8 @@ void * setup_synclink_transfers(void * arg)
   uint8_t zerobuffer[BIPHASE_FRAME_SIZE_BYTES] = {0};
   uint8_t * read_buf = NULL;
   int data_present = 0;
+  int counter = 0;
+  uint16_t sync = 0xeb90;
 
   while (!shutdown_mcp) {
     // wait for the buffer to get below 2x the frame size
@@ -337,11 +339,12 @@ void * setup_synclink_transfers(void * arg)
       data_present = 1;
     } else { // send zeros
       read_buf = zerobuffer;
+      *(uint16_t *) (read_buf+2) = counter++;
       data_present = 0;
     }
     // set syncword and invert for next send
-    *(uint16_t *) read_buf = sync_word;
-    sync_word = ~sync_word;
+    *(uint16_t *) read_buf = sync;
+    sync = ~sync;
 
     // reverse bits and switch to big endian
     reverse_bits(BIPHASE_FRAME_SIZE_BYTES, (uint16_t *) read_buf, (uint16_t *) lsb_buffer); // reverse_buffer);
