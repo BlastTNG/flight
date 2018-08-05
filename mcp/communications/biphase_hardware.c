@@ -131,24 +131,36 @@ int get_synclink_fd(void)
 int setup_synclink()
 {
     int rc;
-    int enable = 1;
-    int sigs;
     MGSL_PARAMS params;
 
-    if (synclink_fd > 0) close(synclink_fd);
-    synclink_fd = open("/dev/ttyMicrogate", O_RDWR | O_NONBLOCK, 0);
+    /* Open device */
+    synclink_fd = open("/dev/ttyMicrogate", O_RDWR, 0);
     if (synclink_fd < 0) {
-        blast_warn("Error Opening synclink. Stopped Biphase Downlink Thread");
-        pthread_exit(0);
+        blast_err("open error=%d %s", errno, strerror(errno));
+        return synclink_fd;
     }
     usleep(1000);
-    rc = ioctl(synclink_fd, MGSL_IOCRXENABLE, enable);
+
+    /* Close and reopen to reset */
+    close(synclink_fd);
+    synclink_fd = open("/dev/ttyMicrogate", O_RDWR, 0);
+    usleep(1000);
+
+    /* Get the current stats */
+    rc = ioctl(synclink_fd, MGSL_IOCGSTATS, 0);
+    if (rc < 0) {
+        blast_err("ioctl(MGSL_IOCGSTATS) error=%d %s", errno, strerror(errno));
+        return rc;
+    }
+    // Disable transmitter
+    int enable = 0;
+    rc = ioctl(synclink_fd, MGSL_IOCTXENABLE, enable);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
 
-    /* Set parameters */
+    /* Get the current parameters and set the new ones*/
     rc = ioctl(synclink_fd, MGSL_IOCGPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCGPARAMS) error=%d %s", errno, strerror(errno));
@@ -158,14 +170,17 @@ int setup_synclink()
     params.loopback = 0;
     params.flags = HDLC_FLAG_RXC_BRG + HDLC_FLAG_TXC_BRG;
     params.encoding = HDLC_ENCODING_BIPHASE_LEVEL;
-    // params.encoding = HDLC_ENCODING_NRZ;
+    //params.encoding = HDLC_ENCODING_NRZ;
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
+    params.addr_filter = 0xff;
     rc = ioctl(synclink_fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
         return rc;
     }
+  
+    /* set to proper output mode */
     int mode = MGSL_INTERFACE_RS422;
     // mode += MGSL_INTERFACE_MSB_FIRST;
     rc = ioctl(synclink_fd, MGSL_IOCSIF, mode);
@@ -173,15 +188,34 @@ int setup_synclink()
         blast_err("ioctl(MGSL_IOCSIF) error=%d %s", errno, strerror(errno));
         return rc;
     }
+
+    /* set to persist zero output on idle */
+    int idlemode;
+    rc = ioctl(synclink_fd, MGSL_IOCGTXIDLE, &idlemode);
+    blast_info("The current idlemode is %04x", idlemode);
+    // idlemode = HDLC_TXIDLE_ZEROS;
+    idlemode = HDLC_TXIDLE_CUSTOM_16+0x0000;
+    blast_info("Setting mode to %04x", idlemode);
+    rc = ioctl(synclink_fd, MGSL_IOCSTXIDLE, idlemode);
+    rc = ioctl(synclink_fd, MGSL_IOCGTXIDLE, &idlemode);
+    blast_info("The new idlemode is %04x", idlemode);
+
     // Blocking mode for read and writes
     fcntl(synclink_fd, F_SETFL, fcntl(synclink_fd, F_GETFL) & ~O_NONBLOCK);
-    // Request to Send and Data Terminal Ready
-    sigs = TIOCM_RTS + TIOCM_DTR;
-    rc = ioctl(synclink_fd, TIOCMBIS, &sigs);
+
+    // Enable transmitter
+    enable = 1;
+    rc = ioctl(synclink_fd, MGSL_IOCTXENABLE, enable);
     if (rc < 0) {
-        blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
+        blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
         return rc;
     }
+
+    // set fd options for termios
+    system("stty --file=/dev/ttyMicrogate 921600 -icanon -echo -echoctl -echonl -isig -noflsh -iexten -onlcr -opost -olcuc -onocr -ocrnl -onlret -icrnl -inpck -istrip -iuclc -ixoff -ixon -igncr -hupcl cs8 -parenb -cstopb -crtscts clocal cread min 1 time 0");
+
+    usleep(1000);
+
     return rc;
 }
 
