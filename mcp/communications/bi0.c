@@ -325,20 +325,20 @@ void * setup_synclink_transfers(void * arg)
 
   while (!shutdown_mcp) {
     // wait for the buffer to get below 2x the frame size
-		int count = 2*BIPHASE_FRAME_SIZE_BYTES;
-		while (count >= 2*BIPHASE_FRAME_SIZE_BYTES) {  
-			ioctl(synclink_fd, TIOCOUTQ, &count);
-			usleep(500);
-		}
+    int count = 2*BIPHASE_FRAME_SIZE_BYTES;
+    while (count >= 2*BIPHASE_FRAME_SIZE_BYTES) {  
+      ioctl(synclink_fd, TIOCOUTQ, &count);
+      usleep(500);
+    }
 
     // get data from the fifo, or stuff with zeros
     if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from the main thread
       read_buf = getFifoRead(&libusb_fifo);
       data_present = 1;
     } else { // send zeros
-	  	read_buf = zerobuffer;
-			data_present = 0;
-		}
+      read_buf = zerobuffer;
+      data_present = 0;
+    }
     // set syncword and invert for next send
     *(uint16_t *) read_buf = sync_word;
     sync_word = ~sync_word;
@@ -430,23 +430,23 @@ void biphase_writer(void * arg)
             setup_libusb_transfers(); 
         }
         if (previous_clock_speed != CommandData.biphase_clk_speed) {
-                mpsse_closing = true;
-                sleep(1);
-                mpsse_reset_purge_close(ctx);
-                usleep(1000);
-                while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
-                    blast_warn("Error opening mpsse. Will retry in 5s");
+            mpsse_closing = true;
+            sleep(1);
+            mpsse_reset_purge_close(ctx);
+            usleep(1000);
+            while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
+                blast_warn("Error opening mpsse. Will retry in 5s");
 
-                    InCharge = DEFAULT_INCHARGE;
-                    blast_info("Defaulting to fc1 in charge");
+                InCharge = DEFAULT_INCHARGE;
+                blast_info("Defaulting to fc1 in charge");
 
-                    sleep(5);
-                }
-                previous_clock_speed = CommandData.biphase_clk_speed;
-                usleep(1000);
-                mpsse_closing = false;
-                just_reopened_mpsse = true;
-                setup_libusb_transfers(); 
+                sleep(5);
+            }
+            previous_clock_speed = CommandData.biphase_clk_speed;
+            usleep(1000);
+            mpsse_closing = false;
+            just_reopened_mpsse = true;
+            setup_libusb_transfers(); 
         }
        
         // get the current linklist
@@ -474,8 +474,8 @@ void biphase_writer(void * arg)
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
                 decrementFifo(&bi0_fifo);
 
-								// bandwidth limit; frames are 1 Hz, so bandwidth == size
-								transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
+                // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
                 allframe_bytes += bandwidth-transmit_size;
             }
 
@@ -494,8 +494,8 @@ void biphase_writer(void * arg)
                 uint8_t * write_buf = getFifoWrite(&libusb_fifo); 
                 writeHeader(write_buf+2, *(uint32_t *) ll->serial, transmit_size, i_pkt, n_pkt);
                 memcpy(write_buf+PACKET_HEADER_SIZE+2, chunk, chunksize);
-                    incrementFifo(&libusb_fifo);
-                    count++;
+                incrementFifo(&libusb_fifo);
+                count++;
                 i_pkt++;
                 //printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
