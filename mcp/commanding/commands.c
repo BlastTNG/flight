@@ -1963,6 +1963,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.biphase_allframe_fraction = rvalues[1];
       blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
+    case set_roach_all_chan:
+        if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {
+          CommandData.num_channels_all_roaches[ivalues[0]-1] = ivalues[1];
+          blast_info("Roach %d to send %d kids\n", ivalues[0], ivalues[1]);
+        }
+        break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
         CommandData.roach_tlm[i].kid = ivalues[(i/3)*2+0];
@@ -3132,6 +3138,7 @@ void InitCommandData()
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    memset(CommandData.num_channels_all_roaches, 0, sizeof(CommandData.num_channels_all_roaches));
     CommandData.pilot_oth = 0;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */

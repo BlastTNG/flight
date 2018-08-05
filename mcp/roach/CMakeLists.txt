@@ -4,6 +4,7 @@ set(ROACH_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/remote_serial.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/roach.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/roach_udp.c    
+    ${CMAKE_CURRENT_SOURCE_DIR}/roach_multiplex.c    
     ${CMAKE_CURRENT_SOURCE_DIR}/valon.c
     PARENT_SCOPE
 )

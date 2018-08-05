@@ -880,6 +880,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Allframe fraction", 0, 1, 'f', "aff_pilot"}
     }
   },
+  {COMMAND(set_roach_all_chan), "Send lots of kids for a given roach", GR_TELEM, 2,
+    {
+      {"Roach", 1, 5, 'i', "NONE"},
+      {"Number of kids", 0, 1024, 'i', "NONE"},
+    }
+  },
   {COMMAND(set_roach_chan), "Select 5 I/Q/df channel triplets", GR_TELEM, 10,
     {
       {"Kid A-C", 0, 1023, 'i', "NONE"},

@@ -101,6 +101,7 @@ int main(int argc, char * argv[]) {
   linklist_generate_lookup(ll_list);  
   write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
+  channels_write_calspecs("test.cs", derived_list);
   int pilot_on = 1;
   int bi0_on = 1;
   int highrate_on = 1;
