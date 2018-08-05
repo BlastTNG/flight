@@ -4561,6 +4561,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint16_t)roach_state_table[i].write_flag) << 10);
         roach_status_field |= (((uint16_t)roach_state_table[i].has_ref) << 11);
         roach_status_field |= (((uint16_t)roach_state_table[i].retune_flag) << 12);
+        roach_status_field |= (((uint16_t)roach_state_table[i].has_vna_tones) << 13);
         SET_UINT16(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_UINT16(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
