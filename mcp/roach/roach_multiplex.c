@@ -101,9 +101,7 @@ void add_roach_tlm_488hz()
 
         r_tlm->index = get_roach_index(j+1, (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH, i);
 			}
-		} else {
-      r_tlm->index = get_roach_index(r_tlm->roach, r_tlm->kid, r_tlm->rtype);
-    }
+		}
   }
 
   // ------------------------------------------------
