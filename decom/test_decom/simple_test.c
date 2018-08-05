@@ -28,6 +28,7 @@
 #include <unistd.h> 
 #include <string.h>
 #include <errno.h>
+#include <termios.h>
 
 #include "decom_pci.h"
 
@@ -44,42 +45,66 @@
 
 const unsigned short syncwords[SYNC_LEN] = {0xeb90};
 
+int open_decom() {
+  int fp = open("/dev/decom_pci", O_RDONLY);
+  if (fp < 0) {
+    perror("Error opening DECOM_PCI.\n");
+    exit(0);
+  }
+
+  // printf("NIOS program version is %08x.\n", ioctl(fp, DECOM_IOC_VERSION));
+  printf("Reseting board . . . \n");
+  ioctl(fp, DECOM_IOC_RESET);
+  usleep(100);
+  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", 2*(BI0_FRAME_SIZE)-1);
+  ioctl(fp, DECOM_IOC_FRAMELEN, 2*BI0_FRAME_SIZE-1);
+
+  tcdrain(fp);
+
+  return fp;
+}
+
+void print_buffer(unsigned short * buffer, unsigned int bufsize) {
+  int i;
+  for (i = 0; i < bufsize; i++) {
+    if (!(i%32)) printf("\n");
+    printf("%04x ", buffer[i]);
+  }
+  printf("\n");
+}
+
 int main(int argc, char *argv[]) {
-  int i, j, k = 0;
-  int fp;
+  int i = 0, j = 0, k = 0;
   unsigned short receiveword;
   int syncstate = 0, sync_pol;
   int polarity = 0;
   ssize_t bytes_read;
   ssize_t bytes_read_since_last_sync = 0;
   bool first_time_error = true;
+  unsigned short crc = 0;
 
-  fp = open("/dev/decom_pci", O_RDWR);
-  if (fp < 0) {
-    perror("Error opening DECOM_PCI.\n");
-    exit(0);
-  }
+  unsigned short * buffer = calloc(2, 10*BI0_FRAME_SIZE);
 
-  printf("NIOS program version is %08x.\n", ioctl(fp, DECOM_IOC_VERSION));
-  printf("Reseting board . . . \n");
-  ioctl(fp, DECOM_IOC_RESET);
-  usleep(100);
-  printf("Setting num words between sync words (DECOM_IOC_FRAMELEN) to BI0_FRAME_SIZE-1 = %d\n", 2*(BI0_FRAME_SIZE)-1);
-  // ioctl(fp, DECOM_IOC_FRAMELEN, 2*(BI0_FRAME_SIZE)-1);
-  ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE);
-  usleep(100);
-  printf("Force unlock:\n");
-  ioctl(fp, DECOM_IOC_FORCE_UNLOCK);
-  usleep(100);
-  printf("Some READ information:\n");
-  printf("\tCounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
-  printf("\tLocked ? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
-  printf("\tNum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
-  printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
-  printf("Reseting board . . . \n");
-  ioctl(fp, DECOM_IOC_RESET);
-  usleep(100);
+  int fp = open_decom();
+  //ioctl(fp, DECOM_IOC_FRAMELEN, BI0_FRAME_SIZE-1);
+  // usleep(100);
+  // printf("Force unlock:\n");
+  // ioctl(fp, DECOM_IOC_FORCE_UNLOCK);
+  // printf("Some READ information:\n");
+  // printf("\tCounter = %d\n", ioctl(fp, DECOM_IOC_COUNTER));
+  // printf("\tLocked ? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
+  // printf("\tNum unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
+  // printf("\tFIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+  // printf("Reseting board . . . \n");
+  // ioctl(fp, DECOM_IOC_RESET);
+  // usleep(100);
+  // ioctl(fp, DECOM_IOC_NUM_UNLOCKED);
 
+  bool locked = false;
+  unsigned int data_received = 0;
+  unsigned int mbit_count = 0;
+
+  sleep(1);
 
   for (i = 0; ; i++) {
     bytes_read = read(fp, (void *)(&receiveword), sizeof(unsigned short));
@@ -88,12 +113,37 @@ int main(int argc, char *argv[]) {
 	  j += 1;
 	  bytes_read_since_last_sync += bytes_read;
 	  if ((receiveword == 0xeb90) || (receiveword == 0x146f)) {
-        // printf("\n== j=%d ==\n", j);
-        printf("\n");
-	    j = 0;
-	    bytes_read_since_last_sync = 0;
+        //printf("\n== j=%d ==\n", j);
+        if (bytes_read_since_last_sync != 1248) {
+          printf("\n---------------- Not locked (size = %d) -----------------------\n", bytes_read_since_last_sync);
+          print_buffer(buffer, (bytes_read_since_last_sync-1)/2+1);
+          locked = false;
+          tcflush(fp, TCIOFLUSH);
+          mbit_count = 0;
+          usleep(1);
+        } else {
+          if (!locked) printf("\nWe have now established lock\n");
+          if (crc) {
+            printf("Bad crc %04x\n", crc);
+            print_buffer(buffer, (bytes_read_since_last_sync-1)/2+1);
+            mbit_count = 0;
+          }
+
+          data_received += bytes_read_since_last_sync;
+          if (data_received >= 125000) {
+            printf("%d: Received 1 Mbit\n", ++mbit_count);
+            data_received = 0;
+          }
+          locked = true;
+        }
+        crc = 0;
+        bytes_read_since_last_sync = 0;
+        j = 0;
+
 	  }
-      printf("%04x ", receiveword);
+      crc ^= receiveword;
+      buffer[j] = receiveword;
+
  	  //printf("\nWord Received: 0x%04x\n", receiveword);
 	  //printf("Read %zd bytes\n", bytes_read);
 	  //printf("Number of reads since last sync: %d\n", j);
@@ -111,6 +161,8 @@ int main(int argc, char *argv[]) {
 	    // printf("locked? = %d\n", ioctl(fp, DECOM_IOC_LOCKED));
 	    // printf("num unlocked = %d\n", ioctl(fp, DECOM_IOC_NUM_UNLOCKED));
 	    // printf("FIONREAD = %d\n", ioctl(fp, DECOM_IOC_FIONREAD));
+        // printf("Should not get here\n");
+        usleep(1000);
     }
   }
   return 0;

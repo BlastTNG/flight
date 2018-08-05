@@ -122,7 +122,6 @@ linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 extern linklist_t * ll_hk;
-extern char * ROACH_TYPES[NUM_RTYPES];
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -315,95 +314,6 @@ void * lj_connection_handler(void *arg) {
 
 unsigned int superframe_counter[RATE_END] = {0};
 
-// distributes and multiplexes commanded roach channels to compressed telemetry fields
-void add_roach_tlm_488hz()
-{
-  static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
-  static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
-  static int first_time = 1;
-  static unsigned int RoachId[NUM_ROACH_TLM] = {0};
-  static unsigned int KidId[NUM_ROACH_TLM] = {0};
-  static unsigned int TypeId[NUM_ROACH_TLM] = {0};
-  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
-  static int have_warned = 0;
-  int i;
-
-  if (first_time) {
-    for (i = 0; i < NUM_ROACH_TLM; i++) {
-			char tlm_name[64] = {0};
-			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN", 65+i);
-      tlm[i] = channels_find_by_name(tlm_name);
-			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN_index", 65+i);
-      tlm_index[i] = channels_find_by_name(tlm_name);
-    }
-    for (i = 0; i < NUM_ROACHES; i++) roach_df_telem[i].first_call = 1; // Tell mcp to initialize
-                                                                        // the roach_df_telem struct.
-    memset(roach_indices, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
-    first_time = 0;
-  }
-
-  for (i = 0; i < NUM_ROACH_TLM; i++) {
-    int ind_rtype = i % NUM_RTYPES;
-    int ind_roach = i / NUM_RTYPES;
-    if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
-      roach_indices[i] = CommandData.roach_tlm[i].index;
-      read_roach_index(&RoachId[i], &KidId[i], &TypeId[i], roach_indices[i]);
-      RoachId[i] -= 1; // switch from 1 to 0 indexing
-
-      if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", CommandData.roach_tlm[i].name, tlm[i]->field);
-    }
-
-    // invalid roach selection
-    if (RoachId[i] >= NUM_ROACHES) continue;
-
-    unsigned int i_udp_read = GETREADINDEX(roach_udp[RoachId[i]].index);
-    data_udp_packet_t *m_packet = &(roach_udp[RoachId[i]].last_pkts[i_udp_read]);
-
-    // Calculate the df incorporating the new packet data
-    if ((ind_roach >= NUM_ROACHES) || (ind_rtype >= NUM_RTYPES)) {
-        blast_err("Df indexing error: roach_index %d, ind_rtype %d conflict with NUM_ROACHES %d, NUM_RTYPES %d",
-                  ind_roach, ind_rtype, NUM_ROACHES, NUM_RTYPES);
-        have_warned = 1;
-    } else {
-        if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
-            switch (ind_rtype) {
-                case 0: // I values
-                    roach_df_telem[ind_roach].i_cur = m_packet->Ival[KidId[i]];
-                    break;
-                case 1: // Q values
-                    roach_df_telem[ind_roach].q_cur = m_packet->Qval[KidId[i]];
-                    break;
-                case 2: // calc df values
-                    roach_df_telem[ind_roach].ind_kid = KidId[i];
-                    roach_df_telem[ind_roach].ind_roach = ind_roach;
-                    roach_df_continuous(&(roach_df_telem[ind_roach]));
-                    break;
-            }
-        }
-        have_warned = 0;
-    }
-    // write the roach data to the multiplexed field
-    if (tlm[i]) {
-      double value = -3.14159;
-      if (strcmp(ROACH_TYPES[TypeId[i]], "i") == 0) { // I comes from the UDP packet directly
-        value = m_packet->Ival[KidId[i]];
-      } else if (strcmp(ROACH_TYPES[TypeId[i]], "q") == 0) { // Q comes from the UDP packet directly
-        value = m_packet->Qval[KidId[i]];
-      } else if (strcmp(ROACH_TYPES[TypeId[i]], "df") == 0) { // df comes from the frame
-        if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
-          value = roach_df_telem[ind_roach].df;
-        }
-      }
-
-      SET_FLOAT(tlm[i], value);
-    }
-    // write the multiplex index
-    if (tlm_index[i]) {
-      SET_INT32(tlm_index[i], roach_indices[i]);
-    }
-  }
-}
-
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
@@ -534,6 +444,7 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
+    write_roach_channels_1hz();
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
@@ -550,13 +461,22 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
-    int counter_488hz = 1;
-    int counter_244hz = 1;
-    int counter_200hz = 1;
-    int counter_100hz = 1;
-    int counter_5hz = 1;
-    int counter_2hz = 1;
-    int counter_1hz = 1;
+
+    // Start values indicate the phase (in MCP_FREQ counts) of each channel relative to zero.
+    //
+    // For 24400 mcp counts per second, there are 50, 100, 122, 244, 4880, 12200, and 24400
+    // mcp counts per 488 Hz, 244 Hz, 200 Hz, 100 Hz, 5 Hz, and 1 Hz routine, respectively.
+    //
+    // Start values are chosen so that all the routines are spaced over the 50 mcp pulses per
+    // 488 Hz routine, which is the fastest rate.
+    int counter_488hz = 40;
+    int counter_244hz = 39; // 10;
+    int counter_200hz = 33; // 11;
+    int counter_100hz = 27; // 17;
+    int counter_5hz = 20; // 23;
+    int counter_2hz = 19; // 30;
+    int counter_1hz = 1; // 31;
+
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
@@ -812,6 +732,7 @@ blast_info("Finished initializing Beaglebones..."); */
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
 
   // This is the DPGS we get over serial from CSBF
+
   dgps_thread = ph_thread_spawn(DGPSMonitor, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);

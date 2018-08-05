@@ -1963,6 +1963,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.biphase_allframe_fraction = rvalues[1];
       blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
+    case set_roach_all_chan:
+        if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {
+          CommandData.num_channels_all_roaches[ivalues[0]-1] = ivalues[1];
+          blast_info("Roach %d to send %d kids\n", ivalues[0], ivalues[1]);
+        }
+        break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
         CommandData.roach_tlm[i].kid = ivalues[(i/3)*2+0];
@@ -2895,7 +2901,13 @@ void InitCommandData()
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
+        CommandData.roach_params[i].in_atten = 16;
     }
+    CommandData.roach_params[0].out_atten = 7;
+    CommandData.roach_params[1].out_atten = 2;
+    CommandData.roach_params[2].out_atten = 3;
+    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[4].out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -3126,6 +3138,7 @@ void InitCommandData()
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    memset(CommandData.num_channels_all_roaches, 0, sizeof(CommandData.num_channels_all_roaches));
     CommandData.pilot_oth = 0;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
@@ -3252,9 +3265,7 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        // these settings will give ~ -60/dBm per tone 1000 tones
-        CommandData.roach_params[i].out_atten = 17;
-        CommandData.roach_params[i].in_atten = 10;
+        // these settings were determined on August 2, 2018 (Palestine)
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
