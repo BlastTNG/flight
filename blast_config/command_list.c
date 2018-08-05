@@ -1081,12 +1081,12 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(offset_lo), "shift LO by specified amount in Hz", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
+      {"Amount to shift LO", -1000000., 1000000., 'f', "NONE"},
     }
   },
   {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 1,
     {
-      {"Amount to shift LO", 0, 1000000., 'f', "NONE"},
+      {"Amount to shift LO", -1000000., 1000000., 'f', "NONE"},
     }
   },
   {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
