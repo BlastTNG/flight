@@ -155,7 +155,7 @@ enum singleCommand {
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
-  reload_vna_all, end_sweeps_all, pilot_oth_on, pilot_oth_off,
+  reload_vna_all, end_sweeps_all, new_ref_params_all, pilot_oth_on, pilot_oth_off,
 
   xyzzy
 };
@@ -293,6 +293,7 @@ enum multiCommand {
   change_amp,
   change_freq,
   change_phase,
+  set_attens_all,
   offset_freq,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
