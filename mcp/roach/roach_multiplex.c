@@ -80,21 +80,26 @@ void add_roach_tlm_488hz()
     first_time = 0;
   }
 
+  // -----------------------------------
   // Set multiplex for all channels here
   // -----------------------------------
+  // Multiplex is set by command, where the commanded number of channels per roach will be sent
+  // multiplexed at 488 Hz.
+  // -----------------------------------
 
+  static unsigned int kid_counter[NUM_ROACHES] = {0};
   for (int j = 0; j < NUM_ROACHES; j++) {
-		if (CommandData.num_channels_all_roaches[j]) {
-			for (int i = 0; i < 3; i++) {
+		if (CommandData.num_channels_all_roaches[j]) { // if non-zero, multiplex that number of roach channels
+			for (int i = 0; i < 3; i++) { // loop through I, Q, and df
         int tlm_ind = j*3+i;
         if (tlm_ind >= NUM_ROACH_TLM) continue;
         r_tlm = &(CommandData.roach_tlm[tlm_ind]);
 
 				// set kid and roach counters for I, Q, and df multiplex
         unsigned int wrap = MIN(CommandData.num_channels_all_roaches[j], MAX_CHANNELS_PER_ROACH);
-        unsigned int next_kid = (r_tlm->kid+1)%wrap;
+        kid_counter[j] = (kid_counter[j]+1)%wrap;
 
-        r_tlm->index = get_roach_index(j, next_kid, i);
+        r_tlm->index = get_roach_index(j, (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH, i);
 			}
 		}
   }
