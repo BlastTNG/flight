@@ -123,6 +123,7 @@ typedef struct roach_state {
     uint16_t port;
     bool has_qdr_cal;
     bool has_tones;
+    bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
     bool is_sweeping;

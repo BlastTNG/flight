@@ -1876,6 +1876,7 @@ int roach_write_saved(roach_state_t *m_roach)
         m_roach->targ_tones[j] = m_temp_freqs[j];
         // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
     }
+    save_output_trf(m_roach);
     if (APPLY_TARG_TRF) {
         CommandData.roach[m_roach->which - 1].load_targ_amps = 2;
         blast_info("ROACH%d, Applying targ trf correction", m_roach->which);
@@ -2019,7 +2020,6 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     if (!CommandData.roach[ind].do_sweeps) {
         return SWEEP_INTERRUPT;
     }
-    blast_info("INSIDE DO SWEEPS");
     char *save_bbfreqs_command;
     // char *save_vna_trf_command;
     double m_span;
@@ -2104,25 +2104,18 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     blast_info("ROACH%d Starting new sweep...", m_roach->which);
     /* Sweep and save data */
     for (size_t i = 0; i < m_num_sweep_freqs; i++) {
-        blast_info("i = %u", i);
-        blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
         if (CommandData.roach[ind].do_sweeps) {
-            blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
             pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
             // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
             if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-                blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 blast_info("Error setting LO... reboot Pi%d?", ind + 1);
                 return PI_READ_ERROR;
             }
-            blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
-                blast_info("FAIL");
-                blast_info("do_sweeps = %d", CommandData.roach[ind].do_sweeps);
                 return SWEEP_FAIL;
             }
         } else {
@@ -2649,6 +2642,7 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
       m_roach->last_targ_path, m_on_res);
     blast_info("Command: %s", py_command);
     pyblast_system(py_command);
+    // system(py_command);
     sleep(5);
     if (m_on_res) {
         blast_tmp_sprintf(load_path, "%s/new_res_freqs.dat", m_roach->last_targ_path);
@@ -2669,6 +2663,7 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
     blast_tmp_sprintf(copy_command, "cp %s %s/bb_targ_freqs.dat",
             load_path, m_roach->sweep_root_path);
     pyblast_system(copy_command);
+    // system(copy_command);
     if ((roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids) < 0)) {
         return retval;
     }
@@ -2943,6 +2938,7 @@ int calc_grad_freqs(roach_state_t *m_roach, char *m_targ_path)
            m_roach->lo_centerfreq);
     blast_info("%s", calc_freqs_command);
     pyblast_system(calc_freqs_command);
+    // system(calc_freqs_command);
     sleep(6);
     blast_tmp_sprintf(m_targ_freq_path, "%s/gradient_freqs.dat", m_targ_path);
     blast_info("Opening gradient freqs for reading...");
@@ -3886,6 +3882,7 @@ int roach_write_vna(roach_state_t *m_roach)
     }
     blast_info("ROACH%d, Search comb uploaded", m_roach->which);
     m_roach->has_tones = 1;
+    m_roach->has_vna_tones = 1;
     retval = 0;
     return retval;
 }
@@ -4222,9 +4219,7 @@ void *roach_cmd_loop(void* ind)
                     }*/
                 }
                 // write targ tones
-                if (AUTO_WRITE_TARG &&
-                       roach_state_table[i].has_tones &&
-                       !roach_state_table[i].has_targ_tones) {
+                if (AUTO_WRITE_TARG && !roach_state_table[i].has_targ_tones) {
                     roach_write_targ_tones(&roach_state_table[i]);
                 }
                 // if has_targ_tones, and NOT is_sweeping, do a targ sweep
