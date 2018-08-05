@@ -3252,9 +3252,8 @@ void InitCommandData()
         CommandData.roach_params[i].peak_threshold = 1; // dB
         CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
-        // these settings will give ~ -60/dBm per tone 1000 tones
-        CommandData.roach_params[i].out_atten = 17;
-        CommandData.roach_params[i].in_atten = 10;
+        // these settings were determined on August 2, 2018 (Palestine)
+        CommandData.roach_params[i].in_atten = 16;
         CommandData.roach_params[i].test_freq = 10.0125e6;
         CommandData.roach_params[i].atten_step = 1.0;
         CommandData.roach_params[i].npoints = 11;
@@ -3267,6 +3266,11 @@ void InitCommandData()
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
     }
+    CommandData.roach_params[0].out_atten = 7;
+    CommandData.roach_params[1].out_atten = 2;
+    CommandData.roach_params[2].out_atten = 3;
+    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[4].out_atten = 4;
 
     CommandData.rox_bias.amp = 56;
     CommandData.rox_bias.status = 0;
