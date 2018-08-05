@@ -287,7 +287,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
   {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
-  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
+  {COMMAND(xy_panic), "stop XY stage motors immediately", GR_XY},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
@@ -783,42 +783,42 @@ struct mcom mcommands[plugh + 2] = {
 
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
-    GR_MISC, 4,
+    GR_XY, 4,
     {
-      {"X destination", 0, 80000, 'l', "X_STAGE"},
-      {"Y destination", 0, 80000, 'l', "Y_STAGE"},
+      {"X destination", 0, 200000, 'l', "X_STAGE"},
+      {"Y destination", 0, 200000, 'l', "Y_STAGE"},
       {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
       {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
-    GR_MISC, 4,
+    GR_XY, 4,
     {
-      {"X delta", -80000, 80000, 'l', "0"},
-      {"Y delta", -80000, 80000, 'l', "0"},
+      {"X delta", -120000, 120000, 'l', "0"},
+      {"Y delta", -120000, 120000, 'l', "0"},
       {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
       {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
     }
   },
-  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 3,
+  {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_XY, 3,
     {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
+      {"X center", 0, 200000, 'l', "X_STAGE"},
       {"delta X", 0, 80000, 'l', "NONE"},
       {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
     }
   },
-  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 3,
+  {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_XY, 3,
     {
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
+      {"Y center", 0, 200000, 'l', "Y_STAGE"},
       {"delta Y", 0, 80000, 'l', "NONE"},
       {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"},
     }
   },
-  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 7,
+  {COMMAND(xy_raster), "raster the X-Y translation stage", GR_XY, 7,
     {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
+      {"X center", 0, 200000, 'l', "X_STAGE"},
       {"X Width", 0, 40000, 'i', "NONE"},
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
+      {"Y center", 0, 200000, 'l', "Y_STAGE"},
       {"Y Width", 0, 40000, 'i', "NONE"},
       {"X Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
       {"Y Velocity", 0, 16000, 'i', "Y_VEL_STAGE"},

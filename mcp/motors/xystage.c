@@ -331,7 +331,7 @@ void StageBus(void)
   EZBus_SetPreamble(&bus, STAGEX_ID, XYSTAGE_PREAMBLE);
   EZBus_SetPreamble(&bus, STAGEY_ID, XYSTAGE_PREAMBLE);
 
-  EZBus_Comm(&bus, STAGEX_ID, "z100000R"); // Wake up at position 10000 so we have space to move in either direction.
+  EZBus_Comm(&bus, STAGEX_ID, "z100000R"); // Wake up at position 100000 so we have space to move in either direction.
   EZBus_Comm(&bus, STAGEY_ID, "z100000R"); // May want to use home command to re-zero on limit switches.
   all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
