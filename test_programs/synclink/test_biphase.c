@@ -104,6 +104,8 @@ int send_biphase_writes() {
     params.clock_speed = 1000000;
     params.crc_type = HDLC_CRC_NONE;
     params.addr_filter = 0xff;
+    params.preamble = HDLC_PREAMBLE_PATTERN_NONE;
+
     rc = ioctl(fd, MGSL_IOCSPARAMS, &params);
     if (rc < 0) {
         blast_err("ioctl(MGSL_IOCSPARAMS) error=%d %s", errno, strerror(errno));
@@ -154,14 +156,12 @@ int send_biphase_writes() {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
     // fcntl(fd, F_SETFL, fcntl(fd, F_GETFL));
     // Request to Send and Data Terminal Ready
-    /*
     sigs = TIOCM_RTS + TIOCM_DTR;
     rc = ioctl(fd, TIOCMBIS, &sigs);
     if (rc < 0) {
         blast_err("assert DTR/RTS error = %d %s", errno, strerror(errno));
         return rc;
     }
-    */
 
     // Enable transmitter
     enable = 1;
@@ -176,6 +176,12 @@ int send_biphase_writes() {
 
     sleep(3);
     for (int j=0; j>-1; j++) {
+        int count = 2496;
+        while (count >= 2496) {  
+          ioctl(fd, TIOCOUTQ, &count);
+          usleep(500);
+        }
+        if (count < 1248) printf("Low count (%d)!!\n", count);
         data_to_write[2] = small_counter;
         if (j%2 == 0) {
             data_to_write[0] = 0xEB90;
@@ -198,14 +204,16 @@ int send_biphase_writes() {
             usleep(50000);
             // return rc;
         } else {
+            /*
             printf("\n");
             for (int k=0; k<((int) bytes_to_write/2); k++) {
                 if (!(k%32)) printf("\n");
                 printf("%04x ", data_to_write[k]);
             }
+            */
         }
-        printf("\nWrote %d bytes", rc);
-        if (j%2) rc = tcdrain(fd);
+        // printf("\nWrote %d bytes (%d in buffer)\n", rc, count);
+        // rc = tcdrain(fd);
         gettimeofday(&end, NULL);
         /*
         if ((counter % 10) == 0) {
@@ -215,7 +223,7 @@ int send_biphase_writes() {
         */
         counter += 1;
         // sleep(1);
-        usleep(100);
+        // usleep(100);
     } 
     // Closing
     // sigs = TIOCM_RTS + TIOCM_DTR;
