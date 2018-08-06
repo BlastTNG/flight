@@ -339,7 +339,7 @@ void * setup_synclink_transfers(void * arg)
       data_present = 1;
     } else { // send zeros
       read_buf = zerobuffer;
-      *(uint16_t *) (read_buf+2) = counter++;
+      *(uint16_t *) (read_buf+BIPHASE_FRAME_SIZE_BYTES-2) = counter++;
       data_present = 0;
     }
     // set syncword and invert for next send
