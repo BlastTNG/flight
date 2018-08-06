@@ -56,13 +56,14 @@ extern char * ROACH_TYPES[NUM_RTYPES];
 
 void add_roach_tlm_488hz()
 {
-  int i;
+  int i, j;
 
   static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
   static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
   static unsigned int prev_roach_index[NUM_ROACH_TLM] = {0};
   static int have_warned = 0;
   static int first_time = 1;
+  float df = -3.14159;
 
   roach_tlm_t * r_tlm = NULL;
 
@@ -74,8 +75,11 @@ void add_roach_tlm_488hz()
 			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN_index", 65+i);
       tlm_index[i] = channels_find_by_name(tlm_name);
     }
-    for (i = 0; i < NUM_ROACHES; i++) roach_df_telem[i].first_call = 1; // Tell mcp to initialize
-                                                                        // the roach_df_telem struct.
+    for (i = 0; i < NUM_ROACHES; i++) {
+      for (j = 0; j < MAX_CHANNELS_PER_ROACH; j++) {
+        roach_df_telem[i][j].first_call = 1; // Tell mcp to initialize
+      }
+    }                                                                    // the roach_df_telem struct.
     memset(prev_roach_index, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
     first_time = 0;
   }
@@ -113,8 +117,6 @@ void add_roach_tlm_488hz()
     r_tlm = &CommandData.roach_tlm[i];
     int i_roach = r_tlm->roach-1;
 
-    int ind_rtype = i % NUM_RTYPES;
-    int ind_roach = i / NUM_RTYPES;
     if ((!CommandData.num_channels_all_roaches[i_roach]) && (strlen(r_tlm->name)) &&
            (r_tlm->index != prev_roach_index[i])) {
       if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", r_tlm->name, tlm[i]->field);
@@ -128,27 +130,19 @@ void add_roach_tlm_488hz()
     data_udp_packet_t *m_packet = &(roach_udp[i_roach].last_pkts[i_udp_read]);
 
     // Calculate the df incorporating the new packet data
-    if ((ind_roach >= NUM_ROACHES) || (ind_rtype >= NUM_RTYPES)) {
+    if ((i_roach >= NUM_ROACHES) || (r_tlm->kid >= MAX_CHANNELS_PER_ROACH)) {
         blast_err("Df indexing error: roach_index %d, ind_rtype %d conflict with NUM_ROACHES %d, NUM_RTYPES %d",
-                  ind_roach, ind_rtype, NUM_ROACHES, NUM_RTYPES);
+                  i_roach, r_tlm->kid, NUM_ROACHES, MAX_CHANNELS_PER_ROACH);
         have_warned = 1;
     } else {
         if (CommandData.roach_tlm_mode & ROACH_TLM_IQDF) {
-            switch (ind_rtype) {
-                case 0: // I values
-                    roach_df_telem[ind_roach].i_cur = m_packet->Ival[r_tlm->kid];
-                    break;
-                case 1: // Q values
-                    roach_df_telem[ind_roach].q_cur = m_packet->Qval[r_tlm->kid];
-                    break;
-                case 2: // calc df values
-                    roach_df_telem[ind_roach].ind_kid = r_tlm->kid;
-                    roach_df_telem[ind_roach].ind_roach = ind_roach;
-                    roach_df_continuous(&(roach_df_telem[ind_roach]));
-                    break;
+            if (strcmp(ROACH_TYPES[r_tlm->rtype], "df") == 0) {
+                df = roach_df_continuous(&(roach_df_telem[i_roach][r_tlm->kid]),
+                                   m_packet->Qval[r_tlm->kid], m_packet->Ival[r_tlm->kid],
+                                   i_roach, r_tlm->kid);
             }
-        }
-        have_warned = 0;
+       }
+       have_warned = 0;
     }
     // write the roach data to the multiplexed field
     if (tlm[i]) {
@@ -159,7 +153,7 @@ void add_roach_tlm_488hz()
         value = m_packet->Qval[r_tlm->kid];
       } else if (strcmp(ROACH_TYPES[r_tlm->rtype], "df") == 0) { // df comes from the frame
         if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
-          value = roach_df_telem[ind_roach].df;
+          value = df;
         }
       }
 

@@ -279,7 +279,7 @@ typedef struct {
     int first_call;
 } roach_df_calc_t;
 
-roach_df_calc_t roach_df_telem[NUM_ROACHES];
+roach_df_calc_t roach_df_telem[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
 
 roach_handle_data_t roach_udp[NUM_ROACHES];
 
@@ -309,8 +309,7 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
-void roach_df_continuous(roach_df_calc_t* m_roach_df);
-
+float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid);
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);

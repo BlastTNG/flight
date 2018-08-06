@@ -3170,22 +3170,27 @@ int roach_df(roach_state_t* m_roach)
     return retval;
 }
 
-void roach_df_continuous(roach_df_calc_t* m_roach_df)
+float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid)
 {
     int i;
-    static uint32_t i_ct = 0;
-    static int first_pass = 1;
-    roach_state_t* m_roach = &(roach_state_table[m_roach_df->ind_roach]);
+    float df;
+//     static uint32_t i_ct = 0;
+//     static int first_pass = 1;
+    // Check to make sure i_roach and i_kid are within range
+    if ((i_roach >= NUM_ROACHES) || (i_kid >= MAX_CHANNELS_PER_ROACH)
+                                 || (i_roach < 0) || (i_kid < 0)) {
+        blast_info("i_roach = %d, i_kid = %d are out of range", i_roach, i_kid);
+    }
+    roach_state_t* m_roach = &(roach_state_table[i_roach]);
     if (m_roach_df->first_call) { // initialize structure
         for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->ibuf[i] = 0.0;
         for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->qbuf[i] = 0.0;
         m_roach_df->ind_last = 0;
         m_roach_df->i_sum = 0.0;
         m_roach_df->q_sum = 0.0;
-        m_roach_df->df = 0.0;
         m_roach_df->first_call = 0;
     }
-    int retval = -1;
+    int retval = -1.0;
     // check for ref params
     if ((!m_roach->has_ref)) {
 //         if ((i_ct % ROACH_FILT_DEBUG_FREQ) == 0) {
@@ -3194,16 +3199,16 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
 //         }
 //         // Don't try to calculate df until the references are set.
 //         i_ct++;
-        return;
+        return(retval);
     }
-    if (first_pass) {
-        i_ct = 0;
-        first_pass = 0;
-    }
-    m_roach_df->i_sum = m_roach_df->i_sum - m_roach_df->ibuf[m_roach_df->ind_last] + m_roach_df->i_cur;
-    m_roach_df->q_sum = m_roach_df->q_sum - m_roach_df->qbuf[m_roach_df->ind_last] + m_roach_df->q_cur;
-    m_roach_df->qbuf[m_roach_df->ind_last] = m_roach_df->q_cur;
-    m_roach_df->ibuf[m_roach_df->ind_last] = m_roach_df->i_cur;
+//     if (first_pass) {
+//         i_ct = 0;
+//         first_pass = 0;
+//     }
+    m_roach_df->i_sum = m_roach_df->i_sum - m_roach_df->ibuf[m_roach_df->ind_last] + inew;
+    m_roach_df->q_sum = m_roach_df->q_sum - m_roach_df->qbuf[m_roach_df->ind_last] + qnew;
+    m_roach_df->qbuf[m_roach_df->ind_last] = qnew;
+    m_roach_df->ibuf[m_roach_df->ind_last] = inew;
 //     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
 //         blast_info("roach%d ikid%d i_sum = %f, i_cur = %f, ind_last = %f",
 //                    m_roach_df->ind_roach, m_roach_df->ind_kid,
@@ -3224,15 +3229,16 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
     comp_vals[0] = m_roach_df->i_sum / ROACH_DF_FILT_LEN;
     comp_vals[1] = m_roach_df->q_sum / ROACH_DF_FILT_LEN;
     // calculate df for each selected channel
-    double deltaI = comp_vals[0] - m_roach->ref_vals[m_roach_df->ind_kid][0];
-    double deltaQ = comp_vals[1] - m_roach->ref_vals[m_roach_df->ind_kid][1];
-    m_roach_df->df =  -1. * ((m_roach->ref_grads[m_roach_df->ind_kid][0] * deltaI) +
-                     (m_roach->ref_grads[m_roach_df->ind_kid][1] * deltaQ)) /
-                     (m_roach->ref_grads[m_roach_df->ind_kid][0]*m_roach->ref_grads[m_roach_df->ind_kid][0] +
-                      m_roach->ref_grads[m_roach_df->ind_kid][1]*m_roach->ref_grads[m_roach_df->ind_kid][1]);
+    double deltaI = comp_vals[0] - m_roach->ref_vals[i_kid][0];
+    double deltaQ = comp_vals[1] - m_roach->ref_vals[i_kid][1];
+    df =  -1. * ((m_roach->ref_grads[i_kid][0] * deltaI) +
+                     (m_roach->ref_grads[i_kid][1] * deltaQ)) /
+                     (m_roach->ref_grads[i_kid][0]*m_roach->ref_grads[i_kid][0] +
+                      m_roach->ref_grads[i_kid][1]*m_roach->ref_grads[i_kid][1]);
     if (!m_roach->first_calc) {
-        m_roach_df->df -= m_roach->df_offset[m_roach_df->ind_kid];
+        df -= m_roach->df_offset[i_kid];
     }
+    return(df);
 //    if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
 //         blast_info("roach%d ikid%d comp_vals = %f %f ref_vals %f %f delta I Q %f %f ref_grads %f %f",
 //                    m_roach_df->ind_roach, m_roach_df->ind_kid, comp_vals[0], comp_vals[1],
