@@ -309,7 +309,7 @@ void StageBus(void)
   }
   while (1) {
     if (EZBus_Init(&bus, STAGE_BUS_TTY, "", STAGE_BUS_CHATTER) == EZ_ERR_OK) {
-      blast_info("Connected to port %d on attempt %u.", STAGE_BUS_TTY, conn_attempt);
+      blast_info("Connected to port %s on attempt %u.", STAGE_BUS_TTY, conn_attempt);
       break;
     }
     conn_attempt++;
