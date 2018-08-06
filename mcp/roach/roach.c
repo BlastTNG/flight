@@ -1849,15 +1849,6 @@ int get_targ_freqs(roach_state_t *m_roach, char* m_targ_path, bool m_use_default
     return retval;
 }
 
-void center_df(roach_state_t *m_roach)
-{
-    for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
-        m_roach->df_offset[chan] = m_roach->df[chan];
-    }
-    blast_info("ROACH%d, zeroing dfs...", m_roach->which);
-    CommandData.roach[m_roach->which - 1].recenter_df = 0;
-}
-
 int roach_dfs(roach_state_t* m_roach)
 {
     int retval = -1;
@@ -1904,11 +1895,30 @@ int roach_dfs(roach_state_t* m_roach)
         if (!CommandData.roach[m_roach->which - 1].recenter_df) {
             m_roach->df[chan] -= m_roach->df_offset[chan];
         }
-        blast_info("*********** ROACH%d, chan %zd df = %g", m_roach->which, chan, m_roach->df[chan]);
+        blast_info("**** ROACH%d, chan %zd df = %g,", m_roach->which, chan, m_roach->df[chan]);
+        /* blast_info("**** ROACH%d, chan %zd df = %g, Icomp_val %g, deltaI %g, Irefval %g, offset %g",
+               m_roach->which,
+               chan,
+               m_roach->df[chan],
+               comp_vals[chan][0],
+               deltaI,
+               m_roach->ref_vals[chan][0],
+               m_roach->df_offset[chan]);*/
     }
     // TODO(Sam) add error handling
     retval = 0;
     return retval;
+}
+
+void center_df(roach_state_t *m_roach)
+{
+    CommandData.roach[m_roach->which - 1].recenter_df = 1;
+    roach_dfs(m_roach);
+    for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
+        m_roach->df_offset[chan] = m_roach->df[chan];
+    }
+    blast_info("ROACH%d, zeroing dfs...", m_roach->which);
+    CommandData.roach[m_roach->which - 1].recenter_df = 0;
 }
 
 int save_ref_params(roach_state_t *m_roach)
@@ -1946,9 +1956,6 @@ int save_ref_params(roach_state_t *m_roach)
     }
     // set 'has ref' flag
     m_roach->has_ref = 1;
-    CommandData.roach[m_roach->which - 1].recenter_df = 0;
-    roach_dfs(m_roach);
-    CommandData.roach[m_roach->which - 1].recenter_df = 1;
     center_df(m_roach);
     retval = 0;
     return retval;
@@ -2777,7 +2784,6 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
     }
     // if Roach has df ref params, recenter df
     if (m_roach->has_ref) {
-        CommandData.roach[m_roach->which - 1].recenter_df = 1;
         center_df(m_roach);
     }
     retval = 0;
@@ -3178,7 +3184,15 @@ int roach_df(roach_state_t* m_roach)
     if (!CommandData.roach[m_roach->which - 1].recenter_df) {
         m_roach->df[chan] -= m_roach->df_offset[chan];
     }
-    blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, chan, m_roach->df[chan]);
+    blast_info("****** ROACH%d, chan %d df = %g", m_roach->which, chan, m_roach->df[chan]);
+    /* blast_info("**** ROACH%d, chan %zd df = %g, Icomp_val %g, deltaI %g, Irefval %g, offset %g",
+          m_roach->which,
+          chan,
+          m_roach->df[chan],
+          comp_vals[0],
+          deltaI,
+          m_roach->ref_vals[chan][0],
+          m_roach->df_offset[chan]);*/
     retval = 0;
     return retval;
 }
@@ -3186,14 +3200,14 @@ int roach_df(roach_state_t* m_roach)
 float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid)
 {
     int i;
-    float df;
-//     static uint32_t i_ct = 0;
-//     static int first_pass = 1;
+    double df;
+    static uint32_t i_ct = 0;
+    static int first_pass = 1;
     // Check to make sure i_roach and i_kid are within range
-    if ((i_roach >= NUM_ROACHES) || (i_kid >= MAX_CHANNELS_PER_ROACH)
+    /* if ((i_roach >= NUM_ROACHES) || (i_kid >= MAX_CHANNELS_PER_ROACH)
                                  || (i_roach < 0) || (i_kid < 0)) {
         blast_info("i_roach = %d, i_kid = %d are out of range", i_roach, i_kid);
-    }
+    }*/
     roach_state_t* m_roach = &(roach_state_table[i_roach]);
     if (m_roach_df->first_call) { // initialize structure
         for (i = 0; i < ROACH_DF_FILT_LEN; i++) m_roach_df->ibuf[i] = 0.0;
@@ -3214,27 +3228,27 @@ float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, i
 //         i_ct++;
         return(retval);
     }
-//     if (first_pass) {
-//         i_ct = 0;
-//         first_pass = 0;
-//     }
+    /* if (first_pass) {
+        i_ct = 0;
+        first_pass = 0;
+    }*/
     m_roach_df->i_sum = m_roach_df->i_sum - m_roach_df->ibuf[m_roach_df->ind_last] + inew;
     m_roach_df->q_sum = m_roach_df->q_sum - m_roach_df->qbuf[m_roach_df->ind_last] + qnew;
     m_roach_df->qbuf[m_roach_df->ind_last] = qnew;
     m_roach_df->ibuf[m_roach_df->ind_last] = inew;
-//     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
-//         blast_info("roach%d ikid%d i_sum = %f, i_cur = %f, ind_last = %f",
-//                    m_roach_df->ind_roach, m_roach_df->ind_kid,
-//                    m_roach_df->i_sum, m_roach_df->ibuf[m_roach_df->ind_last], m_roach_df->i_cur);
-//         blast_info("roach%d ikid%d q_sum = %f, q_cur = %f, qbuf last = %f, new_ind = %d",
-//                    m_roach_df->ind_roach, m_roach_df->ind_kid,
-//                    m_roach_df->q_sum, m_roach_df->qbuf[m_roach_df->ind_last], m_roach_df->q_cur);
-//     }
+    /* if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 5) {
+        blast_info("roach%d ikid%d i_sum = %f, i_cur = %f, ind_last = %f",
+                   i_roach, i_kid,
+                   m_roach_df->i_sum, m_roach_df->ibuf[m_roach_df->ind_last], inew);
+        blast_info("roach%d ikid%d q_sum = %f, q_cur = %f, qbuf last = %f, new_ind = %d",
+                   i_roach, i_kid,
+                   m_roach_df->q_sum, m_roach_df->qbuf[m_roach_df->ind_last], qnew);
+    }*/
     m_roach_df->ind_last = ((m_roach_df->ind_last) + 1) % ROACH_DF_FILT_LEN;
-//     if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
-//          blast_info("roach%d ikid%d new_index = %d",
-//                     m_roach_df->ind_roach, m_roach_df->ind_kid, m_roach_df->ind_last);
-//     }
+    /* if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 5) {
+         blast_info("roach%d ikid%d new_index = %d",
+                    i_roach, i_kid, m_roach_df->ind_last);
+    }*/
     // Store in comp_vals
     // Get I and Q vals from packets. Average NUM_AVG values
     // Store in comp_vals
@@ -3249,19 +3263,20 @@ float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, i
                      (m_roach->ref_grads[i_kid][0]*m_roach->ref_grads[i_kid][0] +
                       m_roach->ref_grads[i_kid][1]*m_roach->ref_grads[i_kid][1]);
     if (!CommandData.roach[m_roach->which - 1].recenter_df) {
-        m_roach_df->df -= m_roach->df_offset[i_kid];
+        df -= m_roach->df_offset[i_kid];
     }
+    /* if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 5) {
+         blast_info("roach%d ikid%d comp_vals = %f %f ref_vals %f %f delta I Q %f %f ref_grads %f %f offset %f",
+                    i_roach, i_kid, comp_vals[0], comp_vals[1],
+                    m_roach->ref_vals[i_kid][0], m_roach->ref_vals[i_kid][1],
+                    deltaI, deltaQ,
+                    m_roach->ref_grads[i_kid][0], m_roach->ref_grads[i_kid][1],
+                    m_roach->df_offset[i_kid]);
+         blast_info("*************** ROACH%d, chan %d df = %g", i_roach+1,
+                    i_kid, df);
+    }
+    i_ct++; */
     return(df);
-//    if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
-//         blast_info("roach%d ikid%d comp_vals = %f %f ref_vals %f %f delta I Q %f %f ref_grads %f %f",
-//                    m_roach_df->ind_roach, m_roach_df->ind_kid, comp_vals[0], comp_vals[1],
-//                    m_roach->ref_vals[m_roach_df->ind_kid][0],
-//                    m_roach->ref_vals[m_roach_df->ind_kid][0], deltaI, deltaQ,
-//                    m_roach->ref_grads[m_roach_df->ind_kid][0], m_roach->ref_grads[m_roach_df->ind_kid][1]);
-//         blast_info("*************** ROACH%d, chan %d df = %g", m_roach_df->ind_roach+1,
-//                    m_roach_df->ind_kid, m_roach->df);
-//    }
-//    i_ct++;
 }
 
 int shift_freq(roach_state_t *m_roach)
@@ -4110,6 +4125,7 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].calc_ref_params = 0;
             }
             if (CommandData.roach[i].recenter_df) {
+                CommandData.roach[i].recenter_df = 1;
                 center_df(&roach_state_table[i]);
                 CommandData.roach[i].recenter_df = 0;
             }
