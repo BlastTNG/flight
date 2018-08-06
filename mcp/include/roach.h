@@ -120,6 +120,7 @@ typedef struct roach_state {
 
     int has_error;
     const char *last_err;
+    bool katcp_is_busy;
     char *address;
     uint16_t port;
     bool has_qdr_cal;
@@ -134,6 +135,7 @@ typedef struct roach_state {
     bool has_adc_cal;
     bool write_flag;
 
+    float adc_rms[2];
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
