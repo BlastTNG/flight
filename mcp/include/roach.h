@@ -167,14 +167,16 @@ typedef struct roach_state {
     char *channels_path;
 
     // For detector retune decision
-    uint16_t nflag_thresh; // num channels which need to be out of range for retune
-    bool has_ref; /* If 1, ref grads exist */
-    bool retune_flag; // 1 if retune is recommended
+    int nflag_thresh; // num channels which need to be out of range for retune
+    int has_ref; /* If 1, ref grads exist */
+    bool first_calc;
+    int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
     double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
     double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
-    double df[MAX_CHANNELS_PER_ROACH];
+    double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
+    double df[MAX_CHANNELS_PER_ROACH]; // Delta f
 
     char *last_cal_path;
     // path to the last master chop directory

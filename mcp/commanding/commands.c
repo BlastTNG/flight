@@ -1206,6 +1206,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_sweeps = 0;
             }
             break;
+        case new_ref_params_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].calc_ref_params = 1;
+            }
+            break;
+        case set_attens_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].set_attens = 1;
+            }
+            break;
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -2086,10 +2096,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)
-                 && ((rvalues[2] > 0) && rvalues[2] <= 30)) {
-          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[1];
-          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0.5) && rvalues[1] <= 30)
+                 && ((rvalues[2] > 0.5) && rvalues[2] <= 30)) {
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
