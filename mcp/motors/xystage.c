@@ -78,23 +78,24 @@ static void ReadStage(struct ezbus* bus)
   EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
   EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
-  if (counter == 0)
+  if (counter == 0) {
     EZBus_ReadInt(bus, STAGEX_ID, "?1", &stage_data.xstr);
-  else if (counter == 1)
+    blast_info("Reading position, etc from XY Stage");
+  } else if (counter == 1) {
     EZBus_ReadInt(bus, STAGEX_ID, "?3", &stage_data.xstp);
-  else if (counter == 2)
+  } else if (counter == 2) {
     EZBus_ReadInt(bus, STAGEX_ID, "?4", &stage_data.xlim);
-  else if (counter == 3)
+  } else if (counter == 3) {
     EZBus_ReadInt(bus, STAGEX_ID, "?5", &stage_data.xvel);
-  else if (counter == 4)
+  } else if (counter == 4) {
     EZBus_ReadInt(bus, STAGEY_ID, "?1", &stage_data.ystr);
-  else if (counter == 5)
+  } else if (counter == 5) {
     EZBus_ReadInt(bus, STAGEY_ID, "?3", &stage_data.ystp);
-  else if (counter == 6)
+  } else if (counter == 6) {
     EZBus_ReadInt(bus, STAGEY_ID, "?5", &stage_data.yvel);
-  else if (counter == 7)
+  } else if (counter == 7) {
     EZBus_ReadInt(bus, STAGEY_ID, "?4", &stage_data.ylim);
-
+  }
   counter = (counter + 1) % 8;
 }
 
