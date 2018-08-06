@@ -326,6 +326,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(end_sweeps_all), "End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "Calculates and saves ref params from last target sweep for all Roaches", GR_ROACH},
   {COMMAND(set_attens_all), "Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
+  {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
+  {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1132,6 +1135,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
       {"delta_freq", -1000000.0, 1000000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(auto_find_kids), "Automatically do a VNA sweep, find kids and write tonest", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
   /***************************************/
