@@ -200,7 +200,8 @@ int main(int argc, char *argv[]) {
         if (bin_backup) {
 				  create_rawfile_symlinks(ll_rawfile, symraw_name);
         } else {
-          fclose(ll_rawfile->fp);          
+          fclose(ll_rawfile->fp);
+          ll_rawfile->fp = NULL;
         }
 
 				// set the first framenum request
