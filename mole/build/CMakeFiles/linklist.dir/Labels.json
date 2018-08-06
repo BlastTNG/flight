@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/paul/git/flight/mole/build/CMakeFiles/linklist"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/CMakeFiles/linklist.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/CMakeFiles/linklist-complete.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-install.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-mkdir.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-download.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-update.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-patch.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-configure.rule"
+		},
+		{
+			"file" : "/home/paul/git/flight/mole/build/linklist/src/linklist-stamp/linklist-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"linklist"
+		],
+		"name" : "linklist"
+	}
+}

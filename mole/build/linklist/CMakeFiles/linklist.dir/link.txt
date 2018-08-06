@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblinklist.a  CMakeFiles/linklist.dir/linklist.c.o CMakeFiles/linklist.dir/linklist_compress.c.o CMakeFiles/linklist.dir/linklist_writer.c.o CMakeFiles/linklist.dir/linklist_connect.c.o
+/usr/bin/ranlib liblinklist.a

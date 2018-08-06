@@ -1,0 +1,1 @@
+/usr/bin/cc -Wall -std=gnu99  -rdynamic CMakeFiles/mole.dir/mole.c.o  -o mole linklist/liblinklist.a -lpthread -lssl -lcrypto -lm 
