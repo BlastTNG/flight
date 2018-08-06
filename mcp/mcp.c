@@ -550,13 +550,22 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
+
+    // Start values indicate the phase (in MCP_FREQ counts) of each channel relative to zero.
+    //
+    // For 24400 mcp counts per second, there are 50, 100, 122, 244, 4880, 12200, and 24400
+    // mcp counts per 488 Hz, 244 Hz, 200 Hz, 100 Hz, 5 Hz, and 1 Hz routine, respectively.
+    //
+    // Start values are chosen so that all the routines are spaced over the 50 mcp pulses per
+    // 488 Hz routine, which is the fastest rate.
     int counter_488hz = 1;
-    int counter_244hz = 1;
-    int counter_200hz = 1;
-    int counter_100hz = 1;
-    int counter_5hz = 1;
-    int counter_2hz = 1;
-    int counter_1hz = 1;
+    int counter_244hz = 10;
+    int counter_200hz = 11;
+    int counter_100hz = 17;
+    int counter_5hz = 23;
+    int counter_2hz = 30;
+    int counter_1hz = 31;
+
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");

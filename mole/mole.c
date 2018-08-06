@@ -100,7 +100,7 @@ void print_display(char * text, unsigned int recv_framenum) {
 }
 
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char * mole_dir = "/data/mole";
+char mole_dir[128] = "/data/mole";
 char symdir_name[128] = "/data/etc/mole.lnk";
 char symraw_name[128] = "/data/rawdir/LIVE";
 
@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
+  int bin_backup = 0;
 
   // initialization variables
   uint32_t req_serial = 0;
@@ -124,7 +125,6 @@ int main(int argc, char *argv[]) {
   int64_t recv_framenum = 0;
   uint16_t recv_flags = 0;
   int resync = 1;
-
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -144,6 +144,14 @@ int main(int argc, char *argv[]) {
       rewind = atoi(argv[++i]);
     } else if (strcmp(argv[i], "-v") == 0) { // verbose mode
       ll_flags |= LL_VERBOSE;
+    } else if (strcmp(argv[i], "--backup") == 0) { // write binary backup files
+      bin_backup = 1;
+    } else if (strcmp(argv[i], "--archive-dir") == 0) { // set the archive directory
+      strcpy(archive_dir, argv[++i]);
+    } else if (strcmp(argv[i], "--mole-dir") == 0) { // set the mole directory dirfiles
+      strcpy(mole_dir, argv[++i]);
+    } else if (strcmp(argv[i], "--no-backup") == 0) { // don't write binary backup files
+      bin_backup = 0;
     } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
       ll_flags |= LL_IGNORE_CHECKSUM;
     } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
@@ -189,7 +197,12 @@ int main(int argc, char *argv[]) {
 				sprintf(filename, "%s/%s", archive_dir, linklistname);
         if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
 				ll_rawfile = open_linklist_rawfile(filename, linklist);
-				create_rawfile_symlinks(ll_rawfile, symraw_name);
+        if (bin_backup) {
+				  create_rawfile_symlinks(ll_rawfile, symraw_name);
+        } else {
+          fclose(ll_rawfile->fp);
+          ll_rawfile->fp = NULL;
+        }
 
 				// set the first framenum request
 				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
@@ -231,12 +244,16 @@ int main(int argc, char *argv[]) {
       /* all flags are cleared at this point */
 
 			// write the dirfile
-			seek_linklist_dirfile(ll_dirfile, recv_framenum);
-			write_linklist_dirfile(ll_dirfile, recv_buffer);
+      if (ll_dirfile) {
+			  seek_linklist_dirfile(ll_dirfile, recv_framenum);
+			  write_linklist_dirfile(ll_dirfile, recv_buffer);
+      }
 
 			// write the rawfile
-			seek_linklist_rawfile(ll_rawfile, recv_framenum);
-			write_linklist_rawfile(ll_rawfile, recv_buffer);
+      if (bin_backup && ll_rawfile) {
+			  seek_linklist_rawfile(ll_rawfile, recv_framenum);
+			  write_linklist_rawfile(ll_rawfile, recv_buffer);
+      }
 
 /* 
 			int i;
