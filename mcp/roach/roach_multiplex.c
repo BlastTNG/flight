@@ -138,7 +138,7 @@ void add_roach_tlm_488hz()
         if (CommandData.roach_tlm_mode & ROACH_TLM_IQDF) {
             if (strcmp(ROACH_TYPES[r_tlm->rtype], "df") == 0) {
                 df = roach_df_continuous(&(roach_df_telem[i_roach][r_tlm->kid]),
-                                   m_packet->Qval[r_tlm->kid], m_packet->Ival[r_tlm->kid],
+                                   m_packet->Ival[r_tlm->kid], m_packet->Qval[r_tlm->kid],
                                    i_roach, r_tlm->kid);
             }
        }

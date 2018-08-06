@@ -70,6 +70,6 @@ int check_disk_init();
 
 void initialize_diskmanager();
 void diskmanager_shutdown();
-
+int make_local_symlink(char * filename);
 
 #endif /* INCLUDE_DISKMANAGER_TNG_H */
