@@ -454,11 +454,11 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
 {
     FILE * fp = fopen(filename, "w+");
     int j = 0;
-    linklist_t * ll = NULL;
 
-    static int first_time = 1;
-    static superframe_t * roach_sf = NULL;
-    static superframe_entry_t * sfe = NULL;
+    linklist_t * ll = NULL;
+    superframe_t * roach_sf = NULL;
+    superframe_entry_t * sfe = NULL;
+
     int entry_i = 0;
 
     char fieldname[128] = {0};
@@ -469,10 +469,7 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
     }
 
     // need to generate the superframe first time through
-    if (first_time) {
-        sfe = calloc(ROACH_STRUCT_SF_NUM_ENTRIES+1, sizeof(superframe_entry_t));
-    }
-
+    sfe = calloc(ROACH_STRUCT_SF_NUM_ENTRIES+1, sizeof(superframe_entry_t));
 
     // dummy udp packet for mapping
     data_udp_packet_t m_packet;
@@ -528,15 +525,11 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
     fclose(fp);
 
     // --- STEP 2: generate the linklist --- //
-    // first time through, build the superframe
-    if (first_time) {
-        roach_sf = linklist_build_superframe(sfe, &channel_data_to_double, &channel_double_to_data);
-    }
+    // build the superframe
+    roach_sf = linklist_build_superframe(sfe, &channel_data_to_double, &channel_double_to_data);
 
     // parse the newly made linklist file
     ll = parse_linklist_format(roach_sf, filename);
-
-    first_time = 0;
 
     return ll;
 }
@@ -556,7 +549,7 @@ void write_roach_channels_488hz(void)
     char channel_name_pps_count[128] = {0};
     char channel_name_clock_count[128] = {0};
     char channel_name_packet_count[128] = {0};
-	int i;
+    int i;
     static int firsttime = 1;
 
     if (firsttime) {
