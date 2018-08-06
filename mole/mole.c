@@ -113,6 +113,9 @@ int main(int argc, char *argv[]) {
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
 
+  // configure the TCP connection
+  tcpconn.flag |= TCPCONN_LOOP;
+
   // initialization variables
   uint32_t req_serial = 0;
   unsigned int req_framenum = 0;
