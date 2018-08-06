@@ -324,8 +324,17 @@ void * setup_synclink_transfers(void * arg)
   int data_present = 0;
   int counter = 0;
   uint16_t sync = 0xeb90;
+  int sleeptime = 1;
 
   while (!shutdown_mcp) {
+    while ((synclink_fd = get_synclink_fd()) < 0) { // keep trying to connect
+      rc = setup_synclink();
+      blast_err("Unable to connect to synclink. Will try again in %d seconds\n", sleeptime);
+      sleep(sleeptime);
+      sleeptime = MIN(sleeptime*2, 60);
+    }
+    sleeptime = 1;
+
     // wait for the buffer to get below 2x the frame size
     int count = 2*BIPHASE_FRAME_SIZE_BYTES;
     while (count >= 2*BIPHASE_FRAME_SIZE_BYTES) {  
@@ -339,7 +348,7 @@ void * setup_synclink_transfers(void * arg)
       data_present = 1;
     } else { // send zeros
       read_buf = zerobuffer;
-      *(uint16_t *) (read_buf+2) = counter++;
+      *(uint16_t *) (read_buf+BIPHASE_FRAME_SIZE_BYTES-2) = counter++;
       data_present = 0;
     }
     // set syncword and invert for next send
