@@ -468,7 +468,9 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
         return NULL;
     }
 
-    // need to generate the superframe first time through
+    // Generate the superframe
+    // Actually want to calloc because the pointer is stored in the superframe and
+    // linklist, which is returned.
     sfe = calloc(ROACH_STRUCT_SF_NUM_ENTRIES+1, sizeof(superframe_entry_t));
 
     // dummy udp packet for mapping
