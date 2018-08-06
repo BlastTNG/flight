@@ -41,11 +41,7 @@ void Leveler::level(Shared::Image::Raw& image, unsigned short leveled[])
     double counter = 0.0;
     int subj, subi = 0;
 
-    for (int j=0; j<image_height; j++) {
-        for (int i=0; i<image_width; i++) {
-            leveled[j*image_width+i] = image.pixels[j*image_width+i];
-        }
-    }
+    memcpy(leveled, image.pixels, image_height * image_width * sizeof(uint16_t));
 
     int coarse4_width = int(floor(image_width/4.0));
     int coarse4_height = int(floor(image_height/4.0));

@@ -33,6 +33,11 @@
 #define CRCPOLY_LE 0xedb88320
 #define CRCPOLY_BE 0x04c11db7
 
+#ifdef CRC16_SEED
+#undef CRC16_SEED
+#endif
+#define CRC16_SEED 0xEB90
+
 extern uint32_t  crc32_le(uint32_t crc, unsigned char const *p, size_t len);
 extern uint32_t  crc32_be(uint32_t crc, unsigned char const *p, size_t len);
 

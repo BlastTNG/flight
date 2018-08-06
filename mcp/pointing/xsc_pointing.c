@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #include "blast.h"
-#include "fifo.h"
+#include "xsc_fifo.h"
 #include "framing.h"
 #include "channels_tng.h"
 #include "tx.h"
@@ -43,11 +43,13 @@
 #include "pointing_struct.h"
 #include "angles.h"
 
+extern int16_t InCharge;
+
 bool scan_entered_snap_mode = false;
 bool scan_leaving_snap_mode = false;
 
 static int32_t loop_counter = 0;
-static fifo_t *trigger_fifo[2] = {NULL};
+static xsc_fifo_t *trigger_fifo[2] = {NULL};
 
 typedef enum xsc_trigger_state_t
 {
@@ -123,16 +125,16 @@ static void xsc_trigger(int m_which, int m_value)
 
 xsc_last_trigger_state_t *xsc_get_trigger_data(int m_which)
 {
-    xsc_last_trigger_state_t *last = fifo_pop(trigger_fifo[m_which]);
+    xsc_last_trigger_state_t *last = xsc_fifo_pop(trigger_fifo[m_which]);
     return last;
 }
 
 static inline void xsc_store_trigger_data(int m_which, const xsc_last_trigger_state_t *m_state)
 {
-    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = fifo_new();
+    if (!(trigger_fifo[m_which])) trigger_fifo[m_which] = xsc_fifo_new();
     xsc_last_trigger_state_t *stored = malloc(sizeof(xsc_last_trigger_state_t));
     memcpy(stored, m_state, sizeof(*m_state));
-    if (!fifo_push(trigger_fifo[m_which], stored)) {
+    if (!xsc_fifo_push(trigger_fifo[m_which], stored)) {
         free(stored);
     }
 }
@@ -189,6 +191,8 @@ static bool xsc_scan_force_trigger_threshold()
 
 void xsc_control_triggers()
 {
+    if (!InCharge) return;
+
     static int state_counter = 0;
 
     static xsc_trigger_state_t trigger_state = xsc_trigger_in_hard_grace_period;
@@ -258,14 +262,20 @@ void xsc_control_triggers()
                 for (int which = 0; which < 2; which++) {
                 	trigger |= (1 << which);
                     xsc_trigger(which, 1);
+                    printf("Triggering XSC%d!\n", which);
 
                     xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
-                    xsc_pointing_state[which].last_trigger.counter_stars =
-                            XSC_SERVER_DATA(which).channels.ctr_stars;
+                    xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;
                     xsc_pointing_state[which].last_trigger.lat = PointingData[i_point].lat;
                     xsc_pointing_state[which].last_trigger.lst = PointingData[i_point].lst;
                     xsc_pointing_state[which].last_trigger.trigger_time = get_100hz_framenum();
                     xsc_pointing_state[which].last_trigger_time = get_100hz_framenum();
+
+                    struct timeval tv = { 0 };
+                    gettimeofday(&tv, NULL);
+                    xsc_pointing_state[which].last_trigger.timestamp_s = tv.tv_sec;
+                    xsc_pointing_state[which].last_trigger.timestamp_us = tv.tv_usec;
+
                     xsc_store_trigger_data(which, &(xsc_pointing_state[which].last_trigger));
                 }
 
@@ -322,6 +332,8 @@ static double xsc_get_temperature(int which)
 
 void xsc_control_heaters(void)
 {
+    if (!InCharge) return;
+
     static channel_t* address[2];
     static bool first_time = true;
     static int setpoint_counter[2] = {0, 0};
@@ -377,8 +389,10 @@ void xsc_control_heaters(void)
 
         if (heater_on) {
             SET_VALUE(address[which], 0x2);
+            CommandData.XSC[which].net.heater_state = 0x2;
         } else {
             SET_VALUE(address[which], 0x0);
+            CommandData.XSC[which].net.heater_state = 0x0;
         }
     }
 }

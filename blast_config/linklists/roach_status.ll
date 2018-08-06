@@ -1,0 +1,22 @@
+# ROACH BASIC STATUS 
+# Compression
+packet_count_roach1
+packet_count_roach2
+packet_count_roach3
+packet_count_roach4
+packet_count_roach5
+packet_count_mcp_roach1
+packet_count_mcp_roach2
+packet_count_mcp_roach3
+packet_count_mcp_roach4
+packet_count_mcp_roach5
+packet_count_valid_mcp_roach1
+packet_count_valid_mcp_roach2
+packet_count_valid_mcp_roach3
+packet_count_valid_mcp_roach4
+packet_count_valid_mcp_roach5
+packet_count_invalid_mcp_roach1
+packet_count_invalid_mcp_roach2
+packet_count_invalid_mcp_roach3
+packet_count_invalid_mcp_roach4
+packet_count_invalid_mcp_roach5

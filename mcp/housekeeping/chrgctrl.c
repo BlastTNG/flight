@@ -46,6 +46,8 @@ along with mcp; if not, write to the Free Software Foundation, Inc.,
                              // function declarations
 #include "mcp.h"
 
+extern int16_t InCharge;
+
 typedef enum {
     CC_STATE_DISCONNECT = 0,
     CC_STATE_READY,
@@ -169,6 +171,10 @@ void* chrgctrlComm(void* cc) {
     blast_info("starting controller #%d at IP %s", ctlr->id, ctlr->addr);
 
     while (ctlr->req_state != CC_STATE_SHUTDOWN) {
+        if (!InCharge) {
+            usleep(100000);
+            continue;
+        }
         usleep(1000000);
         if (ctlr->state == CC_STATE_RESET ||
                 (ctlr->req_state == CC_STATE_READY

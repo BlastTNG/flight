@@ -28,10 +28,10 @@
 #include <time.h>
 
 #include <xsc_protocol.h>
-#include "isc_protocol.h"
 #include "command_list.h"
 #include "channels_tng.h"
 #include "mcp_sched.h"
+#include "roach.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -92,6 +92,8 @@
 
 #define PREV_STATUS_FILE "/data/etc/blast/mcp.prev_status"
 
+/* Need to undef I here in for source files that utilize complex.h */
+#undef I
 struct GainStruct {
   float P;
   float I;
@@ -164,6 +166,8 @@ struct PivGainStruct {
 #define HWPR_REPEAT	5
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
+
+#define ROACH_TLM_IQDF 1
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -257,39 +261,65 @@ typedef struct
     uint32_t uei_of_dio_432_out; ///!< BITFIELD for UEI_OF digital output
 } uei_commands_t;
 
+typedef enum {intermed = 0, opened, closed, loose_closed} valve_state_t;
+
 typedef struct {
-  uint16_t charcoalHeater;
-  uint16_t hsCharcoal;
-  uint16_t fridgeCycle;
-  uint16_t force_cycle;
-
-  double cycle_start_temp;
-  double cycle_pot_max;
-  double cycle_charcoal_max;
-  double cycle_charcoal_settle;
-  // timeouts in minutes (NB: time will probably be in seconds)
-  double cycle_charcoal_timeout;
-  double cycle_settle_timeout;
-
-  uint16_t BDAHeat;
-  uint16_t hsPot;
-  int16_t heliumLevel;
-  int he4_lev_old;
   int16_t hwprPos;
   int hwpr_pos_old;
 
-  uint16_t JFETHeat;
-  uint16_t autoJFETheat;
-  double JFETSetOn, JFETSetOff;
-
-  enum calmode calibrator;
-  uint16_t calib_pulse, calib_period;
+  uint16_t cal_length, calib_period;
   int calib_repeats;
   int calib_hwpr;
-
-  uint16_t potvalve_open, potvalve_on, potvalve_close;
+  int potvalve_on;
+  valve_state_t potvalve_goal;
+  uint32_t potvalve_vel;
+  uint16_t potvalve_opencurrent, potvalve_closecurrent;
+  uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
+  valve_state_t valve_goals[2];
+  uint16_t valve_vel, valve_current, valve_acc;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
+  int do_cal_pulse;
+  int do_level_pulse;
+  uint16_t level_length;
+  uint16_t heater_300mk, charcoal_hs, charcoal, lna_250, lna_350, lna_500, heater_1k;
+  uint16_t heater_update;
+  uint16_t heater_status;
+  uint16_t sync;
+  uint16_t force_cycle, auto_cycling;
+  uint16_t pot_filling;
+  uint16_t forced;
+  int labjack, send_dac, load_curve, cycle_allowed;
+  float dac_value;
+  uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
+
+typedef struct {
+  float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
+  float of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
+  float of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
+  float of_9_off, of_10_off, of_11_off, of_12_off, of_13_off, of_14_off, of_15_off, of_16_off;
+  float if_1_on, if_1_off, if_2_on, if_2_off, if_3_on, if_3_off, if_4_on, if_4_off;
+  float if_5_on, if_5_off, if_6_on, if_6_off, if_7_on, if_7_off, if_8_on, if_8_off;
+  float if_9_on, if_9_off, if_10_on, if_10_off;
+  float cycle_of_1, cycle_of_2, cycle_of_3, cycle_of_4, cycle_of_5, cycle_of_6;
+  float cycle_of_7, cycle_of_8, cycle_of_9, cycle_of_10, cycle_of_11, cycle_of_12;
+  float cycle_of_13, cycle_of_14, cycle_of_15, cycle_of_16;
+  float cycle_if_1, cycle_if_2, cycle_if_3, cycle_if_4, cycle_if_5, cycle_if_6;
+  float cycle_if_7, cycle_if_8, cycle_if_9, cycle_if_10;
+  float cycled_of, cycled_if;
+  float rec_on, rec_off, amp_supply_on, amp_supply_off;
+  float therm_supply_on, therm_supply_off, heater_supply_on, heater_supply_off;
+  float update_rec, update_of, update_if;
+  uint16_t labjack[5];
+  int of_relays[16], if_relays[10];
+  int update_video, video_trans;
+} relay_cmds_t;
+
+typedef struct {
+    uint16_t lj_q_on;
+    uint16_t which_q[5];
+    uint16_t set_q;
+} labjack_queue_t;
 
 typedef struct slinger_commanding
 {
@@ -298,11 +328,86 @@ typedef struct slinger_commanding
     bool biphase_active;
 } slinger_commanding_t;
 
+typedef struct udp_roach
+{
+    bool store_udp;
+    bool publish_udp;
+} udp_roach_t;
+
+typedef struct roach
+{
+    unsigned int new_state;
+    unsigned int change_roach_state;
+    unsigned int get_roach_state;
+    unsigned int do_df_calc;
+    unsigned int auto_retune;
+    unsigned int opt_tones;
+    unsigned int do_sweeps;
+    unsigned int new_atten;
+    unsigned int load_vna_amps;
+    unsigned int load_targ_amps;
+    unsigned int calibrate_adc;
+    unsigned int set_attens;
+    unsigned int find_kids;
+    unsigned int adc_rms;
+    unsigned int test_tone;
+    unsigned int roach_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
+    unsigned int do_cal_sweeps;
+    unsigned int get_phase_centers;
+    unsigned int get_timestream;
+    unsigned int chan;
+    unsigned int tune_chan;
+    unsigned int refit_res_freqs;
+    unsigned int change_tone_amps;
+    unsigned int do_master_chop;
+    unsigned int load_new_freqs;
+    unsigned int calc_ref_params;
+    unsigned int do_check_retune;
+    unsigned int do_retune;
+    unsigned int set_lo;
+    unsigned int find_kids_default;
+    unsigned int change_targ_freq;
+    unsigned int change_tone_phase;
+    unsigned int change_tone_freq;
+} roach_status_t;
+
+typedef struct roach_params
+{
+//  Parameters input to find_kids script
+    double smoothing_scale;
+    double peak_threshold;
+    double spacing_threshold;
+//  Set attenuators
+    double in_atten;
+    double out_atten;
+    double new_out_atten;
+    double test_freq;
+    double atten_step;
+    double npoints;
+    double ncycles;
+    double num_sec;
+    double lo_offset;
+    double delta_amp;
+    double delta_phase;
+    double freq_offset;
+} roach_params_t;
+
+// Ethercat controller/device commands
+typedef struct {
+    bool reset;
+    bool fix_rw;
+    bool fix_el;
+    bool fix_piv;
+    bool fix_hwpr;
+} ec_devices_struct_t;
+
 typedef struct {
     enum {bal_rest = 0, bal_manual, bal_auto} mode;
-    enum {pos = 0, neg} bal_move_type;
+    enum {neg = 0, no_bal, pos} bal_move_type;
     uint32_t pos;
-    uint16_t vel;
+    uint32_t vel;
     uint16_t hold_i;
     uint16_t move_i;
     uint16_t acc;
@@ -312,6 +417,20 @@ typedef struct {
     double i_el_off_bal;
     double gain_bal;
 } cmd_balance_t;
+
+typedef struct {
+    uint8_t amp;
+    int8_t status;
+    bool reset;
+} cmd_rox_bias_t;
+
+typedef struct {
+    unsigned int kid;
+    unsigned int roach;
+    unsigned int rtype;
+    unsigned int index;
+    char name[64];
+} roach_tlm_t;
 
 struct CommandDataStruct {
   uint16_t command_count;
@@ -326,12 +445,34 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
-  uint32_t tdrss_bw;
-  uint32_t iridium_bw;
 
-  enum {vtx_isc, vtx_osc} vtx_sel[2];
+  uint32_t highrate_bw;
+  uint32_t pilot_bw;
+  uint32_t biphase_bw;
+
+  float highrate_allframe_fraction;
+  float pilot_allframe_fraction;
+  float biphase_allframe_fraction;
+
+  uint32_t biphase_clk_speed;
+  bool biphase_rnrz;
+  bool highrate_through_tdrss;
+  char pilot_linklist_name[32];
+  char bi0_linklist_name[32];
+  char highrate_linklist_name[32];
+  uint32_t pilot_oth;
+  roach_tlm_t roach_tlm[NUM_ROACH_TLM];
+  char roach_tlm_mode;
+
+  enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
+
+  roach_status_t roach[NUM_ROACHES];
+  udp_roach_t udp_roach[NUM_ROACHES];
+  roach_params_t roach_params[NUM_ROACHES];
 
   uei_commands_t uei_command;
+
+  cmd_rox_bias_t rox_bias;
 
   struct GainStruct ele_gain;
   struct GainStruct azi_gain;
@@ -339,21 +480,9 @@ struct CommandDataStruct {
 
   struct {
     struct latch_pulse sc_tx;
-    struct latch_pulse das;
-    struct latch_pulse xsc0;
-    struct latch_pulse xsc1;
-    struct latch_pulse rw;
-    struct latch_pulse piv;
-    struct latch_pulse elmot;
     struct latch_pulse bi0;
-    struct latch_pulse rx_main;
-    struct latch_pulse rx_hk;
-    struct latch_pulse rx_amps;
     struct latch_pulse charge;
-    int gybox_off;
-    int gyro_off[6];
     int gyro_off_auto[6];
-    int hub232_off;
   } power;
 
   uint16_t disable_az;
@@ -381,7 +510,9 @@ struct CommandDataStruct {
   unsigned char use_pss;
   unsigned char use_xsc0;
   unsigned char use_xsc1;
-  unsigned char use_mag;
+  unsigned char use_mag1;
+  unsigned char use_mag2;
+  unsigned char use_dgps;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -392,20 +523,22 @@ struct CommandDataStruct {
   double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
-  double mag_az_trim;
+  double mag_az_trim[2];
   double pss_az_trim;
+  double dgps_az_trim;
 
   int autotrim_enable;
   double autotrim_thresh;    // in sc sigma
   double autotrim_rate;      // degrees/s
   time_t autotrim_time;      // in seconds
   time_t autotrim_xsc0_last_bad;
-  time_t autotrim_osc_last_bad;
+  time_t autotrim_xsc1_last_bad;
 
-  double cal_xmax_mag;
-  double cal_xmin_mag;
-  double cal_ymax_mag;
-  double cal_ymin_mag;
+  double cal_xmax_mag[2];
+  double cal_xmin_mag[2];
+  double cal_ymax_mag[2];
+  double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
@@ -427,11 +560,18 @@ struct CommandDataStruct {
 
   cryo_cmds_t Cryo;
 
+  labjack_queue_t Labjack_Queue;
+
+  relay_cmds_t Relays;
+
   cmd_balance_t balance;
+
+  ec_devices_struct_t ec_devices;
 
   struct {
     int off;
     int force_repoll;
+    int which_used;
 
     /* arbitrary command */
     int cindex;
@@ -480,6 +620,10 @@ struct CommandDataStruct {
     int shutter_step;
     int shutter_step_slow;
     int shutter_out;
+    int shutter_move_i;
+    int shutter_hold_i;
+    int shutter_vel;
+    int shutter_acc;
 
     uint32_t  shutter_goal;
   } actbus;
@@ -497,6 +641,7 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+  int mag_reset;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;
@@ -535,6 +680,7 @@ void InitCommandData();
 double LockPosition(double);
 int SIndex(enum singleCommand);
 int MIndex(enum multiCommand);
+void WritePrevStatus();
 
 extern struct CommandDataStruct CommandData;
 

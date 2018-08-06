@@ -1363,6 +1363,7 @@ int wake_endpoint_remote_flat_katcp(struct katcp_dispatch *d, struct katcp_endpo
   reply   = is_reply_parse_katcl(px);
 
   result = append_parse_katcl(fx->f_line, px);
+  (void)result;
   /* WARNING: do something with the return code */
   
   if(request > 0){

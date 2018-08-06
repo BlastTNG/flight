@@ -32,10 +32,16 @@
 
 #include "channel_macros.h"
 #include "lookup.h"
+#include "linklist.h"
 
 #define FIELD_LEN 32
 #define UNITS_LEN 48
 #define BLAST_TNG_CH_VERSION 1
+
+#define NUM_KIDS 1024
+#define NUM_ROACHES 5
+#define NUM_RTYPES 3
+#define NUM_ROACH_TLM 15
 
 #include "derived.h"
 
@@ -109,14 +115,30 @@ extern void *channel_data[RATE_END];
 extern size_t frame_size[RATE_END];
 extern channel_t channel_list[];
 extern derived_tng_t derived_list[];
+extern int channels_count;
+extern superframe_t * superframe;
 
 int channels_initialize(const channel_t * const m_channel_list);
 channel_t *channels_find_by_name(const char *m_name);
 int channels_store_data(E_RATE m_rate, const void *m_data, size_t m_len);
+int channels_check_size_of_frame(E_RATE m_rate, size_t m_len);
 int channels_read_map(channel_header_t *m_map, size_t m_len, channel_t **m_channel_list);
 channel_header_t *channels_create_map(channel_t *m_channel_list);
+channel_header_t *channels_create_rate_map(channel_t *m_channel_list, E_RATE m_rate);
+size_t channel_size(channel_t *);
+unsigned int add_frame_to_superframe(void * , E_RATE , void *, unsigned int *);
+unsigned int extract_frame_from_superframe(void * , E_RATE , void *, unsigned int *);
+unsigned int get_spf(unsigned int);
 
 int channels_read_derived_map(derived_header_t *m_map, size_t m_len, derived_tng_t **m_channel_list);
 derived_header_t *channels_create_derived_map(derived_tng_t *m_derived);
+superframe_t * channels_generate_superframe(const channel_t * const m_channel_list);
+void make_name_from_roach_index(unsigned int , char * name);
+int get_roach_index(unsigned int , unsigned int , unsigned int);
+void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
+linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
+void channels_write_calspecs(char *, derived_tng_t *);
+double channel_data_to_double(uint8_t * data, uint8_t type);
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 
 #endif /* CHANNELS_V2_H_ */

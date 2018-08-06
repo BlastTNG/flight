@@ -144,11 +144,14 @@ void AbstractCamera::fill_general_admin()
 {
     using namespace Shared::Image;
     shared_image.filters = shared_filters;
+	
     shared_image.counter_fcp = shared_client.counter_fcp;
     shared_image.counter_stars = shared_results.counter_stars;
     shared_results.counter_stars++;
-    shared_image.to_be_solved = false;
-    if (shared_status.stage == Status::empty || shared_status.stage == Status::done) {
+	shared_image.to_be_solved = false;
+	update();
+	update();
+    if (shared_status.stage == Status::empty || shared_status.stage == Status::done || 1) {
         shared_image.to_be_solved = true;
 		logger.log("Image will be solved");
 	}

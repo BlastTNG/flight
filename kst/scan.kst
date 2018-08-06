@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kst version="2.0">
+    <data>
+        <source reader="Directory of Binary Files" file="/data/etc/defricher.cur" fileRelative="../../data/etc/defricher.cur"/>
+    </data>
+    <variables>
+        <datavector file="/data/etc/defricher.cur" fileRelative="../../data/etc/defricher.cur" field="DEC" start="-1" count="6000" skip="-1" doAve="false" initialVNum="1" initialXNum="1"/>
+        <datavector file="/data/etc/defricher.cur" fileRelative="../../data/etc/defricher.cur" field="RA" start="-1" count="6000" skip="-1" doAve="false" initialVNum="2" initialXNum="12"/>
+    </variables>
+    <objects/>
+    <relations>
+        <curve xvector="DEC (V1)" yvector="RA (V2)" color="#ffffff" headcolor="#000000" haslines="true" linewidth="0" linestyle="0" haspoints="false" pointtype="3" pointdensity="0" hasbars="false" barstyle="0" ignoreautoscale="false" hashead="false" headtype="0" initialCNum="1"/>
+    </relations>
+    <graphics>
+        <view name="View &amp;1" width="967" height="953">
+            <plot tiedxzoom="false" tiedyzoom="false" leftlabelvisible="true" bottomlabelvisible="true" rightlabelvisible="false" toplabelvisible="false" globalfont="Ubuntu,12,-1,5,50,0,0,0,0,0" globalfontscale="16" globalfontcolor="#ffffff" showlegend="false" hidebottomaxislabel="false" hidetopaxislabel="true" hideleftaxislabel="false" hiderightaxislabel="true" initialPlotNum="1" name="Plot">
+                <position x="425.89495" y="404.5546"/>
+                <rect x="-423.9126" y="-400.98085" width="962.2617" height="944.7089"/>
+                <relativesize width="0.9951" height="0.9913" centerx="0.4996" centery="0.4994" posx="0.00205" posy="0.00375000000000007"/>
+                <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                    <brush color="#ffffff" style="1"/>
+                </pen>
+                <brush color="#000000" style="1"/>
+                <legend auto="true" title="" font="Ubuntu,11,-1,5,50,0,0,0,0,0" fontscale="9.6" verticaldisplay="false" name="Legend">
+                    <position x="-293.1698275" y="-283.953234277108"/>
+                    <rect x="0" y="0" width="81.4002411568078" height="21.2229893447013"/>
+                    <relativesize width="0.0931107365990372" height="0.0240976210694605" centerx="0.0965553682995187" centery="0.144927694491611" posx="0.05" posy="0.13287888395688"/>
+                    <transform m11="1" m12="0" m13="0" m21="0" m22="1" m23="0" m31="0" m32="0" m33="1"/>
+                    <pen style="1" width="0" miterlimit="2" cap="16" joinStyle="64">
+                        <brush color="#000000" style="1"/>
+                    </pen>
+                    <brush color="#ffffff" style="1"/>
+                </legend>
+                <cartesianrender name="Cartesian Plot" type="1">
+                    <relation tag="RA vs DEC (C1)"/>
+                </cartesianrender>
+                <plotaxis id="xaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" interpret="false" interpretation="1" display="4" majortickmode="5" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="false" drawminorgridlines="false" drawmajorgridlinecolor="#a0a0a4" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="1" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2">
+                    <plotmarkers xaxis="true" linecolor="#000000" linestyle="1" linewidth="1" curvemode="33409056"/>
+                </plotaxis>
+                <plotaxis id="yaxis" visible="true" log="false" reversed="false" autobaseoffset="true" baseoffset="false" interpret="false" interpretation="1" display="4" majortickmode="2" minortickcount="5" autominortickcount="true" drawmajorticks="true" drawminorticks="true" drawmajorgridlines="false" drawminorgridlines="false" drawmajorgridlinecolor="#87878a" drawminorgridlinecolor="#a0a0a4" drawmajorgridlinestyle="1" drawminorgridlinestyle="2" drawmajorgridlinewidth="1" drawminorgridlinewidth="1" significantdigits="9" rotation="0" zoommode="2">
+                    <plotmarkers xaxis="false" linecolor="#ffffff" linestyle="1" linewidth="1" curvemode="2"/>
+                </plotaxis>
+                <plotlabel id="leftlabel" visible="true" overridetext="RA" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#ffffff" fontuseglobal="true"/>
+                <plotlabel id="rightlabel" visible="false" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#ffffff" fontuseglobal="true"/>
+                <plotlabel id="toplabel" visible="false" overridetext="" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#ffffff" fontuseglobal="true"/>
+                <plotlabel id="bottomlabel" visible="true" overridetext="DEC" autolabel="true" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#ffffff" fontuseglobal="true"/>
+                <plotlabel id="numberlabel" visible="true" overridetext="" autolabel="false" font="Ubuntu,12,-1,5,50,0,0,0,0,0" fontscale="16" fontcolor="#ffffff" fontuseglobal="true"/>
+                <projectionrect x="44.2801306423118" y="9.52194459030902" width="9.3390432897915" height="0.937440214771653"/>
+            </plot>
+        </view>
+    </graphics>
+</kst>
