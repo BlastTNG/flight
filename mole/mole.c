@@ -71,6 +71,36 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
+void USAGE(void) {
+  
+  printf("\n\nMole is a generic linklist client/server that converts raw "
+      "binary data to dirfiles.\n\n"
+      "Usage: mole [OPTION]...\n\n"
+      " -nc                Don't run a client.\n"
+      "                    Default is to run a client.\n"
+      " -s                 Run a server for other mole clients to connect to.\n"
+      "                    Default is to not run a server.\n"
+      " -w X               Start acquiring data X frames from the current index.\n"
+      "                    Default is 20.\n"
+      " -v                 Verbose mode.\n"
+      "                    \n"
+      " @host              Connect to a specific host.\n"
+      " --archive-dir dir  Save raw binary files to specified directory.\n"
+      "                    Only valid if backing up binary data locally.\n"
+      "                    Default is /data/rawdir.\n"
+      " --backup           Backup binary data in the archive directory.\n"
+      "                    Default is to not backup data.\n"
+      " --little-end       Force mole to interpret data as little endian.\n"
+      " --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
+      "                    Default is /data/mole.\n"
+      " --no-backup        Do not backup data in the archive directory.\n"
+      "                    This is the default.\n"
+      " --no-check         Ignore checksum values when processing data.\n"  
+      "\n");
+
+    exit(0);
+}
+
 void print_display(char * text, unsigned int recv_framenum) {
 	static char spin[] = "/-\\|";
   static unsigned int s = 0;
@@ -159,9 +189,11 @@ int main(int argc, char *argv[]) {
       ll_flags |= LL_IGNORE_CHECKSUM;
     } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
       ll_flags &= ~LL_USE_BIG_ENDIAN;
+    } else if (strcmp(argv[i], "--help") == 0) { // view usage
+      USAGE();
     } else {
       printf("Unrecognized option \"%s\"\n", argv[i]);
-      exit(1);
+      USAGE();
     }
   }
 
