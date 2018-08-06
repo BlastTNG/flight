@@ -1214,7 +1214,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].roach_new_state = ROACH_STATE_BOOT;
               CommandData.roach[i].roach_desired_state = ROACH_STATE_STREAMING;
               CommandData.roach[i].change_roach_state = 1;
-              CommandData.roach[i].do_sweeps = 1;
             }
           break;
         case pilot_oth_on:
