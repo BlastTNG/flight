@@ -557,10 +557,6 @@ int main(int argc, char *argv[])
   ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
 
-#ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  pthread_t xy_id;
-#endif
-
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
