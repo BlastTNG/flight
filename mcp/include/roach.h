@@ -42,7 +42,7 @@
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
-#define NUM_FLAG_CHANNELS_PER_ROACH MAX_CHANNELS_PER_ROACH/16
+#define NUM_FLAG_CHANNELS_PER_ROACH (MAX_CHANNELS_PER_ROACH/16 + 1)
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
@@ -309,13 +309,17 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
+void roach_df_continuous(roach_df_calc_t* m_roach_df);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
 void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
-
 linklist_t * generate_roach_udp_linklist(char *, int);
+
+// Defined in roach_multiplex.c
+void add_roach_tlm_488hz();
+
 
 #endif /* INCLUDE_ROACH_H_ */

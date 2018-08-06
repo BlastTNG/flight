@@ -1194,6 +1194,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].calc_ref_params = 1;
             }
             break;
+        case set_attens_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].set_attens = 1;
+            }
+            break;
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -1945,6 +1950,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.biphase_allframe_fraction = rvalues[1];
       blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
+    case set_roach_all_chan:
+        if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {
+          CommandData.num_channels_all_roaches[ivalues[0]-1] = ivalues[1];
+          blast_info("Roach %d to send %d kids\n", ivalues[0], ivalues[1]);
+        }
+        break;
     case set_roach_chan:
       for (i = 0; i < NUM_ROACH_TLM; i++) {
         CommandData.roach_tlm[i].kid = ivalues[(i/3)*2+0];
@@ -2064,8 +2075,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_attens:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0.5) && rvalues[1] <= 30)
                  && ((rvalues[2] > 0.5) && rvalues[2] <= 30)) {
-          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[1];
-          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
@@ -2206,11 +2217,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].change_tone_freq = 1;
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
           CommandData.roach_params[ivalues[0]-1].freq_offset = rvalues[2];
-      }
-      break;
-    case set_attens_all:
-      for (int i = 0; i < NUM_ROACHES; i++) {
-          CommandData.roach[i].set_attens = 1;
       }
       break;
       /*************************************
@@ -3119,6 +3125,7 @@ void InitCommandData()
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    memset(CommandData.num_channels_all_roaches, 0, sizeof(CommandData.num_channels_all_roaches));
     CommandData.pilot_oth = 0;
 
     CommandData.slew_veto = VETO_MAX; /* 5 minutes */
