@@ -56,9 +56,12 @@
 #define STAGEXNUM 0
 #define STAGEYNUM 1
 #define POLL_TIMEOUT 500 /* 15 seconds */
+#define NSTAGE_ACTS 2
 
 extern int16_t InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
+
+static const int id_stage[NSTAGE_ACTS] = {EZ_WHO_S6, EZ_WHO_S7};
 
 static struct stage_struct {
   int xpos, ypos;
@@ -199,15 +202,31 @@ void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
 void ControlXYStage(struct ezbus* bus)
 {
   int my_cindex = 0;
+  int caddr_match;
+  int i;
 
   /* Send the uplinked command, if any */
+  // my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+  // if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID
+  //     || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
+  //   EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
+  // 	CommandData.actbus.command[my_cindex]);
+  //   CommandData.actbus.caddr[my_cindex] = 0;
+  // }
+
   my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-  if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID
-      || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
-    EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
-	CommandData.actbus.command[my_cindex]);
-    CommandData.actbus.caddr[my_cindex] = 0;
-  }
+  caddr_match = 0;
+  for (i = 0; i < NSTAGE_ACTS; i++)
+      if (CommandData.actbus.caddr[my_cindex] == id_stage[i]) caddr_match = 1;
+          if (caddr_match) {
+              // blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+              //            CommandData.actbus.caddr[my_cindex]);
+              // increase print level for uplinked manual commands
+              bus->chatter = EZ_CHAT_BUS;
+              EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
+              CommandData.actbus.caddr[my_cindex] = 0;
+              bus->chatter = STAGE_BUS_CHATTER;
+        }
 
   /* respond to normal movement commands */
   if (CommandData.xystage.is_new) {
