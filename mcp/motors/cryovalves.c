@@ -456,8 +456,8 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		openCurPotValveAddr = channels_find_by_name("i_open_potvalve");
 		closeCurPotValveAddr = channels_find_by_name("i_close_potvalve");
 		holdCurPotValveAddr = channels_find_by_name("i_hold_potvalve");
-		closedThresholdPotValveAddr = channels_find_by_name("thresh_closed_potvalve");
-	        lclosedThresholdPotValveAddr = channels_find_by_name("thresh_lclosed_potvalve");
+		closedThresholdPotValveAddr = channels_find_by_name("thresh_clos_potvalve");
+	        lclosedThresholdPotValveAddr = channels_find_by_name("threshlclos_potvalve");
 	        openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
 
 		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
