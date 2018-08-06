@@ -324,6 +324,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(load_freqs_all), "Write all saved targ freqs to Roaches", GR_ROACH},
   {COMMAND(reload_vna_all), "Reload vna freqs and vna trf for all Roaches", GR_ROACH},
   {COMMAND(end_sweeps_all), "End all sweeps", GR_ROACH},
+  {COMMAND(new_ref_params_all), "Calculates and saves ref params from last target sweep for all Roaches", GR_ROACH},
+  {COMMAND(set_attens_all), "Set all attens to default values (all Roaches)", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -989,8 +991,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_in_level", 1.0, 30.0, 'f', "NONE"},
-      {"rf_out_level", 1.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 0.5, 30.0, 'f', "NONE"},
+      {"rf_out_level", 0.5, 30.0, 'f', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
@@ -1092,7 +1094,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 1,
     {
-      {"Amount to shift LO", -1000000., 1000000., 'f', "NONE"},
+      {"Amount to shift LO", -1000000.0, 1000000.0, 'f', "NONE"},
     }
   },
   {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
