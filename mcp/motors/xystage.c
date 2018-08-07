@@ -43,7 +43,7 @@
 
 /* EZBus setup parameters */
 #define STAGE_BUS_TTY "/dev/ttystage"
-#define STAGE_BUS_CHATTER EZ_CHAT_ACT
+#define STAGE_BUS_CHATTER EZ_CHAT_BUS
 #define STAGEX_NAME "XY Stage X"
 #define STAGEY_NAME "XY Stage Y"
 #define STAGEX_ID EZ_WHO_S6
@@ -51,7 +51,7 @@
 
 #define STAGE_BUS_ACCEL 2
 #define STAGE_BUS_IHOLD 20
-#define STAGE_BUS_IMOVE 50
+#define STAGE_BUS_IMOVE 75
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
@@ -152,6 +152,8 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 {
   int now;
   char who = (is_y) ? STAGEY_ID : STAGEX_ID;
+  int counter = 100; // to print status once a second with loop running every 10 ms
+  int again = 12000; // try again after 2 minutes
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
 	return;
@@ -172,6 +174,22 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 
     EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
     EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
+
+    counter--;
+    counter %= 100;
+    if (!counter) {
+        blast_info("In GoWait, requesting XY Stage Position");
+	blast_info("Pos_XStage = %d, Pos_YStage = %d", stage_data.xpos, stage_data.ypos);
+    }
+
+    again--;
+    if (!again) {
+	EZBus_Stop(bus, who);
+	blast_info("Not to commanded position after 2 minutes, trying again");
+        blast_info("Move %c to %i at speed %i and wait", (is_y) ? 'Y' : 'X', dest, vel);
+        EZBus_GotoVel(bus, who, dest, vel);
+	again = 12000;
+    }
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
     } while (now != dest);
@@ -219,8 +237,8 @@ void ControlXYStage(struct ezbus* bus)
   for (i = 0; i < NSTAGE_ACTS; i++)
       if (CommandData.actbus.caddr[my_cindex] == id_stage[i]) caddr_match = 1;
           if (caddr_match) {
-              // blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
-              //            CommandData.actbus.caddr[my_cindex]);
+              blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+                         CommandData.actbus.caddr[my_cindex]);
               // increase print level for uplinked manual commands
               bus->chatter = EZ_CHAT_BUS;
               EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
