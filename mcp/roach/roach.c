@@ -4578,9 +4578,9 @@ void write_roach_channels_5hz(void)
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
-    static channel_t *RoachStatusAddr[NUM_ROACHES];
     static channel_t *PiStatusAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
+    static channel_t *RoachStreamStateAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
     static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
@@ -4588,10 +4588,12 @@ void write_roach_channels_5hz(void)
     static channel_t *CmdRoachParOutAttenAddr[NUM_ROACHES];
     static channel_t *RoachAdcIRmsAddr[NUM_ROACHES];
     static channel_t *RoachAdcQRmsAddr[NUM_ROACHES];
+    static channel_t *RoachIsAveragingAddr[NUM_ROACHES];
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
+    char channel_name_roach_stream_state[128] = { 0 };
     char channel_name_pi_state[128] = { 0 };
     char channel_name_cmd_roach_par_smooth[128] = { 0 };
     char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
@@ -4600,6 +4602,7 @@ void write_roach_channels_5hz(void)
     char channel_name_cmd_roach_par_out_atten[128] = { 0 };
     char channel_name_roach_adcI_rms[128] = { 0 };
     char channel_name_roach_adcQ_rms[128] = { 0 };
+    char channel_name_roach_is_averaging[128] = { 0 };
 
     if (firsttime) {
         firsttime = 0;
@@ -4617,6 +4620,8 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_pi_state,
                     sizeof(channel_name_pi_state), "state_pi_roach%d", i + 1);
             snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
+                    "state_roach%d", i + 1);
+            snprintf(channel_name_roach_stream_state, sizeof(channel_name_roach_stream_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_cmd_roach_par_smooth,
                     sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
@@ -4639,14 +4644,17 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            snprintf(channel_name_roach_is_averaging,
+                    sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d",
+                    i + 1);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
                     channel_name_valid_pkt_ct);
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
-            RoachStatusAddr[i] = channels_find_by_name(channel_name_roach_state);
             PiStatusAddr[i] = channels_find_by_name(channel_name_pi_state);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
+            RoachStreamStateAddr[i] = channels_find_by_name(channel_name_roach_stream_state);
             CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
             CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
             CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
@@ -4654,6 +4662,7 @@ void write_roach_channels_5hz(void)
             CmdRoachParOutAttenAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_out_atten);
             RoachAdcIRmsAddr[i] = channels_find_by_name(channel_name_roach_adcI_rms);
             RoachAdcQRmsAddr[i] = channels_find_by_name(channel_name_roach_adcQ_rms);
+            RoachIsAveragingAddr[i] = channels_find_by_name(channel_name_roach_is_averaging);
         }
     }
     for (i = 0; i < NUM_ROACHES; i++) {
@@ -4662,10 +4671,11 @@ void write_roach_channels_5hz(void)
         roach_udp[i].roach_valid_packet_count);
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
-        SET_UINT16(RoachStatusAddr[i], roach_state_table[i].state);
+        SET_UINT16(RoachStateAddr[i], roach_state_table[i].state);
         SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
+        SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
         // TODO(laura/sam): Replace next write with a streaming status bitfield.
-        SET_UINT16(RoachStateAddr[i], roach_state_table[i].is_streaming);
+        SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
