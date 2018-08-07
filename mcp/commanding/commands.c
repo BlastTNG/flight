@@ -1196,7 +1196,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case set_attens_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].set_attens = 1;
+                CommandData.roach[i].set_attens = 2;
             }
             break;
         case auto_find_kids_all:
@@ -1224,7 +1224,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case debug_mode:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].go_flight_mode = 0;
-                CommandData.roach[i].auto_find = 0;
+                // CommandData.roach[i].auto_find = 0;
                 CommandData.roach[i].do_sweeps = 0;
             }
             break;

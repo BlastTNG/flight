@@ -1313,6 +1313,50 @@ int set_atten(pi_state_t *m_pi)
     return retval;
 }
 
+int set_attens_default(pi_state_t *m_pi)
+{
+    int retval = -1;
+    char *m_command;
+    char *m_command2;
+    int ind = m_pi->which - 1;
+    // the order of input and output attenuators is switched between PIs
+    if (ind == 0) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           16.0,
+           7.0);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           2.0,
+           16.0);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           3.0,
+           16.0);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           16.0,
+           7.0);
+    }
+    if (ind == 4) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           7.0,
+           16.0);
+    }
+    blast_tmp_sprintf(m_command2, "cat rudat.log");
+    pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
+    pi_write_string(m_pi, (unsigned char*)m_command2, strlen(m_command2));
+    if (pi_read_string(m_pi, PI_READ_NTRIES, PI_READ_TIMEOUT) < 0) {
+        blast_info("Error setting Atten... reboot Pi%d?", ind + 1);
+        return PI_READ_ERROR;
+    } else {
+        retval = 0;
+    }
+    return retval;
+}
+
 // TODO(Sam) Finish and test this function
 /* Function: cal_adc_rms
  * ----------------------------
@@ -1766,17 +1810,8 @@ int load_last_sweep_path(roach_state_t *m_roach, int sweep_type)
  * @parm m_last_targ the path for saving the TARG sweep
  *
 */
-int get_targ_freqs(roach_state_t *m_roach, char* m_targ_path, bool m_use_default_params)
+int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
 {
-    /* if (!m_targ_path) {
-        if (create_sweepdir(m_roach, TARG)) {
-            blast_info("Roach%d, created %s", m_roach->which, m_roach->last_targ_path);
-        } else {
-            blast_info("Roach%d, could not create new target sweep directory", m_roach->which);
-        }
-    } */
-    // Check for last VNA path. If doesn't exist, use hardcoded vna search path
-    // (a previous sweep) as specified at top of file
     int retval = -1;
     if (!m_roach->last_vna_path) {
         blast_info("Roach%d, NO VNA PATH FOUND, loading from ref file", m_roach->which);
@@ -1840,6 +1875,10 @@ int get_targ_freqs(roach_state_t *m_roach, char* m_targ_path, bool m_use_default
         blast_err("ROACH%d, Error finding TARG freqs", m_roach->which);
         return retval;
     }
+    if (m_roach->num_kids > 700) {
+        blast_err("ROACH%d, Too many TARG freqs, bad sweep likely", m_roach->which);
+        return retval;
+    }
     blast_info("NUM kids = %zd", m_roach->num_kids);
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
     for (size_t j = 0; j < m_roach->num_kids; j++) {
@@ -1848,6 +1887,9 @@ int get_targ_freqs(roach_state_t *m_roach, char* m_targ_path, bool m_use_default
     }
     if (CommandData.roach[m_roach->which - 1].find_kids) {
         CommandData.roach[m_roach->which - 1].find_kids = 0;
+    }
+    if (CommandData.roach[m_roach->which - 1].find_kids_default) {
+        CommandData.roach[m_roach->which - 1].find_kids_default = 0;
     }
     save_output_trf(m_roach);
     retval = 0;
@@ -2015,6 +2057,7 @@ int roach_write_saved(roach_state_t *m_roach)
     // cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
     save_ref_params(m_roach);
     m_roach->has_targ_tones = 1;
+    m_roach->has_vna_tones = 0;
     retval = 0;
     return retval;
 }
@@ -2022,7 +2065,8 @@ int roach_write_saved(roach_state_t *m_roach)
 int roach_write_targ_tones(roach_state_t *m_roach)
 {
     int retval = -1;
-    if (m_roach->num_kids == 0) {
+    if (!m_roach->targ_tones || m_roach->num_kids == 0) {
+        blast_info("ROACH%d, NO TARG TONES WRITTEN, ENTERING DEBUG MODE", m_roach->which);
         return retval;
     } else {
         blast_info("ROACH%d, Uploading TARGET comb...", m_roach->which);
@@ -2438,9 +2482,9 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
             for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
                 I_sum[chan] += m_packet.Ival[chan];
                 Q_sum[chan] += m_packet.Qval[chan];
-                if (m_roach->which == 1 && chan == 329) {
+                /* if (m_roach->which == 1 && chan == 329) {
                     blast_info("%zd, %g, %g", chan, m_packet.Ival[chan], m_packet.Qval[chan]);
-                }
+                }*/
             }
             count++;
         }
@@ -2451,11 +2495,11 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
         for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
             m_roach->I_on[chan] = (I_sum[chan] / count);
             m_roach->Q_on[chan] = (Q_sum[chan] / count);
-                if (m_roach->which == 1 && chan == 329) {
+                /*if (m_roach->which == 1 && chan == 329) {
                     blast_info("Isum %f, Qsum %f, Iavg %f, Qavg %f",
                        I_sum[chan], Q_sum[chan],
                        m_roach->I_on[chan], m_roach->Q_on[chan]);
-                }
+                }*/
             double deltaI = m_roach->I_on[chan] - m_roach->ref_vals[chan][0];
             double deltaQ = m_roach->Q_on[chan] - m_roach->ref_vals[chan][1];
             m_roach->df_on[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI)
@@ -2468,11 +2512,11 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
         for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
             m_roach->I_off[chan] = (I_sum[chan] / count);
             m_roach->Q_off[chan] = (Q_sum[chan] / count);
-                if (m_roach->which == 1 && chan == 329) {
+                /*if (m_roach->which == 1 && chan == 329) {
                     blast_info("Isum %f, Qsum %f, Iavg %f, Qavg %f",
                        I_sum[chan], Q_sum[chan],
                        m_roach->I_off[chan], m_roach->Q_off[chan]);
-                }
+                }*/
             double deltaI = m_roach->I_off[chan] - m_roach->ref_vals[chan][0];
             double deltaQ = m_roach->Q_off[chan] - m_roach->ref_vals[chan][1];
             m_roach->df_off[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI)
@@ -2695,12 +2739,12 @@ int lamp_chan_p2p(roach_state_t *m_roach)
         m_roach->I_diff[chan] = m_roach->I_on[chan] - m_roach->I_off[chan];
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
-        if (m_roach->which == 1 && chan == 329) {
+        /*if (m_roach->which == 1 && chan == 329) {
             blast_info("Ion %g, Ioff %g, Qon %g, Qoff %g, Idiff %g, Qdiff %g",
                   m_roach->I_on[chan], m_roach->I_off[chan],
                   m_roach->Q_on[chan], m_roach->Q_off[chan],
                   m_roach->I_diff[chan], m_roach->Q_diff[chan]);
-        }
+        }*/
         /* mag_on[chan] = sqrt(on_vals[chan][0]*on_vals[chan][0] +
                      on_vals[chan][1]*on_vals[chan][1]);
         mag_off[chan] = sqrt(off_vals[chan][0]*off_vals[chan][0] +
@@ -3749,33 +3793,84 @@ void reset_roach_flags(roach_state_t *m_roach)
 
 void start_debug_mode(roach_state_t *m_roach)
 {
+    // if you are not in flight mode, you are in debug mode
+    if (!m_roach->in_flight_mode) {
+        return;
+    } else {
+        blast_info("ROACH%d: STARTING DEBUG MODE!", m_roach->which);
+        m_roach->in_flight_mode = 0;
+    }
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     m_roach->in_flight_mode = 0;
     m_roach->is_sweeping = 0;
     CommandData.roach[m_roach->which - 1].go_flight_mode = 0;
-    CommandData.roach[m_roach->which - 1].auto_find = 0;
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-}
-
-void start_flight_mode(roach_state_t *m_roach)
-{
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-    m_roach->in_flight_mode = 1;
-    m_roach->is_sweeping = 0;
-    // m_roach->has_vna_sweep = 0;
-    // m_roach->has_targ_sweep = 0;
-    // m_roach->has_targ_tones = 0;
-    // m_roach->has_ref = 0;
-    // m_roach->current_ntones = 0;
-    // m_roach->num_kids = 0;
     if (m_roach->is_streaming) {
         if (m_roach->has_vna_tones) {
             m_roach->state = ROACH_STATE_STREAMING;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
         } else {
             m_roach->state = ROACH_STATE_CONFIGURED;
             m_roach->desired_state = ROACH_STATE_STREAMING;
         }
     }
-    CommandData.roach[m_roach->which - 1].auto_find = 1;
+}
+
+void start_flight_mode(roach_state_t *m_roach)
+{
+    // if blastcmd set debug mode
+    if (CommandData.roach[m_roach->which - 1].go_flight_mode == 0) {
+        m_roach->in_flight_mode = 0;
+        return;
+    }
+    if (m_roach->in_flight_mode) {
+        return;
+    } else if (CommandData.roach[m_roach->which - 1].go_flight_mode == 1) {
+        blast_info("ROACH%d: STARTING FLIGHT MODE!", m_roach->which);
+        m_roach->in_flight_mode = 1;
+    }
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    m_roach->is_sweeping = 0;
+    if (m_roach->is_streaming) {
+        if (m_roach->has_vna_tones) {
+            m_roach->state = ROACH_STATE_STREAMING;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
+        } else {
+            m_roach->state = ROACH_STATE_CONFIGURED;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
+        }
+    }
+}
+
+int roach_targ_sweep(roach_state_t *m_roach)
+{
+    int retval = -1;
+    m_roach->is_sweeping = 2;
+    if ((roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0) < 0)) {
+        retval = -2;
+    }
+    blast_info("ROACH%d, STARTING TARG sweep", m_roach->which);
+    retval = roach_do_sweep(m_roach, TARG);
+    if ((retval == SWEEP_SUCCESS)) {
+        blast_info("ROACH%d, TARG sweep complete", m_roach->which);
+        // creates file for downlinking sweep path to local machine
+        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
+        // save params for delta f calculation
+        save_ref_params(m_roach);
+        // check lamp response
+        CommandData.roach_params[m_roach->which - 1].num_sec = 4;
+        CommandData.roach[m_roach->which - 1].check_response = 1;
+        lamp_check_response(m_roach);
+        CommandData.roach[m_roach->which - 1].check_response = 0;
+        get_adc_rms(m_roach);
+    /*} else if ((retval == SWEEP_INTERRUPT)) {
+        m_roach->has_targ_sweep = 0;
+        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);*/
+    } else if (retval == SWEEP_INTERRUPT) {
+        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
+    } else if (retval == SWEEP_FAIL) {
+        blast_info("ROACH%d, TARG sweep failed reattempt", m_roach->which);
+    }
+    return retval;
 }
 
 /** Function: roach_state_manager
@@ -3849,12 +3944,25 @@ void roach_state_manager(roach_state_t *m_roach, int result)
                     m_roach->is_sweeping = 0;
                     m_roach->has_vna_sweep = 1;
                     CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-                }
-                if (result == -1) {
+                    // if in flight mode, find kids automatically
+                    if (m_roach->in_flight_mode) {
+                        if ((get_targ_freqs(m_roach, 1)) < 0) {
+                            start_debug_mode(m_roach);
+                        } else {
+                            if ((roach_write_targ_tones(m_roach)) < 0) {
+                                start_debug_mode(m_roach);
+                            } else {
+                                m_roach->has_targ_tones = 1;
+                                CommandData.roach[m_roach->which - 1].do_sweeps = 1;
+                            }
+                            result = roach_targ_sweep(m_roach);
+                            break;
+                        }
+                    }
+                } else if (result == -1) {
                     // sweep interrupted by command, go to debug mode
                     start_debug_mode(m_roach);
-                }
-                if (result == -2) {
+                } else if (result == -2) {
                     // sweep failed, retry
                     m_roach->is_sweeping = 0;
                     CommandData.roach[m_roach->which - 1].do_sweeps = 1;
@@ -3870,6 +3978,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
                 }
                 if (result == -1) {
                     // sweep interrupted by command, go to debug mode
+                    m_roach->is_sweeping = 0;
                     start_debug_mode(m_roach);
                 }
                 if (result == -2) {
@@ -4150,38 +4259,6 @@ int roach_vna_sweep(roach_state_t *m_roach)
     return retval;
 }
 
-int roach_targ_sweep(roach_state_t *m_roach)
-{
-    int retval = -1;
-    m_roach->is_sweeping = 2;
-    if ((roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0) < 0)) {
-        retval = -2;
-    }
-    blast_info("ROACH%d, STARTING TARG sweep", m_roach->which);
-    retval = roach_do_sweep(m_roach, TARG);
-    if ((retval == SWEEP_SUCCESS)) {
-        blast_info("ROACH%d, TARG sweep complete", m_roach->which);
-        // creates file for downlinking sweep path to local machine
-        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
-        // save params for delta f calculation
-        save_ref_params(m_roach);
-        // check lamp response
-        CommandData.roach_params[m_roach->which - 1].num_sec = 4;
-        CommandData.roach[m_roach->which - 1].check_response = 1;
-        lamp_check_response(m_roach);
-        CommandData.roach[m_roach->which - 1].check_response = 0;
-        get_adc_rms(m_roach);
-    /*} else if ((retval == SWEEP_INTERRUPT)) {
-        m_roach->has_targ_sweep = 0;
-        blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);*/
-    } else if (retval == SWEEP_INTERRUPT) {
-        blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
-    } else if (retval == SWEEP_FAIL) {
-        blast_info("ROACH%d, VNA sweep failed reattempt", m_roach->which);
-    }
-    return retval;
-}
-
 /*
  * Function: roach_cmd_loop
  * -----------------------------
@@ -4200,14 +4277,13 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    /* while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
              first_time = 0;
         }
         usleep(2000);
     }
-    */
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
     pi_state_table[i].desired_state = PI_STATE_INIT;
@@ -4215,10 +4291,7 @@ void *roach_cmd_loop(void* ind)
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
-        if (CommandData.roach[i].go_flight_mode) {
-            // Resets all status fields and puts state at BOOT
-            start_flight_mode(&roach_state_table[i]);
-        }
+        start_flight_mode(&roach_state_table[i]);
         if (CommandData.roach[i].set_lo == 1) {
             if (recenter_lo(&roach_state_table[i]) < 0) {
                 blast_info("Error recentering LO");
@@ -4247,8 +4320,15 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].roach_desired_state);
             CommandData.roach[i].change_roach_state = 0;
         }
-        if (CommandData.roach[i].set_attens) {
+        if (CommandData.roach[i].set_attens == 1) {
             if (set_atten(&pi_state_table[i]) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+            } else {
+                CommandData.roach[i].set_attens = 0;
+            }
+        }
+        if (CommandData.roach[i].set_attens == 2) {
+            if (set_attens_default(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
             } else {
                 CommandData.roach[i].set_attens = 0;
@@ -4398,15 +4478,13 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].do_retune = 0;
             }
             if (CommandData.roach[i].find_kids) {
-                if ((get_targ_freqs(&roach_state_table[i],
-                     roach_state_table[i].last_targ_path, 0)) < 0) {
+                if ((get_targ_freqs(&roach_state_table[i], 0)) < 0) {
                        blast_err("ROACH%d: Failed to find kids", i + 1);
                    }
                 CommandData.roach[i].find_kids = 0;
             }
             if (CommandData.roach[i].find_kids_default) {
-                if ((get_targ_freqs(&roach_state_table[i],
-                             roach_state_table[i].last_targ_path, 1)) < 0) {
+                if ((get_targ_freqs(&roach_state_table[i], 1)) < 0) {
                        blast_err("ROACH%d: Failed to find kids", i + 1);
                    }
                 CommandData.roach[i].find_kids_default = 0;
@@ -4465,61 +4543,6 @@ void *roach_cmd_loop(void* ind)
         }
         // STREAMING is the final state. Further actions depend on the presence
         // on status flags, e.g.. has_tones, is_sweeping, or AUTO_VNA_SWEEP
-        if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
-            // if AUTO_CAL_ADC set, automatically adjust the attenuators to get 100 mV rms at ADCs
-            /* if (AUTO_CAL_ADC && roach_state_table[i].has_adc_cal == 0) {
-                result = cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
-                roach_state_manager(&roach_state_table[i], result);
-            } */
-            if (CommandData.roach[i].auto_find) {
-                // VNA sweep must be commanded manually
-                if (roach_state_table[i].has_vna_sweep &&
-                       !roach_state_table[i].is_sweeping) {
-                    result = roach_vna_sweep(&roach_state_table[i]);
-                    roach_state_manager(&roach_state_table[i], result);
-                }
-                // if has_vna_sweep, do find kids
-                if (roach_state_table[i].has_vna_sweep) {
-                    get_targ_freqs(&roach_state_table[i], roach_state_table[i].last_targ_path, 1);
-                    /* if (AUTO_CAL_ADC) {
-                        cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
-                    }*/
-                }
-                // write targ tones
-                if (roach_state_table[i].has_targ_tones) {
-                    CommandData.roach[i].do_sweeps = 1;
-                    roach_write_targ_tones(&roach_state_table[i]);
-                }
-                // if has_targ_tones, and NOT is_sweeping, do a targ sweep
-                if (!roach_state_table[i].has_targ_tones &&
-                       !roach_state_table[i].has_targ_sweep) {
-                    result = roach_targ_sweep(&roach_state_table[i]);
-                    roach_state_manager(&roach_state_table[i], result);
-                }
-            }
-            /* Do a series of small sweeps: Increase tone amplitudes by small amount
-               (DELTA_AMP), and calculate nonlinear parameter with Python script
-               nonlinearParam.py
-               In Python script: Choose tone amplitude which yields lowest alpha value,
-               write list of tone amplitudes to be written.
-               In C: Load list of tone amplitudes and write to Roach*/
-            if (AUTO_CAL_AMPS &&
-                roach_state_table[i].has_targ_tones) {
-            blast_info("ROACH%d, Starting CAL sweeps...", i + 1);
-            result = cal_sweep_amps(&roach_state_table[i]);
-            if ((result == SWEEP_SUCCESS)) {
-                // Save the paths to last sweeps for data analysis
-                pyblast_system("python /home/fc1user/sam_builds/sweep_list.py cal");
-                blast_info("ROACH%d, CAL sweeps complete", i + 1);
-            } else if ((result == SWEEP_INTERRUPT)) {
-                blast_info("ROACH%d, Cal sweep interrupted by blastcmd", i + 1);
-            } else {
-                blast_info("ROACH%d, Cal sweep failed, will reattempt", i + 1);
-            }
-            optimize_amps(&roach_state_table[i]);
-            break;
-            }
-        }
         usleep(1000); // prevents mcp from eating up all the CPU.
     }
     return NULL;
@@ -4630,6 +4653,8 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].is_sweeping = 0;
     roach_state_table[ind].has_vna_sweep = 0;
     roach_state_table[ind].has_targ_sweep = 0;
+    roach_state_table[ind].in_flight_mode = 0;
+    CommandData.roach[ind].go_flight_mode = 0;
     blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
     blast_info("Spawned command thread for roach%i", ind + 1);
