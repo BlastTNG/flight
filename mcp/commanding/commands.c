@@ -1985,7 +1985,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case set_roach_mode:
         if (ivalues[0] == 0) CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
-        else if (ivalues[1] == 1) CommandData.roach_tlm_mode = ROACH_TLM_DELTA;
+        else if (ivalues[0] == 1) CommandData.roach_tlm_mode = ROACH_TLM_DELTA;
         break;
     case set_roach_all_chan:
         if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {

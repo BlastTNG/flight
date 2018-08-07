@@ -315,7 +315,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
-  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", GR_ROACH},
+  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
   {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
   {COMMAND(center_lo_all), "(All Roaches) recenter LOs", GR_ROACH},
@@ -950,7 +950,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", CONFIRM | GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
