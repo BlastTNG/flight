@@ -1584,7 +1584,7 @@ static void *diskmanager(void *m_arg __attribute__((unused))) {
 
 
 void initialize_diskmanager(void) {
-    ck_ht_init(&s_filepool, CK_HT_MODE_BYTESTRING, NULL, &ALLOCATOR, 16,
+    ck_ht_init(&s_filepool, CK_HT_MODE_BYTESTRING, NULL, &ALLOCATOR, 128,
             BLAST_MAGIC32);
 
     blast_info("Beginning initialize_dismanager.");
