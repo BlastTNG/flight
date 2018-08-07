@@ -168,6 +168,7 @@ struct PivGainStruct {
 #define HWPR_GOTO_POT	7
 
 #define ROACH_TLM_IQDF 0x1
+#define ROACH_TLM_DELTA 0x2
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
