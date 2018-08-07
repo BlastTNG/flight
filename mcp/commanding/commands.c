@@ -1216,6 +1216,15 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].change_roach_state = 1;
             }
           break;
+        case flight_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 1;
+            }
+            break;
+        case change_freqs_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].change_targ_freq = 2;
+          }
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -2242,6 +2251,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.roach[ivalues[0]-1].auto_find = 1;
       }
       break;
+    case lamp_check_all:
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            CommandData.roach[i].check_response = 1;
+            CommandData.roach_params[i].num_sec = rvalues[0];
+        }
+        break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2912,6 +2927,8 @@ void InitCommandData()
         CommandData.roach[i].auto_find = 0;
         CommandData.roach_params[i].in_atten = 16;
         CommandData.roach[i].recenter_df = 0;
+        CommandData.roach[i].go_flight_mode = 0;
+        CommandData.roach[i].check_response = 0;
     }
     CommandData.roach_params[0].out_atten = 7;
     CommandData.roach_params[1].out_atten = 2;

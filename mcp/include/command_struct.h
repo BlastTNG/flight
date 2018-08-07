@@ -372,6 +372,8 @@ typedef struct roach
     unsigned int on_res;
     unsigned int auto_find;
     unsigned int recenter_df;
+    unsigned int go_flight_mode;
+    unsigned int check_response;
 } roach_status_t;
 
 typedef struct roach_params

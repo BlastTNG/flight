@@ -180,6 +180,17 @@ typedef struct roach_state {
     double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
     double df[MAX_CHANNELS_PER_ROACH]; // Delta f
 
+    // for cal lamp check
+    double I_on[MAX_CHANNELS_PER_ROACH];
+    double I_off[MAX_CHANNELS_PER_ROACH];
+    double Q_on[MAX_CHANNELS_PER_ROACH];
+    double Q_off[MAX_CHANNELS_PER_ROACH];
+    double I_diff[MAX_CHANNELS_PER_ROACH];
+    double Q_diff[MAX_CHANNELS_PER_ROACH];
+    double df_on[MAX_CHANNELS_PER_ROACH];
+    double df_off[MAX_CHANNELS_PER_ROACH];
+    double df_diff[MAX_CHANNELS_PER_ROACH];
+
     char *last_cal_path;
     // path to the last master chop directory
     char *last_chop_path;
