@@ -94,13 +94,13 @@ void pilot_compress_and_send(void *arg) {
 
     // get the current bandwidth
     if ((bandwidth != CommandData.pilot_bw) ||
-         (CommandData.pilot_allframe_fraction < 0.001)) allframe_bytes = 0;
+         (CommandData.pilot_allframe_fraction < 0.0001)) allframe_bytes = 0;
     bandwidth = CommandData.pilot_bw;
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
       // send allframe if necessary
-      if (allframe_bytes >= bandwidth) {
+      if (allframe_bytes >= superframe->allframe_size) {
         transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
         allframe_bytes = 0;
       } else {
@@ -113,7 +113,8 @@ void pilot_compress_and_send(void *arg) {
         allframe_bytes += bandwidth-transmit_size;
       }
 
-
+			// no packetization if there is nothing to transmit
+			if (!transmit_size) continue;
 
       if (CommandData.pilot_oth) {
         // send the data to pilot oth via bitsender
