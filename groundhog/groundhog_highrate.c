@@ -23,17 +23,21 @@
 #include "bitserver.h"
 #include "linklist.h" // This gives access to channel_list and frame_size
 #include "linklist_compress.h"
+#include "linklist_writer.h"
 #include "blast.h"
 #include "blast_time.h"
+#include "groundhog.h"
 #include "groundhog_framing.h"
 #include "highrate.h"
 #include "comms_serial.h"
+#include "slowdl.h"
 
 enum HeaderType{NONE, IRID_OMNI, TD_OMNI, IRID_SLOW, PAYLOAD};
 
 struct CSBFHeader {
   uint8_t route;
   uint8_t origin;
+  uint8_t comm;
   uint8_t zero;
   uint16_t size;
 
@@ -44,6 +48,8 @@ struct CSBFHeader {
   char namestr[80];
 };
 
+
+char * comm_label[2] = {"COMM1", "COMM2"};
 
 enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
   header->mode = NONE;
@@ -63,7 +69,8 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
               header->sync = 0;
       }
   } else if (header->sync == 2) {
-      header->origin = byte;
+      header->origin = byte & 0x07; // bits 0-2 == 0 is hk, == 1 is low rate, == 2 is high rate
+      header->comm = ((byte & 0x08) >> 3); // bit 3 == 0 is comm1,  == 1 is comm2
       header->checksum = byte;             
 
       header->sync++;
@@ -84,15 +91,17 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
       if (header->zero) {
           header->mode = PAYLOAD;
       } else if (header->route == HIGHRATE_IRIDIUM_SYNC2) {
-          if ((header->origin & 0x03) == 0x01) {
+          if (header->origin == 0x00) {
               header->mode = IRID_SLOW;
-              sprintf(header->namestr, "Iridium HK");
-          } else if ((header->origin & 0x03) == 0x02) {
+              sprintf(header->namestr, "Iridium HK %s", comm_label[header->comm]);
+          } else if (header->origin == 0x02) {
               header->mode = IRID_OMNI;
-              sprintf(header->namestr, "Iridium Omni");
+              sprintf(header->namestr, "Iridium Omni %s", comm_label[header->comm]);
+          } else {
+              blast_info("Unrecognized origin 0x%x\n", header->origin+(header->comm << 3));
           }
       } else if (header->route == HIGHRATE_TDRSS_SYNC2) {
-          sprintf(header->namestr, "TDRSS");
+          sprintf(header->namestr, "TDRSS %s", comm_label[header->comm]);
           header->mode = TD_OMNI;
       }
       header->sync = 0;
@@ -134,19 +143,47 @@ void read_gse_sync_frame(int fd, uint8_t * buffer, struct CSBFHeader * header) {
   }
 }
 
+// grabs a packet from the gse stripped of it gse header
+void read_gse_sync_frame_direct(int fd, uint8_t * buffer, unsigned int length) {
+  uint8_t byte = 0;
+  unsigned int bytes_read = 0;
+
+  while (true) {
+      if (read(fd, &byte, 1) == 1) {
+          buffer[bytes_read++] = byte;
+
+          if (bytes_read >= length) { // done reading from the buffer 
+              return;
+          }
+      } else { // nothing read
+          usleep(1000);
+      }
+  }
+}
 
 void highrate_receive(void *arg) {
   // Open serial port
-  char * theport = (char *) arg;
+  unsigned int serial_mode = (unsigned long long) arg;
   comms_serial_t *serial = comms_serial_new(NULL);
-  comms_serial_connect(serial, theport);
+  char linkname[80];
+  if (serial_mode) { // direct
+      comms_serial_connect(serial, DIRECT_PORT);
+      sprintf(linkname, "TDRSSDirect");
+  } else { // highrate
+      comms_serial_connect(serial, HIGHRATE_PORT);
+      sprintf(linkname, "SerHighRate");
+  }
   comms_serial_setspeed(serial, B115200);
   int fd = serial->sock->fd; 
 
   linklist_t * ll = NULL;
 
+  // open a file to save all the raw linklist data
+  linklist_rawfile_t * ll_rawfile = NULL;
+  uint32_t ser = 0, prev_ser = 0;
+
   // packet sizes
-  unsigned int payload_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
+  unsigned int payload_packet_size = (HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1)*2;
   uint16_t datasize = HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE;
   uint32_t buffer_size = ((HIGHRATE_MAX_SIZE-1)/datasize+1)*datasize;
 
@@ -162,13 +199,14 @@ void highrate_receive(void *arg) {
   uint16_t *i_pkt, *n_pkt;
   uint32_t *frame_number;
   uint32_t transmit_size;
-  uint8_t *compressed_buffer = calloc(1, buffer_size);
+  uint8_t *compbuffer = calloc(1, buffer_size);
 
   uint8_t *local_superframe = calloc(1, superframe->size);
+  uint8_t *local_allframe = calloc(1, superframe->allframe_size);
   struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
-  uint8_t * gse_packet = calloc(1, 2048);
+  uint8_t * gse_packet = calloc(1, 4096);
   unsigned int gse_read = 0;
 
   struct CSBFHeader payload_packet_header = {0};
@@ -186,21 +224,33 @@ void highrate_receive(void *arg) {
       // printf("-------------START (lock = %d)---------\n", payload_packet_lock);
 
       // get the sync frame from the gse
-      read_gse_sync_frame(fd, gse_packet, &gse_packet_header);
+      if (serial_mode) { // direct
+          // mimic the return header values for highrate
+          gse_packet_header.size = 2048;
+          gse_packet_header.origin = 0xe;
+          sprintf(gse_packet_header.namestr, "TDRSS Direct");
+
+          read_gse_sync_frame_direct(fd, gse_packet, gse_packet_header.size);
+      } else { // highrate
+          read_gse_sync_frame(fd, gse_packet, &gse_packet_header);
+      }
+
       gse_read = 0;
       source_str = gse_packet_header.namestr;
-/* 
+
+      /* 
       for (int i = 0; i < gse_packet_header.size; i++) {
           if (i%32 == 0) printf("\n%.3d : ", i/32);
           printf("0x%.2x ", gse_packet[i]);
       }
       printf("\n");
-*/
+      */
+
       // printf("Got a GSE packet size %d origin 0x%x\n", gse_packet_header.size, gse_packet_header.origin);
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if (gse_packet_header.origin & 0xe) { // packet not from the hk stack
+          if (gse_packet_header.origin) { // packet not from the hk stack (origin != 0)
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
@@ -223,13 +273,19 @@ void highrate_receive(void *arg) {
                       transmit_size = *frame_number;
 
                       if (!(ll = linklist_lookup_by_serial(*serial_number))) {
-                          blast_err("Could not find linklist with serial 0x%.4x", *serial_number);
+                          blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *serial_number);
                           continue; 
                       }
+                      ser = *serial_number;
+
+                      if (ser != prev_ser) {
+                        ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, linkname);
+                      }
+                      prev_ser = ser;
 
                       // blast_info("Transmit size=%d, blk_size=%d, payload_size=%d, datasize=%d, i=%d, n=%d", transmit_size, ll->blk_size, payload_size, datasize, *i_pkt, *n_pkt);
 
-                      retval = depacketizeBuffer(compressed_buffer, &recv_size, 
+                      retval = depacketizeBuffer(compbuffer, &recv_size, 
                                            HIGHRATE_DATA_PACKET_SIZE-PACKET_HEADER_SIZE,
                                            i_pkt, n_pkt, data_buffer);
 
@@ -239,22 +295,30 @@ void highrate_receive(void *arg) {
                       if ((retval == 0) && (ll != NULL))
                       {
                           // decompress the linklist
-                          if (read_allframe(local_superframe, superframe, compressed_buffer)) {
-                              blast_info("[%s] Received an allframe :)\n", source_str);
+                          if (read_allframe(local_superframe, superframe, compbuffer)) {
+                              if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
+                              memcpy(local_allframe, compbuffer, superframe->allframe_size);
                           } else {
                               if (transmit_size > ll->blk_size) {
                                   blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
                                   transmit_size = ll->blk_size;
                               }
-                              blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
+                              if (verbose) blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
+
+                              // write the linklist data to disk
+                              if (ll_rawfile) {
+                                  memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                                  write_linklist_rawfile(ll_rawfile, compbuffer);
+                              }
+
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-                              decompress_linklist_opt(local_superframe, ll, compressed_buffer, transmit_size, 0);
+                              decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
                               memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                              groundhog_linklist_publish(ll, compressed_buffer);
+                              groundhog_linklist_publish(ll, compbuffer);
 
                               incrementFifo(local_fifo);
                           }
-                          memset(compressed_buffer, 0, buffer_size);
+                          memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
                       }
                   }
@@ -271,6 +335,18 @@ void highrate_receive(void *arg) {
           } else { // housekeeping packet
               // TODO(javier): deal with housekeeping packets
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
+              if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
+                  blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
+                  if (verbose) {
+                      for (int i = 0; i < gse_packet_header.size; i++) {
+                        if (i % 16 == 0) printf("\n%.04d: ", i/16);
+                        printf("0x%.02x ", gse_packet[i]);
+                      }
+                      printf("\n");
+                  }
+              } else {
+                  blast_info("[%s] Bad syncword 0x%.08x\n", source_str, *(uint32_t *) gse_packet);
+              }
               gse_read += gse_packet_header.size;
           }
       }

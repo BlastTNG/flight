@@ -122,7 +122,6 @@ linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
 extern linklist_t * ll_hk;
-extern char * ROACH_TYPES[NUM_RTYPES];
 
 #define MPRINT_BUFFER_SIZE 1024
 #define MAX_MPRINT_STRING \
@@ -264,7 +263,7 @@ void close_mcp(int m_code)
     while (!ready_to_close) usleep(10000);
     watchdog_close();
     shutdown_bias_tone();
-    // diskmanager_shutdown();
+    diskmanager_shutdown();
     ph_sched_stop();
 }
 
@@ -315,67 +314,10 @@ void * lj_connection_handler(void *arg) {
 
 unsigned int superframe_counter[RATE_END] = {0};
 
-// distributes and multiplexes commanded roach channels to compressed telemetry fields
-void add_roach_tlm_488hz()
-{
-  static channel_t * tlm[NUM_ROACH_TLM] = {NULL};
-  static channel_t * tlm_index[NUM_ROACH_TLM] = {NULL};
-  static int first_time = 1;
-  static unsigned int RoachId[NUM_ROACH_TLM] = {0};
-  static unsigned int KidId[NUM_ROACH_TLM] = {0};
-  static unsigned int TypeId[NUM_ROACH_TLM] = {0};
-  static unsigned int roach_indices[NUM_ROACH_TLM] = {0};
-
-  int i;
-
-  if (first_time) {
-    for (i = 0; i < NUM_ROACH_TLM; i++) {
-			char tlm_name[64] = {0};
-			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN", 65+i);
-      tlm[i] = channels_find_by_name(tlm_name);
-			snprintf(tlm_name, sizeof(tlm_name), "kid%c_roachN_index", 65+i);
-      tlm_index[i] = channels_find_by_name(tlm_name);
-    }
-
-    memset(roach_indices, 0xff, NUM_ROACH_TLM*sizeof(unsigned int));
-    first_time = 0;
-  }
-
-  for (i = 0; i < NUM_ROACH_TLM; i++) {
-    if ((roach_indices[i] != CommandData.roach_tlm[i].index) && (strlen(CommandData.roach_tlm[i].name))) {
-      roach_indices[i] = CommandData.roach_tlm[i].index;
-      read_roach_index(&RoachId[i], &KidId[i], &TypeId[i], roach_indices[i]);
-
-      if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", CommandData.roach_tlm[i].name, tlm[i]->field);
-    }
-
-    unsigned int i_udp_read = GETREADINDEX(roach_udp[RoachId[i]].index);
-    data_udp_packet_t *m_packet = &(roach_udp[RoachId[i]].last_pkts[i_udp_read]);
-
-    // write the roach data to the multiplexed field
-    if (tlm[i]) {
-      double value = -3.14159;
-      if (strcmp(ROACH_TYPES[TypeId[i]], "i") == 0) { // I comes from the UDP packet directly
-        value = m_packet->Ival[KidId[i]];
-      } else if (strcmp(ROACH_TYPES[TypeId[i]], "q") == 0) { // Q comes from the UDP packet directly
-        value = m_packet->Qval[KidId[i]];
-      } else if (strcmp(ROACH_TYPES[TypeId[i]], "df") == 0) { // df comes from the frame
-        // GET_VALUE(channels_find_by_name(CommandData.roach_tlm[i].name), value);
-      }
-
-      SET_FLOAT(tlm[i], value);
-    }
-    // write the multiplex index
-    if (tlm_index[i]) {
-      SET_INT32(tlm_index[i], roach_indices[i]);
-    }
-  }
-}
-
 static void mcp_488hz_routines(void)
 {
 #ifndef NO_KIDS_TEST
-	// write_roach_channels_488hz();
+    write_roach_channels_488hz();
 #endif
     add_roach_tlm_488hz();
 
@@ -397,6 +339,8 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
+    outer_frame_200hz(1);
+    process_sun_sensors();
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
@@ -437,6 +381,7 @@ static void mcp_5hz_routines(void)
     // read_5hz_acs();
     store_5hz_acs();
     write_motor_channels_5hz();
+    write_roach_channels_5hz();
     store_axes_mode_data();
     WriteAux();
     ControlBalance();
@@ -485,12 +430,13 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame(1);
+    outer_frame_1hz(1);
     // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);
     // highbay will be rewritten as all on or off when box is complete
     highbay(1);
+    store_1hz_acs();
     // thermal_vac();
     // blast_info("value is %f", labjack_get_value(6, 3));
     blast_store_cpu_health();
@@ -498,10 +444,11 @@ static void mcp_1hz_routines(void)
     xsc_control_heaters();
     store_1hz_xsc(0);
     store_1hz_xsc(1);
+    write_roach_channels_1hz();
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
-    // store_data_hk(master_superframe_buffer);
+    store_data_hk(master_superframe_buffer);
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
@@ -514,13 +461,22 @@ static void *mcp_main_loop(void *m_arg)
 #define MCP_NS_PERIOD (NSEC_PER_SEC / MCP_FREQ)
 #define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
 
-    int counter_488hz = 1;
-    int counter_244hz = 1;
-    int counter_200hz = 1;
-    int counter_100hz = 1;
-    int counter_5hz = 1;
-    int counter_2hz = 1;
-    int counter_1hz = 1;
+
+    // Start values indicate the phase (in MCP_FREQ counts) of each channel relative to zero.
+    //
+    // For 24400 mcp counts per second, there are 50, 100, 122, 244, 4880, 12200, and 24400
+    // mcp counts per 488 Hz, 244 Hz, 200 Hz, 100 Hz, 5 Hz, and 1 Hz routine, respectively.
+    //
+    // Start values are chosen so that all the routines are spaced over the 50 mcp pulses per
+    // 488 Hz routine, which is the fastest rate.
+    int counter_488hz = 40;
+    int counter_244hz = 39; // 10;
+    int counter_200hz = 33; // 11;
+    int counter_100hz = 27; // 17;
+    int counter_5hz = 20; // 23;
+    int counter_2hz = 19; // 30;
+    int counter_1hz = 1; // 31;
+
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     nameThread("Main");
@@ -588,6 +544,7 @@ int main(int argc, char *argv[])
   ph_thread_t *act_thread = NULL;
   ph_thread_t *mag_thread = NULL;
   ph_thread_t *gps_thread = NULL;
+  ph_thread_t *dgps_thread = NULL;
 	ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
@@ -596,13 +553,9 @@ int main(int argc, char *argv[])
   pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
-  pthread_t bi0_send_worker;
-  // pthread_t biphase_writer_id;
+  // pthread_t bi0_send_worker;
+  ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
-
-#ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  // pthread_t xy_id;
-#endif
 
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
@@ -678,9 +631,6 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDataFIFO, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-#ifdef USE_XY_THREAD
-  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
-#endif
 
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
@@ -690,13 +640,13 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef NO_KIDS_TEST
-  // blast_info("Initializing ROACHes from MCP...");
-  // roach_udp_networking_init();
-  // init_roach(0);
-  // init_roach(1);
-  // init_roach(2);
-  // init_roach(3);
-  // init_roach(4);
+  blast_info("Initializing ROACHes from MCP...");
+  roach_udp_networking_init();
+  init_roach(0);
+  init_roach(1);
+  init_roach(2);
+  init_roach(3);
+  init_roach(4);
   blast_info("Finished initializing ROACHes...");
 #endif
 
@@ -724,9 +674,14 @@ blast_info("Finished initializing Beaglebones..."); */
   telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
 
+  linklist_t * testll = generate_roach_udp_linklist("roach1.ll", 0);
+  write_superframe_format(testll->superframe, "roach1.sf");
+
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
-  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
+//  pthread_create(&bi0_send_worker, NULL, (void *) &biphase_writer, (void *) telemetries_linklist);
+  bi0_send_worker = ph_thread_spawn((void *) &biphase_writer, (void *) telemetries_linklist);
+
 
 //  pthread_create(&disk_id, NULL, (void*)&FrameFileWriter, NULL);
   signal(SIGHUP, close_mcp);
@@ -734,7 +689,7 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  // pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
 
 //  InitSched();
   initialize_motors();
@@ -765,13 +720,20 @@ blast_info("Finished initializing Beaglebones..."); */
 
 
   mag_thread = ph_thread_spawn(monitor_magnetometer, NULL);
+
+  // This is our (BLAST) GPS, used for timing and position.
   gps_thread = ph_thread_spawn(GPSMonitor, &GPSData);
+
+  // This is the DPGS we get over serial from CSBF
+
+  dgps_thread = ph_thread_spawn(DGPSMonitor, NULL);
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
+#ifndef USE_XY_THREAD
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
-
+#endif
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
@@ -782,8 +744,11 @@ blast_info("Finished initializing Beaglebones..."); */
 //  initialize the data sharing server
   data_sharing_init(linklist_array);
 
+// Get attitude and position information from the CSBF GPS
+//  initialize_csbf_gps_monitor();
+
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
-#ifdef USE_XY_THREAD
+#ifdef USE_XY_THREAD // define should be set in mcp.h
   ph_thread_t *xy_thread = ph_thread_spawn(StageBus, NULL);
 #endif
   ph_sched_run();

@@ -71,6 +71,36 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
+void USAGE(void) {
+  
+  printf("\n\nMole is a generic linklist client/server that converts raw "
+      "binary data to dirfiles.\n\n"
+      "Usage: mole [OPTION]...\n\n"
+      " -nc                Don't run a client.\n"
+      "                    Default is to run a client.\n"
+      " -s                 Run a server for other mole clients to connect to.\n"
+      "                    Default is to not run a server.\n"
+      " -w X               Start acquiring data X frames from the current index.\n"
+      "                    Default is 20.\n"
+      " -v                 Verbose mode.\n"
+      "                    \n"
+      " @host              Connect to a specific host.\n"
+      " --archive-dir dir  Save raw binary files to specified directory.\n"
+      "                    Only valid if backing up binary data locally.\n"
+      "                    Default is /data/rawdir.\n"
+      " --backup           Backup binary data in the archive directory.\n"
+      "                    Default is to not backup data.\n"
+      " --little-end       Force mole to interpret data as little endian.\n"
+      " --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
+      "                    Default is /data/mole.\n"
+      " --no-backup        Do not backup data in the archive directory.\n"
+      "                    This is the default.\n"
+      " --no-check         Ignore checksum values when processing data.\n"  
+      "\n");
+
+    exit(0);
+}
+
 void print_display(char * text, unsigned int recv_framenum) {
 	static char spin[] = "/-\\|";
   static unsigned int s = 0;
@@ -100,7 +130,7 @@ void print_display(char * text, unsigned int recv_framenum) {
 }
 
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char * mole_dir = "/data/mole";
+char mole_dir[128] = "/data/mole";
 char symdir_name[128] = "/data/etc/mole.lnk";
 char symraw_name[128] = "/data/rawdir/LIVE";
 
@@ -110,6 +140,11 @@ int main(int argc, char *argv[]) {
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
+  unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
+  int bin_backup = 0;
+
+  // configure the TCP connection
+  tcpconn.flag |= TCPCONN_LOOP;
 
   // initialization variables
   uint32_t req_serial = 0;
@@ -123,7 +158,6 @@ int main(int argc, char *argv[]) {
   int64_t recv_framenum = 0;
   uint16_t recv_flags = 0;
   int resync = 1;
-
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -141,9 +175,25 @@ int main(int argc, char *argv[]) {
       client_mode = 0;
     } else if (strcmp(argv[i], "-w") == 0) { // rewind value 
       rewind = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-v") == 0) { // verbose mode
+      ll_flags |= LL_VERBOSE;
+    } else if (strcmp(argv[i], "--backup") == 0) { // write binary backup files
+      bin_backup = 1;
+    } else if (strcmp(argv[i], "--archive-dir") == 0) { // set the archive directory
+      strcpy(archive_dir, argv[++i]);
+    } else if (strcmp(argv[i], "--mole-dir") == 0) { // set the mole directory dirfiles
+      strcpy(mole_dir, argv[++i]);
+    } else if (strcmp(argv[i], "--no-backup") == 0) { // don't write binary backup files
+      bin_backup = 0;
+    } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
+      ll_flags |= LL_IGNORE_CHECKSUM;
+    } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
+      ll_flags &= ~LL_USE_BIG_ENDIAN;
+    } else if (strcmp(argv[i], "--help") == 0) { // view usage
+      USAGE();
     } else {
       printf("Unrecognized option \"%s\"\n", argv[i]);
-      exit(1);
+      USAGE();
     }
   }
 
@@ -174,7 +224,7 @@ int main(int argc, char *argv[]) {
 				// open linklist dirfile
 				sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
-				ll_dirfile = open_linklist_dirfile(filename, linklist);
+				ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_flags);
 				unlink(symdir_name);
 				symlink(filename, symdir_name);  
 
@@ -182,7 +232,12 @@ int main(int argc, char *argv[]) {
 				sprintf(filename, "%s/%s", archive_dir, linklistname);
         if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
 				ll_rawfile = open_linklist_rawfile(filename, linklist);
-				create_rawfile_symlinks(ll_rawfile, symraw_name);
+        if (bin_backup) {
+				  create_rawfile_symlinks(ll_rawfile, symraw_name);
+        } else {
+          fclose(ll_rawfile->fp);
+          ll_rawfile->fp = NULL;
+        }
 
 				// set the first framenum request
 				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
@@ -224,12 +279,16 @@ int main(int argc, char *argv[]) {
       /* all flags are cleared at this point */
 
 			// write the dirfile
-			seek_linklist_dirfile(ll_dirfile, recv_framenum);
-			write_linklist_dirfile(ll_dirfile, recv_buffer);
+      if (ll_dirfile) {
+			  seek_linklist_dirfile(ll_dirfile, recv_framenum);
+			  write_linklist_dirfile(ll_dirfile, recv_buffer);
+      }
 
 			// write the rawfile
-			seek_linklist_rawfile(ll_rawfile, recv_framenum);
-			write_linklist_rawfile(ll_rawfile, recv_buffer);
+      if (bin_backup && ll_rawfile) {
+			  seek_linklist_rawfile(ll_rawfile, recv_framenum);
+			  write_linklist_rawfile(ll_rawfile, recv_buffer);
+      }
 
 /* 
 			int i;

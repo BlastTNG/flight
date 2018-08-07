@@ -495,7 +495,7 @@ int EZBus_Recv(struct ezbus* bus)
 
     if (timespec_compare(&current, &end) > 0) {
         if (bus->chatter >= EZ_CHAT_ERR)
-            blast_err("%sSerial read timeout", bus->name);
+            // blast_err("%sSerial read timeout", bus->name);
         retval |= EZ_ERR_TIMEOUT;
     }
 
@@ -637,7 +637,7 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char))
     int retval = EZ_ERR_OK;
 
     if (bus->chatter >= EZ_CHAT_ACT) {
-        blast_info("%sPolling EZStepper Bus.", bus->name);
+        // blast_info("%sPolling EZStepper Bus.", bus->name);
     }
 
     for (i = whoLoopMin(EZ_WHO_ALL); i <= whoLoopMax(EZ_WHO_ALL); ++i) {
@@ -647,7 +647,7 @@ int EZBus_PollInit(struct ezbus* bus, int (*ezinit)(struct ezbus*, char))
         EZBus_Send(bus, i, "&");
         if ((result = EZBus_Recv(bus)) & (EZ_ERR_TIMEOUT | EZ_ERR_OOD)) {
             if (bus->chatter >= EZ_CHAT_ACT)
-            blast_warn("%sNo response from %s, will repoll later.", bus->name, stepName(bus, i));
+            // blast_warn("%sNo response from %s, will repoll later.", bus->name, stepName(bus, i));
             bus->stepper[iWho(i)].status &= ~EZ_STEP_OK;
             retval |= result;	  // include in retval results from Recv
             retval |= EZ_ERR_POLL;
@@ -762,10 +762,10 @@ int EZBus_SetAccel(struct ezbus* bus, char who, int acc)
 int EZBus_SetPreamble(struct ezbus* bus, char who, const char* preamble)
 {
     char i;
-    blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
+    // blast_info("EZBus_SetPreamble: = %i, whoLoopMax(who) = %i", whoLoopMin(who), whoLoopMax(who));
     for (i = whoLoopMin(who); i <= whoLoopMax(who); ++i) {
-	    blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
-	               i, iWho(i), preamble, EZ_BUS_BUF_LEN);
+	    // blast_info("EZBus_SetPreamble: i = %i, iWho(i) = %i, preamble = %s, EZ_BUS_BUF_LEN = %i",
+	    //           i, iWho(i), preamble, EZ_BUS_BUF_LEN);
         strncpy(bus->stepper[iWho(i)].preamble, preamble, EZ_BUS_BUF_LEN);
         bus->stepper[iWho(i)].preamble[EZ_BUS_BUF_LEN - 1] = '\0';
     }

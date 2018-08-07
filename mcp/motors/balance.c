@@ -41,7 +41,7 @@
 typedef enum
 {
     negative = 0, no_move, positive
-} move_type_t;
+} bal_move_type_t;
 
 typedef struct {
 	uint16_t init;
@@ -49,7 +49,7 @@ typedef struct {
 	int ind;
     	int do_move;
 	int moving;
-	move_type_t dir;
+	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
 	uint8_t lims;
@@ -60,7 +60,7 @@ static balance_state_t balance_state;
 // Decides when the balance system should be turned on and off.
 void ControlBalance(void)
 {
-	double i_el = 0.0;
+    double i_el = 0.0;
     static int firsttime = 1;
     int i_motors = GETREADINDEX(motor_index);
 
@@ -107,7 +107,7 @@ void ControlBalance(void)
 	       }
            } else if (balance_state.i_el_avg < 0) {
                if (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_on_bal) {
-                   blast_info("Setting the balance system to move in the positive direction.");
+                   // blast_info("Setting the balance system to move in the positive direction.");
                    balance_state.do_move = 1;
                    balance_state.dir = positive;
                } else if (balance_state.moving && (balance_state.i_el_avg < (-1.0)*CommandData.balance.i_el_off_bal)) {
@@ -185,7 +185,8 @@ void DoBalance(struct ezbus* bus)
         EZBus_Take(bus, balance_state.addr);
         blast_info("Making sure the balance system is not running on startup.");
         EZBus_Stop(bus, balance_state.addr);
-        EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
+	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
+        // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
@@ -205,7 +206,7 @@ void DoBalance(struct ezbus* bus)
 // TODO(laura): Add checking to make sure that the motor commands actually went through
 // updating the status variables.
 
-        // get (relative) position on the rail and read limit switches
+    // get (relative) position on the rail and read limit switches
     // NOTE(laura 2018-07-13): This next line was commented out.  I have no idea why.
     EZBus_ReadInt(bus, balance_state.addr, "?0", &balance_state.pos);
     EZBus_ReadInt(bus, balance_state.addr, "?4", &balance_state.lims);

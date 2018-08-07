@@ -65,8 +65,7 @@ static store_file_info_t storage_info_1hz = {0};
 static store_file_info_t storage_info_5hz = {0};
 static store_file_info_t storage_info_100hz = {0};
 static store_file_info_t storage_info_200hz = {0};
-static store_file_info_t storage_info_hk = {0};
-// =======
+
 // #define MAX_NUM_FILENAME_CHARS 72
 typedef struct {
     fileentry_t *fp;
@@ -76,14 +75,19 @@ typedef struct {
 } roach_udp_write_info_t;
 
 roach_udp_write_info_t roach_udp_write_info[NUM_ROACHES];
-// >>>>>>> origin/master
 
 // housekeeping linklist
 #define LL_TMP_NAME "/tmp/TMP"
+#define LL_ROACH_TMP_NAME "/tmp/TMPROACH"
 #define LOCAL_RAWDIR "/data/rawdir"
 #define HK_PREFIX "master"
+#define ROACH_PREFIX "roach"
 
 linklist_t * ll_hk = NULL;
+linklist_t * ll_roach[NUM_ROACHES]= {NULL};
+static store_file_info_t storage_info_hk = {0};
+static store_file_info_t storage_info_roaches[NUM_ROACHES] = {{0}};
+
 extern unsigned int ll_rawfile_default_fpf;
 
 int store_disks_ready() {
@@ -123,21 +127,6 @@ void get_write_file_name(char* fname, char* chlist, char* type, uint32_t index)
 int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char *m_type) {
     size_t pkg_size = sizeof(channel_header_t) + m_channels_pkg->length * sizeof(struct channel_packed);
     size_t bytes_written = 0;
-// =======
-// // Handles the file_open, file_write, and file_close calls.
-// static int store_data(fileentry_t **m_fp, char *m_file, char *m_type, uint16_t m_rate,
-//                 int32_t m_frame_number, uint32_t *m_counter, uint16_t m_freq)
-// {
-//     uint16_t bytes_written = 0;
-//     if ((*m_counter) >= STORE_DATA_FRAMES_PER_FILE * m_freq) {
-//     	blast_info("Closing %s", m_file);
-//         file_close(*m_fp);
-//         get_write_file_name(m_file, m_type, m_frame_number);
-// 		blast_info("Opening %s", m_file);
-//         *m_fp = file_open(m_file, "w+");
-//         (*m_counter) = 0;
-//     }
-// >>>>>>> origin/master
     if (*m_fp) {
         bytes_written = file_write(*m_fp, (void*) m_channels_pkg, pkg_size);
 		if (bytes_written < pkg_size) {
@@ -153,6 +142,7 @@ int store_data_header(fileentry_t **m_fp, channel_header_t *m_channels_pkg, char
 	}
     return(0);
 }
+
 
 unsigned int move_file_to_diskmanager(char * fileout, char * filein) {
     fileentry_t *fp_chlist = file_open(fileout, "w+");
@@ -189,6 +179,18 @@ unsigned int move_file_to_diskmanager(char * fileout, char * filein) {
     return bytes_written;
 }
 
+void make_roach_name(char * filename, unsigned int roach) {
+    // get the date string for file saving
+    time_t now = time(0);
+    char datestring[80] = {0};
+    struct tm tm_t = {0};
+    localtime_r(&now, &tm_t);
+    strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", &tm_t);
+    char tempname[80] = {0};
+    snprintf(tempname, sizeof(tempname), ROACH_PREFIX "%d_%s", roach+1, datestring);
+    snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s", archive_dir, tempname);
+}
+
 void make_hk_name(char * filename) {
     // get the date string for file saving
     time_t now = time(0);
@@ -201,18 +203,138 @@ void make_hk_name(char * filename) {
     snprintf(filename, MAX_NUM_FILENAME_CHARS, "%s/%s", archive_dir, tempname);
 }
 
+void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize, unsigned int roach) {
+    static int file_index[NUM_ROACHES] = {0};
+
+    unsigned int bytes_written = 0;
+    char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
+    char symlink_name[MAX_NUM_FILENAME_CHARS] = {0};
+
+    if (!store_disks_ready()) {
+        if (!storage_info_roaches[roach].have_warned) {
+            blast_info("store_disks_ready is not ready for roach %d", roach+1);
+            storage_info_roaches[roach].have_warned = true;
+        }
+        return;
+    }
+    storage_info_roaches[roach].have_warned = false;
+
+    if (!storage_info_roaches[roach].init) {
+        // initialize the store_file_info struct
+	      storage_info_roaches[roach].fp = NULL;
+	      snprintf(storage_info_roaches[roach].type, sizeof(storage_info_roaches[roach].type),
+                   "roach%d", roach+1);
+	      storage_info_roaches[roach].mcp_framenum_addr = channels_find_by_name("mcp_488hz_framecount");
+	      storage_info_roaches[roach].channels_pkg = NULL;
+	      storage_info_roaches[roach].rate = RATE_488HZ;
+	      storage_info_roaches[roach].nrate = 488;
+	      storage_info_roaches[roach].init = true;
+        storage_info_roaches[roach].frames_stored = 0;
+        storage_info_roaches[roach].fp = NULL;
+
+        // open and write the temporary superframe, linklist, and calspecs format files
+        snprintf(archive_dir, sizeof(archive_dir), "rawdir");
+        ll_rawfile_default_fpf = STORE_DATA_FRAMES_PER_FILE;
+
+        // generate superframe and linklist format for roach data
+        ll_roach[roach] = generate_roach_udp_linklist(LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT, roach);
+        write_superframe_format(ll_roach[roach]->superframe, LL_ROACH_TMP_NAME SUPERFRAME_FORMAT_EXT);
+
+        // copy the format files to the diskmanager
+        make_roach_name(storage_info_roaches[roach].file_name, roach);
+
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT,
+                   storage_info_roaches[roach].file_name);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME LINKLIST_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" LINKLIST_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT,
+                   storage_info_roaches[roach].file_name);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" SUPERFRAME_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT,
+                   storage_info_roaches[roach].file_name);
+        bytes_written = move_file_to_diskmanager(fileout_name, LL_ROACH_TMP_NAME CALSPECS_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" CALSPECS_FORMAT_EXT, roach+1);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+    }
+
+    // close the file once enough frames are written
+    if (storage_info_roaches[roach].frames_stored >=
+         (ll_rawfile_default_fpf*storage_info_roaches[roach].nrate)) {
+	      bytes_written = file_write(storage_info_roaches[roach].fp,
+                               (void*) &(storage_info_roaches[roach].crc),
+                               sizeof(uint32_t));
+        file_close(storage_info_roaches[roach].fp);
+        storage_info_roaches[roach].fp = NULL;
+    }
+
+    // open the file if it hasn't been opened or was closed
+    if (!storage_info_roaches[roach].fp) {
+        snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_EXT ".%.2u",
+                                storage_info_roaches[roach].file_name, file_index[roach]);
+        storage_info_roaches[roach].frames_stored = 0;
+        storage_info_roaches[roach].crc = BLAST_MAGIC32;
+        storage_info_roaches[roach].fp = file_open(fileout_name, "w+");
+        if (!file_index[roach]) {
+            snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_roach%d" LINKLIST_EXT ".%.2u",
+                     roach+1, file_index[roach]);
+            unlink(symlink_name);
+            symlink(fileout_name, symlink_name);
+        }
+        file_index[roach]++;
+    }
+    // write to the fie if opened
+    if (storage_info_roaches[roach].fp) {
+        // compress the linklist
+        uint16_t pad = 0;
+        file_write(storage_info_roaches[roach].fp, (void *) &pad, sizeof(pad)); // initial pad for checksum
+				bytes_written += file_write(storage_info_roaches[roach].fp, (void *) m_packet, buffersize);
+		    if (bytes_written < buffersize) {
+            if (storage_info_roaches[roach].have_warned) {
+                blast_err("Buffer size is %u bytes but we were only able to write %u bytes",
+                            buffersize, bytes_written);
+                storage_info_roaches[roach].have_warned = true;
+            }
+		    } else {
+		        // We wrote the frame successfully.
+            (storage_info_roaches[roach].frames_stored)++;
+            storage_info_roaches[roach].have_warned = false;
+            storage_info_roaches[roach].crc = crc32(storage_info_roaches[roach].crc,
+                                                     m_packet,
+                                                     buffersize);
+		    }
+        file_write(storage_info_roaches[roach].fp, (void *) &pad, sizeof(pad)); // final pad for checksum
+		} else {
+		  	if (storage_info_roaches[roach].have_warned) {
+			  		blast_err("Failed to open file %s for writing.", storage_info_roaches[roach].file_name);
+				  	storage_info_roaches[roach].have_warned = true;
+		  	}
+		}
+}
+
 void store_data_hk(uint8_t * sf_buffer) {
     unsigned int bytes_written = 0;
     char fileout_name[MAX_NUM_FILENAME_CHARS] = {0};
+    char symlink_name[MAX_NUM_FILENAME_CHARS] = {0};
 
     static int file_index = 0;
     static uint8_t * comp_buffer = NULL;
     static bool first_time = 1;
-    if (!store_disks_ready() && !(storage_info_hk.have_warned)) {
-        blast_info("store_disks_ready is not ready.");
-        storage_info_hk.have_warned = true;
+    if (!store_disks_ready()) {
+        if (!storage_info_hk.have_warned) {
+            blast_info("store_disks_ready is not ready.");
+            storage_info_hk.have_warned = true;
+        }
         return;
     }
+    storage_info_hk.have_warned = false;
 
     if (first_time) {
         // initialize the store_file_info struct
@@ -231,7 +353,7 @@ void store_data_hk(uint8_t * sf_buffer) {
 
         // open and write the temporary superframe, linklist, and calspecs format files
         snprintf(archive_dir, sizeof(archive_dir), "rawdir");
-        ll_rawfile_default_fpf = 900;
+        ll_rawfile_default_fpf = STORE_DATA_FRAMES_PER_FILE;
 
         linklist_rawfile_t * ll_rawfile = open_linklist_rawfile(LL_TMP_NAME, ll_hk);
         channels_write_calspecs(LL_TMP_NAME CALSPECS_FORMAT_EXT, derived_list);
@@ -241,18 +363,27 @@ void store_data_hk(uint8_t * sf_buffer) {
         make_hk_name(storage_info_hk.file_name);
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" LINKLIST_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME LINKLIST_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" LINKLIST_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
 
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" SUPERFRAME_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME SUPERFRAME_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" SUPERFRAME_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
+
         snprintf(fileout_name, MAX_NUM_FILENAME_CHARS, "%s" CALSPECS_FORMAT_EXT, storage_info_hk.file_name);
         bytes_written = move_file_to_diskmanager(fileout_name, LL_TMP_NAME CALSPECS_FORMAT_EXT);
+        snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" CALSPECS_FORMAT_EXT);
+        unlink(symlink_name);
+        symlink(fileout_name, symlink_name);
 
         first_time = 0;
-        printf("We are done initializing HK for the first time\n");
     }
 
     // close the file once enough frames are written
-    if (storage_info_hk.frames_stored >= ll_rawfile_default_fpf) {
+    if (storage_info_hk.frames_stored >= (ll_rawfile_default_fpf*storage_info_hk.nrate)) {
 	      bytes_written = file_write(storage_info_hk.fp, (void*) &(storage_info_hk.crc), sizeof(uint32_t));
         file_close(storage_info_hk.fp);
         storage_info_hk.fp = NULL;
@@ -265,6 +396,12 @@ void store_data_hk(uint8_t * sf_buffer) {
         storage_info_hk.frames_stored = 0;
         storage_info_hk.crc = BLAST_MAGIC32;
         storage_info_hk.fp = file_open(fileout_name, "w+");
+        if (!file_index) {
+            snprintf(symlink_name, MAX_NUM_FILENAME_CHARS, "/data/rawdir/LIVE_master" LINKLIST_EXT ".%.2u",
+                      file_index);
+            unlink(symlink_name);
+            symlink(fileout_name, symlink_name);
+        }
         file_index++;
     }
 
@@ -365,11 +502,6 @@ void store_rate_data(store_file_info_t *m_storage) {
                 m_storage->have_warned = false;
                 m_storage->crc = crc32(m_storage->crc, channel_data[m_storage->rate], frame_size[m_storage->rate]);
 		    }
-// =======
-// 	    if (temp_fp) {
-//            store_data(&temp_fp, file_name, type_1hz, RATE_1HZ,
-//                                    mcp_1hz_framenum, &frames_stored_to_1hz, 1);
-// >>>>>>> origin/master
         } else {
 	        if (m_storage->have_warned) {
 	            blast_err("Failed to open file %s for writing.", m_storage->file_name);
@@ -472,7 +604,6 @@ void store_roach_udp_packet(data_udp_packet_t *m_packet, roach_handle_data_t *m_
     if (!store_disks_ready()) return;
 
      m_roach_write = (roach_udp_write_info_t*) &(roach_udp_write_info[m_roach_udp->i_which]);
-// >>>>>>> origin/master
 
     header_size = sizeof(packet_header_out);
     packet_size = sizeof(*m_packet);

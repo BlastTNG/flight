@@ -35,19 +35,29 @@
 #include "phenom/socket.h"
 #include "phenom/buffer.h"
 #include "remote_serial.h"
+#include "linklist.h"
+#include "channels_tng.h"
 
 #define ROACH_UDP_CRC_ERR 0x01
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
+#define NUM_FLAG_CHANNELS_PER_ROACH (MAX_CHANNELS_PER_ROACH/16 + 1)
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
+#define ROACH_DF_FILT_LEN 10
+#define ROACH_UDP_DEBUG_PRINT_COUNT 1
+#define ROACH_FILT_DEBUG_FREQ 5000
+#define ROACH_UDP_BUF_LEN ROACH_UDP_LEN
 #define ROACH_UDP_DATA_LEN NUM_ROACH_UDP_CHANNELS * 4 * 2
 #define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24) | \
                                             (((b) & 0xff) << 16) | \
                                             (((c) & 0xff) << 8)  | \
                                             ((d) & 0xff))
+#define NC1_PORT 12345
+#define NC2_PORT 12346
+
 static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 // Destination IP for fc2
 static const char udp_dest[32] = "239.1.1.234";
@@ -67,34 +77,18 @@ typedef struct {
 } __attribute__((packed)) udp_packet_t;
 
 typedef enum {
-    ROACH_STATUS_BOOT = 0,
-    ROACH_STATUS_CONNECTED,
-    ROACH_STATUS_PROGRAMMED,
-    ROACH_STATUS_CONFIGURED,
-    ROACH_STATUS_CALIBRATED,
-    ROACH_STATUS_TONE,
-    ROACH_STATUS_STREAMING,
-    ROACH_STATUS_VNA,
-    ROACH_STATUS_ARRAY_FREQS,
-    ROACH_STATUS_TARG,
-    ROACH_STATUS_CAL_AMPS,
-    ROACH_STATUS_ACQUIRING,
-} e_roach_status;
+    ROACH_STATE_BOOT = 0,
+    ROACH_STATE_CONNECTED = 1,
+    ROACH_STATE_PROGRAMMED = 2,
+    ROACH_STATE_CONFIGURED = 3,
+    ROACH_STATE_STREAMING = 4,
+} e_roach_state;
 
 typedef enum {
-    PI_STATUS_BOOT = 0,
-    PI_STATUS_INIT,
-} e_pi_status;
-
-typedef enum {
-    RUDAT_STATUS_BOOT = 0,
-    RUDAT_STATUS_HAS_ATTENS,
-} e_rudat_status;
-
-typedef enum {
-    VALON_STATUS_BOOT = 0,
-    VALON_STATUS_HAS_FREQS,
-} e_valon_status;
+    PI_STATE_BOOT = 0,
+    PI_STATE_CONNECTED = 1,
+    PI_STATE_INIT = 2,
+} e_pi_state;
 
 typedef enum {
     ROACH_UPLOAD_RESULT_WORKING = 0,
@@ -121,14 +115,23 @@ typedef struct roach_state {
     int array;
     int which;
     int katcp_fd;
-    e_roach_status status;
-    e_roach_status desired_status;
+    e_roach_state state;
+    e_roach_state desired_state;
 
     int has_error;
     const char *last_err;
     char *address;
     uint16_t port;
+    bool has_qdr_cal;
+    bool has_tones;
+    bool has_vna_tones;
+    bool has_targ_tones;
     bool is_streaming;
+    bool is_sweeping;
+    bool has_vna_sweep;
+    bool has_targ_sweep;
+    bool has_amp_cal;
+    bool has_adc_cal;
     bool write_flag;
 
     double *freq_residuals;
@@ -154,20 +157,27 @@ typedef struct roach_state {
     double p_min_freq;
     double n_max_freq;
     double n_min_freq;
-    // VNA/TARG sweep file paths
+    // VNA/TARG/CAL sweep file paths
+    char *sweep_root_path;
+    char *vna_path_ref;
+    char *targ_path_ref;
     char *targ_path_root;
     char *last_vna_path;
     char *last_targ_path;
     char *channels_path;
+
     // For detector retune decision
+    int nflag_thresh; // num channels which need to be out of range for retune
     int has_ref; /* If 1, ref grads exist */
+    bool first_calc;
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
-    double ref_grad[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
-    double ref_df[MAX_CHANNELS_PER_ROACH]; // The reference delta f values
-    double comp_df[MAX_CHANNELS_PER_ROACH]; // To be compared to ref_df
-    double df_diff[MAX_CHANNELS_PER_ROACH]; // For each kid, = comp_df - ref_df
+    double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
+    double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
+    double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
+    double df[MAX_CHANNELS_PER_ROACH]; // Delta f
+
     char *last_cal_path;
     // path to the last master chop directory
     char *last_chop_path;
@@ -184,10 +194,13 @@ typedef struct roach_state {
     // Path to tone amplitudes file
     char *amps_path[2];
     double *last_amps;
+    double *last_phases;
+    double *last_freqs;
     char *vna_amps_path[2];
-    char *targ_amps_path[2];
+    char *targ_amps_path[3];
     char *random_phase_path;
     char *phase_centers_path;
+    char *freqlist_path;
     fftw_plan comb_plan;
 
     // PPC link
@@ -196,22 +209,14 @@ typedef struct roach_state {
 
 typedef struct pi_state {
     int which;
-    e_pi_status status;
-    e_pi_status desired_status;
+    e_pi_state state;
+    e_pi_state desired_state;
+    uint16_t port;
+    bool has_valon;
+    bool has_input_atten;
+    bool has_output_atten;
     remote_serial_t *pi_comm;
 } pi_state_t;
-
-typedef struct rudat_state {
-    int which;
-    e_rudat_status status;
-    e_rudat_status desired_status;
-} rudat_state_t;
-
-typedef struct valon_state {
-    int which;
-    e_valon_status status;
-    e_valon_status desired_status;
-} valon_state_t;
 
 typedef struct {
     const char *firmware_file;
@@ -260,6 +265,22 @@ typedef struct {
     struct timeval  timeout;
 } roach_handle_data_t;
 
+typedef struct {
+    float ibuf[ROACH_DF_FILT_LEN];
+    float qbuf[ROACH_DF_FILT_LEN];
+    int ind_last;
+    int ind_roach;
+    int ind_kid;
+    float i_sum;
+    float q_sum;
+    float i_cur;
+    float q_cur;
+    float df;
+    int first_call;
+} roach_df_calc_t;
+
+roach_df_calc_t roach_df_telem[NUM_ROACHES];
+
 roach_handle_data_t roach_udp[NUM_ROACHES];
 
 // This structure is used for writing a header for each roach-udp packet to disk.
@@ -286,13 +307,19 @@ int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_v
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
-int get_roach_status(uint16_t ind);
+int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
+void roach_df_continuous(roach_df_calc_t* m_roach_df);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
 void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
+linklist_t * generate_roach_udp_linklist(char *, int);
+
+// Defined in roach_multiplex.c
+void add_roach_tlm_488hz();
+
 
 #endif /* INCLUDE_ROACH_H_ */

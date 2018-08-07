@@ -171,11 +171,11 @@ void biphase_receive(void *args)
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
 
                   if (read_allframe(local_superframe, superframe, compbuffer)) {
-                      printf("[Biphase] Received an allframe :)\n");
+                      if (verbose) blast_info("[Biphase] Received an allframe :)\n");
                       memcpy(local_allframe, compbuffer, superframe->allframe_size);
                   } else {
                       // The compressed linklist has been fully reconstructed
-                      blast_info("[Biphase] Received linklist \"%s\"", ll->name);
+                      if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
                       // write the linklist data to disk

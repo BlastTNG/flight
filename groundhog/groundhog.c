@@ -31,6 +31,7 @@
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
+int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
 
@@ -100,6 +101,7 @@ int main(int argc, char * argv[]) {
   linklist_generate_lookup(ll_list);  
   write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
 
+  channels_write_calspecs("test.cs", derived_list);
   int pilot_on = 1;
   int bi0_on = 1;
   int highrate_on = 1;
@@ -113,6 +115,7 @@ int main(int argc, char * argv[]) {
     else if (strcmp(argv[i], "-bi0_only") == 0) highrate_on = pilot_on = 0;
     else if (strcmp(argv[i], "-highrate_only") == 0) pilot_on = bi0_on = 0;
     else if (strcmp(argv[i], "-d") == 0) daemon = 1;
+    else if (strcmp(argv[i], "-quiet") == 0) verbose = 0;
     else {
       blast_err("Unrecognized option \"%s\"", argv[i]);
       exit(1);
@@ -135,6 +138,13 @@ int main(int argc, char * argv[]) {
                                  PILOT_MAX_PACKET_SIZE,
                                  PILOT};
 
+  struct UDPSetup pilot_setup2 = {"Pilot 2", 
+                                 PILOT_ADDR, 
+                                 PILOT_PORT+1, 
+                                 PILOT_MAX_SIZE, 
+                                 PILOT_MAX_PACKET_SIZE,
+                                 PILOT};
+
   struct UDPSetup udplos_setup = {"BI0-LOS", 
                                   BI0LOS_GND_ADDR, 
                                   BI0LOS_GND_PORT, 
@@ -146,7 +156,7 @@ int main(int argc, char * argv[]) {
   pthread_t groundhog_publish_worker;
 
   // Receiving data from telemetry
-  pthread_t pilot_receive_worker;
+  pthread_t pilot_receive_worker[2];
   pthread_t biphase_receive_worker;
   pthread_t highrate_receive_worker;
   pthread_t direct_receive_worker;
@@ -158,7 +168,8 @@ int main(int argc, char * argv[]) {
   pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
   if (pilot_on) {
-    pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker[0], NULL, (void *) &udp_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker[1], NULL, (void *) &udp_receive, (void *) &pilot_setup2);
   }
 
   if (bi0_on) {
@@ -167,10 +178,8 @@ int main(int argc, char * argv[]) {
   }
 
   if (highrate_on) {
-    char highrate_dev[80] = HIGHRATE_PORT;
-    char direct_dev[80] = DIRECT_PORT; 
-    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, (void *) highrate_dev);
-    pthread_create(&direct_receive_worker, NULL, (void *) &highrate_receive, (void *) direct_dev);
+    pthread_create(&highrate_receive_worker, NULL, (void *) &highrate_receive, (void *) 0);
+    pthread_create(&direct_receive_worker, NULL, (void *) &highrate_receive, (void *) 1);
   }
 
   // start the server thread for mole clients
@@ -180,7 +189,8 @@ int main(int argc, char * argv[]) {
   pthread_join(groundhog_publish_worker, NULL);
 
   if (pilot_on) {
-    pthread_join(pilot_receive_worker, NULL);
+    pthread_join(pilot_receive_worker[0], NULL);
+    pthread_join(pilot_receive_worker[1], NULL);
   }
 
   if (bi0_on) {

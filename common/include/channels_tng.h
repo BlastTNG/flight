@@ -41,7 +41,14 @@
 #define NUM_KIDS 1024
 #define NUM_ROACHES 5
 #define NUM_RTYPES 3
-#define NUM_ROACH_TLM 10
+#define NUM_ROACH_TLM 15
+#define ROACH_NAME_SARRAY "ROACH_NAMES"
+#define ROACH_ALL_I_CHANNEL "kidM_roachN"
+#define ROACH_ALL_Q_CHANNEL "kidN_roachN"
+#define ROACH_ALL_DF_CHANNEL "kidO_roachN"
+#define ROACH_ALL_I_INDEX_CHANNEL "kidM_roachN_index"
+#define ROACH_ALL_Q_INDEX_CHANNEL "kidN_roachN_index"
+#define ROACH_ALL_DF_INDEX_CHANNEL "kidO_roachN_index"
 
 #include "derived.h"
 
@@ -138,5 +145,7 @@ int get_roach_index(unsigned int , unsigned int , unsigned int);
 void read_roach_index(unsigned int *, unsigned int *, unsigned int *, unsigned int);
 linklist_t * generate_housekeeping_linklist(linklist_t * , char *);
 void channels_write_calspecs(char *, derived_tng_t *);
+double channel_data_to_double(uint8_t * data, uint8_t type);
+int channel_double_to_data(uint8_t * data, double dub, uint8_t type);
 
 #endif /* CHANNELS_V2_H_ */
