@@ -557,10 +557,6 @@ int main(int argc, char *argv[])
   ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
 
-#ifdef USE_XY_THREAD /* Define should be set in mcp.h */
-  // pthread_t xy_id;
-#endif
-
   if (argc == 1) {
     fprintf(stderr, "Must specify file type:\n"
         "p  pointing\n"
@@ -635,9 +631,6 @@ int main(int argc, char *argv[])
   pthread_create(&CommandDataFIFO, NULL, (void*)&WatchFIFO, (void*)flc_ip[SouthIAm]);
   pthread_create(&CommandDatacomm1, NULL, (void*)&WatchPort, (void*)0);
   pthread_create(&CommandDatacomm2, NULL, (void*)&WatchPort, (void*)1);
-#ifdef USE_XY_THREAD
-  // pthread_create(&xy_id, NULL, (void*)&StageBus, NULL);
-#endif
 
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
@@ -738,7 +731,9 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
+#ifndef USE_XY_THREAD
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
+#endif
 //  Turns on software WD 2, which reboots the FC if not tickled
 //  initialize_watchdog(2); // Don't want this for testing but put BACK FOR FLIGHT
 
@@ -753,7 +748,7 @@ blast_info("Finished initializing Beaglebones..."); */
 //  initialize_csbf_gps_monitor();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
-#ifdef USE_XY_THREAD
+#ifdef USE_XY_THREAD // define should be set in mcp.h
   ph_thread_t *xy_thread = ph_thread_spawn(StageBus, NULL);
 #endif
   ph_sched_run();
