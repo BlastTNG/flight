@@ -165,7 +165,7 @@ const char roach_fpg[] = "/data/etc/blast/roachFirmware/stable_ctime_v6_2018_Feb
 // const char roach_fpg[] = "/data/etc/blast/roachFirmware/longerfirs_2018_Apr_18_1905.fpg";
 
 /* Roach2 state structure, see roach.h */
-static roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
+roach_state_t roach_state_table[NUM_ROACHES]; /* NUM_ROACHES = 5 */
 /* Pi state structure, see roach.h */
 static pi_state_t pi_state_table[NUM_ROACHES];
 /* Initialization scripts that live on Pi */
@@ -4122,8 +4122,7 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    /*
-    while (!InCharge) {
+    /* while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
              first_time = 0;

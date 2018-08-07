@@ -883,6 +883,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Allframe fraction", 0, 1, 'f', "aff_pilot"}
     }
   },
+  {COMMAND(set_roach_mode), "0=normal, 1=delta", GR_TELEM, 1,
+    {
+      {"Roach DL mode", 0, 1, 'i', "NONE"},
+    }
+  },
   {COMMAND(set_roach_all_chan), "Send lots of kids for a given roach", GR_TELEM, 2,
     {
       {"Roach", 1, 5, 'i', "NONE"},
