@@ -120,6 +120,7 @@ typedef struct roach_state {
 
     int has_error;
     const char *last_err;
+    bool katcp_is_busy;
     char *address;
     uint16_t port;
     bool has_qdr_cal;
@@ -127,13 +128,16 @@ typedef struct roach_state {
     bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
-    bool is_sweeping;
+    int is_sweeping;
+    bool in_flight_mode;
     bool has_vna_sweep;
     bool has_targ_sweep;
     bool has_amp_cal;
     bool has_adc_cal;
     bool write_flag;
+    bool is_averaging;
 
+    float adc_rms[2];
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
@@ -177,6 +181,17 @@ typedef struct roach_state {
     double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
     double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
     double df[MAX_CHANNELS_PER_ROACH]; // Delta f
+
+    // for cal lamp check
+    double I_on[MAX_CHANNELS_PER_ROACH];
+    double I_off[MAX_CHANNELS_PER_ROACH];
+    double Q_on[MAX_CHANNELS_PER_ROACH];
+    double Q_off[MAX_CHANNELS_PER_ROACH];
+    double I_diff[MAX_CHANNELS_PER_ROACH];
+    double Q_diff[MAX_CHANNELS_PER_ROACH];
+    double df_on[MAX_CHANNELS_PER_ROACH];
+    double df_off[MAX_CHANNELS_PER_ROACH];
+    double df_diff[MAX_CHANNELS_PER_ROACH];
 
     char *last_cal_path;
     // path to the last master chop directory
@@ -266,20 +281,15 @@ typedef struct {
 } roach_handle_data_t;
 
 typedef struct {
-    float ibuf[ROACH_DF_FILT_LEN];
-    float qbuf[ROACH_DF_FILT_LEN];
+    double ibuf[ROACH_DF_FILT_LEN];
+    double qbuf[ROACH_DF_FILT_LEN];
     int ind_last;
-    int ind_roach;
-    int ind_kid;
-    float i_sum;
-    float q_sum;
-    float i_cur;
-    float q_cur;
-    float df;
+    double i_sum;
+    double q_sum;
     int first_call;
 } roach_df_calc_t;
 
-roach_df_calc_t roach_df_telem[NUM_ROACHES];
+roach_df_calc_t roach_df_telem[NUM_ROACHES][MAX_CHANNELS_PER_ROACH];
 
 roach_handle_data_t roach_udp[NUM_ROACHES];
 
@@ -309,8 +319,7 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
-void roach_df_continuous(roach_df_calc_t* m_roach_df);
-
+float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid);
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);

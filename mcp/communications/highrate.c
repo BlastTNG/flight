@@ -102,7 +102,7 @@ void highrate_compress_and_send(void *arg) {
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
-      if (allframe_bytes >= bandwidth) {
+      if (allframe_bytes >= superframe->allframe_size) {
           transmit_size = write_allframe(compressed_buffer, superframe, getFifoRead(&highrate_fifo));
           allframe_bytes = 0;
       } else {
@@ -114,6 +114,9 @@ void highrate_compress_and_send(void *arg) {
 				transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.highrate_allframe_fraction)); 
         allframe_bytes += bandwidth-transmit_size;
       }
+
+			// no packetization if there is nothing to transmit
+      if (!transmit_size) continue;
 
       // set initialization for packetization
       uint8_t * chunk = NULL;

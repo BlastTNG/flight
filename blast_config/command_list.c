@@ -319,17 +319,23 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
-  {COMMAND(vna_sweep_all), "Peform a VNA sweep on all Roaches", GR_ROACH},
-  {COMMAND(targ_sweep_all), "Peform a TARG sweep on all Roaches", GR_ROACH},
-  {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
-  {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
-  {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
+  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
+  {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
+  {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
+  {COMMAND(center_lo_all), "(All Roaches) recenter LOs", GR_ROACH},
+  {COMMAND(calc_dfs), "(All Roaches) Calculate df for all channels", GR_ROACH},
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
-  {COMMAND(load_freqs_all), "Write all saved targ freqs to Roaches", GR_ROACH},
-  {COMMAND(reload_vna_all), "Reload vna freqs and vna trf for all Roaches", GR_ROACH},
-  {COMMAND(end_sweeps_all), "End all sweeps", GR_ROACH},
-  {COMMAND(new_ref_params_all), "Calculates and saves ref params from last target sweep for all Roaches", GR_ROACH},
-  {COMMAND(set_attens_all), "Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(load_freqs_all), "(All Roaches) Write all saved targ freqs", GR_ROACH},
+  {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
+  {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
+  {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
+  {COMMAND(set_attens_all), "(All Roaches) Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
+  {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
+  {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
+  {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
+  {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
+  {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -882,6 +888,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Allframe fraction", 0, 1, 'f', "aff_pilot"}
     }
   },
+  {COMMAND(set_roach_mode), "0=normal, 1=delta", GR_TELEM, 1,
+    {
+      {"Roach DL mode", 0, 1, 'i', "NONE"},
+    }
+  },
   {COMMAND(set_roach_all_chan), "Send lots of kids for a given roach", GR_TELEM, 2,
     {
       {"Roach", 1, 5, 'i', "NONE"},
@@ -943,7 +954,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", CONFIRM | GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
@@ -1136,6 +1147,16 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
       {"delta_freq", -1000000.0, 1000000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(auto_find_kids), "Automatically do a VNA sweep, find kids and write tonest", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(lamp_check_all), "(All Roaches) Checks response to cal lamp (I,Q,mag(I,Q)) and saves to disk", GR_ROACH, 1,
+    {
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
   /***************************************/
