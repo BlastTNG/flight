@@ -154,8 +154,9 @@ enum singleCommand {
 	if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
-  refit_freqs_all, center_lo_all, calc_dfs, change_amps, load_freqs_all,
-  reload_vna_all, end_sweeps_all, pilot_oth_on, pilot_oth_off,
+  center_lo_all, calc_dfs, change_amps, load_freqs_all,
+  reload_vna_all, end_sweeps_all, set_attens_all, new_ref_params_all,
+  pilot_oth_on, pilot_oth_off,
 
   xyzzy
 };
@@ -181,9 +182,7 @@ enum multiCommand {
   // t_gyro_set,
   highrate_bw,       pilot_bw,         biphase_bw,
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
-  request_file,      set_roach_chan,
-  set_roach_df_chan_1,
-  set_roach_df_chan_2,
+  request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute,
 
   // t_gyro_gain,
@@ -277,8 +276,9 @@ enum multiCommand {
   periodic_cal,
   calc_phase_centers,
   timestream,
-  chop_tune_chan,
+  cal_amps,
   refit_freqs,
+  refit_freqs_all,
   chop_template,
   load_freqs,
   new_ref_params,

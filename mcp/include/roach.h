@@ -42,6 +42,7 @@
 #define ROACH_UDP_SEQ_ERR 0x02
 
 #define MAX_CHANNELS_PER_ROACH 1016
+#define NUM_FLAG_CHANNELS_PER_ROACH (MAX_CHANNELS_PER_ROACH/16 + 1)
 #define NUM_ROACHES 5
 #define NUM_ROACH_UDP_CHANNELS 1024
 #define ROACH_UDP_LEN 8234
@@ -123,6 +124,7 @@ typedef struct roach_state {
     uint16_t port;
     bool has_qdr_cal;
     bool has_tones;
+    bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
     bool is_sweeping;
@@ -167,12 +169,14 @@ typedef struct roach_state {
     // For detector retune decision
     int nflag_thresh; // num channels which need to be out of range for retune
     int has_ref; /* If 1, ref grads exist */
+    bool first_calc;
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range
 
     double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
     double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
-    double df[MAX_CHANNELS_PER_ROACH];
+    double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
+    double df[MAX_CHANNELS_PER_ROACH]; // Delta f
 
     char *last_cal_path;
     // path to the last master chop directory
@@ -193,7 +197,7 @@ typedef struct roach_state {
     double *last_phases;
     double *last_freqs;
     char *vna_amps_path[2];
-    char *targ_amps_path[2];
+    char *targ_amps_path[3];
     char *random_phase_path;
     char *phase_centers_path;
     char *freqlist_path;
@@ -305,13 +309,17 @@ int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
 void roach_timestamp_init(uint16_t ind);
+void roach_df_continuous(roach_df_calc_t* m_roach_df);
 
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
 void write_roach_channels_244hz(void);
 void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
-
 linklist_t * generate_roach_udp_linklist(char *, int);
+
+// Defined in roach_multiplex.c
+void add_roach_tlm_488hz();
+
 
 #endif /* INCLUDE_ROACH_H_ */

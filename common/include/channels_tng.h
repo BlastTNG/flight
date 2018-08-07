@@ -42,6 +42,13 @@
 #define NUM_ROACHES 5
 #define NUM_RTYPES 3
 #define NUM_ROACH_TLM 15
+#define ROACH_NAME_SARRAY "ROACH_NAMES"
+#define ROACH_ALL_I_CHANNEL "kidM_roachN"
+#define ROACH_ALL_Q_CHANNEL "kidN_roachN"
+#define ROACH_ALL_DF_CHANNEL "kidO_roachN"
+#define ROACH_ALL_I_INDEX_CHANNEL "kidM_roachN_index"
+#define ROACH_ALL_Q_INDEX_CHANNEL "kidN_roachN_index"
+#define ROACH_ALL_DF_INDEX_CHANNEL "kidO_roachN_index"
 
 #include "derived.h"
 

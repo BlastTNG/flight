@@ -167,7 +167,7 @@ struct PivGainStruct {
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
 
-#define ROACH_TLM_IQDF 1
+#define ROACH_TLM_IQDF 0x1
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -358,7 +358,7 @@ typedef struct roach
     unsigned int get_phase_centers;
     unsigned int get_timestream;
     unsigned int chan;
-    unsigned int tune_chan;
+    unsigned int tune_amps;
     unsigned int refit_res_freqs;
     unsigned int change_tone_amps;
     unsigned int do_master_chop;
@@ -371,6 +371,7 @@ typedef struct roach
     unsigned int change_targ_freq;
     unsigned int change_tone_phase;
     unsigned int change_tone_freq;
+    unsigned int on_res;
 } roach_status_t;
 
 typedef struct roach_params
@@ -386,12 +387,13 @@ typedef struct roach_params
     double test_freq;
     double atten_step;
     double npoints;
-    double ncycles;
+    int ncycles;
     double num_sec;
     double lo_offset;
     double delta_amp;
     double delta_phase;
     double freq_offset;
+    int resp_thresh;
 } roach_params_t;
 
 // Ethercat controller/device commands
@@ -463,6 +465,7 @@ struct CommandDataStruct {
   uint32_t pilot_oth;
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
   char roach_tlm_mode;
+  unsigned int num_channels_all_roaches[NUM_ROACHES];
 
   enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 

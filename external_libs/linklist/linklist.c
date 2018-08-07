@@ -86,9 +86,11 @@ uint8_t get_sf_type_int(char * str) {
   return i;
 }
 
+int hashkey = 5381;
+
 //Implements the djb2 hashing algorithm for char*s 
 unsigned int hash(const char* input){
-  int returnVal = 5381;
+  int returnVal = hashkey;
   int c;
 
   while ((c = *input++))
@@ -236,7 +238,10 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   for (i = 0; i < superframe->n_entries; i++) {
     unsigned int hashloc = hash(superframe->entries[i].field)%superframe->hash_table_size;
     if (superframe->hash_table[hashloc]) {
-      linklist_err("Hash with entry \"%s\"\n", superframe->entries[i].field);
+      memset(superframe->hash_table, 0, sizeof(superframe_entry_t *)*superframe->hash_table_size);
+      hashkey = (hashkey*137)&0xffff;
+      linklist_err("Hash with entry \"%s\". Trying key %d\n", superframe->entries[i].field, hashkey);
+      i = -1;
     } else {
       superframe->hash_table[hashloc] = &superframe->entries[i];
     }
@@ -680,7 +685,12 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   // generate serial
   MD5_Final(md5hash,&mdContext);
   memcpy(ll->serial,md5hash,MD5_DIGEST_LENGTH);
-
+/*
+  for (i = 0; i < ll->n_entries; i++) {
+    if (ll->items[i].tlm) printf("%s %d\n", ll->items[i].tlm->field, ll->items[i].start);
+    else printf("CHECKSUM %d\n", ll->items[i].start);
+  }
+*/
   return ll;
 }
 
