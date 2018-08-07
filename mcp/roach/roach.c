@@ -4775,6 +4775,9 @@ void write_roach_channels_1hz(void)
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
     static channel_t *LoCenterFreqAddr[NUM_ROACHES];
     static channel_t *NFlagThreshFieldAddr[NUM_ROACHES];
+    static channel_t *NKidsTlmRoach[NUM_ROACHES];
+    static channel_t *SKidsTlmRoach[NUM_ROACHES];
+    static channel_t *RoachTlmMode;
     uint16_t n_good_kids = 0;
     uint16_t roach_status_field = 0;
     char channel_name_flags_kids[128] = { 0 };
@@ -4786,6 +4789,8 @@ void write_roach_channels_1hz(void)
     char channel_name_lo_center_freq[128] = { 0 };
     char channel_name_lo_freq_req[128] = { 0 };
     char channel_name_nflag_thresh[128] = { 0 };
+    char channel_name_nkids_tlm[128] = { 0 };
+    char channel_name_skids_tlm[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -4811,6 +4816,10 @@ void write_roach_channels_1hz(void)
                         "lo_center_freq_roach%d", i + 1);
             snprintf(channel_name_nflag_thresh, sizeof(channel_name_nflag_thresh),
                         "nflag_thresh_roach%d", i + 1);
+            snprintf(channel_name_nkids_tlm, sizeof(channel_name_nkids_tlm),
+                        "nkids_tlm_roach%d", i + 1);
+            snprintf(channel_name_skids_tlm, sizeof(channel_name_skids_tlm),
+                        "skids_tlm_roach%d", i + 1);
             nKidsFoundAddr[i] = channels_find_by_name(channel_name_kids_found);
             nKidsGoodAddr[i] = channels_find_by_name(channel_name_kids_good);
             nKidsBadAddr[i] = channels_find_by_name(channel_name_kids_bad);
@@ -4819,7 +4828,10 @@ void write_roach_channels_1hz(void)
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
             LoCenterFreqAddr[i] = channels_find_by_name(channel_name_lo_center_freq);
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
+            NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
+            SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
         }
+        RoachTlmMode = channels_find_by_name("roach_tlm_mode");
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         n_good_kids = 0;
@@ -4860,5 +4872,8 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
         SET_SCALED_VALUE(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq);
         SET_UINT16(NFlagThreshFieldAddr[i], roach_state_table[i].nflag_thresh);
+        SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);
+        SET_UINT16(SKidsTlmRoach[i], CommandData.roach_tlm[i].kid);
     }
+    SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
 }
