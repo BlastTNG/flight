@@ -749,7 +749,10 @@ blast_info("Finished initializing Beaglebones..."); */
 //  initialize_csbf_gps_monitor();
 
   main_thread = ph_thread_spawn(mcp_main_loop, NULL);
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 #ifdef USE_XY_THREAD // define should be set in mcp.h
   ph_thread_t *xy_thread = ph_thread_spawn(StageBus, NULL);
 #endif

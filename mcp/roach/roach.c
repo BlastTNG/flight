@@ -1277,28 +1277,28 @@ int set_atten(pi_state_t *m_pi)
     // the order of input and output attenuators is switched between PIs
     if (ind == 0) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].out_atten,
-           CommandData.roach_params[ind].in_atten);
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
     }
     if (ind == 1) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].in_atten,
-           CommandData.roach_params[ind].out_atten);
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
     }
     if (ind == 2) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].in_atten,
-           CommandData.roach_params[ind].out_atten);
-    }
-    if (ind == 3) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
            CommandData.roach_params[ind].out_atten,
            CommandData.roach_params[ind].in_atten);
     }
-    if (ind == 4) {
+    if (ind == 3) {
         blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
            CommandData.roach_params[ind].in_atten,
            CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 4) {
+        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
     }
     blast_tmp_sprintf(m_command2, "cat rudat.log");
     pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
@@ -3025,46 +3025,6 @@ int cal_indiv_amps(roach_state_t *m_roach, int ncycles)
     return 0;
 }*/
 
-int save_ref_params(roach_state_t *m_roach)
-{
-    int retval = -1;
-    if (!m_roach->last_targ_path) {
-        if ((load_last_sweep_path(m_roach, TARG) < 0)) {
-            return retval;
-        }
-    }
-    char *path_to_ref_grads;
-    char *path_to_ref_vals;
-    char *py_command;
-    blast_tmp_sprintf(path_to_ref_grads, "%s/ref_grads.dat",
-                     m_roach->sweep_root_path);
-    blast_tmp_sprintf(path_to_ref_vals, "%s/ref_vals.dat",
-                     m_roach->sweep_root_path);
-    blast_info("Roach%d, Saving ref grads", m_roach->which);
-    blast_tmp_sprintf(py_command, "python %s %s", ref_grads_script,
-            m_roach->last_targ_path);
-    blast_info("%s", py_command);
-    pyblast_system(py_command);
-    // get reference gradients
-    if ((roach_read_2D_file(m_roach, path_to_ref_grads,
-              m_roach->ref_grads, m_roach->num_kids) < 0)) {
-        return retval;
-    }
-    if ((roach_read_2D_file(m_roach, path_to_ref_vals,
-               m_roach->ref_vals, m_roach->num_kids) < 0)) {
-        return retval;
-    } else {
-        // set 'has ref' flag
-        m_roach->has_ref = 1;
-    }
-    for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
-        blast_info("*************** ROACH%d, dIdf, dQdf = %g, %g", m_roach->which,
-              m_roach->ref_grads[chan][0], m_roach->ref_grads[chan][0]);
-    }
-    retval = 0;
-    return retval;
-}
-
 int roach_dfs(roach_state_t* m_roach)
 {
     int retval = -1;
@@ -3107,9 +3067,60 @@ int roach_dfs(roach_state_t* m_roach)
         m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
         (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
         m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
-        blast_info("*************** ROACH%d, chan %zd df = %g", m_roach->which, chan, m_roach->df[chan]);
+        // if first_calc = False, apply df_offset to each df value
+        if (!m_roach->first_calc) {
+            m_roach->df[chan] -= m_roach->df_offset[chan];
+        }
+        blast_info("*********** ROACH%d, chan %zd df = %g", m_roach->which, chan, m_roach->df[chan]);
     }
     // TODO(Sam) add error handling
+    retval = 0;
+    return retval;
+}
+
+int save_ref_params(roach_state_t *m_roach)
+{
+    int retval = -1;
+    if (!m_roach->last_targ_path) {
+        if ((load_last_sweep_path(m_roach, TARG) < 0)) {
+            return retval;
+        }
+    }
+    if (!m_roach->first_calc) {
+        m_roach->first_calc = 1;
+    }
+    char *path_to_ref_grads;
+    char *path_to_ref_vals;
+    char *py_command;
+    blast_tmp_sprintf(path_to_ref_grads, "%s/ref_grads.dat",
+                     m_roach->sweep_root_path);
+    blast_tmp_sprintf(path_to_ref_vals, "%s/ref_vals.dat",
+                     m_roach->sweep_root_path);
+    blast_info("Roach%d, Saving ref grads", m_roach->which);
+    blast_tmp_sprintf(py_command, "python %s %s", ref_grads_script,
+            m_roach->last_targ_path);
+    blast_info("%s", py_command);
+    pyblast_system(py_command);
+    // get reference gradients
+    if ((roach_read_2D_file(m_roach, path_to_ref_grads,
+              m_roach->ref_grads, m_roach->num_kids) < 0)) {
+        return retval;
+    }
+    if ((roach_read_2D_file(m_roach, path_to_ref_vals,
+               m_roach->ref_vals, m_roach->num_kids) < 0)) {
+        return retval;
+    }
+    for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
+        blast_info("*************** ROACH%d, dIdf, dQdf = %g, %g", m_roach->which,
+              m_roach->ref_grads[chan][0], m_roach->ref_grads[chan][0]);
+    }
+    // set 'has ref' flag
+    m_roach->has_ref = 1;
+    roach_dfs(m_roach);
+    for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
+        m_roach->df_offset[chan] = m_roach->df[chan];
+    }
+    m_roach->first_calc = 0;
     retval = 0;
     return retval;
 }
@@ -3151,6 +3162,9 @@ int roach_df(roach_state_t* m_roach)
     m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
             (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
                       m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
+    if (!m_roach->first_calc) {
+        m_roach->df[chan] -= m_roach->df_offset[chan];
+    }
     blast_info("*************** ROACH%d, chan %d df = %g", m_roach->which, chan, m_roach->df[chan]);
     retval = 0;
     return retval;
@@ -3216,6 +3230,9 @@ void roach_df_continuous(roach_df_calc_t* m_roach_df)
                      (m_roach->ref_grads[m_roach_df->ind_kid][1] * deltaQ)) /
                      (m_roach->ref_grads[m_roach_df->ind_kid][0]*m_roach->ref_grads[m_roach_df->ind_kid][0] +
                       m_roach->ref_grads[m_roach_df->ind_kid][1]*m_roach->ref_grads[m_roach_df->ind_kid][1]);
+    if (!m_roach->first_calc) {
+        m_roach_df->df -= m_roach->df_offset[m_roach_df->ind_kid];
+    }
 //    if ((i_ct % ROACH_FILT_DEBUG_FREQ) < 20) {
 //         blast_info("roach%d ikid%d comp_vals = %f %f ref_vals %f %f delta I Q %f %f ref_grads %f %f",
 //                    m_roach_df->ind_roach, m_roach_df->ind_kid, comp_vals[0], comp_vals[1],
@@ -3933,6 +3950,9 @@ int roach_targ_sweep(roach_state_t *m_roach)
         m_roach->has_targ_sweep = 0;
     }
     CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    if (m_roach->first_calc) {
+        save_ref_params(m_roach);
+    }
     return retval;
 }
 
@@ -3954,13 +3974,13 @@ void *roach_cmd_loop(void* ind)
     ph_thread_set_name(tname);
     nameThread(tname);
     static int first_time = 1;
-    /* while (!InCharge) {
+    while (!InCharge) {
         if (first_time) {
             blast_info("roach%i: Waiting until we get control...", i+1);
              first_time = 0;
         }
         usleep(2000);
-    }*/
+    }
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
     pi_state_table[i].desired_state = PI_STATE_INIT;
@@ -4358,6 +4378,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_targ_tones = 0;
     roach_state_table[ind].has_adc_cal = 0;
     roach_state_table[ind].has_ref = 0;
+    roach_state_table[ind].first_calc = 1;
     roach_state_table[ind].is_streaming = 0;
     roach_state_table[ind].is_sweeping = 0;
     roach_state_table[ind].has_vna_sweep = 0;

@@ -99,7 +99,7 @@ void add_roach_tlm_488hz()
         unsigned int wrap = MIN(CommandData.num_channels_all_roaches[j], MAX_CHANNELS_PER_ROACH);
         kid_counter[j] = (kid_counter[j]+1)%wrap;
 
-        r_tlm->index = get_roach_index(j, (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH, i);
+        r_tlm->index = get_roach_index(j+1, (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH, i);
 			}
 		}
   }
