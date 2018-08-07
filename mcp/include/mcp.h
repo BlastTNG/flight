@@ -65,5 +65,5 @@ extern struct tm start_time;
 
 #define MAX_LINE_LENGTH 1024
 
-// #define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
+#define USE_XY_THREAD /* TODO(lmf): Comment out (or remove) for flight */
 #endif
