@@ -1221,6 +1221,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].go_flight_mode = 1;
             }
             break;
+        case debug_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 0;
+                CommandData.roach[i].auto_find = 0;
+                CommandData.roach[i].do_sweeps = 0;
+            }
+            break;
         case change_freqs_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;

@@ -102,8 +102,8 @@
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 50 /* Number of packets to average for each sweep point */
 #define SWEEP_INTERRUPT (-1)
-#define SWEEP_SUCCESS (1)
-#define SWEEP_FAIL (0)
+#define SWEEP_SUCCESS (0)
+#define SWEEP_FAIL (-2)
 #define SWEEP_TIMEOUT 500 /* microsecond timeout between set LO and save data */
 #define PI_READ_ERROR -10 /* Error code: Pi read */
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
@@ -1164,7 +1164,7 @@ float *roach_read_adc(roach_state_t *m_roach)
 {
     size_t buffer_len = (1<<12);
     uint16_t *temp_data;
-    char* filename;
+    // char* filename;
     float *rms = malloc(sizeof(float) * 2);
     float irms, qrms, ival, qval, isum, qsum;
     temp_data = calloc((uint16_t)buffer_len, sizeof(uint16_t));
@@ -1180,8 +1180,8 @@ float *roach_read_adc(roach_state_t *m_roach)
     usleep(1000);
     roach_read_data(m_roach, (uint8_t*)temp_data,
            "adc_snap_adc_snap_bram", 0, buffer_len * sizeof(uint16_t), READ_DATA_MS_TIMEOUT);
-    blast_tmp_sprintf(filename, "%s/adc_vals.dat", m_roach->sweep_root_path);
-    FILE *fd = fopen(filename, "w");
+    // blast_tmp_sprintf(filename, "%s/adc_vals.dat", m_roach->sweep_root_path);
+    // FILE *fd = fopen(filename, "w");
     roach_buffer_htons((uint16_t*)temp_data, buffer_len);
     isum = 0;
     qsum = 0;
@@ -1190,17 +1190,17 @@ float *roach_read_adc(roach_state_t *m_roach)
             ival = (float)((int16_t)temp_data[i]);
             ival *= 550.;
             ival /= pow(2, 15);
-            fprintf(fd, "%f\n", ival);
+            // fprintf(fd, "%f\n", ival);
             isum += pow(ival, 2);
         } else {
             qval = (float)((int16_t)temp_data[i]);
             qval *= 550.;
             qval /= pow(2, 15);
-            fprintf(fd, "%f\n", qval);
+            // fprintf(fd, "%f\n", qval);
             qsum += pow(qval, 2);
         }
     }
-    fclose(fd);
+    // fclose(fd);
     irms = sqrt(isum / ((float)buffer_len / 2.));
     qrms = sqrt(qsum / ((float)buffer_len / 2.));
     rms[0] = irms;
@@ -2140,7 +2140,6 @@ int shift_lo(roach_state_t *m_roach)
 */
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
-    m_roach->is_sweeping = 1;
     int ind = m_roach->which - 1;
     pi_state_t *m_pi = &pi_state_table[ind];
     if (!CommandData.roach[ind].do_sweeps) {
@@ -2260,7 +2259,6 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     }
     free(m_sweep_freqs);
     CommandData.roach[ind].do_sweeps = 0;
-    m_roach->is_sweeping = 0;
     return SWEEP_SUCCESS;
 }
 
@@ -3735,6 +3733,51 @@ void shutdown_roaches(void)
     }
 }
 
+void reset_roach_flags(roach_state_t *m_roach)
+{
+    m_roach->is_streaming = 0;
+    m_roach->has_qdr_cal = 0;
+    m_roach->is_sweeping = 0;
+    m_roach->has_vna_sweep = 0;
+    m_roach->has_vna_tones = 0;
+    m_roach->has_targ_sweep = 0;
+    m_roach->has_targ_tones = 0;
+    m_roach->has_ref = 0;
+    m_roach->current_ntones = 0;
+    m_roach->num_kids = 0;
+}
+
+void start_debug_mode(roach_state_t *m_roach)
+{
+    m_roach->in_flight_mode = 0;
+    m_roach->is_sweeping = 0;
+    CommandData.roach[m_roach->which - 1].go_flight_mode = 0;
+    CommandData.roach[m_roach->which - 1].auto_find = 0;
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+}
+
+void start_flight_mode(roach_state_t *m_roach)
+{
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    m_roach->in_flight_mode = 1;
+    m_roach->is_sweeping = 0;
+    // m_roach->has_vna_sweep = 0;
+    // m_roach->has_targ_sweep = 0;
+    // m_roach->has_targ_tones = 0;
+    // m_roach->has_ref = 0;
+    // m_roach->current_ntones = 0;
+    // m_roach->num_kids = 0;
+    if (m_roach->is_streaming) {
+        if (m_roach->has_vna_tones) {
+            m_roach->state = ROACH_STATE_STREAMING;
+        } else {
+            m_roach->state = ROACH_STATE_CONFIGURED;
+            m_roach->desired_state = ROACH_STATE_STREAMING;
+        }
+    }
+    CommandData.roach[m_roach->which - 1].auto_find = 1;
+}
+
 /** Function: roach_state_manager
  * ----------------------------
  * Takes the result of a function and pushes the roach status
@@ -3799,9 +3842,45 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             }
             break;
         case ROACH_STATE_STREAMING:
+            // vna sweep
+            if (m_roach->is_sweeping == 1) {
+                if (result == 0) {
+                    // success
+                    m_roach->is_sweeping = 0;
+                    m_roach->has_vna_sweep = 1;
+                    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+                }
+                if (result == -1) {
+                    // sweep interrupted by command, go to debug mode
+                    start_debug_mode(m_roach);
+                }
+                if (result == -2) {
+                    // sweep failed, retry
+                    m_roach->is_sweeping = 0;
+                    CommandData.roach[m_roach->which - 1].do_sweeps = 1;
+                }
+            }
+            // targ sweep
+            if (m_roach->is_sweeping == 2) {
+                if (result == 0) {
+                    // success
+                    m_roach->is_sweeping = 0;
+                    m_roach->has_targ_sweep = 1;
+                    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+                }
+                if (result == -1) {
+                    // sweep interrupted by command, go to debug mode
+                    start_debug_mode(m_roach);
+                }
+                if (result == -2) {
+                    // sweep failed, retry
+                    m_roach->is_sweeping = 0;
+                    CommandData.roach[m_roach->which - 1].do_sweeps = 2;
+                }
+            }
+            if ((AUTO_CAL_ADC) && (!m_roach->has_adc_cal)) {
             // Calibrate input/output attenuators so that ADC V rms
             // is close to 100 mV in I and in Q
-            if ((AUTO_CAL_ADC) && (!m_roach->has_adc_cal)) {
                 if (result == -1) {
                     m_roach->state = ROACH_STATE_STREAMING;
                 }
@@ -4009,6 +4088,7 @@ int roach_init_gbe(roach_state_t *m_roach)
 int roach_config_sequence(roach_state_t *m_roach)
 {
     int retval;
+    reset_roach_flags(m_roach);
     // program firmware registers
     if ((roach_prog_registers(m_roach) < 0)) {
         retval = -1;
@@ -4051,6 +4131,7 @@ int roach_write_vna(roach_state_t *m_roach)
 int roach_vna_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    m_roach->is_sweeping = 1;
     if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
         return retval;
     }
@@ -4060,29 +4141,25 @@ int roach_vna_sweep(roach_state_t *m_roach)
     retval = roach_do_sweep(m_roach, VNA);
     if (retval == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
-        m_roach->has_vna_sweep = 1;
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
     } else if (retval == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
-        m_roach->has_vna_sweep = 0;
-    } else {
-        blast_info("ROACH%d, VNA sweep failed, will reattempt", m_roach->which);
-        m_roach->has_vna_sweep = 0;
+    } else if (retval == SWEEP_FAIL) {
+        blast_info("ROACH%d, VNA sweep failed reattempt", m_roach->which);
     }
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     return retval;
 }
 
 int roach_targ_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    m_roach->is_sweeping = 2;
     if ((roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0) < 0)) {
-        return retval;
+        retval = -2;
     }
     blast_info("ROACH%d, STARTING TARG sweep", m_roach->which);
     retval = roach_do_sweep(m_roach, TARG);
     if ((retval == SWEEP_SUCCESS)) {
-        m_roach->has_targ_sweep = 1;
         blast_info("ROACH%d, TARG sweep complete", m_roach->which);
         // creates file for downlinking sweep path to local machine
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
@@ -4093,14 +4170,15 @@ int roach_targ_sweep(roach_state_t *m_roach)
         CommandData.roach[m_roach->which - 1].check_response = 1;
         lamp_check_response(m_roach);
         CommandData.roach[m_roach->which - 1].check_response = 0;
+        get_adc_rms(m_roach);
     /*} else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);*/
-    } else {
-        blast_info("ROACH%d, TARG sweep failed", m_roach->which);
-        m_roach->has_targ_sweep = 0;
+    } else if (retval == SWEEP_INTERRUPT) {
+        blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
+    } else if (retval == SWEEP_FAIL) {
+        blast_info("ROACH%d, VNA sweep failed reattempt", m_roach->which);
     }
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     return retval;
 }
 
@@ -4139,19 +4217,7 @@ void *roach_cmd_loop(void* ind)
         // These commands can be executed in any Roach state
         if (CommandData.roach[i].go_flight_mode) {
             // Resets all status fields and puts state at BOOT
-            roach_state_table[i].is_streaming = 0;
-            roach_state_table[i].is_sweeping = 0;
-            roach_state_table[i].has_tones = 0;
-            roach_state_table[i].has_vna_sweep = 0;
-            roach_state_table[i].has_targ_sweep = 0;
-            roach_state_table[i].has_targ_tones = 0;
-            roach_state_table[i].has_vna_tones = 0;
-            roach_state_table[i].has_ref = 0;
-            roach_state_table[i].current_ntones = 0;
-            roach_state_table[i].num_kids = 0;
-            roach_state_table[i].state = ROACH_STATE_CONFIGURED;
-            roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
-            CommandData.roach[i].auto_find = 1;
+            start_flight_mode(&roach_state_table[i]);
         }
         if (CommandData.roach[i].set_lo == 1) {
             if (recenter_lo(&roach_state_table[i]) < 0) {
@@ -4248,12 +4314,13 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].do_df_calc = 0;
             }
             if (CommandData.roach[i].do_sweeps == 1) {
-                    roach_vna_sweep(&roach_state_table[i]);
-                    CommandData.roach[i].do_sweeps = 0;
+                    result = roach_vna_sweep(&roach_state_table[i]);
+                    roach_state_manager(&roach_state_table[i], result);
             }
             if (CommandData.roach[i].do_sweeps == 2) {
                 if (roach_state_table[i].has_targ_tones) {
-                    roach_targ_sweep(&roach_state_table[i]);
+                    result = roach_targ_sweep(&roach_state_table[i]);
+                    roach_state_manager(&roach_state_table[i], result);
                 } else {
                     blast_info("ROACH%d: Must write targ tones before doing targ sweep", i + 1);
                 }
@@ -4405,9 +4472,11 @@ void *roach_cmd_loop(void* ind)
                 roach_state_manager(&roach_state_table[i], result);
             } */
             if (CommandData.roach[i].auto_find) {
-                if (!roach_state_table[i].has_vna_sweep &&
+                // VNA sweep must be commanded manually
+                if (roach_state_table[i].has_vna_sweep &&
                        !roach_state_table[i].is_sweeping) {
-                    roach_vna_sweep(&roach_state_table[i]);
+                    result = roach_vna_sweep(&roach_state_table[i]);
+                    roach_state_manager(&roach_state_table[i], result);
                 }
                 // if has_vna_sweep, do find kids
                 if (roach_state_table[i].has_vna_sweep) {
@@ -4418,12 +4487,14 @@ void *roach_cmd_loop(void* ind)
                 }
                 // write targ tones
                 if (roach_state_table[i].has_targ_tones) {
+                    CommandData.roach[i].do_sweeps = 1;
                     roach_write_targ_tones(&roach_state_table[i]);
                 }
                 // if has_targ_tones, and NOT is_sweeping, do a targ sweep
                 if (!roach_state_table[i].has_targ_tones &&
                        !roach_state_table[i].has_targ_sweep) {
-                    roach_targ_sweep(&roach_state_table[i]);
+                    result = roach_targ_sweep(&roach_state_table[i]);
+                    roach_state_manager(&roach_state_table[i], result);
                 }
             }
             /* Do a series of small sweeps: Increase tone amplitudes by small amount

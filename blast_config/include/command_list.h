@@ -157,7 +157,7 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_all, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, pilot_oth_on, pilot_oth_off,
+  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off,
 
   xyzzy
 };

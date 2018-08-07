@@ -330,6 +330,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
   {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
+  {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
