@@ -558,7 +558,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pos_set), "define Latitude/Longitude of current position", GR_TRIM, 2,
     {
       {"Current Latitude (deg)",      -90, 90, 'f', "LAT"},
-      {"Current Longitude (deg)", 0, 360, 'f', "LON"}
+      {"Current Longitude (deg)", -360, 360, 'f', "LON"}
     }
   },
   {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,

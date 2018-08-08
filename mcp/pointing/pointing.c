@@ -1718,6 +1718,8 @@ void SetTrimToSC(int which)
   i_point = GETREADINDEX(point_index);
   NewAzEl.az = PointingData[i_point].xsc_az[which];
   NewAzEl.el = PointingData[i_point].xsc_el[which];
+
+  // NewAzEl.rate = 360.0; // star cameras are right
   NewAzEl.fresh = 1;
 }
 

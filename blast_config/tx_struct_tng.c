@@ -377,8 +377,8 @@ channel_t channel_list[] =
     { "lst",                  1.0 / 3600.0,     0.0, TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
     { "parts_sched",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
 
-    { "lat",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
-    { "lon",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
+    { "lat",                  LI2DEG*2.0,       0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
+    { "lon",                  LI2DEG*2.0,       0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
 
     { "ra",                   LI2H,             0.0,        TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
     { "dec",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
