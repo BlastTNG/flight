@@ -3449,7 +3449,8 @@ void InitCommandData()
     for (int which = 0; which < 2; which++) {
         CommandData.XSC[which].is_new_window_period_cs = 1500;
 
-        CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        // CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        CommandData.XSC[which].heaters.mode = xsc_heater_off;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
         CommandData.XSC[which].trigger.exposure_time_cs = 12;
