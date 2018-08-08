@@ -198,6 +198,7 @@ struct PointingDataStruct {
   double d_az_xsc1;
   double prev_sol_az_xsc1;
   double prev_sol_el_xsc1;
+  double autotrim_rate_xsc;
 };
 
 extern struct PointingDataStruct PointingData[3];

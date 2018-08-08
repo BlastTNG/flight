@@ -1115,6 +1115,7 @@ void store_5hz_acs(void)
     static channel_t *threshAtrimAddr;
     static channel_t *timeAtrimAddr;
     static channel_t *rateAtrimAddr;
+    static channel_t *rateAtrimPtAddr;
 
     static channel_t *modeCalAddr;
     static channel_t *hwprCalAddr;
@@ -1260,9 +1261,10 @@ void store_5hz_acs(void)
         trimPssAddr = channels_find_by_name("trim_pss");
         trimDGPSAddr = channels_find_by_name("trim_dgps");
 
-        threshAtrimAddr = channels_find_by_name("thresh_atrim");
-        timeAtrimAddr = channels_find_by_name("time_atrim");
-        rateAtrimAddr = channels_find_by_name("rate_atrim");
+        threshAtrimAddr = channels_find_by_name("thresh_cmd_atrim");
+        timeAtrimAddr = channels_find_by_name("time_cmd_atrim");
+        rateAtrimAddr = channels_find_by_name("rate_cmd_atrim");
+        rateAtrimPtAddr = channels_find_by_name("rate_atrim");
         DGPSRawAzAddr = channels_find_by_name("az_raw_dgps");
         DGPSAzAddr = channels_find_by_name("az_dgps");
         DGPSSigmaAzAddr = channels_find_by_name("sigma_dgps");
@@ -1388,6 +1390,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);
     SET_SCALED_VALUE(timeAtrimAddr, CommandData.autotrim_time);
     SET_SCALED_VALUE(rateAtrimAddr, CommandData.autotrim_rate);
+    SET_SCALED_VALUE(rateAtrimPtAddr, PointingData[i_point].autotrim_rate_xsc);
 
     SET_FLOAT(gy_azvel_addr, (float) (PointingData[i_point].gy_az));
     SET_FLOAT(gy_elvel_addr, (float) (PointingData[i_point].gy_el));

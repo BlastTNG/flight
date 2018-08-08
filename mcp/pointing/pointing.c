@@ -1593,6 +1593,7 @@ void Pointing(void)
     PointingData[point_index].d_az_xsc1 = OSCAz.d_az;
     PointingData[point_index].prev_sol_az_xsc1 = OSCAz.prev_sol_az;
     PointingData[point_index].prev_sol_el_xsc1 = OSCEl.prev_sol_el;
+    PointingData[point_index].autotrim_rate_xsc = NewAzEl.rate;
 
     xsc_calculate_full_pointing_estimated_location(0);
     xsc_calculate_full_pointing_estimated_location(1);

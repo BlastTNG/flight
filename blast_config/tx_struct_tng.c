@@ -926,9 +926,10 @@ channel_t channel_list[] =
     { "t_char_set_cycle",     70.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_T_K, 0 },
     { "time_char_cycle",      120.0 / 65536.0,  0.0, TYPE_UINT16, RATE_5HZ, U_T_MIN, 0 },
     { "time_set_cycle",       120.0 / 65536.0,  0.0, TYPE_UINT16, RATE_5HZ, U_T_MIN, 0 },
-    { "thresh_atrim",         10.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "thresh_cmd_atrim",         10.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
-    { "time_atrim",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "time_cmd_atrim",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "rate_cmd_atrim",           30.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rate_atrim",           30.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "v_batt_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
