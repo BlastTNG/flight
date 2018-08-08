@@ -112,7 +112,7 @@ void highrate_compress_and_send(void *arg) {
 
 				// bandwidth limit; frames are 1 Hz, so bandwidth == size
 				transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.highrate_allframe_fraction)); 
-        allframe_bytes += bandwidth-transmit_size;
+        allframe_bytes += bandwidth*CommandData.highrate_allframe_fraction;
       }
 
 			// no packetization if there is nothing to transmit
