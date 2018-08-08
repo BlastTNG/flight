@@ -4,6 +4,8 @@
 #include <inttypes.h>
 #include "linklist.h"
 
+#define LL_RAWFILE_DUMMY 0x8
+
 struct linklist_dirfile {
   char filename[80];
   unsigned int framenum;
@@ -39,6 +41,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t *);
 int tell_linklist_rawfile(linklist_rawfile_t *);
 
 linklist_rawfile_t * open_linklist_rawfile(char *, linklist_t *);
+linklist_rawfile_t * open_linklist_rawfile_opt(char *, linklist_t *, unsigned int);
 void close_and_free_linklist_rawfile(linklist_rawfile_t *);
 int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
 int read_linklist_rawfile(linklist_rawfile_t *, uint8_t *);

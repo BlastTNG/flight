@@ -90,6 +90,7 @@ void USAGE(void) {
       "                    Default is /data/rawdir.\n"
       " --backup           Backup binary data in the archive directory.\n"
       "                    Default is to not backup data.\n"
+      " --loopback         Have mole extract its own binary files.\n"
       " --little-end       Force mole to interpret data as little endian.\n"
       " --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                    Default is /data/mole.\n"
@@ -189,6 +190,10 @@ int main(int argc, char *argv[]) {
       ll_flags |= LL_IGNORE_CHECKSUM;
     } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
       ll_flags &= ~LL_USE_BIG_ENDIAN;
+    } else if (strcmp(argv[i], "--loopback") == 0) { // loopback mode
+      bin_backup = 0;
+      strcpy(tcpconn.ip, "localhost");
+      server_mode = 1;
     } else if (strcmp(argv[i], "--help") == 0) { // view usage
       USAGE();
     } else {
@@ -231,18 +236,14 @@ int main(int argc, char *argv[]) {
         // open the linklist rawfile
 				sprintf(filename, "%s/%s", archive_dir, linklistname);
         if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
-				ll_rawfile = open_linklist_rawfile(filename, linklist);
+				ll_rawfile = open_linklist_rawfile_opt(filename, linklist, (bin_backup) ? 0 : LL_RAWFILE_DUMMY);
         if (bin_backup) {
 				  create_rawfile_symlinks(ll_rawfile, symraw_name);
-        } else {
-          fclose(ll_rawfile->fp);
-          ll_rawfile->fp = NULL;
         }
 
 				// set the first framenum request
 				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
 				req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
-        rewind = UINT32_MAX; // all future rewinds are to the beginning of the file
 
         resync = 0;
         continue; 

@@ -168,6 +168,7 @@ struct PivGainStruct {
 #define HWPR_GOTO_POT	7
 
 #define ROACH_TLM_IQDF 0x1
+#define ROACH_TLM_DELTA 0x2
 
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
@@ -337,7 +338,8 @@ typedef struct udp_roach
 
 typedef struct roach
 {
-    unsigned int new_state;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
     unsigned int change_roach_state;
     unsigned int get_roach_state;
     unsigned int do_df_calc;
@@ -352,9 +354,6 @@ typedef struct roach
     unsigned int find_kids;
     unsigned int adc_rms;
     unsigned int test_tone;
-    unsigned int roach_state;
-    unsigned int roach_new_state;
-    unsigned int roach_desired_state;
     unsigned int do_cal_sweeps;
     unsigned int get_phase_centers;
     unsigned int get_timestream;
@@ -373,6 +372,10 @@ typedef struct roach
     unsigned int change_tone_phase;
     unsigned int change_tone_freq;
     unsigned int on_res;
+    unsigned int auto_find;
+    unsigned int recenter_df;
+    unsigned int go_flight_mode;
+    unsigned int check_response;
 } roach_status_t;
 
 typedef struct roach_params

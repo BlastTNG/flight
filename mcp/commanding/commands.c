@@ -1213,9 +1213,42 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case set_attens_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].set_attens = 1;
+                CommandData.roach[i].set_attens = 2;
             }
             break;
+        case auto_find_kids_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].auto_find = 1;
+            }
+            break;
+        case zero_df_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].recenter_df = 1;
+            }
+            break;
+        case reset_roach_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].roach_new_state = ROACH_STATE_BOOT;
+              CommandData.roach[i].roach_desired_state = ROACH_STATE_STREAMING;
+              CommandData.roach[i].change_roach_state = 1;
+            }
+          break;
+        case flight_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 1;
+            }
+            break;
+        case debug_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 0;
+                // CommandData.roach[i].auto_find = 0;
+                CommandData.roach[i].do_sweeps = 0;
+            }
+            break;
+        case change_freqs_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].change_targ_freq = 2;
+          }
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -1973,6 +2006,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.biphase_allframe_fraction = rvalues[1];
       blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
+    case set_roach_mode:
+        if (ivalues[0] == 0) CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+        else if (ivalues[0] == 1) CommandData.roach_tlm_mode = ROACH_TLM_DELTA;
+        break;
     case set_roach_all_chan:
         if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {
           CommandData.num_channels_all_roaches[ivalues[0]-1] = ivalues[1];
@@ -2065,7 +2102,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case reset_roach:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATE_BOOT;
+          CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
+          CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
           CommandData.roach[ivalues[0]-1].change_roach_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
@@ -2242,6 +2280,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].freq_offset = rvalues[2];
       }
       break;
+    case auto_find_kids:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+        CommandData.roach[ivalues[0]-1].auto_find = 1;
+      }
+      break;
+    case lamp_check_all:
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            CommandData.roach[i].check_response = 1;
+            CommandData.roach_params[i].num_sec = rvalues[0];
+        }
+        break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2884,10 +2933,8 @@ void InitCommandData()
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].do_cal_sweeps = 0;
-        CommandData.roach[i].new_state = 0;
         CommandData.roach[i].change_roach_state = 0;
         CommandData.roach[i].get_roach_state = 0;
-        CommandData.roach[i].roach_state = 0;
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
@@ -2911,7 +2958,11 @@ void InitCommandData()
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
+        CommandData.roach[i].auto_find = 0;
         CommandData.roach_params[i].in_atten = 16;
+        CommandData.roach[i].recenter_df = 0;
+        CommandData.roach[i].go_flight_mode = 0;
+        CommandData.roach[i].check_response = 0;
     }
     CommandData.roach_params[0].out_atten = 7;
     CommandData.roach_params[1].out_atten = 2;
@@ -3423,7 +3474,8 @@ void InitCommandData()
     for (int which = 0; which < 2; which++) {
         CommandData.XSC[which].is_new_window_period_cs = 1500;
 
-        CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        // CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        CommandData.XSC[which].heaters.mode = xsc_heater_off;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
         CommandData.XSC[which].trigger.exposure_time_cs = 12;
