@@ -163,6 +163,7 @@ struct PointingDataStruct {
   double enc_motor_el;
   double enc_motor_sigma;
 
+  double clin_ok;
   double clin_el;
   double clin_el_lut;
   double clin_sigma;

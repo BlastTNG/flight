@@ -1308,6 +1308,7 @@ void Pointing(void)
         read_shared_pdata[4].pval = &(ISCAz.variance);
         read_shared_pdata[5].pval = &(OSCAz.variance);
         read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
+        read_shared_pdata[7].pval = &enc_motor_ok;
         snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
         snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
         snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
@@ -1315,6 +1316,7 @@ void Pointing(void)
         snprintf(read_shared_pdata[4].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_var");
         snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
         snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
+        snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
     }
 
     if (elClinLut.n == 0)
@@ -1328,7 +1330,7 @@ void Pointing(void)
 //                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
 //                    OSCAz.variance, ACSData.enc_motor_elev);
 //         ReadICCPointing(read_shared_pdata);
-//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
 //                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
 //                    OSCAz.variance, ACSData.enc_motor_elev);
     }
@@ -1442,7 +1444,7 @@ void Pointing(void)
             ACSData.enc_elev, 1);
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
-            ACSData.enc_motor_elev, enc_motor_ok);
+            ACSData.enc_motor_elev, (enc_motor_ok || !InCharge));
     EvolveElSolution(&MagElN, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_n, mag_ok_n);
@@ -1452,7 +1454,7 @@ void Pointing(void)
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
     }
-    if (CommandData.use_elmotenc && enc_motor_ok) {
+    if (CommandData.use_elmotenc && (enc_motor_ok || !InCharge)) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 

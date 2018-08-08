@@ -1104,7 +1104,10 @@ void store_5hz_acs(void)
     static channel_t* DGPSAzAddr;
     static channel_t* DGPSSigmaAzAddr;
     static channel_t *DGPSRawAzAddr;
-    static channel_t *SensorsOKAddr;
+    static channel_t *MagOKAddr[2];
+    static channel_t *EncMotorOK;
+    static channel_t *DGPSOK;
+    static channel_t *ElClinOK;
 
     /* trim fields */
     static channel_t *trimClinAddr;
@@ -1128,7 +1131,6 @@ void store_5hz_acs(void)
 
     int i_point;
     int sensor_veto;
-    int sensors_ok;
 
     /******** Obtain correct indexes the first time here ***********/
     if (firsttime) {
@@ -1254,7 +1256,11 @@ void store_5hz_acs(void)
         nextIHwprPAddr = channels_find_by_name("next_i_hwpr_p");
 
         vetoSensorAddr = channels_find_by_name("veto_sensor");
-        SensorsOKAddr = channels_find_by_name("ok_sensor");
+        MagOKAddr[0] = channels_find_by_name("ok_mag1");
+        MagOKAddr[1] = channels_find_by_name("ok_mag2");
+        EncMotorOK = channels_find_by_name("ok_motor_enc");
+        ElClinOK = channels_find_by_name("ok_elclin");
+        DGPSOK = channels_find_by_name("ok_dgps");
 
         lstSchedAddr = channels_find_by_name("lst_sched");
 
@@ -1450,10 +1456,11 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.el_autogyro << 9);
 
     SET_UINT16(vetoSensorAddr, sensor_veto);
-    sensors_ok = ((PointingData[i_point].enc_motor_ok) | ((PointingData[i_point].dgps_ok) << 1)
-                 | ((PointingData[i_point].dgps_ok) << 2) | ((PointingData[i_point].pss_ok) << 3)
-                 | ((PointingData[i_point].mag_ok[0]) << 4) | ((PointingData[i_point].mag_ok[1]) << 5));
-    SET_UINT16(SensorsOKAddr, sensors_ok);
+    SET_UINT8(MagOKAddr[0], PointingData[i_point].mag_ok[0]);
+    SET_UINT8(MagOKAddr[1], PointingData[i_point].mag_ok[0]);
+    SET_UINT8(EncMotorOK, PointingData[i_point].enc_motor_ok);
+    SET_UINT8(ElClinOK, PointingData[i_point].clin_ok);
+    SET_UINT8(DGPSOK, PointingData[i_point].dgps_ok);
 }
 void store_1hz_acs(void)
 {

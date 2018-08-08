@@ -53,7 +53,7 @@
 
 #define SSS_ALIGNMENT     1.5532
 
-#define NUM_READ_P_ICC      5
+#define NUM_READ_P_ICC      8
 #define NUM_CHARS_CHAN_P_ICC   128
 
 typedef struct {
