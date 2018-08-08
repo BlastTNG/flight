@@ -182,8 +182,8 @@ void send_fast_data() {
   }
 }
 
-void recv_fast_data() {
-  if (!fast_shared_ll || InCharge) return;
+bool recv_fast_data() {
+  if (!fast_shared_ll || InCharge) return false;
 
   int i = 0;
   int retval = 0;
@@ -203,7 +203,7 @@ void recv_fast_data() {
 		if (retval != fast_shared_packet_size) {
 			if (retval > 0) blast_err("Received %d bytes, expected %d bytes of fast shared data",
 																 retval, fast_shared_packet_size);
-			return;
+			return false;
 		}
     new_data = true;
 	}
@@ -231,6 +231,8 @@ void recv_fast_data() {
 		}
   }
   count++;
+
+  return new_data;
 }
 
 // grabs shared data from the fifo for the specified field at the specified rate

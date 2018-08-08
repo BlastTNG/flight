@@ -36,6 +36,6 @@ void data_sharing_init(linklist_t **);
 void share_data(E_RATE);
 void share_superframe(uint8_t *);
 void send_fast_data();
-void recv_fast_data();
+bool recv_fast_data();
 
 #endif /* INCLUDE_DATA_SHARING_SERVER_H_ */
