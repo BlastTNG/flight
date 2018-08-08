@@ -63,6 +63,7 @@
 #include "gps.h"
 #include "sip.h"
 
+extern int InCharge;
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
 struct XSCPointingState xsc_pointing_state[2] = {{.counter_mcp = 0}};
@@ -1060,6 +1061,23 @@ static inline double exponential_moving_average(double m_running_avg, double m_n
     return alpha * m_newval + (1.0 - alpha) * m_running_avg;
 }
 
+// Called if we are not in charge.  Reads important fields (shared from the ICC) that
+// cannot be read out when not the ICC.
+void ReadICCPointing(read_icc_t *m_read_icc)
+{
+    int i;
+    static int first_time = 1;
+    if (first_time) {
+        blast_info("Not in charge, getting pointing sensor data from shared linklist.");
+        for (i = 0; i < NUM_READ_P_ICC; i++) {
+            m_read_icc[i].ch = channels_find_by_name(m_read_icc[i].ch_name);
+        }
+        first_time = 0;
+    }
+    for (i = 0; i < NUM_READ_P_ICC; i++) {
+        SET_SCALED_VALUE(m_read_icc[i].ch, *(m_read_icc[i].pval));
+    }
+}
 // TODO(seth): Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
@@ -1222,6 +1240,7 @@ void Pointing(void)
         .since_last = 0,
     };
 
+  static read_icc_t read_shared_pdata[NUM_READ_P_ICC];
   static gyro_history_t hs = {NULL};
   static gyro_reading_t RG = {0.0};
 
@@ -1277,12 +1296,33 @@ void Pointing(void)
         /* Load lat/lon from disk */
         last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
         last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
+
+        // Set pointers to variables that will be read from shared data if we are not in charge.
+        read_shared_pdata[0].pval = &(ISCAz.angle);
+        read_shared_pdata[1].pval = &(OSCAz.angle);
+        read_shared_pdata[2].pval = &(ISCEl.angle);
+        read_shared_pdata[3].pval = &(OSCEl.angle);
+        read_shared_pdata[4].pval = &(ISCAz.variance);
+        read_shared_pdata[5].pval = &(OSCAz.variance);
+        read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
+        snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
+        snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
+        snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
+        snprintf(read_shared_pdata[3].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_el");
+        snprintf(read_shared_pdata[4].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_var");
+        snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
+        snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
     }
 
     if (elClinLut.n == 0)
         LutInit(&elClinLut);
 
     i_point_read = GETREADINDEX(point_index);
+
+    // If we are not in charge then we need to read some pointing data from the ICC
+    if (!InCharge) {
+        ReadICCPointing(read_shared_pdata);
+    }
 
     // Make aristotle correct
     R = 15.0 / 3600.0;
@@ -1551,6 +1591,7 @@ void Pointing(void)
 
     PointingData[point_index].xsc_az[0] = ISCAz.angle;
     PointingData[point_index].xsc_el[0] = ISCEl.angle;
+    PointingData[point_index].xsc_var[0] = ISCEl.variance;
     PointingData[point_index].xsc_sigma[0] = sqrt(ISCEl.variance + ISCEl.sys_var);
     PointingData[point_index].offset_ifel_gy_xsc[0] = ISCEl.offset_gy;
     PointingData[point_index].offset_ifroll_gy_xsc[0] = ISCAz.offset_ifroll_gy;
@@ -1558,6 +1599,7 @@ void Pointing(void)
 
     PointingData[point_index].xsc_az[1] = OSCAz.angle;
     PointingData[point_index].xsc_el[1] = OSCEl.angle;
+    PointingData[point_index].xsc_var[1] = OSCEl.variance;
     PointingData[point_index].xsc_sigma[1] = sqrt(OSCEl.variance + OSCEl.sys_var);
     PointingData[point_index].offset_ifel_gy_xsc[1] = OSCEl.offset_gy;
     PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;

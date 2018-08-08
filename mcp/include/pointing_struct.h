@@ -146,6 +146,7 @@ struct PointingDataStruct {
 
   double xsc_az[2];
   double xsc_el[2];
+  double xsc_var[2];
   double xsc_sigma[2];
   double offset_ifel_gy_xsc[2];
   double offset_ifyaw_gy_xsc[2];
