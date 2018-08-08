@@ -84,6 +84,10 @@ void data_sharing_init(linklist_t ** ll_array) {
   setBITRecverSerial(&shared_data_recver, *(uint32_t *) temp_ll->serial);
   shared_ll = temp_ll;
 
+  if (!fast_shared_ll) {
+    blast_err("Cannot find fast_shared.ll for data sharing");
+    return;
+  }
   // initialize fast bitserver and buffers
   fast_shared_packet_size = fast_shared_ll->blk_size;
   fast_shared_recv_buffer = calloc(1, fast_shared_ll->blk_size);
