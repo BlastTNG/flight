@@ -40,19 +40,28 @@
 
 struct BITSender shared_data_sender = {0};
 struct BITRecver shared_data_recver = {0};
+struct BITSender fast_shared_data_sender = {0};
+struct BITRecver fast_shared_data_recver = {0};
+
 unsigned int shared_packet_size = 0;
 uint8_t * shared_recv_buffer = NULL;
 uint8_t * shared_cmddata = NULL;
 uint8_t * shared_superframe = NULL;
 int shared_data_recvd = 0;
 
+unsigned int fast_shared_packet_size = 0;
+uint8_t * fast_shared_recv_buffer = NULL;
+
 extern int16_t InCharge;
 extern int16_t SouthIAm;
 
 linklist_t * shared_ll = NULL;
+linklist_t * fast_shared_ll = NULL;
 
 void data_sharing_init(linklist_t ** ll_array) {
   linklist_t * temp_ll = linklist_find_by_name("shared.ll", ll_array);
+
+  fast_shared_ll = linklist_find_by_name("fast_shared.ll", ll_array);
 
   if (!temp_ll) {
     blast_err("Cannot find shared.ll for data sharing");
@@ -73,8 +82,18 @@ void data_sharing_init(linklist_t ** ll_array) {
 
   setBITSenderSerial(&shared_data_sender, *(uint32_t *) temp_ll->serial);
   setBITRecverSerial(&shared_data_recver, *(uint32_t *) temp_ll->serial);
-
   shared_ll = temp_ll;
+
+  // initialize fast bitserver and buffers
+  fast_shared_packet_size = fast_shared_ll->blk_size;
+  fast_shared_recv_buffer = calloc(1, fast_shared_ll->blk_size);
+  initBITSender(&fast_shared_data_sender, (SouthIAm) ? NORTH_IP : SOUTH_IP, FAST_DATA_SHARING_PORT, 300,
+                  fast_shared_packet_size, fast_shared_packet_size);
+  initBITRecver(&fast_shared_data_recver, (SouthIAm) ? SOUTH_IP : NORTH_IP, FAST_DATA_SHARING_PORT, 300,
+                  fast_shared_packet_size, fast_shared_packet_size);
+
+  setBITSenderSerial(&fast_shared_data_sender, *(uint32_t *) fast_shared_ll->serial);
+  setBITRecverSerial(&fast_shared_data_recver, *(uint32_t *) fast_shared_ll->serial);
 }
 
 void share_superframe(uint8_t * superframe) {
@@ -124,6 +143,78 @@ void share_superframe(uint8_t * superframe) {
 
     // set the flag that fresh shared data has been received
     shared_data_recvd = 1;
+  }
+}
+
+void send_fast_data() {
+  if (!fast_shared_ll || !InCharge) return;
+
+  int i = 0;
+  int retval = 0;
+  superframe_entry_t * chan = NULL;
+  uint8_t * data_loc = NULL;
+  unsigned int tlm_in_start = 0;
+
+  // build the data to send
+  for (i = 0; i < fast_shared_ll->n_entries; i++) {
+    chan = fast_shared_ll->items[i].tlm;
+    tlm_in_start = fast_shared_ll->items[i].start;
+
+    // don't process null channels
+    if (!chan) continue;
+
+		// read the data raw into the frame (only one sample)
+		data_loc = fast_shared_recv_buffer+tlm_in_start;
+		memcpy(data_loc, chan->var, get_superframe_entry_size(chan));
+  }
+
+  // send the data
+  retval = sendToBITSender(&fast_shared_data_sender,
+                            fast_shared_recv_buffer,
+                            fast_shared_packet_size, 0);
+
+  if (retval != fast_shared_packet_size) {
+    blast_err("Could only send %d/%d bytes of fast shared data", retval, fast_shared_packet_size);
+  }
+}
+
+void recv_fast_data() {
+  if (!fast_shared_ll || InCharge) return;
+
+  int i = 0;
+  int retval = 0;
+  superframe_entry_t * chan = NULL;
+  uint8_t * data_loc = NULL;
+  unsigned int tlm_in_start = 0;
+  bool new_data = false;
+
+	// read up to the latest packet
+	while (peekBITRecver(&fast_shared_data_recver)) {
+		retval = recvFromBITRecver(&fast_shared_data_recver,
+																fast_shared_recv_buffer,
+																fast_shared_packet_size,
+																RECV_TIMEOUT);
+		if (retval != fast_shared_packet_size) {
+			if (retval > 0) blast_err("Received %d bytes, expected %d bytes of fast shared data",
+																 retval, fast_shared_packet_size);
+			return;
+		}
+    new_data = true;
+	}
+
+	// have new valid data, so write to the frame
+  if (new_data) {
+		for (i = 0; i < fast_shared_ll->n_entries; i++) {
+			chan = fast_shared_ll->items[i].tlm;
+			tlm_in_start = fast_shared_ll->items[i].start;
+
+			// don't process null channels
+			if (!chan) continue;
+
+			// overwrite data with fast shared data
+			data_loc = fast_shared_recv_buffer+tlm_in_start;
+			memcpy(chan->var, data_loc, get_superframe_entry_size(chan));
+		}
   }
 }
 

@@ -356,10 +356,12 @@ static void mcp_200hz_routines(void)
 static void mcp_100hz_routines(void)
 {
     read_100hz_acs();
+    recv_fast_data();
     Pointing();
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
+    send_fast_data();
 //   BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
