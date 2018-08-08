@@ -48,6 +48,7 @@
 #include "lut.h"
 #include "tx.h"
 #include "fir.h"
+#include "ec_motors.h"
 
 #include "dsp1760.h"
 #include "EGM9615.h"
@@ -1110,6 +1111,8 @@ void Pointing(void)
     static int i_at_float = 0;
     double trim_change;
 
+    int enc_motor_ok = is_el_motor_ready();
+
     static int firsttime = 1;
 
     int i_point_read;
@@ -1321,7 +1324,13 @@ void Pointing(void)
 
     // If we are not in charge then we need to read some pointing data from the ICC
     if (!InCharge) {
-        ReadICCPointing(read_shared_pdata);
+//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
+//                    OSCAz.variance, ACSData.enc_motor_elev);
+//         ReadICCPointing(read_shared_pdata);
+//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
+//                    OSCAz.variance, ACSData.enc_motor_elev);
     }
 
     // Make aristotle correct
@@ -1433,7 +1442,7 @@ void Pointing(void)
             ACSData.enc_elev, 1);
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
-            ACSData.enc_motor_elev, 1);
+            ACSData.enc_motor_elev, enc_motor_ok);
     EvolveElSolution(&MagElN, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_n, mag_ok_n);
@@ -1443,7 +1452,7 @@ void Pointing(void)
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
     }
-    if (CommandData.use_elmotenc) {
+    if (CommandData.use_elmotenc && enc_motor_ok) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 
@@ -1569,14 +1578,17 @@ void Pointing(void)
     //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f", PointingData[point_index].enc_el);
     PointingData[point_index].enc_el = EncEl.angle;
     PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
+    PointingData[point_index].enc_motor_ok = enc_motor_ok;
     PointingData[point_index].enc_motor_el = EncMotEl.angle;
     PointingData[point_index].enc_motor_sigma = sqrt(EncMotEl.variance + EncMotEl.sys_var);
     PointingData[point_index].clin_el = ClinEl.angle;
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
+    PointingData[point_index].mag_ok[0] = mag_ok_n;
     PointingData[point_index].mag_az[0] = MagAzN.angle;
     PointingData[point_index].mag_el[0] = MagElN.angle;
     PointingData[point_index].mag_sigma[0] = sqrt(MagAzN.variance + MagAzN.sys_var);
+    PointingData[point_index].mag_ok[1] = mag_ok_s;
     PointingData[point_index].mag_az[1] = MagAzS.angle;
     PointingData[point_index].mag_el[1] = MagElS.angle;
     PointingData[point_index].mag_sigma[1] = sqrt(MagAzS.variance + MagAzS.sys_var);
@@ -1586,6 +1598,7 @@ void Pointing(void)
     PointingData[point_index].null_az = NullAz.angle;
 
     // Added 22 June 2010 GT
+    PointingData[point_index].pss_ok = pss_ok;
     PointingData[point_index].pss_az = PSSAz.angle;
     PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
 

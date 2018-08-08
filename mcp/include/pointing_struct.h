@@ -109,6 +109,7 @@ struct PointingDataStruct {
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
 
+  bool mag_ok[NUM_MAGS];   // flag
   double mag_az[NUM_MAGS];   // degrees
   double mag_az_raw[NUM_MAGS];   // degrees
   double mag_el[NUM_MAGS];   // degrees
@@ -156,6 +157,7 @@ struct PointingDataStruct {
   double estimated_xsc_ra_hours[2];
   double estimated_xsc_dec_deg[2];
 
+  bool enc_motor_ok;   // flag
   double enc_el;
   double enc_sigma;
   double enc_motor_el;

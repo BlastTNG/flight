@@ -935,6 +935,20 @@ static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
     return(0);
 }
 
+// Checks to see whether we have we have communicated with the El Motor and it is returning
+// a reasonable network status.
+uint8_t is_el_motor_ready() {
+    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
+}
+
+uint8_t is_rw_motor_ready() {
+    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
+}
+
+uint8_t is_pivot_motor_ready() {
+    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
+}
+
 static void read_motor_data()
 {
     int motor_i = motor_index;
