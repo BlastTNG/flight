@@ -192,6 +192,8 @@ void recv_fast_data() {
   unsigned int tlm_in_start = 0;
   bool new_data = false;
 
+  static int count = 0;
+
 	// read up to the latest packet
 	while (peekBITRecver(&fast_shared_data_recver)) {
 		retval = recvFromBITRecver(&fast_shared_data_recver,
@@ -218,8 +220,17 @@ void recv_fast_data() {
 			// overwrite data with fast shared data
 			data_loc = fast_shared_recv_buffer+tlm_in_start;
 			memcpy(chan->var, data_loc, get_superframe_entry_size(chan));
+
+      /*
+      if (!(count%100)) {
+        double value = 0;
+        GET_SCALED_VALUE(channels_find_by_name(chan->field), value);
+        blast_info("%s = %f\n", chan->field, value);
+      }
+      */
 		}
   }
+  count++;
 }
 
 // grabs shared data from the fifo for the specified field at the specified rate
