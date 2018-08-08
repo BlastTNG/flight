@@ -75,6 +75,9 @@ static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+#define PSN_EAST_BAY_LAT 31.779300
+#define PSN_EAST_BAY_LON 264.283000
+
 void RecalcOffset(double, double);  /* actuators.c */
 
 /* defined in pointing.c */
@@ -94,7 +97,7 @@ extern char * ROACH_TYPES[NUM_RTYPES];
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
 
-struct SIPDataStruct SIPData;
+struct SIPDataStruct SIPData = {.GPSpos = {.lat = PSN_EAST_BAY_LAT, .lon = PSN_EAST_BAY_LON}};
 struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c

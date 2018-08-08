@@ -233,8 +233,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
-  {COMMAND(trim_to_xsc0), "trim coarse sensors to XSC0", GR_TRIM},
-  {COMMAND(trim_to_xsc1), "trim coarse sensors to XSC1", GR_TRIM},
+  {COMMAND(trim_to_xsc0), "trim coarse sensors to XSC0 (disables autotrim)", GR_TRIM},
+  {COMMAND(trim_to_xsc1), "trim coarse sensors to XSC1 (disables autotrim)", GR_TRIM},
   {COMMAND(trim_xsc1_to_xsc0), "trim XSC1 to XSC0", GR_TRIM},
   {COMMAND(trim_xsc0_to_xsc1), "trim XSC0 to XSC1", GR_TRIM},
   {COMMAND(autotrim_off), "disable auto-trim to XSC0/XSC1", GR_TRIM},
@@ -558,7 +558,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pos_set), "define Latitude/Longitude of current position", GR_TRIM, 2,
     {
       {"Current Latitude (deg)",      -90, 90, 'f', "LAT"},
-      {"Current Longitude (deg)", 0, 360, 'f', "LON"}
+      {"Current Longitude (deg)", -360, 360, 'f', "LON"}
     }
   },
   {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
