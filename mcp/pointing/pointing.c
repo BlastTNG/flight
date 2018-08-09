@@ -1362,7 +1362,7 @@ void Pointing(void)
 
 //  Only add the encoder solution if we are getting data from the El drive.  Or if we
 //  are not InCharge and getting shared El data from the other FCC.
-    enc_motor_ok = enc_motor_ready || (!InCharge && PointingData[i_point_read].recv_shared_data);
+    enc_motor_ok = enc_motor_ready; // || (!InCharge && PointingData[i_point_read].recv_shared_data);
 
     // If we are not in charge then we need to read some pointing data from the ICC
     if (!InCharge) {
@@ -1484,7 +1484,7 @@ void Pointing(void)
             ACSData.enc_elev, 1);
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
-            ACSData.enc_motor_elev, (enc_motor_ok || !InCharge));
+            ACSData.enc_motor_elev, enc_motor_ok);
     EvolveElSolution(&MagElN, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_n, mag_ok_n);
@@ -1494,7 +1494,7 @@ void Pointing(void)
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
     }
-    if (CommandData.use_elmotenc && (enc_motor_ok || !InCharge)) {
+    if (CommandData.use_elmotenc && enc_motor_ok) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 
