@@ -1345,6 +1345,10 @@ void Pointing(void)
         read_shared_pdata[5].pval = &(OSCAz.variance);
         read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
         read_shared_pdata[7].pval = &enc_motor_ready;
+        read_shared_pdata[8].pval = &NewAzEl.fresh;
+        read_shared_pdata[9].pval = &NewAzEl.rate;
+        read_shared_pdata[10].pval = &NewAzEl.az;
+        read_shared_pdata[11].pval = &NewAzEl.el;
         snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
         snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
         snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
@@ -1353,6 +1357,10 @@ void Pointing(void)
         snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
         snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
         snprintf(read_shared_pdata[7].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
+        snprintf(read_shared_pdata[8].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "rate_atrim");
+        snprintf(read_shared_pdata[9].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "fresh_trim");
+        snprintf(read_shared_pdata[10].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "new_az");
+        snprintf(read_shared_pdata[11].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC,  "new_el");
     }
 
     if (elClinLut.n == 0)
@@ -1601,6 +1609,7 @@ void Pointing(void)
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
 
     PointingData[point_index].az = AzAtt.az;
+    PointingData[point_index].weight_az = AzAtt.weight;
     if (CommandData.az_autogyro) {
         PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
         PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
@@ -1691,6 +1700,9 @@ void Pointing(void)
     PointingData[point_index].prev_sol_az_xsc1 = OSCAz.prev_sol_az;
     PointingData[point_index].prev_sol_el_xsc1 = OSCEl.prev_sol_el;
     PointingData[point_index].autotrim_rate_xsc = NewAzEl.rate;
+    PointingData[point_index].fresh = NewAzEl.fresh;
+    PointingData[point_index].new_az = NewAzEl.az;
+    PointingData[point_index].new_el = NewAzEl.el;
 
     xsc_calculate_full_pointing_estimated_location(0);
     xsc_calculate_full_pointing_estimated_location(1);

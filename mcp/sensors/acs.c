@@ -1128,6 +1128,11 @@ void store_5hz_acs(void)
     static channel_t *hwprCalAddr;
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
+    static channel_t *freshTrimAddr;
+    static channel_t *newAzAddr;
+    static channel_t *newElAddr;
+    static channel_t *weightAzAddr;
+    static channel_t *weightElAddr;
 
     int i_point;
     int sensor_veto;
@@ -1277,9 +1282,14 @@ void store_5hz_acs(void)
         timeAtrimAddr = channels_find_by_name("time_cmd_atrim");
         rateAtrimAddr = channels_find_by_name("rate_cmd_atrim");
         rateAtrimPtAddr = channels_find_by_name("rate_atrim");
+        freshTrimAddr = channels_find_by_name("fresh_trim");
+        newAzAddr = channels_find_by_name("new_az");
+        newElAddr = channels_find_by_name("new_el");
         DGPSRawAzAddr = channels_find_by_name("az_raw_dgps");
         DGPSAzAddr = channels_find_by_name("az_dgps");
         DGPSSigmaAzAddr = channels_find_by_name("sigma_dgps");
+        weightAzAddr = channels_find_by_name("weight_az");
+        weightElAddr = channels_find_by_name("weight_el");
     }
 
     i_point = GETREADINDEX(point_index);
@@ -1403,6 +1413,9 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(timeAtrimAddr, CommandData.autotrim_time);
     SET_SCALED_VALUE(rateAtrimAddr, CommandData.autotrim_rate);
     SET_SCALED_VALUE(rateAtrimPtAddr, PointingData[i_point].autotrim_rate_xsc);
+    SET_SCALED_VALUE(freshTrimAddr, PointingData[i_point].fresh);
+    SET_SCALED_VALUE(newAzAddr, PointingData[i_point].new_az);
+    SET_SCALED_VALUE(newElAddr, PointingData[i_point].new_el);
 
     SET_FLOAT(gy_azvel_addr, (float) (PointingData[i_point].gy_az));
     SET_FLOAT(gy_elvel_addr, (float) (PointingData[i_point].gy_el));
@@ -1445,9 +1458,11 @@ void store_5hz_acs(void)
     		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
 			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
 			| ((!CommandData.use_elclin) << 5)
-			| ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
+			| ((!CommandData.use_xsc1) << 6) | ((CommandData.uplink_sched) << 7)
+			| ((CommandData.az_autogyro)  << 8) | ((CommandData.az_autogyro)  << 9)
+			| ((CommandData.disable_el) << 10)
             | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12)
-			| ((!CommandData.use_pss) << 13);
+			| ((!CommandData.use_pss) << 13) | ((!CommandData.use_dgps) << 14);
 
     if (PointingData[i_point].t >= CommandData.pointing_mode.t)
         sensor_veto |= (1 << 7);
@@ -1461,6 +1476,8 @@ void store_5hz_acs(void)
     SET_UINT8(EncMotorOK, PointingData[i_point].enc_motor_ok);
     SET_UINT8(ElClinOK, PointingData[i_point].clin_ok);
     SET_UINT8(DGPSOK, PointingData[i_point].dgps_ok);
+    SET_UINT16(weightAzAddr, PointingData[i_point].weight_az);
+    SET_UINT16(weightElAddr, PointingData[i_point].weight_el);
 }
 void store_1hz_acs(void)
 {

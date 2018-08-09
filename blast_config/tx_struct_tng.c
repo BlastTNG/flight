@@ -938,6 +938,12 @@ channel_t channel_list[] =
     { "time_cmd_atrim",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rate_cmd_atrim",           30.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rate_atrim",           30.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "thresh_atrim",           10.0 / 65536.0,   0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "fresh_trim",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
+    { "new_az",               720.0 / 65536.0,  0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "new_el",               720.0 / 65536.0,  0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "weight_az",               360.0 / 65536.0,  0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "weight_el",               360.0 / 65536.0,  0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "v_batt_cc2",           1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
     { "v_arr_cc2",            1 / 180.0,        -32400.0 / 180.0, TYPE_UINT16, RATE_1HZ, U_V_V, 0 },
