@@ -383,6 +383,8 @@ static void mcp_5hz_routines(void)
     update_sun_sensors();
     // read_5hz_acs();
     store_5hz_acs();
+    store_5hz_xsc(0);
+    store_5hz_xsc(1);
     write_motor_channels_5hz();
     write_roach_channels_5hz();
     store_axes_mode_data();
@@ -421,7 +423,7 @@ static void mcp_1hz_routines(void)
     // int ready = 1;
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
-    if (ready) {
+    if (ready && InCharge) {
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
          memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
          incrementFifo(telem_fifo[i]);

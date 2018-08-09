@@ -712,16 +712,35 @@ static inline channel_t* get_xsc_channel(const char *m_field, int m_which)
   return channels_find_by_name(buffer);
 }
 
+void store_5hz_xsc(int m_which)
+{
+    static bool firsttime[2] = {true, true};
+    static channel_t* address_xN_point_az[2];
+    static channel_t* address_xN_point_el[2];
+    static channel_t* address_xN_point_var[2];
+    static channel_t* address_xN_point_sigma[2];
+
+    int i_point = GETREADINDEX(point_index);
+
+    if (firsttime[m_which]) {
+        firsttime[m_which] = false;
+        address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
+        address_xN_point_el[m_which]      = get_xsc_channel("point_el"        , m_which);
+        address_xN_point_var[m_which]   = get_xsc_channel("point_var"     , m_which);
+        address_xN_point_sigma[m_which]   = get_xsc_channel("point_sigma"     , m_which);
+    }
+    SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
+    SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
+    SET_SCALED_VALUE(address_xN_point_var[m_which]  , PointingData[i_point].xsc_var[m_which]);
+    SET_SCALED_VALUE(address_xN_point_sigma[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
+}
+
 void store_1hz_xsc(int m_which)
 {
     static bool firsttime[2] = {true, true};
 
     static channel_t* address_xN_point_az_raw[2];
-    static channel_t* address_xN_point_az[2];
     static channel_t* address_xN_point_el_raw[2];
-    static channel_t* address_xN_point_el[2];
-    static channel_t* address_xN_point_var[2];
-    static channel_t* address_xN_point_sigma[2];
     static channel_t* address_xN_point_az_trim[2];
     static channel_t* address_xN_point_el_trim[2];
     static channel_t* address_xN_cd_robust_mode[2];
@@ -828,11 +847,7 @@ void store_1hz_xsc(int m_which)
         address_xN_image_hor_sigma_pointing[m_which] = get_xsc_channel("image_hor_sigma_pointing", m_which);
 
         address_xN_point_az_raw[m_which]  = get_xsc_channel("point_az_raw"    , m_which);
-        address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
         address_xN_point_el_raw[m_which]  = get_xsc_channel("point_el_raw"    , m_which);
-        address_xN_point_el[m_which]      = get_xsc_channel("point_el"        , m_which);
-        address_xN_point_var[m_which]   = get_xsc_channel("point_var"     , m_which);
-        address_xN_point_sigma[m_which]   = get_xsc_channel("point_sigma"     , m_which);
         address_xN_point_az_trim[m_which] = get_xsc_channel("point_az_trim"   , m_which);
         address_xN_point_el_trim[m_which] = get_xsc_channel("point_el_trim"   , m_which);
         address_xN_cd_robust_mode[m_which] = get_xsc_channel("cd_robust_mode"   , m_which);
@@ -896,10 +911,6 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_hor_sigma_pointing[m_which],
                      XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
 
-    SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
-    SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
-    SET_SCALED_VALUE(address_xN_point_var[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
-    SET_SCALED_VALUE(address_xN_point_sigma[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
     SET_SCALED_VALUE(address_xN_point_az_raw[m_which] , xsc_pointing_state[m_which].az);
     SET_SCALED_VALUE(address_xN_point_el_raw[m_which] , xsc_pointing_state[m_which].el);
     SET_SCALED_VALUE(address_xN_point_az_trim[m_which], CommandData.XSC[m_which].cross_el_trim);

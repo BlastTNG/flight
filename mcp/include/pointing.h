@@ -60,6 +60,7 @@ typedef struct {
     void *pval;
     char ch_name[NUM_CHARS_CHAN_P_ICC];
     channel_t *ch;
+    E_TYPE var_type;
 } read_icc_t;
 
 void set_position(double m_lat, double m_lon);

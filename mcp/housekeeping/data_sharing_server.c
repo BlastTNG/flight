@@ -221,13 +221,12 @@ bool recv_fast_data() {
 			data_loc = fast_shared_recv_buffer+tlm_in_start;
 			memcpy(chan->var, data_loc, get_superframe_entry_size(chan));
 
-      /*
-      if (!(count%100)) {
+
+/*      if (!(count%500)) {
         double value = 0;
         GET_SCALED_VALUE(channels_find_by_name(chan->field), value);
         blast_info("%s = %f\n", chan->field, value);
-      }
-      */
+      } */
 		}
   }
   count++;

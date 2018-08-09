@@ -723,7 +723,7 @@ static void EvolveXSCSolution(struct ElSolutionStruct *e, struct AzSolutionStruc
     gy_az = (m_rg->ifroll_gy + m_rg->ifroll_gy_offset) * sin(el_frame)
             + (m_rg->ifyaw_gy + m_rg->ifyaw_gy_offset) * cos(el_frame);
     a->angle += gy_az / SR;
-    a->variance += (2 * GYRO_VAR); // This is twice the variance because we are using 2 gyros -SNH
+    a->variance += (GYRO_VAR);
     a->int_ifroll += m_rg->ifroll_gy / SR;
     a->int_ifyaw += m_rg->ifyaw_gy / SR;
     e->int_ifel += m_rg->ifel_gy / SR;
@@ -1078,7 +1078,7 @@ void ReadICCPointing(read_icc_t *m_read_icc)
         first_time = 0;
     }
     for (i = 0; i < NUM_READ_P_ICC; i++) {
-        switch (m_read_icc[i].ch->type) {
+        switch (m_read_icc[i].var_type) {
             case TYPE_INT8:
             GET_SCALED_VALUE(m_read_icc[i].ch, *(int8_t*)m_read_icc[i].pval);
             break;
@@ -1102,7 +1102,7 @@ void ReadICCPointing(read_icc_t *m_read_icc)
             break;
         case TYPE_UINT64:
             GET_SCALED_VALUE(m_read_icc[i].ch, *(uint64_t*)(m_read_icc[i].pval));
-            break;
+           break;
         case TYPE_FLOAT:
             GET_SCALED_VALUE(m_read_icc[i].ch, *(float*)(m_read_icc[i].pval));
             break;
@@ -1110,7 +1110,7 @@ void ReadICCPointing(read_icc_t *m_read_icc)
             GET_SCALED_VALUE(m_read_icc[i].ch, *(double*)(m_read_icc[i].pval));
             break;
         default:
-            blast_err("Invalid type %d", m_read_icc[i].ch->type);
+            blast_err("Invalid type %d", m_read_icc[i].var_type);
         }
 //        SET_SCALED_VALUE(m_read_icc[i].ch, &(()m_read_icc[i].pval));
     }
@@ -1146,9 +1146,11 @@ void Pointing(void)
     static int i_at_float = 0;
     double trim_change;
 
-    int enc_motor_ready = is_el_motor_ready();
+    static int enc_motor_ready;
+
     int enc_motor_ok;
 
+    enc_motor_ready = is_el_motor_ready();
     static int firsttime = 1;
 
     int i_point_read;
@@ -1361,6 +1363,18 @@ void Pointing(void)
         snprintf(read_shared_pdata[9].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "fresh_trim");
         snprintf(read_shared_pdata[10].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "new_az");
         snprintf(read_shared_pdata[11].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC,  "new_el");
+        read_shared_pdata[0].var_type = TYPE_DOUBLE;
+        read_shared_pdata[1].var_type = TYPE_DOUBLE;
+        read_shared_pdata[2].var_type = TYPE_DOUBLE;
+        read_shared_pdata[3].var_type = TYPE_DOUBLE;
+        read_shared_pdata[4].var_type = TYPE_DOUBLE;
+        read_shared_pdata[5].var_type = TYPE_DOUBLE;
+        read_shared_pdata[6].var_type = TYPE_DOUBLE;
+        read_shared_pdata[7].var_type = TYPE_UINT8;
+        read_shared_pdata[8].var_type = TYPE_INT32;
+        read_shared_pdata[9].var_type = TYPE_DOUBLE;
+        read_shared_pdata[10].var_type = TYPE_DOUBLE;
+        read_shared_pdata[11].var_type = TYPE_DOUBLE;
     }
 
     if (elClinLut.n == 0)
@@ -1370,17 +1384,21 @@ void Pointing(void)
 
 //  Only add the encoder solution if we are getting data from the El drive.  Or if we
 //  are not InCharge and getting shared El data from the other FCC.
-    enc_motor_ok = enc_motor_ready; // || (!InCharge && PointingData[i_point_read].recv_shared_data);
+    enc_motor_ok = enc_motor_ready;
 
     // If we are not in charge then we need to read some pointing data from the ICC
-    if (!InCharge) {
-//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
-//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
-//                    OSCAz.variance, ACSData.enc_motor_elev);
+//     if (j % 500 == 0) {
+//         blast_info("Before sharing: ISCAz.angle %f, ISCEl.angle %f, ISCEl.variance %f"
+//                    " ISCEl.sigma %f, XelTrim %f, ElTrim %f",
+//                    ISCAz.angle, ISCEl.angle, ISCEl.variance, sqrt(ISCEl.variance + ISCEl.sys_var),
+//                    CommandData.XSC[0].cross_el_trim, CommandData.XSC[0].cross_el_trim);
+//         blast_info("OSCAz.angle %f, OSCEl.angle %f, OSCEl.variance %f, OSCEl.sigma %f,"
+//                    "XelTrim %f, ElTrim %f",
+//                    OSCAz.angle, OSCEl.angle, OSCEl.variance, sqrt(OSCEl.variance + OSCEl.sys_var),
+//                    CommandData.XSC[1].cross_el_trim, CommandData.XSC[1].cross_el_trim);
+//     }
+    if ((!InCharge) && PointingData[i_point_read].recv_shared_data) {
          ReadICCPointing(read_shared_pdata);
-//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
-//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
-//                    OSCAz.variance, ACSData.enc_motor_elev);
     }
 
     // Make aristotle correct
