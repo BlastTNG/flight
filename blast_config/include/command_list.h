@@ -129,8 +129,10 @@ enum singleCommand {
   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
-  pump_valve_open, pump_valve_close, fill_valve_open, fill_valve_close,
-  ln_valve_on, ln_valve_off, potvalve_on, potvalve_off, potvalve_open, potvalve_close,
+  pump_valve_open, pump_valve_close, pump_valve_off, pump_valve_on,
+  fill_valve_open, fill_valve_close, fill_valve_off, fill_valve_on,
+  ln_valve_on, ln_valve_off,
+  potvalve_on, potvalve_off, potvalve_open, potvalve_close,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
     heater_sync, allow_cycle, disallow_cycle,
 	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
@@ -156,7 +158,8 @@ enum singleCommand {
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_all, new_ref_params_all,
-  pilot_oth_on, pilot_oth_off,
+  auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
+  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off,
 
   xyzzy
 };
@@ -183,7 +186,7 @@ enum multiCommand {
   highrate_bw,       pilot_bw,         biphase_bw,
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
-  set_queue_execute,
+  set_queue_execute, set_roach_mode,
 
   // t_gyro_gain,
   timeout,           vcap,
@@ -205,7 +208,8 @@ enum multiCommand {
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
   actuators_set_used,
   potvalve_set_thresholds,
-  potvalve_set_vel, potvalve_set_current, valves_set_vel, valves_set_current, valves_set_acc,
+  potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
+  valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
 
   xsc_is_new_window_period,
   xsc_offset,
@@ -292,7 +296,9 @@ enum multiCommand {
   change_amp,
   change_freq,
   change_phase,
+  auto_find_kids,
   offset_freq,
+  lamp_check_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

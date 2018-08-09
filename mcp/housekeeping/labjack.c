@@ -684,6 +684,10 @@ void store_labjack_data(void)
 }
 
 void init_labjacks(int set_1, int set_2, int set_3, int set_4, int set_5, int q_set) {
+    if (q_set == 1) {
+       initialize_labjack_queue();
+       init_labjack_digital();
+    }
     if (set_1 == 1) {
         labjack_networking_init(LABJACK_CRYO_1, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
         initialize_labjack_commands(LABJACK_CRYO_1);
@@ -704,13 +708,4 @@ void init_labjacks(int set_1, int set_2, int set_3, int set_4, int set_5, int q_
         labjack_networking_init(LABJACK_OF_3, LABJACK_CRYO_NCHAN, LABJACK_CRYO_SPP);
         initialize_labjack_commands(LABJACK_OF_3);
     }
-    if (q_set == 1) {
-        initialize_labjack_queue();
-        init_labjack_digital();
-    }
 }
-
-
-
-
-

@@ -327,6 +327,7 @@ void rw_reset_fault(void);
 void el_reset_fault(void);
 void piv_reset_fault(void);
 
+uint8_t is_el_motor_ready();
 int initialize_motors(void);
 
 #endif /* INCLUDE_EC_MOTORS_H_ */

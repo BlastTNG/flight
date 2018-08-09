@@ -97,7 +97,7 @@ void udp_receive(void *arg) {
 
     // decompress the linklist
     if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
-      // blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+      blast_info("[%s] Received an allframe :)\n", udpsetup->name);
       memcpy(local_allframe, compbuffer, superframe->allframe_size);
     } else {
       if ((good_serial_count % 1) == 0) {

@@ -262,7 +262,7 @@ void xsc_control_triggers()
                 for (int which = 0; which < 2; which++) {
                 	trigger |= (1 << which);
                     xsc_trigger(which, 1);
-                    printf("Triggering XSC%d!\n", which);
+                    blast_info("Triggering XSC%d!", which);
 
                     xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
                     xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;

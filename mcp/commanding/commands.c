@@ -75,6 +75,9 @@ static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+#define PSN_EAST_BAY_LAT 31.779300
+#define PSN_EAST_BAY_LON 264.283000
+
 void RecalcOffset(double, double);  /* actuators.c */
 
 /* defined in pointing.c */
@@ -94,7 +97,7 @@ extern char * ROACH_TYPES[NUM_RTYPES];
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
 
-struct SIPDataStruct SIPData;
+struct SIPDataStruct SIPData = {.GPSpos = {.lat = PSN_EAST_BAY_LAT, .lon = PSN_EAST_BAY_LON}};
 struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c
@@ -972,9 +975,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case potvalve_on:
             CommandData.Cryo.potvalve_on = 1;
+	    CommandData.Cryo.potvalve_goal = 0;
             break;
         case potvalve_off:
             CommandData.Cryo.potvalve_on = 0;
+	    CommandData.Cryo.potvalve_goal = 0;
             break;
         case pump_valve_open:
 	    CommandData.Cryo.valve_goals[0] = opened;
@@ -982,11 +987,26 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case pump_valve_close:
 	    CommandData.Cryo.valve_goals[0] = closed;
 	    break;
+	case pump_valve_off:
+	    CommandData.Cryo.valve_goals[0] = 0;
+	    CommandData.Cryo.valve_stop[0] = 1;
+	    break;
+	case pump_valve_on:
+	    CommandData.Cryo.valve_goals[0] = 0;
+	    CommandData.Cryo.valve_stop[0] = 0;
 	case fill_valve_open:
 	    CommandData.Cryo.valve_goals[1] = opened;
 	    break;
 	case fill_valve_close:
 	    CommandData.Cryo.valve_goals[1] = closed;
+	    break;
+	case fill_valve_off:
+	    CommandData.Cryo.valve_goals[1] = 0;
+	    CommandData.Cryo.valve_stop[1] = 1;
+	    break;
+	case fill_valve_on:
+	    CommandData.Cryo.valve_goals[1] = 0;
+	    CommandData.Cryo.valve_stop[1] = 0;
 	    break;
 	case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
@@ -1196,9 +1216,42 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case set_attens_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].set_attens = 1;
+                CommandData.roach[i].set_attens = 2;
             }
             break;
+        case auto_find_kids_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].auto_find = 1;
+            }
+            break;
+        case zero_df_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].recenter_df = 1;
+            }
+            break;
+        case reset_roach_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].roach_new_state = ROACH_STATE_BOOT;
+              CommandData.roach[i].roach_desired_state = ROACH_STATE_STREAMING;
+              CommandData.roach[i].change_roach_state = 1;
+            }
+          break;
+        case flight_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 1;
+            }
+            break;
+        case debug_mode:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].go_flight_mode = 0;
+                // CommandData.roach[i].auto_find = 0;
+                CommandData.roach[i].do_sweeps = 0;
+            }
+            break;
+        case change_freqs_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].change_targ_freq = 2;
+          }
         case pilot_oth_on:
             CommandData.pilot_oth = 1;
             blast_info("Switched to Pilot OTH\n");
@@ -1765,6 +1818,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_opencurrent = ivalues[0];
       CommandData.Cryo.potvalve_closecurrent = ivalues[1];
       break;
+    case potvalve_set_hold_current:
+      CommandData.Cryo.potvalve_hold_i = ivalues[0];
+      break;
     case potvalve_set_thresholds:
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
@@ -1773,8 +1829,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
       break;
-    case valves_set_current:
-      CommandData.Cryo.valve_current = ivalues[0];
+    case valves_set_move_i:
+      CommandData.Cryo.valve_move_i = ivalues[0];
+      break;
+    case valves_set_hold_i:
+      CommandData.Cryo.valve_hold_i = ivalues[0];
       break;
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
@@ -1950,6 +2009,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.biphase_allframe_fraction = rvalues[1];
       blast_info("Changed biphase bw to %f kbps (%f percent allframe)", rvalues[0], rvalues[1]*100.0);
       break;
+    case set_roach_mode:
+        if (ivalues[0] == 0) CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+        else if (ivalues[0] == 1) CommandData.roach_tlm_mode = ROACH_TLM_DELTA;
+        break;
     case set_roach_all_chan:
         if (ivalues[0] > 0 && ivalues[0] <= NUM_ROACHES) {
           CommandData.num_channels_all_roaches[ivalues[0]-1] = ivalues[1];
@@ -2042,7 +2105,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case reset_roach:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].new_state = ROACH_STATE_BOOT;
+          CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
+          CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
           CommandData.roach[ivalues[0]-1].change_roach_state = 1;
           CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
@@ -2219,6 +2283,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].freq_offset = rvalues[2];
       }
       break;
+    case auto_find_kids:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+        CommandData.roach[ivalues[0]-1].auto_find = 1;
+      }
+      break;
+    case lamp_check_all:
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            CommandData.roach[i].check_response = 1;
+            CommandData.roach_params[i].num_sec = rvalues[0];
+        }
+        break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -2861,10 +2936,8 @@ void InitCommandData()
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
         CommandData.roach[i].do_cal_sweeps = 0;
-        CommandData.roach[i].new_state = 0;
         CommandData.roach[i].change_roach_state = 0;
         CommandData.roach[i].get_roach_state = 0;
-        CommandData.roach[i].roach_state = 0;
         CommandData.roach[i].find_kids = 0;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
@@ -2888,7 +2961,11 @@ void InitCommandData()
         CommandData.roach[i].change_tone_phase = 0;
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
+        CommandData.roach[i].auto_find = 0;
         CommandData.roach_params[i].in_atten = 16;
+        CommandData.roach[i].recenter_df = 0;
+        CommandData.roach[i].go_flight_mode = 0;
+        CommandData.roach[i].check_response = 0;
     }
     CommandData.roach_params[0].out_atten = 7;
     CommandData.roach_params[1].out_atten = 2;
@@ -3337,12 +3414,14 @@ void InitCommandData()
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
     CommandData.Cryo.potvalve_closed_threshold = 6000;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 12000;
     CommandData.Cryo.valve_vel = 50000;
-    CommandData.Cryo.valve_current = 75;
+    CommandData.Cryo.valve_move_i = 75;
+    CommandData.Cryo.valve_hold_i = 0;
     CommandData.Cryo.valve_acc = 16;
 
 
@@ -3398,7 +3477,8 @@ void InitCommandData()
     for (int which = 0; which < 2; which++) {
         CommandData.XSC[which].is_new_window_period_cs = 1500;
 
-        CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        // CommandData.XSC[which].heaters.mode = xsc_heater_auto;
+        CommandData.XSC[which].heaters.mode = xsc_heater_off;
         CommandData.XSC[which].heaters.setpoint = 10.0;
 
         CommandData.XSC[which].trigger.exposure_time_cs = 12;

@@ -256,7 +256,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   }
 
   // parse the superframe format
-  snprintf(pathname, 128, "%s/%s", archive_dir, reqffname);
+  snprintf(pathname, 128, "%s/%s", "/tmp", reqffname);
   if (!(*sf = parse_superframe_format(pathname))) {
     linklist_err("Superframe format parser error.\n");
     return 0;
@@ -265,7 +265,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   unlink(pathname);
 
   // parse the linklist format
-  snprintf(pathname, 128, "%s/%s", archive_dir, reqllname);
+  snprintf(pathname, 128, "%s/%s", "/tmp", reqllname);
   if (!(*ll = parse_linklist_format(*sf, pathname))) {
     linklist_err("Linklist format parser error.\n");
     return 0;
@@ -284,7 +284,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   // parse the calspecs format
   if (calspecs) {
     char fname[128];
-    snprintf(pathname, 128, "%s/%s", archive_dir, reqcsname);
+    snprintf(pathname, 128, "%s/%s", "/tmp", reqcsname);
     snprintf(fname, 128, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
 
     if (copy_file(pathname, fname) < 0) {
@@ -855,7 +855,7 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   uint32_t ll_serial;
 
   char savedname[256] = {0};
-  snprintf(savedname, 256, "%s/%s", archive_dir, filename);
+  snprintf(savedname, 256, "%s/%s", "/tmp", filename);
 
   // linklist_info("Requesting file \"%s\" from server...\n",filename);
 

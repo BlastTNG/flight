@@ -205,3 +205,15 @@ pin_in_lock
 mc_rw_vel
 mc_el_motor_pos
 mc_piv_pos
+
+offset_ifel_gy
+offset_ifroll_gy
+offset_ifyaw_gy
+offset_ifrollmag1_gy
+offset_ifyawmag1_gy
+offset_ifrolldgps_gy
+offset_ifyawdgps_gy
+offset_ifrollmag2_gy
+offset_ifyawmag2_gy
+offset_ifrollpss_gy
+offset_ifyawpss_gy

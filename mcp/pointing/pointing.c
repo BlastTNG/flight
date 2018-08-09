@@ -48,6 +48,7 @@
 #include "lut.h"
 #include "tx.h"
 #include "fir.h"
+#include "ec_motors.h"
 
 #include "dsp1760.h"
 #include "EGM9615.h"
@@ -63,6 +64,7 @@
 #include "gps.h"
 #include "sip.h"
 
+extern int InCharge;
 int point_index = 0;
 struct PointingDataStruct PointingData[3];
 struct XSCPointingState xsc_pointing_state[2] = {{.counter_mcp = 0}};
@@ -1060,6 +1062,59 @@ static inline double exponential_moving_average(double m_running_avg, double m_n
     return alpha * m_newval + (1.0 - alpha) * m_running_avg;
 }
 
+// Called if we are not in charge.  Reads important fields (shared from the ICC) that
+// cannot be read out when not the ICC.
+void ReadICCPointing(read_icc_t *m_read_icc)
+{
+    int i;
+    static int first_time = 1;
+    if (first_time) {
+        blast_info("Not in charge, getting pointing sensor data from %d shared linklist channels.",
+                   NUM_READ_P_ICC);
+        for (i = 0; i < NUM_READ_P_ICC; i++) {
+            m_read_icc[i].ch = channels_find_by_name(m_read_icc[i].ch_name);
+            blast_info("writing channel %s", m_read_icc[i].ch_name);
+        }
+        first_time = 0;
+    }
+    for (i = 0; i < NUM_READ_P_ICC; i++) {
+        switch (m_read_icc[i].ch->type) {
+            case TYPE_INT8:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int8_t*)m_read_icc[i].pval);
+            break;
+        case TYPE_UINT8:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint8_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT16:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int16_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT16:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint16_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT32:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int32_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT32:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint32_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT64:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int64_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT64:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint64_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_FLOAT:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(float*)(m_read_icc[i].pval));
+            break;
+        case TYPE_DOUBLE:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(double*)(m_read_icc[i].pval));
+            break;
+        default:
+            blast_err("Invalid type %d", m_read_icc[i].ch->type);
+        }
+//        SET_SCALED_VALUE(m_read_icc[i].ch, &(()m_read_icc[i].pval));
+    }
+}
 // TODO(seth): Split up Pointing() in manageable chunks for each sensor
 /*****************************************************************
   do sensor selection;
@@ -1085,12 +1140,14 @@ void Pointing(void)
     double pss_az = 0;
     double pss_el = 0;
     double dgps_az = 0;
-    double dgps_el = 0;
     double clin_elev;
     static double last_good_lat = 0, last_good_lon = 0, last_good_alt = 0;
     static double last_gy_total_vel = 0.0;
     static int i_at_float = 0;
     double trim_change;
+
+    int enc_motor_ready = is_el_motor_ready();
+    int enc_motor_ok;
 
     static int firsttime = 1;
 
@@ -1222,6 +1279,7 @@ void Pointing(void)
         .since_last = 0,
     };
 
+  static read_icc_t read_shared_pdata[NUM_READ_P_ICC];
   static gyro_history_t hs = {NULL};
   static gyro_reading_t RG = {0.0};
 
@@ -1277,12 +1335,53 @@ void Pointing(void)
         /* Load lat/lon from disk */
         last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
         last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
+
+        // Set pointers to variables that will be read from shared data if we are not in charge.
+        read_shared_pdata[0].pval = &(ISCAz.angle);
+        read_shared_pdata[1].pval = &(OSCAz.angle);
+        read_shared_pdata[2].pval = &(ISCEl.angle);
+        read_shared_pdata[3].pval = &(OSCEl.angle);
+        read_shared_pdata[4].pval = &(ISCEl.variance);
+        read_shared_pdata[5].pval = &(OSCEl.variance);
+        read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
+        read_shared_pdata[7].pval = &enc_motor_ready;
+        read_shared_pdata[8].pval = &NewAzEl.fresh;
+        read_shared_pdata[9].pval = &NewAzEl.rate;
+        read_shared_pdata[10].pval = &NewAzEl.az;
+        read_shared_pdata[11].pval = &NewAzEl.el;
+        snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
+        snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
+        snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
+        snprintf(read_shared_pdata[3].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_el");
+        snprintf(read_shared_pdata[4].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_var");
+        snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
+        snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
+        snprintf(read_shared_pdata[7].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
+        snprintf(read_shared_pdata[8].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "rate_atrim");
+        snprintf(read_shared_pdata[9].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "fresh_trim");
+        snprintf(read_shared_pdata[10].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "new_az");
+        snprintf(read_shared_pdata[11].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC,  "new_el");
     }
 
     if (elClinLut.n == 0)
         LutInit(&elClinLut);
 
     i_point_read = GETREADINDEX(point_index);
+
+//  Only add the encoder solution if we are getting data from the El drive.  Or if we
+//  are not InCharge and getting shared El data from the other FCC.
+    enc_motor_ok = enc_motor_ready; // || (!InCharge && PointingData[i_point_read].recv_shared_data);
+
+    // If we are not in charge then we need to read some pointing data from the ICC
+    if (!InCharge) {
+//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
+//                    OSCAz.variance, ACSData.enc_motor_elev);
+         ReadICCPointing(read_shared_pdata);
+//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+//                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
+//                    OSCAz.variance, ACSData.enc_motor_elev);
+    }
 
     // Make aristotle correct
     R = 15.0 / 3600.0;
@@ -1393,7 +1492,7 @@ void Pointing(void)
             ACSData.enc_elev, 1);
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
-            ACSData.enc_motor_elev, 1);
+            ACSData.enc_motor_elev, enc_motor_ok);
     EvolveElSolution(&MagElN, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_n, mag_ok_n);
@@ -1510,6 +1609,7 @@ void Pointing(void)
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
 
     PointingData[point_index].az = AzAtt.az;
+    PointingData[point_index].weight_az = AzAtt.weight;
     if (CommandData.az_autogyro) {
         PointingData[point_index].offset_ifroll_gy = AzAtt.offset_ifroll_gy;
         PointingData[point_index].offset_ifyaw_gy = AzAtt.offset_ifyaw_gy;
@@ -1529,14 +1629,17 @@ void Pointing(void)
     //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f", PointingData[point_index].enc_el);
     PointingData[point_index].enc_el = EncEl.angle;
     PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
+    PointingData[point_index].enc_motor_ok = enc_motor_ok;
     PointingData[point_index].enc_motor_el = EncMotEl.angle;
     PointingData[point_index].enc_motor_sigma = sqrt(EncMotEl.variance + EncMotEl.sys_var);
     PointingData[point_index].clin_el = ClinEl.angle;
     PointingData[point_index].clin_sigma = sqrt(ClinEl.variance + ClinEl.sys_var);
 
+    PointingData[point_index].mag_ok[0] = mag_ok_n;
     PointingData[point_index].mag_az[0] = MagAzN.angle;
     PointingData[point_index].mag_el[0] = MagElN.angle;
     PointingData[point_index].mag_sigma[0] = sqrt(MagAzN.variance + MagAzN.sys_var);
+    PointingData[point_index].mag_ok[1] = mag_ok_s;
     PointingData[point_index].mag_az[1] = MagAzS.angle;
     PointingData[point_index].mag_el[1] = MagElS.angle;
     PointingData[point_index].mag_sigma[1] = sqrt(MagAzS.variance + MagAzS.sys_var);
@@ -1546,11 +1649,13 @@ void Pointing(void)
     PointingData[point_index].null_az = NullAz.angle;
 
     // Added 22 June 2010 GT
+    PointingData[point_index].pss_ok = pss_ok;
     PointingData[point_index].pss_az = PSSAz.angle;
     PointingData[point_index].pss_sigma = sqrt(PSSAz.variance + PSSAz.sys_var);
 
     PointingData[point_index].xsc_az[0] = ISCAz.angle;
     PointingData[point_index].xsc_el[0] = ISCEl.angle;
+    PointingData[point_index].xsc_var[0] = ISCEl.variance;
     PointingData[point_index].xsc_sigma[0] = sqrt(ISCEl.variance + ISCEl.sys_var);
     PointingData[point_index].offset_ifel_gy_xsc[0] = ISCEl.offset_gy;
     PointingData[point_index].offset_ifroll_gy_xsc[0] = ISCAz.offset_ifroll_gy;
@@ -1558,6 +1663,7 @@ void Pointing(void)
 
     PointingData[point_index].xsc_az[1] = OSCAz.angle;
     PointingData[point_index].xsc_el[1] = OSCEl.angle;
+    PointingData[point_index].xsc_var[1] = OSCEl.variance;
     PointingData[point_index].xsc_sigma[1] = sqrt(OSCEl.variance + OSCEl.sys_var);
     PointingData[point_index].offset_ifel_gy_xsc[1] = OSCEl.offset_gy;
     PointingData[point_index].offset_ifroll_gy_xsc[1] = OSCAz.offset_ifroll_gy;
@@ -1593,6 +1699,10 @@ void Pointing(void)
     PointingData[point_index].d_az_xsc1 = OSCAz.d_az;
     PointingData[point_index].prev_sol_az_xsc1 = OSCAz.prev_sol_az;
     PointingData[point_index].prev_sol_el_xsc1 = OSCEl.prev_sol_el;
+    PointingData[point_index].autotrim_rate_xsc = NewAzEl.rate;
+    PointingData[point_index].fresh = NewAzEl.fresh;
+    PointingData[point_index].new_az = NewAzEl.az;
+    PointingData[point_index].new_el = NewAzEl.el;
 
     xsc_calculate_full_pointing_estimated_location(0);
     xsc_calculate_full_pointing_estimated_location(1);
@@ -1613,7 +1723,7 @@ void Pointing(void)
         NewAzEl.fresh = 0;
     }
 
-    if (NewAzEl.fresh == 1) {
+    if ((NewAzEl.fresh == 1) && InCharge) {
         trim_change = (NewAzEl.el - ClinEl.angle) - ClinEl.trim;
         if (trim_change > NewAzEl.rate)
             trim_change = NewAzEl.rate;
@@ -1673,6 +1783,15 @@ void Pointing(void)
         DGPSAz.trim += trim_change;
 
         NewAzEl.fresh = 0;
+    } else {
+        ClinEl.trim = CommandData.clin_el_trim;
+        EncEl.trim = CommandData.enc_el_trim;
+        EncMotEl.trim = CommandData.enc_motor_el_trim;
+        NullAz.trim = CommandData.null_az_trim;
+        MagAzN.trim = CommandData.mag_az_trim[0];
+        MagAzS.trim = CommandData.mag_az_trim[1];
+        PSSAz.trim = CommandData.pss_az_trim;
+        DGPSAz.trim = CommandData.dgps_az_trim;
     }
 
     point_index = INC_INDEX(point_index);
@@ -1718,6 +1837,8 @@ void SetTrimToSC(int which)
   i_point = GETREADINDEX(point_index);
   NewAzEl.az = PointingData[i_point].xsc_az[which];
   NewAzEl.el = PointingData[i_point].xsc_el[which];
+
+  NewAzEl.rate = 360.0; // star cameras are right
   NewAzEl.fresh = 1;
 }
 
