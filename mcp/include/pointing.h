@@ -57,7 +57,7 @@
 #define NUM_CHARS_CHAN_P_ICC   128
 
 typedef struct {
-    double *pval;
+    void *pval;
     char ch_name[NUM_CHARS_CHAN_P_ICC];
     channel_t *ch;
 } read_icc_t;

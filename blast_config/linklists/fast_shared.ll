@@ -9,4 +9,5 @@ x1_point_el NONE 1
 x1_point_var NONE 1
 
 mc_el_motor_pos NONE 1
+ok_motor_enc NONE 1
 

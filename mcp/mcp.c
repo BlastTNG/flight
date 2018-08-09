@@ -355,8 +355,9 @@ static void mcp_200hz_routines(void)
 }
 static void mcp_100hz_routines(void)
 {
+    int i_point = GETREADINDEX(point_index);
     read_100hz_acs();
-    recv_fast_data();
+    PointingData[i_point].recv_shared_data = recv_fast_data();
     Pointing();
 //    DoSched();
     update_axes_mode();

@@ -167,6 +167,7 @@ struct PointingDataStruct {
   double clin_el;
   double clin_el_lut;
   double clin_sigma;
+  uint8_t recv_shared_data;   // flag
 
   bool requested_el_out_of_bounds;
   bool az_destination_capped;

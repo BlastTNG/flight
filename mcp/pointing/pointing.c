@@ -1069,14 +1069,50 @@ void ReadICCPointing(read_icc_t *m_read_icc)
     int i;
     static int first_time = 1;
     if (first_time) {
-        blast_info("Not in charge, getting pointing sensor data from shared linklist.");
+        blast_info("Not in charge, getting pointing sensor data from %d shared linklist channels.",
+                   NUM_READ_P_ICC);
         for (i = 0; i < NUM_READ_P_ICC; i++) {
             m_read_icc[i].ch = channels_find_by_name(m_read_icc[i].ch_name);
+            blast_info("writing channel %s", m_read_icc[i].ch_name);
         }
         first_time = 0;
     }
     for (i = 0; i < NUM_READ_P_ICC; i++) {
-        SET_SCALED_VALUE(m_read_icc[i].ch, *(m_read_icc[i].pval));
+        switch (m_read_icc[i].ch->type) {
+            case TYPE_INT8:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int8_t*)m_read_icc[i].pval);
+            break;
+        case TYPE_UINT8:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint8_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT16:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int16_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT16:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint16_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT32:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int32_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT32:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint32_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_INT64:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(int64_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_UINT64:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(uint64_t*)(m_read_icc[i].pval));
+            break;
+        case TYPE_FLOAT:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(float*)(m_read_icc[i].pval));
+            break;
+        case TYPE_DOUBLE:
+            GET_SCALED_VALUE(m_read_icc[i].ch, *(double*)(m_read_icc[i].pval));
+            break;
+        default:
+            blast_err("Invalid type %d", m_read_icc[i].ch->type);
+        }
+//        SET_SCALED_VALUE(m_read_icc[i].ch, &(()m_read_icc[i].pval));
     }
 }
 // TODO(seth): Split up Pointing() in manageable chunks for each sensor
@@ -1104,14 +1140,14 @@ void Pointing(void)
     double pss_az = 0;
     double pss_el = 0;
     double dgps_az = 0;
-    double dgps_el = 0;
     double clin_elev;
     static double last_good_lat = 0, last_good_lon = 0, last_good_alt = 0;
     static double last_gy_total_vel = 0.0;
     static int i_at_float = 0;
     double trim_change;
 
-    int enc_motor_ok = is_el_motor_ready();
+    int enc_motor_ready = is_el_motor_ready();
+    int enc_motor_ok;
 
     static int firsttime = 1;
 
@@ -1308,7 +1344,7 @@ void Pointing(void)
         read_shared_pdata[4].pval = &(ISCAz.variance);
         read_shared_pdata[5].pval = &(OSCAz.variance);
         read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
-        read_shared_pdata[7].pval = &enc_motor_ok;
+        read_shared_pdata[7].pval = &enc_motor_ready;
         snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
         snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
         snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
@@ -1316,7 +1352,7 @@ void Pointing(void)
         snprintf(read_shared_pdata[4].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_var");
         snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
         snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
-        snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
+        snprintf(read_shared_pdata[7].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
     }
 
     if (elClinLut.n == 0)
@@ -1324,13 +1360,17 @@ void Pointing(void)
 
     i_point_read = GETREADINDEX(point_index);
 
+//  Only add the encoder solution if we are getting data from the El drive.  Or if we
+//  are not InCharge and getting shared El data from the other FCC.
+    enc_motor_ok = enc_motor_ready || (!InCharge && PointingData[i_point_read].recv_shared_data);
+
     // If we are not in charge then we need to read some pointing data from the ICC
     if (!InCharge) {
 //         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
 //                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
 //                    OSCAz.variance, ACSData.enc_motor_elev);
-//         ReadICCPointing(read_shared_pdata);
-         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
+         ReadICCPointing(read_shared_pdata);
+//         blast_info("XSC0 Az %f, XSC0 El %f, XSC0 Var %f, XSC1 Az %f, XSC1 El %f, XSC1 Var Az%f, ElMotEnc %f",
 //                    ISCAz.angle, ISCEl.angle, ISCAz.variance, OSCAz.angle, OSCEl.angle,
 //                    OSCAz.variance, ACSData.enc_motor_elev);
     }
