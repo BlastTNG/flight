@@ -1494,7 +1494,7 @@ void Pointing(void)
     if (CommandData.use_elenc) {
         AddElSolution(&ElAtt, &EncEl, 1);
     }
-    if (CommandData.use_elmotenc && enc_motor_ok) {
+    if (CommandData.use_elmotenc) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 
