@@ -471,14 +471,14 @@ void biphase_writer(void * arg)
 
         // get the current bandwidth
         if ((bandwidth != CommandData.biphase_bw) ||
-             (CommandData.biphase_allframe_fraction < 0.001)) allframe_bytes = 0;
+             (CommandData.biphase_allframe_fraction < 0.0001)) allframe_bytes = 0;
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
             // send allframe if necessary
-            if (allframe_bytes >= bandwidth) {
+            if (allframe_bytes >= superframe->allframe_size) {
                 transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
                 allframe_bytes = 0;
             } else {
@@ -488,9 +488,12 @@ void biphase_writer(void * arg)
 
                 // bandwidth limit; frames are 1 Hz, so bandwidth == size
                 transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
-                allframe_bytes += bandwidth-transmit_size;
+                allframe_bytes += bandwidth*CommandData.biphase_allframe_fraction;
             }
 
+            // no packetization if there is nothing to transmit
+            if (!transmit_size) continue;
+ 
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
@@ -498,7 +501,7 @@ void biphase_writer(void * arg)
             // packetization temporary variables
             uint8_t * chunk = NULL;
             uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-BI0_ZERO_PADDING-PACKET_HEADER_SIZE-2;
-                        
+                       
             // packetize the linklist and send the chunks if there is data to packetize
             while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, transmit_size,
                                            &chunksize, &i_pkt, &n_pkt))) {

@@ -109,6 +109,7 @@ struct PointingDataStruct {
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
 
+  bool mag_ok[NUM_MAGS];   // flag
   double mag_az[NUM_MAGS];   // degrees
   double mag_az_raw[NUM_MAGS];   // degrees
   double mag_el[NUM_MAGS];   // degrees
@@ -146,6 +147,7 @@ struct PointingDataStruct {
 
   double xsc_az[2];
   double xsc_el[2];
+  double xsc_var[2];
   double xsc_sigma[2];
   double offset_ifel_gy_xsc[2];
   double offset_ifyaw_gy_xsc[2];
@@ -155,14 +157,17 @@ struct PointingDataStruct {
   double estimated_xsc_ra_hours[2];
   double estimated_xsc_dec_deg[2];
 
+  bool enc_motor_ok;   // flag
   double enc_el;
   double enc_sigma;
   double enc_motor_el;
   double enc_motor_sigma;
 
+  double clin_ok;
   double clin_el;
   double clin_el_lut;
   double clin_sigma;
+  uint8_t recv_shared_data;   // flag
 
   bool requested_el_out_of_bounds;
   bool az_destination_capped;
@@ -198,6 +203,12 @@ struct PointingDataStruct {
   double d_az_xsc1;
   double prev_sol_az_xsc1;
   double prev_sol_el_xsc1;
+  double autotrim_rate_xsc;
+  uint8_t fresh;
+  double new_az;
+  double new_el;
+  double weight_az;
+  double weight_el;
 };
 
 extern struct PointingDataStruct PointingData[3];

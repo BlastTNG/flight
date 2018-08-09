@@ -355,11 +355,14 @@ static void mcp_200hz_routines(void)
 }
 static void mcp_100hz_routines(void)
 {
+    int i_point = GETREADINDEX(point_index);
     read_100hz_acs();
+    PointingData[i_point].recv_shared_data = recv_fast_data();
     Pointing();
 //    DoSched();
     update_axes_mode();
     store_100hz_acs();
+    send_fast_data();
 //   BiasControl();
     WriteChatter();
     store_100hz_xsc(0);
@@ -380,6 +383,8 @@ static void mcp_5hz_routines(void)
     update_sun_sensors();
     // read_5hz_acs();
     store_5hz_acs();
+    store_5hz_xsc(0);
+    store_5hz_xsc(1);
     write_motor_channels_5hz();
     write_roach_channels_5hz();
     store_axes_mode_data();
@@ -418,7 +423,7 @@ static void mcp_1hz_routines(void)
     // int ready = 1;
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
-    if (ready) {
+    if (ready && InCharge) {
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
          memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
          incrementFifo(telem_fifo[i]);
@@ -452,7 +457,9 @@ static void mcp_1hz_routines(void)
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
-    // roach_timestamp_init(1);
+    /* for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_timestamp_init(i);
+    }*/
 }
 
 static void *mcp_main_loop(void *m_arg)
@@ -732,6 +739,7 @@ blast_info("Finished initializing Beaglebones..."); */
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
 
 #ifndef USE_XY_THREAD
+  // for now put ActBus inside ifndef so that only one of Actbus thread and XYbus thread run
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
 #endif
 //  Turns on software WD 2, which reboots the FC if not tickled

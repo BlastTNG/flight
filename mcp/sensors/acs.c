@@ -712,15 +712,35 @@ static inline channel_t* get_xsc_channel(const char *m_field, int m_which)
   return channels_find_by_name(buffer);
 }
 
+void store_5hz_xsc(int m_which)
+{
+    static bool firsttime[2] = {true, true};
+    static channel_t* address_xN_point_az[2];
+    static channel_t* address_xN_point_el[2];
+    static channel_t* address_xN_point_var[2];
+    static channel_t* address_xN_point_sigma[2];
+
+    int i_point = GETREADINDEX(point_index);
+
+    if (firsttime[m_which]) {
+        firsttime[m_which] = false;
+        address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
+        address_xN_point_el[m_which]      = get_xsc_channel("point_el"        , m_which);
+        address_xN_point_var[m_which]   = get_xsc_channel("point_var"     , m_which);
+        address_xN_point_sigma[m_which]   = get_xsc_channel("point_sigma"     , m_which);
+    }
+    SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
+    SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
+    SET_SCALED_VALUE(address_xN_point_var[m_which]  , PointingData[i_point].xsc_var[m_which]);
+    SET_SCALED_VALUE(address_xN_point_sigma[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
+}
+
 void store_1hz_xsc(int m_which)
 {
     static bool firsttime[2] = {true, true};
 
     static channel_t* address_xN_point_az_raw[2];
-    static channel_t* address_xN_point_az[2];
     static channel_t* address_xN_point_el_raw[2];
-    static channel_t* address_xN_point_el[2];
-    static channel_t* address_xN_point_sigma[2];
     static channel_t* address_xN_point_az_trim[2];
     static channel_t* address_xN_point_el_trim[2];
     static channel_t* address_xN_cd_robust_mode[2];
@@ -827,10 +847,7 @@ void store_1hz_xsc(int m_which)
         address_xN_image_hor_sigma_pointing[m_which] = get_xsc_channel("image_hor_sigma_pointing", m_which);
 
         address_xN_point_az_raw[m_which]  = get_xsc_channel("point_az_raw"    , m_which);
-        address_xN_point_az[m_which]      = get_xsc_channel("point_az"        , m_which);
         address_xN_point_el_raw[m_which]  = get_xsc_channel("point_el_raw"    , m_which);
-        address_xN_point_el[m_which]      = get_xsc_channel("point_el"        , m_which);
-        address_xN_point_sigma[m_which]   = get_xsc_channel("point_sigma"     , m_which);
         address_xN_point_az_trim[m_which] = get_xsc_channel("point_az_trim"   , m_which);
         address_xN_point_el_trim[m_which] = get_xsc_channel("point_el_trim"   , m_which);
         address_xN_cd_robust_mode[m_which] = get_xsc_channel("cd_robust_mode"   , m_which);
@@ -894,9 +911,6 @@ void store_1hz_xsc(int m_which)
     SET_SCALED_VALUE(address_xN_image_hor_sigma_pointing[m_which],
                      XSC_SERVER_DATA(m_which).channels.image_hor_sigma_pointing);
 
-    SET_SCALED_VALUE(address_xN_point_az[m_which]     , PointingData[i_point].xsc_az[m_which]);
-    SET_SCALED_VALUE(address_xN_point_el[m_which]     , PointingData[i_point].xsc_el[m_which]);
-    SET_SCALED_VALUE(address_xN_point_sigma[m_which]  , PointingData[i_point].xsc_sigma[m_which]);
     SET_SCALED_VALUE(address_xN_point_az_raw[m_which] , xsc_pointing_state[m_which].az);
     SET_SCALED_VALUE(address_xN_point_el_raw[m_which] , xsc_pointing_state[m_which].el);
     SET_SCALED_VALUE(address_xN_point_az_trim[m_which], CommandData.XSC[m_which].cross_el_trim);
@@ -1101,6 +1115,10 @@ void store_5hz_acs(void)
     static channel_t* DGPSAzAddr;
     static channel_t* DGPSSigmaAzAddr;
     static channel_t *DGPSRawAzAddr;
+    static channel_t *MagOKAddr[2];
+    static channel_t *EncMotorOK;
+    static channel_t *DGPSOK;
+    static channel_t *ElClinOK;
 
     /* trim fields */
     static channel_t *trimClinAddr;
@@ -1115,11 +1133,17 @@ void store_5hz_acs(void)
     static channel_t *threshAtrimAddr;
     static channel_t *timeAtrimAddr;
     static channel_t *rateAtrimAddr;
+    static channel_t *rateAtrimPtAddr;
 
     static channel_t *modeCalAddr;
     static channel_t *hwprCalAddr;
     static channel_t *periodCalAddr;
     static channel_t *lstSchedAddr;
+    static channel_t *freshTrimAddr;
+    static channel_t *newAzAddr;
+    static channel_t *newElAddr;
+    static channel_t *weightAzAddr;
+    static channel_t *weightElAddr;
 
     int i_point;
     int sensor_veto;
@@ -1248,6 +1272,11 @@ void store_5hz_acs(void)
         nextIHwprPAddr = channels_find_by_name("next_i_hwpr_p");
 
         vetoSensorAddr = channels_find_by_name("veto_sensor");
+        MagOKAddr[0] = channels_find_by_name("ok_mag1");
+        MagOKAddr[1] = channels_find_by_name("ok_mag2");
+        EncMotorOK = channels_find_by_name("ok_motor_enc");
+        ElClinOK = channels_find_by_name("ok_elclin");
+        DGPSOK = channels_find_by_name("ok_dgps");
 
         lstSchedAddr = channels_find_by_name("lst_sched");
 
@@ -1260,12 +1289,18 @@ void store_5hz_acs(void)
         trimPssAddr = channels_find_by_name("trim_pss");
         trimDGPSAddr = channels_find_by_name("trim_dgps");
 
-        threshAtrimAddr = channels_find_by_name("thresh_atrim");
-        timeAtrimAddr = channels_find_by_name("time_atrim");
-        rateAtrimAddr = channels_find_by_name("rate_atrim");
+        threshAtrimAddr = channels_find_by_name("thresh_cmd_atrim");
+        timeAtrimAddr = channels_find_by_name("time_cmd_atrim");
+        rateAtrimAddr = channels_find_by_name("rate_cmd_atrim");
+        rateAtrimPtAddr = channels_find_by_name("rate_atrim");
+        freshTrimAddr = channels_find_by_name("fresh_trim");
+        newAzAddr = channels_find_by_name("new_az");
+        newElAddr = channels_find_by_name("new_el");
         DGPSRawAzAddr = channels_find_by_name("az_raw_dgps");
         DGPSAzAddr = channels_find_by_name("az_dgps");
         DGPSSigmaAzAddr = channels_find_by_name("sigma_dgps");
+        weightAzAddr = channels_find_by_name("weight_az");
+        weightElAddr = channels_find_by_name("weight_el");
     }
 
     i_point = GETREADINDEX(point_index);
@@ -1388,6 +1423,10 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);
     SET_SCALED_VALUE(timeAtrimAddr, CommandData.autotrim_time);
     SET_SCALED_VALUE(rateAtrimAddr, CommandData.autotrim_rate);
+    SET_SCALED_VALUE(rateAtrimPtAddr, PointingData[i_point].autotrim_rate_xsc);
+    SET_SCALED_VALUE(freshTrimAddr, PointingData[i_point].fresh);
+    SET_SCALED_VALUE(newAzAddr, PointingData[i_point].new_az);
+    SET_SCALED_VALUE(newElAddr, PointingData[i_point].new_el);
 
     SET_FLOAT(gy_azvel_addr, (float) (PointingData[i_point].gy_az));
     SET_FLOAT(gy_elvel_addr, (float) (PointingData[i_point].gy_el));
@@ -1430,9 +1469,11 @@ void store_5hz_acs(void)
     		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
 			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
 			| ((!CommandData.use_elclin) << 5)
-			| ((!CommandData.use_xsc1) << 6) | ((CommandData.disable_el) << 10)
+			| ((!CommandData.use_xsc1) << 6) | ((CommandData.uplink_sched) << 7)
+			| ((CommandData.az_autogyro)  << 8) | ((CommandData.az_autogyro)  << 9)
+			| ((CommandData.disable_el) << 10)
             | ((CommandData.disable_az) << 11) | ((CommandData.force_el) << 12)
-			| ((!CommandData.use_pss) << 13);
+			| ((!CommandData.use_pss) << 13) | ((!CommandData.use_dgps) << 14);
 
     if (PointingData[i_point].t >= CommandData.pointing_mode.t)
         sensor_veto |= (1 << 7);
@@ -1441,6 +1482,13 @@ void store_5hz_acs(void)
     sensor_veto |= (CommandData.el_autogyro << 9);
 
     SET_UINT16(vetoSensorAddr, sensor_veto);
+    SET_UINT8(MagOKAddr[0], PointingData[i_point].mag_ok[0]);
+    SET_UINT8(MagOKAddr[1], PointingData[i_point].mag_ok[0]);
+    SET_UINT8(EncMotorOK, PointingData[i_point].enc_motor_ok);
+    SET_UINT8(ElClinOK, PointingData[i_point].clin_ok);
+    SET_UINT8(DGPSOK, PointingData[i_point].dgps_ok);
+    SET_UINT16(weightAzAddr, PointingData[i_point].weight_az);
+    SET_UINT16(weightElAddr, PointingData[i_point].weight_el);
 }
 void store_1hz_acs(void)
 {

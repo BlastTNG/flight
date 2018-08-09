@@ -233,8 +233,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(az_auto_gyro), "automatically calculate az gyro offsets", GR_TRIM},
   {COMMAND(el_auto_gyro), "automatically calculate el gyro offset", GR_TRIM},
   {COMMAND(reset_trims), "reset coarse pointing trims to zero", GR_TRIM},
-  {COMMAND(trim_to_xsc0), "trim coarse sensors to XSC0", GR_TRIM},
-  {COMMAND(trim_to_xsc1), "trim coarse sensors to XSC1", GR_TRIM},
+  {COMMAND(trim_to_xsc0), "trim coarse sensors to XSC0 (disables autotrim)", GR_TRIM},
+  {COMMAND(trim_to_xsc1), "trim coarse sensors to XSC1 (disables autotrim)", GR_TRIM},
   {COMMAND(trim_xsc1_to_xsc0), "trim XSC1 to XSC0", GR_TRIM},
   {COMMAND(trim_xsc0_to_xsc1), "trim XSC0 to XSC1", GR_TRIM},
   {COMMAND(autotrim_off), "disable auto-trim to XSC0/XSC1", GR_TRIM},
@@ -260,14 +260,18 @@ struct scom scommands[xyzzy + 1] = {
   // {COMMAND(l_valve_open), "set he4 AND ln tank valve direction open", GR_CRYO},
   // {COMMAND(l_valve_close), "set he4 AND ln tank valve direction close", GR_CRYO},
 
-  {COMMAND(potvalve_on), "He4 pot valve on", GR_CRYO | CONFIRM},
-  {COMMAND(potvalve_off), "He4 pot valve off", GR_CRYO},
+  {COMMAND(potvalve_on), "Turn He4 pot valve on (will accept move commands)", GR_CRYO | CONFIRM},
+  {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO},
   {COMMAND(pump_valve_open), "open pump valve", GR_CRYO},
-  {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(pump_valve_close), "close pump valve", GR_CRYO},
+  {COMMAND(pump_valve_off), "stop pump valve, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_valve_on), "re-enable pump valve", GR_CRYO},
+  {COMMAND(fill_valve_open), "open fill valve", GR_CRYO},
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO},
+  {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
+  {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -315,17 +319,23 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
-  {COMMAND(vna_sweep_all), "Peform a VNA sweep on all Roaches", GR_ROACH},
-  {COMMAND(targ_sweep_all), "Peform a TARG sweep on all Roaches", GR_ROACH},
-  {COMMAND(find_kids_default_all), "Find frequencies using VNA sweeps for all Roaches", GR_ROACH},
-  {COMMAND(center_lo_all), "recenter all LOs", GR_ROACH},
-  {COMMAND(calc_dfs), "Calculate df for all Roaches, all channels", GR_ROACH},
+  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
+  {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
+  {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
+  {COMMAND(center_lo_all), "(All Roaches) recenter LOs", GR_ROACH},
+  {COMMAND(calc_dfs), "(All Roaches) Calculate df for all channels", GR_ROACH},
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
-  {COMMAND(load_freqs_all), "Write all saved targ freqs to Roaches", GR_ROACH},
-  {COMMAND(reload_vna_all), "Reload vna freqs and vna trf for all Roaches", GR_ROACH},
-  {COMMAND(end_sweeps_all), "End all sweeps", GR_ROACH},
-  {COMMAND(new_ref_params_all), "Calculates and saves ref params from last target sweep for all Roaches", GR_ROACH},
-  {COMMAND(set_attens_all), "Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(load_freqs_all), "(All Roaches) Write all saved targ freqs", GR_ROACH},
+  {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
+  {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
+  {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
+  {COMMAND(set_attens_all), "(All Roaches) Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
+  {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
+  {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
+  {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
+  {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
+  {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -548,7 +558,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pos_set), "define Latitude/Longitude of current position", GR_TRIM, 2,
     {
       {"Current Latitude (deg)",      -90, 90, 'f', "LAT"},
-      {"Current Longitude (deg)", 0, 360, 'f', "LON"}
+      {"Current Longitude (deg)", -360, 360, 'f', "LON"}
     }
   },
   {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
@@ -878,6 +888,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Allframe fraction", 0, 1, 'f', "aff_pilot"}
     }
   },
+  {COMMAND(set_roach_mode), "0=normal, 1=delta", GR_TELEM, 1,
+    {
+      {"Roach DL mode", 0, 1, 'i', "NONE"},
+    }
+  },
   {COMMAND(set_roach_all_chan), "Send lots of kids for a given roach", GR_TELEM, 2,
     {
       {"Roach", 1, 5, 'i', "NONE"},
@@ -939,7 +954,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", CONFIRM | GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
@@ -1134,6 +1149,16 @@ struct mcom mcommands[plugh + 2] = {
       {"delta_freq", -1000000.0, 1000000.0, 'f', "NONE"},
     }
   },
+  {COMMAND(auto_find_kids), "Automatically do a VNA sweep, find kids and write tonest", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(lamp_check_all), "(All Roaches) Checks response to cal lamp (I,Q,mag(I,Q)) and saves to disk", GR_ROACH, 1,
+    {
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
@@ -1279,8 +1304,8 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
-      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "THRESH_CLOSED_POTVALVE"},
-      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "THRESH_LCLOSED_POTVALVE"},
+      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "THRESH_CLOS_POTVALVE"},
+      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "THRESHLCLOS_POTVALVE"},
       {"Open threshold (10100-16000)", 10200, 16000, 'i', "THRESH_OPEN_POTVALVE"},
     }
   },
@@ -1291,9 +1316,15 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(valves_set_current), "Set cryostat valves move current", GR_CRYO, 1,
+  {COMMAND(valves_set_move_i), "Set cryostat valves move current", GR_CRYO, 1,
     {
       {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
+    }
+  },
+
+  {COMMAND(valves_set_hold_i), "Set cryostat valves hold current", GR_CRYO, 1,
+    {
+      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "CURRENT_VALVES"}
     }
   },
 

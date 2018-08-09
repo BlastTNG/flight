@@ -102,6 +102,31 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
 int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   // seek to the current file and file location to be written to next
   unsigned int fileindex = ll_rawfile->fileindex;
+
+  // get the directory that the binary files are located
+  int i, pos;
+  char filename[128] = {0};
+  strcpy(filename, ll_rawfile->basename);
+  for (pos = strlen(filename)-1; pos >= 0; pos--) {
+    if (filename[pos] == '/') {
+      filename[pos] = '\0';
+      break;
+    }
+  }
+
+  // get list of the files in the directory
+  struct dirent **dir;
+  int n = scandir(filename, &dir, NULL, alphasort);
+
+  // find the highest number binary fragment file with the matching name in the directory
+  snprintf(filename, 128, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
+  for (i = 0; i < n; i++) {
+    if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
+      unsigned int tmpindex = atoi(dir[i]->d_name+strlen(filename));
+      fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
+    }
+  }
+
   do {
     // seek to the beginning of the fragment files
     if (seek_linklist_rawfile(ll_rawfile, ll_rawfile->fpf*fileindex)) {
@@ -146,6 +171,10 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
 }
 
 linklist_rawfile_t * open_linklist_rawfile(char * basename, linklist_t * ll) {
+  return open_linklist_rawfile_opt(basename, ll, 0);
+}
+
+linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll, unsigned int flags) {
   if (!basename || (strlen(basename) == 0)) {
     linklist_err("Invalid rawfile basename");
     return NULL;
@@ -176,17 +205,24 @@ linklist_rawfile_t * open_linklist_rawfile(char * basename, linklist_t * ll) {
     if (ll->flags & LL_INCLUDE_ALLFRAME) ll_rawfile->framesize += ll->superframe->allframe_size;
   }
 
-  // open and seek to the beginning of the linklist rawfile
-  if (seekend_linklist_rawfile(ll_rawfile) < 0) {
-    free(ll_rawfile);
-    return NULL;
-  }
-
-  if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
-    // write the superframe and linklist format files
-    write_linklist_format(ll_rawfile->ll, filename);
-    snprintf(filename, 127, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
-    write_superframe_format(ll->superframe, filename);
+  if (flags & LL_RAWFILE_DUMMY) {
+    // close the file descriptor
+    if (ll_rawfile->fp) {
+      fclose(ll_rawfile->fp);
+      ll_rawfile->fp = NULL ;
+    }
+  } else {
+    // open and seek to the beginning of the linklist rawfile
+		if (seekend_linklist_rawfile(ll_rawfile) < 0) {
+			free(ll_rawfile);
+			return NULL;
+		}
+		if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
+			// write the superframe and linklist format files
+			write_linklist_format(ll_rawfile->ll, filename);
+			snprintf(filename, 127, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+			write_superframe_format(ll->superframe, filename);
+		}
   }
 
   return ll_rawfile;

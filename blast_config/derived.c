@@ -93,12 +93,12 @@ derived_tng_t derived_list[] = {
     LINCOM("X_H_P", "x_p", 0.0003662109375, 0),
 
     BITWORD("VETO_EL_MOTOR_ENC", "veto_sensor", 0, 1),
-    BITWORD("VETO_ISC", "veto_sensor", 1, 1),
+    BITWORD("VETO_XSC0", "veto_sensor", 1, 1),
     BITWORD("VETO_EL_ENC", "veto_sensor", 2, 1),
     BITWORD("VETO_MAG1", "veto_sensor", 3, 1),
     BITWORD("VETO_MAG2", "veto_sensor", 4, 1),
     BITWORD("VETO_EL_CLIN", "veto_sensor", 5, 1),
-    BITWORD("VETO_OSC", "veto_sensor", 6, 1),
+    BITWORD("VETO_XSC1", "veto_sensor", 6, 1),
     BITWORD("IS_SCHED", "veto_sensor", 7, 1),
     BITWORD("AZ_AUTO_GYRO", "veto_sensor", 8, 1),
     BITWORD("EL_AUTO_GYRO", "veto_sensor", 9, 1),
@@ -106,6 +106,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DISABLE_AZ", "veto_sensor", 11, 1),
     BITWORD("FORCE_EL", "veto_sensor", 12, 1),
     BITWORD("VETO_PSS", "veto_sensor", 13, 1),
+    BITWORD("VETO_DGPS", "veto_sensor", 14, 1),
 
     BITWORD("PULSE_XSC0", "pulse_sc", 0, 1),
     BITWORD("PULSE_XSC1", "pulse_sc", 1, 1),
