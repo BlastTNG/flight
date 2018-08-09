@@ -14,4 +14,4 @@ thresh_atrim NONE 1
 fresh_trim NONE 1
 new_az NONE 1
 new_el NONE 1
-
+rate_atrim NONE 1

@@ -1341,8 +1341,8 @@ void Pointing(void)
         read_shared_pdata[1].pval = &(OSCAz.angle);
         read_shared_pdata[2].pval = &(ISCEl.angle);
         read_shared_pdata[3].pval = &(OSCEl.angle);
-        read_shared_pdata[4].pval = &(ISCAz.variance);
-        read_shared_pdata[5].pval = &(OSCAz.variance);
+        read_shared_pdata[4].pval = &(ISCEl.variance);
+        read_shared_pdata[5].pval = &(OSCEl.variance);
         read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
         read_shared_pdata[7].pval = &enc_motor_ready;
         read_shared_pdata[8].pval = &NewAzEl.fresh;
@@ -1723,7 +1723,7 @@ void Pointing(void)
         NewAzEl.fresh = 0;
     }
 
-    if (NewAzEl.fresh == 1) {
+    if ((NewAzEl.fresh == 1) && InCharge) {
         trim_change = (NewAzEl.el - ClinEl.angle) - ClinEl.trim;
         if (trim_change > NewAzEl.rate)
             trim_change = NewAzEl.rate;
@@ -1783,6 +1783,15 @@ void Pointing(void)
         DGPSAz.trim += trim_change;
 
         NewAzEl.fresh = 0;
+    } else {
+        ClinEl.trim = CommandData.clin_el_trim;
+        EncEl.trim = CommandData.enc_el_trim;
+        EncMotEl.trim = CommandData.enc_motor_el_trim;
+        NullAz.trim = CommandData.null_az_trim;
+        MagAzN.trim = CommandData.mag_az_trim[0];
+        MagAzS.trim = CommandData.mag_az_trim[1];
+        PSSAz.trim = CommandData.pss_az_trim;
+        DGPSAz.trim = CommandData.dgps_az_trim;
     }
 
     point_index = INC_INDEX(point_index);
