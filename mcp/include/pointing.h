@@ -53,14 +53,13 @@
 
 #define SSS_ALIGNMENT     1.5532
 
-#define NUM_READ_P_ICC      12
 #define NUM_CHARS_CHAN_P_ICC   128
 
 typedef struct {
     void *pval;
     char ch_name[NUM_CHARS_CHAN_P_ICC];
-    channel_t *ch;
     E_TYPE var_type;
+    channel_t *ch;
 } read_icc_t;
 
 void set_position(double m_lat, double m_lon);

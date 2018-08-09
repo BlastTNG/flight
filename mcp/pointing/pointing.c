@@ -1069,15 +1069,17 @@ void ReadICCPointing(read_icc_t *m_read_icc)
     int i;
     static int first_time = 1;
     if (first_time) {
-        blast_info("Not in charge, getting pointing sensor data from %d shared linklist channels.",
-                   NUM_READ_P_ICC);
-        for (i = 0; i < NUM_READ_P_ICC; i++) {
+        blast_info("Not in charge");
+        for (i = 0; m_read_icc[i].pval; i++) {
             m_read_icc[i].ch = channels_find_by_name(m_read_icc[i].ch_name);
             blast_info("writing channel %s", m_read_icc[i].ch_name);
         }
+        blast_info("Getting pointing sensor data from %d shared linklist channels.", i);
         first_time = 0;
     }
-    for (i = 0; i < NUM_READ_P_ICC; i++) {
+    for (i = 0; m_read_icc[i].pval; i++) {
+        if (!m_read_icc[i].ch) continue;
+
         switch (m_read_icc[i].var_type) {
             case TYPE_INT8:
             GET_SCALED_VALUE(m_read_icc[i].ch, *(int8_t*)m_read_icc[i].pval);
@@ -1147,8 +1149,8 @@ void Pointing(void)
     double trim_change;
 
     static int enc_motor_ready;
-
-    int enc_motor_ok;
+    static int enc_motor_ok;
+    enc_motor_ready = is_el_motor_ready();
 
     enc_motor_ready = is_el_motor_ready();
     static int firsttime = 1;
@@ -1281,9 +1283,27 @@ void Pointing(void)
         .since_last = 0,
     };
 
-  static read_icc_t read_shared_pdata[NUM_READ_P_ICC];
-  static gyro_history_t hs = {NULL};
-  static gyro_reading_t RG = {0.0};
+		static read_icc_t read_shared_pdata[] = {
+        {(void *) &(ISCAz.angle), "x0_point_az", TYPE_DOUBLE},
+        {(void *) &(OSCAz.angle), "x1_point_az", TYPE_DOUBLE},
+        {(void *) &(ISCEl.angle), "x0_point_el", TYPE_DOUBLE},
+        {(void *) &(OSCEl.angle), "x1_point_el", TYPE_DOUBLE},
+        {(void *) &(ISCEl.variance), "x0_point_var", TYPE_DOUBLE},
+        {(void *) &(OSCEl.variance), "x1_point_var", TYPE_DOUBLE},
+        {(void *) &(ACSData.enc_motor_elev), "mc_el_motor_pos", TYPE_DOUBLE},
+        {(void *) &(enc_motor_ready), "ok_motor_enc", TYPE_UINT8},
+        {(void *) &(NewAzEl.fresh), "rate_atrim", TYPE_INT32},
+        {(void *) &(NewAzEl.rate), "fresh_trim", TYPE_DOUBLE},
+        {(void *) &(NewAzEl.az), "new_az", TYPE_DOUBLE},
+        {(void *) &(NewAzEl.el), "new_el", TYPE_DOUBLE},
+
+        // terminator
+        {0}
+		};
+
+
+		static gyro_history_t hs = {NULL};
+		static gyro_reading_t RG = {0.0};
 
     if (firsttime) {
         firsttime = 0;
@@ -1337,44 +1357,6 @@ void Pointing(void)
         /* Load lat/lon from disk */
         last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
         last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
-
-        // Set pointers to variables that will be read from shared data if we are not in charge.
-        read_shared_pdata[0].pval = &(ISCAz.angle);
-        read_shared_pdata[1].pval = &(OSCAz.angle);
-        read_shared_pdata[2].pval = &(ISCEl.angle);
-        read_shared_pdata[3].pval = &(OSCEl.angle);
-        read_shared_pdata[4].pval = &(ISCEl.variance);
-        read_shared_pdata[5].pval = &(OSCEl.variance);
-        read_shared_pdata[6].pval = &(ACSData.enc_motor_elev);
-        read_shared_pdata[7].pval = &enc_motor_ready;
-        read_shared_pdata[8].pval = &NewAzEl.fresh;
-        read_shared_pdata[9].pval = &NewAzEl.rate;
-        read_shared_pdata[10].pval = &NewAzEl.az;
-        read_shared_pdata[11].pval = &NewAzEl.el;
-        snprintf(read_shared_pdata[0].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_az");
-        snprintf(read_shared_pdata[1].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_az");
-        snprintf(read_shared_pdata[2].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_el");
-        snprintf(read_shared_pdata[3].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_el");
-        snprintf(read_shared_pdata[4].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x0_point_var");
-        snprintf(read_shared_pdata[5].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "x1_point_var");
-        snprintf(read_shared_pdata[6].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "mc_el_motor_pos");
-        snprintf(read_shared_pdata[7].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "ok_motor_enc");
-        snprintf(read_shared_pdata[8].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "rate_atrim");
-        snprintf(read_shared_pdata[9].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "fresh_trim");
-        snprintf(read_shared_pdata[10].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC, "new_az");
-        snprintf(read_shared_pdata[11].ch_name, sizeof(char) * NUM_CHARS_CHAN_P_ICC,  "new_el");
-        read_shared_pdata[0].var_type = TYPE_DOUBLE;
-        read_shared_pdata[1].var_type = TYPE_DOUBLE;
-        read_shared_pdata[2].var_type = TYPE_DOUBLE;
-        read_shared_pdata[3].var_type = TYPE_DOUBLE;
-        read_shared_pdata[4].var_type = TYPE_DOUBLE;
-        read_shared_pdata[5].var_type = TYPE_DOUBLE;
-        read_shared_pdata[6].var_type = TYPE_DOUBLE;
-        read_shared_pdata[7].var_type = TYPE_UINT8;
-        read_shared_pdata[8].var_type = TYPE_INT32;
-        read_shared_pdata[9].var_type = TYPE_DOUBLE;
-        read_shared_pdata[10].var_type = TYPE_DOUBLE;
-        read_shared_pdata[11].var_type = TYPE_DOUBLE;
     }
 
     if (elClinLut.n == 0)
