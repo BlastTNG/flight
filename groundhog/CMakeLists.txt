@@ -112,12 +112,13 @@ ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
 # add linklist library
-set(LINKLIST_LIBRARY ${PROJECT_BINARY_DIR}/linklist/liblinklist.a)
+set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
 ExternalProject_Add(linklist
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND "")
+  INSTALL_COMMAND ""
+  )
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
 
@@ -171,13 +172,15 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
     ) 
 
+add_dependencies(groundhog linklist)
+
 define_file_basename_for_sources(groundhog)
 
 target_link_libraries(groundhog
+    ${LINKLIST_LIBRARY}
     ${GLIB_LIBRARY}  
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
-    ${LINKLIST_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT} 
     ssl crypto
     )
