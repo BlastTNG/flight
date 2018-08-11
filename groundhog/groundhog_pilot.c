@@ -111,6 +111,7 @@ void udp_receive(void *arg) {
       if (ll_rawfile) {
         memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
         write_linklist_rawfile(ll_rawfile, compbuffer);
+        flush_linklist_rawfile(ll_rawfile);
       }
 
       // decompress

@@ -182,6 +182,7 @@ void biphase_receive(void *args)
                       if (ll_rawfile) {
                         memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                         write_linklist_rawfile(ll_rawfile, compbuffer);
+                        flush_linklist_rawfile(ll_rawfile);
                       }
 
                       decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
