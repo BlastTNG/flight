@@ -449,8 +449,8 @@ void *connection_handler(void *arg)
           for (j=strlen(dir[i]->d_name)-1;j>=0;j--) {
             if (dir[i]->d_name[j] == '/') break;
           }
-          strncpy(tempc,dir[i]->d_name+j+1, LINKLIST_MAX_FILENAME_SIZE); // copy the abbr. name
-          strncpy(dir[i]->d_name,tempc, LINKLIST_MAX_FILENAME_SIZE); // copy it back          
+          strcpy(tempc, dir[i]->d_name+j+1); // copy the abbr. name
+          strcpy(dir[i]->d_name, tempc); // copy it back          
  
           nfile++;
         } else {
