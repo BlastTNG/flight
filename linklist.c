@@ -674,7 +674,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       break;
     }
   }
-  memset(ll->name, 0, 64); // clear name completely
+  memset(ll->name, 0, LINKLIST_SHORT_FILENAME_SIZE); // clear name completely
   strcpy(ll->name, fname+i); // copy the name
 
   // update the hash

@@ -7,7 +7,7 @@
 #define LL_RAWFILE_DUMMY 0x8
 
 struct linklist_dirfile {
-  char filename[80];
+  char filename[LINKLIST_MAX_FILENAME_SIZE];
   unsigned int framenum;
   unsigned int flags;
   linklist_t * ll;
@@ -17,7 +17,7 @@ struct linklist_dirfile {
 };
 
 struct linklist_rawfile {
-  char basename[128];
+  char basename[LINKLIST_MAX_FILENAME_SIZE];
   unsigned int framenum;
   unsigned int fileindex;
   unsigned int framesize;

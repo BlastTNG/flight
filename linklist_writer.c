@@ -58,26 +58,26 @@ extern unsigned int ll_rawfile_default_fpf;
 
 // creates a symlink for the rawfile with the new name pointing to the ll_rawfile basename 
 void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
-  char filename[1024] = {0};
-  char symname[1024] = {0};
+  char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char symname[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
-  snprintf(symname, 1024, "%s" LINKLIST_EXT ".00", newname);
-  snprintf(filename, 1024, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".00", newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
   unlink(symname);
   symlink(filename, symname);
 
-  snprintf(symname, 1024, "%s" SUPERFRAME_FORMAT_EXT, newname);
-  snprintf(filename, 1024, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
   symlink(filename, symname);
 
-  snprintf(symname, 1024, "%s" LINKLIST_FORMAT_EXT, newname);
-  snprintf(filename, 1024, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
   symlink(filename, symname);
 
-  snprintf(symname, 1024, "%s" CALSPECS_FORMAT_EXT, newname);
-  snprintf(filename, 1024, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" CALSPECS_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
   symlink(filename, symname);
 }
@@ -85,10 +85,10 @@ void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
 void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
   // get the date string for file saving
   time_t now = time(0);
-  char datestring[1024] = {0};
+  char datestring[LINKLIST_MAX_FILENAME_SIZE] = {0};
   struct tm * tm_t = localtime(&now);
   strftime(datestring, sizeof(datestring)-1, "%Y-%m-%d-%H-%M-%S", tm_t);
-  char tempname[1024] = {0};
+  char tempname[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
   int i;
   // strip possible extensions in name
@@ -96,7 +96,7 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
     if (ll->name[i] == '.') break;
   }
   strncpy(tempname, ll->name, i);
-  snprintf(filename, 1024, "%s/%s_%s", archive_dir, tempname, datestring);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s/%s_%s", archive_dir, tempname, datestring);
 }
 
 int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
@@ -105,7 +105,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
 
   // get the directory that the binary files are located
   int i, pos;
-  char filename[1024] = {0};
+  char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
   strcpy(filename, ll_rawfile->basename);
   for (pos = strlen(filename)-1; pos >= 0; pos--) {
     if (filename[pos] == '/') {
@@ -119,7 +119,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   int n = scandir(filename, &dir, NULL, alphasort);
 
   // find the highest number binary fragment file with the matching name in the directory
-  snprintf(filename, 1024, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
   for (i = 0; i < n; i++) {
     if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
       unsigned int tmpindex = atoi(dir[i]->d_name+strlen(filename));
@@ -156,8 +156,8 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
       fclose(ll_rawfile->fp);
       ll_rawfile->fp = NULL;
     }
-    char filename[1024];
-    snprintf(filename, 1024, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, fileindex);
+    char filename[LINKLIST_MAX_FILENAME_SIZE];
+    snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, fileindex);
     ll_rawfile->fp = fpreopenb(filename);
     if (!ll_rawfile->fp) {
       linklist_err("Could not open raw linklist binary file %s\n", filename);
@@ -184,8 +184,8 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   strcpy(ll_rawfile->basename, basename);
   ll_rawfile->ll = ll;
 
-  char filename[1024];
-  snprintf(filename, 1024, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  char filename[LINKLIST_MAX_FILENAME_SIZE];
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
 
   // get the number of frames per file (fpf)
   int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND);
@@ -220,7 +220,7 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
 		if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
 			// write the superframe and linklist format files
 			write_linklist_format(ll_rawfile->ll, filename);
-			snprintf(filename, 1024, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+			snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
 			write_superframe_format(ll->superframe, filename);
 		}
   }
@@ -337,8 +337,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   }
 
   // open formatfile
-  char formatname[1024] = {0};
-  snprintf(formatname, 1024, "%s/format", ll_dirfile->filename);
+  char formatname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  snprintf(formatname, LINKLIST_MAX_FILENAME_SIZE, "%s/format", ll_dirfile->filename);
   FILE * formatfile = fopen(formatname, "w");
   fprintf(formatfile,"# Linklist Dirfile Format File\n");
   fprintf(formatfile,"# Auto-generated by linklist_writer\n\n");
@@ -354,7 +354,7 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 
   // generate binary files
   int i, j;
-  char binname[1024] = {0};
+  char binname[LINKLIST_MAX_FILENAME_SIZE] = {0};
   linkentry_t * tlm_le = NULL; 
   int tlm_index = 0;
   superframe_entry_t * sfe = ll->superframe->entries;
@@ -408,7 +408,7 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 		fflush(formatfile);
 
 		// open the file if not already opened
-		snprintf(binname, 1024, "%s/%s", ll_dirfile->filename, sfe[i].field);
+		snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", ll_dirfile->filename, sfe[i].field);
 		ll_dirfile->bin[i] = fpreopenb(binname);  
   }
 

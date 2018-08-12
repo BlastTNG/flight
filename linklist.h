@@ -41,6 +41,8 @@
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
 #define ALL_TELEMETRY_NAME "all_telemetry.ll"
 
+#define LINKLIST_MAX_FILENAME_SIZE 1024
+#define LINKLIST_SHORT_FILENAME_SIZE 64
 #define SUPERFRAME_EXT ".sf.bin"
 #define SUPERFRAME_FORMAT_EXT ".sf.format"
 #define LINKLIST_EXT ".ll.bin"
@@ -122,7 +124,7 @@ struct superframe_struct
   double (*datatodouble)(uint8_t *, uint8_t);
   int (*doubletodata)(uint8_t *, double, uint8_t);
 
-  char calspecs[64];
+  char calspecs[LINKLIST_MAX_FILENAME_SIZE];
 };
 
 struct link_entry
@@ -138,7 +140,7 @@ struct link_entry
 
 struct linklist_struct
 {
-  char name[64]; // name of the linklist file
+  char name[LINKLIST_SHORT_FILENAME_SIZE]; // name of the linklist file
   uint32_t n_entries; // number of entries in the list
   uint32_t blk_size; // size of entire compressed frame
   uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
@@ -159,7 +161,7 @@ struct block_container
   unsigned int curr_size;
   uint8_t * buffer;
 
-  char filename[80];
+  char filename[LINKLIST_MAX_FILENAME_SIZE];
   FILE *fp;
 };
 
@@ -170,7 +172,7 @@ typedef struct sf_entry superframe_entry_t;
 typedef struct superframe_struct superframe_t;
 
 extern const char * SF_TYPES_STR[]; 
-extern char archive_dir[128];
+extern char archive_dir[LINKLIST_MAX_FILENAME_SIZE];
 
 /**
  * These intermediate types are necessary to allow GCC to use its strict-aliasing
