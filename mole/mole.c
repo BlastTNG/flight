@@ -86,6 +86,11 @@ void USAGE(void) {
       " -bs --block-size fpf   Specify the number of frames per file flush.\n"
       "                        Default is 1 frame per flush for real time.\n"
       " -c  --client           Run a client (default).\n"
+      " -f  --filenum x        Select a file by number. File dialog will be prompted otherwise.\n"
+      "                        If the number is beyond the range, the file dialog is prompted.\n"
+      " -F  --filename x       Select a file by name. File dialog will be prompted otherwise.\n"
+      "                        The first file with closest matching name will be selected.\n"
+      "                        If a matching name cannot be found, the file dialog is prompted.\n"
       " -E  --end X            Last frame to read. Ignores rewind if specified.\n"
       "                        Mole will exit once the last frame is read.\n"
       " -le --little-end       Force mole to interpret data as little endian.\n"
@@ -148,6 +153,8 @@ int main(int argc, char *argv[]) {
   uint64_t end_frame = UINT64_MAX;
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
+  int filenum_selection = -1;
+  char filename_selection[128] = {0};
 
   // configure the TCP connection
   tcpconn.flag |= TCPCONN_LOOP;
@@ -225,6 +232,12 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--block-size") == 0) ||
                (strcmp(argv[i], "-bs") == 0)) { // flush files after number of frames received
       num_frames_per_flush = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--filenum") == 0) ||
+               (strcmp(argv[i], "-f") == 0)) { // select file by number
+      filenum_selection = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--filename") == 0) ||
+               (strcmp(argv[i], "-F") == 0)) { // select file by name
+      strcpy(filename_selection, argv[++i]);
     } else if ((strcmp(argv[i], "--loopback") == 0) ||
                (strcmp(argv[i], "-L") == 0)) { // loopback mode
       bin_backup = 0;
@@ -253,9 +266,8 @@ int main(int argc, char *argv[]) {
 
   if (client_mode) {
     char linklistname[64] = {0};
-    char selectname[64] = {0};
     char filename[128] = {0};
-    user_file_select(&tcpconn, selectname);
+    user_file_select(&tcpconn, filename_selection);
 
     while (1) {
       // display
@@ -264,7 +276,7 @@ int main(int argc, char *argv[]) {
       // the file on the server has switched, so resync 
       if (resync) {
         // sync with the server and get the initial framenum
-				req_serial = sync_with_server(&tcpconn, selectname, linklistname, flags, &superframe, &linklist);
+				req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, flags, &superframe, &linklist);
 				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
 
 				printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);

@@ -54,6 +54,7 @@
 
 #include <pthread.h> // threads
 #include <openssl/md5.h>
+#include <regex.h>
 
 #include "linklist.h"
 #include "linklist_writer.h"
@@ -122,8 +123,7 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   int i,j;
 
-  linklist_info("\nSelect archive file:\n\n");
-
+  // deal with display widths
   int n = (numlink-1)/3+1;
   int width[3] = {0};
   for (i=0;i<n;i++) {
@@ -133,26 +133,54 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   }
   for (i=0;i<3;i++) width[i] += 3;
 
-  for (i=0;i<n;i++) {
-    if (name[i][0]) printf("%.2d: %s",i,name[i]);
-    for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
-    if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
-    for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
-    if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
-    printf("\n");
+  // display all the entries that match the optionally supplied linklist name
+
+  int match = strlen(linklistname);
+  int n_match =  numlink;
+  
+  regex_t regex;
+
+  if (match) {
+    n_match = 0;
+    if (regcomp(&regex, linklistname, 0)) {
+      linklist_err("Regex failed\n");
+      return;
+    }
+		for (i=0;i<numlink;i++) {
+			if (regexec(&regex, name[i], 0, NULL, 0) != REG_NOMATCH) {
+				strncpy(linklistname, name[i], LINKLIST_MAX_FILENAME_SIZE);
+				n_match++;
+			}
+		}
+    regfree(&regex);
   }
 
-  while (1) {
-    char ta[10];
-    printf("\nFile number: ");
-    fscanf(stdin,"%s",ta);
-    int cn = atoi(ta);
-    if ((cn >= 0) && (cn < numlink)) {
-      strncpy(linklistname, name[cn], LINKLIST_MAX_FILENAME_SIZE);
-      break;
-    }
-    linklist_info("\nInvalid selection\n");
-  } 
+  // don't have exactly 1 matching entry, so prompt user to select
+  if (n_match != 1) {
+    if (!n_match) printf("\nUnable to find matching entry \"%s\"\n\n", linklistname);
+		linklist_info("Select archive file:\n\n");
+
+		for (i=0;i<n;i++) {
+			if (name[i][0]) printf("%.2d: %s",i,name[i]);
+			for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
+			if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
+			for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
+			if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
+			printf("\n");
+		}
+
+		while (1) {
+			char ta[10];
+			printf("\nFile number: ");
+			fscanf(stdin,"%s",ta);
+			int cn = atoi(ta);
+			if ((cn >= 0) && (cn < numlink)) {
+				strncpy(linklistname, name[cn], LINKLIST_MAX_FILENAME_SIZE);
+				break;
+			}
+			linklist_info("\nInvalid selection\n");
+		} 
+  }
   
   linklist_info("Archive file \"%s\" selected\n", linklistname);
 }
