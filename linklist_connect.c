@@ -137,12 +137,14 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   int match = strlen(linklistname);
   int n_match =  numlink;
+  char str_match[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  strcpy(str_match, linklistname);
   
   regex_t regex;
 
   if (match) {
     n_match = 0;
-    if (regcomp(&regex, linklistname, 0)) {
+    if (regcomp(&regex, str_match, 0)) {
       linklist_err("Regex failed\n");
       return;
     }
@@ -153,12 +155,12 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 			}
 		}
     regfree(&regex);
+	  printf("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
   }
 
   // don't have exactly 1 matching entry, so prompt user to select
   if (n_match != 1) {
-    if (!n_match) printf("\nUnable to find matching entry \"%s\"\n\n", linklistname);
-		linklist_info("Select archive file:\n\n");
+		linklist_info("\nSelect archive file:\n\n");
 
 		for (i=0;i<n;i++) {
 			if (name[i][0]) printf("%.2d: %s",i,name[i]);
