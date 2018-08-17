@@ -22,6 +22,7 @@ struct linklist_rawfile {
   unsigned int fileindex;
   unsigned int framesize;
   unsigned int fpf;
+  unsigned int isseekend;
   linklist_t * ll;
   FILE * fp;
 };

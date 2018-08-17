@@ -103,28 +103,31 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   // seek to the current file and file location to be written to next
   unsigned int fileindex = ll_rawfile->fileindex;
 
-  // get the directory that the binary files are located
-  int i, pos;
-  char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
-  strcpy(filename, ll_rawfile->basename);
-  for (pos = strlen(filename)-1; pos >= 0; pos--) {
-    if (filename[pos] == '/') {
-      filename[pos] = '\0';
-      break;
-    }
-  }
+  if (!ll_rawfile->isseekend) {
+		// get the directory that the binary files are located
+		int i, pos;
+		char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
+		strcpy(filename, ll_rawfile->basename);
+		for (pos = strlen(filename)-1; pos >= 0; pos--) {
+			if (filename[pos] == '/') {
+				filename[pos] = '\0';
+				break;
+			}
+		}
 
-  // get list of the files in the directory
-  struct dirent **dir;
-  int n = scandir(filename, &dir, NULL, alphasort);
+		// get list of the files in the directory
+		struct dirent **dir;
+		int n = scandir(filename, &dir, NULL, alphasort);
 
-  // find the highest number binary fragment file with the matching name in the directory
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
-  for (i = 0; i < n; i++) {
-    if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
-      unsigned int tmpindex = atoi(dir[i]->d_name+strlen(filename));
-      fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
-    }
+		// find the highest number binary fragment file with the matching name in the directory
+		snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
+		for (i = 0; i < n; i++) {
+			if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
+				unsigned int tmpindex = atoi(dir[i]->d_name+strlen(filename));
+				fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
+			}
+		}
+    ll_rawfile->isseekend = 1;
   }
 
   do {
@@ -183,6 +186,7 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   linklist_rawfile_t * ll_rawfile = calloc(1, sizeof(linklist_rawfile_t));
   strcpy(ll_rawfile->basename, basename);
   ll_rawfile->ll = ll;
+  ll_rawfile->isseekend = 0;
 
   char filename[LINKLIST_MAX_FILENAME_SIZE];
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
