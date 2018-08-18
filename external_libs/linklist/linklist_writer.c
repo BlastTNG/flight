@@ -103,7 +103,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   // seek to the current file and file location to be written to next
   unsigned int fileindex = ll_rawfile->fileindex;
 
-  if (!ll_rawfile->isseekend) {
+  if (ll_rawfile->isseekend < 0) {
 		// get the directory that the binary files are located
 		int i, pos;
 		char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
@@ -127,7 +127,10 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
 				fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
 			}
 		}
-    ll_rawfile->isseekend = 1;
+    ll_rawfile->isseekend = fileindex;
+  } else { // have already seeked to the end
+    ll_rawfile->fileindex = ll_rawfile->isseekend;
+    fileindex = ll_rawfile->isseekend;
   }
 
   do {
@@ -186,7 +189,7 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   linklist_rawfile_t * ll_rawfile = calloc(1, sizeof(linklist_rawfile_t));
   strcpy(ll_rawfile->basename, basename);
   ll_rawfile->ll = ll;
-  ll_rawfile->isseekend = 0;
+  ll_rawfile->isseekend = -1;
 
   char filename[LINKLIST_MAX_FILENAME_SIZE];
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
