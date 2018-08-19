@@ -81,29 +81,27 @@ void USAGE(void) {
       "                        Only valid if backing up binary data locally.\n"
       "                        Default is /data/rawdir.\n"
       " -b  --backup           Backup binary data in the archive directory.\n"
-      " -be --big-end          Force mole to interpret data as big endian (default).\n"
       " -nb --no-backup        Do not backup data in the archive directory (default).\n"
+      " -be --big-end          Force mole to interpret data as big endian (default).\n"
       " -bs --block-size fpf   Specify the number of frames per file flush.\n"
       "                        Default is 1 frame per flush for real time.\n"
       " -c  --client           Run a client (default).\n"
-      " -f  --filenum x        Select a file by number. File dialog will be prompted otherwise.\n"
-      "                        If the number is beyond the range, the file dialog is prompted.\n"
-      " -F  --filename x       Select a file by name. File dialog will be prompted otherwise.\n"
-      "                        The first file with closest matching name will be selected.\n"
-      "                        If a matching name cannot be found, the file dialog is prompted.\n"
+      " -nc --no-client        Don't run a client.\n"
+      " -F  --filename regex   Select a file by standard regex entry\n"
+      "                        If exactly one matching entry is found, that file will be loaded.\n"
+      "                        Otherwise, the file selection dialog box will be prompted.\n"
       " -E  --end X            Last frame to read. Ignores rewind if specified.\n"
       "                        Mole will exit once the last frame is read.\n"
+      " -k  --check            Evaluate checksum values when processing data (default).\n"  
+      " -nk --no-check         Ignore checksum values when processing data.\n"  
       " -le --little-end       Force mole to interpret data as little endian.\n"
       " -L  --loopback         Have mole extract its own binary files.\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
-      "                        Default is /data/mole.\n"
-      " -nc --no-client        Don't run a client.\n"
+      "                        The default is /data/mole.\n"
       " -s  --server           Run a server for other mole clients to connect to.\n"
       " -ns --no-server        Don't run a server (default).\n"
       " -S  --start X          Starting frame to read. Ignores rewind if specified.\n"
-      " -nk --no-check         Ignore checksum values when processing data.\n"  
-      " -w  --rewind X         Start acquiring data X frames from the latest index.\n"
-      "                        Default is 20.\n"
+      " -w  --rewind X         Start acquiring data X frames from the latest index (default 20).\n"
       " -v  --verbose          Verbose mode.\n"
       "\n");
 
@@ -153,7 +151,6 @@ int main(int argc, char *argv[]) {
   uint64_t end_frame = UINT64_MAX;
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
-  int filenum_selection = -1;
   char filename_selection[128] = {0};
 
   // configure the TCP connection
@@ -220,6 +217,9 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--mole-dir") == 0) ||
                (strcmp(argv[i], "-md") == 0)) { // set the mole directory dirfiles
       strcpy(mole_dir, argv[++i]);
+    } else if ((strcmp(argv[i], "--check") == 0) ||
+               (strcmp(argv[i], "-k") == 0)) { // checksum 
+      ll_flags &= ~LL_IGNORE_CHECKSUM;
     } else if ((strcmp(argv[i], "--no-check") == 0) ||
                (strcmp(argv[i], "-nk") == 0)) { // no checksum 
       ll_flags |= LL_IGNORE_CHECKSUM;
@@ -232,9 +232,6 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--block-size") == 0) ||
                (strcmp(argv[i], "-bs") == 0)) { // flush files after number of frames received
       num_frames_per_flush = atoi(argv[++i]);
-    } else if ((strcmp(argv[i], "--filenum") == 0) ||
-               (strcmp(argv[i], "-f") == 0)) { // select file by number
-      filenum_selection = atoi(argv[++i]);
     } else if ((strcmp(argv[i], "--filename") == 0) ||
                (strcmp(argv[i], "-F") == 0)) { // select file by name
       strcpy(filename_selection, argv[++i]);
