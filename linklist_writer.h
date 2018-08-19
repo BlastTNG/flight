@@ -18,11 +18,11 @@ struct linklist_dirfile {
 
 struct linklist_rawfile {
   char basename[LINKLIST_MAX_FILENAME_SIZE];
-  unsigned int framenum;
-  unsigned int fileindex;
-  unsigned int framesize;
-  unsigned int fpf;
-  int isseekend;
+  unsigned int framenum; // current frame number
+  unsigned int fileindex; // current file index for rawfile chunks
+  unsigned int framesize; // size [Bytes] of a frame
+  unsigned int fpf; // number of frames per rawfile chunk
+  int isseekend; // file index for the end of the rawfile (i.e. last chunk)
   linklist_t * ll;
   FILE * fp;
 };

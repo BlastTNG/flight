@@ -101,7 +101,7 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
 
 int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   // seek to the current file and file location to be written to next
-  unsigned int fileindex = ll_rawfile->fileindex;
+  int fileindex = ll_rawfile->isseekend;
 
   if (ll_rawfile->isseekend < 0) {
 		// get the directory that the binary files are located
@@ -123,14 +123,11 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
 		snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
 		for (i = 0; i < n; i++) {
 			if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
-				unsigned int tmpindex = atoi(dir[i]->d_name+strlen(filename));
+				int tmpindex = atoi(dir[i]->d_name+strlen(filename));
 				fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
 			}
 		}
     ll_rawfile->isseekend = fileindex;
-  } else { // have already seeked to the end
-    ll_rawfile->fileindex = ll_rawfile->isseekend;
-    fileindex = ll_rawfile->isseekend;
   }
 
   do {
@@ -156,6 +153,7 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
 
   if (fileindex != ll_rawfile->fileindex || !ll_rawfile->fp) {
     ll_rawfile->fileindex = fileindex;
+    if (fileindex > ll_rawfile->isseekend) ll_rawfile->isseekend = fileindex;
 
     // close the old file 
     if (ll_rawfile->fp) {
