@@ -127,8 +127,11 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
 				fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
 			}
 		}
-    ll_rawfile->isseekend = fileindex;
+        if (fileindex < 0) fileindex = 0; // catch exception if no files exist
+        ll_rawfile->isseekend = fileindex;
   }
+
+  printf("%d %d\n", fileindex);
 
   do {
     // seek to the beginning of the fragment files
