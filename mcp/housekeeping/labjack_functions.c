@@ -375,7 +375,7 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
  */
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    ph_buf_t *buf;
+    ph_buf_t *buf = NULL, *prev_buf = NULL;
     labjack_state_t *state = (labjack_state_t*) m_data;
     labjack_data_pkt_t *data_pkt;
     labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
@@ -427,7 +427,15 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
         return;
     }
     read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
-    buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
+
+    // read as many packets as necessary to clear the queue
+    do {
+        if (prev_buf) ph_buf_delref(prev_buf); // had a packet, but also have a newer packet, so remove old one
+        prev_buf = buf;
+        buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
+    } while (buf);
+    buf = prev_buf;
+
     if (!buf) return; /// We do not have enough data
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
