@@ -430,13 +430,13 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 
     // read as many packets as necessary to clear the queue
     do {
-        if (prev_buf) ph_buf_delref(prev_buf); // had a packet, but also have a newer packet, so remove old one
-        prev_buf = buf;
+        if (prev_buf) ph_buf_delref(prev_buf); // had an old packet, but also have a newer packet, so remove old one
+        prev_buf = buf; // the new packet is the next old packet
         buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
     } while (buf);
-    buf = prev_buf;
+    buf = prev_buf; // reference the newest non-null packet
 
-    if (!buf) return; /// We do not have enough data
+    if (!buf) return; /// We do not have (and never had) enough data
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
     // Correct for the fact that Labjack readout is MSB first.
