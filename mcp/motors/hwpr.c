@@ -67,7 +67,7 @@ static struct hwpr_control_struct
     enum move_status move_cur;
     // enum read_pot read_before;
     // enum read_pot read_after;
-    // int read_wait_cnt; // Added
+    // int read_wait_cnt; // added
     int done_move;
     int done_all;
     int32_t rel_move;
