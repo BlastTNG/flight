@@ -183,3 +183,20 @@ void StoreHWPRBus(void)
   SET_VALUE(statControlHwprAddr, hwpr_stat_field);
 }
 
+
+void ControlHWPR(struct ezbus *bus)
+{
+	if (CommandData.hwpr.mode == HWPR_PANIC) {
+		blast_info("Panic"); // need to make this only print on change of state	
+		EZBus_Stop(bus, hwpr_data.addr);
+		CommandData.hwpr.mode = HWPR_SLEEP;
+	} else if (CommandData.hwpr.mode == HWPR_SLEEP) {
+	} else if (CommandData.hwpr.mode == ) {
+	} else if (CommandData.hwpr.mode == ) {
+	} else if (CommandData.hwpr.mode == ) {
+	}
+
+
+
+
+}
