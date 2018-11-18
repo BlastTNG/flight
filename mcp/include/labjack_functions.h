@@ -196,6 +196,7 @@ typedef struct {
     uint16_t req_comm_stream_state;
     uint16_t has_comm_stream_error;
     uint16_t have_warned_write_reg;
+    uint16_t have_warned_connect;
     uint16_t calibration_read;
 
     float DAC[2];

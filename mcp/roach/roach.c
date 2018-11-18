@@ -4045,15 +4045,20 @@ void pi_state_manager(pi_state_t *m_pi, int result)
 int roach_boot_sequence(roach_state_t *m_roach)
 {
     int retval = -1;
-    blast_info("Attempting to connect to %s", m_roach->address);
-    m_roach->katcp_fd = net_connect(m_roach->address,
-                              0, NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS);
+    int flags = 0;
+    if (!m_roach->have_warned_connect) {
+        blast_info("Attempting to connect to %s", m_roach->address);
+        flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
+    }
+    m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
     if (m_roach->katcp_fd > 0) {
         blast_info("ROACH%d, KATCP up", m_roach->which);
+        m_roach->have_warned_connect = 0;
         retval = 0;
     } else {
-        blast_err("ROACH%d, KATCP connection error", m_roach->which);
+        if (!m_roach->have_warned_connect) blast_err("ROACH%d, KATCP connection error", m_roach->which);
+        m_roach->have_warned_connect = 1;
         sleep(3);
     }
     return retval;
@@ -4063,15 +4068,19 @@ int pi_boot_sequence(pi_state_t *m_pi, int m_ntries)
 {
     int retval = -1;
     int count = 0;
-    blast_info("Initializing Pi%d ...", m_pi->which);
-    m_pi->pi_comm = remote_serial_init(m_pi->which - 1, m_pi->port);
+
+    if (!m_pi->have_warned_connect) blast_info("Initializing Pi%d ...", m_pi->which);
+    m_pi->pi_comm = remote_serial_init(m_pi->which - 1, m_pi->port, m_pi->have_warned_connect);
+
     while ((count < m_ntries)) {
         if (!m_pi->pi_comm->connected) {
-            blast_info("Waiting to connect to PI%d ...", m_pi->which);
+            if (!m_pi->have_warned_connect) blast_info("Waiting to connect to PI%d ...", m_pi->which);
+            m_pi->have_warned_connect = 1;
             usleep(2000);
             count += 1;
         } else {
             retval = 0;
+            m_pi->have_warned_connect = 0;
             blast_info("Pi%d initialized...", m_pi->which);
             break;
         }

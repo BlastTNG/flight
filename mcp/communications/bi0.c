@@ -390,14 +390,20 @@ void biphase_writer(void * arg)
     uint8_t direction = 0xBF; 
     uint32_t previous_clock_speed = CommandData.biphase_clk_speed;
 
+    static unsigned int warned_mpsse = 0;
+
     while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
-        blast_warn("Error opening mpsse. Will retry in 5s");
-
         InCharge = DEFAULT_INCHARGE;
-        blast_info("Defaulting to fc%d in charge", DEFAULT_INCHARGE+1);
 
+        if (!warned_mpsse) {
+          blast_warn("Error opening mpsse. Will retry every 5s");
+          if (InCharge) blast_info("Defaulting to in charge");
+          else blast_info("Defaulting to not in charge");
+        }
+        warned_mpsse = 1;
         sleep(5);
     }
+    warned_mpsse = 0;
 
     // biphase fifo
     allocFifo(&libusb_fifo, 2048, BIPHASE_FRAME_SIZE_BYTES);
@@ -428,13 +434,17 @@ void biphase_writer(void * arg)
             mpsse_closing = true;
             mpsse_close(ctx);
             while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
-                blast_warn("Error opening mpsse. Will retry in 5s");
-
                 InCharge = DEFAULT_INCHARGE;
-                blast_info("Defaulting to fc1 in charge");
 
+                if (!warned_mpsse) {
+                  blast_warn("Error opening mpsse. Will retry every 5s");
+                  if (InCharge) blast_info("Defaulting to in charge");
+                  else blast_info("Defaulting to not in charge");
+                }
+                warned_mpsse = 1;
                 sleep(5);
             }
+            warned_mpsse = 0;
             usleep(1000);
             mpsse_closing = false;
             mpsse_disconnected = false;

@@ -442,8 +442,8 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
     // Correct for the fact that Labjack readout is MSB first.
     ret = labjack_data_word_swap(data_pkt, read_buf_size);
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
-        blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
-                   state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
+        // blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
+        //            state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
     }
     state_data->trans_id = data_pkt->header.resp.trans_id;
 

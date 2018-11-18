@@ -74,6 +74,8 @@ void highrate_compress_and_send(void *arg) {
   // packetization variables
   uint16_t i_pkt = 0;
   uint16_t n_pkt = 0;
+  unsigned int backoff = 2;
+  unsigned int max_backoff = 60;
 
   nameThread("Highrate");
 
@@ -83,7 +85,10 @@ void highrate_compress_and_send(void *arg) {
            comms_serial_setspeed(serial, B115200)) {
         break;
       }
-      sleep(5);
+      sleep(backoff);
+      blast_info("Could not connect to highrate port. Will try again in %d seconds...", backoff);
+      if (backoff < max_backoff) backoff *= 2;
+      if (backoff > max_backoff) backoff = max_backoff;
     }
     get_serial_fd = 0;
 

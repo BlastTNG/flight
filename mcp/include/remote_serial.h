@@ -39,6 +39,7 @@ typedef struct remote_serial {
     int port;
     bool connected;
     bool have_warned_version;
+    uint8_t have_warned_connect;
     uint32_t backoff_sec;
     struct timeval timeout;
     ph_job_t connect_job;
@@ -50,6 +51,6 @@ int remote_serial_write_data(remote_serial_t *m_serial, uint8_t *m_data, size_t 
 int remote_serial_read_data(remote_serial_t *m_serial, uint8_t *m_buffer, size_t m_size);
 int remote_serial_flush(remote_serial_t *m_serial);
 void remote_serial_shutdown(remote_serial_t *m_serial);
-remote_serial_t *remote_serial_init(int m_which, int m_port);
+remote_serial_t *remote_serial_init(int m_which, int m_port, int has_warned);
 
 #endif /* INCLUDE_REMOTE_SERIAL_H_ */
