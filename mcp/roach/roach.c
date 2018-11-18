@@ -4069,7 +4069,6 @@ int pi_boot_sequence(pi_state_t *m_pi, int m_ntries)
     int retval = -1;
     int count = 0;
 
-    if (!m_pi->have_warned_connect) blast_info("Initializing Pi%d ...", m_pi->which);
     m_pi->pi_comm = remote_serial_init(m_pi->which - 1, m_pi->port, m_pi->have_warned_connect);
 
     while ((count < m_ntries)) {
