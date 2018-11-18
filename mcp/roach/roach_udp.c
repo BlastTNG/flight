@@ -281,13 +281,13 @@ void poll_socket(void)
 {
     init_roach_socket();
     int debug_count = 0;
-    blast_info("Roach socket file descriptor is %i", roach_sock_fd);
+    // blast_info("Roach socket file descriptor is %i", roach_sock_fd);
     if (!roach_sock_fd) {
        blast_err("Failed to open Socket");
     } else {
-        blast_info("Roach socket file descriptor is %i", roach_sock_fd);
+       // blast_info("Roach socket file descriptor is %i", roach_sock_fd);
     }
-    blast_info("Creating poll thread...");
+    // blast_info("Creating poll thread...");
     int rv;
     struct pollfd ufds[1];
     ufds[0].fd = roach_sock_fd;
@@ -388,14 +388,14 @@ void roach_udp_networking_init(void)
         snprintf(m_roach_udp->address, sizeof(m_roach_udp->address), "roach%i-udp", m_roach_udp->which);
         m_roach_udp->port = 64000 + ind;
 
-        blast_info("roach%i: Configuring roach information corresponding to %s",
-            m_roach_udp->which, m_roach_udp->address);
+        // blast_info("roach%i: Configuring roach information corresponding to %s",
+        //     m_roach_udp->which, m_roach_udp->address);
         struct hostent *udp_origin = gethostbyname(m_roach_udp->address);
         origaddr = *(uint32_t*)(udp_origin->h_addr_list[0]);
         snprintf(m_roach_udp->ip, sizeof(m_roach_udp->ip), "%d.%d.%d.%d",
             (origaddr & 0xff), ((origaddr >> 8) & 0xff),
             ((origaddr >> 16) & 0xff), ((origaddr >> 24) & 0xff));
-        blast_info("Expecting UDP packets for ROACH%d from IP %s on port %i", m_roach_udp->which,
+        blast_info("UDP packets for ROACH%d from IP %s on port %i", m_roach_udp->which,
             m_roach_udp->ip, m_roach_udp->port);
 
         // blast_info("Initializing ROACH UDP packet reading.");
