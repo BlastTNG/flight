@@ -4664,9 +4664,9 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_targ_sweep = 0;
     roach_state_table[ind].in_flight_mode = 0;
     CommandData.roach[ind].go_flight_mode = 0;
-    blast_info("Spawning command thread for roach%i...", ind + 1);
+    // blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
-    blast_info("Spawned command thread for roach%i", ind + 1);
+    // blast_info("Spawned command thread for roach%i", ind + 1);
     return 0;
 }
 

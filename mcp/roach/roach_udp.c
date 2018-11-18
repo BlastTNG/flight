@@ -398,7 +398,7 @@ void roach_udp_networking_init(void)
         blast_info("Expecting UDP packets for ROACH%d from IP %s on port %i", m_roach_udp->which,
             m_roach_udp->ip, m_roach_udp->port);
 
-        blast_info("Initializing ROACH UDP packet reading.");
+        // blast_info("Initializing ROACH UDP packet reading.");
 
         m_roach_udp->opened = 1;
         m_roach_udp->have_warned = false;

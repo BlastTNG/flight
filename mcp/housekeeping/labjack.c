@@ -85,7 +85,7 @@ void init_labjack_digital(void) {
     labjack_digital.status_charcoal_hs_Addr = channels_find_by_name("status_charcoal_hs");
     labjack_digital.status_500_LNA_Addr = channels_find_by_name("status_500_LNA");
     labjack_digital.status_350_LNA_Addr = channels_find_by_name("status_350_LNA");
-    blast_info("init channels for labjack digital");
+    // blast_info("init channels for labjack digital");
 }
 
 void labjack_queue_command(int m_labjack, int m_address, float m_command) {
@@ -191,8 +191,8 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
     uint16_t nChanList[1] = {0};
     float rangeList[MAX_NUM_ADDRESSES];
 
-	blast_info("Attempting to set registers for labjack%02d streaming.", m_state->which);
-// Disable streaming (otherwise we can't set the other streaming registers.
+	  // blast_info("Attempting to set registers for labjack%02d streaming.", m_state->which);
+    // Disable streaming (otherwise we can't set the other streaming registers.
     labjack_set_short(0, data);
     if ((ret = modbus_write_registers(m_state->cmd_mb, STREAM_ENABLE_ADDR, 2, data)) < 0) {
         ret = modbus_read_registers(m_state->cmd_mb, LJ_MODBUS_ERROR_INFO_ADDR, 2, err_data);
@@ -300,7 +300,7 @@ static void init_labjack_stream_commands(labjack_state_t *m_state)
         return;
     }
 
-	blast_info("Setting Modbus register addresses for labjack%02d streaming.", m_state->which);
+	 // blast_info("Setting Modbus register addresses for labjack%02d streaming.", m_state->which);
 
     // Using a loop to add Modbus addresses for AIN0 - AIN(NUM_ADDRESSES-1) to the
     // stream scan and configure the analog input settings.
@@ -591,9 +591,9 @@ void *labjack_cmd_thread(void *m_lj) {
         }
 
         if (CommandData.Labjack_Queue.which_q[m_state->which] == 1) {
-            if (CommandData.Labjack_Queue.lj_q_on == 0) {
-                blast_info("queue set by LJ %d", m_state->which);
-            }
+            // if (CommandData.Labjack_Queue.lj_q_on == 0) {
+            //     blast_info("queue set by LJ %d", m_state->which);
+            // }
             labjack_execute_command_queue();
             CommandData.Labjack_Queue.lj_q_on = 1;
         }
@@ -618,7 +618,7 @@ void *labjack_cmd_thread(void *m_lj) {
 
 ph_thread_t* initialize_labjack_commands(int m_which)
 {
-    blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
+    // blast_info("start_labjack_command: creating labjack %d ModBus thread", m_which);
     return ph_thread_spawn(labjack_cmd_thread, (void*) &state[m_which]);
 }
 
@@ -634,7 +634,7 @@ void initialize_labjack_queue(void) {
  */
 void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet)
 {
-    blast_dbg("Labjack Init for %d", m_which);
+    // blast_dbg("Labjack Init for %d", m_which);
 
 
     state[m_which].connected = false;

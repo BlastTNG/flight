@@ -256,7 +256,7 @@ static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
  */
 void xsc_networking_init(int m_which)
 {
-    blast_dbg("XSC Init for %d", m_which);
+    // blast_dbg("XSC Init for %d", m_which);
     for (unsigned int i = 0; i < 3; i++) {
         xsc_clear_server_data(&xsc_mserver_data[m_which][i]);
         xsc_init_server_data(&xsc_mserver_data[m_which][i]);
