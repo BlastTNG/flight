@@ -67,6 +67,7 @@ static struct hwpr_control_struct
     float enc_err;
     int reset_enc;
 	float angle_targ;
+	float angle;
 } hwpr_control;
 
 void MonitorHWPR(struct ezbus *bus)
@@ -189,8 +190,7 @@ void StoreHWPRBus(void)
 
 void ControlHWPR(struct ezbus *bus)
 {	
-	
-	hwpr_control.enc_targ = CommandData.hwpr_target;
+	hwpr_control = CommandData.hwpr.overshoot;
 
     if (CommandData.hwpr.mode == HWPR_PANIC) {
 		blast_info("Panic"); // need to make this only print on change of state
@@ -204,6 +204,7 @@ void ControlHWPR(struct ezbus *bus)
 			hwpr_control.rel_move = (int32) (hwpr_control.angle_diff * HWPR_DEG_TO_STEPS);
 		} else if (CommandData.hwpr.mode == HWPR_JUMP) {
 		} else if (CommandData.hwpr.mode == HWPR_STEP) {
+			GetHWPRi(bus);
 		} else if (CommandData.hwpr.mode == HWPR_REPEAT) {
 		} else if (CommandData.hwpr.mode == HWPR_GOTO_I) {
 		} else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
@@ -213,7 +214,7 @@ void ControlHWPR(struct ezbus *bus)
 	if (hwpr_control.rel_move > 0) {
 		EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move)
 	} else if (hwpr_control.rel_move < 0) {
-		hwpr_control.rel_move += 
+		hwpr_control.rel_move += overshoot;
 	}
 
 

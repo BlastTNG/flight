@@ -324,7 +324,7 @@ void ControlHWPR(struct ezbus *bus)
             blast_info("Waiting for calpulse to be done...cal_wait_cnt=%i, hwpr_control.do_calpulse=%i", cal_wait_cnt,
                        hwpr_control.do_calpulse);
 #endif
-            /* Do we want a pot reading first? Should always be yes for step mode.*/
+        /* Do we want a pot reading first? Should always be yes for step mode.*/
         /*} else if (hwpr_control.read_before == yes) {
              pulse the potentiometer
 #ifdef DEBUG_HWPR
