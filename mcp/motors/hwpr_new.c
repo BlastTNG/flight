@@ -36,10 +36,12 @@
 
 #undef DEBUG_HWPR
 
+#define HWPR_DEG_TO_STEPS 14222.22222 // 100 (input_rev/output_rev) * 51200 (usteps/input_rev) / 360 (deg/output_rev)
+
 static struct hwpr_struct {
   int addr;
   int32_t pos;
-  float enc; // old blast had enc and pot, why? We should only need enc
+  float enc; // old file had enc and pot here, why? We should only need enc, old blast had only pot
 } hwpr_data;
 
 enum move_type
@@ -64,6 +66,7 @@ static struct hwpr_control_struct
     float enc_targ;
     float enc_err;
     int reset_enc;
+	float angle_targ;
 } hwpr_control;
 
 void MonitorHWPR(struct ezbus *bus)
@@ -185,16 +188,38 @@ void StoreHWPRBus(void)
 
 
 void ControlHWPR(struct ezbus *bus)
-{
-	if (CommandData.hwpr.mode == HWPR_PANIC) {
-		blast_info("Panic"); // need to make this only print on change of state	
+{	
+	
+	hwpr_control.enc_targ = CommandData.hwpr_target;
+
+    if (CommandData.hwpr.mode == HWPR_PANIC) {
+		blast_info("Panic"); // need to make this only print on change of state
 		EZBus_Stop(bus, hwpr_data.addr);
 		CommandData.hwpr.mode = HWPR_SLEEP;
-	} else if (CommandData.hwpr.mode == HWPR_SLEEP) {
-	} else if (CommandData.hwpr.mode == ) {
-	} else if (CommandData.hwpr.mode == ) {
-	} else if (CommandData.hwpr.mode == ) {
+    } else if (CommandData.hwpr.is_new == 1) {
+		if (CommandData.hwpr.mode == HWPR_SLEEP) {
+		} else if (CommandData.hwpr.mode == HWPR_GOTO) {
+			hwpr_control.angle_targ = CommandData.hwpr.target;
+			hwpr_control.angle_diff = hwpr_control.angle_targ - hwpr_control.angle;
+			hwpr_control.rel_move = (int32) (hwpr_control.angle_diff * HWPR_DEG_TO_STEPS);
+		} else if (CommandData.hwpr.mode == HWPR_JUMP) {
+		} else if (CommandData.hwpr.mode == HWPR_STEP) {
+		} else if (CommandData.hwpr.mode == HWPR_REPEAT) {
+		} else if (CommandData.hwpr.mode == HWPR_GOTO_I) {
+		} else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
+		}
+	CommandData.hwpr_is_new = 0;
 	}
+	if (hwpr_control.rel_move > 0) {
+		EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move)
+	} else if (hwpr_control.rel_move < 0) {
+		hwpr_control.rel_move += 
+	}
+
+
+
+
+
 
 
 

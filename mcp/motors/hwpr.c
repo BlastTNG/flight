@@ -263,11 +263,11 @@ void ControlHWPR(struct ezbus *bus)
     } else if (CommandData.hwpr.is_new) {
         if ((CommandData.hwpr.mode == HWPR_GOTO)) {
             blast_info("HWPR GOTO: %d", CommandData.hwpr.target); // DEBUG PCA
-	    EZBus_Goto(bus, hwpr_data.addr, CommandData.hwpr.target);
+	    	EZBus_Goto(bus, hwpr_data.addr, CommandData.hwpr.target);
             CommandData.hwpr.mode = HWPR_SLEEP;
         } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
             blast_info("HWPR JUMP: %d", CommandData.hwpr.target); // DEBUG PCA
-	    EZBus_RelMove(bus, hwpr_data.addr, CommandData.hwpr.target);
+	    	EZBus_RelMove(bus, hwpr_data.addr, CommandData.hwpr.target);
             CommandData.hwpr.mode = HWPR_SLEEP;
         } else if ((CommandData.hwpr.mode == HWPR_GOTO_I)) {
             blast_info("ControlHWPR: Attempting to go to HWPR position %i", CommandData.hwpr.i_pos);
