@@ -54,19 +54,19 @@ struct GPSInfoStruct CSBFGPSData = {.longitude = 0.0};
 // should we write it to the frame?
 time_t csbf_gps_time;
 
-int csbf_setserial(const char *input_tty)
+int csbf_setserial(const char *input_tty, int verbosity)
 {
   int fd;
   struct termios term;
 
-  blast_info("Connecting to sip port %s...", input_tty);
+  if (verbosity > 0) blast_info("Connecting to sip port %s...", input_tty);
 
   if ((fd = open(input_tty, O_RDWR)) < 0) {
-    blast_err("Unable to open serial port");
+    if (verbosity > 0) blast_err("Unable to open serial port");
     return -1;
   }
   if (tcgetattr(fd, &term)) {
-    blast_err("Unable to get serial device attributes");
+    if (verbosity > 0) blast_err("Unable to get serial device attributes");
     return -1;
   }
 
@@ -81,19 +81,19 @@ int csbf_setserial(const char *input_tty)
   term.c_cflag |= CS8;
 
   if (cfsetospeed(&term, B19200)) {          /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial output speed");
+    if (verbosity > 0) blast_err("Error setting serial output speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (cfsetispeed(&term, B19200)) {         /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial input speed");
+    if (verbosity > 0) blast_err("Error setting serial input speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (tcsetattr(fd, TCSANOW, &term)) {
-    blast_err("Unable to set serial attributes");
+    if (verbosity > 0) blast_err("Unable to set serial attributes");
     if (fd >= 0) close(fd);
     return -1;
   }
@@ -209,6 +209,7 @@ void * DGPSMonitor(void * arg)
     unsigned char buf;
     char indata[128];
     uint16_t i_char = 0;
+    int has_warned = 0;
     e_dgps_read_status readstage = DGPS_WAIT_FOR_START;
     typedef struct
     {
@@ -227,11 +228,13 @@ void * DGPSMonitor(void * arg)
         usleep(10000); /* sleep for 10ms */
         // wait for a valid file descriptor
     		while (get_serial_fd) {
-            if ((tty_fd = csbf_setserial(CSBFGPSCOM)) >= 0) {
+            if ((tty_fd = csbf_setserial(CSBFGPSCOM, !has_warned)) >= 0) {
                 break;
             }
+            has_warned = 1;
             sleep(5);
         }
+        has_warned = 0;
         get_serial_fd = 0;
         /* Loop until data come in */
         while (read(tty_fd, &buf, 1) <= 0) {

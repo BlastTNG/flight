@@ -63,6 +63,7 @@ typedef struct {
   int which;
   bool connected;
   bool have_warned_version;
+  uint8_t have_warned_connect;
   uint32_t backoff_sec;
   struct timeval timeout;
   ph_job_t connect_job;
@@ -193,15 +194,18 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
-            blast_err("resolve %s:%d failed %s", addresses[state->which], port, gai_strerror(m_errcode));
+            if (!state->have_warned_connect) blast_err("resolve %s:%d failed %s",
+                     addresses[state->which], port, gai_strerror(m_errcode));
+            state->have_warned_connect = 1;
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
             return;
 
         case PH_SOCK_CONNECT_ERRNO:
-            blast_err("connect %s:%d failed: `Error %d: %s`",
+            if (!state->have_warned_connect) blast_err("connect %s:%d failed: `Error %d: %s`",
                       addresses[state->which], port, m_errcode, strerror(m_errcode));
+            state->have_warned_connect = 1;
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
@@ -209,6 +213,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     }
 
     blast_info("Connected to XSC%d at %s", state->which, addresses[state->which]);
+    state->have_warned_connect = 0;
 
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
@@ -235,7 +240,9 @@ static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_why);
     xsc_state_t *state = (xsc_state_t*)m_data;
 
-    blast_info("Connecting to %s", addresses[state->which]);
+    if (!state->have_warned_connect) blast_info("Connecting to %s", addresses[state->which]);
+    state->have_warned_connect = 1;
+
     ph_sock_resolve_and_connect(addresses[state->which], port, 0,
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM,
         connected, m_data);
@@ -249,7 +256,7 @@ static void connect_xsc(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
  */
 void xsc_networking_init(int m_which)
 {
-    blast_dbg("XSC Init for %d", m_which);
+    // blast_dbg("XSC Init for %d", m_which);
     for (unsigned int i = 0; i < 3; i++) {
         xsc_clear_server_data(&xsc_mserver_data[m_which][i]);
         xsc_init_server_data(&xsc_mserver_data[m_which][i]);
