@@ -1249,6 +1249,11 @@ struct mcom mcommands[plugh + 2] = {
           {"Labjack to execute queue", 0, 4, 'i', "LJ"},
       }
   },
+  {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
+      {
+          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
+      }
+  },
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",

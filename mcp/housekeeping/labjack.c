@@ -447,6 +447,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     CommandData.Relays.labjack[state->which] = 1;
     state->backoff_sec = min_backoff_sec;
     m_sock->callback = labjack_process_stream;
+    m_sock->timeout_duration.tv_sec = 2;
+    m_sock->timeout_duration.tv_usec = 0;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
@@ -531,8 +533,20 @@ void set_execute(int which) {
     CommandData.Labjack_Queue.which_q[which] = 1;
 }
 
+void set_reconnect(int which) {
+    // close tcp socket
+    modbus_free(state[which].cmd_mb);
+
+    // reset modbus pointer and stream state flag
+    state[which].cmd_mb = NULL;
+    state[which].comm_stream_state = 0;
+
+    // reset the q
+    CommandData.Labjack_Queue.which_q[which] = 0;
+    CommandData.Labjack_Queue.set_q = 1;
+}
+
 void *labjack_cmd_thread(void *m_lj) {
-    static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
     // int labjack = m_state->which;
     char tname[10];
@@ -573,16 +587,16 @@ void *labjack_cmd_thread(void *m_lj) {
                                       MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
 
             if (modbus_connect(m_state->cmd_mb)) {
-                if (!have_warned_connect) {
+                if (!m_state->have_warned_connect) {
                     blast_err("Could not connect to ModBUS charge controller at %s: %s", m_state->address,
                             modbus_strerror(errno));
                 }
                 modbus_free(m_state->cmd_mb);
                 m_state->cmd_mb = NULL;
-                have_warned_connect = 1;
+                m_state->have_warned_connect = 1;
                 continue;
             }
-            have_warned_connect = 0;
+            m_state->have_warned_connect = 0;
         }
 
         /*  Start streaming */
