@@ -640,6 +640,7 @@ struct CommandDataStruct {
     int force_repoll;
     int mode, is_new, target;
     int n_pos, repeats, step_wait, step_size, overshoot;
+	int backoff;
     double pos[4];
     int i_pos;
     int no_step;

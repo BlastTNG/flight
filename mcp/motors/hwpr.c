@@ -54,7 +54,7 @@ enum move_type
 };
 enum move_status
 {
-    not_yet = 0, ready, moving, at_overshoot, is_done
+    not_yet = 0, ready, moving, at_overshoot, is_done, needs_backoff
 };
 /*enum read_pot
 {
@@ -73,6 +73,7 @@ static struct hwpr_control_struct
     int32_t rel_move;
     int i_next_step;
     int do_overshoot;
+	int do_backoff;
     int stop_cnt;
     float enc_targ;
     float enc_err;
@@ -423,7 +424,7 @@ void ControlHWPR(struct ezbus *bus)
                         return; // break out of loop!
                     }
 
-                    /*** Once we are ready to move send ActBus Command ***/
+            /*** Once we are ready to move send ActBus Command ***/
 
             } else if (hwpr_control.move_cur == ready) {
             	/* Is the hwpr move negative?
@@ -449,6 +450,10 @@ void ControlHWPR(struct ezbus *bus)
                     EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                     hwpr_control.move_cur = moving;
                     hwpr_control.stop_cnt = 0;
+					// only set do_backoff now if we are not overshooting, otherwise wait until after overshoot
+					if (!hwpr_control.do_overshoot) {
+						hwpr_control.do_backoff = 1;
+					}
                     // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
                     /*** We are moving.  Wait until we are done. ***/
             } else if (hwpr_control.move_cur == moving) {
@@ -469,6 +474,8 @@ void ControlHWPR(struct ezbus *bus)
 
                     if (hwpr_control.do_overshoot) {
                         hwpr_control.move_cur = at_overshoot;
+					} else if (hwpr_control.do_backoff) {
+						hwpr_control.move_cur = needs_backoff;
                     } else { // we're done moving
                         hwpr_control.move_cur = is_done;
 #ifdef DEBUG_HWPR
@@ -493,8 +500,17 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.move_cur = moving;
                 hwpr_control.stop_cnt = 0;
                 hwpr_control.do_overshoot = 0;
+				hwpr_control.do_backoff = 1;
                 hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
+			} else if (hwpr_control.move_cur == needs_backoff) {
+#ifdef DEBUG_HWPR
+				blast_info("Going to backoff to break thermal link");
+#endif
+				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
+				EZBus_RelMove(bus, hwpr_dat.addr, hwpr_control.rel_move);
+
+				hwpr_control.
             } else if (hwpr_control.move_cur == is_done) {
                 /* Have to tell the HWPR that it is at it's current warm encoder position
                  * or else it will sometimes oscillate
