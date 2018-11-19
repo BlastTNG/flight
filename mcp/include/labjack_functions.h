@@ -191,6 +191,7 @@ typedef struct {
     bool have_warned_version;
     bool shutdown;
     bool initialized;
+    bool force_reconnect;
     // Used for setting up the streaming in the command thread
     uint16_t comm_stream_state;
     uint16_t req_comm_stream_state;

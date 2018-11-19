@@ -467,6 +467,8 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_why);
     labjack_state_t *state = (labjack_state_t*)m_data;
 
+    state->initialized = true;
+
     if (!state->have_warned_connect) blast_info("Connecting to %s", state->address);
     ph_sock_resolve_and_connect(state->address, state->port, 0,
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
@@ -534,16 +536,12 @@ void set_execute(int which) {
 }
 
 void set_reconnect(int which) {
-    // close tcp socket
-    modbus_free(state[which].cmd_mb);
+    // force a reconnect of the stream data
+    state[which].initialized = false;
+    state[which].have_warned_connect = 0;
+    state[which].force_reconnect = true;
 
-    // reset modbus pointer and stream state flag
-    state[which].cmd_mb = NULL;
-    state[which].comm_stream_state = 0;
-
-    // reset the q
-    CommandData.Labjack_Queue.which_q[which] = 0;
-    CommandData.Labjack_Queue.set_q = 1;
+    blast_info("Forced reconnect on %d\n", which);
 }
 
 void *labjack_cmd_thread(void *m_lj) {
@@ -588,7 +586,7 @@ void *labjack_cmd_thread(void *m_lj) {
 
             if (modbus_connect(m_state->cmd_mb)) {
                 if (!m_state->have_warned_connect) {
-                    blast_err("Could not connect to ModBUS charge controller at %s: %s", m_state->address,
+                    blast_err("Could not connect to ModBUS at %s: %s", m_state->address,
                             modbus_strerror(errno));
                 }
                 modbus_free(m_state->cmd_mb);
@@ -623,6 +621,18 @@ void *labjack_cmd_thread(void *m_lj) {
                 continue;
             } */
     }
+
+		// reset the q
+		int qstate = CommandData.Labjack_Queue.which_q[m_state->which];
+		CommandData.Labjack_Queue.which_q[m_state->which] = 0;
+		if (qstate) CommandData.Labjack_Queue.set_q = 1;
+
+    // close the modbus
+    m_state->comm_stream_state = 0;
+    modbus_close(m_state->cmd_mb);
+    modbus_free(m_state->cmd_mb);
+    m_state->cmd_mb = NULL;
+
     return NULL;
 }
 
@@ -665,7 +675,6 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
     data_state->num_channels = m_numchannels;
     data_state->scans_per_packet = m_scans_per_packet;
     state[m_which].conn_data = data_state;
-    state[m_which].initialized = true;
     ph_job_dispatch_now(&(state[m_which].connect_job));
 }
 
