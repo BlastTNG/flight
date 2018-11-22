@@ -3205,6 +3205,11 @@ void InitCommandData()
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    for (i = 0; i < NUM_ROACH_TLM; i++) {
+      CommandData.roach_tlm[i].roach = 1;
+      CommandData.roach_tlm[i].kid = 0;
+      CommandData.roach_tlm[i].rtype= 0;
+    }
     memset(CommandData.num_channels_all_roaches, 0, sizeof(CommandData.num_channels_all_roaches));
     CommandData.pilot_oth = 0;
 

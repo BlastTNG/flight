@@ -502,6 +502,7 @@ static int initialized(void) {
 
 void labjack_choose_execute(void) {
     int init = initialized();
+    static bool has_warned = false;
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
         // blast_info("setting cmd queue executor");
         if (state[0].connected == 1) {
@@ -520,7 +521,8 @@ void labjack_choose_execute(void) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
         } else {
-            blast_info("no queue selected, trying again in 1s");
+            if (!has_warned) blast_info("no queue selected, trying again every 1s");
+            has_warned = true;
         }
     }
 }
