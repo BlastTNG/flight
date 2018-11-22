@@ -1893,6 +1893,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_queue_execute:
       set_execute(ivalues[0]);
       break;
+    case reconnect_lj:
+      set_reconnect(ivalues[0]-1);
+      break;
     case cal_length: // specify length in ms (multiples of 5)
       CommandData.Cryo.cal_length = (ivalues[0]/5);
       break;

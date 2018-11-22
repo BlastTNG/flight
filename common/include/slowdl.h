@@ -32,4 +32,6 @@ struct SlowDlStruct {
   int i_read; // for buffer
 };
 
+void updateSlowDL();
+
 #endif /* INCLUDE_SLOWDL_H */

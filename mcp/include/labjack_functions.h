@@ -191,12 +191,14 @@ typedef struct {
     bool have_warned_version;
     bool shutdown;
     bool initialized;
+    bool force_reconnect;
     // Used for setting up the streaming in the command thread
     uint16_t comm_stream_state;
     uint16_t req_comm_stream_state;
     uint16_t has_comm_stream_error;
     uint16_t have_warned_write_reg;
     uint16_t calibration_read;
+    uint16_t have_warned_connect;
 
     float DAC[2];
     float AIN[84]; // Analog input channels read from Labjack
