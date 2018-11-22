@@ -95,6 +95,7 @@
 #include "xsc_pointing.h"
 #include "xystage.h"
 #include "sip.h"
+#include "scheduler_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
