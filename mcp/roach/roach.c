@@ -100,7 +100,7 @@
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
 #define TARG_SWEEP_SPAN 150.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
-#define N_AVG 50 /* Number of packets to average for each sweep point */
+#define N_AVG 20 /* Number of packets to average for each sweep point */
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (0)
 #define SWEEP_FAIL (-2)
@@ -1262,6 +1262,12 @@ int read_accum_snap(roach_state_t *m_roach)
     return retval;
 }
 
+
+int atten_client(pi_state_t *m_pi)
+{
+    return 0;
+}
+
 /* Function: set_atten
  * ----------------------------
  * Sets Roach attenuators; levels are in dB, between 0 and 30.
@@ -2137,21 +2143,6 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     return 1;
 }
 
-/* Function: recenter_lo
- * ----------------------------
- * Returns the LO to center position
- *
- * @param m_roach roach state table
-*/
-int recenter_lo(roach_state_t *m_roach)
-{
-    char *lo_command;
-    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
-                  m_roach->lo_centerfreq/1.0e6);
-    pi_write_string(&pi_state_table[m_roach->which - 1], (unsigned char*)lo_command, strlen(lo_command));
-    return 0;
-}
-
 int shift_lo(roach_state_t *m_roach)
 {
     int retval = -1;
@@ -2170,6 +2161,53 @@ int shift_lo(roach_state_t *m_roach)
     blast_info("ROACH%d, LO set to %g", m_roach->which, set_freq);
     retval = 0;
     return retval;
+}
+
+int setLO_oneshot(int which_pi, double loFreq)
+{
+    char *lo_freq;
+    int s;
+    int status = 0;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    char buff[1024];
+    bzero(buff, sizeof(buff));
+    blast_tmp_sprintf(lo_freq, "%f", loFreq);
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      perror("client: socket");
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(pi_state_table[which_pi].address)) == NULL) {
+      blast_info("error: gethost");
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(9999);
+    /* Copies host address to socket with aide of structures. */
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+      perror("client: connect");
+      blast_err("errno = %d\n", errno);
+    }
+    if ((status = write(s, lo_freq, strlen(lo_freq))) < 0) {
+        blast_err("setLO_oneshot");
+    }
+    // if (read(s, buff, sizeof(buff)) < 0) toltec_info("read fail");
+    status = read(s, buff, sizeof(buff));
+    blast_info("%s\n", buff);
+    close(s);
+    return status;
+}
+
+int recenter_lo(roach_state_t *m_roach)
+{
+    char *lo_command;
+    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
+                  m_roach->lo_centerfreq/1.0e6);
+    setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6);
+    // pi_write_string(&pi_state_table[m_roach->which - 1], (unsigned char*)lo_command, strlen(lo_command));
+    return 0;
 }
 
 // TODO(Sam) add cal and grad sweeps as sweep types
@@ -2277,12 +2315,13 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
+            setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
+            /* pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
             // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
             if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
                 blast_info("Error setting LO... reboot Pi%d?", ind + 1);
                 return PI_READ_ERROR;
-            }
+            } */
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
@@ -2295,12 +2334,13 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     usleep(SWEEP_TIMEOUT);
     if (recenter_lo(m_roach) < 0) {
         blast_info("Error recentering LO");
-    } else {
+    }
+    /* } else {
         if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
             blast_info("Error setting LO... reboot Pi%d?", ind + 1);
             return PI_READ_ERROR;
         }
-    }
+    } */
     free(m_sweep_freqs);
     CommandData.roach[ind].do_sweeps = 0;
     return SWEEP_SUCCESS;
@@ -4294,7 +4334,7 @@ void *roach_cmd_loop(void* ind)
     }
     blast_info("Starting Roach Commanding Thread");
     pi_state_table[i].state = PI_STATE_BOOT;
-    pi_state_table[i].desired_state = PI_STATE_INIT;
+    // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     while (!shutdown_mcp) {
@@ -4506,7 +4546,7 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].opt_tones = 0;
             }
         }
-        if (pi_state_table[i].state == PI_STATE_BOOT &&
+        /* if (pi_state_table[i].state == PI_STATE_BOOT &&
                              pi_state_table[i].desired_state >= PI_STATE_BOOT) {
             result = pi_boot_sequence(&pi_state_table[i], PI_READ_NTRIES);
             pi_state_manager(&pi_state_table[i], result);
@@ -4515,7 +4555,7 @@ void *roach_cmd_loop(void* ind)
                              pi_state_table[i].desired_state >= PI_STATE_CONNECTED) {
             result = pi_init_sequence(&pi_state_table[i]);
             pi_state_manager(&pi_state_table[i], result);
-        }
+        }*/
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
                                    roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
             // establish a KATCP connection to the PPC
@@ -4649,6 +4689,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].which = ind + 1;
     pi_state_table[ind].which = ind + 1;
     pi_state_table[ind].port = NC2_PORT;
+    asprintf(&pi_state_table[ind].address, "pi%d", ind + 1);
     roach_state_table[ind].dest_port = 64000 + ind;
     roach_state_table[ind].src_port = 64000 + ind;
     roach_state_table[ind].src_ip = IPv4(192, 168, 40, 71 + ind);

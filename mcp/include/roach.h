@@ -233,6 +233,7 @@ typedef struct pi_state {
     bool has_input_atten;
     bool has_output_atten;
     remote_serial_t *pi_comm;
+    char *address;
 } pi_state_t;
 
 typedef struct {
