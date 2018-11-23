@@ -48,7 +48,7 @@ const char *GroupNames[N_GROUPS] = {
 
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
 
-const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", 0};
+const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *linklist_names[] = {0};
 
 
@@ -844,7 +844,7 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(set_linklists), "change linklists for downlink", GR_TELEM, 2,
     {
-      {"Downlink", 0, 2, 'i', "NONE", {downlink_names}},
+      {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {LINKLIST_SELECT}
     }
   },
@@ -1247,6 +1247,11 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_queue_execute), "command queue changed", GR_CRYO, 1,
       {
           {"Labjack to execute queue", 0, 4, 'i', "LJ"},
+      }
+  },
+  {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
+      {
+          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
       }
   },
   /***************************************/

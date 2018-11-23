@@ -447,6 +447,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     CommandData.Relays.labjack[state->which] = 1;
     state->backoff_sec = min_backoff_sec;
     m_sock->callback = labjack_process_stream;
+    m_sock->timeout_duration.tv_sec = 2;
+    m_sock->timeout_duration.tv_usec = 0;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
@@ -464,6 +466,8 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_job);
     ph_unused_parameter(m_why);
     labjack_state_t *state = (labjack_state_t*)m_data;
+
+    state->initialized = true;
 
     if (!state->have_warned_connect) blast_info("Connecting to %s", state->address);
     ph_sock_resolve_and_connect(state->address, state->port, 0,
@@ -498,6 +502,7 @@ static int initialized(void) {
 
 void labjack_choose_execute(void) {
     int init = initialized();
+    static bool has_warned = false;
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
         // blast_info("setting cmd queue executor");
         if (state[0].connected == 1) {
@@ -516,7 +521,8 @@ void labjack_choose_execute(void) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
         } else {
-            blast_info("no queue selected, trying again in 1s");
+            if (!has_warned) blast_info("no queue selected, trying again every 1s");
+            has_warned = true;
         }
     }
 }
@@ -531,8 +537,16 @@ void set_execute(int which) {
     CommandData.Labjack_Queue.which_q[which] = 1;
 }
 
+void set_reconnect(int which) {
+    // force a reconnect of the stream data
+    state[which].initialized = false;
+    state[which].have_warned_connect = 0;
+    state[which].force_reconnect = true;
+
+    blast_info("Forced reconnect on %d\n", which);
+}
+
 void *labjack_cmd_thread(void *m_lj) {
-    static int have_warned_connect = 0;
     labjack_state_t *m_state = (labjack_state_t*)m_lj;
     // int labjack = m_state->which;
     char tname[10];
@@ -573,16 +587,16 @@ void *labjack_cmd_thread(void *m_lj) {
                                       MODBUS_ERROR_RECOVERY_LINK | MODBUS_ERROR_RECOVERY_PROTOCOL);
 
             if (modbus_connect(m_state->cmd_mb)) {
-                if (!have_warned_connect) {
-                    blast_err("Could not connect to ModBUS charge controller at %s: %s", m_state->address,
+                if (!m_state->have_warned_connect) {
+                    blast_err("Could not connect to ModBUS at %s: %s", m_state->address,
                             modbus_strerror(errno));
                 }
                 modbus_free(m_state->cmd_mb);
                 m_state->cmd_mb = NULL;
-                have_warned_connect = 1;
+                m_state->have_warned_connect = 1;
                 continue;
             }
-            have_warned_connect = 0;
+            m_state->have_warned_connect = 0;
         }
 
         /*  Start streaming */
@@ -609,6 +623,18 @@ void *labjack_cmd_thread(void *m_lj) {
                 continue;
             } */
     }
+
+		// reset the q
+		int qstate = CommandData.Labjack_Queue.which_q[m_state->which];
+		CommandData.Labjack_Queue.which_q[m_state->which] = 0;
+		if (qstate) CommandData.Labjack_Queue.set_q = 1;
+
+    // close the modbus
+    m_state->comm_stream_state = 0;
+    modbus_close(m_state->cmd_mb);
+    modbus_free(m_state->cmd_mb);
+    m_state->cmd_mb = NULL;
+
     return NULL;
 }
 
@@ -651,7 +677,6 @@ void labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_p
     data_state->num_channels = m_numchannels;
     data_state->scans_per_packet = m_scans_per_packet;
     state[m_which].conn_data = data_state;
-    state[m_which].initialized = true;
     ph_job_dispatch_now(&(state[m_which].connect_job));
 }
 

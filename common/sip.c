@@ -74,6 +74,7 @@
 
 void nameThread(const char*);  /* mcp.c */
 void fillDLData(unsigned char *b, int len); /* slowdl.c */
+void fillSBDData(unsigned char *b, int len); /* highrate.c */
 
 extern pthread_mutex_t mutex;
 
@@ -376,8 +377,9 @@ static void SendDownData(char tty_fd)
   buffer[0] = SLOWDL_DLE;
   buffer[1] = SLOWDL_SYNC;
   buffer[2] = SLOWDL_LEN;
-  updateSlowDL();
-  fillDLData(buffer+3, SLOWDL_LEN);
+  // updateSlowDL();
+  // fillDLData(buffer+3, SLOWDL_LEN);
+  fillSBDData(buffer+3, SLOWDL_LEN);
   blast_info("Sending slowdl data\n");
 
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;

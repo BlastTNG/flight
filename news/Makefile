@@ -5,7 +5,7 @@ CFLAGS = -g
 # External repository dependencies
 #
 
-SPIDER_OR_BLAST=1   # we need at least one of Spider or BLAST config
+BLAST_ONLY=1   # we need at least one of Spider or BLAST config
 
 ########################################################
 # Inputs
@@ -15,7 +15,7 @@ SHARED_OBJS = compressfuncs.o
 LOCAL_OBJS = news_utils.o
 EXPT_OBJS = tx_struct.o compressstruct.o derived.o slowdl_struct.o
 
-SHARED_HEADERS = compressstruct.h channels.h derived.h
+SHARED_HEADERS = include/channels_tng.h include/derived.h
 
 ########################################################
 # Run the sanity checks and prepare the build system
@@ -27,8 +27,7 @@ include ../common/Makefile.shared
 # Set up targets
 #
 
-BLAST_ALL = fox-blast msnbc-blast rush-blast rumor-blast
-SPIDER_ALL = fox-spider msnbc-spider rush-spider rumor-spider
+BLAST_ALL = rumor-blast
 
 ifeq ($(HAVE_BLASTCONF),1)
 	ALL += $(BLAST_ALL)

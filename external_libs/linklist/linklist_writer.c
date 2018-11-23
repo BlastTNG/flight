@@ -131,7 +131,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
         ll_rawfile->isseekend = fileindex;
   }
 
-  printf("%d %d\n", fileindex);
+  // printf("%d %d\n", fileindex);
 
   do {
     // seek to the beginning of the fragment files

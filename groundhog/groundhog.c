@@ -21,7 +21,6 @@
 #include "linklist_writer.h"
 #include "linklist_connect.h"
 #include "blast.h"
-#include "groundhog_framing.h"
 #include "channels_tng.h"
 #include "derived.h"
 #include "groundhog.h"
@@ -152,9 +151,6 @@ int main(int argc, char * argv[]) {
                                   BI0LOS_MAX_PACKET_SIZE,
                                   BI0};
 
-  // Publishing data to MSQT
-  pthread_t groundhog_publish_worker;
-
   // Receiving data from telemetry
   pthread_t pilot_receive_worker[2];
   pthread_t biphase_receive_worker;
@@ -163,9 +159,6 @@ int main(int argc, char * argv[]) {
 
   // Serving up data received via telemetry
   pthread_t server_thread;
-
-  // publishing thread; handles all telemetry publishing to mosquitto
-  pthread_create(&groundhog_publish_worker, NULL, (void *) &groundhog_publish, NULL);
 
   if (pilot_on) {
     pthread_create(&pilot_receive_worker[0], NULL, (void *) &udp_receive, (void *) &pilot_setup);
@@ -184,9 +177,6 @@ int main(int argc, char * argv[]) {
 
   // start the server thread for mole clients
   pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
-
-  // The Joining
-  pthread_join(groundhog_publish_worker, NULL);
 
   if (pilot_on) {
     pthread_join(pilot_receive_worker[0], NULL);

@@ -417,13 +417,22 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
      * If we have an error, or do not receive data from the LabJack in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-        blast_err("disconnecting LabJack at %s due to connection issue", state->address);
+    if ((m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME) || (state->force_reconnect))) {
+        state->connected = false;
+
+        // effectively resetting all the stuff from connect_lj
+        blast_err("Reconnected Cmd and Data for LabJack at %s", state->address);
         ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
         ph_sock_enable(m_sock, 0);
-        state->connected = false;
         CommandData.Relays.labjack[state->which] = 0;
-        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
+        state->force_reconnect = false;
+        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
+
+        // restart command thread
+        state->shutdown = true;
+        while (state->cmd_mb) usleep(10000);
+        state->shutdown = false;
+        initialize_labjack_commands(state->which);
         return;
     }
     read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
