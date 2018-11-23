@@ -114,7 +114,7 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
                   break;
               case 0x02:
                   header->mode = TD_OMNI;
-                  sprintf(header->namestr, "TDRSS Omni %s", comm_label[header->comm]);
+                  sprintf(header->namestr, "TDRSS Omni/HGA %s", comm_label[header->comm]);
                   break;
               default:
                   blast_info("Unrecognized TDRSS origin byte 0x%x\n", header->origin+(header->comm << 3));
