@@ -521,10 +521,11 @@ void ControlHWPR(struct ezbus *bus)
 				blast_info("Going to backoff to break thermal link");
 #endif
 				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
-				EZBus_RelMove(bus, hwpr_dat.addr, hwpr_control.rel_move);
+				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
 				hwpr_control.move_cur = moving;
 				hwpr_control.stop_cnt = 0;
 				hwpr_control.do_backoff = 0;
+				hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
 
             } else if (hwpr_control.move_cur == is_done) {
@@ -568,7 +569,6 @@ void ControlHWPR(struct ezbus *bus)
 #endif
                 hwpr_control.done_all = 1;
         }
-        
         if (hwpr_control.done_all == 1) {
 #ifdef DEBUG_HWPR
             blast_info("ControlHWPR: HWPR command complete");
