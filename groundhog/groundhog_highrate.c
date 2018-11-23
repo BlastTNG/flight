@@ -32,7 +32,7 @@
 #include "comms_serial.h"
 #include "slowdl.h"
 
-enum HeaderType{NONE, IRID_OMNI, TD_OMNI, IRID_SLOW, PAYLOAD};
+enum HeaderType{NONE, TD_HK, TD_OMNI, IRID_HK, IRID_DIAL, IRID_SLOW, PAYLOAD};
 
 struct CSBFHeader {
   uint8_t route;
@@ -91,18 +91,35 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
       if (header->zero) {
           header->mode = PAYLOAD;
       } else if (header->route == HIGHRATE_IRIDIUM_SYNC2) {
-          if (header->origin == 0x00) {
-              header->mode = IRID_SLOW;
-              sprintf(header->namestr, "Iridium HK %s", comm_label[header->comm]);
-          } else if (header->origin == 0x02) {
-              header->mode = IRID_OMNI;
-              sprintf(header->namestr, "Iridium Omni %s", comm_label[header->comm]);
-          } else {
-              blast_info("Unrecognized origin 0x%x\n", header->origin+(header->comm << 3));
+          switch (header->origin) {
+              case 0x01:
+              case 0x00:
+                  header->mode = IRID_HK;
+                  sprintf(header->namestr, "Iridium HK %s", comm_label[header->comm]);
+                  break;
+              case 0x02:
+                  header->mode = IRID_DIAL;
+                  sprintf(header->namestr, "Iridium Dialup %s", comm_label[header->comm]);
+                  break;
+              default:
+                  blast_info("Unrecognized Iridium origin byte 0x%x\n", header->origin+(header->comm << 3));
+              
           }
       } else if (header->route == HIGHRATE_TDRSS_SYNC2) {
-          sprintf(header->namestr, "TDRSS %s", comm_label[header->comm]);
-          header->mode = TD_OMNI;
+          switch (header->origin) {
+              case 0x01:
+              case 0x00:
+                  header->mode = TD_HK;
+                  sprintf(header->namestr, "TDRSS HK %s", comm_label[header->comm]);
+                  break;
+              case 0x02:
+                  header->mode = TD_OMNI;
+                  sprintf(header->namestr, "TDRSS Omni %s", comm_label[header->comm]);
+                  break;
+              default:
+                  blast_info("Unrecognized TDRSS origin byte 0x%x\n", header->origin+(header->comm << 3));
+              
+          }
       }
       header->sync = 0;
   }
@@ -250,7 +267,7 @@ void highrate_receive(void *arg) {
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if (gse_packet_header.origin) { // packet not from the hk stack (origin != 0)
+          if ((gse_packet_header.mode != TD_HK) || (gse_packet_header.mode != IRID_HK)) { // packet not from the hk stack (origin != 0)
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
