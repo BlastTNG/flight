@@ -193,10 +193,12 @@ void highrate_receive(void *arg) {
   int fd = serial->sock->fd; 
 
   linklist_t * ll = NULL;
+  linklist_t * sbd_ll = NULL;
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
-  uint32_t ser = 0, prev_ser = 0;
+  linklist_rawfile_t * sbd_ll_rawfile = NULL;
+  uint32_t ser = 0, prev_ser = 0, sbd_ser = 0, sbd_prev_ser = 0;
 
   // packet sizes
   unsigned int payload_packet_size = (HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1)*2;
@@ -343,8 +345,28 @@ void highrate_receive(void *arg) {
               }    
      
           } else { // housekeeping packet
-              // TODO(javier): deal with housekeeping packets
+              // short burst data (sbd) packets are simple:
+              // 4 bytes for the linklist serial followed by the data
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
+              if (!(*(uint32_t *) gse_packet)) {
+                  blast_info("[%s] Empty HK packet", source_str);
+                  continue;
+              }
+							if (!(sbd_ll = linklist_lookup_by_serial(*(uint32_t *) gse_packet))) {
+									blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *serial_number);
+									continue; 
+							}
+							sbd_ser = *(uint32_t *) gse_packet;
+
+							if (sbd_ser != sbd_prev_ser) {
+								sbd_ll_rawfile = groundhog_open_new_rawfile(sbd_ll_rawfile, sbd_ll, "sbd");
+							}
+							sbd_prev_ser = sbd_ser;
+							if (sbd_ll_rawfile) {
+									write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
+									flush_linklist_rawfile(sbd_ll_rawfile);
+							}
+              /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
                   blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
                   if (verbose) {
@@ -354,9 +376,11 @@ void highrate_receive(void *arg) {
                       }
                       printf("\n");
                   }
+              
               } else {
                   blast_info("[%s] Bad syncword 0x%.08x\n", source_str, *(uint32_t *) gse_packet);
               }
+              */
               gse_read += gse_packet_header.size;
           }
       }
