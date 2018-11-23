@@ -431,7 +431,7 @@ void ControlHWPR(struct ezbus *bus)
                 If so check if we need to add an overshoot for backlash correction */
                 hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 		    	if (hwpr_control.rel_move < 0) {
-                	if (CommandData.hwpr.overshoot > 0) {
+                	if (CommandData.hwpr.overshoot < 0) {
                     hwpr_control.rel_move -= (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
                     hwpr_control.do_overshoot = 1;
 #ifdef DEBUG_HWPR
@@ -441,7 +441,7 @@ void ControlHWPR(struct ezbus *bus)
                 }
 
 				if (hwpr_control.rel_move > 0) {
-                	if (CommandData.hwpr.overshoot < 0) {
+                	if (CommandData.hwpr.overshoot > 0) {
                     hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
                     hwpr_control.do_overshoot = 1;
 #ifdef DEBUG_HWPR
@@ -570,6 +570,7 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.done_all = 1;
         }
         if (hwpr_control.done_all == 1) {
+
 #ifdef DEBUG_HWPR
             blast_info("ControlHWPR: HWPR command complete");
 #endif
