@@ -438,24 +438,37 @@ void ControlHWPR(struct ezbus *bus)
                     blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
 #endif
                 	}
-                } else if (hwpr_control.rel_move == 0) {
-                        blast_info("ControlHWPR: Requested a move of 0.  Ignoring.");
-                        hwpr_control.done_move = 1;
-                        hwpr_control.move_cur = is_done;
+                }
+
+				if (hwpr_control.rel_move > 0) {
+                	if (CommandData.hwpr.overshoot < 0) {
+                    hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
+                    hwpr_control.do_overshoot = 1;
+#ifdef DEBUG_HWPR
+                    blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
+#endif
+                	}
                 }
 #ifdef DEBUG_HWPR
-                    blast_info("ControlHWPR: Here's where I will send a relative move command of %i",
+                blast_info("ControlHWPR: Here's where I will send a relative move command of %i",
                                hwpr_control.rel_move);
 #endif
-                    EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
-                    hwpr_control.move_cur = moving;
-                    hwpr_control.stop_cnt = 0;
-					// only set do_backoff now if we are not overshooting, otherwise wait until after overshoot
-					if (!hwpr_control.do_overshoot) {
-						hwpr_control.do_backoff = 1;
-					}
-                    // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
-                    /*** We are moving.  Wait until we are done. ***/
+                EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
+                hwpr_control.move_cur = moving;
+                hwpr_control.stop_cnt = 0;
+
+				if (hwpr_control.rel_move == 0) {
+                    blast_info("ControlHWPR: Requested a move of 0.  Ignoring.");
+                    hwpr_control.done_move = 1;
+                    hwpr_control.move_cur = is_done;
+                }
+				// only set do_backoff now if we are not overshooting, otherwise wait until after overshoot
+				if (!hwpr_control.do_overshoot) {
+					hwpr_control.do_backoff = 1;
+				}
+                // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
+
+            /*** We are moving.  Wait until we are done. ***/
             } else if (hwpr_control.move_cur == moving) {
             	if (hwpr_data.enc == last_enc) {
                 	hwpr_control.stop_cnt++;
@@ -509,8 +522,11 @@ void ControlHWPR(struct ezbus *bus)
 #endif
 				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
 				EZBus_RelMove(bus, hwpr_dat.addr, hwpr_control.rel_move);
+				hwpr_control.move_cur = moving;
+				hwpr_control.stop_cnt = 0;
+				hwpr_control.do_backoff = 0;
 
-				hwpr_control.
+
             } else if (hwpr_control.move_cur == is_done) {
                 /* Have to tell the HWPR that it is at it's current warm encoder position
                  * or else it will sometimes oscillate
