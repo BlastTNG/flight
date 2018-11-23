@@ -27,7 +27,6 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "groundhog.h"
-#include "groundhog_framing.h"
 #include "highrate.h"
 #include "comms_serial.h"
 #include "slowdl.h"
@@ -220,7 +219,6 @@ void highrate_receive(void *arg) {
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
-  struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
   uint8_t * gse_packet = calloc(1, 4096);
@@ -328,13 +326,7 @@ void highrate_receive(void *arg) {
                                   write_linklist_rawfile(ll_rawfile, compbuffer);
                                   flush_linklist_rawfile(ll_rawfile);
                               }
-
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-                              decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
-                              memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                              groundhog_linklist_publish(ll, compbuffer);
-
-                              incrementFifo(local_fifo);
                           }
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;

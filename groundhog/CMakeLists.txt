@@ -79,23 +79,6 @@ IF(NOT GLIB_LIBRARY)
 ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
-# Find mosquitto    
-pkg_check_modules(PC_MOSQ QUIET mosquitto)
-set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
-
-find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
-          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
-          PATH_SUFFIXES mosquitto REQUIRED)
-find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
-            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
-IF(NOT MOSQ_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
-ENDIF()
-IF(NOT MOSQ_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
-ENDIF()
-include_directories(${MOSQ_INCLUDE_DIR})
-
 # Find getdata    
 pkg_check_modules(PC_GD QUIET getdata)
 
