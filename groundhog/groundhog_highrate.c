@@ -32,7 +32,7 @@
 #include "comms_serial.h"
 #include "slowdl.h"
 
-enum HeaderType{NONE, TD_HK, TD_OMNI, IRID_HK, IRID_DIAL, IRID_SLOW, PAYLOAD};
+enum HeaderType{NONE, TD_HK, TD_OMNI_HGA, IRID_HK, IRID_DIAL, PAYLOAD};
 
 struct CSBFHeader {
   uint8_t route;
@@ -113,7 +113,7 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
                   sprintf(header->namestr, "TDRSS HK %s", comm_label[header->comm]);
                   break;
               case 0x02:
-                  header->mode = TD_OMNI;
+                  header->mode = TD_OMNI_HGA;
                   sprintf(header->namestr, "TDRSS Omni/HGA %s", comm_label[header->comm]);
                   break;
               default:
