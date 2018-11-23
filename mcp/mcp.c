@@ -681,6 +681,8 @@ blast_info("Finished initializing Beaglebones..."); */
       linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
   telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+  telemetries_linklist[SBD_TELEMETRY_INDEX] =
+      linklist_find_by_name(CommandData.sbd_linklist_name, linklist_array);
 
   linklist_t * testll = generate_roach_udp_linklist("roach1.ll", 0);
   write_superframe_format(testll->superframe, "roach1.sf");

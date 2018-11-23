@@ -1951,6 +1951,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         copysvalue(CommandData.highrate_linklist_name, linklist_nt[ivalues[1]]);
         telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+      } else if (ivalues[0] == 3) {
+        copysvalue(CommandData.sbd_linklist_name, linklist_nt[ivalues[1]]);
+        telemetries_linklist[SBD_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.sbd_linklist_name, linklist_array);
       } else {
         blast_err("Unknown downlink index %d", ivalues[0]);
       }
@@ -3202,6 +3206,7 @@ void InitCommandData()
     copysvalue(CommandData.pilot_linklist_name, ALL_TELEMETRY_NAME);
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
+    copysvalue(CommandData.sbd_linklist_name, "sbd.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
