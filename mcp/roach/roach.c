@@ -132,6 +132,8 @@
 #define AUTO_CAL_AMPS 0
 #define APPLY_VNA_TRF 1 /* Apply Roach output transfer function to vna freqs by default */
 #define APPLY_TARG_TRF 1 /* Apply Roach output transfer function to targ freqs by default */
+#define ATTEN_PORT 9998 /* Pi port for atten socket */
+#define VALON_PORT 9999 /* Pi port for valon socket */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1262,10 +1264,79 @@ int read_accum_snap(roach_state_t *m_roach)
     return retval;
 }
 
-
-int atten_client(pi_state_t *m_pi)
+int atten_client(pi_state_t *m_pi, char *command)
 {
-    return 0;
+    int status = 0;
+    int s;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    // char vcommand[strlen(argv[1]) + strlen(argv[2])];
+    char buff[1024];
+    // bzero(command, sizeof(command));
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      perror("client: socket");
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(m_pi->address)) == NULL) {
+      blast_err("error: gethost");
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(ATTEN_PORT);
+      /* Copies host address to socket with aide of structures. */
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+      perror("client: connect");
+      blast_info("errno = %d\n", errno);
+    }
+    bzero(buff, sizeof(buff));
+    if ((status = write(s, command, strlen(command))) < 0) {
+    // printf("STATUS = %d\n", status);
+        blast_err("Error writing to atten socket");
+    }
+    status = read(s, buff, sizeof(buff));
+    // printf("STATUS = %d\n", status);
+    blast_info("%s\n", buff);
+    close(s);
+    return status;
+}
+
+int set_atten(pi_state_t *m_pi)
+{
+    int retval = 0;
+    int ind = m_pi->which - 1;
+    char *command;
+    // the order of input and output attenuators is switched between PIs
+    if (ind == 0) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 4) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (atten_client(m_pi, command) < 0) {
+        retval = -1;
+    }
+    return retval;
 }
 
 /* Function: set_atten
@@ -1275,6 +1346,7 @@ int atten_client(pi_state_t *m_pi)
  * @param m_pi pi state table
  *
 */
+/*
 int set_atten(pi_state_t *m_pi)
 {
     int retval = -1;
@@ -1317,48 +1389,41 @@ int set_atten(pi_state_t *m_pi)
         retval = 0;
     }
     return retval;
-}
+}*/
 
 int set_attens_default(pi_state_t *m_pi)
 {
-    int retval = -1;
-    char *m_command;
-    char *m_command2;
+    int retval = 0;
+    char *command;
     int ind = m_pi->which - 1;
     // the order of input and output attenuators is switched between PIs
     if (ind == 0) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+        blast_tmp_sprintf(command, "set %g %g",
            16.0,
            7.0);
     }
     if (ind == 1) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+        blast_tmp_sprintf(command, "set %g %g",
            2.0,
            16.0);
     }
     if (ind == 2) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+        blast_tmp_sprintf(command, "set %g %g",
            3.0,
            16.0);
     }
     if (ind == 3) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+        blast_tmp_sprintf(command, "set %g %g",
            16.0,
            7.0);
     }
     if (ind == 4) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
+        blast_tmp_sprintf(command, "set %g %g",
            7.0,
            16.0);
     }
-    blast_tmp_sprintf(m_command2, "cat rudat.log");
-    pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
-    pi_write_string(m_pi, (unsigned char*)m_command2, strlen(m_command2));
-    if (pi_read_string(m_pi, PI_READ_NTRIES, PI_READ_TIMEOUT) < 0) {
-        blast_info("Error setting Atten... reboot Pi%d?", ind + 1);
-        return PI_READ_ERROR;
-    } else {
-        retval = 0;
+    if (atten_client(m_pi, command) < 0) {
+        retval = -1;
     }
     return retval;
 }
@@ -2182,7 +2247,7 @@ int setLO_oneshot(int which_pi, double loFreq)
     }
     /* Assigns port number. */
     sin.sin_family = AF_INET;
-    sin.sin_port = htons(9999);
+    sin.sin_port = htons(VALON_PORT);
     /* Copies host address to socket with aide of structures. */
     bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
     /* Requests link with server and verifies connection. */
@@ -2223,7 +2288,6 @@ int recenter_lo(roach_state_t *m_roach)
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
     int ind = m_roach->which - 1;
-    pi_state_t *m_pi = &pi_state_table[ind];
     if (!CommandData.roach[ind].do_sweeps) {
         return SWEEP_INTERRUPT;
     }
@@ -4138,7 +4202,7 @@ int pi_init_sequence(pi_state_t *m_pi)
     } else {
         blast_info("PI%d: ATTENS set", m_pi->which);
     }
-    if (init_valon(m_pi) < 0) {
+    /* if (init_valon(m_pi) < 0) {
         blast_info("PI%d: Failed to set Valon...", m_pi->which);
         retval = -2;
         return retval;
@@ -4155,7 +4219,7 @@ int pi_init_sequence(pi_state_t *m_pi)
             blast_info("PI%d: Read error", m_pi->which);
             return PI_READ_ERROR;
         }
-    }
+    } */
     retval = 0;
     return retval;
 }
@@ -4333,7 +4397,7 @@ void *roach_cmd_loop(void* ind)
         usleep(2000);
     }
     blast_info("Starting Roach Commanding Thread");
-    pi_state_table[i].state = PI_STATE_BOOT;
+    pi_state_table[i].state = PI_STATE_CONNECTED;
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
@@ -4550,12 +4614,12 @@ void *roach_cmd_loop(void* ind)
                              pi_state_table[i].desired_state >= PI_STATE_BOOT) {
             result = pi_boot_sequence(&pi_state_table[i], PI_READ_NTRIES);
             pi_state_manager(&pi_state_table[i], result);
-        }
+        }*/
         if (pi_state_table[i].state == PI_STATE_CONNECTED &&
                              pi_state_table[i].desired_state >= PI_STATE_CONNECTED) {
             result = pi_init_sequence(&pi_state_table[i]);
-            pi_state_manager(&pi_state_table[i], result);
-        }*/
+            // pi_state_manager(&pi_state_table[i], result);
+        }
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
                                    roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
             // establish a KATCP connection to the PPC
