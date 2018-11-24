@@ -112,8 +112,8 @@ void framing_publish_1hz(void)
         if (1) {
             // blast_warn("the size of 1hz data is %zu", sizeof(channel_data[RATE_1HZ]));
         }
-        mosquitto_publish(mosq, NULL, frame_name,
-                          frame_size[RATE_1HZ], channel_data[RATE_1HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //                   frame_size[RATE_1HZ], channel_data[RATE_1HZ], 0, false);
     }
 }
 
@@ -134,8 +134,8 @@ void framing_publish_5hz(void)
         if (mcp_5hz_framenum % 5 == 1) {
             // blast_warn("the size of the 5hz frame is %zu", frame_size[RATE_5HZ]);
         }
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_5HZ], channel_data[RATE_5HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //         frame_size[RATE_5HZ], channel_data[RATE_5HZ], 0, false);
     }
 }
 
@@ -156,8 +156,8 @@ void framing_publish_100hz(void)
         if (mcp_100hz_framenum % 100 == 1) {
             // blast_warn("the size of the 100hz data is %zu", frame_size[RATE_100HZ]);
         }
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_100HZ], channel_data[RATE_100HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //        frame_size[RATE_100HZ], channel_data[RATE_100HZ], 0, false);
     }
 }
 
@@ -179,8 +179,8 @@ void framing_publish_200hz(void)
         if (mcp_200hz_framenum % 200 == 1) {
             // blast_warn("the size of the 200hz frame is %zu", frame_size[RATE_200HZ]);
         }
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_200HZ], channel_data[RATE_200HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //         frame_size[RATE_200HZ], channel_data[RATE_200HZ], 0, false);
     }
 }
 
@@ -202,8 +202,8 @@ void framing_publish_244hz(void)
         if ((mcp_244hz_framenum % 244) == 1) {
            // blast_warn("size of 244hz is %zu", frame_size[RATE_244HZ]);
         }
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //         frame_size[RATE_244HZ], channel_data[RATE_244HZ], 0, false);
     }
 }
 
@@ -222,8 +222,8 @@ void framing_publish_488hz(void)
     mcp_488hz_framenum++;
     SET_INT32(mcp_488hz_framenum_addr, mcp_488hz_framenum);
     if (frame_size[RATE_488HZ]) {
-        mosquitto_publish(mosq, NULL, frame_name,
-                frame_size[RATE_488HZ], channel_data[RATE_488HZ], 0, false);
+        // mosquitto_publish(mosq, NULL, frame_name,
+        //         frame_size[RATE_488HZ], channel_data[RATE_488HZ], 0, false);
     }
 }
 
@@ -232,7 +232,7 @@ void framing_publish_488hz(void)
  */
 void framing_publish_command_data(struct CommandDataStruct *m_commanddata)
 {
-    mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
+    // mosquitto_publish(mosq, NULL, "commanddata", sizeof(struct CommandDataStruct), m_commanddata, 1, 1);
 }
 
 static void framing_handle_data(const char *m_src, const char *m_rate, const void *m_data, const int m_len)

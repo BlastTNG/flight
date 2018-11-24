@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
 #ifndef BOLOTEST
   /* Initialize the Ephemeris */
 //  ReductionInit("/data/etc/blast/ephem.2000");
-  framing_init(channel_list, derived_list);
+  // framing_init(channel_list, derived_list);
   memset(PointingData, 0, 3 * sizeof(struct PointingDataStruct));
 #endif
 

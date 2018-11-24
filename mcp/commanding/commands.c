@@ -127,7 +127,7 @@ void WritePrevStatus()
     return;
   }
 
-  framing_publish_command_data(&CommandData);
+  // framing_publish_command_data(&CommandData);
 }
 
 /* calculate the nearest lockable elevation */
