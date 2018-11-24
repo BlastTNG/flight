@@ -125,10 +125,6 @@ int main(int argc, char * argv[]) {
     daemonize();
   }
 
-  // initialize framing
-  framing_init();
-
- 
   // setup pilot receive udp struct
   struct UDPSetup pilot_setup = {"Pilot", 
                                  PILOT_ADDR, 
@@ -144,12 +140,14 @@ int main(int argc, char * argv[]) {
                                  PILOT_MAX_PACKET_SIZE,
                                  PILOT};
 
+  /*
   struct UDPSetup udplos_setup = {"BI0-LOS", 
                                   BI0LOS_GND_ADDR, 
                                   BI0LOS_GND_PORT, 
                                   BI0_MAX_BUFFER_SIZE, 
                                   BI0LOS_MAX_PACKET_SIZE,
                                   BI0};
+  */
 
   // Receiving data from telemetry
   pthread_t pilot_receive_worker[2];
