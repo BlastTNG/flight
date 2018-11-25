@@ -104,7 +104,7 @@
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (0)
 #define SWEEP_FAIL (-2)
-#define SWEEP_TIMEOUT 500 /* microsecond timeout between set LO and save data */
+#define SWEEP_TIMEOUT 10000 /* microsecond timeout between set LO and save data */
 #define PI_READ_ERROR -10 /* Error code: Pi read */
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
@@ -2208,26 +2208,6 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     return 1;
 }
 
-int shift_lo(roach_state_t *m_roach)
-{
-    int retval = -1;
-    char *lo_command;
-    double shift = (double)CommandData.roach_params[m_roach->which - 1].lo_offset;
-    blast_info("LO SHIFT ======================== %g", shift);
-    double set_freq = (m_roach->lo_centerfreq + shift)/1.0e6;
-    blast_info("LO SET FREQ ======================== %g", set_freq);
-    pi_state_t *m_pi = &pi_state_table[m_roach->which - 1];
-    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g", set_freq);
-    pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
-    if (pi_read_string(m_pi, PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-        blast_info("Error setting LO... reboot Pi%d?", m_roach->which);
-        return retval;
-    }
-    blast_info("ROACH%d, LO set to %g", m_roach->which, set_freq);
-    retval = 0;
-    return retval;
-}
-
 int setLO_oneshot(int which_pi, double loFreq)
 {
     char *lo_freq;
@@ -2271,8 +2251,22 @@ int recenter_lo(roach_state_t *m_roach)
     blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                   m_roach->lo_centerfreq/1.0e6);
     setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6);
-    // pi_write_string(&pi_state_table[m_roach->which - 1], (unsigned char*)lo_command, strlen(lo_command));
     return 0;
+}
+
+int shift_lo(roach_state_t *m_roach)
+{
+    int retval = -1;
+    double shift = (double)CommandData.roach_params[m_roach->which - 1].lo_offset;
+    blast_info("LO SHIFT ======================== %g", shift);
+    double set_freq = (m_roach->lo_centerfreq + shift)/1.0e6;
+    if (setLO_oneshot(m_roach->which - 1, set_freq) < 0) {
+        blast_err("ROACH%d LO error", m_roach->which);
+        return retval;
+    }
+    // blast_info("LO SET FREQ ======================== %g", set_freq);
+    retval = 0;
+    return retval;
 }
 
 // TODO(Sam) add cal and grad sweeps as sweep types
