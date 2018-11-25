@@ -144,7 +144,7 @@ void StoreHWPRBus(void)
   // static channel_t* potTargHwprAddr;
   static channel_t* encTargHwprAddr;
   static channel_t* encErrHwprAddr;
-  static channel_t* encRealHwpAddr; 
+  static channel_t* encRealHwpAddr;
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -240,6 +240,7 @@ int GetHWPRi(double pot_val)
 }
 
 int GetHWPRIndex(int enc_val)
+// From the current encoder reading, and a specified margin, return the position of the HWP
 {
 	int i;
 	int index;
@@ -495,6 +496,8 @@ void ControlHWPR(struct ezbus *bus)
                 blast_info("ControlHWPR: Here's where I will send a relative move command of %i",
                                hwpr_control.rel_move);
 #endif
+				// modify move so we re-engage at the cold end
+				hwpr_control.rel_move -= (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
                 hwpr_control.stop_cnt = 0;
