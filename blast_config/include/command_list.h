@@ -202,7 +202,7 @@ enum multiCommand {
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   motors_verbose,    fix_ethercat,      bias_step,
   // phase_step,
-  hwpr_repeat,      hwpr_define_pos,          params_test,
+  hwpr_repeat,      hwpr_define_pos, hwpr_set_margin,         params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,

@@ -647,6 +647,7 @@ struct CommandDataStruct {
     int no_step;
     int use_pot;
     double pot_targ;
+	int margin;
   } hwpr;
 
   int pin_is_in;

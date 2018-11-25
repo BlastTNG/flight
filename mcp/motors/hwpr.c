@@ -82,6 +82,7 @@ static struct hwpr_control_struct
     // int dead_pot;
     int do_calpulse;
     int reset_enc;
+	int margin;
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -230,6 +231,27 @@ int GetHWPRi(double pot_val)
 #endif
   // i is the closest index to where we are.  return the next index (i+1)%4
   return i_min;
+}
+
+int HWPRGetIndex(int enc_val)
+{
+	int i;
+	int index;
+
+	hwpr_control.margin = CommandData.hwpr.margin;
+
+	// if encoder is within hwpr_margin of position 0
+	if ((enc_val > (CommandData.hwpr.pos[0] + hwpr_control.margin)) 
+			&& (enc_val < (CommandData.hwpr.pos[0] - hwpr_control.margin))) {
+		index = 0;
+	} else if ((enc_val > (CommandData.hwpr.pos[1] + hwpr_control.margin)) 
+			&& (enc_val < (CommandData.hwpr.pos[1] - hwpr_control.margin))) {
+		index = 1;
+	} else {
+		index = -1; // not at a defined position
+	}
+
+	return index;
 }
 
 void ControlHWPR(struct ezbus *bus)
@@ -570,7 +592,6 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.done_all = 1;
         }
         if (hwpr_control.done_all == 1) {
-
 #ifdef DEBUG_HWPR
             blast_info("ControlHWPR: HWPR command complete");
 #endif

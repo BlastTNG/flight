@@ -788,7 +788,13 @@ struct mcom mcommands[plugh + 2] = {
       {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
     }
   },
-
+  {COMMAND(hwpr_set_margin),
+    "Set HWPR margin for determinting which indexed position we are at",
+    GR_HWPR, 1,
+    {
+      {"hwpr margin", 0, 64000, 'i', "NONE"},
+    }
+  },
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,

@@ -1811,6 +1811,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
+	case hwpr_set_margin:
+	  CommandData.hwpr.margin = ivalues[0];
+	  break;
     case potvalve_set_vel:
       CommandData.Cryo.potvalve_vel = ivalues[0];
       break;
