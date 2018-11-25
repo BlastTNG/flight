@@ -1662,7 +1662,8 @@ void get_time(char *time_buffer)
  *
  * @param ind roach index
 */
-void roach_timestamp_init(uint16_t ind)
+
+/* void roach_timestamp_init(uint16_t ind)
 {
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
@@ -1677,24 +1678,51 @@ void roach_timestamp_init(uint16_t ind)
     strncpy(nsec_truncated, nsec, 3);
     sec_truncated[6] = '\0';
     nsec_truncated[3] = '\0';
-    /* blast_info("%s", sec);
-    blast_info("%s", sec_truncated);
-    blast_info("%s", nsec);
-    blast_info("%s", nsec_truncated);
-    */
+    // blast_info("%s", sec);
+    // blast_info("%s", sec_truncated);
+    // blast_info("%s", nsec);
+    // blast_info("%s", nsec_truncated);
     blast_tmp_sprintf(timestamp, "%s%s", sec_truncated, nsec_truncated);
     // blast_info("%s", timestamp);
     // blast_info("%u", atoi(timestamp));
-    if (roach_state_table[ind].katcp_is_busy) {
-        blast_warn("ROACH%d: KATCP is busy", roach_state_table[ind].which);
-        sleep(10);
-        return;
-    } else {
-        if ((roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0) < 0)) {
-            blast_warn("ROACH%d: Timestamp write error", roach_state_table[ind].which);
-        }
+    // if (roach_state_table[ind].katcp_is_busy) {
+    //    blast_warn("ROACH%d: KATCP is busy", roach_state_table[ind].which);
+    //    sleep(10);
+    //    return;
+    // } else {
+    //    if ((roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0) < 0)) {
+    //        blast_warn("ROACH%d: Timestamp write error", roach_state_table[ind].which);
+    //    }
         // roach_read_int(&roach_state_table[ind], "GbE_ctime");
+    // }
+    if ((roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0) < 0)) {
+        blast_warn("ROACH%d: Timestamp write error", roach_state_table[ind].which);
     }
+}*/
+
+int roach_timestamp_init(roach_state_t *m_roach)
+{
+    int retval = -1;
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    char *sec;
+    char *nsec;
+    char sec_truncated[2];
+    char nsec_truncated[2];
+    char *timestamp;
+    blast_tmp_sprintf(sec, "%ld", ts.tv_sec);
+    blast_tmp_sprintf(nsec, "%ld", ts.tv_nsec);
+    strncpy(sec_truncated, sec+3, 8);
+    strncpy(nsec_truncated, nsec, 3);
+    sec_truncated[7] = '\0';
+    nsec_truncated[3] = '\0';
+    blast_tmp_sprintf(timestamp, "%s%s", sec_truncated, nsec_truncated);
+    if ((roach_write_int(m_roach, "GbE_ctime", atoi(timestamp), 0) < 0)) {
+        blast_warn("ROACH%d: Timestamp write error", m_roach->which);
+    }
+    // blast_info("TIMESTAMP ============ %s", timestamp);
+    retval = 0;
+    return retval;
 }
 
 /* Function: get_path
@@ -4294,6 +4322,11 @@ int roach_init_gbe(roach_state_t *m_roach)
     }
     usleep(100);
     if ((roach_write_int(m_roach, "GbE_pps_start", 1, 0) < 0)) {
+        return retval;
+    }
+    usleep(100);
+    // write ctime to register
+    if (roach_timestamp_init(m_roach) < 0) {
         return retval;
     }
     retval = 0;

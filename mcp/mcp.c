@@ -459,9 +459,6 @@ static void mcp_1hz_routines(void)
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);
-    /* for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_timestamp_init(i);
-    }*/
 }
 
 static void *mcp_main_loop(void *m_arg)
