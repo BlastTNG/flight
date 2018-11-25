@@ -46,11 +46,12 @@ static struct hwpr_struct {
   int32_t pos;
   float enc;
   double pot;
+  float enc_real_hwp;
 } hwpr_data;
 
 enum move_type
 {
-    no_move = 0, pot, ind, step
+    no_move = 0, pot, ind, step, goto_abs, jump
 };
 enum move_status
 {
@@ -83,6 +84,7 @@ static struct hwpr_control_struct
     int do_calpulse;
     int reset_enc;
 	int margin;
+	int engaged;
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -142,6 +144,7 @@ void StoreHWPRBus(void)
   // static channel_t* potTargHwprAddr;
   static channel_t* encTargHwprAddr;
   static channel_t* encErrHwprAddr;
+  static channel_t* encRealHwpAddr; 
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -167,6 +170,7 @@ void StoreHWPRBus(void)
     encTargHwprAddr = channels_find_by_name("enc_targ_hwpr");
     encErrHwprAddr = channels_find_by_name("enc_err_hwpr");
     // potErrHwprAddr = channels_find_by_name("pot_err_hwpr");
+	encRealHwpAddr = channels_find_by_name("enc_real_hwp");
   }
 
   hwpr_wait_cnt--;
@@ -191,6 +195,7 @@ void StoreHWPRBus(void)
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
+  SET_FLOAT(encRealHwpAddr, hwpr_data.enc_real_hwp);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007;
@@ -207,6 +212,7 @@ void StoreHWPRBus(void)
   SET_VALUE(statControlHwprAddr, hwpr_stat_field);
 }
 
+// DEPRECATED, use GetHWPRIndex for two position HWPR - PAW 2018/11/25
 // From the current potentiometer reading. Figure out the nearest
 // hwpr step position, and return the index
 int GetHWPRi(double pot_val)
@@ -233,7 +239,7 @@ int GetHWPRi(double pot_val)
   return i_min;
 }
 
-int HWPRGetIndex(int enc_val)
+int GetHWPRIndex(int enc_val)
 {
 	int i;
 	int index;
@@ -241,15 +247,20 @@ int HWPRGetIndex(int enc_val)
 	hwpr_control.margin = CommandData.hwpr.margin;
 
 	// if encoder is within hwpr_margin of position 0
-	if ((enc_val > (CommandData.hwpr.pos[0] + hwpr_control.margin)) 
-			&& (enc_val < (CommandData.hwpr.pos[0] - hwpr_control.margin))) {
+	if ((enc_val < (CommandData.hwpr.pos[0] + hwpr_control.margin))
+			&& (enc_val > (CommandData.hwpr.pos[0] - hwpr_control.margin))) {
 		index = 0;
-	} else if ((enc_val > (CommandData.hwpr.pos[1] + hwpr_control.margin)) 
-			&& (enc_val < (CommandData.hwpr.pos[1] - hwpr_control.margin))) {
+	// if encoder is within hwpr_margin of position 1
+	} else if ((enc_val < (CommandData.hwpr.pos[1] + hwpr_control.margin))
+			&& (enc_val > (CommandData.hwpr.pos[1] - hwpr_control.margin))) {
 		index = 1;
 	} else {
-		index = -1; // not at a defined position
+		index = -1; // not at a defined position, next position will be zero
 	}
+
+#ifdef DEBUG_HWPR
+    blast_info("GetHWPRIndex: Returning position %i", i_min);
+#endif
 
 	return index;
 }
@@ -286,10 +297,16 @@ void ControlHWPR(struct ezbus *bus)
     } else if (CommandData.hwpr.is_new) {
         if ((CommandData.hwpr.mode == HWPR_GOTO)) {
             blast_info("HWPR GOTO: %d", CommandData.hwpr.target); // DEBUG PCA
+            ResetControlHWPR();
+			hwpr_control.go = goto_abs;
+			hwpr_control.move_cur = not_yet;
 	    	// EZBus_Goto(bus, hwpr_data.addr, CommandData.hwpr.target);
             // CommandData.hwpr.mode = HWPR_SLEEP;
         } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
             blast_info("HWPR JUMP: %d", CommandData.hwpr.target); // DEBUG PCA
+            ResetControlHWPR();
+			hwpr_control.go = jump;
+			hwpr_control.move_cur = not_yet;
 	    	// EZBus_RelMove(bus, hwpr_data.addr, CommandData.hwpr.target);
             // CommandData.hwpr.mode = HWPR_SLEEP;
         } else if ((CommandData.hwpr.mode == HWPR_GOTO_I)) {
@@ -349,10 +366,12 @@ void ControlHWPR(struct ezbus *bus)
 						/**
                 		* get index of the closest hwpr_step position,
                 		* and find the encoder position for the next step pos
+						*
+						* if not at a defined position, i_step = -1, so the next position will be position 0
                 		*/
 
-                		i_step = GetHWPRi(hwpr_enc_cur);
-                		i_next_step = (i_step + 1) % 4;
+                		i_step = GetHWPRIndex(hwpr_enc_cur);
+                		i_next_step = (i_step + 1) % 2;
                 		hwpr_control.i_next_step = i_next_step;
 
                 		hwpr_control.enc_targ = CommandData.hwpr.pos[i_next_step];
@@ -393,11 +412,12 @@ void ControlHWPR(struct ezbus *bus)
                         // hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 
                         hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
-
+#ifdef DEBUG_HWPR
                         blast_info("Destination is index %i, pot value = %f, required rel encoder move is %ld:",
                                        CommandData.hwpr.i_pos, CommandData.hwpr.pos[i_next_step],
                                        hwpr_control.rel_move);
                         blast_info("target: %f, current: %f", hwpr_control.enc_targ, hwpr_enc_cur); // DEBUG
+#endif
 					} else { // don't use pot
                             // hwpr_control.dead_pot = 1;
 
@@ -536,12 +556,14 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.stop_cnt = 0;
                 hwpr_control.do_overshoot = 0;
 				hwpr_control.do_backoff = 1;
-                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
+				// I don't think this is necessary, we already calculated rel_move from hwpr_data.enc and enc_targ PAW 2018/11/25
+                // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
 			} else if (hwpr_control.move_cur == needs_backoff) {
 #ifdef DEBUG_HWPR
 				blast_info("Going to backoff to break thermal link");
 #endif
+				hwpr_data.enc_real_hwp = hwpr_data.enc;
 				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
 				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
 				hwpr_control.move_cur = moving;
