@@ -1391,7 +1391,7 @@ int set_atten(pi_state_t *m_pi)
     return retval;
 }*/
 
-int set_attens_default(pi_state_t *m_pi)
+int set_attens_to_default(pi_state_t *m_pi)
 {
     int retval = 0;
     char *command;
@@ -4434,7 +4434,7 @@ void *roach_cmd_loop(void* ind)
             }
         }
         if (CommandData.roach[i].set_attens == 2) {
-            if (set_attens_default(&pi_state_table[i]) < 0) {
+            if (set_attens_to_default(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
             } else {
                 CommandData.roach[i].set_attens = 0;

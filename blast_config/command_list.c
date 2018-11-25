@@ -329,7 +329,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
-  {COMMAND(set_attens_all), "(All Roaches) Set all attens to default values (all Roaches)", GR_ROACH},
+  {COMMAND(set_attens_default), "(All Roaches) Set all attens to default values (all Roaches)", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
@@ -1006,8 +1006,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_in_level", 0.5, 30.0, 'f', "NONE"},
-      {"rf_out_level", 0.5, 30.0, 'f', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens_all), "Set all attenuators to same values (input/output)", GR_ROACH, 2,
+    {
+      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
