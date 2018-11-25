@@ -4428,6 +4428,8 @@ void *roach_cmd_loop(void* ind)
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
+    // center LO
+    recenter_lo(&roach_state_table[i]);
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
         start_flight_mode(&roach_state_table[i]);
