@@ -55,7 +55,7 @@ enum move_type
 };
 enum move_status
 {
-    not_yet = 0, ready, moving, at_overshoot, is_done, needs_backoff
+    not_yet = 0, ready, moving, at_overshoot, is_done, needs_backoff, engage
 };
 /*enum read_pot
 {
@@ -394,7 +394,7 @@ void ControlHWPR(struct ezbus *bus)
 						    	enc_state, hwpr_control.rel_move);
                 	}
 
-					hwpr_control.move_cur = ready;
+					hwpr_control.move_cur = engage;
 
 				} else if (hwpr_control.go == ind) {
                 	// Not changing for flight.  Fix if we fly again. -lmf
@@ -430,7 +430,7 @@ void ControlHWPR(struct ezbus *bus)
                             return;
                     }
 
-                    hwpr_control.move_cur = ready;
+                    hwpr_control.move_cur = engage;
 
                     } else if (hwpr_control.go == pot) {
                         enc_state = hwp_get_state();
@@ -459,7 +459,7 @@ void ControlHWPR(struct ezbus *bus)
                             return;
                         }
 
-                        hwpr_control.move_cur = ready;
+                        hwpr_control.move_cur = engage;
 
                     } else {
                         blast_info("This state should be impossible.");
@@ -469,6 +469,18 @@ void ControlHWPR(struct ezbus *bus)
 
             /*** Once we are ready to move send ActBus Command ***/
 
+            } else if (hwpr_control.move_cur == engage) {
+				/*We should be ready, but we need to re-engage the fork at the cold end*/
+				if (hwpr_control.rel_move < 0) {
+					hwpr_control.engage_move = -(int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100)
+					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
+				} else if (hwpr_control.rel_move > 0) {
+					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100)
+					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
+
+				} else {
+				}
+				hwpr_control.move_cur = ready;
             } else if (hwpr_control.move_cur == ready) {
             	/* Is the hwpr move negative?
                 If so check if we need to add an overshoot for backlash correction */
@@ -496,8 +508,6 @@ void ControlHWPR(struct ezbus *bus)
                 blast_info("ControlHWPR: Here's where I will send a relative move command of %i",
                                hwpr_control.rel_move);
 #endif
-				// modify move so we re-engage at the cold end
-				hwpr_control.rel_move -= (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
                 hwpr_control.stop_cnt = 0;
@@ -507,7 +517,7 @@ void ControlHWPR(struct ezbus *bus)
                     hwpr_control.done_move = 1;
                     hwpr_control.move_cur = is_done;
                 }
-				// only set do_backoff now if we are not overshooting, otherwise wait until after overshoot
+				// only set do_backoff now if we are not overshooting, otherwise wait until after overshoot correction
 				if (!hwpr_control.do_overshoot) {
 					hwpr_control.do_backoff = 1;
 				}
@@ -558,7 +568,7 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.move_cur = moving;
                 hwpr_control.stop_cnt = 0;
                 hwpr_control.do_overshoot = 0;
-				hwpr_control.do_backoff = 1;
+				hwpr_control.do_backoff = 1; // after overshoot correction, we should backoff
 				// I don't think this is necessary, we already calculated rel_move from hwpr_data.enc and enc_targ PAW 2018/11/25
                 // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
@@ -573,7 +583,6 @@ void ControlHWPR(struct ezbus *bus)
 				hwpr_control.stop_cnt = 0;
 				hwpr_control.do_backoff = 0;
 				hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
-
 
             } else if (hwpr_control.move_cur == is_done) {
                 /* Have to tell the HWPR that it is at it's current warm encoder position
