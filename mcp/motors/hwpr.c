@@ -51,7 +51,7 @@ static struct hwpr_struct {
 
 enum move_type
 {
-    no_move = 0, pot, ind, step, goto_abs, jump
+    no_move = 0, pot, ind, step, goto_abs, goto_rel
 };
 enum move_status
 {
@@ -75,6 +75,7 @@ static struct hwpr_control_struct
     int i_next_step;
     int do_overshoot;
 	int do_backoff;
+	int do_main_move;
     int stop_cnt;
     float enc_targ;
     float enc_err;
@@ -83,8 +84,8 @@ static struct hwpr_control_struct
     // int dead_pot;
     int do_calpulse;
     int reset_enc;
-	int margin;
-	int engaged;
+	int margin; // shouldn't be reset before each move
+	int engaged; // shouldn't be reset before each move
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -107,6 +108,8 @@ void ResetControlHWPR(void) {
   hwpr_control.done_all = 0;
   hwpr_control.rel_move = 0;
   hwpr_control.do_overshoot = 0;
+  hwpr_control.do_backoff = 0;
+  hwpr_control.do_main_move = 0;
   // hwpr_control.do_calpulse = no;
   hwpr_control.stop_cnt = 0;
   hwpr_control.enc_targ = 0;
@@ -303,10 +306,10 @@ void ControlHWPR(struct ezbus *bus)
 			hwpr_control.move_cur = not_yet;
 	    	// EZBus_Goto(bus, hwpr_data.addr, CommandData.hwpr.target);
             // CommandData.hwpr.mode = HWPR_SLEEP;
-        } else if ((CommandData.hwpr.mode == HWPR_JUMP)) {
-            blast_info("HWPR JUMP: %d", CommandData.hwpr.target); // DEBUG PCA
+        } else if ((CommandData.hwpr.mode == HWPR_GOTO_REL)) {
+            blast_info("HWPR GOTO REL: %d", CommandData.hwpr.target); // DEBUG PCA
             ResetControlHWPR();
-			hwpr_control.go = jump;
+			hwpr_control.go = goto_rel;
 			hwpr_control.move_cur = not_yet;
 	    	// EZBus_RelMove(bus, hwpr_data.addr, CommandData.hwpr.target);
             // CommandData.hwpr.mode = HWPR_SLEEP;
@@ -394,6 +397,7 @@ void ControlHWPR(struct ezbus *bus)
 						    	enc_state, hwpr_control.rel_move);
                 	}
 
+					// engage fork before main move
 					hwpr_control.move_cur = engage;
 
 				} else if (hwpr_control.go == ind) {
@@ -430,42 +434,62 @@ void ControlHWPR(struct ezbus *bus)
                             return;
                     }
 
+					// engage fork before main move
                     hwpr_control.move_cur = engage;
 
-                    } else if (hwpr_control.go == pot) {
-                        enc_state = hwp_get_state();
-						if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    					    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+                } else if (hwpr_control.go == pot) {
+                    enc_state = hwp_get_state();
+					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
 #ifdef DEBUG_HWPR
-                            blast_info("This is where I calculate the relative step from the pot value.");
-                            blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
+                        blast_info("This is where I calculate the relative step from the pot value.");
+                        blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
                                        hwpr_enc_cur);
 #endif
-                            hwpr_control.enc_targ = CommandData.hwpr.pot_targ;
-                            // hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
+                        hwpr_control.enc_targ = CommandData.hwpr.pot_targ;
+                        // hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 
-                            hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
+                        hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 #ifdef DEBUG_HWPR
-                            blast_info("Destination is index %i, pot value = %f, required rel encoder move is %i:",
+                        blast_info("Destination is index %i, pot value = %f, required rel encoder move is %i:",
                                        CommandData.hwpr.i_pos, CommandData.hwpr.pos[i_next_step],
                                        hwpr_control.rel_move);
 #endif
 
-                        } else { // don't use pot
+                    } else { // don't use pot
                             // hwpr_control.dead_pot = 1;
                             /* can't step to a hwp position, because we don't know where it is */
                             blast_warn("The pot is dead! State = %d: Don't know where to move.", enc_state);
                             CommandData.hwpr.mode = HWPR_SLEEP;
                             return;
-                        }
+                    }
 
+						// engage fork before main move
                         hwpr_control.move_cur = engage;
 
-                    } else {
-                        blast_info("This state should be impossible.");
-                        CommandData.hwpr.mode = HWPR_SLEEP;
-                        return; // break out of loop!
-                    }
+                } else if (hwpr_control.go == goto_abs) {
+					enc_state = hwp_get_state();
+					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+						
+						hwpr_control.enc_targ = CommandData.hwpr.target;
+					}
+
+					hwpr_control.move_cur = engage;
+
+                } else if (hwpr_control.go == goto_rel) {
+					enc_state = hwp_get_state();
+					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+    				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.; 
+					}
+
+					hwpr_control.move_cur = engage;
+                } else {
+                    blast_info("This state should be impossible.");
+                    CommandData.hwpr.mode = HWPR_SLEEP;
+                    return; // break out of loop!
+                }
 
             /*** Once we are ready to move send ActBus Command ***/
 
@@ -478,9 +502,11 @@ void ControlHWPR(struct ezbus *bus)
 					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100)
 					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
 
-				} else {
 				}
-				hwpr_control.move_cur = ready;
+
+				hwpr_control.move_cur = moving;
+				hwpr_control.do_main_move = 1;
+
             } else if (hwpr_control.move_cur == ready) {
             	/* Is the hwpr move negative?
                 If so check if we need to add an overshoot for backlash correction */
@@ -510,6 +536,7 @@ void ControlHWPR(struct ezbus *bus)
 #endif
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
+				hwpr_control.do_main_move = 0;
                 hwpr_control.stop_cnt = 0;
 
 				if (hwpr_control.rel_move == 0) {
@@ -542,6 +569,8 @@ void ControlHWPR(struct ezbus *bus)
 
                     if (hwpr_control.do_overshoot) {
                         hwpr_control.move_cur = at_overshoot;
+					} else if (hwpr_control.do_main_move) {
+						hwpr_control.move_cur = ready;
 					} else if (hwpr_control.do_backoff) {
 						hwpr_control.move_cur = needs_backoff;
                     } else { // we're done moving

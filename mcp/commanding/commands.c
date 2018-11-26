@@ -1779,9 +1779,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO;
       CommandData.hwpr.is_new = 1;
       break;
-    case hwpr_jump:
+    case hwpr_goto_rel:
       CommandData.hwpr.target = ivalues[0];
-      CommandData.hwpr.mode = HWPR_JUMP;
+      CommandData.hwpr.mode = HWPR_GOTO_REL;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_repeat:

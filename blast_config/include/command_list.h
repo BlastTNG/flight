@@ -176,7 +176,7 @@ enum multiCommand {
   // cal_repeat,
   cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
-  hwpr_jump,         hwpr_goto_i,
+  hwpr_goto_rel,         hwpr_goto_i,
   autotrim_to_sc,
   lock,              phase,             act_offset,
   pivot_gain,        ra_dec_goto,      ra_dec_set,

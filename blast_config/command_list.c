@@ -741,7 +741,7 @@ struct mcom mcommands[plugh + 2] = {
       {"destination", 0, 80000, 'l', "ENC_HWPR"}
     }
   },
-  {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
+  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
     GR_HWPR, 1,
     {
       {"delta", -80000, 80000, 'l', "0"}
