@@ -49,7 +49,7 @@ struct Fifo highrate_fifo = {0};
 struct Fifo sbd_fifo = {0};
 linklist_t ** ll_array = NULL;
 
-void fillSBDData(unsigned char *b, int len) {
+void fillSBData(unsigned char *b, int len) {
   memset(b, 0, len);
 
   if (!ll_array) return;

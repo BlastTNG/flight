@@ -119,7 +119,7 @@ struct chat_buf chatter_buffer;
 struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
-linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
+linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo, &sbd_fifo};
 extern linklist_t * ll_hk;
