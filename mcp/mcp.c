@@ -121,7 +121,7 @@ struct tm start_time;
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
-struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo};
+struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo, &sbd_fifo};
 extern linklist_t * ll_hk;
 
 #define MPRINT_BUFFER_SIZE 1024
@@ -683,9 +683,6 @@ blast_info("Finished initializing Beaglebones..."); */
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
   telemetries_linklist[SBD_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.sbd_linklist_name, linklist_array);
-
-  linklist_t * testll = generate_roach_udp_linklist("roach1.ll", 0);
-  write_superframe_format(testll->superframe, "roach1.sf");
 
   pthread_create(&pilot_send_worker, NULL, (void *) &pilot_compress_and_send, (void *) telemetries_linklist);
   pthread_create(&highrate_send_worker, NULL, (void *) &highrate_compress_and_send, (void *) telemetries_linklist);
