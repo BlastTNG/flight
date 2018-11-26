@@ -424,13 +424,12 @@ static void mcp_1hz_routines(void)
     // int ready = 1;
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
-    /*
     if (ready && InCharge) {
       for (int i = 0; i < NUM_TELEMETRIES; i++) {
          memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
          incrementFifo(telem_fifo[i]);
       }
-    }*/
+    }
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();
