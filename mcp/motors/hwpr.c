@@ -86,6 +86,7 @@ static struct hwpr_control_struct
     int reset_enc;
 	int margin; // shouldn't be reset before each move
 	int engaged; // shouldn't be reset before each move
+	int32_t engage_move;
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -471,19 +472,26 @@ void ControlHWPR(struct ezbus *bus)
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
     				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
-						
-						hwpr_control.enc_targ = CommandData.hwpr.target;
+						hwpr_control.enc_targ = CommandData.hwpr.target / ENC_TO_DEG;
+                    	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
+					} else { // encoder is dead
+						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
+						CommandData.hwpr.mode = HWPR_SLEEP;
+						return;
 					}
-
 					hwpr_control.move_cur = engage;
 
                 } else if (hwpr_control.go == goto_rel) {
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
     				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
-						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.; 
+						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target; 
+                    	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
+					} else { // encoder is dead
+						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
+						CommandData.hwpr.mode = HWPR_SLEEP;
+						return;
 					}
-
 					hwpr_control.move_cur = engage;
                 } else {
                     blast_info("This state should be impossible.");
