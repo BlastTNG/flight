@@ -1,0 +1,1423 @@
+BEGIN
+c594ed889812e11d
+184877
+test_values  UINT16  200  27757  284  "Voltage"  "V"
+heater_status_write  UINT16  1  758  1369
+heater_status_read  UINT16  1  479  1369
+cycle_state  UINT8  1  430  1369
+stage_chopper  UINT16  200  27771  284  "Voltage"  "V"
+read_dio  UINT16  1  463  1369
+tr_fpa_1k  UINT16  200  27811  284  "Voltage"  "V"
+tr_250_fpa  UINT16  200  27701  284  "Voltage"  "V"
+tr_1k_plate  UINT16  200  27737  284  "Voltage"  "V"
+tr_300mk_strap  UINT16  200  27647  284  "Voltage"  "V"
+tr_350_fpa  UINT16  200  27619  284  "Voltage"  "V"
+tr_he4_pot  UINT16  200  27633  284  "Voltage"  "V"
+tr_he3_fridge  UINT16  200  27715  284  "Voltage"  "V"
+tr_500_fpa  UINT16  200  27785  284  "Voltage"  "V"
+rox_bias  UINT16  1  6  1369  "Voltage"  "V"
+bias_alsa_state_rox  UINT16  1  1323  1369
+n2_flow_v  UINT16  1  302  1369  "Voltage"  "V"
+he_blow_v  UINT16  1  894  1369  "Voltage"  "V"
+he_pot_hi_flow_v  UINT16  1  329  1369  "Voltage"  "V"
+he_pot_lo_flow_v  UINT16  1  854  1369  "Voltage"  "V"
+he_purge_flow_v  UINT16  1  531  1369  "Voltage"  "V"
+alarm_gauge  UINT16  1  856  1369  "Voltage"  "V"
+of_status  UINT16  1  88  1369  "Voltage"  "V"
+if_status  UINT16  1  1104  1369  "Voltage"  "V"
+labjack_conn_status  UINT16  1  238  1369
+td_charcoal_hs  UINT16  200  27755  284  "Voltage"  "V"
+td_vcs2_filt  UINT16  200  27769  284  "Voltage"  "V"
+td_250fpa  UINT16  200  27821  284  "Voltage"  "V"
+td_hwp  UINT16  200  27573  284  "Voltage"  "V"
+td_vcs1_hx  UINT16  200  27791  284  "Voltage"  "V"
+td_1k_fridge  UINT16  200  27733  284  "Voltage"  "V"
+td_4k_plate  UINT16  200  27777  284  "Voltage"  "V"
+td_vcs1_filt  UINT16  200  27823  284  "Voltage"  "V"
+td_m3  UINT16  200  27819  284  "Voltage"  "V"
+td_charcoal  UINT16  200  27767  284  "Voltage"  "V"
+td_ob_filter  UINT16  200  27799  284  "Voltage"  "V"
+td_vcs2_plate  UINT16  200  27617  284  "Voltage"  "V"
+td_m4  UINT16  200  27605  284  "Voltage"  "V"
+td_4k_filt  UINT16  200  27779  284  "Voltage"  "V"
+td_vcs2_hx  UINT16  200  27595  284  "Voltage"  "V"
+td_vcs1_plate  UINT16  200  27685  284  "Voltage"  "V"
+level_sensor_read  UINT16  1  1235  1369  "Voltage"  "V"
+cal_lamp_read  UINT16  200  27711  284  "Voltage"  "V"
+heater_300mk_read  UINT16  1  449  1369  "Voltage"  "V"
+thermistor_1  UINT16  1  1069  1369  "Voltage"  "V"
+thermistor_2  UINT16  1  108  1369  "Voltage"  "V"
+thermistor_3  UINT16  1  186  1369  "Voltage"  "V"
+thermistor_4  UINT16  1  1256  1369  "Voltage"  "V"
+thermistor_5  UINT16  1  872  1369  "Voltage"  "V"
+thermistor_6  UINT16  1  375  1369  "Voltage"  "V"
+thermistor_7  UINT16  1  638  1369  "Voltage"  "V"
+thermistor_8  UINT16  1  1303  1369  "Voltage"  "V"
+thermistor_9  UINT16  1  333  1369  "Voltage"  "V"
+thermistor_10  UINT16  1  1196  1369  "Voltage"  "V"
+thermistor_11  UINT16  1  1065  1369  "Voltage"  "V"
+thermistor_12  UINT16  1  1092  1369  "Voltage"  "V"
+thermistor_13  UINT16  1  848  1369  "Voltage"  "V"
+thermistor_14  UINT16  1  272  1369  "Voltage"  "V"
+thermistor_15  UINT16  1  790  1369  "Voltage"  "V"
+thermistor_16  UINT16  1  1148  1369  "Voltage"  "V"
+thermistor_17  UINT16  1  862  1369  "Voltage"  "V"
+thermistor_18  UINT16  1  688  1369  "Voltage"  "V"
+thermistor_19  UINT16  1  28  1369  "Voltage"  "V"
+thermistor_20  UINT16  1  740  1369  "Voltage"  "V"
+thermistor_21  UINT16  1  1317  1369  "Voltage"  "V"
+thermistor_22  UINT16  1  1128  1369  "Voltage"  "V"
+thermistor_23  UINT16  1  780  1369  "Voltage"  "V"
+thermistor_24  UINT16  1  1329  1369  "Voltage"  "V"
+thermistor_25  UINT16  1  944  1369  "Voltage"  "V"
+thermistor_26  UINT16  1  1252  1369  "Voltage"  "V"
+thermistor_27  UINT16  1  1140  1369  "Voltage"  "V"
+thermistor_28  UINT16  1  74  1369  "Voltage"  "V"
+thermistor_29  UINT16  1  50  1369  "Voltage"  "V"
+thermistor_30  UINT16  1  2  1369  "Voltage"  "V"
+thermistor_31  UINT16  1  156  1369  "Voltage"  "V"
+thermistor_32  UINT16  1  994  1369  "Voltage"  "V"
+thermistor_33  UINT16  1  1260  1369  "Voltage"  "V"
+thermistor_34  UINT16  1  808  1369  "Voltage"  "V"
+thermistor_35  UINT16  1  455  1369  "Voltage"  "V"
+thermistor_36  UINT16  1  890  1369  "Voltage"  "V"
+thermistor_37  UINT16  1  325  1369  "Voltage"  "V"
+thermistor_38  UINT16  1  744  1369  "Voltage"  "V"
+thermistor_39  UINT16  1  260  1369  "Voltage"  "V"
+thermistor_40  UINT16  1  852  1369  "Voltage"  "V"
+thermistor_41  UINT16  1  357  1369  "Voltage"  "V"
+thermistor_42  UINT16  1  26  1369  "Voltage"  "V"
+thermistor_43  UINT16  1  924  1369  "Voltage"  "V"
+thermistor_44  UINT16  1  1110  1369  "Voltage"  "V"
+thermistor_45  UINT16  1  1106  1369  "Voltage"  "V"
+thermistor_46  UINT16  1  258  1369  "Voltage"  "V"
+thermistor_47  UINT16  1  1108  1369  "Voltage"  "V"
+thermistor_48  UINT16  1  220  1369  "Voltage"  "V"
+thermistor_49  UINT16  1  1142  1369  "Voltage"  "V"
+thermistor_50  UINT16  1  547  1369  "Voltage"  "V"
+thermistor_51  UINT16  1  752  1369  "Voltage"  "V"
+thermistor_52  UINT16  1  178  1369  "Voltage"  "V"
+thermistor_53  UINT16  1  392  1369  "Voltage"  "V"
+thermistor_54  UINT16  1  521  1369  "Voltage"  "V"
+thermistor_55  UINT16  1  1217  1369  "Voltage"  "V"
+thermistor_56  UINT16  1  359  1369  "Voltage"  "V"
+thermistor_57  UINT16  1  918  1369  "Voltage"  "V"
+thermistor_58  UINT16  1  1291  1369  "Voltage"  "V"
+thermistor_59  UINT16  1  282  1369  "Voltage"  "V"
+thermistor_60  UINT16  1  1345  1369  "Voltage"  "V"
+thermistor_61  UINT16  1  610  1369  "Voltage"  "V"
+thermistor_62  UINT16  1  312  1369  "Voltage"  "V"
+thermistor_63  UINT16  1  898  1369  "Voltage"  "V"
+thermistor_64  UINT16  1  646  1369  "Voltage"  "V"
+thermistor_65  UINT16  1  475  1369  "Voltage"  "V"
+thermistor_66  UINT16  1  1126  1369  "Voltage"  "V"
+thermistor_67  UINT16  1  1156  1369  "Voltage"  "V"
+thermistor_68  UINT16  1  1250  1369  "Voltage"  "V"
+thermistor_69  UINT16  1  1361  1369  "Voltage"  "V"
+thermistor_70  UINT16  1  1254  1369  "Voltage"  "V"
+thermistor_71  UINT16  1  1225  1369  "Voltage"  "V"
+thermistor_72  UINT16  1  1038  1369  "Voltage"  "V"
+thermistor_73  UINT16  1  714  1369  "Voltage"  "V"
+thermistor_74  UINT16  1  708  1369  "Voltage"  "V"
+current_eth_switch  UINT16  1  1150  1369  "Voltage"  "V"
+current_fc1  UINT16  1  1071  1369  "Voltage"  "V"
+current_xsc0  UINT16  1  86  1369  "Voltage"  "V"
+current_fc2  UINT16  1  1319  1369  "Voltage"  "V"
+current_xsc1  UINT16  1  420  1369  "Voltage"  "V"
+current_ele_mot  UINT16  1  682  1369  "Voltage"  "V"
+current_pivot  UINT16  1  1040  1369  "Voltage"  "V"
+current_rw_mot  UINT16  1  570  1369  "Voltage"  "V"
+current_hd_pv  UINT16  1  212  1369  "Voltage"  "V"
+current_gyros  UINT16  1  998  1369  "Voltage"  "V"
+current_data_transmit  UINT16  1  1166  1369  "Voltage"  "V"
+clin_of_x  UINT16  1  1283  1369
+clin_of_y  UINT16  1  668  1369
+clin_if_x  UINT16  1  236  1369
+clin_if_y  UINT16  1  1134  1369
+clin_of_t  UINT16  1  810  1369
+clin_if_t  UINT16  1  754  1369
+status_charcoal_heater  UINT8  1  389  1369
+status_250_LNA  UINT8  1  395  1369
+status_1K_heater  UINT8  1  1079  1369
+status_charcoal_hs  UINT8  1  394  1369
+status_500_LNA  UINT8  1  1174  1369
+status_350_LNA  UINT8  1  318  1369
+status_300mk_heater  UINT16  1  381  1369  "Voltage"  "V"
+status_cal_lamp  UINT16  1  1000  1369  "Voltage"  "V"
+x0_point_az_raw  UINT16  1  1096  1369
+x0_point_az  UINT16  1  46  1369
+x0_point_el_raw  UINT16  1  491  1369
+x0_point_el  UINT16  1  316  1369
+x0_point_sigma  UINT16  1  541  1369
+x0_point_az_trim  UINT16  1  80  1369
+x0_point_el_trim  UINT16  1  481  1369
+x0_cd_robust_mode  UINT8  1  1198  1369
+x1_point_az_raw  UINT16  1  1144  1369
+x1_point_az  UINT16  1  138  1369
+x1_point_el_raw  UINT16  1  134  1369
+x1_point_el  UINT16  1  770  1369
+x1_point_sigma  UINT16  1  42  1369
+x1_point_az_trim  UINT16  1  818  1369
+x1_point_el_trim  UINT16  1  684  1369
+x1_cd_robust_mode  UINT8  1  991  1369
+x1_heater  UINT8  1  1276  1369
+x0_heater  UINT8  1  1044  1369
+x0_ctr_mcp  INT32  200  27639  284
+x0_last_trig_age_cs  INT32  200  27597  284
+x0_last_trig_ctr_mcp  INT32  200  27591  284
+x0_predicted_streaking_px  UINT16  200  27735  284
+x0_last_trig_ctr_stars  INT32  200  27829  284
+x0_image_blobn_x  UINT16  200  27809  284
+x0_image_blobn_y  UINT16  200  27567  284
+x0_image_blobn_flux  UINT16  200  27731  284
+x0_image_blobn_peak_to_flux  UINT16  200  27565  284
+x1_last_trig_ctr_stars  INT32  200  27601  284
+x1_image_blobn_x  UINT16  200  27797  284
+x1_image_blobn_y  UINT16  200  27663  284
+x1_image_blobn_flux  UINT16  200  27629  284
+x1_image_blobn_peak_to_flux  UINT16  200  27657  284
+x1_predicted_streaking_px  UINT16  200  27631  284
+x0_last_trig_lat  UINT32  200  27763  284
+x0_last_trig_lst  UINT32  200  27673  284
+x0_image_num_blobs_found  UINT16  1  1010  1369
+x0_image_num_blobs_matched  UINT16  1  992  1369
+x0_ctr_stars  INT32  200  27743  284
+x0_image_ctr_stars  INT32  200  27649  284
+x0_image_ctr_mcp  INT32  200  27681  284
+x0_hk_temp_lens  UINT16  1  20  1369  "Temperature"  "^oC"
+x0_hk_temp_comp  UINT16  1  1341  1369  "Temperature"  "^oC"
+x0_hk_temp_plate  UINT16  1  884  1369  "Temperature"  "^oC"
+x0_hk_temp_flange  UINT16  1  1237  1369  "Temperature"  "^oC"
+x0_hk_pressure  UINT16  1  292  1369  "Pressure"  "PSI"
+x0_hk_disk  UINT16  1  144  1369
+x0_image_eq_valid  UINT32  1  385  1369
+x0_cam_gain_valid  UINT32  1  82  1369
+x0_image_hor_valid  UINT32  1  533  1369
+x0_image_afocus_metric_valid  UINT32  1  628  1369
+x0_stars_run_time  UINT32  1  406  1369  "Time"  "s"
+x0_cam_gain_db  INT32  1  1100  1369
+x0_lens_focus  UINT32  1  792  1369
+x0_lens_aperture  UINT32  1  58  1369
+x0_image_num_exposures  UINT8  1  1175  1369
+x0_image_stats_mean  UINT16  1  1279  1369
+x0_image_stats_noise  UINT16  1  1130  1369
+x0_image_stats_gaindb  UINT16  1  1090  1369
+x0_image_stats_num_px_sat  UINT16  1  1012  1369
+x0_image_stats_frac_px_sat  UINT16  1  471  1369
+x0_image_afocus_metric  UINT16  1  68  1369
+x0_image_eq_iplate  UINT16  1  355  1369
+x0_image_hor_iplate  UINT16  1  182  1369
+x0_image_eq_ra  UINT32  1  345  1369
+x0_image_eq_dec  UINT32  1  321  1369
+x0_image_eq_roll  UINT32  1  951  1369
+x0_image_eq_sigma_ra  UINT32  1  1034  1369
+x0_image_eq_sigma_dec  UINT32  1  987  1369
+x0_image_eq_sigma_roll  UINT32  1  876  1369
+x0_image_eq_sigma_pointing  UINT32  1  1264  1369
+x0_image_hor_az  UINT32  1  1075  1369
+x0_image_hor_el  UINT32  1  208  1369
+x0_image_hor_roll  UINT32  1  716  1369
+x0_image_hor_sigma_az  UINT32  1  451  1369
+x0_image_hor_sigma_el  UINT32  1  112  1369
+x0_image_hor_sigma_roll  UINT32  1  1118  1369
+x0_image_hor_sigma_pointing  UINT32  1  377  1369
+x1_image_num_blobs_found  UINT16  1  184  1369
+x1_image_num_blobs_matched  UINT16  1  798  1369
+x1_ctr_stars  INT32  200  27773  284
+x1_image_ctr_stars  INT32  200  27787  284
+x1_image_ctr_mcp  INT32  200  27557  284
+x1_hk_temp_lens  UINT16  1  961  1369  "Temperature"  "^oC"
+x1_hk_temp_comp  UINT16  1  180  1369  "Temperature"  "^oC"
+x1_hk_temp_plate  UINT16  1  284  1369  "Temperature"  "^oC"
+x1_hk_temp_flange  UINT16  1  712  1369  "Temperature"  "^oC"
+x1_hk_pressure  UINT16  1  866  1369  "Pressure"  "PSI"
+x1_hk_disk  UINT16  1  1004  1369
+x1_image_eq_valid  UINT32  1  36  1369
+x1_cam_gain_valid  UINT32  1  437  1369
+x1_image_hor_valid  UINT32  1  981  1369
+x1_image_afocus_metric_valid  UINT32  1  902  1369
+x1_stars_run_time  UINT32  1  642  1369  "Time"  "s"
+x1_cam_gain_db  INT32  1  604  1369
+x1_lens_focus  UINT32  1  1176  1369
+x1_lens_aperture  UINT32  1  503  1369
+x1_image_num_exposures  UINT8  1  553  1369
+x1_image_stats_mean  UINT16  1  543  1369
+x1_image_stats_noise  UINT16  1  830  1369
+x1_image_stats_gaindb  UINT16  1  1192  1369
+x1_image_stats_num_px_sat  UINT16  1  331  1369
+x1_image_stats_frac_px_sat  UINT16  1  1061  1369
+x1_image_afocus_metric  UINT16  1  1158  1369
+x1_image_eq_iplate  UINT16  1  1024  1369
+x1_image_hor_iplate  UINT16  1  1186  1369
+x1_image_eq_ra  UINT32  1  648  1369
+x1_image_eq_dec  UINT32  1  170  1369
+x1_image_eq_roll  UINT32  1  564  1369
+x1_image_eq_sigma_ra  UINT32  1  445  1369
+x1_image_eq_sigma_dec  UINT32  1  549  1369
+x1_image_eq_sigma_roll  UINT32  1  1170  1369
+x1_image_eq_sigma_pointing  UINT32  1  1309  1369
+x1_image_hor_az  UINT32  1  52  1369
+x1_image_hor_el  UINT32  1  100  1369
+x1_image_hor_roll  UINT32  1  1331  1369
+x1_image_hor_sigma_az  UINT32  1  513  1369
+x1_image_hor_sigma_el  UINT32  1  402  1369
+x1_image_hor_sigma_roll  UINT32  1  1231  1369
+x1_image_hor_sigma_pointing  UINT32  1  558  1369
+subframe_counter_1hz  UINT8  100  8062  195
+subframe_counter_5hz  UINT8  100  8157  195
+time  UINT32  100  8123  195
+time_usec  UINT32  100  8200  195
+time_sip  UINT32  100  8216  195
+lst  UINT32  100  8077  195
+parts_sched  UINT32  100  8172  195
+lat  INT32  100  8063  195
+lon  INT32  100  8232  195
+ra  UINT32  100  8081  195
+dec  INT32  100  8099  195
+start_cycle  UINT32  100  8192  195
+lst_sched  UINT32  100  8055  195
+start_set_cycle  UINT32  100  8135  195
+ampl_500_bias  UINT16  5  1719  1336
+ampl_350_bias  UINT16  5  1691  1336
+ampl_250_bias  UINT16  5  2560  1336
+ampl_rox_bias  UINT16  5  1983  1336
+ampl_x_bias  UINT16  5  2212  1336
+dig21_das  UINT16  5  1731  1336
+dig65_das  UINT16  5  1597  1336
+ramp_ena_bias  UINT16  5  2178  1336
+ramp_ampl_bias  UINT16  5  2355  1336
+t_padcdc_rec  UINT16  5  2507  1336  "Temperature"  "^oC"
+t_pauram_rec  UINT16  5  1875  1336  "Temperature"  "^oC"
+t_hkdcdc_rec  UINT16  5  2161  1336  "Temperature"  "^oC"
+vt_stbd_das  UINT16  5  1985  1336  "Voltage"  "V"
+vt_stbd_rec  UINT16  5  2594  1336  "Voltage"  "V"
+vt_port_das  UINT16  5  2194  1336  "Voltage"  "V"
+vt_port_rec  UINT16  5  2531  1336  "Voltage"  "V"
+vt_mot_pump_val  UINT16  5  1733  1336  "Voltage"  "V"
+vt_1_prime  UINT16  5  1443  1336  "Voltage"  "V"
+vt_if_top_back  UINT16  5  2462  1336  "Voltage"  "V"
+vt_hwpr_mot  UINT16  5  2494  1336  "Voltage"  "V"
+vt_if_top_frnt  UINT16  5  2345  1336  "Voltage"  "V"
+vt_hwpr_feed  UINT16  5  2325  1336  "Voltage"  "V"
+vt_if_bot_frnt  UINT16  5  2630  1336  "Voltage"  "V"
+vt_strut_bot  UINT16  5  1857  1336  "Voltage"  "V"
+vt_strut_side  UINT16  5  2550  1336  "Voltage"  "V"
+vt_2_prime  UINT16  5  1471  1336  "Voltage"  "V"
+vt_if_bot_back  UINT16  5  2472  1336  "Voltage"  "V"
+vt_dac_box  UINT16  5  1771  1336  "Voltage"  "V"
+t_mot_act  UINT16  5  1926  1336  "Temperature"  "^oC"
+t_push_plate  UINT16  5  1711  1336  "Temperature"  "^oC"
+t_1_second  UINT16  5  1823  1336  "Temperature"  "^oC"
+t_2_second  UINT16  5  1423  1336  "Temperature"  "^oC"
+he4_lev  UINT16  5  2270  1336  "Voltage"  "V"
+i_charcoal  UINT16  5  1965  1336  "Voltage"  "V"
+i_cal_lamp  UINT16  5  2226  1336  "Voltage"  "V"
+i_hs_char  UINT16  5  1671  1336  "Voltage"  "V"
+i_hs_pot  UINT16  5  1859  1336  "Voltage"  "V"
+i_300mk  UINT16  5  2031  1336  "Voltage"  "V"
+i_jfet  UINT16  5  1663  1336  "Voltage"  "V"
+pin_in_lock  UINT16  5  1963  1336
+period_cal  UINT16  5  2444  1336
+status_eth  UINT16  5  1934  1336
+az_null  UINT16  100  8069  195  "Direction"  "^o"
+az_sun  UINT16  5  1841  1336  "Direction"  "^o"
+lvdt_low_act  UINT16  5  1463  1336
+status_mcc  UINT16  5  2335  1336
+cryostate  UINT16  5  1883  1336
+upslot_sched  UINT16  5  1469  1336
+t_chip_flc  UINT16  5  1993  1336  "Temperature"  "^oC"
+veto_sensor  UINT16  5  2558  1336
+i_level_on_bal  UINT16  5  1797  1336  "Current"  "A"
+i_level_off_bal  UINT16  5  2131  1336  "Current"  "A"
+i_el_req_avg_bal  UINT16  5  2377  1336  "Current"  "A"
+status_bal  UINT8  5  2317  1336
+enc_potvalve  UINT16  5  2647  1336
+pos_potvalve  INT32  5  1556  1336
+state_potvalve  UINT8  5  1513  1336
+vel_potvalve  UINT32  5  1481  1336
+i_open_potvalve  UINT8  5  1748  1336
+i_close_potvalve  UINT8  5  1745  1336
+i_hold_potvalve  UINT8  5  2632  1336
+thresh_clos_potvalve  UINT16  5  2562  1336
+threshlclos_potvalve  UINT16  5  1885  1336
+thresh_open_potvalve  UINT16  5  1633  1336
+lims_pumpvalve  UINT8  5  1921  1336
+pos_pumpvalve  INT32  5  2214  1336
+lims_fillvalve  UINT8  5  2314  1336
+pos_fillvalve  INT32  5  2200  1336
+vel_valves  UINT16  5  1645  1336
+i_move_valves  UINT8  5  2291  1336
+i_hold_valves  UINT8  5  2175  1336
+acc_valves  UINT16  5  1387  1336
+vel_bal  UINT32  5  1453  1336
+acc_bal  UINT16  5  1511  1336
+i_move_bal  UINT16  5  1599  1336
+i_hold_bal  UINT16  5  1415  1336
+pos_bal  INT32  5  2306  1336
+lim_bal  UINT8  5  1574  1336
+alt_sip  UINT16  5  1735  1336
+lat_sip  INT16  5  2604  1336  "Latitude"  "^o"
+lon_sip  INT16  5  1683  1336  "Longitude"  "^o"
+mode_p  UINT16  5  2111  1336
+x_p  UINT16  5  2439  1336
+y_p  INT16  5  1514  1336
+vel_az_p  UINT16  5  1865  1336
+del_p  UINT16  5  1930  1336
+w_p  UINT16  5  2697  1336
+offset_ifel_gy  INT16  5  2701  1336  "Rate"  "^o/s"
+offset_ifroll_gy  INT16  5  2099  1336  "Rate"  "^o/s"
+offset_ifyaw_gy  INT16  5  2407  1336  "Rate"  "^o/s"
+lvdt_high_act  UINT16  5  1727  1336
+pulse_cal  UINT16  5  2681  1336
+sigma_clin  UINT16  5  2677  1336
+mks_hi_sip  UINT16  5  2109  1336
+mks_med_sip  UINT16  5  1867  1336
+pref_tp_sf  UINT16  5  1375  1336
+bi0_fifo_size  UINT16  5  1665  1336
+plover  UINT16  5  2635  1336
+jfet_set_on  UINT16  5  2556  1336
+jfet_set_off  UINT16  5  2492  1336
+state_cycle  UINT16  5  1493  1336
+g_p_heat_gy  UINT16  5  1413  1336
+g_i_heat_gy  UINT16  5  2043  1336
+g_d_heat_gy  UINT16  5  1871  1336
+t_set_gy  UINT16  5  2302  1336  "Temperature"  "^oC"
+h_age_gy  UINT16  5  1609  1336
+h_hist_gy  UINT16  5  2113  1336
+ra_1_p  UINT16  5  1855  1336
+dec_1_p  INT16  5  1815  1336
+ra_2_p  UINT16  5  2107  1336
+dec_2_p  INT16  5  1753  1336
+ra_3_p  UINT16  5  2266  1336
+dec_3_p  INT16  5  1405  1336
+ra_4_p  UINT16  5  2238  1336
+dec_4_p  INT16  5  1581  1336
+trim_clin  INT16  5  1595  1336
+trim_enc  INT16  5  1687  1336
+trim_motor_enc  INT16  5  1759  1336
+trim_null  INT16  5  2349  1336
+trim_mag1  INT16  5  2689  1336
+trim_mag2  INT16  5  1637  1336
+gain_bal  UINT16  5  1799  1336
+el_clin  UINT16  5  2389  1336
+h_p  UINT16  5  1575  1336
+el_lut_clin  UINT16  5  2661  1336
+mks_lo_sip  UINT16  5  2296  1336
+alt  UINT16  5  1943  1336
+mode_az_mc  UINT16  5  2641  1336
+mode_el_mc  UINT16  5  1499  1336
+dest_az_mc  UINT16  5  1550  1336
+dest_el_mc  UINT16  5  1587  1336
+vel_az_mc  INT16  5  2173  1336
+vel_el_mc  INT16  5  1435  1336
+dir_az_mc  INT16  5  2628  1336
+dir_el_mc  INT16  5  1945  1336
+slew_veto  UINT16  5  1997  1336
+sveto_len  UINT16  5  1377  1336
+pot_lock  UINT16  5  2496  1336
+dith_el  INT16  5  2637  1336  "Direction"  "^o"
+state_lock  UINT16  5  1713  1336
+goal_lock  UINT16  5  2013  1336
+seized_act  INT16  5  1681  1336
+n_dith_p  UINT16  5  2433  1336
+x_vel_stage  UINT16  5  2157  1336
+x_stp_stage  UINT16  5  2065  1336
+x_str_stage  UINT16  5  2626  1336
+y_lim_stage  UINT16  5  2310  1336
+i_dith_el  INT16  5  1643  1336
+y_stp_stage  UINT16  5  2357  1336
+y_str_stage  UINT16  5  2554  1336
+x_lim_stage  UINT16  5  1947  1336
+y_vel_stage  UINT16  5  2061  1336
+he4_lev_old  UINT16  5  1932  1336
+offset_ifelxsc0_gy  INT16  5  1751  1336
+offset_ifelxsc1_gy  INT16  5  2460  1336
+offset_ifrollxsc0_gy  INT16  5  2699  1336
+offset_ifrollxsc1_gy  INT16  5  2236  1336
+offset_ifyawxsc0_gy  INT16  5  2208  1336
+offset_ifyawxsc1_gy  INT16  5  1801  1336
+new_offset_ifelmotorenc_gy  INT16  100  8071  195
+int_ifelmotorenc  INT16  100  8158  195
+new_offset_ifyawmag1_gy  INT16  100  8178  195
+new_offset_ifrollmag1_gy  INT16  100  8168  195
+int_ifyawmag1  INT16  100  8147  195
+int_ifrollmag1  INT16  100  8238  195
+d_az_mag1  INT16  100  8228  195
+new_offset_ifyawmag2_gy  INT16  100  8115  195
+new_offset_ifrollmag2_gy  INT16  100  8093  195
+int_ifyawmag2  INT16  100  8170  195
+int_ifrollmag2  INT16  100  8087  195
+d_az_mag2  INT16  100  8139  195
+new_offset_ifelxsc0_gy  INT16  100  8188  195
+new_offset_ifyawxsc0_gy  INT16  100  8075  195
+new_offset_ifrollxsc0_gy  INT16  100  8180  195
+d_az_xsc0  INT16  100  8091  195
+int_ifrollxsc0  INT16  100  8097  195
+int_ifyawxsc0  INT16  100  8230  195
+int_ifelxsc0  INT16  100  8155  195
+prev_soln_az_xsc0  INT16  100  8049  195
+prev_soln_el_xsc0  INT16  100  8085  195
+new_offset_ifelxsc1_gy  INT16  100  8176  195
+new_offset_ifyawxsc1_gy  INT16  100  8220  195
+new_offset_ifrollxsc1_gy  INT16  100  8182  195
+d_az_xsc1  INT16  100  8067  195
+int_ifyawxsc1  INT16  100  8145  195
+int_ifrollxsc1  INT16  100  8060  195
+int_ifelxsc1  INT16  100  8149  195
+prev_soln_az_xsc1  INT16  100  8226  195
+prev_soln_el_xsc1  INT16  100  8186  195
+pos_lock  INT16  5  2127  1336
+pos_0_act  INT16  5  2649  1336
+pos_1_act  INT16  5  2278  1336
+pos_2_act  INT16  5  2294  1336
+enc_0_act  INT16  5  1701  1336
+enc_1_act  INT16  5  2196  1336
+enc_2_act  INT16  5  1845  1336
+goal_sf  UINT16  5  1991  1336
+focus_sf  INT16  5  2511  1336
+offset_ifrollmag1_gy  INT16  5  2437  1336  "Rate"  "^o/s"
+offset_ifyawmag1_gy  INT16  5  1899  1336  "Rate"  "^o/s"
+offset_ifrolldgps_gy  INT16  1  616  1369  "Rate"  "^o/s"
+offset_ifyawdgps_gy  INT16  1  1180  1369  "Rate"  "^o/s"
+offset_ifrollmag2_gy  INT16  5  2180  1336  "Rate"  "^o/s"
+offset_ifyawmag2_gy  INT16  5  2667  1336  "Rate"  "^o/s"
+offset_ifrollpss_gy  INT16  5  1631  1336  "Rate"  "^o/s"
+offset_ifyawpss_gy  INT16  5  2474  1336  "Rate"  "^o/s"
+next_i_hwpr_p  INT16  5  2363  1336
+next_i_dith_p  INT16  5  1534  1336
+pref_ts_sf  UINT16  5  2391  1336
+spread_sf  UINT16  5  2383  1336
+acc_lock  UINT16  5  1507  1336
+i_move_act  UINT16  5  1717  1336
+i_hold_act  UINT16  5  1538  1336
+vel_act  UINT16  5  1938  1336
+acc_act  UINT16  5  2244  1336
+i_move_lock  UINT16  5  2318  1336
+i_hold_lock  UINT16  5  2679  1336
+vel_lock  UINT16  5  1505  1336
+g_prime_sf  INT16  5  1528  1336
+g_second_sf  INT16  5  2450  1336
+step_sf  UINT16  5  2151  1336
+wait_sf  UINT16  5  2446  1336
+mode_sf  UINT16  5  1973  1336
+correction_sf  INT16  5  2435  1336
+age_sf  UINT16  5  1999  1336
+offset_sf  INT16  5  1721  1336
+t_prime_sf  UINT16  5  1911  1336  "Temperature"  "^oC"
+t_second_sf  UINT16  5  2620  1336  "Temperature"  "^oC"
+flags_act  UINT16  5  1924  1336
+lvdt_spread_act  INT16  5  1905  1336
+el_sun  INT16  5  2537  1336
+hwpr_cal  UINT16  5  2276  1336
+mode_cal  UINT16  5  1777  1336
+overshoot_hwpr  FLOAT32  5  1401  1336
+drive_info_rw  UINT16  5  1583  1336
+drive_err_cts_rw  UINT16  5  2584  1336
+drive_info_el  UINT16  5  1873  1336
+drive_err_cts_el  UINT16  5  1913  1336
+drive_info_piv  UINT16  5  2515  1336
+drive_err_cts_piv  UINT16  5  2379  1336
+vel_hwpr  UINT16  5  2417  1336
+acc_hwpr  UINT16  5  2141  1336
+i_move_hwpr  UINT16  5  2618  1336
+i_hold_hwpr  UINT16  5  2204  1336
+pos_hwpr  INT32  5  1439  1336
+enc_hwpr  FLOAT32  5  1657  1336
+step_start_bias  UINT16  5  1399  1336
+step_end_bias  UINT16  5  2458  1336
+step_n_bias  UINT16  5  2395  1336
+step_time_bias  UINT16  5  2222  1336
+step_pul_len_bias  UINT16  5  2669  1336
+step_array_bias  UINT16  5  2163  1336
+step_start_phase  UINT16  5  1863  1336
+step_end_phase  UINT16  5  1835  1336
+step_nsteps_phase  UINT16  5  2149  1336
+step_time_phase  UINT16  5  2019  1336
+step_ena_bias  UINT16  5  2005  1336
+step_ena_phase  UINT16  5  2552  1336
+v_batt_cc1  UINT16  1  804  1369  "Voltage"  "V"
+v_arr_cc1  UINT16  1  967  1369  "Voltage"  "V"
+i_batt_cc1  UINT16  1  556  1369  "Current"  "A"
+i_arr_cc1  UINT16  1  300  1369  "Current"  "A"
+t_hs_cc1  INT16  1  424  1369  "Temperature"  "^oC"
+fault_cc1  UINT16  1  1353  1369
+alarm_cc1  UINT16  1  501  1369
+v_targ_cc1  UINT16  1  222  1369  "Voltage"  "V"
+state_cc1  UINT16  1  672  1369
+lvdt_0_act  INT16  5  1869  1336
+lvdt_1_act  INT16  5  2504  1336
+lvdt_2_act  INT16  5  2260  1336
+gy_az_vel  FLOAT32  5  1369  1336  "Rate"  "^o/s"
+gy_el_vel  FLOAT32  5  1969  1336  "Rate"  "^o/s"
+gy_total_vel  FLOAT32  5  2427  1336  "Rate"  "^o/s"
+gy_total_accel  FLOAT32  5  2653  1336  "Rate"  "^o/s"
+offset_0_act  UINT16  5  1679  1336
+offset_1_act  UINT16  5  2633  1336
+offset_2_act  UINT16  5  2347  1336
+goal_0_act  INT16  5  1607  1336
+goal_1_act  INT16  5  1781  1336
+goal_2_act  INT16  5  1695  1336
+ok_pss  UINT16  5  2441  1336
+sigma_pss  UINT16  5  1459  1336
+cal_imin_pss  UINT16  5  1669  1336  "Voltage"  "V"
+az_raw_pss  UINT16  5  2592  1336  "Position"  "^o"
+el_raw_pss  UINT16  5  1655  1336  "Position"  "^o"
+az_pss  UINT16  5  1568  1336  "Position"  "^o"
+trim_pss  INT16  5  2182  1336
+trim_dgps  INT16  5  2300  1336
+cal_off_pss1  INT16  5  1936  1336  "Trim"  "^o"
+cal_off_pss2  INT16  5  2003  1336  "Trim"  "^o"
+cal_off_pss3  INT16  5  1977  1336  "Trim"  "^o"
+cal_off_pss4  INT16  5  2063  1336  "Trim"  "^o"
+cal_off_pss5  INT16  5  2339  1336  "Trim"  "^o"
+cal_off_pss6  INT16  5  2482  1336  "Trim"  "^o"
+cal_off_pss7  INT16  5  1566  1336  "Trim"  "^o"
+cal_off_pss8  INT16  5  1847  1336  "Trim"  "^o"
+cal_d_pss1  INT16  5  2624  1336  "Trim"  "mm"
+cal_d_pss2  INT16  5  2298  1336  "Trim"  "mm"
+cal_d_pss3  INT16  5  1689  1336  "Trim"  "mm"
+cal_d_pss4  INT16  5  2387  1336  "Trim"  "mm"
+cal_d_pss5  INT16  5  1807  1336  "Trim"  "mm"
+cal_d_pss6  INT16  5  2069  1336  "Trim"  "mm"
+cal_d_pss7  INT16  5  2220  1336  "Trim"  "mm"
+cal_d_pss8  INT16  5  2393  1336  "Trim"  "mm"
+snr_pss1  UINT16  5  2322  1336
+snr_pss2  UINT16  5  1853  1336
+snr_pss3  UINT16  5  1503  1336
+snr_pss4  UINT16  5  2292  1336
+snr_pss5  UINT16  5  2129  1336
+snr_pss6  UINT16  5  1995  1336
+snr_pss7  UINT16  5  2105  1336
+snr_pss8  UINT16  5  2015  1336
+az_raw_pss1  UINT16  5  2071  1336  "Position"  "^o"
+az_raw_pss2  UINT16  5  2663  1336  "Position"  "^o"
+az_raw_pss3  UINT16  5  2133  1336  "Position"  "^o"
+az_raw_pss4  UINT16  5  2517  1336  "Position"  "^o"
+az_raw_pss5  UINT16  5  2564  1336  "Position"  "^o"
+az_raw_pss6  UINT16  5  2612  1336  "Position"  "^o"
+az_raw_pss7  UINT16  5  1485  1336  "Position"  "^o"
+az_raw_pss8  UINT16  5  2184  1336  "Position"  "^o"
+el_raw_pss1  UINT16  5  2596  1336  "Position"  "^o"
+el_raw_pss2  UINT16  5  1967  1336  "Position"  "^o"
+el_raw_pss3  UINT16  5  2224  1336  "Position"  "^o"
+el_raw_pss4  UINT16  5  1397  1336  "Position"  "^o"
+el_raw_pss5  UINT16  5  1915  1336  "Position"  "^o"
+el_raw_pss6  UINT16  5  1647  1336  "Position"  "^o"
+el_raw_pss7  UINT16  5  1703  1336  "Position"  "^o"
+el_raw_pss8  UINT16  5  1431  1336  "Position"  "^o"
+v1_1_pss  FLOAT32  5  1901  1336  "Voltage"  "V"
+v2_1_pss  FLOAT32  5  1540  1336  "Voltage"  "V"
+v3_1_pss  FLOAT32  5  2169  1336  "Voltage"  "V"
+v4_1_pss  FLOAT32  5  1783  1336  "Voltage"  "V"
+v5_1_pss  FLOAT32  5  1887  1336  "Voltage"  "V"
+v1_2_pss  FLOAT32  5  1817  1336  "Voltage"  "V"
+v2_2_pss  FLOAT32  5  2240  1336  "Voltage"  "V"
+v3_2_pss  FLOAT32  5  1520  1336  "Voltage"  "V"
+v4_2_pss  FLOAT32  5  1705  1336  "Voltage"  "V"
+v5_2_pss  FLOAT32  5  2115  1336  "Voltage"  "V"
+v1_3_pss  FLOAT32  5  2023  1336  "Voltage"  "V"
+v2_3_pss  FLOAT32  5  2693  1336  "Voltage"  "V"
+v3_3_pss  FLOAT32  5  1546  1336  "Voltage"  "V"
+v4_3_pss  FLOAT32  5  1577  1336  "Voltage"  "V"
+v5_3_pss  FLOAT32  5  1552  1336  "Voltage"  "V"
+v1_4_pss  FLOAT32  5  2153  1336  "Voltage"  "V"
+v2_4_pss  FLOAT32  5  2419  1336  "Voltage"  "V"
+v3_4_pss  FLOAT32  5  1907  1336  "Voltage"  "V"
+v4_4_pss  FLOAT32  5  2045  1336  "Voltage"  "V"
+v5_4_pss  FLOAT32  5  1697  1336  "Voltage"  "V"
+v1_5_pss  FLOAT32  5  1449  1336  "Voltage"  "V"
+v2_5_pss  FLOAT32  5  1831  1336  "Voltage"  "V"
+v3_5_pss  FLOAT32  5  1617  1336  "Voltage"  "V"
+v4_5_pss  FLOAT32  5  2452  1336  "Voltage"  "V"
+v5_5_pss  FLOAT32  5  1417  1336  "Voltage"  "V"
+v1_6_pss  FLOAT32  5  1495  1336  "Voltage"  "V"
+v2_6_pss  FLOAT32  5  2089  1336  "Voltage"  "V"
+v3_6_pss  FLOAT32  5  1953  1336  "Voltage"  "V"
+v4_6_pss  FLOAT32  5  2671  1336  "Voltage"  "V"
+v5_6_pss  FLOAT32  5  1763  1336  "Voltage"  "V"
+v1_7_pss  FLOAT32  5  1803  1336  "Voltage"  "V"
+v2_7_pss  FLOAT32  5  1393  1336  "Voltage"  "V"
+v3_7_pss  FLOAT32  5  2101  1336  "Voltage"  "V"
+v4_7_pss  FLOAT32  5  1603  1336  "Voltage"  "V"
+v5_7_pss  FLOAT32  5  1639  1336  "Voltage"  "V"
+v1_8_pss  FLOAT32  5  2232  1336  "Voltage"  "V"
+v2_8_pss  FLOAT32  5  1809  1336  "Voltage"  "V"
+v3_8_pss  FLOAT32  5  2643  1336  "Voltage"  "V"
+v4_8_pss  FLOAT32  5  2049  1336  "Voltage"  "V"
+v5_8_pss  FLOAT32  5  2546  1336  "Voltage"  "V"
+accel_az  UINT16  5  2053  1336
+led_cc1  UINT16  5  2572  1336
+force_sbsc  UINT16  5  2703  1336
+exp_int_sbsc  UINT16  5  2320  1336  "Time"  "ms"
+exp_time_sbsc  UINT16  5  2287  1336  "Time"  "ms"
+foc_res_sbsc  UINT16  5  1813  1336
+move_tol_sbsc  UINT16  5  1373  1336
+maxblob_sbsc  UINT16  5  2375  1336
+grid_sbsc  UINT16  5  2059  1336
+thresh_sbsc  UINT16  5  2513  1336
+mdist_sbsc  UINT16  5  1629  1336
+mapmean_sbsc  UINT16  5  1653  1336
+mapsigma_sbsc  UINT16  5  1635  1336
+ccd_t_sbsc  INT16  5  1421  1336
+nblobs_sbsc  UINT16  5  1837  1336
+blob00_x_sbsc  UINT16  5  2608  1336
+blob00_y_sbsc  UINT16  5  1379  1336
+blob00_f_sbsc  UINT16  5  2480  1336
+blob00_s_sbsc  UINT16  5  2464  1336
+blob01_x_sbsc  UINT16  5  2371  1336
+blob01_y_sbsc  UINT16  5  2284  1336
+blob01_f_sbsc  UINT16  5  1667  1336
+blob01_s_sbsc  UINT16  5  1891  1336
+blob02_x_sbsc  UINT16  5  2598  1336
+blob02_y_sbsc  UINT16  5  2079  1336
+blob02_f_sbsc  UINT16  5  2337  1336
+blob02_s_sbsc  UINT16  5  1769  1336
+g_pt_az  FLOAT32  5  2541  1336
+g_pt_el  FLOAT32  5  2521  1336
+pos0_hwpr  FLOAT32  5  2476  1336
+pos1_hwpr  FLOAT32  5  1465  1336
+pos2_hwpr  FLOAT32  5  1773  1336
+pos3_hwpr  FLOAT32  5  2403  1336
+i_pos_rq_hwpr  UINT16  5  1509  1336
+rate_highrate  UINT16  1  592  1369  "Rate"  "bps"
+rate_biphase  UINT16  1  431  1369  "Rate"  "bps"
+mpsse_clock_speed  UINT16  1  622  1369  "Rate"  "bps"
+rate_pilot  UINT16  1  702  1369  "Rate"  "bps"
+nkids_tlm_roach1  UINT16  1  704  1369  "Rate"  "bps"
+skids_tlm_roach1  UINT16  1  525  1369  "Rate"  "bps"
+nkids_tlm_roach2  UINT16  1  319  1369  "Rate"  "bps"
+skids_tlm_roach2  UINT16  1  489  1369  "Rate"  "bps"
+nkids_tlm_roach3  UINT16  1  832  1369  "Rate"  "bps"
+skids_tlm_roach3  UINT16  1  1248  1369  "Rate"  "bps"
+nkids_tlm_roach4  UINT16  1  327  1369  "Rate"  "bps"
+skids_tlm_roach4  UINT16  1  700  1369  "Rate"  "bps"
+nkids_tlm_roach5  UINT16  1  1182  1369  "Rate"  "bps"
+skids_tlm_roach5  UINT16  1  1277  1369  "Rate"  "bps"
+roach_tlm_mode  UINT16  1  10  1369  "Rate"  "bps"
+read_wait_hwpr  UINT16  5  2017  1336
+i_pos_hwpr  UINT16  5  2385  1336
+stop_cnt_hwpr  UINT16  5  2519  1336
+rel_move_hwpr  INT16  5  2600  1336
+stat_control_hwpr  INT16  5  2606  1336
+pot_targ_hwpr  UINT16  5  2570  1336
+mode_act  INT16  5  2312  1336
+enc_targ_hwpr  FLOAT32  5  2073  1336
+enc_err_hwpr  FLOAT32  5  2657  1336
+dr_0_act  INT16  5  1615  1336
+dr_1_act  INT16  5  1709  1336
+dr_2_act  INT16  5  1381  1336
+tol_act  UINT16  5  2159  1336
+status_actbus  UINT16  5  2369  1336
+used_actbus  UINT16  5  1544  1336
+pot_err_hwpr  INT16  5  2425  1336
+blob_idx_sbsc  UINT16  5  1473  1336
+el_raw_enc  UINT16  100  8198  195  "Position"  "^o"
+el_enc  UINT16  100  8121  195  "Position"  "^o"
+sigma_enc  UINT16  100  8236  195
+el_motor_enc  UINT16  100  8204  195  "Position"  "^o"
+sigma_motor_enc  UINT16  100  8151  195
+chatter  UINT16  100  8190  195
+focpos_sbsc  INT16  5  2525  1336
+delay_sbsc  UINT16  5  2057  1336
+daz_p  UINT16  5  1787  1336
+steps_shutter  UINT16  5  2304  1336
+steps_slow_shutter  UINT16  5  2085  1336
+pos_shutter  UINT16  5  2198  1336
+ra_sbsc  UINT16  5  2639  1336
+dec_sbsc  INT16  5  2143  1336
+i_tot  UINT16  5  2077  1336  "Current"  "A"
+t_set_sbsc  UINT16  5  1749  1336  "Temperature"  "^oC"
+pot_hwpr  UINT16  5  2192  1336
+t_cpu0_flc_s  INT16  1  294  1369  "Temperature"  "^oC"
+t_cpu0_flc_n  INT16  1  914  1369  "Temperature"  "^oC"
+t_cpu1_flc_s  INT16  1  979  1369  "Temperature"  "^oC"
+t_cpu1_flc_n  INT16  1  410  1369  "Temperature"  "^oC"
+v_12v_flc_s  UINT16  1  602  1369  "Voltage"  "V"
+v_12v_flc_n  UINT16  1  390  1369  "Voltage"  "V"
+v_5v_flc_s  UINT16  1  1270  1369  "Voltage"  "V"
+v_5v_flc_n  UINT16  1  1219  1369  "Voltage"  "V"
+v_batt_flc_s  UINT16  1  900  1369  "Voltage"  "V"
+v_batt_flc_n  UINT16  1  214  1369  "Voltage"  "V"
+i_flc_s  UINT16  1  586  1369  "Current"  "A"
+i_flc_n  UINT16  1  485  1369  "Current"  "A"
+last_cmd_s  UINT16  5  2087  1336
+last_cmd_n  UINT16  5  1501  1336
+count_cmd_s  UINT16  5  1979  1336
+count_cmd_n  UINT16  5  1461  1336
+df_flc_s  UINT16  5  1518  1336
+df_flc_n  UINT16  5  1475  1336
+time_flc_s  UINT32  100  8208  195
+time_flc_n  UINT32  100  8103  195
+timeout_s  UINT16  5  2268  1336
+timeout_n  UINT16  5  2397  1336
+t_start_cycle  UINT16  5  1881  1336  "Temperature"  "K"
+t_pot_max_cycle  UINT16  5  1975  1336  "Temperature"  "K"
+t_char_max_cycle  UINT16  5  2484  1336  "Temperature"  "K"
+t_char_set_cycle  UINT16  5  2210  1336  "Temperature"  "K"
+time_char_cycle  UINT16  5  2500  1336  "Time"  "min"
+time_set_cycle  UINT16  5  1491  1336  "Time"  "min"
+thresh_atrim  UINT16  5  2691  1336
+time_atrim  UINT16  5  2448  1336
+rate_atrim  UINT16  5  1746  1336
+v_batt_cc2  UINT16  1  756  1369  "Voltage"  "V"
+v_arr_cc2  UINT16  1  1207  1369  "Voltage"  "V"
+i_batt_cc2  UINT16  1  1321  1369  "Current"  "A"
+i_arr_cc2  UINT16  1  664  1369  "Current"  "A"
+t_hs_cc2  INT16  1  736  1369  "Temperature"  "^oC"
+fault_cc2  UINT16  1  652  1369
+alarm_cc2  UINT16  1  1241  1369
+v_targ_cc2  UINT16  1  335  1369  "Voltage"  "V"
+state_cc2  UINT16  1  1014  1369
+led_cc2  UINT16  1  349  1369
+latch0  UINT16  5  2095  1336
+latch1  UINT16  5  2527  1336
+switch_gy  UINT16  5  2509  1336
+switch_misc  UINT16  5  1821  1336
+bus_reset_act  UINT16  5  2399  1336
+v_pump_bal  UINT16  5  1411  1336
+dac2_ampl  UINT16  5  1922  1336
+mask_gy  UINT16  5  1457  1336
+bits_vtx  UINT16  5  1433  1336
+bits_bal  UINT16  5  2007  1336
+pch_pyr_clin  UINT16  5  2218  1336
+roll_pyr_clin  UINT16  5  2498  1336
+xel_if_clin  UINT16  5  1389  1336
+el_raw_if_clin  UINT16  5  1779  1336
+x_stage  UINT16  5  1839  1336
+y_stage  UINT16  5  2431  1336
+ifpm_hall  UINT16  5  2675  1336
+lvdt_65_act  UINT16  5  2343  1336
+lvdt_63_act  UINT16  5  1919  1336
+lvdt_64_act  UINT16  5  2135  1336
+ifyaw_1_gy  FLOAT32  200  27665  284  "Rate"  "^o/s"
+ifroll_1_gy  FLOAT32  200  27801  284  "Rate"  "^o/s"
+ifyaw_2_gy  FLOAT32  200  27747  284  "Rate"  "^o/s"
+ifel_1_gy  FLOAT32  200  27751  284  "Rate"  "^o/s"
+ifel_2_gy  FLOAT32  200  27725  284  "Rate"  "^o/s"
+ifroll_2_gy  FLOAT32  200  27643  284  "Rate"  "^o/s"
+good_pktcnt_yaw_1_gy  UINT32  200  27677  284
+good_pktcnt_roll_1_gy  UINT32  200  27669  284
+good_pktcnt_el_1_gy  UINT32  200  27613  284
+good_pktcnt_yaw_2_gy  UINT32  200  27553  284
+good_pktcnt_roll_2_gy  UINT32  200  27813  284
+good_pktcnt_el_2_gy  UINT32  200  27717  284
+az  UINT32  200  27691  284  "Position"  "^o"
+el  UINT32  200  27825  284  "Position"  "^o"
+ifel_gy  FLOAT32  100  8212  195  "Rate"  "^o/s"
+ifroll_gy  FLOAT32  100  8160  195  "Rate"  "^o/s"
+ifyaw_gy  FLOAT32  100  8141  195  "Rate"  "^o/s"
+vel_req_el  FLOAT32  200  27659  284  "Rate"  "^o/s"
+vel_req_az  FLOAT32  200  27703  284  "Rate"  "^o/s"
+trigger_xsc  UINT8  100  8059  195
+dig43_das  UINT16  100  8095  195
+chopper  UINT16  100  8206  195  "Voltage"  "V"
+x_mag1_n  INT16  100  8073  195
+y_mag1_n  INT16  100  8153  195
+z_mag1_n  INT16  100  8111  195
+x_mag2_s  INT16  100  8089  195
+y_mag2_s  INT16  100  8184  195
+z_mag2_s  INT16  100  8113  195
+lat_dgps  INT16  1  1246  1369
+lon_dgps  INT16  1  828  1369
+alt_dgps  INT16  1  110  1369
+num_sat_dgps  INT8  1  948  1369
+quality_dgps  INT8  1  1245  1369
+az_raw_dgps  UINT16  5  1625  1336
+az_dgps  UINT16  5  2456  1336
+sigma_dgps  UINT16  1  22  1369
+ifel_earth_gy  INT16  5  1589  1336  "Rate"  "^o/s"
+ifroll_earth_gy  INT16  5  2373  1336  "Rate"  "^o/s"
+ifyaw_earth_gy  INT16  5  1516  1336  "Rate"  "^o/s"
+az_mag1  UINT16  5  2610  1336  "Direction"  "^o"
+az_raw_mag1  UINT16  5  1532  1336  "Direction"  "^o"
+pitch_mag1  INT16  5  1530  1336  "Direction"  "^o"
+sigma_mag1  UINT16  5  1437  1336
+declination_mag1  INT16  5  2341  1336  "Direction"  "^o"
+dip_mag1  INT16  5  2651  1336  "Direction"  "^o"
+cal_xmax_mag1  INT32  1  720  1369
+cal_xmin_mag1  INT32  1  1227  1369
+cal_ymax_mag1  INT32  1  1293  1369
+cal_ymin_mag1  INT32  1  955  1369
+cal_align_mag1  INT16  1  764  1369
+az_mag2  UINT16  5  2529  1336  "Direction"  "^o"
+az_raw_mag2  UINT16  5  2470  1336  "Direction"  "^o"
+pitch_mag2  INT16  5  2602  1336  "Direction"  "^o"
+sigma_mag2  UINT16  5  1391  1336
+declination_mag2  INT16  5  2539  1336  "Direction"  "^o"
+dip_mag2  INT16  5  1560  1336  "Direction"  "^o"
+cal_xmax_mag2  INT32  1  1297  1369
+cal_xmin_mag2  INT32  1  396  1369
+cal_ymax_mag2  INT32  1  146  1369
+cal_ymin_mag2  INT32  1  596  1369
+cal_align_mag2  INT16  1  554  1369
+mc_rw_vel  INT32  100  8131  195  "Rate"  "^o/s"
+mc_rw_pos  INT32  100  8240  195  "Direction"  "^o"
+mc_el_vel  INT32  100  8117  195  "Rate"  "^o/s"
+mc_el_pos  INT32  100  8051  195  "Direction"  "^o"
+mc_el_motor_pos  INT32  100  8164  195  "Direction"  "^o"
+mc_piv_vel  INT32  100  8107  195  "Rate"  "^o/s"
+mc_piv_pos  INT32  100  8222  195  "Direction"  "^o"
+control_word_read_el  UINT16  5  1961  1336
+control_word_read_rw  UINT16  5  2535  1336
+control_word_read_piv  UINT16  5  2289  1336
+latched_fault_el  UINT32  5  1621  1336
+latched_fault_rw  UINT32  5  1487  1336
+latched_fault_piv  UINT32  5  2027  1336
+network_status_el  UINT16  5  1928  1336
+network_status_rw  UINT16  5  1715  1336
+network_status_piv  UINT16  5  2097  1336
+network_problem_el  UINT16  5  1829  1336
+network_problem_rw  UINT16  5  2230  1336
+network_problem_piv  UINT16  5  2055  1336
+mc_cmd_status  UINT8  5  2286  1336
+mc_piv_i_cmd  INT16  200  27729  284
+mc_rw_i_cmd  INT16  200  27579  284
+mc_el_i_cmd  INT16  200  27695  284
+mc_piv_i_read  INT16  200  27817  284
+mc_rw_i_read  INT16  200  27585  284
+mc_el_i_read  INT16  200  27607  284
+g_p_el  FLOAT32  5  2614  1336
+g_i_el  FLOAT32  5  2409  1336
+g_d_el  FLOAT32  5  2327  1336
+g_db_el  FLOAT32  5  1877  1336
+g_p_az  FLOAT32  5  1825  1336
+g_i_az  FLOAT32  5  2272  1336
+g_d_az  FLOAT32  5  2413  1336
+g_pe_piv  FLOAT32  5  2576  1336
+g_pv_piv  FLOAT32  5  1723  1336
+g_iv_piv  FLOAT32  5  2365  1336
+set_rw  FLOAT32  5  2262  1336  "Rate"  "^o/s"
+fault_gy  UINT16  5  1585  1336
+vel_el_p  UINT16  200  27713  284
+frict_off_piv  FLOAT32  200  27581  284
+frict_term_piv  FLOAT32  200  27653  284
+frict_term_uf_piv  FLOAT32  200  27621  284
+frict_off_el  FLOAT32  200  27759  284
+frict_term_el  FLOAT32  200  27575  284
+frict_term_uf_el  FLOAT32  200  27625  284
+status_rw  UINT32  5  1793  1336
+state_rw  UINT16  5  1536  1336
+status_el  UINT32  5  1741  1336
+state_el  UINT16  5  2119  1336
+status_piv  UINT32  5  1755  1336
+state_piv  UINT16  5  2165  1336
+t_mc_rw  INT16  5  2021  1336  "Temperature"  "^oC"
+t_mc_el  INT16  5  2466  1336  "Temperature"  "^oC"
+t_mc_piv  INT16  5  2315  1336  "Temperature"  "^oC"
+p_term_el  FLOAT32  200  27697  284
+i_term_el  FLOAT32  200  27609  284
+d_term_el  FLOAT32  200  27721  284
+error_el  FLOAT32  200  27561  284
+el_integral_step  FLOAT32  200  27739  284
+p_term_az  FLOAT32  200  27805  284
+i_term_az  FLOAT32  200  27781  284
+d_term_az  FLOAT32  200  27635  284
+error_az  FLOAT32  200  27569  284
+az_integral_step  FLOAT32  200  27707  284
+p_rw_term_piv  FLOAT32  200  27549  284
+i_rw_term_piv  FLOAT32  200  27793  284
+p_err_term_piv  FLOAT32  200  27587  284
+dio_heaters  UINT16  100  8196  195
+ain00_cryo_labjack  UINT16  5  1685  1336
+ain01_cryo_labjack  UINT16  5  2361  1336
+ain02_cryo_labjack  UINT16  5  2574  1336
+ain03_cryo_labjack  UINT16  5  1917  1336
+ain04_cryo_labjack  UINT16  5  2067  1336
+ain05_cryo_labjack  UINT16  5  2665  1336
+ain06_cryo_labjack  UINT16  5  2041  1336
+ain07_cryo_labjack  UINT16  5  1987  1336
+ain08_cryo_labjack  UINT16  5  1981  1336
+ain09_cryo_labjack  UINT16  5  2502  1336
+ain10_cryo_labjack  UINT16  5  2081  1336
+ain11_cryo_labjack  UINT16  5  1843  1336
+ain12_cryo_labjack  UINT16  5  2622  1336
+ain13_cryo_labjack  UINT16  5  1627  1336
+ain14_cryo_labjack  UINT16  5  2190  1336
+mcp_1hz_framecount  INT32  1  772  1369
+mcp_1hz_framecount_dl  INT32  1  64  1369
+mcp_5hz_framecount  INT32  5  2137  1336
+mcp_100hz_framecount  INT32  100  8127  195
+mcp_200hz_framecount  INT32  200  27687  284
+mcp_244hz_framecount  INT32  244  84349  4
+mcp_488hz_framecount  INT32  488  85505  204
+ctime_packet_roach1  UINT32  488  85377  204
+ctime_packet_roach2  UINT32  488  85361  204
+ctime_packet_roach3  UINT32  488  85417  204
+ctime_packet_roach4  UINT32  488  85513  204
+ctime_packet_roach5  UINT32  488  85341  204
+pps_count_roach1  UINT32  488  85425  204
+pps_count_roach2  UINT32  488  85493  204
+pps_count_roach3  UINT32  488  85517  204
+pps_count_roach4  UINT32  488  85405  204
+pps_count_roach5  UINT32  488  85385  204
+clock_count_roach1  UINT32  488  85329  204
+clock_count_roach2  UINT32  488  85333  204
+clock_count_roach3  UINT32  488  85401  204
+clock_count_roach4  UINT32  488  85497  204
+clock_count_roach5  UINT32  488  85461  204
+packet_count_roach1  UINT32  488  85357  204
+packet_count_roach2  UINT32  488  85369  204
+packet_count_roach3  UINT32  488  85509  204
+packet_count_roach4  UINT32  488  85445  204
+packet_count_roach5  UINT32  488  85409  204
+packet_count_mcp_roach1  UINT32  5  2280  1336
+packet_count_mcp_roach2  UINT32  5  1570  1336
+packet_count_mcp_roach3  UINT32  5  2186  1336
+packet_count_mcp_roach4  UINT32  5  1562  1336
+packet_count_mcp_roach5  UINT32  5  2580  1336
+packet_count_valid_mcp_roach1  UINT32  5  1673  1336
+packet_count_valid_mcp_roach2  UINT32  5  1383  1336
+packet_count_valid_mcp_roach3  UINT32  5  2037  1336
+packet_count_valid_mcp_roach4  UINT32  5  2145  1336
+packet_count_valid_mcp_roach5  UINT32  5  1445  1336
+packet_count_invalid_mcp_roach1  UINT32  5  2033  1336
+packet_count_invalid_mcp_roach2  UINT32  5  1737  1336
+packet_count_invalid_mcp_roach3  UINT32  5  2256  1336
+packet_count_invalid_mcp_roach4  UINT32  5  2351  1336
+packet_count_invalid_mcp_roach5  UINT32  5  2588  1336
+state_pi_roach1  UINT16  5  2586  1336
+state_pi_roach2  UINT16  5  2254  1336
+state_pi_roach3  UINT16  5  2206  1336
+state_pi_roach4  UINT16  5  1989  1336
+state_pi_roach5  UINT16  5  1729  1336
+state_roach1  UINT16  5  2093  1336
+state_roach2  UINT16  5  1601  1336
+state_roach3  UINT16  5  2125  1336
+state_roach4  UINT16  5  2167  1336
+state_roach5  UINT16  5  1693  1336
+stream_state_roach1  UINT16  5  1940  1336
+stream_state_roach2  UINT16  5  1761  1336
+stream_state_roach3  UINT16  5  2083  1336
+stream_state_roach4  UINT16  5  1893  1336
+stream_state_roach5  UINT16  5  2533  1336
+is_averaging_roach1  UINT8  5  1942  1336
+is_averaging_roach2  UINT8  5  2324  1336
+is_averaging_roach3  UINT8  5  2545  1336
+is_averaging_roach4  UINT8  5  2443  1336
+is_averaging_roach5  UINT8  5  2506  1336
+fk_smooth_scale_roach1  UINT32  5  1477  1336
+fk_smooth_scale_roach2  UINT32  5  1957  1336
+fk_smooth_scale_roach3  UINT32  5  2331  1336
+fk_smooth_scale_roach4  UINT32  5  1427  1336
+fk_smooth_scale_roach5  UINT32  5  1949  1336
+fk_peak_thresh_roach1  UINT16  5  1661  1336
+fk_peak_thresh_roach2  UINT16  5  1677  1336
+fk_peak_thresh_roach3  UINT16  5  2486  1336
+fk_peak_thresh_roach4  UINT16  5  2359  1336
+fk_peak_thresh_roach5  UINT16  5  2381  1336
+fk_space_thresh_roach1  UINT32  5  2488  1336
+fk_space_thresh_roach2  UINT32  5  1407  1336
+fk_space_thresh_roach3  UINT32  5  2009  1336
+fk_space_thresh_roach4  UINT32  5  1524  1336
+fk_space_thresh_roach5  UINT32  5  2250  1336
+atten_in_roach1  UINT16  5  2176  1336
+atten_in_roach2  UINT16  5  2468  1336
+atten_in_roach3  UINT16  5  1425  1336
+atten_in_roach4  UINT16  5  2001  1336
+atten_in_roach5  UINT16  5  2401  1336
+atten_out_roach1  UINT16  5  2228  1336
+atten_out_roach2  UINT16  5  1767  1336
+atten_out_roach3  UINT16  5  2683  1336
+atten_out_roach4  UINT16  5  1861  1336
+atten_out_roach5  UINT16  5  2423  1336
+adcI_rms_roach1  FLOAT32  5  1591  1336
+adcI_rms_roach2  FLOAT32  5  1611  1336
+adcI_rms_roach3  FLOAT32  5  2566  1336
+adcI_rms_roach4  FLOAT32  5  1789  1336
+adcI_rms_roach5  FLOAT32  5  1649  1336
+adcQ_rms_roach1  FLOAT32  5  1849  1336
+adcQ_rms_roach2  FLOAT32  5  2685  1336
+adcQ_rms_roach3  FLOAT32  5  1895  1336
+adcQ_rms_roach4  FLOAT32  5  2246  1336
+adcQ_rms_roach5  FLOAT32  5  2121  1336
+nkids_found_roach1  UINT16  1  896  1369
+nkids_found_roach2  UINT16  1  537  1369
+nkids_found_roach3  UINT16  1  1243  1369
+nkids_found_roach4  UINT16  1  768  1369
+nkids_found_roach5  UINT16  1  286  1369
+nkids_good_roach1  UINT16  1  1016  1369
+nkids_good_roach2  UINT16  1  778  1369
+nkids_good_roach3  UINT16  1  1351  1369
+nkids_good_roach4  UINT16  1  96  1369
+nkids_good_roach5  UINT16  1  574  1369
+nkids_bad_roach1  UINT16  1  1018  1369
+nkids_bad_roach2  UINT16  1  256  1369
+nkids_bad_roach3  UINT16  1  786  1369
+nkids_bad_roach4  UINT16  1  1363  1369
+nkids_bad_roach5  UINT16  1  814  1369
+status_roach1  UINT16  1  975  1369
+status_roach2  UINT16  1  1086  1369
+status_roach3  UINT16  1  892  1369
+status_roach4  UINT16  1  14  1369
+status_roach5  UINT16  1  365  1369
+current_ntones_roach1  UINT16  1  416  1369
+current_ntones_roach2  UINT16  1  971  1369
+current_ntones_roach3  UINT16  1  266  1369
+current_ntones_roach4  UINT16  1  477  1369
+current_ntones_roach5  UINT16  1  244  1369
+lo_freq_req_roach1  UINT16  1  796  1369
+lo_freq_req_roach2  UINT16  1  339  1369
+lo_freq_req_roach3  UINT16  1  1357  1369
+lo_freq_req_roach4  UINT16  1  926  1369
+lo_freq_req_roach5  UINT16  1  762  1369
+lo_center_freq_roach1  UINT16  1  276  1369
+lo_center_freq_roach2  UINT16  1  1138  1369
+lo_center_freq_roach3  UINT16  1  367  1369
+lo_center_freq_roach4  UINT16  1  363  1369
+lo_center_freq_roach5  UINT16  1  1082  1369
+nflag_thresh_roach1  UINT16  1  840  1369
+nflag_thresh_roach2  UINT16  1  802  1369
+nflag_thresh_roach3  UINT16  1  461  1369
+nflag_thresh_roach4  UINT16  1  1188  1369
+nflag_thresh_roach5  UINT16  1  1045  1369
+kidA_roachN  FLOAT32  488  85433  204
+kidB_roachN  FLOAT32  488  85381  204
+kidC_roachN  FLOAT32  488  85521  204
+kidD_roachN  FLOAT32  488  85481  204
+kidE_roachN  FLOAT32  488  85413  204
+kidF_roachN  FLOAT32  488  85441  204
+kidG_roachN  FLOAT32  488  85393  204
+kidH_roachN  FLOAT32  488  85397  204
+kidI_roachN  FLOAT32  488  85365  204
+kidJ_roachN  FLOAT32  488  85345  204
+kidK_roachN  FLOAT32  488  85453  204
+kidL_roachN  FLOAT32  488  85449  204
+kidM_roachN  FLOAT32  488  85489  204
+kidN_roachN  FLOAT32  488  85437  204
+kidO_roachN  FLOAT32  488  85457  204
+kidA_roachN_index  UINT32  488  85349  204
+kidB_roachN_index  UINT32  488  85429  204
+kidC_roachN_index  UINT32  488  85485  204
+kidD_roachN_index  UINT32  488  85389  204
+kidE_roachN_index  UINT32  488  85469  204
+kidF_roachN_index  UINT32  488  85525  204
+kidG_roachN_index  UINT32  488  85501  204
+kidH_roachN_index  UINT32  488  85473  204
+kidI_roachN_index  UINT32  488  85373  204
+kidJ_roachN_index  UINT32  488  85421  204
+kidK_roachN_index  UINT32  488  85325  204
+kidL_roachN_index  UINT32  488  85477  204
+kidM_roachN_index  UINT32  488  85353  204
+kidN_roachN_index  UINT32  488  85337  204
+kidO_roachN_index  UINT32  488  85465  204
+flags_kids0000_roach1  UINT16  1  459  1369
+flags_kids0016_roach1  UINT16  1  1213  1369
+flags_kids0032_roach1  UINT16  1  800  1369
+flags_kids0048_roach1  UINT16  1  888  1369
+flags_kids0064_roach1  UINT16  1  70  1369
+flags_kids0080_roach1  UINT16  1  1347  1369
+flags_kids0096_roach1  UINT16  1  608  1369
+flags_kids0112_roach1  UINT16  1  824  1369
+flags_kids0128_roach1  UINT16  1  1084  1369
+flags_kids0144_roach1  UINT16  1  670  1369
+flags_kids0160_roach1  UINT16  1  218  1369
+flags_kids0176_roach1  UINT16  1  1042  1369
+flags_kids0192_roach1  UINT16  1  618  1369
+flags_kids0208_roach1  UINT16  1  1335  1369
+flags_kids0224_roach1  UINT16  1  24  1369
+flags_kids0240_roach1  UINT16  1  594  1369
+flags_kids0256_roach1  UINT16  1  296  1369
+flags_kids0272_roach1  UINT16  1  930  1369
+flags_kids0288_roach1  UINT16  1  136  1369
+flags_kids0304_roach1  UINT16  1  1047  1369
+flags_kids0320_roach1  UINT16  1  517  1369
+flags_kids0336_roach1  UINT16  1  76  1369
+flags_kids0352_roach1  UINT16  1  928  1369
+flags_kids0368_roach1  UINT16  1  1258  1369
+flags_kids0384_roach1  UINT16  1  1049  1369
+flags_kids0400_roach1  UINT16  1  78  1369
+flags_kids0416_roach1  UINT16  1  160  1369
+flags_kids0432_roach1  UINT16  1  1051  1369
+flags_kids0448_roach1  UINT16  1  441  1369
+flags_kids0464_roach1  UINT16  1  626  1369
+flags_kids0480_roach1  UINT16  1  1114  1369
+flags_kids0496_roach1  UINT16  1  658  1369
+flags_kids0512_roach1  UINT16  1  116  1369
+flags_kids0528_roach1  UINT16  1  934  1369
+flags_kids0544_roach1  UINT16  1  1168  1369
+flags_kids0560_roach1  UINT16  1  868  1369
+flags_kids0576_roach1  UINT16  1  499  1369
+flags_kids0592_roach1  UINT16  1  1073  1369
+flags_kids0608_roach1  UINT16  1  1203  1369
+flags_kids0624_roach1  UINT16  1  306  1369
+flags_kids0640_roach1  UINT16  1  922  1369
+flags_kids0656_roach1  UINT16  1  1339  1369
+flags_kids0672_roach1  UINT16  1  523  1369
+flags_kids0688_roach1  UINT16  1  882  1369
+flags_kids0704_roach1  UINT16  1  1057  1369
+flags_kids0720_roach1  UINT16  1  1215  1369
+flags_kids0736_roach1  UINT16  1  337  1369
+flags_kids0752_roach1  UINT16  1  94  1369
+flags_kids0768_roach1  UINT16  1  996  1369
+flags_kids0784_roach1  UINT16  1  274  1369
+flags_kids0800_roach1  UINT16  1  686  1369
+flags_kids0816_roach1  UINT16  1  435  1369
+flags_kids0832_roach1  UINT16  1  940  1369
+flags_kids0848_roach1  UINT16  1  1262  1369
+flags_kids0864_roach1  UINT16  1  1020  1369
+flags_kids0880_roach1  UINT16  1  1281  1369
+flags_kids0896_roach1  UINT16  1  1160  1369
+flags_kids0912_roach1  UINT16  1  154  1369
+flags_kids0928_roach1  UINT16  1  252  1369
+flags_kids0944_roach1  UINT16  1  48  1369
+flags_kids0960_roach1  UINT16  1  1367  1369
+flags_kids0976_roach1  UINT16  1  588  1369
+flags_kids0992_roach1  UINT16  1  1305  1369
+flags_kids1008_roach1  UINT16  1  1190  1369
+flags_kids0000_roach2  UINT16  1  698  1369
+flags_kids0016_roach2  UINT16  1  1337  1369
+flags_kids0032_roach2  UINT16  1  676  1369
+flags_kids0048_roach2  UINT16  1  90  1369
+flags_kids0064_roach2  UINT16  1  443  1369
+flags_kids0080_roach2  UINT16  1  152  1369
+flags_kids0096_roach2  UINT16  1  1162  1369
+flags_kids0112_roach2  UINT16  1  806  1369
+flags_kids0128_roach2  UINT16  1  206  1369
+flags_kids0144_roach2  UINT16  1  216  1369
+flags_kids0160_roach2  UINT16  1  104  1369
+flags_kids0176_roach2  UINT16  1  600  1369
+flags_kids0192_roach2  UINT16  1  230  1369
+flags_kids0208_roach2  UINT16  1  519  1369
+flags_kids0224_roach2  UINT16  1  264  1369
+flags_kids0240_roach2  UINT16  1  578  1369
+flags_kids0256_roach2  UINT16  1  680  1369
+flags_kids0272_roach2  UINT16  1  1053  1369
+flags_kids0288_roach2  UINT16  1  228  1369
+flags_kids0304_roach2  UINT16  1  12  1369
+flags_kids0320_roach2  UINT16  1  30  1369
+flags_kids0336_roach2  UINT16  1  0  1369
+flags_kids0352_roach2  UINT16  1  497  1369
+flags_kids0368_roach2  UINT16  1  634  1369
+flags_kids0384_roach2  UINT16  1  590  1369
+flags_kids0400_roach2  UINT16  1  62  1369
+flags_kids0416_roach2  UINT16  1  1223  1369
+flags_kids0432_roach2  UINT16  1  674  1369
+flags_kids0448_roach2  UINT16  1  959  1369
+flags_kids0464_roach2  UINT16  1  985  1369
+flags_kids0480_roach2  UINT16  1  1349  1369
+flags_kids0496_roach2  UINT16  1  1287  1369
+flags_kids0512_roach2  UINT16  1  1285  1369
+flags_kids0528_roach2  UINT16  1  106  1369
+flags_kids0544_roach2  UINT16  1  234  1369
+flags_kids0560_roach2  UINT16  1  614  1369
+flags_kids0576_roach2  UINT16  1  353  1369
+flags_kids0592_roach2  UINT16  1  1209  1369
+flags_kids0608_roach2  UINT16  1  969  1369
+flags_kids0624_roach2  UINT16  1  816  1369
+flags_kids0640_roach2  UINT16  1  844  1369
+flags_kids0656_roach2  UINT16  1  690  1369
+flags_kids0672_roach2  UINT16  1  1327  1369
+flags_kids0688_roach2  UINT16  1  262  1369
+flags_kids0704_roach2  UINT16  1  124  1369
+flags_kids0720_roach2  UINT16  1  1154  1369
+flags_kids0736_roach2  UINT16  1  726  1369
+flags_kids0752_roach2  UINT16  1  1146  1369
+flags_kids0768_roach2  UINT16  1  351  1369
+flags_kids0784_roach2  UINT16  1  820  1369
+flags_kids0800_roach2  UINT16  1  838  1369
+flags_kids0816_roach2  UINT16  1  162  1369
+flags_kids0832_roach2  UINT16  1  1002  1369
+flags_kids0848_roach2  UINT16  1  1032  1369
+flags_kids0864_roach2  UINT16  1  426  1369
+flags_kids0880_roach2  UINT16  1  678  1369
+flags_kids0896_roach2  UINT16  1  766  1369
+flags_kids0912_roach2  UINT16  1  620  1369
+flags_kids0928_roach2  UINT16  1  268  1369
+flags_kids0944_roach2  UINT16  1  308  1369
+flags_kids0960_roach2  UINT16  1  341  1369
+flags_kids0976_roach2  UINT16  1  938  1369
+flags_kids0992_roach2  UINT16  1  457  1369
+flags_kids1008_roach2  UINT16  1  1184  1369
+flags_kids0000_roach3  UINT16  1  128  1369
+flags_kids0016_roach3  UINT16  1  98  1369
+flags_kids0032_roach3  UINT16  1  224  1369
+flags_kids0048_roach3  UINT16  1  226  1369
+flags_kids0064_roach3  UINT16  1  192  1369
+flags_kids0080_roach3  UINT16  1  194  1369
+flags_kids0096_roach3  UINT16  1  140  1369
+flags_kids0112_roach3  UINT16  1  18  1369
+flags_kids0128_roach3  UINT16  1  465  1369
+flags_kids0144_roach3  UINT16  1  200  1369
+flags_kids0160_roach3  UINT16  1  527  1369
+flags_kids0176_roach3  UINT16  1  369  1369
+flags_kids0192_roach3  UINT16  1  1136  1369
+flags_kids0208_roach3  UINT16  1  412  1369
+flags_kids0224_roach3  UINT16  1  746  1369
+flags_kids0240_roach3  UINT16  1  1022  1369
+flags_kids0256_roach3  UINT16  1  692  1369
+flags_kids0272_roach3  UINT16  1  280  1369
+flags_kids0288_roach3  UINT16  1  912  1369
+flags_kids0304_roach3  UINT16  1  1067  1369
+flags_kids0320_roach3  UINT16  1  383  1369
+flags_kids0336_roach3  UINT16  1  1274  1369
+flags_kids0352_roach3  UINT16  1  400  1369
+flags_kids0368_roach3  UINT16  1  1122  1369
+flags_kids0384_roach3  UINT16  1  624  1369
+flags_kids0400_roach3  UINT16  1  246  1369
+flags_kids0416_roach3  UINT16  1  122  1369
+flags_kids0432_roach3  UINT16  1  949  1369
+flags_kids0448_roach3  UINT16  1  572  1369
+flags_kids0464_roach3  UINT16  1  864  1369
+flags_kids0480_roach3  UINT16  1  314  1369
+flags_kids0496_roach3  UINT16  1  568  1369
+flags_kids0512_roach3  UINT16  1  916  1369
+flags_kids0528_roach3  UINT16  1  942  1369
+flags_kids0544_roach3  UINT16  1  834  1369
+flags_kids0560_roach3  UINT16  1  782  1369
+flags_kids0576_roach3  UINT16  1  748  1369
+flags_kids0592_roach3  UINT16  1  874  1369
+flags_kids0608_roach3  UINT16  1  1112  1369
+flags_kids0624_roach3  UINT16  1  886  1369
+flags_kids0640_roach3  UINT16  1  1006  1369
+flags_kids0656_roach3  UINT16  1  298  1369
+flags_kids0672_roach3  UINT16  1  1313  1369
+flags_kids0688_roach3  UINT16  1  812  1369
+flags_kids0704_roach3  UINT16  1  880  1369
+flags_kids0720_roach3  UINT16  1  963  1369
+flags_kids0736_roach3  UINT16  1  1026  1369
+flags_kids0752_roach3  UINT16  1  1164  1369
+flags_kids0768_roach3  UINT16  1  1098  1369
+flags_kids0784_roach3  UINT16  1  240  1369
+flags_kids0800_roach3  UINT16  1  483  1369
+flags_kids0816_roach3  UINT16  1  120  1369
+flags_kids0832_roach3  UINT16  1  732  1369
+flags_kids0848_roach3  UINT16  1  164  1369
+flags_kids0864_roach3  UINT16  1  467  1369
+flags_kids0880_roach3  UINT16  1  696  1369
+flags_kids0896_roach3  UINT16  1  1124  1369
+flags_kids0912_roach3  UINT16  1  640  1369
+flags_kids0928_roach3  UINT16  1  418  1369
+flags_kids0944_roach3  UINT16  1  826  1369
+flags_kids0960_roach3  UINT16  1  1221  1369
+flags_kids0976_roach3  UINT16  1  660  1369
+flags_kids0992_roach3  UINT16  1  142  1369
+flags_kids1008_roach3  UINT16  1  654  1369
+flags_kids0000_roach4  UINT16  1  1088  1369
+flags_kids0016_roach4  UINT16  1  288  1369
+flags_kids0032_roach4  UINT16  1  118  1369
+flags_kids0048_roach4  UINT16  1  242  1369
+flags_kids0064_roach4  UINT16  1  920  1369
+flags_kids0080_roach4  UINT16  1  1343  1369
+flags_kids0096_roach4  UINT16  1  870  1369
+flags_kids0112_roach4  UINT16  1  1355  1369
+flags_kids0128_roach4  UINT16  1  738  1369
+flags_kids0144_roach4  UINT16  1  507  1369
+flags_kids0160_roach4  UINT16  1  16  1369
+flags_kids0176_roach4  UINT16  1  509  1369
+flags_kids0192_roach4  UINT16  1  576  1369
+flags_kids0208_roach4  UINT16  1  1063  1369
+flags_kids0224_roach4  UINT16  1  906  1369
+flags_kids0240_roach4  UINT16  1  1055  1369
+flags_kids0256_roach4  UINT16  1  511  1369
+flags_kids0272_roach4  UINT16  1  270  1369
+flags_kids0288_roach4  UINT16  1  1289  1369
+flags_kids0304_roach4  UINT16  1  1194  1369
+flags_kids0320_roach4  UINT16  1  32  1369
+flags_kids0336_roach4  UINT16  1  973  1369
+flags_kids0352_roach4  UINT16  1  612  1369
+flags_kids0368_roach4  UINT16  1  72  1369
+flags_kids0384_roach4  UINT16  1  850  1369
+flags_kids0400_roach4  UINT16  1  232  1369
+flags_kids0416_roach4  UINT16  1  1094  1369
+flags_kids0432_roach4  UINT16  1  734  1369
+flags_kids0448_roach4  UINT16  1  373  1369
+flags_kids0464_roach4  UINT16  1  728  1369
+flags_kids0480_roach4  UINT16  1  473  1369
+flags_kids0496_roach4  UINT16  1  166  1369
+flags_kids0512_roach4  UINT16  1  44  1369
+flags_kids0528_roach4  UINT16  1  190  1369
+flags_kids0544_roach4  UINT16  1  361  1369
+flags_kids0560_roach4  UINT16  1  56  1369
+flags_kids0576_roach4  UINT16  1  1132  1369
+flags_kids0592_roach4  UINT16  1  493  1369
+flags_kids0608_roach4  UINT16  1  706  1369
+flags_kids0624_roach4  UINT16  1  580  1369
+flags_kids0640_roach4  UINT16  1  1030  1369
+flags_kids0656_roach4  UINT16  1  1059  1369
+flags_kids0672_roach4  UINT16  1  788  1369
+flags_kids0688_roach4  UINT16  1  1080  1369
+flags_kids0704_roach4  UINT16  1  158  1369
+flags_kids0720_roach4  UINT16  1  126  1369
+flags_kids0736_roach4  UINT16  1  174  1369
+flags_kids0752_roach4  UINT16  1  168  1369
+flags_kids0768_roach4  UINT16  1  250  1369
+flags_kids0784_roach4  UINT16  1  204  1369
+flags_kids0800_roach4  UINT16  1  562  1369
+flags_kids0816_roach4  UINT16  1  40  1369
+flags_kids0832_roach4  UINT16  1  977  1369
+flags_kids0848_roach4  UINT16  1  469  1369
+flags_kids0864_roach4  UINT16  1  1365  1369
+flags_kids0880_roach4  UINT16  1  908  1369
+flags_kids0896_roach4  UINT16  1  858  1369
+flags_kids0912_roach4  UINT16  1  724  1369
+flags_kids0928_roach4  UINT16  1  248  1369
+flags_kids0944_roach4  UINT16  1  428  1369
+flags_kids0960_roach4  UINT16  1  1152  1369
+flags_kids0976_roach4  UINT16  1  694  1369
+flags_kids0992_roach4  UINT16  1  310  1369
+flags_kids1008_roach4  UINT16  1  636  1369
+flags_kids0000_roach5  UINT16  1  656  1369
+flags_kids0016_roach5  UINT16  1  936  1369
+flags_kids0032_roach5  UINT16  1  1116  1369
+flags_kids0048_roach5  UINT16  1  846  1369
+flags_kids0064_roach5  UINT16  1  730  1369
+flags_kids0080_roach5  UINT16  1  1268  1369
+flags_kids0096_roach5  UINT16  1  666  1369
+flags_kids0112_roach5  UINT16  1  1272  1369
+flags_kids0128_roach5  UINT16  1  290  1369
+flags_kids0144_roach5  UINT16  1  1028  1369
+flags_kids0160_roach5  UINT16  1  1315  1369
+flags_kids0176_roach5  UINT16  1  176  1369
+flags_kids0192_roach5  UINT16  1  371  1369
+flags_kids0208_roach5  UINT16  1  584  1369
+flags_kids0224_roach5  UINT16  1  198  1369
+flags_kids0240_roach5  UINT16  1  1199  1369
+flags_kids0256_roach5  UINT16  1  254  1369
+flags_kids0272_roach5  UINT16  1  1201  1369
+flags_kids0288_roach5  UINT16  1  784  1369
+flags_kids0304_roach5  UINT16  1  742  1369
+flags_kids0320_roach5  UINT16  1  965  1369
+flags_kids0336_roach5  UINT16  1  842  1369
+flags_kids0352_roach5  UINT16  1  776  1369
+flags_kids0368_roach5  UINT16  1  529  1369
+flags_kids0384_roach5  UINT16  1  4  1369
+flags_kids0400_roach5  UINT16  1  92  1369
+flags_kids0416_roach5  UINT16  1  150  1369
+flags_kids0432_roach5  UINT16  1  196  1369
+flags_kids0448_roach5  UINT16  1  1359  1369
+flags_kids0464_roach5  UINT16  1  946  1369
+flags_kids0480_roach5  UINT16  1  278  1369
+flags_kids0496_roach5  UINT16  1  910  1369
+flags_kids0512_roach5  UINT16  1  1211  1369
+flags_kids0528_roach5  UINT16  1  750  1369
+flags_kids0544_roach5  UINT16  1  487  1369
+flags_kids0560_roach5  UINT16  1  304  1369
+flags_kids0576_roach5  UINT16  1  836  1369
+flags_kids0592_roach5  UINT16  1  422  1369
+flags_kids0608_roach5  UINT16  1  539  1369
+flags_kids0624_roach5  UINT16  1  34  1369
+flags_kids0640_roach5  UINT16  1  860  1369
+flags_kids0656_roach5  UINT16  1  130  1369
+flags_kids0672_roach5  UINT16  1  1239  1369
+flags_kids0688_roach5  UINT16  1  710  1369
+flags_kids0704_roach5  UINT16  1  632  1369
+flags_kids0720_roach5  UINT16  1  343  1369
+flags_kids0736_roach5  UINT16  1  1205  1369
+flags_kids0752_roach5  UINT16  1  1301  1369
+flags_kids0768_roach5  UINT16  1  1325  1369
+flags_kids0784_roach5  UINT16  1  202  1369
+flags_kids0800_roach5  UINT16  1  132  1369
+flags_kids0816_roach5  UINT16  1  545  1369
+flags_kids0832_roach5  UINT16  1  414  1369
+flags_kids0848_roach5  UINT16  1  760  1369
+flags_kids0864_roach5  UINT16  1  433  1369
+flags_kids0880_roach5  UINT16  1  822  1369
+flags_kids0896_roach5  UINT16  1  582  1369
+flags_kids0912_roach5  UINT16  1  932  1369
+flags_kids0928_roach5  UINT16  1  188  1369
+flags_kids0944_roach5  UINT16  1  8  1369
+flags_kids0960_roach5  UINT16  1  1307  1369
+flags_kids0976_roach5  UINT16  1  662  1369
+flags_kids0992_roach5  UINT16  1  1008  1369
+flags_kids1008_roach5  UINT16  1  495  1369
+END
