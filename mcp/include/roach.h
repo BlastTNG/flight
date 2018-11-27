@@ -218,6 +218,7 @@ typedef struct roach_state {
     char *phase_centers_path;
     char *freqlist_path;
     fftw_plan comb_plan;
+    int n_watchdog_fails;
 
     // PPC link
     struct katcl_line *rpc_conn;
@@ -233,6 +234,7 @@ typedef struct pi_state {
     bool has_input_atten;
     bool has_output_atten;
     remote_serial_t *pi_comm;
+    char *address;
 } pi_state_t;
 
 typedef struct {
@@ -320,7 +322,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 int init_roach(uint16_t ind);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
-void roach_timestamp_init(uint16_t ind);
+int roach_timestamp_init(roach_state_t *m_roach);
 float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid);
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);

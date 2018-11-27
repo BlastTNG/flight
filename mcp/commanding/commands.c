@@ -127,7 +127,7 @@ void WritePrevStatus()
     return;
   }
 
-  framing_publish_command_data(&CommandData);
+  // framing_publish_command_data(&CommandData);
 }
 
 /* calculate the nearest lockable elevation */
@@ -1214,7 +1214,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].calc_ref_params = 1;
             }
             break;
-        case set_attens_all:
+        case set_attens_default:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].set_attens = 2;
             }
@@ -2147,8 +2147,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0.5) && rvalues[1] <= 30)
-                 && ((rvalues[2] > 0.5) && rvalues[2] <= 30)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)
+                 && ((rvalues[2] >= 0.0) && rvalues[2] <= 30.0)) {
           CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
           CommandData.roach[ivalues[0]-1].set_attens = 1;
@@ -2215,6 +2215,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
               CommandData.roach[i].get_timestream = 2;
+          }
+      }
+      break;
+    case set_attens_all:
+      if  ((rvalues[0] >= 0.0) && (rvalues[0] <= 30.0) &&
+              ((rvalues[1] >= 0.0) && (rvalues[1] <= 30.0))) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].out_atten = rvalues[0];
+              CommandData.roach_params[i].in_atten = rvalues[1];
+              CommandData.roach[i].set_attens = 1;
           }
       }
       break;

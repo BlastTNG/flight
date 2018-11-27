@@ -148,8 +148,6 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/groundhog.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
     ${PROJECT_SOURCE_DIR}/groundhog.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.c
     ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
     ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
     ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
