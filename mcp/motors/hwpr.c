@@ -246,7 +246,6 @@ int GetHWPRi(double pot_val)
 int GetHWPRIndex(int enc_val)
 // From the current encoder reading, and a specified margin, return the position of the HWP
 {
-	int i;
 	int index;
 
 	hwpr_control.margin = CommandData.hwpr.margin;
@@ -485,7 +484,7 @@ void ControlHWPR(struct ezbus *bus)
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
     				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
-						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target; 
+						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target;
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 					} else { // encoder is dead
 						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
@@ -504,12 +503,11 @@ void ControlHWPR(struct ezbus *bus)
             } else if (hwpr_control.move_cur == engage) {
 				/*We should be ready, but we need to re-engage the fork at the cold end*/
 				if (hwpr_control.rel_move < 0) {
-					hwpr_control.engage_move = -(int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100)
+					hwpr_control.engage_move = -(int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
 				} else if (hwpr_control.rel_move > 0) {
-					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100)
+					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
-
 				}
 
 				hwpr_control.move_cur = moving;
