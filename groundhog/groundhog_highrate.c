@@ -345,7 +345,7 @@ void highrate_receive(void *arg) {
               }    
      
           } else if ((gse_packet_header.origin == 0) || (gse_packet_header.origin == 1)) { // housekeeping packet
-              blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
+              /*
               if (verbose) {
                   for (int i = 0; i < gse_packet_header.size; i++) {
                     if (i % 16 == 0) printf("\n%.04d: ", i/16);
@@ -353,6 +353,7 @@ void highrate_receive(void *arg) {
                   }
                   printf("\n");
               }
+              */
               gse_read += gse_packet_header.size;
 
               // short burst data (sbd) packets are simple:
