@@ -267,7 +267,7 @@ void highrate_receive(void *arg) {
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if ((gse_packet_header.mode != TD_HK) || (gse_packet_header.mode != IRID_HK)) { // packet not from the hk stack (origin != 0)
+          if ((gse_packet_header.mode != TD_HK) && (gse_packet_header.mode != IRID_HK)) { // packet not from the hk stack (origin != 0)
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
