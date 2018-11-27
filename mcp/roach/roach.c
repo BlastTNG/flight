@@ -134,6 +134,8 @@
 #define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
+#define ROACH_WATCHDOG_PERIOD 5 /* second period to check PPC connection */
+#define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -2236,22 +2238,74 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
     return 1;
 }
 
+void roach_watchdog(void *which_roach)
+{
+    int s;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    int which = *((int *) which_roach);
+    while (1) {
+        sleep(ROACH_WATCHDOG_PERIOD);
+        // Try to open socket to KATCP server
+        if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+            blast_err("ROACH%d: Watchdog socket failed", roach_state_table[which].which);
+            continue;
+        }
+        /* Gets, validates host; stores address in hostent structure. */
+        if ((hp = gethostbyname(roach_state_table[which].address)) == NULL) {
+            blast_err("ROACH%d: Watchdog couldn't get address", roach_state_table[which].which);
+        }
+        /* Assigns port number. */
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(7147);
+        /* Copies host address to socket with aide of structures. */
+        bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+        /* Requests link with server and verifies connection. */
+        if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+            blast_err("ROACH%d: Connection Error", roach_state_table[which].which);
+            // if n_watchdog_fails = 5, Roach is put into boot state
+            roach_state_table[which].n_watchdog_fails += 1;
+            blast_info("ROACH%d: N watchdog fails = %d", roach_state_table[which].which,
+                             roach_state_table[which].n_watchdog_fails);
+        /* else {
+            blast_info("ROACH%d: Watchdog check OK", roach_state_table[which].which);
+        }*/
+        }
+        if (roach_state_table[which].n_watchdog_fails >= N_WATCHDOG_FAILS) {
+            roach_state_table[which].state = ROACH_STATE_BOOT;
+            blast_info("ROACH%d: Resetting state to BOOT", roach_state_table[which].which);
+            // reset n_watchdog_fails
+            roach_state_table[which].n_watchdog_fails = 0;
+        }
+    }
+}
+
+void start_watchdog_thread(int which_roach)
+{
+    pthread_t watchdog_thread;
+    blast_info("ROACH%d: Creating ROACH watchdog thread...", which_roach + 1);
+    if (pthread_create(&watchdog_thread, NULL, (void*)&roach_watchdog, (void *)&which_roach)) {
+        blast_err("ROACH%d: Error creating watchdog thread", which_roach + 1);
+    }
+}
+
 int setLO_oneshot(int which_pi, double loFreq)
 {
     char *lo_freq;
     int s;
-    int status = 0;
+    int status = -1;
     struct sockaddr_in sin;
     struct hostent *hp;
     char buff[1024];
     bzero(buff, sizeof(buff));
     blast_tmp_sprintf(lo_freq, "%f", loFreq);
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      perror("client: socket");
+        blast_err("Pi%d: Socket failed", which_pi + 1);
+        return status;
     }
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(pi_state_table[which_pi].address)) == NULL) {
-      blast_info("error: gethost");
+        blast_err("Pi%d: Couldn't establish connection at given hostname", which_pi + 1);
     }
     /* Assigns port number. */
     sin.sin_family = AF_INET;
@@ -2260,16 +2314,18 @@ int setLO_oneshot(int which_pi, double loFreq)
     bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
     /* Requests link with server and verifies connection. */
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-      perror("client: connect");
-      blast_err("errno = %d\n", errno);
+        blast_err("ROACH%d: Connection Error", which_pi + 1);
+        return status;
     }
     if ((status = write(s, lo_freq, strlen(lo_freq))) < 0) {
-        blast_err("setLO_oneshot");
+        blast_err("ROACH%d: Error setting LO", which_pi + 1);
+        return status;
     }
     // if (read(s, buff, sizeof(buff)) < 0) toltec_info("read fail");
     status = read(s, buff, sizeof(buff));
     blast_info("%s\n", buff);
     close(s);
+    status = 0;
     return status;
 }
 
@@ -2278,7 +2334,9 @@ int recenter_lo(roach_state_t *m_roach)
     char *lo_command;
     blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                   m_roach->lo_centerfreq/1.0e6);
-    setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6);
+    if (setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6) < 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -4059,7 +4117,9 @@ void roach_state_manager(roach_state_t *m_roach, int result)
                 // error receiving data packets
             }
             if (result == 0) {
-               m_roach->state = ROACH_STATE_STREAMING;
+                m_roach->state = ROACH_STATE_STREAMING;
+                // start roach watchdog thread
+                start_watchdog_thread(m_roach->which - 1);
             }
             break;
         case ROACH_STATE_STREAMING:
@@ -4796,6 +4856,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_vna_sweep = 0;
     roach_state_table[ind].has_targ_sweep = 0;
     roach_state_table[ind].in_flight_mode = 0;
+    roach_state_table[ind].n_watchdog_fails = 0;
     CommandData.roach[ind].go_flight_mode = 0;
     // blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
