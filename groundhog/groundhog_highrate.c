@@ -344,44 +344,48 @@ void highrate_receive(void *arg) {
                   }
               }    
      
-          } else { // housekeeping packet
+          } else if ((gse_packet_header.origin == 0) || (gse_packet_header.origin == 1)) { // housekeeping packet
+              blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
+              if (verbose) {
+                  for (int i = 0; i < gse_packet_header.size; i++) {
+                    if (i % 16 == 0) printf("\n%.04d: ", i/16);
+                    printf("0x%.02x ", gse_packet[i]);
+                  }
+                  printf("\n");
+              }
+              gse_read += gse_packet_header.size;
+
               // short burst data (sbd) packets are simple:
               // 4 bytes for the linklist serial followed by the data
-              blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
+
               if (!(*(uint32_t *) gse_packet)) {
                   blast_info("[%s] Empty HK packet", source_str);
                   continue;
               }
-							if (!(sbd_ll = linklist_lookup_by_serial(*(uint32_t *) gse_packet))) {
-									blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *serial_number);
-									continue; 
-							}
-							sbd_ser = *(uint32_t *) gse_packet;
+              
+              if (!(sbd_ll = linklist_lookup_by_serial(*(uint32_t *) gse_packet))) {
+                  blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *(uint32_t *) gse_packet);
+                  continue; 
+              }
+              sbd_ser = *(uint32_t *) gse_packet;
 
-							if (sbd_ser != sbd_prev_ser) {
-								sbd_ll_rawfile = groundhog_open_new_rawfile(sbd_ll_rawfile, sbd_ll, "sbd");
-							}
-							sbd_prev_ser = sbd_ser;
-							if (sbd_ll_rawfile) {
-									write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
-									flush_linklist_rawfile(sbd_ll_rawfile);
-							}
+              blast_info("[%s] Received packet \"%s\" from HK stack (size=%d)\n", source_str, sbd_ll->name, gse_packet_header.size);
+
+              if (sbd_ser != sbd_prev_ser) {
+                  sbd_ll_rawfile = groundhog_open_new_rawfile(sbd_ll_rawfile, sbd_ll, "ShortBurst");
+              }
+              sbd_prev_ser = sbd_ser;
+              if (sbd_ll_rawfile) {
+                  write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
+                  flush_linklist_rawfile(sbd_ll_rawfile);
+              }
               /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
-                  blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
-                  if (verbose) {
-                      for (int i = 0; i < gse_packet_header.size; i++) {
-                        if (i % 16 == 0) printf("\n%.04d: ", i/16);
-                        printf("0x%.02x ", gse_packet[i]);
-                      }
-                      printf("\n");
-                  }
               
               } else {
                   blast_info("[%s] Bad syncword 0x%.08x\n", source_str, *(uint32_t *) gse_packet);
               }
               */
-              gse_read += gse_packet_header.size;
           }
       }
   }
