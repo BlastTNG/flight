@@ -137,9 +137,9 @@ void print_display(char * text, unsigned int recv_framenum) {
 }
 
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char mole_dir[1024] = "/data/mole";
-char symdir_name[1024] = "/data/etc/mole.lnk";
-char symraw_name[1024] = "/data/rawdir/LIVE";
+char mole_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole";
+char symdir_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc/mole.lnk";
+char symraw_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir/LIVE";
 
 int main(int argc, char *argv[]) {
   // mode selection
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
   uint64_t end_frame = UINT64_MAX;
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
-  char filename_selection[128] = {0};
+  char filename_selection[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
   // configure the TCP connection
   tcpconn.flag |= TCPCONN_LOOP;
@@ -262,8 +262,8 @@ int main(int argc, char *argv[]) {
   }
 
   if (client_mode) {
-    char linklistname[64] = {0};
-    char filename[128] = {0};
+    char linklistname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+    char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
     user_file_select(&tcpconn, filename_selection);
 
     while (1) {
