@@ -778,7 +778,7 @@ void WatchPort(void* parameter)
                             /*** Single command ***/
                             // blast_info("Single command received\n");
                             // FIXME(seth): this limits # single commands to 255. use indata[1] too
-                            SingleCommand(indata[0] | ((indata[1] & 0x0f)<<8), 0);
+                            SingleCommand(indata[0] | ((indata[1] & 0x0f) << 8), 0);
                             mcommand = -1;
                         } else if ((indata[1] & 0xE0) == 0x80) {
                             /*** Beginning of multi command ***/
