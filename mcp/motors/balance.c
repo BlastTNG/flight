@@ -52,7 +52,7 @@ typedef struct {
 	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
-	uint8_t lims;
+	int8_t lims;
 } balance_state_t;
 
 static balance_state_t balance_state;
