@@ -290,7 +290,6 @@ void ControlHWPR(struct ezbus *bus)
     if (first_time) {
         /* Initialize hwpr_controls */
         ResetControlHWPR();
-
         first_time = 0;
     }
 
@@ -446,10 +445,12 @@ void ControlHWPR(struct ezbus *bus)
                         blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
                                        hwpr_enc_cur);
 #endif
-                        hwpr_control.enc_targ = CommandData.hwpr.pot_targ;
+                        hwpr_control.enc_targ = CommandData.hwpr.pot_targ; // pot_targ in encoder counts?
                         // hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 
-                        hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
+						//
+                        hwpr_control.rel_move =
+							(int32_t)((hwpr_control.enc_targ - hwpr_enc_cur / ENC_TO_DEG) * ENC_TO_DEG * DEG_TO_STEPS);
 #ifdef DEBUG_HWPR
                         blast_info("Destination is index %i, pot value = %f, required rel encoder move is %i:",
                                        CommandData.hwpr.i_pos, CommandData.hwpr.pos[i_next_step],
@@ -459,7 +460,7 @@ void ControlHWPR(struct ezbus *bus)
                     } else { // don't use pot
                             // hwpr_control.dead_pot = 1;
                             /* can't step to a hwp position, because we don't know where it is */
-                            blast_warn("The pot is dead! State = %d: Don't know where to move.", enc_state);
+                            blast_warn("The encoder is dead! State = %d: Don't know where to move.", enc_state);
                             CommandData.hwpr.mode = HWPR_SLEEP;
                             return;
                     }
@@ -470,8 +471,9 @@ void ControlHWPR(struct ezbus *bus)
                 } else if (hwpr_control.go == goto_abs) {
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
-						hwpr_control.enc_targ = CommandData.hwpr.target;
+    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG; // hwpr_enc_cur is in degrees
+						hwpr_control.enc_targ = CommandData.hwpr.target; // enc_targ in degrees
+						// rel_move in steps
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 					} else { // encoder is dead
 						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
@@ -484,8 +486,9 @@ void ControlHWPR(struct ezbus *bus)
                 } else if (hwpr_control.go == goto_rel) {
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
-						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target;
+    				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG; // hwpr_enc_cur is in degrees
+						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target; // enc_targ in degrees
+						// rel_move in steps
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 					} else { // encoder is dead
 						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
@@ -559,6 +562,7 @@ void ControlHWPR(struct ezbus *bus)
 				if (!hwpr_control.do_overshoot) {
 					hwpr_control.do_backoff = 1;
 				}
+				// this is exactly the same as the line at the beginning of the ready block
                 // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
 
             /*** We are moving.  Wait until we are done. ***/
@@ -586,6 +590,7 @@ void ControlHWPR(struct ezbus *bus)
 						hwpr_control.move_cur = needs_backoff;
                     } else { // we're done moving
                         hwpr_control.move_cur = is_done;
+						hwpr_control.done_move = 1;
 #ifdef DEBUG_HWPR
                         blast_info("We're done moving!");
 #endif
