@@ -313,6 +313,12 @@ void setup_libusb_transfers(void)
 
 void * setup_synclink_transfers(void * arg)
 {
+  // wait until InCharge
+  while (!InCharge) {
+    if (shutdown_mcp) return NULL;
+    usleep(10000);
+  }
+
   int rc = setup_synclink();
   int synclink_fd = get_synclink_fd();
 
