@@ -24,8 +24,6 @@
 #  include "config.h"
 #endif
 
-#define ENABLE_ELOG
-
 #ifdef __SPIDER__
 #define  PROGNAME   "spidercmd"
 #else

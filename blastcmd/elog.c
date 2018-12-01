@@ -13,7 +13,6 @@
 #define ELOG_BIN "/usr/local/bin/elog"
 
 #if defined __BLAST__
-#warning "DVW sez: BLASTs elog stuff is probably broken."
 //////////////////////////////////////////////////////////////////////
 // BLAST elog code
 //////////////////////////////////////////////////////////////////////
@@ -25,15 +24,15 @@
 
 static char cmd_log[5000];
 
-void ElogBeforeRoute(char *buffer)
+void ElogBeforeRoute(const char *buffer, const char *user)
 {
   snprintf(cmd_log, 4999, "/usr/local/bin/elog -h " ELOG_HOST " -p " ELOG_PORT
-      " -l " ELOG_LOG " -a Author=" ELOG_AUTH " -a Source=blastcmd "
-      " \"EXE %s\n", buffer);
+      " -l " ELOG_LOG " -a Author=" ELOG_AUTH " -a Category=blastcmd -a Source=blastcmd "
+      "\"%s EXE %s\n", user, buffer);
   cmd_log[4999] = '\0';
 }
 
-void ElogAfterRoute(int result)
+void ElogAfterRoute(int result, int last_sock)
 {
   char log[5000];
   snprintf(log, 4999, "%sResult = %d\"", cmd_log, result);
