@@ -52,7 +52,7 @@ typedef struct {
 	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
-	int8_t lims;
+	int lims;
 } balance_state_t;
 
 static balance_state_t balance_state;
@@ -174,7 +174,7 @@ void WriteBalance_5Hz(void)
 void DoBalance(struct ezbus* bus)
 {
     static int firsttime = 1;
-    char buffer[EZ_BUS_BUF_LEN];
+    // char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
         blast_info("Init DoBalance");
@@ -186,6 +186,7 @@ void DoBalance(struct ezbus* bus)
         blast_info("Making sure the balance system is not running on startup.");
         EZBus_Stop(bus, balance_state.addr);
 	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
+	// PAW, 2018
         // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;

@@ -78,7 +78,7 @@ extern const char *downlink_names[];
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
-  balance_auto,     balance_off,
+  balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,

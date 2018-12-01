@@ -968,20 +968,20 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // break;
         // cryo valves
 	case potvalve_open:
-            CommandData.Cryo.potvalve_goal = opened;
-            break;
-        case potvalve_close:
-            CommandData.Cryo.potvalve_goal = closed;
-            break;
-        case potvalve_on:
-            CommandData.Cryo.potvalve_on = 1;
+        CommandData.Cryo.potvalve_goal = opened;
+        break;
+    case potvalve_close:
+        CommandData.Cryo.potvalve_goal = closed;
+        break;
+    case potvalve_on:
+        CommandData.Cryo.potvalve_on = 1;
 	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case potvalve_off:
-            CommandData.Cryo.potvalve_on = 0;
+        break;
+    case potvalve_off:
+        CommandData.Cryo.potvalve_on = 0;
 	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case pump_valve_open:
+        break;
+    case pump_valve_open:
 	    CommandData.Cryo.valve_goals[0] = opened;
 	    break;
 	case pump_valve_close:
@@ -1114,6 +1114,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+	case balance_terminate:
+	  // after lock45, before termination, drive balance system to lower limit
+	  CommandData.balance.vel = 200000;
+	  CommandData.balance.mode = bal_manual;
+	  CommandData.balance.bal_move_type = 2;
+	  break;
+
 
 #ifndef BOLOTEST
         case blast_rocks:
