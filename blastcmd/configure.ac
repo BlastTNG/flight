@@ -72,6 +72,37 @@ else
   AC_MSG_RESULT([no])
 fi
 
+dnl elog check
+AC_ARG_ENABLE([elog], AS_HELP_STRING([--disable-elog],
+              [omit elog support from the server. (default: autodetect)]),
+              [case ${enableval} in
+               (no)  FORCE_ELOG=no ;;
+               (*) FORCE_ELOG=yes ;;
+             esac], [FORCE_ELOG=])
+
+AC_MSG_CHECKING([whether to enable elog support in the server])
+if test "x$FORCE_ELOG" = "x"; then
+  if echo ${HOSTNAME} | grep -q itsy; then
+    AC_MSG_RESULT([no (Spider flight computer)])
+    ENABLE_ELOG=0
+  else
+    AC_MSG_RESULT([yes (default selected)])
+    ENABLE_ELOG=1
+  fi
+elif test "x$FORCE_ELOG" = "xno"; then
+  AC_MSG_RESULT([no (forced)])
+  ENABLE_ELOG=0
+else
+  AC_MSG_RESULT([yes (forced)])
+  ENABLE_ELOG=1
+fi
+
+if test "x${ENABLE_ELOG}" = "x1"; then
+  AC_DEFINE([ENABLE_ELOG], [/**/],
+            [Define to enable elog support in the server])
+fi
+
+
 dnl See if blastcmd.log is already installed
 AC_MSG_CHECKING(whether blastcmd.log is already present)
 if test -f "$DATA_ETC_DIR/blastcmd.log"; then

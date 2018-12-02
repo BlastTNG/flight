@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = foreign
 
 if INSTALL_BLAST
 blast_config=$(top_srcdir)/../blast_config
-blastcmd_SOURCES = blastcmd.c $(blast_config)/command_list.c daemon.c paramdefs.c  $(shared)/netcmd.c \
+blastcmd_SOURCES = blastcmd.c $(blast_config)/command_list.c daemon.c elog.c paramdefs.c  $(shared)/netcmd.c \
 		   $(blast_config)/command_list.h daemon.h elog.h isc_protocol.h \
 			 $(shared)/netcmd.h
 blastcmd_CPPFLAGS = -D__BLAST__ -I$(blast_config)/include
