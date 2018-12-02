@@ -81,7 +81,7 @@
 /* Q = Quadrature. The sine (imaginary) part of the waveform */
 
 #define DDC_SHIFT 318 /* FW version dependent, see roach_fpg */
-#define VNA_FFT_SHIFT 31 /*Controls FW FFT overflow behavior, for VNA SWEEP */
+#define VNA_FFT_SHIFT 127 /*Controls FW FFT overflow behavior, for VNA SWEEP */
 #define TARG_FFT_SHIFT 127
 #define VNA 0 /* Sweep type */
 #define TARG 1 /* Sweep type */
@@ -98,13 +98,13 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 150.0e3 /* Target sweep span */
+#define TARG_SWEEP_SPAN 175.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
-#define N_AVG 20 /* Number of packets to average for each sweep point */
+#define N_AVG 30 /* Number of packets to average for each sweep point */
 #define SWEEP_INTERRUPT (-1)
 #define SWEEP_SUCCESS (0)
 #define SWEEP_FAIL (-2)
-#define SWEEP_TIMEOUT 10000 /* microsecond timeout between set LO and save data */
+#define SWEEP_TIMEOUT 3000 /* microsecond timeout between set LO and save data */
 #define PI_READ_ERROR -10 /* Error code: Pi read */
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
@@ -136,7 +136,7 @@
 #define VALON_PORT 9999 /* Pi port for valon socket */
 #define ROACH_WATCHDOG_PERIOD 5 /* second period to check PPC connection */
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
-#define VNA_COMB_LEN 500 /* Number of tones in search comb */
+#define VNA_COMB_LEN 1000 /* Number of tones in search comb */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -229,6 +229,7 @@ int roach_read_1D_file(roach_state_t *m_roach, char *m_file_path, double *m_buff
         fclose(fd);
         retval = 0;
     }
+    blast_info("READ FILE RETVAL ======= %d", retval);
     return retval;
 }
 
@@ -501,6 +502,7 @@ static void roach_init_LUT(roach_state_t *m_roach, size_t m_len)
 */
 static void roach_init_DACDDC_LUTs(roach_state_t *m_roach, size_t m_len)
 {
+    blast_info("INSIDE INIT DAC DDC LUTS");
     m_roach->DAC.len = m_len;
     m_roach->DAC.Ival = calloc(m_len, sizeof(double));
     m_roach->DAC.Qval = calloc(m_len, sizeof(double));
@@ -659,6 +661,7 @@ static int roach_dac_comb(roach_state_t *m_roach, double *m_freqs,
     }
     free(spec);
     free(wave);
+    blast_info("END OF DAC LUT FUNCTION");
     retval = 0;
     return retval;
 
@@ -1040,13 +1043,16 @@ int roach_write_QDR(roach_state_t *m_roach)
 */
 int roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
 {
+    blast_info("INSIDE ROACH WRITE TONES");
     int retval = -1;
     m_roach->write_flag = 1;
     roach_init_DACDDC_LUTs(m_roach, LUT_BUFFER_LEN);
     if ((roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen) < 0)) {
+        blast_info("DEFINE DAC LUT FAIL");
         return retval;
     }
     if ((roach_define_DDC_LUT(m_roach, m_freqs, m_freqlen) < 0)) {
+        blast_info("DEFINE DDC LUT FAIL");
         return retval;
     }
     blast_info("ROACH%d, Uploading Tone LUTs...", m_roach->which);
@@ -1062,6 +1068,7 @@ int roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     blast_info("ROACH%d, Write complete.", m_roach->which);
     retval = 0;
     return retval;
+    blast_info("WRITE TONES RETVAL = %d", retval);
 }
 
 /* Function: roach_check_streaming
@@ -1292,12 +1299,14 @@ int atten_client(pi_state_t *m_pi, char *command)
     /* Requests link with server and verifies connection. */
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
         blast_err("ROACH%d: Connection Error", m_pi->which);
+        sleep(10);
         return status;
     }
     bzero(buff, sizeof(buff));
     if ((status = write(s, command, strlen(command))) < 0) {
     // printf("STATUS = %d\n", status);
-        blast_err("ROACH%d: Error setting LO", m_pi->which);
+        blast_err("ROACH%d: Error setting Atten", m_pi->which);
+        sleep(10);
         return status;
     }
     status = read(s, buff, sizeof(buff));
@@ -2323,6 +2332,7 @@ int setLO_oneshot(int which_pi, double loFreq)
         blast_err("ROACH%d: Connection Error", which_pi + 1);
         return status;
     }
+    // blast_info("Set Freq = %f", lo_freq);
     if ((status = write(s, lo_freq, strlen(lo_freq))) < 0) {
         blast_err("ROACH%d: Error setting LO", which_pi + 1);
         return status;
@@ -2331,6 +2341,39 @@ int setLO_oneshot(int which_pi, double loFreq)
     status = read(s, buff, sizeof(buff));
     blast_info("%s\n", buff);
     close(s);
+    status = 0;
+    return status;
+}
+
+int reboot_pi(pi_state_t *m_pi)
+{
+    int s;
+    int status = 0;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    char write_this[] = "sudo reboot";
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      perror("client: socket");
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname("192.168.40.64")) == NULL) {
+      printf("error: gethost");
+      // blast_info("error: gethost");
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(NC2_PORT);
+    /* Copies host address to socket with aide of structures.*/
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+      perror("client: connect");
+      // blast_err("errno = %d\n", errno);
+      printf("errno = %d\n", errno);
+    } else {
+        printf("CONNECTED\n");
+    }
+    write(s, write_this, strlen(write_this));
     status = 0;
     return status;
 }
@@ -2374,9 +2417,12 @@ int shift_lo(roach_state_t *m_roach)
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
     int ind = m_roach->which - 1;
+    blast_info("DO SWEEPS = %d", CommandData.roach[ind].do_sweeps);
     if (!CommandData.roach[ind].do_sweeps) {
+        blast_info("DO SWEEPS NOT SET!!!!!!!!!!!!!!!!!!!!!!");
         return SWEEP_INTERRUPT;
     }
+    blast_info("INSIDE DO SWEEP");
     char *save_bbfreqs_command;
     // char *save_vna_trf_command;
     double m_span;
@@ -2409,6 +2455,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 return SWEEP_FAIL;
             }
     }
+    blast_info("MAKING SWEEP FREQS");
     if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
         if (create_sweepdir(m_roach, TARG)) {
@@ -2443,6 +2490,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         CommandData.roach[ind].do_sweeps = 0;
         return SWEEP_FAIL;
     }
+    blast_info("AFTER DETERMINE SWEEP FREQS");
     double m_min_freq = m_roach->lo_centerfreq - (m_span/2.);
     double m_max_freq = m_roach->lo_centerfreq + (m_span/2.);
     size_t m_num_sweep_freqs = ((m_max_freq - m_min_freq) + LO_STEP)/ LO_STEP;
@@ -2460,6 +2508,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     blast_info("ROACH%d, Sweep freqs written to %s", m_roach->which, sweep_freq_fname);
     blast_info("ROACH%d Starting new sweep...", m_roach->which);
     /* Sweep and save data */
+    blast_info("STARTING SWEEP");
     for (size_t i = 0; i < m_num_sweep_freqs; i++) {
         if (CommandData.roach[ind].do_sweeps) {
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
@@ -4126,7 +4175,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 // start roach watchdog thread
-                start_watchdog_thread(m_roach->which - 1);
+                // start_watchdog_thread(m_roach->which - 1);
             }
             break;
         case ROACH_STATE_STREAMING:
@@ -4447,9 +4496,9 @@ int roach_vna_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
     m_roach->is_sweeping = 1;
-    if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
+    /* if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
         return retval;
-    }
+    }*/
     usleep(3000);
     blast_info("ROACH%d, Initializing VNA sweep", m_roach->which);
     blast_info("ROACH%d, Starting VNA sweep...", m_roach->which);
