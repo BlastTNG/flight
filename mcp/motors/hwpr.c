@@ -527,7 +527,7 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 		    	if (hwpr_control.rel_move < 0) {
                 	if (CommandData.hwpr.overshoot < 0) {
-                    hwpr_control.rel_move -= (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
+                    hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
                     hwpr_control.do_overshoot = 1;
 #ifdef DEBUG_HWPR
                     blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
@@ -563,6 +563,7 @@ void ControlHWPR(struct ezbus *bus)
 					hwpr_control.do_backoff = 1;
 				}
 				// this is exactly the same as the line at the beginning of the ready block
+				// but we need it to include the overshoot, if one is present
                 // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
 
             /*** We are moving.  Wait until we are done. ***/
@@ -603,7 +604,7 @@ void ControlHWPR(struct ezbus *bus)
 #ifdef DEBUG_HWPR
             	blast_info("At the overshoot.");
 #endif
-                // hwpr_control.rel_move = CommandData.hwpr.overshoot * DEG_TO_STEPS;
+                // hwpr_control.rel_move = (-1) * CommandData.hwpr.overshoot * DEG_TO_STEPS;
 				hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_data.enc) * DEG_TO_STEPS);
 #ifdef DEBUG_HWPR
                 blast_info("ControlHWPR: Sending overshoot move command of %i", hwpr_control.rel_move);

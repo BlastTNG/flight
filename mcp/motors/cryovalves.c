@@ -180,7 +180,9 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	}
 }
 
-/* void ControlPotValve(struct ezbus* bus)
+/* Was going to write a new function to replace much of the work in DoPotValve, but not anymore
+ *
+ * void ControlPotValve(struct ezbus* bus)
 {
 	static int firsttime = 1;
 	static int tight_flag;
