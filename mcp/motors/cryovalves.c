@@ -180,7 +180,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	}
 }
 
-void ControlPotValve(struct ezbus* bus)
+/* void ControlPotValve(struct ezbus* bus)
 {
 	static int firsttime = 1;
 	static int tight_flag;
@@ -204,7 +204,7 @@ void ControlPotValve(struct ezbus* bus)
 	} else {
 		potvalve_data.do_move = 0;
 	}
-}
+} */
 
 void DoPotValve(struct ezbus* bus)
 {
@@ -217,7 +217,7 @@ void DoPotValve(struct ezbus* bus)
 	// int firstmove;
 	int newstate;
 	// int do_move;
-	char buffer[EZ_BUS_BUF_LEN];
+	// char buffer[EZ_BUS_BUF_LEN];
 
 	// blast_info("Starting DoPotValve"); // DEBUG PAW
 
@@ -325,7 +325,7 @@ void DoPotValve(struct ezbus* bus)
 	if (potvalve_data.do_move) {
 	switch (potvalve_data.potvalve_move) {
 		case(valve_stop):
-	                if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
+	    	if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
 			break;
 		case(no_move):
 			// blast_info("in case no_move"); // DEBUG PAW

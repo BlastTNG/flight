@@ -1446,7 +1446,7 @@ void *ActuatorBus(void *param)
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
     int which_act_used;
 
-    int hwp_pos; // DEBUG PCA
+    // int hwp_pos; // DEBUG PCA
 
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
