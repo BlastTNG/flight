@@ -130,12 +130,13 @@
 #define DF_THRESH 1.0e4 /* Hz, freq threshold for auto retune */
 #define AUTO_CAL_ADC 0 /* Choose to run the adc cal routine after initial tone write */
 #define AUTO_CAL_AMPS 0
-#define APPLY_VNA_TRF 0 /* Apply Roach output transfer function to vna freqs by default */
+#define APPLY_VNA_TRF 1 /* Apply Roach output transfer function to vna freqs by default */
 #define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
 #define ROACH_WATCHDOG_PERIOD 5 /* second period to check PPC connection */
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
+#define VNA_COMB_LEN 500 /* Number of tones in search comb */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1268,7 +1269,7 @@ int read_accum_snap(roach_state_t *m_roach)
 
 int atten_client(pi_state_t *m_pi, char *command)
 {
-    int status = 0;
+    int status = -1;
     int s;
     struct sockaddr_in sin;
     struct hostent *hp;
@@ -1276,11 +1277,12 @@ int atten_client(pi_state_t *m_pi, char *command)
     char buff[1024];
     // bzero(command, sizeof(command));
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-      perror("client: socket");
+        blast_err("Pi%d: Socket failed", m_pi->which);
+        return status;
     }
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
-      blast_err("error: gethost");
+        blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
     }
     /* Assigns port number. */
     sin.sin_family = AF_INET;
@@ -1289,18 +1291,20 @@ int atten_client(pi_state_t *m_pi, char *command)
     bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
     /* Requests link with server and verifies connection. */
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-      perror("client: connect");
-      blast_info("errno = %d\n", errno);
+        blast_err("ROACH%d: Connection Error", m_pi->which);
+        return status;
     }
     bzero(buff, sizeof(buff));
     if ((status = write(s, command, strlen(command))) < 0) {
     // printf("STATUS = %d\n", status);
-        blast_err("Error writing to atten socket");
+        blast_err("ROACH%d: Error setting LO", m_pi->which);
+        return status;
     }
     status = read(s, buff, sizeof(buff));
     // printf("STATUS = %d\n", status);
     blast_info("%s\n", buff);
     close(s);
+    status = 0;
     return status;
 }
 
@@ -2276,6 +2280,8 @@ void roach_watchdog(void *which_roach)
             blast_info("ROACH%d: Resetting state to BOOT", roach_state_table[which].which);
             // reset n_watchdog_fails
             roach_state_table[which].n_watchdog_fails = 0;
+            // kill thread
+            pthread_exit(NULL);
         }
     }
 }
@@ -3973,6 +3979,7 @@ void reset_roach_flags(roach_state_t *m_roach)
     m_roach->has_ref = 0;
     m_roach->current_ntones = 0;
     m_roach->num_kids = 0;
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
 }
 
 void start_debug_mode(roach_state_t *m_roach)
@@ -4519,6 +4526,9 @@ void *roach_cmd_loop(void* ind)
             blast_info("CHANGE STATE: %d, %d",
                     CommandData.roach[i].roach_new_state,
                     CommandData.roach[i].roach_desired_state);
+            if (CommandData.roach[i].roach_desired_state == ROACH_STATE_BOOT) {
+                reset_roach_flags(&roach_state_table[i]);
+            }
             CommandData.roach[i].change_roach_state = 0;
         }
         if (CommandData.roach[i].set_attens == 1) {
@@ -4793,7 +4803,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
         roach_state_table[ind].nflag_thresh = 300;
-        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
@@ -4803,7 +4813,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].nflag_thresh = 300;
-        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
@@ -4813,7 +4823,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].array = 350;
         roach_state_table[ind].lo_centerfreq = 850.0e6;
         roach_state_table[ind].nflag_thresh = 300;
-        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
@@ -4823,7 +4833,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].nflag_thresh = 300;
-        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
@@ -4833,7 +4843,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
         roach_state_table[ind].nflag_thresh = 300;
-        roach_state_table[ind].vna_comb_len = 1000;
+        roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;

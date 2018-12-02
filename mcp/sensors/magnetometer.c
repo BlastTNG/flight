@@ -47,6 +47,7 @@
 
 extern int16_t SouthIAm; // defined in mcp.c
 
+int verbose_level = 0;
 ph_serial_t *mag_comm = NULL;
 
 typedef enum {
@@ -195,10 +196,12 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     } mag_data_t;
     mag_data_t *mag_reading;
 
+    static int has_warned = 0;
+
     ph_buf_t *buf;
 
 #ifdef DEBUG_MAGNETOMETER
-    blast_info("Magnetometer callback for reason %u, mag_state.cmd_state = %u, status = %u",
+    if (verbose_level) blast_info("Magnetometer callback for reason %u, mag_state.cmd_state = %u, status = %u",
                  (uint8_t) why, (uint8_t) mag_state.cmd_state, (uint8_t) mag_state.status);
 #endif
 
@@ -215,8 +218,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     if ((why & PH_IOMASK_TIME)) {
         mag_state.cmd_state = 0;
         mag_state.timeout_count++;
-        blast_info("We timed out, count = %d , status = %d, Sending CMD '%s' to the MAG",
-                   mag_state.timeout_count, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
+        if (verbose_level) blast_info("We timed out, count = %d , status = %d, Sending CMD '%s' to the MAG",
+                               mag_state.timeout_count, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
         // Try again!
         ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
@@ -228,7 +231,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
 
     if (why & PH_IOMASK_READ) {
 #ifdef DEBUG_MAGNETOMETER
-    	blast_info("Reading mag data!");
+    	if (verbose_level) blast_info("Reading mag data!");
 #endif
         // Read until we get a carriage return (indicating the end of the response)
         buf = ph_serial_read_record(serial, "\r", 1);
@@ -253,7 +256,8 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                  * If we don't receive the length response that we expect, try to interrupt whatever
                  * is happening and reset our initialization to the beginning.
                  */
-                blast_info("We didn't receive the appropriate response.  Resetting...");
+                if (!has_warned) blast_info("We didn't receive the appropriate response.  Resetting...");
+                has_warned = 1;
                 mag_state.cmd_state = 0;
                 ph_stm_printf(serial->stream, "\e\r");
                 ph_stm_flush(serial->stream);
@@ -291,7 +295,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     		mag_state.error_warned = 1;
     	}
     	if (mag_state.err_count > MAG_ERR_THRESHOLD) {
-    		blast_err("Too many errors reading the magnetometer...attempting to reset.");
+    		// blast_err("Too many errors reading the magnetometer...attempting to reset.");
     		mag_state.status = MAG_RESET;
     		mag_state.err_count = 0;
     		mag_state.error_warned = 0;
@@ -305,6 +309,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
  */
 void initialize_magnetometer()
 {
+    static int has_warned = 0;
     static int firsttime = 1;
     if (firsttime) {
         mag_state.reset_count = 0;
@@ -315,10 +320,12 @@ void initialize_magnetometer()
 
     mag_comm = ph_serial_open(MAGCOM, NULL, state_cmd);
     if (!mag_comm) {
-    	blast_err("Could not open Magnetometer port %s", MAGCOM);
+    	if (!has_warned) blast_err("Could not open Magnetometer port %s", MAGCOM);
+      has_warned = 1;
     	return;
     } else {
-    	blast_info("Successfully opened Magnetometer port %s", MAGCOM);
+    	// blast_info("Successfully opened Magnetometer port %s", MAGCOM);
+      has_warned = 0;
     }
 
     mag_comm->callback = mag_process_data;
@@ -339,24 +346,28 @@ void initialize_magnetometer()
 
 void *monitor_magnetometer(void *m_arg)
 {
+  static int has_warned = 0;
   while (!shutdown_mcp) {
     if (mag_state.status == MAG_RESET) {
       if (mag_state.reset_count >= MAG_RESET_THRESHOLD) {
-          blast_info("We've tried resetting the magnetometer %d times.  Power cycling the magnetometers.",
+          if (!has_warned) {
+              blast_info("We've tried resetting the magnetometer %d times.  Power cycling the magnetometers.",
                      mag_state.reset_count);
+          }
+          has_warned = 1;
           mag_state.reset_count = 0;
           // TODO(laura) this is mag_cycle. Functionalize this!
           CommandData.Relays.cycle_of_11 = 1;
           CommandData.Relays.cycled_of = 1;
           CommandData.Relays.of_relays[10] = 1;
       }
-      blast_info("Received a request to reset the magnetometer communications.");
+      if (verbose_level) blast_info("Received a request to reset the magnetometer communications.");
       ph_stm_printf(mag_comm->stream, "\e");
       ph_stm_flush(mag_comm->stream);
       usleep(1000);
       initialize_magnetometer();
       mag_state.reset_count++;
-      blast_info("Magnetometer reset complete. reset counter = %d", mag_state.reset_count);
+      if (verbose_level) blast_info("Magnetometer reset complete. reset counter = %d", mag_state.reset_count);
     }
     usleep(1000);
   }

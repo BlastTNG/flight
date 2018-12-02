@@ -48,13 +48,20 @@
 struct Fifo highrate_fifo = {0};
 struct Fifo sbd_fifo = {0};
 linklist_t ** ll_array = NULL;
+uint8_t * highrate_read_buffer = NULL;
 
-void fillSBDData(unsigned char *b, int len) {
+void fillSBData(unsigned char *b, int len) {
+  static linklist_t * sbd_ll = NULL, * sbd_ll_old = NULL;
+  static uint8_t * compressed_buffer = NULL;
+  static int first_time = 1;
+
+  if (first_time) {
+      compressed_buffer = calloc(1, MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size));
+      first_time = 0;
+  }
   memset(b, 0, len);
 
   if (!ll_array) return;
-  static linklist_t * sbd_ll = NULL, * sbd_ll_old = NULL;
-  uint8_t * compressed_buffer = calloc(1, MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size));
 
 	sbd_ll = ll_array[SBD_TELEMETRY_INDEX];
 	if (sbd_ll != sbd_ll_old) {
@@ -64,10 +71,11 @@ void fillSBDData(unsigned char *b, int len) {
 	sbd_ll_old = sbd_ll;
 
   // compress the data
-  compress_linklist(compressed_buffer, sbd_ll, getFifoRead(&highrate_fifo));
+  if (!highrate_read_buffer) return;
+  compress_linklist(compressed_buffer, sbd_ll, highrate_read_buffer);
 
-  *(uint32_t *) b = *(uint32_t *) sbd_ll->serial;
-  memcpy(b, compressed_buffer, len-sizeof(uint32_t));
+  memcpy(b+0, sbd_ll->serial, sizeof(uint32_t));
+  memcpy(b+sizeof(uint32_t), compressed_buffer, len-sizeof(uint32_t));
 }
 
 void highrate_compress_and_send(void *arg) {
@@ -135,7 +143,8 @@ void highrate_compress_and_send(void *arg) {
           allframe_bytes = 0;
       } else {
 				// compress the linklist
-				compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
+        highrate_read_buffer = getFifoRead(&highrate_fifo);
+				compress_linklist(compressed_buffer, ll, highrate_read_buffer);
 				decrementFifo(&highrate_fifo);
 
 				// bandwidth limit; frames are 1 Hz, so bandwidth == size

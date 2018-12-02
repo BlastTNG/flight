@@ -119,7 +119,7 @@ struct chat_buf chatter_buffer;
 struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
-linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL};
+linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL, NULL};
 uint8_t * master_superframe_buffer = NULL;
 struct Fifo * telem_fifo[NUM_TELEMETRIES] = {&pilot_fifo, &bi0_fifo, &highrate_fifo, &sbd_fifo};
 extern linklist_t * ll_hk;
@@ -436,7 +436,7 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame_1hz(0);
+    outer_frame_1hz(1);
     // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);
