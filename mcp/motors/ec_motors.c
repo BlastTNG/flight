@@ -601,6 +601,9 @@ static int find_controllers(void)
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
         }
     }
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
     return ec_slavecount;
 
 find_err:
@@ -661,6 +664,7 @@ static int hwp_pdo_init(void)
 static int motor_pdo_init(int m_slave)
 {
     pdo_mapping_t map;
+    int retval = 0;
 
     if (ec_slave[m_slave].state != EC_STATE_SAFE_OP && ec_slave[m_slave].state != EC_STATE_PRE_OP) {
         blast_err("Motor Controller %d (%s) is not in pre-operational state!  Cannot configure.",
@@ -702,9 +706,13 @@ static int motor_pdo_init(int m_slave)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
     map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
+    retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
+    if (!retval) {
+        blast_err("Failed mapping!");
+    }
+    blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 1 element
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -770,6 +778,9 @@ static int motor_pdo_init(int m_slave)
     ec_SDOwrite32(m_slave, 0x2420, 0, 8);           // MISC settings for aborting trajectory, saving PDO map
     ec_SDOwrite32(m_slave, 0x1010, 1, 0x65766173);  // Save all objects (the 0x65766173 is hex for 'save')
 
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
     return 0;
 }
 
@@ -813,13 +824,16 @@ static void map_index_vars(int m_index)
     PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
     PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
     PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-    PDO_SEARCH_LIST(ECAT_CTL_STATUS, network_status_word);
+    PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
     /// Outputs
     control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
     target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 }
 /**
  * Interface function to @map_index_vars.  Maps the variables for each of the motor
@@ -836,6 +850,9 @@ static void map_motor_vars(void)
         hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
     }
 
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 	blast_info("Finished map_motor_vars.");
 }
 
@@ -860,6 +877,9 @@ static void motor_configure_timing(void)
          * available.  Otherwise, the data will be held until the SYNC0 time updates
          */
         ec_SDOwrite16(i, 0x1C32, 1, 0);
+        while (ec_iserror()) {
+            blast_err("Slave %i, %s", i, ec_elist2string());
+        }
     }
 }
 
@@ -901,6 +921,9 @@ static int motor_set_operational()
             blast_err("Slave %d State=%2x StatusCode=%4x : %s", i, ec_slave[i].state,
                     ec_slave[i].ALstatuscode, ec_ALstatuscode2string(ec_slave[i].ALstatuscode));
         }
+    }
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
     }
     return -1;
 }

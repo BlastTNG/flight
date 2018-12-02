@@ -436,7 +436,7 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame_1hz(0);
+    outer_frame_1hz(1);
     // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);

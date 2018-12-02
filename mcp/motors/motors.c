@@ -2053,8 +2053,8 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
 
     err_rw = rw_get_velocity_dps() - CommandData.pivot_gain.SP;
     err_vel = m_az_req_vel - PointingData[i_point].gy_az;
-    P_rw_term = -CommandData.pivot_gain.PV * err_rw;
-    P_vel_term = CommandData.pivot_gain.PE * err_vel;
+    P_rw_term = CommandData.pivot_gain.PV * err_rw;
+    P_vel_term = (-1.0)*CommandData.pivot_gain.PE * err_vel;
 
     /**
      * The I gain K_i = K_p / T_i where T_i is measured in seconds and therefore is
