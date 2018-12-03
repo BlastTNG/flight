@@ -53,9 +53,9 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
         type = map[field_type].as<string>();
         if (type == "temperature" && map.count(field_resistor_value)) {
             measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
-            measurement.offset = -273.15;
+            // measurement.offset = -273.15;
 			// measurement.scale = 1;
-			// measurement.offset = 0;
+			measurement.offset = 0;
 			measurement.units = " C";
         } else if (type == "pressure" && map.count(field_voltage)) {
             measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
