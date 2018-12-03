@@ -45,6 +45,11 @@
 #define PIV_DEFAULT_CURRENT_I    200
 #define PIV_DEFAULT_CURRENT_OFF  (0)
 
+#define HEARTBEAT_MS    0 // Period of heartbeat sent by devices in milliseconds
+#define LIFETIME_FACTOR_EC    10 // require a connection every second (10 x 100 ms)
+                                 // or trigger a heartbeat error.
+#define NETWORK_ERR_RESET_THRESH (500 * 20) // After this many network status errors
+                                            // we will attempt to reset the Ethercat connection.
 /**
  * N.B. Here, RX/TX are from the controller's perspective, so RX is
  * received by the controller and TX is transmitted by the controller
@@ -120,6 +125,7 @@ typedef enum {
 typedef struct {
 	int8_t n_found;
 	int8_t slave_count;
+	uint16_t network_error_count;
 	ec_contol_status_t status;
 } ec_state_t;
 
@@ -253,6 +259,21 @@ typedef struct {
 #  define ECAT_CTL_HALT                     (1<<8)
 
 #define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
+#  define ECAT_NET_NODE_STATUS      (1<<0) /* This is two bits */
+#  define ECAT_NET_SYNC_MISSING     (1<<4)
+#  define ECAT_NET_GUARD_ERROR      (1<<5)
+#  define ECAT_NET_BUS_OFF          (1<<8)
+#  define ECAT_NET_TRANSMIT_ERROR   (1<<9)
+#  define ECAT_NET_RECEIVE_ERROR    (1<<10)
+#  define ECAT_NET_TRANSMIT_WARNING (1<<11)
+#  define ECAT_NET_RECEIVE_WARNING  (1<<12)
+
+# define ECAT_NET_NODE_CHECK  0x0003
+# define ECAT_NET_SYNC_CHECK  0x0010
+# define ECAT_NET_COBUS_OFF_CHECK  0x0100
+
+#define ECAT_HEARTBEAT_TIME 0x1017, 0 /* Heartbeat period (ms) */
+#define ECAT_LIFETIME_FACTOR 0x100D, 0 /* */
 
 double rw_get_position_degrees(void);
 double el_get_position_degrees(void);
@@ -306,6 +327,7 @@ void rw_reset_fault(void);
 void el_reset_fault(void);
 void piv_reset_fault(void);
 
+uint8_t is_el_motor_ready();
 int initialize_motors(void);
 
 #endif /* INCLUDE_EC_MOTORS_H_ */

@@ -34,8 +34,65 @@
 #include "blast.h"
 #include "multiplexed_labjack.h"
 #include "sensor_updates.h"
+#include "pointing_struct.h"
 
 extern labjack_state_t state[NUM_LABJACKS];
+
+static labjack_10hz_filter_t vPSSfilt[NUM_LABJACKS][NUM_PSS_V];
+static labjack_10hz_filter_t TPSSfilt[NUM_LABJACKS];
+
+void process_sun_sensors(void) {
+    static int first_time = 1;
+    if (first_time) {
+        for (int i = 0; i < NUM_LABJACKS; i++) {
+            for (int j = 0; j < NUM_PSS_V; j++) {
+                init_labjack_10hz_filter(&vPSSfilt[i][j]);
+            }
+            init_labjack_10hz_filter(&TPSSfilt[i]);
+        }
+        first_time = 0;
+    }
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 26), &vPSSfilt[0][0]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 24), &vPSSfilt[1][0]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 22), &vPSSfilt[2][0]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 20), &vPSSfilt[3][0]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 18), &TPSSfilt[0]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 17), &vPSSfilt[0][1]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 15), &vPSSfilt[1][1]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 13), &vPSSfilt[2][1]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 11), &vPSSfilt[3][1]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 9), &TPSSfilt[1]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 7), &vPSSfilt[0][2]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 5), &vPSSfilt[1][2]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 27), &vPSSfilt[2][2]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 25), &vPSSfilt[3][2]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 23), &TPSSfilt[2]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 21), &vPSSfilt[0][3]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 19), &vPSSfilt[1][3]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 16), &vPSSfilt[2][3]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 14), &vPSSfilt[3][3]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 12), &TPSSfilt[3]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 50), &vPSSfilt[0][4]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 48), &vPSSfilt[1][4]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 46), &vPSSfilt[2][4]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 44), &vPSSfilt[3][4]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 42), &TPSSfilt[4]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 41), &vPSSfilt[0][5]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 39), &vPSSfilt[1][5]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 37), &vPSSfilt[2][5]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 35), &vPSSfilt[3][5]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 33), &TPSSfilt[5]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 31), &vPSSfilt[0][6]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 29), &vPSSfilt[1][6]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 51), &vPSSfilt[2][6]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 49), &vPSSfilt[3][6]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 47), &TPSSfilt[6]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 45), &vPSSfilt[0][7]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 43), &vPSSfilt[1][7]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 40), &vPSSfilt[2][7]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 38), &vPSSfilt[3][7]);
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 36), &TPSSfilt[7]);
+}
 
 void update_sun_sensors(void) {
     static int firsttime = 1;
@@ -123,45 +180,47 @@ void update_sun_sensors(void) {
         v5_8_Addr = channels_find_by_name("v5_8_pss");
     }
     if (state[5].connected) {
-        SET_SCALED_VALUE(v1_1_Addr, labjack_get_value(5, 4));
-        SET_SCALED_VALUE(v2_1_Addr, labjack_get_value(5, 5));
-        SET_SCALED_VALUE(v3_1_Addr, labjack_get_value(5, 6));
-        SET_SCALED_VALUE(v4_1_Addr, labjack_get_value(5, 7));
-        SET_SCALED_VALUE(v5_1_Addr, labjack_get_value(5, 8));
-        SET_SCALED_VALUE(v1_2_Addr, labjack_get_value(5, 9));
-        SET_SCALED_VALUE(v2_2_Addr, labjack_get_value(5, 10));
-        SET_SCALED_VALUE(v3_2_Addr, labjack_get_value(5, 11));
-        SET_SCALED_VALUE(v4_2_Addr, labjack_get_value(5, 12));
-        SET_SCALED_VALUE(v5_2_Addr, labjack_get_value(5, 13));
-        SET_SCALED_VALUE(v1_3_Addr, labjack_get_value(5, 14));
-        SET_SCALED_VALUE(v2_3_Addr, labjack_get_value(5, 15));
-        SET_SCALED_VALUE(v3_3_Addr, labjack_get_value(5, 16));
-        SET_SCALED_VALUE(v4_3_Addr, labjack_get_value(5, 17));
-        SET_SCALED_VALUE(v5_3_Addr, labjack_get_value(5, 18));
-        SET_SCALED_VALUE(v1_4_Addr, labjack_get_value(5, 19));
-        SET_SCALED_VALUE(v2_4_Addr, labjack_get_value(5, 20));
-        SET_SCALED_VALUE(v3_4_Addr, labjack_get_value(5, 21));
-        SET_SCALED_VALUE(v4_4_Addr, labjack_get_value(5, 22));
-        SET_SCALED_VALUE(v5_4_Addr, labjack_get_value(5, 23));
-        SET_SCALED_VALUE(v1_5_Addr, labjack_get_value(5, 24));
-        SET_SCALED_VALUE(v2_5_Addr, labjack_get_value(5, 25));
-        SET_SCALED_VALUE(v3_5_Addr, labjack_get_value(5, 26));
-        SET_SCALED_VALUE(v4_5_Addr, labjack_get_value(5, 27));
-        SET_SCALED_VALUE(v5_5_Addr, labjack_get_value(5, 28));
-        SET_SCALED_VALUE(v1_6_Addr, labjack_get_value(5, 29));
-        SET_SCALED_VALUE(v2_6_Addr, labjack_get_value(5, 30));
-        SET_SCALED_VALUE(v3_6_Addr, labjack_get_value(5, 31));
-        SET_SCALED_VALUE(v4_6_Addr, labjack_get_value(5, 32));
-        SET_SCALED_VALUE(v5_6_Addr, labjack_get_value(5, 33));
-        SET_SCALED_VALUE(v1_7_Addr, labjack_get_value(5, 34));
-        SET_SCALED_VALUE(v2_7_Addr, labjack_get_value(5, 35));
-        SET_SCALED_VALUE(v3_7_Addr, labjack_get_value(5, 36));
-        SET_SCALED_VALUE(v4_7_Addr, labjack_get_value(5, 37));
-        SET_SCALED_VALUE(v5_7_Addr, labjack_get_value(5, 38));
-        SET_SCALED_VALUE(v1_8_Addr, labjack_get_value(5, 39));
-        SET_SCALED_VALUE(v2_8_Addr, labjack_get_value(5, 40));
-        SET_SCALED_VALUE(v3_8_Addr, labjack_get_value(5, 41));
-        SET_SCALED_VALUE(v4_8_Addr, labjack_get_value(5, 42));
-        SET_SCALED_VALUE(v5_8_Addr, labjack_get_value(5, 43));
+//    blast_info("Sending data from labjack6 to channels");
+        SET_FLOAT(v1_1_Addr, vPSSfilt[0][0].filt_val);
+//    blast_info("%f", labjack_get_value(5, 26));
+        SET_FLOAT(v2_1_Addr, vPSSfilt[1][0].filt_val);
+        SET_FLOAT(v3_1_Addr, vPSSfilt[2][0].filt_val);
+        SET_FLOAT(v4_1_Addr, vPSSfilt[3][0].filt_val);
+        SET_FLOAT(v5_1_Addr, TPSSfilt[0].filt_val);
+        SET_FLOAT(v1_2_Addr, vPSSfilt[0][1].filt_val);
+        SET_FLOAT(v2_2_Addr, vPSSfilt[1][1].filt_val);
+        SET_FLOAT(v3_2_Addr, vPSSfilt[2][1].filt_val);
+        SET_FLOAT(v4_2_Addr, vPSSfilt[3][1].filt_val);
+        SET_FLOAT(v5_2_Addr, TPSSfilt[1].filt_val);
+        SET_FLOAT(v1_3_Addr, vPSSfilt[0][2].filt_val);
+        SET_FLOAT(v2_3_Addr, vPSSfilt[1][2].filt_val);
+        SET_FLOAT(v3_3_Addr, vPSSfilt[2][2].filt_val);
+        SET_FLOAT(v4_3_Addr, vPSSfilt[3][2].filt_val);
+        SET_FLOAT(v5_3_Addr, TPSSfilt[2].filt_val);
+        SET_FLOAT(v1_4_Addr, vPSSfilt[0][3].filt_val);
+        SET_FLOAT(v2_4_Addr, vPSSfilt[1][3].filt_val);
+        SET_FLOAT(v3_4_Addr, vPSSfilt[2][3].filt_val);
+        SET_FLOAT(v4_4_Addr, vPSSfilt[3][3].filt_val);
+        SET_FLOAT(v5_4_Addr, TPSSfilt[3].filt_val);
+        SET_FLOAT(v1_5_Addr, vPSSfilt[0][4].filt_val);
+        SET_FLOAT(v2_5_Addr, vPSSfilt[1][4].filt_val);
+        SET_FLOAT(v3_5_Addr, vPSSfilt[2][4].filt_val);
+        SET_FLOAT(v4_5_Addr, vPSSfilt[3][4].filt_val);
+        SET_FLOAT(v5_5_Addr, TPSSfilt[4].filt_val);
+        SET_FLOAT(v1_6_Addr, vPSSfilt[0][5].filt_val);
+        SET_FLOAT(v2_6_Addr, vPSSfilt[1][5].filt_val);
+        SET_FLOAT(v3_6_Addr, vPSSfilt[2][5].filt_val);
+        SET_FLOAT(v4_6_Addr, vPSSfilt[3][5].filt_val);
+        SET_FLOAT(v5_6_Addr, TPSSfilt[5].filt_val);
+        SET_FLOAT(v1_7_Addr, vPSSfilt[0][6].filt_val);
+        SET_FLOAT(v2_7_Addr, vPSSfilt[1][6].filt_val);
+        SET_FLOAT(v3_7_Addr, vPSSfilt[2][6].filt_val);
+        SET_FLOAT(v4_7_Addr, vPSSfilt[3][6].filt_val);
+        SET_FLOAT(v5_7_Addr, TPSSfilt[6].filt_val);
+        SET_FLOAT(v1_8_Addr, vPSSfilt[0][7].filt_val);
+        SET_FLOAT(v2_8_Addr, vPSSfilt[1][7].filt_val);
+        SET_FLOAT(v3_8_Addr, vPSSfilt[2][7].filt_val);
+        SET_FLOAT(v4_8_Addr, vPSSfilt[3][7].filt_val);
+        SET_FLOAT(v5_8_Addr, TPSSfilt[7].filt_val);
     }
 }

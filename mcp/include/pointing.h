@@ -26,6 +26,8 @@
 #ifndef INCLUDE_POINTING_H_
 #define INCLUDE_POINTING_H_
 
+#include "channels_tng.h"
+
 #define GY_HISTORY_AGE_CS 4400
 
 #define FLOAT_ALT 30480
@@ -44,8 +46,21 @@
 #define PSS2_ALIGNMENT    (PSS_ALIGNMENT - 85.0 + 3.9)
 #define PSS3_ALIGNMENT    (PSS_ALIGNMENT - 120.0 + 3.9 + 0.53)
 #define PSS4_ALIGNMENT    (PSS_ALIGNMENT - 155.0 + 3.9 + 0.53 + 3.31)
+#define PSS5_ALIGNMENT    (PSS_ALIGNMENT)
+#define PSS6_ALIGNMENT    (PSS_ALIGNMENT)
+#define PSS7_ALIGNMENT    (PSS_ALIGNMENT)
+#define PSS8_ALIGNMENT    (PSS_ALIGNMENT)
 
 #define SSS_ALIGNMENT     1.5532
+
+#define NUM_CHARS_CHAN_P_ICC   128
+
+typedef struct {
+    void *pval;
+    char ch_name[NUM_CHARS_CHAN_P_ICC];
+    E_TYPE var_type;
+    channel_t *ch;
+} read_icc_t;
 
 void set_position(double m_lat, double m_lon);
 void SetRaDec(double ra, double dec);

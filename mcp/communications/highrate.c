@@ -46,12 +46,43 @@
 #include "highrate.h"
 
 struct Fifo highrate_fifo = {0};
+struct Fifo sbd_fifo = {0};
+linklist_t ** ll_array = NULL;
+uint8_t * highrate_read_buffer = NULL;
+
+void fillSBData(unsigned char *b, int len) {
+  static linklist_t * sbd_ll = NULL, * sbd_ll_old = NULL;
+  static uint8_t * compressed_buffer = NULL;
+  static int first_time = 1;
+
+  if (first_time) {
+      compressed_buffer = calloc(1, MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size));
+      first_time = 0;
+  }
+  memset(b, 0, len);
+
+  if (!ll_array) return;
+
+	sbd_ll = ll_array[SBD_TELEMETRY_INDEX];
+	if (sbd_ll != sbd_ll_old) {
+			if (sbd_ll) blast_info("SBD linklist set to \"%s\"", sbd_ll->name);
+			else blast_info("SBD linklist set to NULL");
+	}
+	sbd_ll_old = sbd_ll;
+
+  // compress the data
+  if (!highrate_read_buffer) return;
+  compress_linklist(compressed_buffer, sbd_ll, highrate_read_buffer);
+
+  memcpy(b+0, sbd_ll->serial, sizeof(uint32_t));
+  memcpy(b+sizeof(uint32_t), compressed_buffer, len-sizeof(uint32_t));
+}
 
 void highrate_compress_and_send(void *arg) {
-
   linklist_t * ll = NULL, * ll_old = NULL;
-  linklist_t ** ll_array = arg;
   comms_serial_t * serial = comms_serial_new(NULL);
+
+  ll_array = arg;
 
   unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size);
   unsigned int csbf_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
@@ -65,14 +96,17 @@ void highrate_compress_and_send(void *arg) {
   uint8_t * csbf_checksum = header_buffer+HIGHRATE_DATA_PACKET_SIZE;
 
   uint8_t * compressed_buffer = calloc(1, buffer_size);
-  int allframe_count = 0;
-  uint32_t bandwidth = 0, transmit_size = 0;
+  unsigned int allframe_bytes = 0;
+  double bandwidth = 0;
+  uint32_t transmit_size = 0;
   int i;
   int get_serial_fd = 1;
 
   // packetization variables
   uint16_t i_pkt = 0;
   uint16_t n_pkt = 0;
+  unsigned int backoff = 2;
+  unsigned int max_backoff = 60;
 
   nameThread("Highrate");
 
@@ -82,7 +116,10 @@ void highrate_compress_and_send(void *arg) {
            comms_serial_setspeed(serial, B115200)) {
         break;
       }
-      sleep(5);
+      sleep(backoff);
+      blast_info("Could not connect to highrate port. Will try again in %d seconds...", backoff);
+      if (backoff < max_backoff) backoff *= 2;
+      if (backoff > max_backoff) backoff = max_backoff;
     }
     get_serial_fd = 0;
 
@@ -95,21 +132,28 @@ void highrate_compress_and_send(void *arg) {
 		ll_old = ll;
 
     // get the current bandwidth
+    if ((bandwidth != CommandData.highrate_bw) ||
+         (CommandData.highrate_allframe_fraction < 0.001)) allframe_bytes = 0;
     bandwidth = CommandData.highrate_bw;
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
       // send allframe if necessary
-      if (!allframe_count) {
+      if (allframe_bytes >= superframe->allframe_size) {
           transmit_size = write_allframe(compressed_buffer, superframe, getFifoRead(&highrate_fifo));
+          allframe_bytes = 0;
       } else {
 				// compress the linklist
-				compress_linklist(compressed_buffer, ll, getFifoRead(&highrate_fifo));
+        highrate_read_buffer = getFifoRead(&highrate_fifo);
+				compress_linklist(compressed_buffer, ll, highrate_read_buffer);
 				decrementFifo(&highrate_fifo);
-        transmit_size = ll->blk_size;
+
+				// bandwidth limit; frames are 1 Hz, so bandwidth == size
+				transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.highrate_allframe_fraction)); 
+        allframe_bytes += bandwidth*CommandData.highrate_allframe_fraction;
       }
 
-      // bandwidth limit; frames are 1 Hz, so bandwidth == size
-      transmit_size = MIN(transmit_size, bandwidth); 
+			// no packetization if there is nothing to transmit
+      if (!transmit_size) continue;
 
       // set initialization for packetization
       uint8_t * chunk = NULL;
@@ -168,7 +212,6 @@ void highrate_compress_and_send(void *arg) {
       }
 
       memset(compressed_buffer, 0, buffer_size);
-      allframe_count = (allframe_count + 1) % (HIGHRATE_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

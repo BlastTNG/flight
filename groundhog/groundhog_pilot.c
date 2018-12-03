@@ -27,7 +27,6 @@
 #include "blast_time.h"
 #include "pilot.h"
 #include "groundhog.h"
-#include "groundhog_framing.h"
 
 void udp_receive(void *arg) {
 
@@ -44,7 +43,6 @@ void udp_receive(void *arg) {
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
-  struct Fifo *local_fifo = &downlink[id].fifo; 
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
@@ -54,6 +52,9 @@ void udp_receive(void *arg) {
   // initialize UDP connection via bitserver/BITRecver
   initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
 
+  int bad_serial_count = 0;
+  int good_serial_count = 0;
+
   while (true) {
     do {
       // get the linklist serial for the data received
@@ -61,8 +62,10 @@ void udp_receive(void *arg) {
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
-        printf("Got a bad serial 0x%x\n", serial);
+        if (verbose) blast_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
+        bad_serial_count++;
       } else {
+        bad_serial_count = 0;
         break;
       }
     } while (true);
@@ -95,21 +98,19 @@ void udp_receive(void *arg) {
       blast_info("[%s] Received an allframe :)\n", udpsetup->name);
       memcpy(local_allframe, compbuffer, superframe->allframe_size);
     } else {
-      blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+      if ((good_serial_count % 1) == 0) {
+        if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+        // blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+      }
+      good_serial_count++;
       // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
       // write the linklist data to disk
       if (ll_rawfile) {
         memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
         write_linklist_rawfile(ll_rawfile, compbuffer);
+        flush_linklist_rawfile(ll_rawfile);
       }
-
-      // decompress
-      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0); 
-      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-      groundhog_linklist_publish(ll, compbuffer);
-
-      incrementFifo(local_fifo);
     }
   }
 }

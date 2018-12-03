@@ -79,23 +79,6 @@ IF(NOT GLIB_LIBRARY)
 ENDIF()
 include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
-# Find mosquitto    
-pkg_check_modules(PC_MOSQ QUIET mosquitto)
-set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
-
-find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
-          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
-          PATH_SUFFIXES mosquitto REQUIRED)
-find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
-            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
-IF(NOT MOSQ_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
-ENDIF()
-IF(NOT MOSQ_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
-ENDIF()
-include_directories(${MOSQ_INCLUDE_DIR})
-
 # Find getdata    
 pkg_check_modules(PC_GD QUIET getdata)
 
@@ -112,12 +95,13 @@ ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
 # add linklist library
-set(LINKLIST_LIBRARY ${PROJECT_BINARY_DIR}/linklist/liblinklist.a)
+set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
 ExternalProject_Add(linklist
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND "")
+  INSTALL_COMMAND ""
+  )
 
 include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
 
@@ -164,20 +148,20 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/groundhog.c
     ${PROJECT_SOURCE_DIR}/decom_pci.h
     ${PROJECT_SOURCE_DIR}/groundhog.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.c
     ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
     ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
     ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
     ) 
 
+add_dependencies(groundhog linklist)
+
 define_file_basename_for_sources(groundhog)
 
 target_link_libraries(groundhog
+    ${LINKLIST_LIBRARY}
     ${GLIB_LIBRARY}  
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
-    ${LINKLIST_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT} 
     ssl crypto
     )

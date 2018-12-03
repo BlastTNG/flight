@@ -31,7 +31,12 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 #include <libusb-1.0/libusb.h>
+
+#include "phenom/job.h"
+#include "phenom/log.h"
+#include "phenom/sysutil.h"
 
 #include <linklist.h>
 #include <linklist_compress.h>
@@ -57,6 +62,7 @@ struct Fifo libusb_fifo = {0};
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
+extern bool shutdown_mcp;
 struct Fifo bi0_fifo = {0};
 
 /******************** Main Biphase Loop **************************/
@@ -66,6 +72,7 @@ uint16_t sync_word = 0xeb90;
 bool mpsse_closing = false;
 bool just_reopened_mpsse = false;
 bool mpsse_disconnected = false;
+bool use_synclink = true;
 
 // callback function that is called when the read transfer for the watchdog is complete
 static LIBUSB_CALL void watchdog_read_cb(struct libusb_transfer * watchdog_read_transfer) {
@@ -116,7 +123,7 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
             watchdog_read_transfer = libusb_alloc_transfer(0);
             if (watchdog_read_transfer) {
                 libusb_fill_bulk_transfer(watchdog_read_transfer, ctx->usb_dev, ctx->in_ep, 
-                                            (void *) watchdog_read_buffer, 64, watchdog_read_cb, 
+                                            (void *) watchdog_read_buffer, 64, watchdog_read_cb,
                                             &reader_done, 2000);
             } else {
                 blast_err("Couldn't allocate watchdog_read_transfer");
@@ -181,7 +188,8 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
             just_reopened_mpsse = false;
         }
 
-        if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
+        // commented out to have SYNCLINK
+        if (!use_synclink && !fifoIsEmpty(&libusb_fifo)) { // data to be sent from main thread
             read_buf = getFifoRead(&libusb_fifo);
             data_present = 1;
         } else { // nothing in the fifo from the main thread, so send zeros
@@ -253,8 +261,9 @@ static LIBUSB_CALL void biphase_write_cb(struct libusb_transfer * biphase_write_
     }
 }
 
-void libusb_handle_all_events(struct libusb_transfer *biphase_write_transfer)
+void * libusb_handle_all_events(void * arg)
 {
+    struct libusb_transfer *biphase_write_transfer = (struct libusb_transfer *) arg;
     struct timeval begin, end;
     nameThread("HandleEvents");
     enum libusb_error retval;
@@ -275,9 +284,11 @@ void libusb_handle_all_events(struct libusb_transfer *biphase_write_transfer)
         } else {
             biphase_write_transfer->flags |= LIBUSB_TRANSFER_FREE_BUFFER; // This also frees send_buffer
             libusb_free_transfer(biphase_write_transfer);
-            pthread_exit(0);
+            // pthread_exit(0);
+            break;
         }
     }
+    return NULL;
 }
 
 void setup_libusb_transfers(void) 
@@ -285,7 +296,8 @@ void setup_libusb_transfers(void)
     struct libusb_transfer *biphase_write_transfer = NULL;
     biphase_write_transfer = libusb_alloc_transfer(0);
 
-    pthread_t libusb_thread;
+    // pthread_t libusb_thread;
+    ph_thread_t *libusb_thread = NULL;
 
     uint8_t *send_buffer = calloc(1, BIPHASE_FRAME_SIZE_BYTES+3);
 
@@ -295,133 +307,82 @@ void setup_libusb_transfers(void)
     // call this once to initialize transfer loop
     biphase_write_cb(biphase_write_transfer);
     // start the handle events parallel loop
-    pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) biphase_write_transfer);
+    // pthread_create(&libusb_thread, NULL, (void *) libusb_handle_all_events, (void *) biphase_write_transfer);
+    libusb_thread = ph_thread_spawn(libusb_handle_all_events, (void *) biphase_write_transfer);
 }
 
-
-// custom BITSender thread for writing to the LOS-UDP card
-// includes a query buffer and response port before writing data
-void * customSendDataThread(void *arg) {
-  struct BITSender *server = (struct BITSender *) arg;
-  unsigned int start, size, n_packets, packet_size, packet_maxsize;
-  unsigned int i;
-  uint8_t *header;
-  uint32_t serial, frame_num;
-  uint8_t *buffer;
-  uint8_t flags;
-
-  // buffer check socket
-  int status_sck;
-  struct sockaddr_in recv_addr, my_addr;
-  struct hostent * the_target = gethostbyname(BI0LOS_FLC_ADDR);
-
-  if ((status_sck = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
-    blast_err("socket() unsuccessful");
-    return NULL;
+void * setup_synclink_transfers(void * arg)
+{
+  // wait until InCharge
+  while (!InCharge) {
+    if (shutdown_mcp) return NULL;
+    usleep(10000);
   }
 
-  struct timeval tv;
-  tv.tv_sec = 0;
-  tv.tv_usec = 100000;
-  if (setsockopt(status_sck, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-      perror("Error");
-  }
+  int rc = setup_synclink();
+  int synclink_fd = get_synclink_fd();
 
-  bzero(&my_addr, sizeof(my_addr));
-  my_addr.sin_family = AF_INET;
-  my_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
-  my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  // send buffers
+  uint8_t lsb_buffer[BIPHASE_FRAME_SIZE_BYTES] = {0};
+  uint8_t reverse_buffer[BIPHASE_FRAME_SIZE_BYTES] = {0};
+  uint8_t zerobuffer[BIPHASE_FRAME_SIZE_BYTES] = {0};
+  uint8_t * read_buf = NULL;
+  int data_present = 0;
+  int counter = 0;
+  uint16_t sync = 0xeb90;
+  int sleeptime = 1;
 
-  if (bind(status_sck, (struct sockaddr *) &my_addr, sizeof(my_addr)) == -1) {
-    blast_err("Bind address already in use");
-    return NULL;
-  }
-
-  bzero(&recv_addr, sizeof(recv_addr));
-  recv_addr.sin_family = AF_INET;
-  recv_addr.sin_port = htons(BI0LOS_BUFFER_PORT);
-  memcpy(&recv_addr.sin_addr.s_addr, the_target->h_addr, the_target->h_length);
-
-  header = (uint8_t *) calloc(PACKET_HEADER_SIZE+server->packet_maxsize, 1);
-
-  uint8_t buffer_status = 0;
-
-  while (1) {
-    if (!fifoIsEmpty(server->send_fifo)) { // something in the buffer
-      serial = server->serial;
-      start = server->send_fifo->start;
-      size = server->send_fifo->size[start];
-      flags = server->send_fifo->flags[start];
-      frame_num = server->send_fifo->frame_num[start];
-      packet_maxsize = server->packet_maxsize;
-      buffer = getFifoRead(server->send_fifo);
-      n_packets = (size-1)/packet_maxsize+1;
-
-      if (flags & NO_HEADER) { // send packet with header
-        if (n_packets > 1) {
-          blast_err("cannot send headerless multi-packet message.");
-        } else {
-          // printf("Sending headerless packet\n");
-          if (sendto(server->sck, buffer, size,
-            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) {
-              blast_err("sendTo failed (errno %d)", errno);
-            }
-        }
-      } else {
-        i = 0;
-        n_packets = 1;
-        packet_size = server->packet_maxsize;
-        while (i < n_packets) {
-          uint8_t * pkt_buffer = packetizeBuffer(buffer, size, (uint32_t *) &packet_size,
-                                                 (uint16_t *) &i, (uint16_t *) &n_packets);
-          writeHeader(header, serial, frame_num, i++, n_packets);
-
-          // query the UDP-LOS card to see if there is a buffer available
-          char recv_status[9] = {0};
-          socklen_t slen = sizeof(recv_addr);
-
-          while (!buffer_status) {
-            slen = sizeof(recv_addr);
-            if (sendto(status_sck, &buffer_status, 1, MSG_NOSIGNAL, 
-                         (struct sockaddr *) &(recv_addr), slen) < 0) {
-              // blast_err("Could not request buffer status\n");
-            }
-
-            if (recvfrom(status_sck, recv_status, 10, 0, (struct sockaddr *) &(recv_addr), &slen) < 0) {
-              // blast_err("Could not receive buffer status\n");
-              buffer_status = 0;
-            } else {
-              buffer_status = atoi(recv_status+7); // responds with LOSBUF=#, where #=0,1,2,4
-              // blast_info("%d Buffer status = %d == %c\n", i, buffer_status, recv_status[7]);
-            }
-          }
-
-          // add header to packet (adds due to MSG_MORE flag)
-          if (sendto(server->sck, header, PACKET_HEADER_SIZE,
-            MSG_NOSIGNAL | MSG_MORE,
-            (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) {
-              blast_err("sendTo failed (errno %d)", errno);
-          }
-
-          // add data to packet and send
-          if (sendto(server->sck, pkt_buffer, packet_size,
-            MSG_NOSIGNAL, (struct sockaddr *) &(server->send_addr),
-            server->slen) < 0) {
-              blast_err("sendTo failed (errno %d)", errno);
-          }
-          //if (buffer_status > 0) buffer_status--;
-          if (buffer_status > 0) buffer_status = 0;
-        }
-      }
-      decrementFifo(server->send_fifo);
-    } else { // sleep the FIFO
-      usleep(1000); // FIFO is sleeping
+  while (!shutdown_mcp) {
+    while ((synclink_fd = get_synclink_fd()) < 0) { // keep trying to connect
+      rc = setup_synclink();
+      blast_err("Unable to connect to synclink. Will try again in %d seconds\n", sleeptime);
+      sleep(sleeptime);
+      sleeptime = MIN(sleeptime*2, 60);
     }
-  }
+    sleeptime = 1;
 
-return NULL;
+    // wait for the buffer to get below 2x the frame size
+    int count = 2*BIPHASE_FRAME_SIZE_BYTES;
+    while (count >= 2*BIPHASE_FRAME_SIZE_BYTES) {  
+      ioctl(synclink_fd, TIOCOUTQ, &count);
+      usleep(500);
+    }
+
+    // get data from the fifo, or stuff with zeros
+    if (!fifoIsEmpty(&libusb_fifo)) { // data to be sent from the main thread
+      read_buf = getFifoRead(&libusb_fifo);
+      data_present = 1;
+    } else { // send zeros
+      read_buf = zerobuffer;
+      *(uint16_t *) (read_buf+BIPHASE_FRAME_SIZE_BYTES-2) = counter++;
+      data_present = 0;
+    }
+    // set syncword and invert for next send
+    *(uint16_t *) read_buf = sync;
+    sync = ~sync;
+
+    // reverse bits and switch to big endian
+    reverse_bits(BIPHASE_FRAME_SIZE_BYTES, (uint16_t *) read_buf, (uint16_t *) lsb_buffer); // reverse_buffer);
+    // biphase_reverse_bytes((void *) lsb_buffer, BIPHASE_FRAME_SIZE_BYTES, reverse_buffer);
+    if (data_present) {
+       decrementFifo(&libusb_fifo);
+    }
+ 
+    // write the data to the frame
+    rc = write(synclink_fd, lsb_buffer, BIPHASE_FRAME_SIZE_BYTES);
+    if (rc < 0) {
+      blast_err("Synclink write error %d: %s\n", errno, strerror(errno));
+      usleep(1000);
+    }
+
+    // clear buffers 
+    memset(lsb_buffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+    memset(reverse_buffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+    memset(zerobuffer, 0, BIPHASE_FRAME_SIZE_BYTES);
+  }  
+
+  synclink_close();
+  return NULL;  
 }
 
 void biphase_writer(void * arg)
@@ -435,26 +396,31 @@ void biphase_writer(void * arg)
     uint8_t direction = 0xBF; 
     uint32_t previous_clock_speed = CommandData.biphase_clk_speed;
 
-    while (!setup_mpsse(&ctx, serial, direction)) {
-        blast_warn("Error opening mpsse. Will retry in 5s");
+    static unsigned int warned_mpsse = 0;
+
+    while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
+        InCharge = DEFAULT_INCHARGE;
+
+        if (!warned_mpsse) {
+          blast_warn("Error opening mpsse. Will retry every 5s");
+          if (InCharge) blast_info("Defaulting to in charge");
+          else blast_info("Defaulting to not in charge");
+        }
+        warned_mpsse = 1;
         sleep(5);
     }
+    warned_mpsse = 0;
 
     // biphase fifo
-    allocFifo(&libusb_fifo, 128, BIPHASE_FRAME_SIZE_BYTES);
+    allocFifo(&libusb_fifo, 2048, BIPHASE_FRAME_SIZE_BYTES);
 
     // setup linklists
     linklist_t ** ll_array = arg;
     linklist_t * ll = NULL, * ll_old = NULL;
-    int allframe_count = 0;
-    uint32_t bandwidth = 0, transmit_size = 0;
+    unsigned int allframe_bytes = 0; 
+    double bandwidth = 0; 
+    uint32_t transmit_size = 0;
     uint8_t * compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE); 
-
-    // BI0-LOS variables
-    struct BITSender bi0lossender = {0};
-    initBITSender(&bi0lossender, BI0LOS_FLC_ADDR, BI0LOS_FLC_PORT, 10, BI0_MAX_BUFFER_SIZE, BI0LOS_MAX_PACKET_SIZE);
-    pthread_cancel(bi0lossender.send_thread); 
-    pthread_create(&bi0lossender.send_thread, NULL, customSendDataThread, (void *) &bi0lossender);
 
     // packetization variables
     uint16_t i_pkt = 0;
@@ -463,17 +429,28 @@ void biphase_writer(void * arg)
 
     // Start the loop of mpsse communication
     setup_libusb_transfers(); 
+    if (use_synclink) {
+      ph_thread_spawn(setup_synclink_transfers, NULL);
+    }
  
-    while (true) {
+    while (!shutdown_mcp) {
         // if changing mpsse clock, close and reopen the chip, restart transfer loops
         if (mpsse_disconnected) {
             blast_err("MPSSE is disconnected. Will try reconnecting");
             mpsse_closing = true;
             mpsse_close(ctx);
-            while (!setup_mpsse(&ctx, serial, direction)) {
-                blast_warn("Error opening mpsse. Will retry in 5s");
+            while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
+                InCharge = DEFAULT_INCHARGE;
+
+                if (!warned_mpsse) {
+                  blast_warn("Error opening mpsse. Will retry every 5s");
+                  if (InCharge) blast_info("Defaulting to in charge");
+                  else blast_info("Defaulting to not in charge");
+                }
+                warned_mpsse = 1;
                 sleep(5);
             }
+            warned_mpsse = 0;
             usleep(1000);
             mpsse_closing = false;
             mpsse_disconnected = false;
@@ -481,22 +458,25 @@ void biphase_writer(void * arg)
             setup_libusb_transfers(); 
         }
         if (previous_clock_speed != CommandData.biphase_clk_speed) {
-                mpsse_closing = true;
-                sleep(1);
-                mpsse_reset_purge_close(ctx);
-                usleep(1000);
-                while (!setup_mpsse(&ctx, serial, direction)) {
-                    blast_warn("Error opening mpsse. Will retry in 5s");
-                    sleep(5);
-                }
-                previous_clock_speed = CommandData.biphase_clk_speed;
-                usleep(1000);
-                mpsse_closing = false;
-                just_reopened_mpsse = true;
-                setup_libusb_transfers(); 
+            mpsse_closing = true;
+            sleep(1);
+            mpsse_reset_purge_close(ctx);
+            usleep(1000);
+            while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
+                blast_warn("Error opening mpsse. Will retry in 5s");
+
+                InCharge = DEFAULT_INCHARGE;
+                blast_info("Defaulting to fc1 in charge");
+
+                sleep(5);
+            }
+            previous_clock_speed = CommandData.biphase_clk_speed;
+            usleep(1000);
+            mpsse_closing = false;
+            just_reopened_mpsse = true;
+            setup_libusb_transfers(); 
         }
        
-        // TODO(Javier): place the correct chunk of linklist into biphase_linklist_chunk
         // get the current linklist
         ll = ll_array[BI0_TELEMETRY_INDEX];
         if (ll != ll_old) {
@@ -506,46 +486,38 @@ void biphase_writer(void * arg)
         ll_old = ll;
 
         // get the current bandwidth
+        if ((bandwidth != CommandData.biphase_bw) ||
+             (CommandData.biphase_allframe_fraction < 0.0001)) allframe_bytes = 0;
         bandwidth = CommandData.biphase_bw;
 
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
+
             // send allframe if necessary
-            if (!allframe_count) {
+            if (allframe_bytes >= superframe->allframe_size) {
                 transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
+                allframe_bytes = 0;
             } else {
                 // compress the linklist to compbuffer
                 compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
                 decrementFifo(&bi0_fifo);
-                transmit_size = ll->blk_size;  
+
+                // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
+                allframe_bytes += bandwidth*CommandData.biphase_allframe_fraction;
             }
 
-            // randomized NRZ
-            if (CommandData.biphase_rnrz) {
-                randomized_buffer(compbuffer, transmit_size, BI0LOS_RNRZ_SEED);
-            }
-
-            // bandwidth limit; frames are 1 Hz, so bandwidth == size
-            transmit_size = MIN(transmit_size, bandwidth);
-
-            // send of BI0-LOS
-            // memset(compbuffer, 0xaa, transmit_size);
-            setBITSenderSerial(&bi0lossender, *(uint32_t *) ll->serial);
-            setBITSenderFramenum(&bi0lossender, transmit_size);
-            sendToBITSender(&bi0lossender, compbuffer, transmit_size, 0);
-
-
-/*
-// commented out since new UDP-LOS devices work
+            // no packetization if there is nothing to transmit
+            if (!transmit_size) continue;
+ 
             // set initialization for packetization
             i_pkt = 0;
             n_pkt = 1;
 
-            // packetization temporatry variables
-            // TODO(javier): make the size commandable for bw
+            // packetization temporary variables
             uint8_t * chunk = NULL;
             uint32_t chunksize = BIPHASE_FRAME_SIZE_BYTES-BI0_ZERO_PADDING-PACKET_HEADER_SIZE-2;
-                        
+                       
             // packetize the linklist and send the chunks if there is data to packetize
             while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, transmit_size,
                                            &chunksize, &i_pkt, &n_pkt))) {
@@ -553,14 +525,12 @@ void biphase_writer(void * arg)
                 uint8_t * write_buf = getFifoWrite(&libusb_fifo); 
                 writeHeader(write_buf+2, *(uint32_t *) ll->serial, transmit_size, i_pkt, n_pkt);
                 memcpy(write_buf+PACKET_HEADER_SIZE+2, chunk, chunksize);
-                    incrementFifo(&libusb_fifo);
-                    count++;
+                incrementFifo(&libusb_fifo);
+                count++;
                 i_pkt++;
                 //printf("Send compressed packet %d of %d\n", i_pkt, n_pkt);
                 usleep(1000);
             }
-*/
-            allframe_count = (allframe_count + 1) % (BI0_ALLFRAME_PERIOD + 1);
         } else { // sleep until the next superframe
             usleep(10000);
         }

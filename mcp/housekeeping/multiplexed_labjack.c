@@ -277,15 +277,18 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 
     switch (m_status) {
         case PH_SOCK_CONNECT_GAI_ERR:
-            blast_err("resolve %s:%d failed %s", state->address, state->port, gai_strerror(m_errcode));
+            if (!state->have_warned_connect) blast_err("resolve %s:%d failed %s",
+                     state->address, state->port, gai_strerror(m_errcode));
+            state->have_warned_connect = 1;
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
             return;
 
         case PH_SOCK_CONNECT_ERRNO:
-            blast_err("connect %s:%d failed: `Error %d: %s`",
-                      state->address, state->port, m_errcode, strerror(m_errcode));
+            if (!state->have_warned_connect) blast_err("connect %s:%d failed: `Error %d: %s`",
+                     state->address, state->port, m_errcode, strerror(m_errcode));
+            state->have_warned_connect = 1;
 
             if (state->backoff_sec < max_backoff_sec) state->backoff_sec += 5;
             ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
@@ -293,6 +296,7 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     }
 
     blast_info("Connected to LabJack at %s", state->address);
+    state->have_warned_connect = 0;
 
     /// If we had an old socket from an invalid connection, free the reference here
     if (state->sock) ph_sock_free(state->sock);
@@ -319,7 +323,8 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_why);
     labjack_state_t *state = (labjack_state_t*)m_data;
 
-    blast_info("Connecting to %s", state->address);
+    if (!state->have_warned_connect) blast_info("Connecting to %s", state->address);
+    state->have_warned_connect = 1;
     ph_sock_resolve_and_connect(state->address, state->port, 0,
                                 &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }

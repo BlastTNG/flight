@@ -167,6 +167,9 @@ struct PivGainStruct {
 #define HWPR_GOTO_I	6
 #define HWPR_GOTO_POT	7
 
+#define ROACH_TLM_IQDF 0x1
+#define ROACH_TLM_DELTA 0x2
+
 // mode        X     Y    vaz   del    w    h
 // LOCK              el
 // AZEL_GOTO   az    el
@@ -270,9 +273,12 @@ typedef struct {
   int calib_hwpr;
   int potvalve_on;
   valve_state_t potvalve_goal;
-  uint16_t potvalve_vel, potvalve_opencurrent, potvalve_closecurrent;
+  uint32_t potvalve_vel;
+  uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
+  uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   valve_state_t valve_goals[2];
-  uint16_t valve_vel, valve_current;
+  int valve_stop[2];
+  uint16_t valve_vel, valve_move_i, valve_hold_i, valve_acc;
   uint16_t lvalve_open, lhevalve_on, lvalve_close, lnvalve_on;
   int do_cal_pulse;
   int do_level_pulse;
@@ -308,6 +314,7 @@ typedef struct {
   float update_rec, update_of, update_if;
   uint16_t labjack[5];
   int of_relays[16], if_relays[10];
+  int update_video, video_trans;
 } relay_cmds_t;
 
 typedef struct {
@@ -331,9 +338,11 @@ typedef struct udp_roach
 
 typedef struct roach
 {
-    unsigned int new_state;
-    unsigned int change_state;
-    unsigned int df_calc;
+    unsigned int roach_new_state;
+    unsigned int roach_desired_state;
+    unsigned int change_roach_state;
+    unsigned int get_roach_state;
+    unsigned int do_df_calc;
     unsigned int auto_retune;
     unsigned int opt_tones;
     unsigned int do_sweeps;
@@ -345,17 +354,28 @@ typedef struct roach
     unsigned int find_kids;
     unsigned int adc_rms;
     unsigned int test_tone;
-    unsigned int roach_state;
-    unsigned int roach_new_state;
-    unsigned int roach_desired_state;
     unsigned int do_cal_sweeps;
     unsigned int get_phase_centers;
     unsigned int get_timestream;
     unsigned int chan;
-    unsigned int tune_chan;
+    unsigned int tune_amps;
     unsigned int refit_res_freqs;
     unsigned int change_tone_amps;
     unsigned int do_master_chop;
+    unsigned int load_new_freqs;
+    unsigned int calc_ref_params;
+    unsigned int do_check_retune;
+    unsigned int do_retune;
+    unsigned int set_lo;
+    unsigned int find_kids_default;
+    unsigned int change_targ_freq;
+    unsigned int change_tone_phase;
+    unsigned int change_tone_freq;
+    unsigned int on_res;
+    unsigned int auto_find;
+    unsigned int recenter_df;
+    unsigned int go_flight_mode;
+    unsigned int check_response;
 } roach_status_t;
 
 typedef struct roach_params
@@ -371,13 +391,22 @@ typedef struct roach_params
     double test_freq;
     double atten_step;
     double npoints;
-    double ncycles;
+    int ncycles;
     double num_sec;
+    double lo_offset;
+    double delta_amp;
+    double delta_phase;
+    double freq_offset;
+    int resp_thresh;
 } roach_params_t;
 
 // Ethercat controller/device commands
 typedef struct {
     bool reset;
+    bool fix_rw;
+    bool fix_el;
+    bool fix_piv;
+    bool fix_hwpr;
 } ec_devices_struct_t;
 
 typedef struct {
@@ -422,18 +451,28 @@ struct CommandDataStruct {
   uint16_t sucks;
   uint16_t lat_range;
   uint16_t at_float;
+
   uint32_t highrate_bw;
   uint32_t pilot_bw;
   uint32_t biphase_bw;
+
+  float highrate_allframe_fraction;
+  float pilot_allframe_fraction;
+  float biphase_allframe_fraction;
+
   uint32_t biphase_clk_speed;
   bool biphase_rnrz;
   bool highrate_through_tdrss;
   char pilot_linklist_name[32];
   char bi0_linklist_name[32];
   char highrate_linklist_name[32];
+  char sbd_linklist_name[32];
+  uint32_t pilot_oth;
   roach_tlm_t roach_tlm[NUM_ROACH_TLM];
+  char roach_tlm_mode;
+  unsigned int num_channels_all_roaches[NUM_ROACHES];
 
-  enum {vtx_xsc0, vtx_xsc1} vtx_sel[2];
+  enum {VTX_XSC0, VTX_XSC1} vtx_sel[2];
 
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
@@ -479,7 +518,9 @@ struct CommandDataStruct {
   unsigned char use_pss;
   unsigned char use_xsc0;
   unsigned char use_xsc1;
-  unsigned char use_mag;
+  unsigned char use_mag1;
+  unsigned char use_mag2;
+  unsigned char use_dgps;
 
   uint16_t fast_offset_gy;
   uint32_t slew_veto;
@@ -490,8 +531,9 @@ struct CommandDataStruct {
   double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
-  double mag_az_trim;
+  double mag_az_trim[2];
   double pss_az_trim;
+  double dgps_az_trim;
 
   int autotrim_enable;
   double autotrim_thresh;    // in sc sigma
@@ -500,10 +542,11 @@ struct CommandDataStruct {
   time_t autotrim_xsc0_last_bad;
   time_t autotrim_xsc1_last_bad;
 
-  double cal_xmax_mag;
-  double cal_xmin_mag;
-  double cal_ymax_mag;
-  double cal_ymin_mag;
+  double cal_xmax_mag[2];
+  double cal_xmin_mag[2];
+  double cal_ymax_mag[2];
+  double cal_ymin_mag[2];
+  double cal_mag_align[2];
 
   double cal_off_pss1;
   double cal_off_pss2;
@@ -536,6 +579,7 @@ struct CommandDataStruct {
   struct {
     int off;
     int force_repoll;
+    int which_used;
 
     /* arbitrary command */
     int cindex;
@@ -584,6 +628,10 @@ struct CommandDataStruct {
     int shutter_step;
     int shutter_step_slow;
     int shutter_out;
+    int shutter_move_i;
+    int shutter_hold_i;
+    int shutter_vel;
+    int shutter_acc;
 
     uint32_t  shutter_goal;
   } actbus;
@@ -601,6 +649,7 @@ struct CommandDataStruct {
   } hwpr;
 
   int pin_is_in;
+  int mag_reset;
 
   struct {
     int x1, y1, x2, y2, step, xvel, yvel, is_new, mode;

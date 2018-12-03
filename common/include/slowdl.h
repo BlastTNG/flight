@@ -9,6 +9,8 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#ifndef INCLUDE_SLOWDL_H
+#define INCLUDE_SLOWDL_H
 
 #include "channels_tng.h"
 
@@ -29,3 +31,7 @@ struct SlowDlStruct {
   unsigned iX[3]; // data as read by ReadData
   int i_read; // for buffer
 };
+
+void updateSlowDL();
+
+#endif /* INCLUDE_SLOWDL_H */

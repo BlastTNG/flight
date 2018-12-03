@@ -54,6 +54,7 @@
 
 #include <pthread.h> // threads
 #include <openssl/md5.h>
+#include <regex.h>
 
 #include "linklist.h"
 #include "linklist_writer.h"
@@ -70,7 +71,7 @@
 extern "C" {
 #endif
 
-char archive_dir[128] = "/data/rawdir";
+char archive_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 uint16_t theday = 0;
 uint16_t themonth = 0;
 uint16_t theyear = 0;
@@ -112,7 +113,7 @@ static int one (const struct dirent *unused)
 // opens a dialog to select file by name from the server
 void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 {
-  char name[1024][64] = {{0}};
+  char name[LINKLIST_MAX_FILENAME_SIZE][LINKLIST_SHORT_FILENAME_SIZE] = {{0}};
   int numlink = request_server_archive_list(tc,name);
 
   if (!numlink) {
@@ -122,8 +123,7 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   int i,j;
 
-  linklist_info("\nSelect archive file:\n\n");
-
+  // deal with display widths
   int n = (numlink-1)/3+1;
   int width[3] = {0};
   for (i=0;i<n;i++) {
@@ -133,26 +133,56 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   }
   for (i=0;i<3;i++) width[i] += 3;
 
-  for (i=0;i<n;i++) {
-    if (name[i][0]) printf("%.2d: %s",i,name[i]);
-    for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
-    if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
-    for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
-    if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
-    printf("\n");
+  // display all the entries that match the optionally supplied linklist name
+
+  int match = strlen(linklistname);
+  int n_match =  numlink;
+  char str_match[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  strcpy(str_match, linklistname);
+  
+  regex_t regex;
+
+  if (match) {
+    n_match = 0;
+    if (regcomp(&regex, str_match, 0)) {
+      linklist_err("Regex failed\n");
+      return;
+    }
+		for (i=0;i<numlink;i++) {
+			if (regexec(&regex, name[i], 0, NULL, 0) != REG_NOMATCH) {
+				strncpy(linklistname, name[i], LINKLIST_MAX_FILENAME_SIZE);
+				n_match++;
+			}
+		}
+    regfree(&regex);
+	  printf("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
   }
 
-  while (1) {
-    char ta[10];
-    printf("\nFile number: ");
-    fscanf(stdin,"%s",ta);
-    int cn = atoi(ta);
-    if ((cn >= 0) && (cn < numlink)) {
-      strcpy(linklistname, name[cn]);
-      break;
-    }
-    linklist_info("\nInvalid selection\n");
-  } 
+  // don't have exactly 1 matching entry, so prompt user to select
+  if (n_match != 1) {
+		linklist_info("\nSelect archive file:\n\n");
+
+		for (i=0;i<n;i++) {
+			if (name[i][0]) printf("%.2d: %s",i,name[i]);
+			for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
+			if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
+			for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
+			if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
+			printf("\n");
+		}
+
+		while (1) {
+			char ta[10];
+			printf("\nFile number: ");
+			fscanf(stdin,"%s",ta);
+			int cn = atoi(ta);
+			if ((cn >= 0) && (cn < numlink)) {
+				strncpy(linklistname, name[cn], LINKLIST_MAX_FILENAME_SIZE);
+				break;
+			}
+			linklist_info("\nInvalid selection\n");
+		} 
+  }
   
   linklist_info("Archive file \"%s\" selected\n", linklistname);
 }
@@ -204,19 +234,19 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
 
   uint32_t recv_ff_serial, recv_ll_serial;
 
-  char reqffname[128] = {0};
-  char reqllname[128] = {0};
-  char reqcsname[128] = {0};
-  char pathname[128] = {0};
+  char reqffname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char reqllname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char reqcsname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char pathname[LINKLIST_MAX_FILENAME_SIZE] = {0};
   int calspecs = 1;
 
   // get linklist format file
   while (1) {
     sleep(1);
 
-    snprintf(reqffname, 128, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
-    snprintf(reqllname, 128, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
-    snprintf(reqcsname, 128, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
+    snprintf(reqffname, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, selectname); // suffix for formatfile
+    snprintf(reqllname, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, selectname); // suffix for linkfile
+    snprintf(reqcsname, LINKLIST_MAX_FILENAME_SIZE, "%s" CALSPECS_FORMAT_EXT, selectname); // suffix for calspecs file
 
     // get the formatfile name
     recv_ff_serial = request_server_file(tc, reqffname, flags);
@@ -256,7 +286,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   }
 
   // parse the superframe format
-  snprintf(pathname, 128, "%s/%s", archive_dir, reqffname);
+  snprintf(pathname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", "/tmp", reqffname);
   if (!(*sf = parse_superframe_format(pathname))) {
     linklist_err("Superframe format parser error.\n");
     return 0;
@@ -265,7 +295,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   unlink(pathname);
 
   // parse the linklist format
-  snprintf(pathname, 128, "%s/%s", archive_dir, reqllname);
+  snprintf(pathname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", "/tmp", reqllname);
   if (!(*ll = parse_linklist_format(*sf, pathname))) {
     linklist_err("Linklist format parser error.\n");
     return 0;
@@ -278,21 +308,21 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
   // linklist_info("Linklist name set to %s\n", selectname);
 
   // request linklist name resolution if necessary (for symlinks on server)
-  request_server_linklist_name(tc, linklistname, 64, flags & TCPCONN_RESOLVE_NAME); 
+  request_server_linklist_name(tc, linklistname, LINKLIST_MAX_FILENAME_SIZE, flags & TCPCONN_RESOLVE_NAME); 
   // linklist_info("Linklist name resolves to %s\n", linklistname);
 
   // parse the calspecs format
   if (calspecs) {
-    char fname[128];
-    snprintf(pathname, 128, "%s/%s", archive_dir, reqcsname);
-    snprintf(fname, 128, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
+    char fname[LINKLIST_MAX_FILENAME_SIZE];
+    snprintf(pathname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", "/tmp", reqcsname);
+    snprintf(fname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s" CALSPECS_FORMAT_EXT, archive_dir, linklistname);
 
     if (copy_file(pathname, fname) < 0) {
       linklist_err("Cannot parse calspecs format \"%s\"\n", pathname);
     } else {
       linklist_info("Parsed calspecs format \"%s\"\n", pathname);
     }
-    strcpy((*sf)->calspecs, fname);
+    strncpy((*sf)->calspecs, fname, LINKLIST_MAX_FILENAME_SIZE);
     if (strcmp(pathname, fname)) unlink(pathname);
   } else {
     (*sf)->calspecs[0] = '\0';
@@ -303,9 +333,9 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
 
 char *get_real_file_name(char * real_name, char * symlink_name) 
 {
-  char resolved_name[128] = {0};
-  char full_name[128] = {0};
-  snprintf(full_name, 128, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
+  char resolved_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char full_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  snprintf(full_name, LINKLIST_MAX_FILENAME_SIZE, "%s/%s" LINKLIST_EXT ".00", archive_dir, symlink_name);
 
   if (!realpath(full_name, resolved_name)) {
     real_name[0] = '\0';
@@ -315,7 +345,7 @@ char *get_real_file_name(char * real_name, char * symlink_name)
   for (i = strlen(resolved_name)-1; i >= 0; i--) {
     if (resolved_name[i] == '/') break;
   }
-  strcpy(real_name, resolved_name+i+1);
+  strncpy(real_name, resolved_name+i+1, LINKLIST_MAX_FILENAME_SIZE);
 
   // strip the file extension
   for (i = 0; i < strlen(real_name); i++) {
@@ -349,12 +379,12 @@ void *connection_handler(void *arg)
   int frame_lag = 1; 
 
   FILE * clientbufferfile = NULL;
-  char linklist_name[128] = {0};
+  char linklist_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
   char * archive_filename;
-  char archive_symlink_filename[128] = {0}; // path to the symlink
-  char archive_resolved_filename[128] = {0}; // path the file that the symlink resolves to
-  char linklist_resolved_name[128] = {0}; // name of the file that the symlink resolves to
+  char archive_symlink_filename[LINKLIST_MAX_FILENAME_SIZE] = {0}; // path to the symlink
+  char archive_resolved_filename[LINKLIST_MAX_FILENAME_SIZE] = {0}; // path the file that the symlink resolves to
+  char linklist_resolved_name[LINKLIST_MAX_FILENAME_SIZE] = {0}; // name of the file that the symlink resolves to
   linklist_rawfile_t * archive_rawfile = NULL;
   int archive_framenum = 0;
   int archive_lag_framenum = 0;
@@ -376,8 +406,8 @@ void *connection_handler(void *arg)
     // process type of request
     if (*req_serial == SERVER_LL_REQ) { // client requesting superframe/linklist format file to be sent
       // recv name: *req_frame_num is number of characters
-      char req_name[64] = {0};
-      read_size = recv(sock, req_name, MIN(*req_frame_num, 63), 0);
+      char req_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
+      read_size = recv(sock, req_name, MIN(*req_frame_num, LINKLIST_MAX_FILENAME_SIZE), 0);
     
       if (read_size <= 0) {
         linklist_err("::CLIENT %d:: unable to receive linklist name\n",sock);
@@ -398,8 +428,8 @@ void *connection_handler(void *arg)
       i++;
 
       // build filename in data backup directory
-      char filename[128] = {0};
-      snprintf(filename, 128, "%s/%s", archive_dir, req_name+i);
+      char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
+      snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", archive_dir, req_name+i);
       if (send_client_file(&tc, filename, SERVER_ARCHIVE_REQ) < 0) {
         client_on = 0;
         break;
@@ -425,20 +455,20 @@ void *connection_handler(void *arg)
         for (pos = 0; pos < strlen(dir[i]->d_name); pos++) {
           if (dir[i]->d_name[pos] == '.') break;
         }
-        char tempc[128];
-        snprintf(tempc, 128, LINKLIST_EXT ".00");
+        char tempc[LINKLIST_MAX_FILENAME_SIZE];
+        snprintf(tempc, LINKLIST_MAX_FILENAME_SIZE, LINKLIST_EXT ".00");
 
         // look for linklist binary files
         if (strcmp(dir[i]->d_name+pos, tempc) == 0) {
           dir[i]->d_name[pos] = 0; // clear the suffix
 
           // check if corresponding superframe format and linklist format files exist
-          snprintf(tempc, 128, "%s/%s" LINKLIST_FORMAT_EXT, archive_dir, dir[i]->d_name);
+          snprintf(tempc, LINKLIST_MAX_FILENAME_SIZE, "%s/%s" LINKLIST_FORMAT_EXT, archive_dir, dir[i]->d_name);
           if (access(tempc, F_OK) != 0) {
             dir[i]->d_name[0] = 0;
             continue;
           }
-          snprintf(tempc, 128, "%s/%s" SUPERFRAME_FORMAT_EXT, archive_dir, dir[i]->d_name);
+          snprintf(tempc, LINKLIST_MAX_FILENAME_SIZE, "%s/%s" SUPERFRAME_FORMAT_EXT, archive_dir, dir[i]->d_name);
           if (access(tempc,F_OK) != 0) {
             dir[i]->d_name[0] = 0;
             continue;
@@ -449,8 +479,8 @@ void *connection_handler(void *arg)
           for (j=strlen(dir[i]->d_name)-1;j>=0;j--) {
             if (dir[i]->d_name[j] == '/') break;
           }
-          strcpy(tempc,dir[i]->d_name+j+1); // copy the abbr. name
-          strcpy(dir[i]->d_name,tempc); // copy it back          
+          strcpy(tempc, dir[i]->d_name+j+1); // copy the abbr. name
+          strcpy(dir[i]->d_name, tempc); // copy it back          
  
           nfile++;
         } else {
@@ -489,8 +519,8 @@ void *connection_handler(void *arg)
 
     } else if (*req_serial == SERVER_SET_LL_NAME_REQ) { // client wants to set the linklist name
       // recv name: *req_frame_num is number of characters
-      char req_name[64] = {0};
-      read_size = recv(sock, req_name, MIN(*req_frame_num, 63), 0);
+      char req_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
+      read_size = recv(sock, req_name, MIN(*req_frame_num, LINKLIST_MAX_FILENAME_SIZE), 0);
 
       if (read_size <= 0) {
         linklist_err("::CLIENT %d:: unable to receive and set linklist name\n", sock);
@@ -509,18 +539,18 @@ void *connection_handler(void *arg)
       j++;
 
       // this name should include the linklist binary file extension (LINKLIST_EXT)
-      strcpy(linklist_name, req_name+j);
+      strncpy(linklist_name, req_name+j, LINKLIST_MAX_FILENAME_SIZE);
       linklist_info("::CLIENT %d:: linklist name set to \"%s\"\n", sock, linklist_name);
     } else if (*req_serial == SERVER_LL_NAME_REQ) { // client wants the linklist name
-      char send_name[128] = {0};
+      char send_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
       if (*req_i & TCPCONN_RESOLVE_NAME) { // resolve any symlinks in linklist name if necessary
         if (!get_real_file_name(send_name, linklist_name)) {
           linklist_err("::CLIENT %d:: unable to resolve linklist name \"%s\"\n", sock, linklist_name);
-          strcpy(send_name, linklist_name); // default to unresolved name
+          strncpy(send_name, linklist_name, LINKLIST_MAX_FILENAME_SIZE); // default to unresolved name
         }
         client_flags |= TCPCONN_RESOLVE_NAME;
       } else { // just get the linklist name
-        strcpy(send_name, linklist_name);
+        strncpy(send_name, linklist_name, LINKLIST_MAX_FILENAME_SIZE);
       }
       // shorten the name for sending to client if necessary
       if (((*req_frame_num)-1) <= strlen(send_name)) send_name[(*req_frame_num)-1] = 0;
@@ -546,12 +576,12 @@ void *connection_handler(void *arg)
         }
 
         // write data file base name for archive file
-        char real_name[128];
-        snprintf(archive_symlink_filename, 128, "%s/%s", archive_dir, linklist_name);
-        snprintf(archive_resolved_filename, 128, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
+        char real_name[LINKLIST_MAX_FILENAME_SIZE];
+        snprintf(archive_symlink_filename, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", archive_dir, linklist_name);
+        snprintf(archive_resolved_filename, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", archive_dir, get_real_file_name(linklist_resolved_name, linklist_name));
 
         archive_filename = (client_flags & TCPCONN_RESOLVE_NAME) ? archive_resolved_filename : archive_symlink_filename;
-        strcpy(linklist_resolved_name, real_name);
+        strncpy(linklist_resolved_name, real_name, LINKLIST_MAX_FILENAME_SIZE);
 
         if ((archive_rawfile = open_linklist_rawfile(archive_filename, NULL)) == NULL) {
           linklist_err("::CLIENT %d:: unable to open archive file \"%s\"\n", sock, archive_filename);
@@ -562,7 +592,7 @@ void *connection_handler(void *arg)
       }
 
       // update the archived file framenumber
-      char test_symlink_name[64] = {0};
+      char test_symlink_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
       get_real_file_name(test_symlink_name, linklist_name);
       seekend_linklist_rawfile(archive_rawfile);
       archive_framenum = tell_linklist_rawfile(archive_rawfile);
@@ -793,7 +823,7 @@ void send_client_error(struct TCPCONN * tc)
 int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
 {
   uint8_t header[TCP_PACKET_HEADER_SIZE] = {0};
-  uint8_t buffer[1024] = {0};  
+  uint8_t buffer[LINKLIST_MAX_FILENAME_SIZE] = {0};  
 
   // open the requested file
   FILE * req_file = fopen(filename, "r");
@@ -821,7 +851,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
   unsigned int bytes_transferred = 0;
   unsigned int loc = 0, col = 0;
   while (bytes_transferred < req_filesize) {
-    loc = MIN(1024, req_filesize-bytes_transferred);
+    loc = MIN(LINKLIST_MAX_FILENAME_SIZE, req_filesize-bytes_transferred);
     col = fread(buffer, 1, loc, req_file);
     if (loc != col) {
       linklist_err("::CLIENT %d:: file read error\n", tc->fd);
@@ -847,15 +877,15 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
 uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int flags)
 {
   int sock = tc->fd;
-  uint8_t buffer[1024] = {0};
+  uint8_t buffer[LINKLIST_MAX_FILENAME_SIZE] = {0};
   uint8_t msg[TCP_PACKET_HEADER_SIZE] = {0};
 
   uint32_t *recv_ser, *recv_filesize;
   uint16_t *recv_i, *recv_n;
   uint32_t ll_serial;
 
-  char savedname[256] = {0};
-  snprintf(savedname, 256, "%s/%s", archive_dir, filename);
+  char savedname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  snprintf(savedname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", "/tmp", filename);
 
   // linklist_info("Requesting file \"%s\" from server...\n",filename);
 
@@ -889,7 +919,7 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
   unsigned int bytes_recvd = 0;
   unsigned int loc = 0;
   while (bytes_recvd < *recv_filesize) {
-    loc = MIN(1024,(*recv_filesize)-bytes_recvd);
+    loc = MIN(LINKLIST_MAX_FILENAME_SIZE,(*recv_filesize)-bytes_recvd);
     if (recv(sock, buffer, loc, MSG_WAITALL) <= 0) {
       linklist_err("request_server_file: failed to recv file block\n");
       return 0;
@@ -1017,7 +1047,7 @@ void set_server_linklist_name(struct TCPCONN * tc, char *linklistname)
 }
 
 // fills the name array with archived linklist names from the server
-int request_server_archive_list(struct TCPCONN * tc, char name[][64])
+int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_FILENAME_SIZE])
 {
   // initiate server connection if not done already
   while (1) {
@@ -1075,7 +1105,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][64])
 }
 
 // fills the name array with linklist names from the server
-int request_server_list(struct TCPCONN * tc, char name[][64]) {
+int request_server_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_FILENAME_SIZE]) {
   // initiate server connection if not done already
   while (tc->fd <= 0)
   {

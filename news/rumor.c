@@ -19,7 +19,7 @@
 
 #include <getdata.h>
 
-#include "slowdl.h"
+#include "include/slowdl.h"
 #include "news.h"
 
 #define RAWDIR "/data/rawdir"

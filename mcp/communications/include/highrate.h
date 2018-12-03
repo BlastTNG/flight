@@ -22,10 +22,9 @@
 #ifndef INCLUDE_HIGHRATE_H
 #define INCLUDE_HIGHRATE_H
 
-// TODO(javier): make allframe period commandable
-#define HIGHRATE_MAX_SIZE 11500
+#define HIGHRATE_MAX_SIZE 1150000
 #define HIGHRATE_PORT "/dev/ttyHighRate"
-#define HIGHRATE_ALLFRAME_PERIOD 10 // number of seconds between sequential allframes
+#define DIRECT_PORT "/dev/ttyDirect"
 
 #define CSBF_HEADER_SIZE 6
 #define HIGHRATE_DATA_PACKET_SIZE 2034 // 11500 
@@ -38,6 +37,7 @@
 #define HIGHRATE_ORIGIN_COMM2 0x0a 
 
 extern struct Fifo highrate_fifo;
+extern struct Fifo sbd_fifo;
 
 void highrate_compress_and_send(void *);
 

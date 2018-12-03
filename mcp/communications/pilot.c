@@ -61,17 +61,25 @@ extern int16_t InCharge;
 
 struct Fifo pilot_fifo = {0};
 
+char * pilot_oth_addr[2] = {"67.239.76.162", "67.239.76.163"};
+unsigned int pilot_oth_port[2] = {PILOT_PORT, PILOT_PORT+1};
+
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
   struct BITSender pilotsender = {0};
+  struct BITSender pilotothsender[2] = {{0}};
   unsigned int fifosize = MAX(PILOT_MAX_SIZE, superframe->allframe_size);
   initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
+  for (int i = 0; i < 2; i++) {  
+    initBITSender(&pilotothsender[i], pilot_oth_addr[i], pilot_oth_port[i], 10, fifosize, PILOT_MAX_PACKET_SIZE);
+  }
   linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
 
   uint8_t * compbuffer = calloc(1, fifosize);
-  int allframe_count = 0;
-  uint32_t bandwidth = 0, transmit_size = 0;
+  unsigned int allframe_bytes = 0;
+  double bandwidth = 0;
+  uint32_t transmit_size = 0;
 
   nameThread("Pilot");
 
@@ -85,34 +93,53 @@ void pilot_compress_and_send(void *arg) {
     ll_old = ll;
 
     // get the current bandwidth
+    if ((bandwidth != CommandData.pilot_bw) ||
+         (CommandData.pilot_allframe_fraction < 0.0001)) allframe_bytes = 0;
     bandwidth = CommandData.pilot_bw;
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
       // send allframe if necessary
-      if (!allframe_count) {
+      if (allframe_bytes >= superframe->allframe_size) {
         transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
+        allframe_bytes = 0;
       } else {
         // compress the linklist
         compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
         decrementFifo(&pilot_fifo);
-        transmit_size = ll->blk_size;
+
+        // bandwidth limit; frames are 1 Hz, so bandwidth == size
+        transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.pilot_allframe_fraction));  
+        allframe_bytes += bandwidth*CommandData.pilot_allframe_fraction;
       }
 
-      // bandwidth limit; frames are 1 Hz, so bandwidth == size
-      transmit_size = MIN(transmit_size, bandwidth);  
+			// no packetization if there is nothing to transmit
+			if (!transmit_size) continue;
 
-      // have packet header serials match the linklist serials
-      setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
+      if (CommandData.pilot_oth) {
+        // send the data to pilot oth via bitsender
+        for (int i = 0; i < 2; i++) {
+				  // have packet header serials match the linklist serials
+				  setBITSenderSerial(&pilotothsender[i], *(uint32_t *) ll->serial);
 
-      // commendeer the framenum for total transmit size
-      setBITSenderFramenum(&pilotsender, transmit_size);
+				  // commendeer the framenum for total transmit size
+				  setBITSenderFramenum(&pilotothsender[i], transmit_size);
 
-      // send the data to the ground station via bitsender
-      sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
+          // send the data over pilot via bitsender
+          sendToBITSender(&pilotothsender[i], compbuffer, transmit_size, 0);
+        }
+      } else {
+				// have packet header serials match the linklist serials
+				setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
+
+				// commendeer the framenum for total transmit size
+				setBITSenderFramenum(&pilotsender, transmit_size);
+
+        // send the data to the ground station via bitsender
+        sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
+      }
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
-      allframe_count = (allframe_count + 1) % (PILOT_ALLFRAME_PERIOD + 1);
     } else {
       usleep(100000); // zzz...
     }

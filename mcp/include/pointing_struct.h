@@ -47,6 +47,8 @@
 #define NUM_PSS 8
 #define NUM_PSS_V 4
 
+#define NUM_MAGS 2
+
 /**********************************************/
 /*  ACSDataStruct                             */
 /*  Purpose: Store raw pointing info          */
@@ -54,9 +56,9 @@
 /*     Used: Main thread;                     */
 /*  Does not need to be a circular buffer...  */
 struct ACSDataStruct {
-  double mag_x;     // counts;
-  double mag_y;     // counts;
-  double mag_z;     // counts;
+  double mag_x[NUM_MAGS];     // counts;
+  double mag_y[NUM_MAGS];     // counts;
+  double mag_z[NUM_MAGS];     // counts;
   double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
   double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
@@ -107,23 +109,29 @@ struct PointingDataStruct {
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
 
-  double mag_az;   // degrees
-  double mag_az_raw;   // degrees
-  double mag_el;   // degrees
-  double mag_el_raw;   // degrees
-  double mag_model_dec; // degrees
-  double mag_model_dip; // degrees
-  double mag_sigma; // degrees
-  double mag_strength; // nanoTesla
-  double offset_ifrollmag_gy;
-  double offset_ifyawmag_gy;
-
+  bool mag_ok[NUM_MAGS];   // flag
+  double mag_az[NUM_MAGS];   // degrees
+  double mag_az_raw[NUM_MAGS];   // degrees
+  double mag_el[NUM_MAGS];   // degrees
+  double mag_el_raw[NUM_MAGS];   // degrees
+  double mag_model_dec[NUM_MAGS]; // degrees
+  double mag_model_dip[NUM_MAGS]; // degrees
+  double mag_sigma[NUM_MAGS]; // degrees
+  double mag_strength[NUM_MAGS]; // nanoTesla
+  double offset_ifrollmag_gy[NUM_MAGS];
+  double offset_ifyawmag_gy[NUM_MAGS];
+  double offset_ifrolldgps_gy;
+  double offset_ifyawdgps_gy;
+  double dgps_az_raw;   // degrees
+  double dgps_az;   // degrees
+  double dgps_sigma;   // degrees
   double null_az; // degrees
 
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun
 
   int pss_ok;
+  int dgps_ok;
   double pss_az;
   double pss_el;
 
@@ -139,6 +147,7 @@ struct PointingDataStruct {
 
   double xsc_az[2];
   double xsc_el[2];
+  double xsc_var[2];
   double xsc_sigma[2];
   double offset_ifel_gy_xsc[2];
   double offset_ifyaw_gy_xsc[2];
@@ -148,17 +157,58 @@ struct PointingDataStruct {
   double estimated_xsc_ra_hours[2];
   double estimated_xsc_dec_deg[2];
 
+  bool enc_motor_ok;   // flag
   double enc_el;
   double enc_sigma;
   double enc_motor_el;
   double enc_motor_sigma;
 
+  double clin_ok;
   double clin_el;
   double clin_el_lut;
   double clin_sigma;
+  uint8_t recv_shared_data;   // flag
 
   bool requested_el_out_of_bounds;
   bool az_destination_capped;
+
+// TODO(laura): These next fields are just for debugging.  Remove from mcp before flight!
+  double new_offset_ifel_elmotenc_gy;
+  double int_ifel_elmotenc;
+  double new_offset_ifyaw_mag1_gy;
+  double new_offset_ifroll_mag1_gy;
+  double d_az_mag1;
+  double int_ifroll_mag1;
+  double int_ifyaw_mag1;
+  double new_offset_ifyaw_mag2_gy;
+  double new_offset_ifroll_mag2_gy;
+  double d_az_mag2;
+  double int_ifroll_mag2;
+  double int_ifyaw_mag2;
+  double new_offset_ifel_xsc0_gy;
+  double new_offset_ifyaw_xsc0_gy;
+  double new_offset_ifroll_xsc0_gy;
+  double int_ifel_xsc0;
+  double int_ifyaw_xsc0;
+  double int_ifroll_xsc0;
+  double d_az_xsc0;
+  double prev_sol_az_xsc0;
+  double prev_sol_el_xsc0;
+  double new_offset_ifel_xsc1_gy;
+  double new_offset_ifyaw_xsc1_gy;
+  double new_offset_ifroll_xsc1_gy;
+  double int_ifel_xsc1;
+  double int_ifyaw_xsc1;
+  double int_ifroll_xsc1;
+  double d_az_xsc1;
+  double prev_sol_az_xsc1;
+  double prev_sol_el_xsc1;
+  double autotrim_rate_xsc;
+  uint8_t fresh;
+  double new_az;
+  double new_el;
+  double weight_az;
+  double weight_el;
 };
 
 extern struct PointingDataStruct PointingData[3];
@@ -167,15 +217,10 @@ extern int point_index;
 /**********************************************/
 /*  DGPS Attittude struct                     */
 /*  Purpose: Store dgps attitude info         */
-/*   Source: dgps thread: dgps.c              */
+/*   Source: dgps thread: csbf_dgps.c              */
 /*     Used: Main thread;                     */
 struct DGPSAttStruct {
   double az;
-  double pitch;
-  double roll;
-  double mrms;
-  double brms;
-  unsigned int ant[4];
   int att_ok;
 };
 

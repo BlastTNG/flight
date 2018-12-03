@@ -5,8 +5,6 @@
 
 #define ROACH_CHANNEL_REF_NAME "kidA_roachN"
 #define ROACH_CHANNEL_REF_INDEX_NAME "kidA_roachN_index"
-#define ROACH_CHANNEL_BLOCK_NAME "kid_roach_block"
-#define ROACH_CHANNEL_BLOCK_INDEX_NAME "kid_roach_index_block"
 
 #include "linklist.h"
 #include "linklist_writer.h"
@@ -35,6 +33,7 @@ void groundhog_write_calspecs(char *, derived_tng_t *);
 linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
 
 extern char datestring[80];
+extern int verbose;
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))

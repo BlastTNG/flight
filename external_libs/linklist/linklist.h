@@ -41,6 +41,8 @@
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
 #define ALL_TELEMETRY_NAME "all_telemetry.ll"
 
+#define LINKLIST_MAX_FILENAME_SIZE 1024
+#define LINKLIST_SHORT_FILENAME_SIZE 64
 #define SUPERFRAME_EXT ".sf.bin"
 #define SUPERFRAME_FORMAT_EXT ".sf.format"
 #define LINKLIST_EXT ".ll.bin"
@@ -53,7 +55,8 @@
 
 #define LL_NO_AUTO_CHECKSUM 0x01
 #define LL_INCLUDE_ALLFRAME 0x02
-#define LL_VERBOSE 0x3
+#define LL_USE_BIG_ENDIAN 0x04
+#define LL_VERBOSE 0x08
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -121,7 +124,7 @@ struct superframe_struct
   double (*datatodouble)(uint8_t *, uint8_t);
   int (*doubletodata)(uint8_t *, double, uint8_t);
 
-  char calspecs[64];
+  char calspecs[LINKLIST_MAX_FILENAME_SIZE];
 };
 
 struct link_entry
@@ -137,7 +140,7 @@ struct link_entry
 
 struct linklist_struct
 {
-  char name[64]; // name of the linklist file
+  char name[LINKLIST_SHORT_FILENAME_SIZE]; // name of the linklist file
   uint32_t n_entries; // number of entries in the list
   uint32_t blk_size; // size of entire compressed frame
   uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
@@ -158,7 +161,7 @@ struct block_container
   unsigned int curr_size;
   uint8_t * buffer;
 
-  char filename[80];
+  char filename[LINKLIST_MAX_FILENAME_SIZE];
   FILE *fp;
 };
 
@@ -169,7 +172,69 @@ typedef struct sf_entry superframe_entry_t;
 typedef struct superframe_struct superframe_t;
 
 extern const char * SF_TYPES_STR[]; 
-extern char archive_dir[128];
+extern char archive_dir[LINKLIST_MAX_FILENAME_SIZE];
+
+/**
+ * These intermediate types are necessary to allow GCC to use its strict-aliasing
+ * optimization without breaking our big-endian/little-endian conversion logic
+ */
+typedef uint32_t __attribute__((__may_alias__)) u32_a;
+typedef uint64_t __attribute__((__may_alias__)) u64_a;
+
+#include <endian.h>
+
+#   define beftoh(x) ({                             \
+            float   _tmp;                           \
+            u32_a *infloat = (u32_a*)&(x);    \
+            u32_a *outfloat = (u32_a*)(&_tmp);\
+            *outfloat = be32toh(*infloat);          \
+            _tmp;                                   \
+    })
+#   define bedtoh(x) ({                             \
+            double   _tmp;                          \
+            u64_a *infloat = (u64_a*)&(x);    \
+            u64_a *outfloat = (u64_a*)(&_tmp);\
+            *outfloat = be64toh(*infloat);          \
+            _tmp;                                   \
+    })
+#   define htobed(in,out) {                         \
+            double   in_dbl = (in);                 \
+            u64_a *indouble = (u64_a*)&in_dbl;\
+            u64_a *outdouble = (u64_a*)&(out);\
+            *outdouble = htobe64(*indouble);        \
+    }
+#   define htobef(in,out)  {                        \
+            float   in_flt = (in);                  \
+            u32_a *infloat = (u32_a*)&in_flt; \
+            u32_a *outfloat = (u32_a*)&(out); \
+            *outfloat = htobe32(*infloat);          \
+    }
+#   define leftoh(x) ({                             \
+            float   _tmp;                           \
+            u32_a *infloat = (u32_a*)&(x);    \
+            u32_a *outfloat = (u32_a*)(&_tmp);\
+            *outfloat = le32toh(*infloat);          \
+            _tmp;                                   \
+    })
+#   define ledtoh(x) ({                             \
+            double   _tmp;                          \
+            u64_a *infloat = (u64_a*)&(x);    \
+            u64_a *outfloat = (u64_a*)(&_tmp);\
+            *outfloat = le64toh(*infloat);          \
+            _tmp;                                   \
+    })
+#   define ltobed(in,out) {                         \
+            double   in_dbl = (in);                 \
+            u64_a *indouble = (u64_a*)&in_dbl;\
+            u64_a *outdouble = (u64_a*)&(out);\
+            *outdouble = ltobe64(*indouble);        \
+    }
+#   define ltobef(in,out)  {                        \
+            float   in_flt = (in);                  \
+            u32_a *infloat = (u32_a*)&in_flt; \
+            u32_a *outfloat = (u32_a*)&(out); \
+            *outfloat = ltobe32(*infloat);          \
+    }
 
 #define STR(s) #s
 

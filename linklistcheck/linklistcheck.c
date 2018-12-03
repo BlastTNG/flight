@@ -42,6 +42,24 @@ int main(int argc, char *argv[])
   char * linklistdir = argv[1];
 
 	int i, r;
+
+  int show_sizes = 1;
+  int show_all_tlms = 1;
+  int show_checksums = 1;
+  char specific_channel[80] = {0};
+
+  for (i = 2; i < argc; i++) {
+    if (strcmp(argv[i], "--sizes-only") == 0) {
+      show_all_tlms = 0;
+    } else if (strcmp(argv[i], "--channel") == 0) {
+      sprintf(specific_channel, "%s", argv[++i]); 
+      show_checksums = 0;
+    } else {
+      printf("Unrecognized option \"%s\"\n", argv[i]);
+      exit(2);
+    }
+  }
+
   uint8_t format_serial[MD5_DIGEST_LENGTH] = {0};
   linklist_t *ll_array[MAX_NUM_LINKLIST_FILES] = {NULL};
   superframe_entry_t * superframe_list = NULL;
@@ -60,6 +78,8 @@ int main(int argc, char *argv[])
     printf("Unable to load linklists\n");
     exit(3);
   }
+  generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_array), ALL_TELEMETRY_NAME);
+  printf("Generate hk linklist\n");
 
   // check the parser and writer
 	linklist_t * ll = ll_array[0];  
@@ -87,37 +107,43 @@ int main(int argc, char *argv[])
 		printf("\n================LINKLIST \"%s\"==================\n",ll->name);
 
 	  // print result
-	  for (i=0;i<ll->n_entries;i++)
- 	 	{
-    	if (ll->items[i].tlm != NULL)
-    	{
-
-      	printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %s, sf_start = %d, sf_skip = %d\n",
-         (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
-         ll->items[i].blk_size, ll->items[i].num, (ll->items[i].comp_type == NO_COMP) ? "NONE" : compRoutine[ll->items[i].comp_type].name, 
-         ll->items[i].tlm->start, ll->items[i].tlm->skip);
-				runningsum += ll->items[i].blk_size;
-    	}
-    	else 
+    if (show_all_tlms) {
+			for (i=0;i<ll->n_entries;i++)
 			{
-				printf("//--------CHECKSUM (over %d bytes)---------//\n",runningsum);
-				runningsum = 0;
+				if (ll->items[i].tlm != NULL)
+				{
+          if ((strlen(specific_channel) > 0) && (strncmp(specific_channel, ll->items[i].tlm->field, strlen(specific_channel)))) {
+            continue;
+          }
+
+					printf("name = %s, start = %d, blk_size = %d, num = %d, comp_type = %s, sf_start = %d, sf_skip = %d\n",
+					 (ll->items[i].tlm->field[0]) ? ll->items[i].tlm->field : "BLOCK", ll->items[i].start, 
+					 ll->items[i].blk_size, ll->items[i].num, (ll->items[i].comp_type == NO_COMP) ? "NONE" : compRoutine[ll->items[i].comp_type].name, 
+					 ll->items[i].tlm->start, ll->items[i].tlm->skip);
+					runningsum += ll->items[i].blk_size;
+				}
+				else if (show_checksums)
+				{
+					printf("//--------CHECKSUM (over %d bytes)---------//\n",runningsum);
+					runningsum = 0;
+				}
 			}
-  	}
 
-		printf("Number of data blocks: %d\n",ll->num_blocks);
+			printf("Number of data blocks: %d\n",ll->num_blocks);
 
-		for (i=0;i<ll->num_blocks;i++)
-		{
-			printf("%s, id=%d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].id,ll->blocks[i].alloc_size);
-		}
+			for (i=0;i<ll->num_blocks;i++)
+			{
+				printf("%s, id=%d, alloc_size = %d\n",ll->blocks[i].name, ll->blocks[i].id,ll->blocks[i].alloc_size);
+			}
+    }
+    if (show_sizes) {
 
-  	printf("Serial: ");
-  	for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
-  	printf("\n");
-  	printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
-    ll = ll_array[++r];
-
+			printf("Serial: ");
+			for (i=0;i<MD5_DIGEST_LENGTH;i++) printf("%x",ll->serial[i]);
+			printf("\n");
+			printf("n_entries = %d, blk_size = %d\n",ll->n_entries,ll->blk_size);
+			ll = ll_array[++r];
+    }
 	}
 
 

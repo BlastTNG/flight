@@ -11,8 +11,10 @@ set(MCP_COMMON_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/pq.c
     ${CMAKE_CURRENT_SOURCE_DIR}/PMurHash.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sip.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/slowdl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/xsc_fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/FIFO.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/log.c
     PARENT_SCOPE
 )
 set(MCP_COMMON_HEADERS
@@ -32,8 +34,10 @@ set(MCP_COMMON_HEADERS
    ${CMAKE_CURRENT_SOURCE_DIR}/include/PMurHash.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/portable_endian.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/sip.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/slowdl.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/xsc_fifo.h
    ${CMAKE_CURRENT_SOURCE_DIR}/include/FIFO.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/log.h
    PARENT_SCOPE
 )
 

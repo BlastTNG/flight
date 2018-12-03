@@ -28,7 +28,6 @@
 #include "crc.h"
 #include "blast.h"
 #include "blast_time.h"
-#include "groundhog_framing.h"
 #include "groundhog.h"
 #include "bitserver.h"
 #include "FIFO.h"
@@ -108,7 +107,6 @@ void biphase_receive(void *args)
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
-  struct Fifo *local_fifo = &downlink[BI0].fifo;
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
@@ -171,24 +169,19 @@ void biphase_receive(void *args)
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
 
                   if (read_allframe(local_superframe, superframe, compbuffer)) {
-                      printf("[Biphase] Received an allframe :)\n");
+                      if (verbose) blast_info("[Biphase] Received an allframe :)\n");
                       memcpy(local_allframe, compbuffer, superframe->allframe_size);
                   } else {
                       // The compressed linklist has been fully reconstructed
-                      blast_info("[Biphase] Received linklist \"%s\"", ll->name);
+                      if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                       // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
                       // write the linklist data to disk
                       if (ll_rawfile) {
                         memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                         write_linklist_rawfile(ll_rawfile, compbuffer);
+                        flush_linklist_rawfile(ll_rawfile);
                       }
-
-                      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
-                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                      groundhog_linklist_publish(ll, compbuffer);
-
-                      incrementFifo(local_fifo);
                       memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
                       compbuffer_size = 0;
                   } 
