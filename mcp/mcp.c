@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
   ph_thread_t *mag_thread = NULL;
   ph_thread_t *gps_thread = NULL;
   ph_thread_t *dgps_thread = NULL;
-	ph_thread_t *lj_init_thread = NULL;
+  ph_thread_t *lj_init_thread = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t CommandDatacomm2;
@@ -481,8 +481,8 @@ int main(int argc, char *argv[])
    * Begin logging
    */
   {
-      time_t start_time_s;
       char log_file_name[PATH_MAX];
+      time_t start_time_s;
 
       start_time_s = time(&start_time_s);
       gmtime_r(&start_time_s, &start_time);
@@ -492,9 +492,10 @@ int main(int argc, char *argv[])
               start_time.tm_hour, start_time.tm_min);
 
       openMCElog(log_file_name);
+
+      initLogger(&logger, log_file_name, 100);
+      logger_buffer = channels_find_by_name("chatter");
   }
-  initLogger(&logger, log_file_name, 100);
-  logger_buffer = channels_find_by_name("chatter");
 
   /* register the output function */
   nameThread("Dummy"); // insert dummy sentinel node first
