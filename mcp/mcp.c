@@ -263,6 +263,9 @@ static void mcp_100hz_routines(void)
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
+    // write the logs to the frame
+    if (logger_buffer) readLogger(&logger, logger_buffer);
+
     share_data(RATE_100HZ);
     framing_publish_100hz();
     add_frame_to_superframe(channel_data[RATE_100HZ], RATE_100HZ, master_superframe_buffer,
@@ -343,8 +346,6 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     write_roach_channels_1hz();
-    // write the logs to the frame
-    if (logger_buffer) readLogger(&logger, logger_buffer);
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
@@ -480,8 +481,8 @@ int main(int argc, char *argv[])
   /**
    * Begin logging
    */
+  char log_file_name[PATH_MAX];
   {
-      char log_file_name[PATH_MAX];
       time_t start_time_s;
 
       start_time_s = time(&start_time_s);
@@ -492,9 +493,6 @@ int main(int argc, char *argv[])
               start_time.tm_hour, start_time.tm_min);
 
       openMCElog(log_file_name);
-
-      initLogger(&logger, log_file_name, 100);
-      logger_buffer = channels_find_by_name("chatter");
   }
 
   /* register the output function */
@@ -525,6 +523,9 @@ int main(int argc, char *argv[])
 
   blast_info("Commands: MCP Command List Version: %s", command_list_serial);
 
+  // telemetry logger
+	initLogger(&logger, log_file_name, 1);
+	logger_buffer = channels_find_by_name("chatter")->var;
 
 //  initialize_blast_comms();
 //  initialize_sip_interface();
