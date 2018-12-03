@@ -94,7 +94,6 @@ int hwpr_calpulse_flag = 0;
 void MonitorHWPR(struct ezbus *bus)
 {
   EZBus_ReadInt(bus, hwpr_data.addr, "?0", &hwpr_data.pos);
-  // EZBus_ReadInt(bus, HWPR_ADDR, "?8", &hwpr_data.enc);
   hwpr_data.enc = hwp_get_position() * ENC_TO_DEG; //  absolute degrees on hwpr
 }
 

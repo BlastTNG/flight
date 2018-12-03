@@ -263,7 +263,7 @@ void DoPotValve(struct ezbus* bus)
 	EZBus_SetIHold(bus, potvalve_data.addr, CommandData.Cryo.potvalve_hold_i);
 
 	if (CommandData.Cryo.potvalve_goal == opened) {
-		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
+		potvalve_data.goal = CommandData.Cryo.potvalve_goal;
 		// blast_info("set goal open"); // DEBUG PAW
 	} else if (CommandData.Cryo.potvalve_goal == closed) {
 		if ((potvalve_data.state == opened) || (potvalve_data.state == intermed)) {

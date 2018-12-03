@@ -1480,7 +1480,7 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
+    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPRNUM = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
     // blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
     //           LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
