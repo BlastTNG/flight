@@ -52,16 +52,16 @@ void Housekeeper::add_channel(variables_map map, int channel_num)
     if (map.count(field_type)) {
         type = map[field_type].as<string>();
         if (type == "temperature" && map.count(field_resistor_value)) {
-            // measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
-            // measurement.offset = -273.15;
-			measurement.scale = 1;
-			measurement.offset = 0;
+            measurement.scale = 1000000.0 / (map[field_resistor_value].as<float>());
+            measurement.offset = -273.15;
+			// measurement.scale = 1;
+			// measurement.offset = 0;
 			measurement.units = " C";
         } else if (type == "pressure" && map.count(field_voltage)) {
-            // measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
-            // measurement.offset = 0.04 / (0.004 * 101.325);
-			measurement.scale = 1;
-			measurement.offset = 0;
+            measurement.scale = 1.0 / (0.004 * 101.325 * (map[field_voltage].as<float>()));
+            measurement.offset = 0.04 / (0.004 * 101.325);
+			// measurement.scale = 1;
+			// measurement.offset = 0;
             measurement.units = " a";
         } else {
             return;
@@ -130,9 +130,7 @@ void Housekeeper::update()
                 }
                
 
-				// int heater_state = shared_housekeeper.heater_state;
-				// TODO(javier): remove for flight
-				int heater_state = 0;
+				int heater_state = shared_housekeeper.heater_state;
 				if (heater_state > 0) {
 					ad_card->heat_camera(true);
 					logdata += "Heating";
