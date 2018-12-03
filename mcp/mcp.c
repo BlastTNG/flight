@@ -85,6 +85,7 @@
 #include "data_sharing_server.h"
 #include "FIFO.h"
 #include "hwpr.h"
+#include "log.h"
 #include "motors.h"
 #include "roach.h"
 #include "relay_control.h"
@@ -115,7 +116,8 @@ void WatchFIFO(void*);          // commands.c
 void StageBus(void);
 #endif
 
-struct chat_buf chatter_buffer;
+struct LOGGER logger = {0};
+uint8_t * logger_buffer = NULL;
 struct tm start_time;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
@@ -146,116 +148,6 @@ time_t mcp_systime(time_t *t) {
   return the_time;
 }
 
-// static void Chatter(void* arg)
-// {
-//  int fd;
-//  char ch;
-//  ssize_t ch_got;
-//  off_t fpos;
-//
-//  fpos = *(off_t*)arg;
-//
-//  nameThread("Chat");
-//
-//  blast_startup("Thread startup\n");
-//
-//  fd = open("/data/etc/blast/mcp.log", O_RDONLY|O_NONBLOCK);
-//
-//  if (fd == -1)
-//  {
-//    blast_tfatal("Failed to open /data/etc/blast/mcp.log for reading (%d)\n", errno);
-//  }
-//
-//  if (fpos == -1) {
-//    if (lseek(fd, -500, SEEK_END) == -1)
-//    {
-//      if (errno == EINVAL)
-//      {
-//  if (lseek(fd, 0, SEEK_SET) == -1)
-//  {
-//    blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
-//  }
-//      } else {
-//  blast_tfatal("Failed to seek /data/etc/blast/mcp.log (%d)\n", errno);
-//      }
-//    }
-//  } else {
-//    if (lseek(fd, fpos, SEEK_SET) == -1)
-//    {
-//      if (lseek(fd, 0, SEEK_END) == -1)
-//      {
-//  blast_tfatal("Failed to rewind /data/etc/blast/mcp.log (%d)\n", errno);
-//      }
-//    }
-//  }
-//
-//  while (read(fd, &ch, 1) == 1 && ch != '\n'); /* Find start of next message */
-//
-//  chatter_buffer.reading = chatter_buffer.writing = 0;
-//      /* decimal 22 is "Synchronous Idle" in ascii */
-//  memset(chatter_buffer.msg, 22, sizeof(char) * 20 * 2 * 4);
-//
-//  while (1)
-//  {
-//    if (chatter_buffer.writing != ((chatter_buffer.reading - 1) & 0x3))
-//    {
-//      ch_got = read(fd, chatter_buffer.msg[chatter_buffer.writing], 2 * 20 * sizeof(char));
-//      if (ch_got == -1)
-//      {
-//        blast_tfatal("Error reading from /data/etc/blast/mcp.log (%d)\n", errno);
-//      }
-//      if (ch_got < (2 * 20 * sizeof(char)))
-//      {
-//        memset(&(chatter_buffer.msg[chatter_buffer.writing][ch_got]), 22, (2 * 20 * sizeof(char)) - ch_got);
-//      }
-//      chatter_buffer.writing = ((chatter_buffer.writing + 1) & 0x3);
-//    }
-//    usleep(100000);
-//  }
-// }
-
-
-
-// void ClearBuffer(struct frameBuffer *buffer) {
-//  buffer->i_out = buffer->i_in;
-// }
-//
-// uint16_t  *PopFrameBufferAndSlow(struct frameBuffer *buffer, uint16_t  ***slow) {
-//  uint16_t  *frame;
-//  int i_out = buffer->i_out;
-//
-//  if (buffer->i_in == i_out) { // no data
-//    return (NULL);
-//  }
-//  frame = buffer->framelist[i_out];
-//
-//  *slow = buffer->slow_data_list[i_out];
-//
-//  i_out++;
-//  if (i_out>=BI0_FRAME_BUFLEN) {
-//    i_out = 0;
-//  }
-//  buffer->i_out = i_out;
-//  return (frame);
-// }
-//
-// uint16_t  *PopFrameBuffer(struct frameBuffer *buffer) {
-//  uint16_t  *frame;
-//  int i_out = buffer->i_out;
-//
-//  if (buffer->i_in == i_out) { // no data
-//    return (NULL);
-//  }
-//  frame = buffer->framelist[i_out];
-//  i_out++;
-//  if (i_out>=BI0_FRAME_BUFLEN) {
-//    i_out = 0;
-//  }
-//  buffer->i_out = i_out;
-//  return (frame);
-// }
-//
-// #endif
 
 void close_mcp(int m_code)
 {
@@ -265,6 +157,7 @@ void close_mcp(int m_code)
     watchdog_close();
     shutdown_bias_tone();
     diskmanager_shutdown();
+    closeLogger(&logger);
     ph_sched_stop();
 }
 
@@ -365,7 +258,6 @@ static void mcp_100hz_routines(void)
     store_100hz_acs();
     send_fast_data();
 //   BiasControl();
-    WriteChatter();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
     xsc_control_triggers();
@@ -451,6 +343,8 @@ static void mcp_1hz_routines(void)
     store_1hz_xsc(0);
     store_1hz_xsc(1);
     write_roach_channels_1hz();
+    // write the logs to the frame
+    if (logger_buffer) readLogger(&logger, logger_buffer);
     store_charge_controller_data();
     share_data(RATE_1HZ);
     framing_publish_1hz();
@@ -599,6 +493,8 @@ int main(int argc, char *argv[])
 
       openMCElog(log_file_name);
   }
+  initLogger(&logger, "/data/etc/blast/log.txt", 100);
+  logger_buffer = channels_find_by_name("chatter");
 
   /* register the output function */
   nameThread("Dummy"); // insert dummy sentinel node first

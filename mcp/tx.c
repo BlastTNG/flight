@@ -62,8 +62,6 @@ int EthernetIsc = 3;
 int EthernetOsc = 3;
 int EthernetSBSC = 3;
 
-extern struct chat_buf chatter_buffer;  /* mcp.c */
-
 /* in auxiliary.c */
 void ChargeController(void);
 void ControlAuxMotors();
@@ -231,45 +229,6 @@ void WriteAux(void)
     SET_VALUE(statusMCCAddr, mccstatus);
     SET_VALUE(last_cmd_addr[0], CommandData.last_command);
     SET_VALUE(count_cmd_addr[0], CommandData.command_count);
-}
-
-void WriteChatter(void)
-{
-//    static channel_t* chatterAddr;
-//    static int firsttime = 1;
-//    unsigned int chat;
-//
-//    if (firsttime) {
-//        firsttime = 0;
-//        chatterAddr = channels_find_by_name("chatter");
-//    }
-//
-//    switch (index & 0x03) {
-//        case 0x00:
-//            chat = 0x0000;
-//            break;
-//        case 0x01:
-//            chat = 0x8000;
-//            break;
-//        case 0x02:
-//            chat = 0x0080;
-//            break;
-//        case 0x03:
-//            chat = 0x8080;
-//            break;
-//        default:
-//            chat = 0x0000;
-//            break;
-//    }
-//
-//    chat += (unsigned int) (chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0x7F);
-//    chat += (unsigned int) ((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0x7F) << 8;
-//
-//    if (index == (19)) {
-//        chatter_buffer.reading = (chatter_buffer.reading + 1) & 0x3;
-//    }
-//
-//    SET_VALUE(chatterAddr, chat);
 }
 
 /***************************************************************/
