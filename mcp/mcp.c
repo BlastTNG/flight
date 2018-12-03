@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
 
       openMCElog(log_file_name);
   }
-  initLogger(&logger, "/data/etc/blast/log.txt", 100);
+  initLogger(&logger, log_file_name, 100);
   logger_buffer = channels_find_by_name("chatter");
 
   /* register the output function */
