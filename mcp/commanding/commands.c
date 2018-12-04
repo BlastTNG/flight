@@ -1226,6 +1226,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].set_attens = 2;
             }
             break;
+        case set_attens_last_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].set_attens = 3;
+            }
+            break;
         case auto_find_kids_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].auto_find = 1;
@@ -2161,6 +2166,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
+    case reboot_pi:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].reboot_pi_now = 1;
+      }
+      break;
+    case read_attens:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].read_attens = 1;
+      }
+      break;
     case new_output_atten:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
           CommandData.roach_params[ivalues[0]-1].new_out_atten = rvalues[1];
@@ -2959,6 +2974,7 @@ void InitCommandData()
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].calibrate_adc = 0;
         CommandData.roach[i].set_attens = 0;
+        CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
@@ -2989,15 +3005,16 @@ void InitCommandData()
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
         CommandData.roach[i].auto_find = 0;
-        CommandData.roach_params[i].in_atten = 16;
+        CommandData.roach_params[i].in_atten = 19;
         CommandData.roach[i].recenter_df = 0;
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
+        CommandData.roach[i].reboot_pi_now = 0;
     }
-    CommandData.roach_params[0].out_atten = 7;
-    CommandData.roach_params[1].out_atten = 2;
-    CommandData.roach_params[2].out_atten = 3;
-    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[0].out_atten = 4;
+    CommandData.roach_params[1].out_atten = 4;
+    CommandData.roach_params[2].out_atten = 4;
+    CommandData.roach_params[3].out_atten = 4;
     CommandData.roach_params[4].out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;

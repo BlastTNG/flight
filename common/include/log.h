@@ -1,6 +1,8 @@
-/* mcp: the master control program
+/* mcp: the BLAST master control program
  *
- * This software is copyright (C) 2003-2011 University of Toronto
+ * This software is copyright (C) 2002-2006 University of Toronto
+ *
+ * This file is part of mcp.
  *
  * mcp is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +20,32 @@
  *
  */
 
+#ifndef INCLUDE_LOG_H
+#define INCLUDE_LOG_H
 
-#ifndef INCLUDE_TX_H
-#define INCLUDE_TX_H
-
-#include "channels_tng.h"
-#include "calibrate.h"
-
-extern int mcp_initial_controls;
-
-double ReadCalData(channel_t *m_ch);
-void StoreData(void);
-void WriteAux(void);
-void SetGyroMask(void);
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+struct LOGGER
+{
+  FILE * f;
+  char * buffer;
+  int loc;
+  unsigned int blksize;
+  int n;
+  int isinit;
+};
+
+
+void initLogger(struct LOGGER *, char *, int);
+int readLogger(struct LOGGER *, char *);
+void resetLogger(struct LOGGER *);
+void closeLogger(struct LOGGER *);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* INCLUDE_LOG_H */
