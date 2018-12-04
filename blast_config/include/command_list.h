@@ -159,7 +159,7 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off,
+  change_freqs_all, set_attens_last_all, debug_mode, pilot_oth_on, pilot_oth_off,
 
   xyzzy
 };
@@ -300,6 +300,8 @@ enum multiCommand {
   offset_freq,
   lamp_check_all,
   set_attens_all,
+  reboot_pi,
+  read_attens,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
