@@ -62,9 +62,10 @@ extern int16_t InCharge;
 #define RW_SN 0x01bbbb65
 #define PIV_SN 0x02924687
 #define EL_SN 0x01238408
-#define RW_ADDR 0x3
+// Reversed order of the RW and Pivot MCs 12-04-18 LMF
+#define RW_ADDR 0x1
 #define EL_ADDR 0x2
-#define PIV_ADDR 0x1
+#define PIV_ADDR 0x3
 #define FUCHS_MFG_ID 0x00ad // HWP encoder
 /**
  * Structure for storing the PDO assignments and their offsets in the
@@ -1053,14 +1054,16 @@ void mc_readPDOassign(int m_slave) {
         if (idx <= 0) {
         	continue;
         } else {
-            blast_info("found idx = %i at wkc = %i, idxloop = %i", idx, wkc, idxloop);
+            blast_info("found idx = %2x at wkc = %i, idxloop = %i", idx, wkc, idxloop);
         }
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
         wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
+        blast_info("Number of subindexes: %i", subidx);
         /* for each subindex */
+        blast_info("Reading our the SDOs");
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
             pdo_channel_map_t *channel = NULL;
             pdo_mapping_t pdo_map = { 0 };
@@ -1072,8 +1075,8 @@ void mc_readPDOassign(int m_slave) {
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
             pdo_list[m_slave] = g_slist_prepend(pdo_list[m_slave], channel);
-            blast_info("Read SDO wkc = %i, idx = %i, len = %i", wkc, idx, len);
-            blast_info("Appending channel to m_pdo_list = %p: index = %i, subindex = %i, offset = %i",
+            blast_info("Read SDO subidxloop = %i, wkc = %i, idx = %i, len = %i", subidxloop, wkc, idx, len);
+            blast_info("Appending channel to m_pdo_list = %p: index = %2x, subindex = %i, offset = %i",
                        pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
