@@ -563,12 +563,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[2] = 1;
             break;
-        case bi0_cycle:
+        case vtx_cycle:
             CommandData.Relays.cycle_if_4 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case vtx_cycle:
+        case bi0_cycle:
             CommandData.Relays.cycle_if_5 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[4] = 1;
