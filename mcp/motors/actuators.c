@@ -441,13 +441,13 @@ static void DoActuators(void)
       CommandData.actbus.goal[2] = act_data[2].enc + delta;
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-	ServoActuators(CommandData.actbus.goal);
-	break;
+	  ServoActuators(CommandData.actbus.goal);
+	  break;
     case ACTBUS_FM_TRIM:
-	actEncTrim(CommandData.actbus.trim);
-	break;
+	  actEncTrim(CommandData.actbus.trim);
+	  break;
     case ACTBUS_FM_SLEEP:
-	break;
+	  break;
     default:
 	blast_err("Unknown Focus Mode (%i), sleeping",
 	    CommandData.actbus.focus_mode);
