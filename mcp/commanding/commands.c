@@ -968,20 +968,20 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // break;
         // cryo valves
 	case potvalve_open:
-            CommandData.Cryo.potvalve_goal = opened;
-            break;
-        case potvalve_close:
-            CommandData.Cryo.potvalve_goal = closed;
-            break;
-        case potvalve_on:
-            CommandData.Cryo.potvalve_on = 1;
+        CommandData.Cryo.potvalve_goal = opened;
+        break;
+    case potvalve_close:
+        CommandData.Cryo.potvalve_goal = closed;
+        break;
+    case potvalve_on:
+        CommandData.Cryo.potvalve_on = 1;
 	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case potvalve_off:
-            CommandData.Cryo.potvalve_on = 0;
+        break;
+    case potvalve_off:
+        CommandData.Cryo.potvalve_on = 0;
 	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case pump_valve_open:
+        break;
+    case pump_valve_open:
 	    CommandData.Cryo.valve_goals[0] = opened;
 	    break;
 	case pump_valve_close:
@@ -1009,25 +1009,25 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    CommandData.Cryo.valve_stop[1] = 0;
 	    break;
 	case l_valve_open:
-            CommandData.Cryo.lvalve_open = 100;
-            CommandData.Cryo.lvalve_close = 0;
-            break;
-        case l_valve_close:
-            CommandData.Cryo.lvalve_close = 100;
-            CommandData.Cryo.lvalve_open = 0;
-            break;
-        case he_valve_on:
-            CommandData.Cryo.lhevalve_on = 1;
-            break;
-        case he_valve_off:
-            CommandData.Cryo.lhevalve_on = 0;
-            break;
-        case ln_valve_on:
-            CommandData.Cryo.lnvalve_on = 1;
-            break;
-        case ln_valve_off:
-            CommandData.Cryo.lnvalve_on = 0;
-            break;
+        CommandData.Cryo.lvalve_open = 100;
+        CommandData.Cryo.lvalve_close = 0;
+        break;
+    case l_valve_close:
+        CommandData.Cryo.lvalve_close = 100;
+        CommandData.Cryo.lvalve_open = 0;
+        break;
+    case he_valve_on:
+        CommandData.Cryo.lhevalve_on = 1;
+        break;
+    case he_valve_off:
+        CommandData.Cryo.lhevalve_on = 0;
+        break;
+    case ln_valve_on:
+        CommandData.Cryo.lnvalve_on = 1;
+        break;
+    case ln_valve_off:
+        CommandData.Cryo.lnvalve_on = 0;
+        break;
 
             // Lock
         case pin_in:
