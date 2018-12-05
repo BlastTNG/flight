@@ -577,12 +577,13 @@ static diskentry_t *diskpool_mount_new(void) {
                     blast_warn("No USB disks found, waiting...");
                     have_warned = true;
                 }
-                usleep(1000);
+                usleep(10000);
                 break;
             }
 
             disk_mounted = diskpool_mount_diskentry(best_disk);
         }
+        usleep(10000);
     }
 
     if (disk_mounted) {
@@ -759,6 +760,7 @@ static void diskmanager_clear_old_mounts()
                         strerror(errno));
             }
         }
+        usleep(10000);
     }
     endmntent(mtab_fp);
 }
