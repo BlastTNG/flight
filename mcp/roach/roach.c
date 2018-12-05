@@ -193,8 +193,8 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 
-char rudat_input_serials[5][11] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
-char rudat_output_serials[5][11] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
+char rudat_input_serials[5][100] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
+char rudat_output_serials[5][100] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
@@ -1323,17 +1323,19 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
     }
     status = read(s, buff, sizeof(buff));
     // printf("STATUS = %d\n", status);
-    // blast_info("%s", buff);
+    blast_info("%s", buff);
     if (read_flag) {
         int count = 0;
         char* line;
         char* rest = buff;
         char response[4][100];
         while ((line = strtok_r(rest, "\n", &rest))) {
-            snprintf(response[count], sizeof(line), line);
+            snprintf(response[count], sizeof(response[count]), line);
+            // blast_info("RESPONSE = %s", response[count]);
             count++;
         }
-        if (response[0] == rudat_input_serials[m_pi->which]) {
+        // blast_info("RESPONSE 0, SERIAL = %s %s", response[0], rudat_input_serials[m_pi->which - 1]);
+        if (strcmp(response[0], rudat_input_serials[m_pi->which - 1]) == 0) {
             CommandData.roach_params[m_pi->which - 1].read_in_atten = atof(response[1]);
             CommandData.roach_params[m_pi->which - 1].read_out_atten = atof(response[3]);
         } else {
@@ -2537,7 +2539,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
         if (m_roach->array == 500) {
-            m_span = 200.0e3;
+            m_span = 250.0e3;
         }
         if (create_sweepdir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
@@ -4146,6 +4148,10 @@ void start_flight_mode(roach_state_t *m_roach)
 int roach_targ_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    if (m_roach->has_vna_tones) {
+        blast_err("ROACH%d: Search comb is loaded. Must write TARG tones before TARG sweep", m_roach->which);
+        return retval;
+    }
     m_roach->is_sweeping = 2;
     if ((roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0) < 0)) {
         retval = -2;
