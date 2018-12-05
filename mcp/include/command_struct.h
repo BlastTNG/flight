@@ -351,6 +351,7 @@ typedef struct roach
     unsigned int load_targ_amps;
     unsigned int calibrate_adc;
     unsigned int set_attens;
+    unsigned int read_attens;
     unsigned int find_kids;
     unsigned int adc_rms;
     unsigned int test_tone;
@@ -376,6 +377,7 @@ typedef struct roach
     unsigned int recenter_df;
     unsigned int go_flight_mode;
     unsigned int check_response;
+    unsigned int reboot_pi_now;
 } roach_status_t;
 
 typedef struct roach_params
@@ -387,6 +389,8 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double read_in_atten;
+    double read_out_atten;
     double new_out_atten;
     double test_freq;
     double atten_step;

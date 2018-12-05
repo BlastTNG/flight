@@ -74,7 +74,7 @@
 
 void nameThread(const char*);  /* mcp.c */
 void fillDLData(unsigned char *b, int len); /* slowdl.c */
-void fillSBDData(unsigned char *b, int len); /* highrate.c */
+void fillSBData(unsigned char *b, int len); /* highrate.c */
 
 extern pthread_mutex_t mutex;
 
@@ -379,7 +379,7 @@ static void SendDownData(char tty_fd)
   buffer[2] = SLOWDL_LEN;
   // updateSlowDL();
   // fillDLData(buffer+3, SLOWDL_LEN);
-  fillSBDData(buffer+3, SLOWDL_LEN);
+  fillSBData(buffer+3, SLOWDL_LEN);
   blast_info("Sending slowdl data\n");
 
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
@@ -778,7 +778,7 @@ void WatchPort(void* parameter)
                             /*** Single command ***/
                             // blast_info("Single command received\n");
                             // FIXME(seth): this limits # single commands to 255. use indata[1] too
-                            SingleCommand(indata[0], 0);
+                            SingleCommand(indata[0] | ((indata[1] & 0x0f) << 8), 0);
                             mcommand = -1;
                         } else if ((indata[1] & 0xE0) == 0x80) {
                             /*** Beginning of multi command ***/

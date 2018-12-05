@@ -37,6 +37,7 @@
 #define HIGHRATE_ORIGIN_COMM2 0x0a 
 
 extern struct Fifo highrate_fifo;
+extern struct Fifo sbd_fifo;
 
 void highrate_compress_and_send(void *);
 

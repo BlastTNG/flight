@@ -49,7 +49,7 @@ extern struct tm start_time;
 #define DEFAULT_INCHARGE !SouthIAm
 
 // telemetry defines
-#define NUM_TELEMETRIES 3
+#define NUM_TELEMETRIES 4
 #define PILOT_TELEMETRY_INDEX 0
 #define BI0_TELEMETRY_INDEX 1
 #define HIGHRATE_TELEMETRY_INDEX 2
