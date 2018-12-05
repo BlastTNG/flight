@@ -337,7 +337,7 @@ void poll_socket(void)
                         // out of sequence for the rest of the subsequent packets read out in buf.
                         // TODO(laura): Test to see if this happens and if so write code to search
                         // for the next packet.
-                            blast_err("Roach%i: Read only %lu bytes.", m_roach_udp->which, bytes_read);
+                            blast_err("Roach%i: Read only %u bytes.", m_roach_udp->which, bytes_read);
                             m_roach_udp->roach_invalid_packet_count++;
                             m_roach_udp->roach_packet_count++;
                             continue;

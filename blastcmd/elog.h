@@ -23,6 +23,8 @@
 #ifndef ELOG_H
 #define ELOG_H
 
+#define ENABLE_ELOG
+
 #ifdef __MINI__
 #undef ENABLE_ELOG
 #endif

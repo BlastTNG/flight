@@ -94,8 +94,6 @@ enum singleCommand {
   trim_to_xsc0,      unlock,             lock_off,
   force_el_on,
   actbus_cycle,
-  vtx_off,	        vtx_on,
-  bi0_off,	        bi0_on,
   charge_off,	    charge_on,		charge_cycle,
 
   ifroll_1_gy_allow, ifroll_1_gy_veto,   ifroll_2_gy_allow, ifroll_2_gy_veto,
@@ -137,9 +135,9 @@ enum singleCommand {
     heater_sync, allow_cycle, disallow_cycle,
 	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
 	xsc0_cycle, gyros_cycle, data_transmit_cycle, elmot_cycle, pivot_cycle,
-	mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_15_cycle,
-	gps_timing_cycle, if_1_cycle, if_lj_cycle, timing_dist_cycle, if_4_cycle,
-	if_5_cycle, if_6_cycle, if_eth_cycle, if_8_cycle, roach_cycle,
+    mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_lj_cycle,
+	gps_timing_cycle, if_1_cycle, if_lj_cycle, timing_dist_cycle, vtx_cycle,
+	bi0_cycle, if_6_cycle, if_eth_switch_cycle, if_8_cycle, roach_cycle,
 	cryo_hk_cycle, force_cycle,
 	hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
 	fc1_on, fc1_off, xsc1_on, xsc1_off,
@@ -148,11 +146,11 @@ enum singleCommand {
 	elmot_on, elmot_off, pivot_on, pivot_off,
 	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
-	of_relay_15_on, of_relay_15_off, gps_timing_on, gps_timing_off,
+	of_lj_on, of_lj_off, gps_timing_on, gps_timing_off,
 	if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
-	timing_dist_on, timing_dist_off, if_relay_4_on, if_relay_4_off,
-	if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
-	if_eth_on, if_eth_off, if_relay_8_on, if_relay_8_off,
+	timing_dist_on, timing_dist_off, bi0_on, bi0_off,
+	vtx_on, vtx_off, if_relay_6_on, if_relay_6_off,
+	if_eth_switch_on, if_eth_switch_off, if_relay_8_on, if_relay_8_off,
 	roach_on, roach_off, cryo_hk_on, cryo_hk_off,
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
@@ -160,7 +158,7 @@ enum singleCommand {
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
   change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off, allow_watchdog,
-    disallow_watchdog,
+    disallow_watchdog, set_attens_last_all,
 
   xyzzy
 };
@@ -301,6 +299,8 @@ enum multiCommand {
   offset_freq,
   lamp_check_all,
   set_attens_all,
+  reboot_pi,
+  read_attens,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

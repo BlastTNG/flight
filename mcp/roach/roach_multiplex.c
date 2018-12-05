@@ -92,6 +92,8 @@ void add_roach_tlm_488hz()
   // -----------------------------------
 
   static unsigned int kid_counter[NUM_ROACHES] = {0};
+  static unsigned int kid_tlm[NUM_ROACHES] = {0};
+
   for (int j = 0; j < NUM_ROACHES; j++) {
 		if (CommandData.num_channels_all_roaches[j]) { // if non-zero, multiplex that number of roach channels
 			for (int i = 0; i < 3; i++) { // loop through I, Q, and df
@@ -102,9 +104,9 @@ void add_roach_tlm_488hz()
 				// set kid and roach counters for I, Q, and df multiplex
         unsigned int wrap = MIN(CommandData.num_channels_all_roaches[j], MAX_CHANNELS_PER_ROACH);
         kid_counter[j] = (kid_counter[j]+1)%wrap;
-        r_tlm->kid = (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH;
+        kid_tlm[j] = (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH;
 
-        r_tlm->index = get_roach_index(j+1, r_tlm->kid, i);
+        r_tlm->index = get_roach_index(j+1, kid_tlm[j], i);
 			}
 		}
   }
