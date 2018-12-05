@@ -563,12 +563,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[2] = 1;
             break;
-        case vtx_cycle:
+        case bi0_cycle:
             CommandData.Relays.cycle_if_4 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case bi0_cycle:
+        case vtx_cycle:
             CommandData.Relays.cycle_if_5 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[4] = 1;
@@ -628,28 +628,28 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[2] = 0;
             break;
-        case bi0_on:
+        case vtx_on:
             CommandData.power.bi0.rst_count = 0;
             CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case bi0_off:
+        case vtx_off:
             CommandData.power.bi0.set_count = 0;
             CommandData.power.bi0.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 0;
             break;
-        case vtx_on:
+        case bi0_on:
             CommandData.power.sc_tx.rst_count = 0;
             CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[4] = 1;
             break;
-        case vtx_off:
+        case bi0_off:
             CommandData.power.sc_tx.set_count = 0;
             CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_off = 1;
