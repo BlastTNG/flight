@@ -2992,6 +2992,8 @@ void InitCommandData()
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
+        CommandData.roach_params[i].read_in_atten = 0;
+        CommandData.roach_params[i].read_out_atten = 0;
     }
     CommandData.roach_params[0].out_atten = 4;
     CommandData.roach_params[1].out_atten = 4;
