@@ -389,6 +389,8 @@ typedef struct roach_params
 //  Set attenuators
     double in_atten;
     double out_atten;
+    double read_in_atten;
+    double read_out_atten;
     double new_out_atten;
     double test_freq;
     double atten_step;

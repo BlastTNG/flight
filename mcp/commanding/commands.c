@@ -967,48 +967,48 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-	case potvalve_open:
-        CommandData.Cryo.potvalve_goal = opened;
-        break;
-    case potvalve_close:
-        CommandData.Cryo.potvalve_goal = closed;
-        break;
-    case potvalve_on:
-        CommandData.Cryo.potvalve_on = 1;
-	    CommandData.Cryo.potvalve_goal = 0;
-        break;
-    case potvalve_off:
-        CommandData.Cryo.potvalve_on = 0;
-	    CommandData.Cryo.potvalve_goal = 0;
-        break;
-    case pump_valve_open:
-	    CommandData.Cryo.valve_goals[0] = opened;
-	    break;
-	case pump_valve_close:
-	    CommandData.Cryo.valve_goals[0] = closed;
-	    break;
-	case pump_valve_off:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 1;
-	    break;
-	case pump_valve_on:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 0;
-	case fill_valve_open:
-	    CommandData.Cryo.valve_goals[1] = opened;
-	    break;
-	case fill_valve_close:
-	    CommandData.Cryo.valve_goals[1] = closed;
-	    break;
-	case fill_valve_off:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 1;
-	    break;
-	case fill_valve_on:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 0;
-	    break;
-	case l_valve_open:
+		case potvalve_open:
+        	CommandData.Cryo.potvalve_goal = opened;
+        	break;
+    	case potvalve_close:
+        	CommandData.Cryo.potvalve_goal = closed;
+        	break;
+    	case potvalve_on:
+        	CommandData.Cryo.potvalve_on = 1;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case potvalve_off:
+        	CommandData.Cryo.potvalve_on = 0;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case pump_valve_open:
+	    	CommandData.Cryo.valve_goals[0] = opened;
+	    	break;
+		case pump_valve_close:
+	    	CommandData.Cryo.valve_goals[0] = closed;
+	    	break;
+		case pump_valve_off:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 1;
+	    	break;
+		case pump_valve_on:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 0;
+		case fill_valve_open:
+	    	CommandData.Cryo.valve_goals[1] = opened;
+	    	break;
+		case fill_valve_close:
+	    	CommandData.Cryo.valve_goals[1] = closed;
+	    	break;
+		case fill_valve_off:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 1;
+	    	break;
+		case fill_valve_on:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 0;
+	    	break;
+		case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
             CommandData.Cryo.lvalve_close = 0;
             break;
@@ -3010,6 +3010,8 @@ void InitCommandData()
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
+        CommandData.roach_params[i].read_in_atten = 0;
+        CommandData.roach_params[i].read_out_atten = 0;
     }
     CommandData.roach_params[0].out_atten = 4;
     CommandData.roach_params[1].out_atten = 4;

@@ -193,6 +193,9 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 
+char rudat_input_serials[5][11] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
+char rudat_output_serials[5][11] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
+
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
 void nameThread(const char*);
@@ -1320,9 +1323,25 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
     }
     status = read(s, buff, sizeof(buff));
     // printf("STATUS = %d\n", status);
-    blast_info("%s\n", buff);
+    // blast_info("%s", buff);
     if (read_flag) {
-        blast_info("READ");
+        int count = 0;
+        char* line;
+        char* rest = buff;
+        char response[4][100];
+        while ((line = strtok_r(rest, "\n", &rest))) {
+            snprintf(response[count], sizeof(line), line);
+            count++;
+        }
+        if (response[0] == rudat_input_serials[m_pi->which]) {
+            CommandData.roach_params[m_pi->which - 1].read_in_atten = atof(response[1]);
+            CommandData.roach_params[m_pi->which - 1].read_out_atten = atof(response[3]);
+        } else {
+            CommandData.roach_params[m_pi->which - 1].read_in_atten = atof(response[3]);
+            CommandData.roach_params[m_pi->which - 1].read_out_atten = atof(response[1]);
+        }
+        blast_info("OUT ATTEN: %f", CommandData.roach_params[m_pi->which - 1].read_out_atten);
+        blast_info("IN ATTEN: %f", CommandData.roach_params[m_pi->which - 1].read_in_atten);
     }
     close(s);
     status = 0;
