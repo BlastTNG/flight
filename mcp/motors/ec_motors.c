@@ -62,10 +62,9 @@ extern int16_t InCharge;
 #define RW_SN 0x01bbbb65
 #define PIV_SN 0x02924687
 #define EL_SN 0x01238408
-// Reversed order of the RW and Pivot MCs 12-04-18 LMF
-#define RW_ADDR 0x1
+#define RW_ADDR 0x3
 #define EL_ADDR 0x2
-#define PIV_ADDR 0x3
+#define PIV_ADDR 0x1
 #define FUCHS_MFG_ID 0x00ad // HWP encoder
 /**
  * Structure for storing the PDO assignments and their offsets in the
@@ -576,27 +575,24 @@ static int find_controllers(void)
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
-        if (ec_slave[i].aliasadr == RW_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %d",
+        int32_t serial = 0;
+        int size = 4;
+        ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
+        if (serial == RW_SN) {
+            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
-        } else if (ec_slave[i].aliasadr == PIV_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Pivot Motor Controller %d: %s: SN: %d",
+            blast_info("Setting rw_index to %d", rw_index);
+        } else if (serial == PIV_SN) {
+            blast_startup("Pivot Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
-        } else if (ec_slave[i].aliasadr == EL_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Elevation Motor Controller %d: %s: SN: %d",
+            blast_info("Setting piv_index to %d", piv_index);
+        } else if (serial == EL_SN) {
+            blast_startup("Elevation Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
+            blast_info("Setting el_index to %d", el_index);
         } else {
             blast_warn("Got unknown MC %s at position %d with alias %d",
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
@@ -706,14 +702,14 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    map_pdo(&map, ECAT_NET_STATUS, 32); // Network Status (including heartbeat monitor)
     retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
     if (!retval) {
         blast_err("Failed mapping!");
     }
     blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -753,6 +749,10 @@ static int motor_pdo_init(int m_slave)
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4)) /// There are four maps in the TX PDOs
         blast_err("Failed mapping!");
 
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+    return 0;
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -844,9 +844,18 @@ static void map_index_vars(int m_index)
 static void map_motor_vars(void)
 {
 	blast_info("Starting map_motor_vars.");
-    if (el_index) map_index_vars(el_index);
-    if (rw_index) map_index_vars(rw_index);
-    if (piv_index) map_index_vars(piv_index);
+    if (el_index) {
+        blast_info("mapping el_motors to index: %d", el_index);
+        map_index_vars(el_index);
+    }
+    if (rw_index) {
+        blast_info("mapping rw_motors to index: %d", rw_index);
+        map_index_vars(rw_index);
+    }
+    if (piv_index) {
+        blast_info("mapping piv_motors to index: %d", piv_index);
+        map_index_vars(piv_index);
+    }
     if (hwp_index) {
         hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
     }
@@ -866,12 +875,18 @@ static void motor_configure_timing(void)
 {
     int found_dc_master = 0;
     ec_configdc();
+    while (ec_iserror()) {
+        blast_err("Error after ec_iserror(), %s", ec_elist2string());
+    }
     for (int i = 1; i <= ec_slavecount; i++) {
         if (!found_dc_master && ec_slave[i].hasdc) {
             ec_dcsync0(i, true, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
             found_dc_master = 1;
         } else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
+        }
+        while (ec_iserror()) {
+            blast_err("Slave %i, %s", i, ec_elist2string());
         }
         /**
          * Set the SYNC Manager mode to free-running so that we get data from the drive as soon as
@@ -881,6 +896,7 @@ static void motor_configure_timing(void)
         while (ec_iserror()) {
             blast_err("Slave %i, %s", i, ec_elist2string());
         }
+        blast_info("Slave %i, has_dc = %d, found_dc_master = %d", i, ec_slave[i].hasdc, found_dc_master);
     }
 }
 
@@ -910,6 +926,7 @@ static int motor_set_operational()
      * If we've reached fully operational state, return
      */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
+        blast_info("We have reached a fully operational state.");
         ec_mcp_state.status = ECAT_MOTOR_RUNNING;
         return 0;
     }
@@ -1106,6 +1123,9 @@ void set_ec_motor_defaults()
     ec_init_heartbeat(rw_index);
     ec_init_heartbeat(el_index);
     ec_init_heartbeat(piv_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 }
 
 int close_ec_motors()
