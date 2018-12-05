@@ -215,6 +215,7 @@ typedef struct roach_state {
     char *vna_amps_path[2];
     char *targ_amps_path[3];
     char *random_phase_path;
+    char *path_to_last_attens;
     char *phase_centers_path;
     char *freqlist_path;
     fftw_plan comb_plan;
@@ -235,6 +236,7 @@ typedef struct pi_state {
     bool has_output_atten;
     remote_serial_t *pi_comm;
     char *address;
+    int error_count;
 } pi_state_t;
 
 typedef struct {

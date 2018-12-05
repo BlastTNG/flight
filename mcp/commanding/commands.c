@@ -378,7 +378,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_of = 1;
             CommandData.Relays.of_relays[13] = 1;
             break;
-        case of_15_cycle:
+        case of_lj_cycle:
             CommandData.Relays.cycle_of_15 = 1;
             CommandData.Relays.cycled_of = 1;
             CommandData.Relays.of_relays[14] = 1;
@@ -528,12 +528,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[13] = 0;
             break;
-        case of_relay_15_on:
+        case of_lj_on:
             CommandData.Relays.of_15_on = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[14] = 1;
             break;
-        case of_relay_15_off:
+        case of_lj_off:
             CommandData.Relays.of_15_off = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[14] = 0;
@@ -553,22 +553,22 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[0] = 1;
             break;
-        case if_2_cycle:
+        case if_lj_cycle:
             CommandData.Relays.cycle_if_2 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[1] = 1;
             break;
-        case if_3_cycle:
+        case timing_dist_cycle:
             CommandData.Relays.cycle_if_3 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[2] = 1;
             break;
-        case if_4_cycle:
+        case vtx_cycle:
             CommandData.Relays.cycle_if_4 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case if_5_cycle:
+        case bi0_cycle:
             CommandData.Relays.cycle_if_5 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[4] = 1;
@@ -578,7 +578,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[5] = 1;
             break;
-        case if_7_cycle:
+        case if_eth_switch_cycle:
             CommandData.Relays.cycle_if_7 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[6] = 1;
@@ -588,12 +588,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[7] = 1;
             break;
-        case if_9_cycle:
+        case roach_cycle:
             CommandData.Relays.cycle_if_9 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[8] = 1;
             break;
-        case if_10_cycle:
+        case cryo_hk_cycle:
             CommandData.Relays.cycle_if_10 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[9] = 1;
@@ -608,42 +608,50 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[0] = 0;
             break;
-        case if_relay_2_on:
+        case if_lj_on:
             CommandData.Relays.if_2_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[1] = 1;
             break;
-        case if_relay_2_off:
+        case if_lj_off:
             CommandData.Relays.if_2_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[1] = 0;
             break;
-        case if_relay_3_on:
+        case timing_dist_on:
             CommandData.Relays.if_3_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[2] = 1;
             break;
-        case if_relay_3_off:
+        case timing_dist_off:
             CommandData.Relays.if_3_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[2] = 0;
             break;
-        case if_relay_4_on:
+        case bi0_on:
+            CommandData.power.bi0.rst_count = 0;
+            CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case if_relay_4_off:
+        case bi0_off:
+            CommandData.power.bi0.set_count = 0;
+            CommandData.power.bi0.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 0;
             break;
-        case if_relay_5_on:
+        case vtx_on:
+            CommandData.power.sc_tx.rst_count = 0;
+            CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[4] = 1;
             break;
-        case if_relay_5_off:
+        case vtx_off:
+            CommandData.power.sc_tx.set_count = 0;
+            CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[4] = 0;
@@ -658,12 +666,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[5] = 0;
             break;
-        case if_relay_7_on:
+        case if_eth_switch_on:
             CommandData.Relays.if_7_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[6] = 1;
             break;
-        case if_relay_7_off:
+        case if_eth_switch_off:
             CommandData.Relays.if_7_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[6] = 0;
@@ -678,22 +686,22 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[7] = 0;
             break;
-        case if_relay_9_on:
+        case roach_on:
             CommandData.Relays.if_9_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[8] = 1;
             break;
-        case if_relay_9_off:
+        case roach_off:
             CommandData.Relays.if_9_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[8] = 0;
             break;
-        case if_relay_10_on:
+        case cryo_hk_on:
             CommandData.Relays.if_10_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[9] = 1;
             break;
-        case if_relay_10_off:
+        case cryo_hk_off:
             CommandData.Relays.if_10_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[9] = 0;
@@ -844,22 +852,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case elclin_allow:
             CommandData.use_elclin = 1;
-            break;
-        case vtx_off:
-            CommandData.power.sc_tx.set_count = 0;
-            CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
-            break;
-        case vtx_on:
-            CommandData.power.sc_tx.rst_count = 0;
-            CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
-            break;
-        case bi0_off:
-            CommandData.power.bi0.set_count = 0;
-            CommandData.power.bi0.rst_count = LATCH_PULSE_LEN;
-            break;
-        case bi0_on:
-            CommandData.power.bi0.rst_count = 0;
-            CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
             break;
         case charge_on:
             CommandData.power.charge.set_count = 0;
@@ -1217,6 +1209,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case set_attens_default:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].set_attens = 2;
+            }
+            break;
+        case set_attens_last_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].set_attens = 3;
             }
             break;
         case auto_find_kids_all:
@@ -2151,6 +2148,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
+    case reboot_pi:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].reboot_pi_now = 1;
+      }
+      break;
+    case read_attens:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].read_attens = 1;
+      }
+      break;
     case new_output_atten:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] > 0) && rvalues[1] <= 30)) {
           CommandData.roach_params[ivalues[0]-1].new_out_atten = rvalues[1];
@@ -2949,6 +2956,7 @@ void InitCommandData()
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].calibrate_adc = 0;
         CommandData.roach[i].set_attens = 0;
+        CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;
         CommandData.roach[i].auto_retune = 0;
         CommandData.roach[i].do_sweeps = 0;
@@ -2979,15 +2987,18 @@ void InitCommandData()
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
         CommandData.roach[i].auto_find = 0;
-        CommandData.roach_params[i].in_atten = 16;
+        CommandData.roach_params[i].in_atten = 19;
         CommandData.roach[i].recenter_df = 0;
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
+        CommandData.roach[i].reboot_pi_now = 0;
+        CommandData.roach_params[i].read_in_atten = 0;
+        CommandData.roach_params[i].read_out_atten = 0;
     }
-    CommandData.roach_params[0].out_atten = 7;
-    CommandData.roach_params[1].out_atten = 2;
-    CommandData.roach_params[2].out_atten = 3;
-    CommandData.roach_params[3].out_atten = 5;
+    CommandData.roach_params[0].out_atten = 4;
+    CommandData.roach_params[1].out_atten = 4;
+    CommandData.roach_params[2].out_atten = 4;
+    CommandData.roach_params[3].out_atten = 4;
     CommandData.roach_params[4].out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;
