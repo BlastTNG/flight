@@ -502,8 +502,10 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
              * If the device is not found, or the
              * superblock is invalid, try the next filesystem in #type
              */
-            if (errno == ENODEV || errno == EINVAL)
+            if (errno == ENODEV || errno == EINVAL) {
+                usleep(10000);
                 continue;
+            }
         }
         break;
     } while (type[++i][0] != '\0');
@@ -575,12 +577,13 @@ static diskentry_t *diskpool_mount_new(void) {
                     blast_warn("No USB disks found, waiting...");
                     have_warned = true;
                 }
-                usleep(1000);
+                usleep(10000);
                 break;
             }
 
             disk_mounted = diskpool_mount_diskentry(best_disk);
         }
+        usleep(10000);
     }
 
     if (disk_mounted) {
@@ -757,6 +760,7 @@ static void diskmanager_clear_old_mounts()
                         strerror(errno));
             }
         }
+        usleep(10000);
     }
     endmntent(mtab_fp);
 }
