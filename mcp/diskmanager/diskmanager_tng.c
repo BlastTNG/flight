@@ -502,8 +502,10 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
              * If the device is not found, or the
              * superblock is invalid, try the next filesystem in #type
              */
-            if (errno == ENODEV || errno == EINVAL)
+            if (errno == ENODEV || errno == EINVAL) {
+                usleep(10000);
                 continue;
+            }
         }
         break;
     } while (type[++i][0] != '\0');
