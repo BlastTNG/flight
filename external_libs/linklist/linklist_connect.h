@@ -77,8 +77,8 @@ int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
 unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
 
-int request_server_list(struct TCPCONN * , char [][64]);
-int request_server_archive_list(struct TCPCONN * , char [][64]);
+int request_server_list(struct TCPCONN * , char [][LINKLIST_SHORT_FILENAME_SIZE]);
+int request_server_archive_list(struct TCPCONN * , char [][LINKLIST_SHORT_FILENAME_SIZE]);
 
 int retrieve_data(struct TCPCONN * , uint8_t *, unsigned int);
 int request_data(struct TCPCONN *, unsigned int, uint16_t *);

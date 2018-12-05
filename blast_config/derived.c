@@ -512,7 +512,7 @@ derived_tng_t derived_list[] = {
     LINCOM("TD_4K_FILT_INT", "TD_4K_FILT", 0.199656, 0.000034),
     LINCOM("TD_VCS2_HX_INT", "TD_VCS2_HX", 0.199033, -0.000013),
     LINCOM("TD_VCS1_PLATE_INT", "TD_VCS1_PLATE", 0.199517, -0.000026),
-    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.txt"),
+    LINTERP("Td_charcoal_hs", "TD_CHARCOAL_HS_INT", LUT_DIR "dt-simonchase.LUT"),
     LINTERP("Td_vcs2_filt", "TD_VCS2_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_250fpa", "TD_250FPA_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_hwp", "TD_HWP_INT", LUT_DIR "dt670_orig.text"),
@@ -523,7 +523,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Td_m3", "TD_M3_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_charcoal", "TD_CHARCOAL_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_ob_filter", "TD_OB_FILTER_INT", LUT_DIR "dt670_orig.text"),
-    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt-simonchase.txt"),
+    LINTERP("Td_vcs2_plate", "TD_VCS2_PLATE_INT", LUT_DIR "dt-simonchase.LUT"),
     LINTERP("Td_m4", "TD_M4_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_4k_filt", "TD_4K_FILT_INT", LUT_DIR "dt670_orig.text"),
     LINTERP("Td_vcs2_hx", "TD_VCS2_HX_INT", LUT_DIR "dt670_orig.text"),
@@ -579,7 +579,7 @@ derived_tng_t derived_list[] = {
 // corrected temps?
     LINTERP("CTr_fpa_1k", "CRR_FPA_1K", LUT_DIR "rox-raw.txt"),
     UNITS("CTr_fpa_1k", "Temperature", "K"),
-    LINTERP("CTr_250_fpa", "CRR_250_FPA" , LUT_DIR "ROX_Cal_U04486.LUT"),
+    LINTERP("CTr_250_fpa", "CRR_250_FPA" , LUT_DIR "rox-raw.txt"),
     UNITS("CTr_250_fpa", "Temperature", "K"),
     LINTERP("CTr_1k_plate", "CRR_1K_PLATE", LUT_DIR "rox-raw.txt"),
     UNITS("CTr_1k_plate", "Temperature", "K"),
@@ -591,7 +591,7 @@ derived_tng_t derived_list[] = {
     UNITS("CTr_he4_pot", "Temperature", "K"),
     LINTERP("CTr_he3_fridge",    "CRR_HE3_FRIDGE"    , LUT_DIR "rox-he3.txt"),
     UNITS("CTr_he3_fridge", "Temperature", "K"),
-    LINTERP("CTr_500_fpa", "CRR_500_FPA", LUT_DIR "rox-raw.txt"),
+    LINTERP("CTr_500_fpa", "CRR_500_FPA", LUT_DIR "ROX_Cal_U04486.LUT"),
     UNITS("CTr_500_fpa", "Temperature", "K"),
 
 

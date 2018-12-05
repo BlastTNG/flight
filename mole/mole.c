@@ -76,27 +76,33 @@ void USAGE(void) {
   printf("\n\nMole is a generic linklist client/server that converts raw "
       "binary data to dirfiles.\n\n"
       "Usage: mole [OPTION]...\n\n"
-      " -nc                Don't run a client.\n"
-      "                    Default is to run a client.\n"
-      " -s                 Run a server for other mole clients to connect to.\n"
-      "                    Default is to not run a server.\n"
-      " -w X               Start acquiring data X frames from the current index.\n"
-      "                    Default is 20.\n"
-      " -v                 Verbose mode.\n"
-      "                    \n"
-      " @host              Connect to a specific host.\n"
-      " --archive-dir dir  Save raw binary files to specified directory.\n"
-      "                    Only valid if backing up binary data locally.\n"
-      "                    Default is /data/rawdir.\n"
-      " --backup           Backup binary data in the archive directory.\n"
-      "                    Default is to not backup data.\n"
-      " --loopback         Have mole extract its own binary files.\n"
-      " --little-end       Force mole to interpret data as little endian.\n"
-      " --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
-      "                    Default is /data/mole.\n"
-      " --no-backup        Do not backup data in the archive directory.\n"
-      "                    This is the default.\n"
-      " --no-check         Ignore checksum values when processing data.\n"  
+      " @host                  Connect to a specific host.\n"
+      " -ad --archive-dir dir  Save raw binary files to specified directory.\n"
+      "                        Only valid if backing up binary data locally.\n"
+      "                        Default is /data/rawdir.\n"
+      " -b  --backup           Backup binary data in the archive directory.\n"
+      " -nb --no-backup        Do not backup data in the archive directory (default).\n"
+      " -be --big-end          Force mole to interpret data as big endian (default).\n"
+      " -bs --block-size fpf   Specify the number of frames per file flush.\n"
+      "                        Default is 1 frame per flush for real time.\n"
+      " -c  --client           Run a client (default).\n"
+      " -nc --no-client        Don't run a client.\n"
+      " -F  --filename regex   Select a file by standard regex entry\n"
+      "                        If exactly one matching entry is found, that file will be loaded.\n"
+      "                        Otherwise, the file selection dialog box will be prompted.\n"
+      " -E  --end X            Last frame to read. Ignores rewind if specified.\n"
+      "                        Mole will exit once the last frame is read.\n"
+      " -k  --check            Evaluate checksum values when processing data (default).\n"  
+      " -nk --no-check         Ignore checksum values when processing data.\n"  
+      " -le --little-end       Force mole to interpret data as little endian.\n"
+      " -L  --loopback         Have mole extract its own binary files.\n"
+      " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
+      "                        The default is /data/mole.\n"
+      " -s  --server           Run a server for other mole clients to connect to.\n"
+      " -ns --no-server        Don't run a server (default).\n"
+      " -S  --start X          Starting frame to read. Ignores rewind if specified.\n"
+      " -w  --rewind X         Start acquiring data X frames from the latest index (default 20).\n"
+      " -v  --verbose          Verbose mode.\n"
       "\n");
 
     exit(0);
@@ -131,9 +137,9 @@ void print_display(char * text, unsigned int recv_framenum) {
 }
 
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char mole_dir[128] = "/data/mole";
-char symdir_name[128] = "/data/etc/mole.lnk";
-char symraw_name[128] = "/data/rawdir/LIVE";
+char mole_dir[1024] = "/data/mole";
+char symdir_name[1024] = "/data/etc/mole.lnk";
+char symraw_name[1024] = "/data/rawdir/LIVE";
 
 int main(int argc, char *argv[]) {
   // mode selection
@@ -141,8 +147,11 @@ int main(int argc, char *argv[]) {
   int client_mode = 1;
   unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
+  uint64_t start_frame = UINT64_MAX;
+  uint64_t end_frame = UINT64_MAX;
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
+  char filename_selection[128] = {0};
 
   // configure the TCP connection
   tcpconn.flag |= TCPCONN_LOOP;
@@ -159,6 +168,8 @@ int main(int argc, char *argv[]) {
   int64_t recv_framenum = 0;
   uint16_t recv_flags = 0;
   int resync = 1;
+  unsigned int num_frames_per_flush = 1; // 1 ensures real time frame push to disk
+  unsigned int frame_i = 0;
 
   // superframe and linklist 
   superframe_t * superframe = NULL;
@@ -170,27 +181,62 @@ int main(int argc, char *argv[]) {
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '@') { // custom target
       strcpy(tcpconn.ip, argv[i]+1);
-    } else if (strcmp(argv[i], "-s") == 0) { // server mode
+    } else if ((strcmp(argv[i], "--server") == 0) ||
+               (strcmp(argv[i], "-s") == 0)) { // server mode
       server_mode = 1;
-    } else if (strcmp(argv[i], "-nc") == 0) { // no client mode
+    } else if ((strcmp(argv[i], "--no-server") == 0) ||
+               (strcmp(argv[i], "-ns") == 0)) { // no server mode
+      server_mode = 0;
+    } else if ((strcmp(argv[i], "--client") == 0) ||
+               (strcmp(argv[i], "-c") == 0)) { // client mode
+      client_mode = 1;
+    } else if ((strcmp(argv[i], "--no-client") == 0) ||
+               (strcmp(argv[i], "-nc") == 0)) { // no client mode
       client_mode = 0;
-    } else if (strcmp(argv[i], "-w") == 0) { // rewind value 
+    } else if ((strcmp(argv[i], "--rewind") == 0) ||
+               (strcmp(argv[i], "-w") == 0)) { // rewind value 
       rewind = atoi(argv[++i]);
-    } else if (strcmp(argv[i], "-v") == 0) { // verbose mode
+    } else if ((strcmp(argv[i], "--start") == 0) ||
+               (strcmp(argv[i], "-S") == 0)) { // start frame 
+      start_frame = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--end") == 0) ||
+               (strcmp(argv[i], "-E") == 0)) { // end frame 
+      end_frame = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--verbose") == 0) ||
+               (strcmp(argv[i], "-v") == 0)) { // verbose mode
       ll_flags |= LL_VERBOSE;
-    } else if (strcmp(argv[i], "--backup") == 0) { // write binary backup files
+    } else if ((strcmp(argv[i], "--backup") == 0) ||
+               (strcmp(argv[i], "-b") == 0)) { // write binary backup files
       bin_backup = 1;
-    } else if (strcmp(argv[i], "--archive-dir") == 0) { // set the archive directory
-      strcpy(archive_dir, argv[++i]);
-    } else if (strcmp(argv[i], "--mole-dir") == 0) { // set the mole directory dirfiles
-      strcpy(mole_dir, argv[++i]);
-    } else if (strcmp(argv[i], "--no-backup") == 0) { // don't write binary backup files
+    } else if ((strcmp(argv[i], "--no-backup") == 0) ||
+               (strcmp(argv[i], "-nb") == 0)) { // don't write binary backup files
       bin_backup = 0;
-    } else if (strcmp(argv[i], "--no-check") == 0) { // no checksum 
+    } else if ((strcmp(argv[i], "--archive-dir") == 0) ||
+               (strcmp(argv[i], "-ad") == 0)) { // set the archive directory
+      strcpy(archive_dir, argv[++i]);
+    } else if ((strcmp(argv[i], "--mole-dir") == 0) ||
+               (strcmp(argv[i], "-md") == 0)) { // set the mole directory dirfiles
+      strcpy(mole_dir, argv[++i]);
+    } else if ((strcmp(argv[i], "--check") == 0) ||
+               (strcmp(argv[i], "-k") == 0)) { // checksum 
+      ll_flags &= ~LL_IGNORE_CHECKSUM;
+    } else if ((strcmp(argv[i], "--no-check") == 0) ||
+               (strcmp(argv[i], "-nk") == 0)) { // no checksum 
       ll_flags |= LL_IGNORE_CHECKSUM;
-    } else if (strcmp(argv[i], "--little-end") == 0) { // force little endian
+    } else if ((strcmp(argv[i], "--little-end") == 0) ||
+               (strcmp(argv[i], "-le") == 0)) { // force little endian
       ll_flags &= ~LL_USE_BIG_ENDIAN;
-    } else if (strcmp(argv[i], "--loopback") == 0) { // loopback mode
+    } else if ((strcmp(argv[i], "--big-end") == 0) ||
+               (strcmp(argv[i], "-be") == 0)) { // force big endian
+      ll_flags |= LL_USE_BIG_ENDIAN;
+    } else if ((strcmp(argv[i], "--block-size") == 0) ||
+               (strcmp(argv[i], "-bs") == 0)) { // flush files after number of frames received
+      num_frames_per_flush = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--filename") == 0) ||
+               (strcmp(argv[i], "-F") == 0)) { // select file by name
+      strcpy(filename_selection, argv[++i]);
+    } else if ((strcmp(argv[i], "--loopback") == 0) ||
+               (strcmp(argv[i], "-L") == 0)) { // loopback mode
       bin_backup = 0;
       strcpy(tcpconn.ip, "localhost");
       server_mode = 1;
@@ -202,6 +248,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if (archive_dir[strlen(archive_dir)-1] == '/') {
+    archive_dir[strlen(archive_dir)-1] = '\0';
+  }
+  if (mole_dir[strlen(mole_dir)-1] == '/') {
+    mole_dir[strlen(mole_dir)-1] = '\0';
+  }
+
   pthread_t server_thread;
   if (server_mode) {
     // start the server to accept clients
@@ -210,9 +263,8 @@ int main(int argc, char *argv[]) {
 
   if (client_mode) {
     char linklistname[64] = {0};
-    char selectname[64] = {0};
     char filename[128] = {0};
-    user_file_select(&tcpconn, selectname);
+    user_file_select(&tcpconn, filename_selection);
 
     while (1) {
       // display
@@ -221,7 +273,7 @@ int main(int argc, char *argv[]) {
       // the file on the server has switched, so resync 
       if (resync) {
         // sync with the server and get the initial framenum
-				req_serial = sync_with_server(&tcpconn, selectname, linklistname, flags, &superframe, &linklist);
+				req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, flags, &superframe, &linklist);
 				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
 
 				printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
@@ -242,8 +294,14 @@ int main(int argc, char *argv[]) {
         }
 
 				// set the first framenum request
-				req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-				req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+        if ((start_frame < end_frame) && (start_frame < req_init_framenum)) { // start-end mode
+          req_framenum = start_frame;
+          if ((end_frame != UINT64_MAX) && (end_frame > req_init_framenum)) end_frame = req_init_framenum;
+          linklist_info("Reading frames %" PRIu64" to %" PRIu64 "\n", start_frame, end_frame);
+        } else { // rewind mode
+				  req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
+				  req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+        }
 
         resync = 0;
         continue; 
@@ -281,14 +339,16 @@ int main(int argc, char *argv[]) {
 
 			// write the dirfile
       if (ll_dirfile) {
-			  seek_linklist_dirfile(ll_dirfile, recv_framenum);
-			  write_linklist_dirfile(ll_dirfile, recv_buffer);
+			  if (!(frame_i % num_frames_per_flush)) seek_linklist_dirfile(ll_dirfile, recv_framenum);
+			  write_linklist_dirfile_opt(ll_dirfile, recv_buffer, 0);
+        if (!(frame_i % num_frames_per_flush)) flush_linklist_dirfile(ll_dirfile);
       }
 
 			// write the rawfile
       if (bin_backup && ll_rawfile) {
 			  seek_linklist_rawfile(ll_rawfile, recv_framenum);
-			  write_linklist_rawfile(ll_rawfile, recv_buffer);
+			  write_linklist_rawfile_opt(ll_rawfile, recv_buffer, 0);
+        if (!(frame_i % num_frames_per_flush)) flush_linklist_rawfile(ll_rawfile);
       }
 
 /* 
@@ -299,10 +359,15 @@ int main(int argc, char *argv[]) {
 			}
 			printf("\n");
 */
+      if (recv_framenum >= end_frame) {
+        linklist_info("\n\nFinished reading up to frame %" PRIi64".\n", recv_framenum);
+        exit(0);
+      }
 
 			memset(recv_buffer, 0, buffer_size);
 			memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
 			req_framenum++;
+      frame_i++;
     }
   }
 

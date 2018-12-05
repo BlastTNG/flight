@@ -95,6 +95,7 @@
 #include "xsc_pointing.h"
 #include "xystage.h"
 #include "sip.h"
+#include "scheduler_tng.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -339,7 +340,7 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    outer_frame_200hz(1);
+    outer_frame_200hz(0);
     process_sun_sensors();
     store_200hz_acs();
     command_motors();
@@ -435,7 +436,7 @@ static void mcp_1hz_routines(void)
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
-    outer_frame_1hz(1);
+    outer_frame_1hz(0);
     // update_mult_vac();
     // relays arg defines found in relay.h
     relays(3);
@@ -680,6 +681,8 @@ blast_info("Finished initializing Beaglebones..."); */
       linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
   telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
       linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+  telemetries_linklist[SBD_TELEMETRY_INDEX] =
+      linklist_find_by_name(CommandData.sbd_linklist_name, linklist_array);
 
   linklist_t * testll = generate_roach_udp_linklist("roach1.ll", 0);
   write_superframe_format(testll->superframe, "roach1.sf");

@@ -1893,6 +1893,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_queue_execute:
       set_execute(ivalues[0]);
       break;
+    case reconnect_lj:
+      set_reconnect(ivalues[0]-1);
+      break;
     case cal_length: // specify length in ms (multiples of 5)
       CommandData.Cryo.cal_length = (ivalues[0]/5);
       break;
@@ -1948,6 +1951,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         copysvalue(CommandData.highrate_linklist_name, linklist_nt[ivalues[1]]);
         telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
             linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+      } else if (ivalues[0] == 3) {
+        copysvalue(CommandData.sbd_linklist_name, linklist_nt[ivalues[1]]);
+        telemetries_linklist[SBD_TELEMETRY_INDEX] =
+            linklist_find_by_name(CommandData.sbd_linklist_name, linklist_array);
       } else {
         blast_err("Unknown downlink index %d", ivalues[0]);
       }
@@ -3199,9 +3206,15 @@ void InitCommandData()
     copysvalue(CommandData.pilot_linklist_name, ALL_TELEMETRY_NAME);
     copysvalue(CommandData.bi0_linklist_name, "test2.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
+    copysvalue(CommandData.sbd_linklist_name, "sbd.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
     CommandData.vtx_sel[1] = vtx_xsc1;
     CommandData.roach_tlm_mode = ROACH_TLM_IQDF;
+    for (i = 0; i < NUM_ROACH_TLM; i++) {
+      CommandData.roach_tlm[i].roach = 1;
+      CommandData.roach_tlm[i].kid = 0;
+      CommandData.roach_tlm[i].rtype= 0;
+    }
     memset(CommandData.num_channels_all_roaches, 0, sizeof(CommandData.num_channels_all_roaches));
     CommandData.pilot_oth = 0;
 

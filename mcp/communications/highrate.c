@@ -46,12 +46,34 @@
 #include "highrate.h"
 
 struct Fifo highrate_fifo = {0};
+linklist_t ** ll_array = NULL;
+
+void fillSBDData(unsigned char *b, int len) {
+  memset(b, 0, len);
+
+  if (!ll_array) return;
+  static linklist_t * sbd_ll = NULL, * sbd_ll_old = NULL;
+  uint8_t * compressed_buffer = calloc(1, MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size));
+
+	sbd_ll = ll_array[SBD_TELEMETRY_INDEX];
+	if (sbd_ll != sbd_ll_old) {
+			if (sbd_ll) blast_info("SBD linklist set to \"%s\"", sbd_ll->name);
+			else blast_info("SBD linklist set to NULL");
+	}
+	sbd_ll_old = sbd_ll;
+
+  // compress the data
+  compress_linklist(compressed_buffer, sbd_ll, getFifoRead(&highrate_fifo));
+
+  *(uint32_t *) b = *(uint32_t *) sbd_ll->serial;
+  memcpy(b, compressed_buffer, len-sizeof(uint32_t));
+}
 
 void highrate_compress_and_send(void *arg) {
-
   linklist_t * ll = NULL, * ll_old = NULL;
-  linklist_t ** ll_array = arg;
   comms_serial_t * serial = comms_serial_new(NULL);
+
+  ll_array = arg;
 
   unsigned int fifosize = MAX(HIGHRATE_MAX_SIZE, superframe->allframe_size);
   unsigned int csbf_packet_size = HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1;
@@ -74,6 +96,8 @@ void highrate_compress_and_send(void *arg) {
   // packetization variables
   uint16_t i_pkt = 0;
   uint16_t n_pkt = 0;
+  unsigned int backoff = 2;
+  unsigned int max_backoff = 60;
 
   nameThread("Highrate");
 
@@ -83,7 +107,10 @@ void highrate_compress_and_send(void *arg) {
            comms_serial_setspeed(serial, B115200)) {
         break;
       }
-      sleep(5);
+      sleep(backoff);
+      blast_info("Could not connect to highrate port. Will try again in %d seconds...", backoff);
+      if (backoff < max_backoff) backoff *= 2;
+      if (backoff > max_backoff) backoff = max_backoff;
     }
     get_serial_fd = 0;
 

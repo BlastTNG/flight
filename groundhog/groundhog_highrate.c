@@ -27,12 +27,11 @@
 #include "blast.h"
 #include "blast_time.h"
 #include "groundhog.h"
-#include "groundhog_framing.h"
 #include "highrate.h"
 #include "comms_serial.h"
 #include "slowdl.h"
 
-enum HeaderType{NONE, IRID_OMNI, TD_OMNI, IRID_SLOW, PAYLOAD};
+enum HeaderType{NONE, TD_HK, TD_OMNI_HGA, IRID_HK, IRID_DIAL, PAYLOAD};
 
 struct CSBFHeader {
   uint8_t route;
@@ -91,18 +90,35 @@ enum HeaderType read_csbf_header(struct CSBFHeader * header, uint8_t byte) {
       if (header->zero) {
           header->mode = PAYLOAD;
       } else if (header->route == HIGHRATE_IRIDIUM_SYNC2) {
-          if (header->origin == 0x00) {
-              header->mode = IRID_SLOW;
-              sprintf(header->namestr, "Iridium HK %s", comm_label[header->comm]);
-          } else if (header->origin == 0x02) {
-              header->mode = IRID_OMNI;
-              sprintf(header->namestr, "Iridium Omni %s", comm_label[header->comm]);
-          } else {
-              blast_info("Unrecognized origin 0x%x\n", header->origin+(header->comm << 3));
+          switch (header->origin) {
+              case 0x01:
+              case 0x00:
+                  header->mode = IRID_HK;
+                  sprintf(header->namestr, "Iridium HK %s", comm_label[header->comm]);
+                  break;
+              case 0x02:
+                  header->mode = IRID_DIAL;
+                  sprintf(header->namestr, "Iridium Dialup %s", comm_label[header->comm]);
+                  break;
+              default:
+                  blast_info("Unrecognized Iridium origin byte 0x%x\n", header->origin+(header->comm << 3));
+              
           }
       } else if (header->route == HIGHRATE_TDRSS_SYNC2) {
-          sprintf(header->namestr, "TDRSS %s", comm_label[header->comm]);
-          header->mode = TD_OMNI;
+          switch (header->origin) {
+              case 0x01:
+              case 0x00:
+                  header->mode = TD_HK;
+                  sprintf(header->namestr, "TDRSS HK %s", comm_label[header->comm]);
+                  break;
+              case 0x02:
+                  header->mode = TD_OMNI_HGA;
+                  sprintf(header->namestr, "TDRSS Omni/HGA %s", comm_label[header->comm]);
+                  break;
+              default:
+                  blast_info("Unrecognized TDRSS origin byte 0x%x\n", header->origin+(header->comm << 3));
+              
+          }
       }
       header->sync = 0;
   }
@@ -177,10 +193,12 @@ void highrate_receive(void *arg) {
   int fd = serial->sock->fd; 
 
   linklist_t * ll = NULL;
+  linklist_t * sbd_ll = NULL;
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
-  uint32_t ser = 0, prev_ser = 0;
+  linklist_rawfile_t * sbd_ll_rawfile = NULL;
+  uint32_t ser = 0, prev_ser = 0, sbd_ser = 0, sbd_prev_ser = 0;
 
   // packet sizes
   unsigned int payload_packet_size = (HIGHRATE_DATA_PACKET_SIZE+CSBF_HEADER_SIZE+1)*2;
@@ -203,7 +221,6 @@ void highrate_receive(void *arg) {
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
-  struct Fifo *local_fifo = &downlink[HIGHRATE].fifo;
 
   struct CSBFHeader gse_packet_header = {0};
   uint8_t * gse_packet = calloc(1, 4096);
@@ -250,7 +267,7 @@ void highrate_receive(void *arg) {
  
       while (gse_read < gse_packet_header.size) { // read all the gse data
 
-          if (gse_packet_header.origin) { // packet not from the hk stack (origin != 0)
+          if ((gse_packet_header.mode != TD_HK) || (gse_packet_header.mode != IRID_HK)) { // packet not from the hk stack (origin != 0)
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
@@ -309,14 +326,9 @@ void highrate_receive(void *arg) {
                               if (ll_rawfile) {
                                   memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                                   write_linklist_rawfile(ll_rawfile, compbuffer);
+                                  flush_linklist_rawfile(ll_rawfile);
                               }
-
                               // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
-                              decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
-                              memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                              groundhog_linklist_publish(ll, compbuffer);
-
-                              incrementFifo(local_fifo);
                           }
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
@@ -333,8 +345,28 @@ void highrate_receive(void *arg) {
               }    
      
           } else { // housekeeping packet
-              // TODO(javier): deal with housekeeping packets
+              // short burst data (sbd) packets are simple:
+              // 4 bytes for the linklist serial followed by the data
               blast_info("[%s] Received packet from HK stack size=%d\n", source_str, gse_packet_header.size);
+              if (!(*(uint32_t *) gse_packet)) {
+                  blast_info("[%s] Empty HK packet", source_str);
+                  continue;
+              }
+							if (!(sbd_ll = linklist_lookup_by_serial(*(uint32_t *) gse_packet))) {
+									blast_err("[%s] Could not find linklist with serial 0x%.4x", source_str, *serial_number);
+									continue; 
+							}
+							sbd_ser = *(uint32_t *) gse_packet;
+
+							if (sbd_ser != sbd_prev_ser) {
+								sbd_ll_rawfile = groundhog_open_new_rawfile(sbd_ll_rawfile, sbd_ll, "sbd");
+							}
+							sbd_prev_ser = sbd_ser;
+							if (sbd_ll_rawfile) {
+									write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
+									flush_linklist_rawfile(sbd_ll_rawfile);
+							}
+              /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
                   blast_info("Plover = %d\n", *(uint16_t *) (gse_packet+4)); 
                   if (verbose) {
@@ -344,9 +376,11 @@ void highrate_receive(void *arg) {
                       }
                       printf("\n");
                   }
+              
               } else {
                   blast_info("[%s] Bad syncword 0x%.08x\n", source_str, *(uint32_t *) gse_packet);
               }
+              */
               gse_read += gse_packet_header.size;
           }
       }

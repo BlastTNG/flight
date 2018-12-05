@@ -115,6 +115,7 @@ typedef struct roach_state {
     int array;
     int which;
     int katcp_fd;
+    uint8_t have_warned_connect;
     e_roach_state state;
     e_roach_state desired_state;
 
@@ -224,6 +225,7 @@ typedef struct roach_state {
 
 typedef struct pi_state {
     int which;
+    uint8_t have_warned_connect;
     e_pi_state state;
     e_pi_state desired_state;
     uint16_t port;

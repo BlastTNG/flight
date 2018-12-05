@@ -28,7 +28,6 @@
 #include "crc.h"
 #include "blast.h"
 #include "blast_time.h"
-#include "groundhog_framing.h"
 #include "groundhog.h"
 #include "bitserver.h"
 #include "FIFO.h"
@@ -108,7 +107,6 @@ void biphase_receive(void *args)
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
-  struct Fifo *local_fifo = &downlink[BI0].fifo;
 
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
@@ -182,13 +180,8 @@ void biphase_receive(void *args)
                       if (ll_rawfile) {
                         memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                         write_linklist_rawfile(ll_rawfile, compbuffer);
+                        flush_linklist_rawfile(ll_rawfile);
                       }
-
-                      decompress_linklist_opt(local_superframe, ll, compbuffer, transmit_size, 0);
-                      memcpy(getFifoWrite(local_fifo), local_superframe, superframe->size);
-                      groundhog_linklist_publish(ll, compbuffer);
-
-                      incrementFifo(local_fifo);
                       memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
                       compbuffer_size = 0;
                   } 

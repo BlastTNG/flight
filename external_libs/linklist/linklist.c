@@ -569,7 +569,8 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
           isblock = 1;
         } else {
           if (!(chan = superframe_find_by_name(superframe, temps[0]))) {
-						linklist_err("parse_linklist_format: unable to find telemetry entry %s\n",temps[0]);
+						linklist_err("**** parse_linklist_format (%s): unable to find telemetry entry %s ****\n",
+                         fname, temps[0]);
 						continue;
 					}
 
@@ -674,7 +675,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       break;
     }
   }
-  memset(ll->name, 0, 64); // clear name completely
+  memset(ll->name, 0, LINKLIST_SHORT_FILENAME_SIZE); // clear name completely
   strcpy(ll->name, fname+i); // copy the name
 
   // update the hash

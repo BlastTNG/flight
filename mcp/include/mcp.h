@@ -53,6 +53,7 @@ extern struct tm start_time;
 #define PILOT_TELEMETRY_INDEX 0
 #define BI0_TELEMETRY_INDEX 1
 #define HIGHRATE_TELEMETRY_INDEX 2
+#define SBD_TELEMETRY_INDEX 3
 
 // Max Slew Veto
 #define VETO_MAX 60000

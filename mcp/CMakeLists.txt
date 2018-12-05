@@ -390,8 +390,10 @@ define_file_basename_for_sources(roach)
 # add mcp objects
 add_library(mcp_obj OBJECT 
     mcp.c 
+    scheduler_tng.c
     tx.c
     ${PROJECT_SOURCE_DIR}/include/mcp.h
+    ${PROJECT_SOURCE_DIR}/include/scheduler_tng.h
     ${PROJECT_SOURCE_DIR}/include/tx.h
     )
 
@@ -438,11 +440,12 @@ target_link_libraries(mcp
 set(check_files ${POINTING_SRCS} ${MOTOR_SRCS} 
 		${SENSOR_SRCS} ${CMD_SRCS} ${MCP_COMMS_SRCS} ${HOUSEKEEPING_SRCS} 
 		${FRAME_SRCS} ${MCP_COMMON_SRCS} ${COMMS_SRCS} ${ROACH_SRCS} ${DISKMANAGER_SRCS} 
-		mcp.c tx.c 
+		mcp.c tx.c scheduler_tng.c
 		${POINTING_HEADERS} ${MOTOR_HEADERS} ${SENSOR_HEADERS} ${CMD_HEADERS} ${MCP_COMMS_HEADERS} 
 		${HOUSEKEEPING_HEADERS} ${FRAME_HEADERS} ${MCP_COMMON_HEADERS} ${COMMS_HEADERS} ${DISKMANAGER_HEADERS} 
 		${ROACH_HEADERS} 
 	    ${PROJECT_SOURCE_DIR}/include/mcp.h
+	    ${PROJECT_SOURCE_DIR}/include/scheduler_tng.h
 	    ${PROJECT_SOURCE_DIR}/include/tx.h
 	)
 list(REMOVE_ITEM check_files ${PROJECT_SOURCE_DIR}/sensors/geomag2015.c ${PROJECT_SOURCE_DIR}/sensors/../include/geomag2015.h ${PROJECT_SOURCE_DIR}/sensors/../include/EGM9615.h)

@@ -375,7 +375,7 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes)
  */
 void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
-    ph_buf_t *buf;
+    ph_buf_t *buf = NULL, *prev_buf = NULL;
     labjack_state_t *state = (labjack_state_t*) m_data;
     labjack_data_pkt_t *data_pkt;
     labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
@@ -417,25 +417,42 @@ void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
      * If we have an error, or do not receive data from the LabJack in the expected
      * amount of time, we tear down the socket and schedule a reconnection attempt.
      */
-    if (m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME)) {
-        blast_err("disconnecting LabJack at %s due to connection issue", state->address);
+    if ((m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME) || (state->force_reconnect))) {
+        state->connected = false;
+
+        // effectively resetting all the stuff from connect_lj
+        blast_err("Reconnected Cmd and Data for LabJack at %s", state->address);
         ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
         ph_sock_enable(m_sock, 0);
-        state->connected = false;
         CommandData.Relays.labjack[state->which] = 0;
-        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 100);
+        state->force_reconnect = false;
+        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
+
+        // restart command thread
+        state->shutdown = true;
+        while (state->cmd_mb) usleep(10000);
+        state->shutdown = false;
+        initialize_labjack_commands(state->which);
         return;
     }
     read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
-    buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
-    if (!buf) return; /// We do not have enough data
+
+    // read as many packets as necessary to clear the queue
+    do {
+        if (prev_buf) ph_buf_delref(prev_buf); // had an old packet, but also have a newer packet, so remove old one
+        prev_buf = buf; // the new packet is the next old packet
+        buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
+    } while (buf);
+    buf = prev_buf; // reference the newest non-null packet
+
+    if (!buf) return; /// We do not have (and never had) enough data
     data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
 
     // Correct for the fact that Labjack readout is MSB first.
     ret = labjack_data_word_swap(data_pkt, read_buf_size);
     if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
-        blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
-                   state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
+        // blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
+        //            state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
     }
     state_data->trans_id = data_pkt->header.resp.trans_id;
 

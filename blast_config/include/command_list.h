@@ -186,7 +186,7 @@ enum multiCommand {
   highrate_bw,       pilot_bw,         biphase_bw,
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
-  set_queue_execute, set_roach_mode,
+  set_queue_execute, reconnect_lj,     set_roach_mode,
 
   // t_gyro_gain,
   timeout,           vcap,

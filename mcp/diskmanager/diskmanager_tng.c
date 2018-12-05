@@ -200,8 +200,8 @@ static int diskpool_add_init_usb_info(const char *m_uuid, int m_pos) {
                 disk.dev);
         return -1;
     } else {
-        blast_info("Added disk index %i (%s) to the diskpool.", m_pos,
-                disk.dev);
+        // blast_info("Added disk index %i (%s) to the diskpool.", m_pos,
+        //         disk.dev);
     }
     return 0;
 }

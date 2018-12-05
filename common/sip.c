@@ -74,6 +74,7 @@
 
 void nameThread(const char*);  /* mcp.c */
 void fillDLData(unsigned char *b, int len); /* slowdl.c */
+void fillSBDData(unsigned char *b, int len); /* highrate.c */
 
 extern pthread_mutex_t mutex;
 
@@ -85,19 +86,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     int *ivalues, char svalues[][CMD_STRING_LEN], int scheduled); // commands.c
 
 
-int sip_setserial(const char *input_tty)
+int sip_setserial(const char *input_tty, int verbosity)
 {
   int fd;
   struct termios term;
-
-  blast_info("Connecting to sip port %s...", input_tty);
+  if (verbosity > 0) blast_info("Connecting to sip port %s...", input_tty);
 
   if ((fd = open(input_tty, O_RDWR)) < 0) {
-    blast_err("Unable to open serial port");
+    if (verbosity > 0) blast_err("Unable to open serial port");
     return -1;
   }
   if (tcgetattr(fd, &term)) {
-    blast_err("Unable to get serial device attributes");
+    if (verbosity > 0) blast_err("Unable to get serial device attributes");
     return -1;
   }
 
@@ -112,19 +112,19 @@ int sip_setserial(const char *input_tty)
   term.c_cflag |= CS8;
 
   if (cfsetospeed(&term, B1200)) {          /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial output speed");
+    if (verbosity > 0) blast_err("Error setting serial output speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (cfsetispeed(&term, B1200)) {         /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial input speed");
+    if (verbosity > 0) blast_err("Error setting serial input speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (tcsetattr(fd, TCSANOW, &term)) {
-    blast_err("Unable to set serial attributes");
+    if (verbosity > 0) blast_err("Unable to set serial attributes");
     if (fd >= 0) close(fd);
     return -1;
   }
@@ -377,8 +377,9 @@ static void SendDownData(char tty_fd)
   buffer[0] = SLOWDL_DLE;
   buffer[1] = SLOWDL_SYNC;
   buffer[2] = SLOWDL_LEN;
-  updateSlowDL();
-  fillDLData(buffer+3, SLOWDL_LEN);
+  // updateSlowDL();
+  // fillDLData(buffer+3, SLOWDL_LEN);
+  fillSBDData(buffer+3, SLOWDL_LEN);
   blast_info("Sending slowdl data\n");
 
   buffer[3 + SLOWDL_LEN] = SLOWDL_ETX;
@@ -639,15 +640,18 @@ void WatchPort(void* parameter)
     nameThread(tname);
     // blast_startup("WatchPort startup\n");
     int get_serial_fd = 1;
+    int has_warned = 0;
 
     for (;;) {
         // wait for a valid file descriptor
     		while (get_serial_fd) {
-            if ((tty_fd = sip_setserial(COMM[port])) >= 0) {
+            if ((tty_fd = sip_setserial(COMM[port], !has_warned)) >= 0) {
                 break;
             }
+            has_warned = 1;
             sleep(5);
         }
+        has_warned = 0;
         get_serial_fd = 0;
 
         /* Loop until data come in */

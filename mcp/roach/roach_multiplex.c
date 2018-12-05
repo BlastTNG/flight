@@ -120,7 +120,7 @@ void add_roach_tlm_488hz()
 
     if ((!CommandData.num_channels_all_roaches[i_roach]) && (strlen(r_tlm->name)) &&
            (r_tlm->index != prev_roach_index[i])) {
-      if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", r_tlm->name, tlm[i]->field);
+      // if (tlm[i]) blast_info("Telemetering \"%s\" -> \"%s\"", r_tlm->name, tlm[i]->field);
     }
     prev_roach_index[i] = r_tlm->index;
 
