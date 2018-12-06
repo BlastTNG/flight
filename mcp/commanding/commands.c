@@ -3425,10 +3425,10 @@ void InitCommandData()
     CommandData.actbus.sf_time = 0;
     CommandData.actbus.sf_offset = 6667;
 
-    CommandData.actbus.act_vel = 20;
-    CommandData.actbus.act_acc = 500;
+    CommandData.actbus.act_vel = 200;
+    CommandData.actbus.act_acc = 1000;
     CommandData.actbus.act_move_i = 75;
-    CommandData.actbus.act_hold_i = 50;
+    CommandData.actbus.act_hold_i = 45;
     CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;
