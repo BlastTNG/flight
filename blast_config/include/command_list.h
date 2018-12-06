@@ -135,7 +135,7 @@ enum singleCommand {
     heater_sync, allow_cycle, disallow_cycle,
 	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
 	xsc0_cycle, gyros_cycle, data_transmit_cycle, elmot_cycle, pivot_cycle,
-	mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_lj_cycle,
+    mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_lj_cycle,
 	gps_timing_cycle, if_1_cycle, if_lj_cycle, timing_dist_cycle, vtx_cycle,
 	bi0_cycle, if_6_cycle, if_eth_switch_cycle, if_8_cycle, roach_cycle,
 	cryo_hk_cycle, force_cycle,
@@ -157,7 +157,8 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, set_attens_last_all, debug_mode, pilot_oth_on, pilot_oth_off,
+  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off, allow_watchdog,
+    disallow_watchdog, set_attens_last_all,
 
   xyzzy
 };
@@ -168,7 +169,7 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,
+  bias_level_x, set_tcrit_fpa,
   // fridge_cycle_params,
   box,
   // cal_repeat,

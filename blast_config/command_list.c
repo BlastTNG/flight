@@ -75,6 +75,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
   {COMMAND(allow_cycle), "autocycle on", GR_CRYO},
   {COMMAND(disallow_cycle), "autocycle_off", GR_CRYO},
+  {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
+  {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
@@ -1256,6 +1258,11 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
           {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(set_tcrit_fpa), "set ADC counts of fpa critical temp", GR_CRYO, 1,
+      {
+          {"ADC counts", 0, 20000, 'i', "ADC"}
       }
   },
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,

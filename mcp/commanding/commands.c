@@ -202,6 +202,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case disallow_cycle:
             CommandData.Cryo.cycle_allowed = 0;
             break;
+        case allow_watchdog:
+            CommandData.Cryo.watchdog_allowed = 1;
+            break;
+        case disallow_watchdog:
+            CommandData.Cryo.watchdog_allowed = 0;
+            break;
         case force_cycle:
             CommandData.Cryo.forced = 1;
             break;
@@ -1899,6 +1905,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    case set_tcrit_fpa: // specify temp in ADC counts
+      CommandData.Cryo.tcrit_fpa = ivalues[0];
+      break;
     case periodic_cal:
       CommandData.Cryo.periodic_pulse = 1;
       CommandData.Cryo.num_pulse = ivalues[0];
@@ -3199,6 +3208,7 @@ void InitCommandData()
     CommandData.Cryo.labjack = 0;
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
+    CommandData.Cryo.watchdog_allowed = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
     CommandData.Relays.update_video = 0;
@@ -3217,6 +3227,7 @@ void InitCommandData()
     bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
     /* prev_status overrides this stuff */
+    CommandData.Cryo.tcrit_fpa = 9900;
     CommandData.Relays.video_trans = 0;
     CommandData.command_count = 0;
     CommandData.last_command = 0xffff;
