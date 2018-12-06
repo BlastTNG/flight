@@ -1010,6 +1010,18 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
     }
   },
+  {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Desired dBm per tone", -47.0, -17.0, 'f', "NONE"},
+    }
+  },
   {COMMAND(read_attens), "Read attenuators", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},

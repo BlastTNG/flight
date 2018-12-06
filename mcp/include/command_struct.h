@@ -403,6 +403,7 @@ typedef struct roach_params
     double delta_phase;
     double freq_offset;
     int resp_thresh;
+    double dBm_per_tone;
 } roach_params_t;
 
 // Ethercat controller/device commands
