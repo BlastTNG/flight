@@ -300,6 +300,8 @@ enum multiCommand {
   set_attens_all,
   reboot_pi,
   read_attens,
+  set_attens_conserve,
+  set_attens_calc,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

@@ -2148,6 +2148,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
+    case set_attens_conserve:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)) {
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_attens = 4;
+      }
+      break;
+    case set_attens_calc:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_attens = 5;
+      }
+      break;
     case reboot_pi:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].reboot_pi_now = 1;
@@ -3375,6 +3387,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
+        CommandData.roach_params[i].dBm_per_tone = -60;
     }
 
     CommandData.rox_bias.amp = 56;

@@ -138,6 +138,7 @@
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
 #define VNA_COMB_LEN 1000 /* Number of tones in search comb */
+#define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1323,7 +1324,7 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
     }
     status = read(s, buff, sizeof(buff));
     // printf("STATUS = %d\n", status);
-    blast_info("%s", buff);
+    // blast_info("%s", buff);
     if (read_flag) {
         int count = 0;
         char* line;
@@ -1361,8 +1362,7 @@ int read_atten(pi_state_t *m_pi)
     }
 }
 
-int set_atten(pi_state_t *m_pi)
-{
+int set_atten(pi_state_t *m_pi) {
     int retval = -1;
     int ind = m_pi->which - 1;
     char *command;
@@ -1402,6 +1402,63 @@ int set_atten(pi_state_t *m_pi)
            roach_state_table[ind].path_to_last_attens, out_in_atten, 2) < 0)) {
         blast_info("ROACH%d, Unable to write last atten settings to file", m_pi->which);
     }
+    return 0;
+}
+
+int set_atten_conserved(pi_state_t *m_pi)
+{
+    // Must set output attenuation with command
+    int retval = -1;
+    int ind = m_pi->which - 1;
+    char *command;
+    double out_in_atten[2];
+    CommandData.roach_params[ind].in_atten =
+        ATTEN_TOTAL - CommandData.roach_params[ind].out_atten;
+    // the order of input and output attenuators is switched between PIs
+    if (ind == 0) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 4) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (atten_client(m_pi, command, 0) < 0) {
+        return retval;
+    }
+    out_in_atten[0] = CommandData.roach_params[ind].out_atten;
+    out_in_atten[1] = CommandData.roach_params[ind].in_atten;
+    if ((roach_save_1D_file(&roach_state_table[ind],
+           roach_state_table[ind].path_to_last_attens, out_in_atten, 2) < 0)) {
+        blast_info("ROACH%d, Unable to write last atten settings to file", m_pi->which);
+    }
+    return 0;
+}
+
+int find_atten(roach_state_t *m_roach, double pow_per_tone) {
+    double out_atten = -47.0 - pow_per_tone - 10.0*log10(m_roach->current_ntones/1000.0);
+    double out_atten_rounded = round(out_atten / 0.5) * 0.5;
+    CommandData.roach_params[m_roach->which - 1].out_atten = out_atten_rounded;
+    CommandData.roach_params[m_roach->which - 1].in_atten = ATTEN_TOTAL - out_atten_rounded;
+    blast_info("ROACH%d, output atten = %f for %f dBm/tone with Ntones = %zd",
+       m_roach->which, out_atten, pow_per_tone, m_roach->current_ntones);
     return 0;
 }
 
@@ -4662,6 +4719,7 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].set_attens == 1) {
             if (set_atten(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                CommandData.roach[i].set_attens = 0;
             } else {
                 CommandData.roach[i].set_attens = 0;
             }
@@ -4669,14 +4727,33 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].set_attens == 2) {
             if (set_attens_to_default(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
-            } else {
-                CommandData.roach[i].set_attens = 0;
             }
+            CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 3) {
             if (write_last_attens(&roach_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
                 CommandData.roach[i].set_attens = 0;
+            }
+            CommandData.roach[i].set_attens = 0;
+        }
+        if (CommandData.roach[i].set_attens == 4) {
+            if (set_atten_conserved(&pi_state_table[i]) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                CommandData.roach[i].set_attens = 0;
+            }
+            CommandData.roach[i].set_attens = 0;
+        }
+        if (CommandData.roach[i].set_attens == 5) {
+            if (find_atten(&roach_state_table[i], CommandData.roach_params[i].dBm_per_tone) < 0) {
+                blast_info("ROACH%d: Failed to calculate output_atten...", i + 1);
+                CommandData.roach[i].set_attens = 0;
+            } else {
+                if (set_atten(&pi_state_table[i]) < 0) {
+                    blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                    CommandData.roach[i].set_attens = 0;
+                }
+            CommandData.roach[i].set_attens = 0;
             }
         }
         if (CommandData.roach[i].read_attens == 1) {
