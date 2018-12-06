@@ -41,7 +41,7 @@
 #define BI0LOS_MAX_PACKET_SIZE 1388
 #define BI0LOS_RNRZ_SEED 0xeb90146f
 
-#define LOS_FILE_LINKLIST "_file_dl.ll"
+#define LOS_FILE_LINKLIST "z_file_dl.ll"
 
 extern struct Fifo bi0_fifo;
 

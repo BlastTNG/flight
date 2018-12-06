@@ -36,7 +36,7 @@
 #define HIGHRATE_ORIGIN_COMM1 0x02
 #define HIGHRATE_ORIGIN_COMM2 0x0a 
 
-#define OTH_FILE_LINKLIST "_file_dl.ll"
+#define OTH_FILE_LINKLIST "z_file_dl.ll"
 
 extern struct Fifo highrate_fifo;
 extern struct Fifo sbd_fifo;
