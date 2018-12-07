@@ -856,17 +856,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_los_file), "Send a file at full rate over LOS", GR_TELEM, 1,
+  {COMMAND(request_stream_file), "Stream a file at bandwidth over given link", GR_TELEM, 2,
     {
+      {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_oth_file), "Send a file at full rate over OTH", GR_TELEM, 1,
-    {
-      {"Absolute file path", 0, 64, 's', ""}
-    }
-  },
-
   {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
     {
       {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}

@@ -1982,32 +1982,31 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
       break;
-    case request_los_file:
+    case request_stream_file:
       filename = svalues[0];
-      if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
+			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
 
       if (filename) {
-				snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
-				telemetries_linklist[BI0_TELEMETRY_INDEX] =
-						linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+        if (ivalues[0] == 0) { // pilot
+					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+        } else if (ivalues[0] == 1) { // BI0
+					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[BI0_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+        } else if (ivalues[0] == 2) { // highrate
+					snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+        } else {
+          blast_err("Cannot send files over link index %d", ivalues[0]);
+          break;
+        }
 				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
 															 "file_block", filename);
       } else {
-        blast_err("Could not resolve filename \"%s\"", svalues[0]);
-      }
-      break;
-    case request_oth_file:
-      filename = svalues[0];
-			if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
-
-      if (filename) {
-				snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
-				telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-						linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
-				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-															 "file_block", filename);
-      } else {
-        blast_err("Could not resolve filename \"%s\"", svalues[0]);
+        blast_err("Could not resolve filename \"%s\"", svalues[1]);
       }
       break;
     case biphase_clk_speed:
