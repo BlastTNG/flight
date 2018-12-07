@@ -3275,7 +3275,7 @@ void InitCommandData()
 
     CommandData.highrate_allframe_fraction = 0.1;
     CommandData.pilot_allframe_fraction = 0.1;
-    CommandData.biphase_allframe_fraction = 0.0;
+    CommandData.biphase_allframe_fraction = 0.1;
 
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_rnrz = false;
