@@ -2523,7 +2523,7 @@ int setLO_oneshot(int which_pi, double loFreq)
     struct hostent *hp;
     char buff[1024];
     bzero(buff, sizeof(buff));
-    blast_tmp_sprintf(lo_freq, "%f", loFreq);
+    blast_tmp_sprintf(lo_freq, "set %g", loFreq);
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", which_pi + 1);
         pi_state_table[which_pi].error_count += 1;
@@ -2733,13 +2733,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
-            /* pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
-            // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
-            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-                blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-                return PI_READ_ERROR;
-            } */
+            set_LO(&pi_state_table[ind], m_roach->lo_freq_req);
+            // setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
