@@ -526,6 +526,10 @@ void read_chopper(void)
     }
 }
 
+static void update_tcrit_fpa(void) {
+    cycle_state.tcrit_fpa = CommandData.Cryo.tcrit_fpa;
+}
+
 // test read for a channel written from the thermometry function
 void test_cycle(void) {
     static channel_t* test_channel;
@@ -540,6 +544,7 @@ void test_cycle(void) {
 }
 // addresses the channels used in the auto cycle structure
 static void init_cycle_channels(void) {
+    // initializes the channels to monitor during the cycle
     cycle_state.tfpa250_Addr = channels_find_by_name("tr_250_fpa");
     cycle_state.the3_Addr = channels_find_by_name("tr_he3_fridge");
     cycle_state.tfpa350_Addr = channels_find_by_name("tr_350_fpa");
@@ -573,13 +578,13 @@ static void init_cycle_values(void) {
     cycle_state.t350_old = 0;
     cycle_state.t500_old = 0;
     cycle_state.start_up_counter = 0;
-    cycle_state.burning_length = 1200;
+    cycle_state.burning_length = 800;
     cycle_state.burning_counter = 0;
     cycle_state.reheating = 0;
     blast_info("values written");
     cycle_state.tcrit_charcoal = 50925; // temp of charcoal
     cycle_state.tmin_charcoal = 51000;
-    cycle_state.tcrit_fpa = 8587; // changed for the new cycle using fridge temp(295 mk)
+    cycle_state.tcrit_fpa = CommandData.Cryo.tcrit_fpa; // changed for the new cycle using fridge temp(295 mk)
 }
 // performs the startup operations of the cycle,
 // averaging the temperatures for 60 seconds before any other actions
@@ -591,7 +596,7 @@ static void start_cycle(void) {
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350_old);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500_old);
         cycle_state.t250 += cycle_state.t250_old;
-        cycle_state.the3+= cycle_state.the3_old;
+        cycle_state.the3 += cycle_state.the3_old;
         cycle_state.t350 += cycle_state.t350_old;
         cycle_state.t500 += cycle_state.t500_old;
         if (cycle_state.start_up_counter == 60) {
@@ -599,6 +604,7 @@ static void start_cycle(void) {
             cycle_state.the3 = cycle_state.the3/60;
             cycle_state.t350 = cycle_state.t350/60;
             cycle_state.t500 = cycle_state.t500/60;
+            // filters the data for the first minute to get a data history and prevent spikes affecting
             cycle_state.standby = 1;
             blast_info("moving to standby");
         }
@@ -614,10 +620,13 @@ static void standby_cycle(void) {
         cycle_state.t350_old = cycle_state.t350;
         cycle_state.t500_old = cycle_state.t500;
         cycle_state.the3_old = cycle_state.the3;
+        // above passes current temps to old temps
+        // below grabs new temperatures
         GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
         GET_VALUE(cycle_state.the3_Addr, cycle_state.the3);
         GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
         GET_VALUE(cycle_state.tfpa500_Addr, cycle_state.t500);
+        // below applies the IIR filter to the data
         cycle_state.t250 = (59*cycle_state.t250_old/60 + cycle_state.t250/60);
         cycle_state.the3 = (59*cycle_state.the3_old/60 + cycle_state.the3/60);
         cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
@@ -638,6 +647,7 @@ static void standby_cycle(void) {
             // cycle_state.heating = 1;
             // blast_info("moving on to the heating phase");
         }
+        // only use the helium 3 evaporator to run the cycles...
         if (cycle_state.the3 > cycle_state.tcrit_fpa) {
             cycle_state.standby = 0;
             cycle_state.heating = 1;
@@ -647,11 +657,13 @@ static void standby_cycle(void) {
 }
 // during this portion of the cycle, we turn off the charcoal hs and allow it to cool
 // for a few minutes. Afterwards the charcoal is turned on until it reaches a critical
-// temperature (~37K). At which point it is turned off and we move on.
+// temperature (~38K). At which point it is turned off and we move on.
 static void heating_cycle(void) {
     static int fill_counter = 0;
+    static int notify_charcoal = 1;
     if (cycle_state.heating == 1) {
             if (cycle_state.heat_delay == 0) {
+                // kills the charcoal hs power to let it cool
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
@@ -664,20 +676,25 @@ static void heating_cycle(void) {
                 cycle_state.heat_delay++;
             }
             if (cycle_state.heat_delay == 180) {
+                // queues the charcoal heater command to be sent
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 1;
-                blast_info("turning on the charcoal");
+                if (notify_charcoal == 1) {
+                    notify_charcoal = 0;
+                    blast_info("turning on the charcoal");
+                }
             }
+        // grabs the temperature of the charcoal diode to monitor
             GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
             if (cycle_state.tcharcoal < cycle_state.tcrit_charcoal) {
+                // upon reaching required temperature kills the heater and sets the mode to waiting
                 CommandData.Cryo.heater_update = 1;
                 CommandData.Cryo.charcoal = 0;
-		// close pumped pot valve
-                CommandData.Cryo.potvalve_goal = closed;
                 cycle_state.heating = 0;
                 cycle_state.burning_off = 1;
                 cycle_state.burning_counter = 0;
                 cycle_state.heat_delay = 0;
+                notify_charcoal = 1;
                 blast_info("heating done, burning off");
             }
         }
@@ -688,10 +705,13 @@ static void heating_cycle(void) {
 static void burnoff_cycle(void) {
     if (cycle_state.burning_off == 1) {
         GET_VALUE(cycle_state.tcharcoal_Addr, cycle_state.tcharcoal);
+        // increments the counter for the charcoal burning off time
         if (cycle_state.burning_counter < cycle_state.burning_length && cycle_state.reheating == 0) {
             cycle_state.burning_counter++;
         }
+        // reheats the charcoal if it cools too fast, this has never happened.
         if (cycle_state.tcharcoal > cycle_state.tmin_charcoal) {
+            CommandData.Cryo.potvalve_goal = closed;
             cycle_state.burning_off = 0;
             cycle_state.cooling = 1;
             CommandData.Cryo.heater_update = 1;
@@ -703,8 +723,11 @@ static void burnoff_cycle(void) {
             blast_info("helium burned off, moving to cooling");
             // close the pot valve here
         }
+        // when the charcoal has had enough time to burn off the he3, close the heat switch and the pumped pot
         if (cycle_state.burning_counter == cycle_state.burning_length) {
+            CommandData.Cryo.potvalve_goal = closed;
             cycle_state.burning_off = 0;
+            // close the pumped pot after the burning off cycle
             cycle_state.cooling = 1;
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal_hs = 1;
@@ -722,7 +745,8 @@ static void burnoff_cycle(void) {
 // at which point we transition back into standby mode
 static void cooling_cycle(void) {
     if ( cycle_state.cooling == 1 ) {
-        // we can close the pumped pot here
+        // starts monitoring the temperatures until the temperature of the evap
+        // drops below the required max operating temperature.
         cycle_state.the3_old = cycle_state.the3;
         cycle_state.t250_old = cycle_state.t250;
         cycle_state.t350_old = cycle_state.t350;
@@ -740,6 +764,7 @@ static void cooling_cycle(void) {
             cycle_state.the3 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
+            // moves the standby mode once we reach the minimum temperature.
             blast_info("Arrays are cool, standby operating mode");
         }
     }
@@ -801,6 +826,7 @@ void auto_cycle_mk2(void) {
                 CommandData.Cryo.forced = 0;
                 blast_info("STARTING FRIDGE CYCLE NOW");
             }
+            update_tcrit_fpa();
             start_cycle();
             standby_cycle();
             heating_cycle();
@@ -818,20 +844,76 @@ void force_incharge(void) {
     // used for the test cryostat without watchdog board
 }
 
+static void pot_watchdog() {
+    static int first_time = 1;
+    static channel_t* pot_addr;
+    static float t_he4, t_he4_old;
+    static int counter = 0;
+    static int watchdog = 0; // whether to go to watchdog mode or not, on startup
+    static int open_required = 0; // whether or not to monitor temps + open pot
+    static int open_time = 900; // pot fill length in seconds
+    static int open_counter = 0; // counts up to a filled pot
+    static float t_he4_max = 59623; // about 1.498K on the pot diode
+    if (first_time == 1) {
+        pot_addr = channels_find_by_name("td_1k_fridge");
+        blast_info("starting pot watchdog");
+        first_time = 0;
+    }
+    if (CommandData.Cryo.watchdog_allowed == 1) {
+        if (state[0].connected && state[1].connected) {
+            if (counter < 60) {
+                GET_VALUE(pot_addr, t_he4_old);
+                t_he4 += t_he4_old;
+                counter++;
+            }
+            if (counter == 60) {
+                watchdog = 1;
+                t_he4 = t_he4/60;
+                counter = 61;
+                blast_info("pot watchdog initialized");
+            }
+            if (cycle_state.standby == 1 && watchdog == 1) {
+                GET_VALUE(pot_addr, t_he4_old);
+                t_he4 = (59*t_he4/60+t_he4_old/60); // infinite impulse response filter but smooths spikes
+                // blast_info("%f", t_he4);
+                if (t_he4 < t_he4_max && open_required == 0) {
+                    open_required = 1; // open the pumped pot to fill
+                    CommandData.Cryo.potvalve_goal = opened;
+                    blast_info("watchdog refilling pumped pot");
+                }
+                if (open_required == 1 && open_counter < open_time) {
+                    open_counter++; // tick up the fill counter
+                }
+                if (open_counter == open_time) {
+                    open_counter = 0; // reset the counter
+                    open_required = 0; // declare no need for open
+                    watchdog = 0; // remove from watchdog to prevent reopening
+                    CommandData.Cryo.potvalve_goal = closed; // close the pot
+                    counter = 0; // put back in startup mode
+                    t_he4 = 0;
+                    blast_info("pumped pot refilled");
+                }
+            }
+        }
+    }
+}
+
+
 void cryo_1hz(int setting_1hz) {
     if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
         // load_curve_300mk();
-        // set_dac();
-        read_thermometers();
+        set_dac();
+        pot_watchdog();
+        // read_thermometers();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
     if (setting_200hz == 1 && state[0].connected && state[1].connected) {
         cal_control();
-        // read_thermometers();
+        read_thermometers();
     }
     if (setting_200hz == 2 && state[0].connected && state[1].connected) {
         read_chopper();
@@ -862,7 +944,6 @@ void thermal_vac(void) {
     SET_SCALED_VALUE(of_3_0_Addr, labjack_get_value(LABJACK_OF_3, 0));
     SET_SCALED_VALUE(of_3_13_Addr, labjack_get_value(LABJACK_OF_3, 13));
 }
-
 
 
 

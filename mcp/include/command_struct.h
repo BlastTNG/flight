@@ -290,8 +290,9 @@ typedef struct {
   uint16_t force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
-  int labjack, send_dac, load_curve, cycle_allowed;
+  int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed;
   float dac_value;
+  float tcrit_fpa;
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
@@ -368,6 +369,7 @@ typedef struct roach
     unsigned int do_check_retune;
     unsigned int do_retune;
     unsigned int set_lo;
+    unsigned int read_lo;
     unsigned int find_kids_default;
     unsigned int change_targ_freq;
     unsigned int change_tone_phase;
@@ -402,6 +404,8 @@ typedef struct roach_params
     double delta_phase;
     double freq_offset;
     int resp_thresh;
+    double dBm_per_tone;
+    double lo_freq_MHz;
 } roach_params_t;
 
 // Ethercat controller/device commands

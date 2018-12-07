@@ -75,6 +75,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(lna500_off), "turning off 500 lna", GR_CRYO},
   {COMMAND(allow_cycle), "autocycle on", GR_CRYO},
   {COMMAND(disallow_cycle), "autocycle_off", GR_CRYO},
+  {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
+  {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
@@ -326,6 +328,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
   {COMMAND(set_attens_default), "(All Roaches) Set all attens to default values", GR_ROACH},
+  {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
@@ -853,6 +856,16 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
+  {COMMAND(request_los_file), "Send a file at full rate over LOS", GR_TELEM, 1,
+    {
+      {"Absolute file path", 0, 64, 's', ""}
+    }
+  },
+  {COMMAND(request_oth_file), "Send a file at full rate over OTH", GR_TELEM, 1,
+    {
+      {"Absolute file path", 0, 64, 's', ""}
+    }
+  },
 
   {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
     {
@@ -1008,6 +1021,18 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
     }
   },
+  {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Desired dBm per tone", -47.0, -17.0, 'f', "NONE"},
+    }
+  },
   {COMMAND(read_attens), "Read attenuators", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1131,6 +1156,17 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
+  {COMMAND(set_lo_MHz), "set the LO frequency", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"lo freq MHz", 100.0, 3000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
   {COMMAND(find_kids_default), "Find res freqs from VNA sweeps using default params", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -1244,6 +1280,11 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
           {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(set_tcrit_fpa), "set ADC counts of fpa critical temp", GR_CRYO, 1,
+      {
+          {"ADC counts", 0, 20000, 'i', "ADC"}
       }
   },
   {COMMAND(level_length), "set length of level sensor pulse", GR_CRYO, 1,

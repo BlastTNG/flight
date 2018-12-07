@@ -138,6 +138,7 @@
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
 #define VNA_COMB_LEN 1000 /* Number of tones in search comb */
+#define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -158,8 +159,8 @@ double test_freq[] = {10.0125e6};
 
 // min and max allowable number of tones for each Roach
 // Assumes channel mapping in roach state structure
-int max_targ_tones[5] = {400, 650, 650, 750, 650};
-int min_targ_tones[5] = {50, 50, 50, 100, 50};
+int max_targ_tones[5] = {500, 750, 750, 750, 750};
+int min_targ_tones[5] = {50, 50, 50, 50, 50};
 
 // UDP destination MAC addresses
 
@@ -193,8 +194,8 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 
-char rudat_input_serials[5][11] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
-char rudat_output_serials[5][11] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
+char rudat_input_serials[5][100] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
+char rudat_output_serials[5][100] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
 
 static pthread_mutex_t fft_mutex; /* Controls access to the fftw3 */
 
@@ -1321,7 +1322,11 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
         m_pi->error_count += 1;
         return status;
     }
-    status = read(s, buff, sizeof(buff));
+    if ((status = read(s, buff, sizeof(buff)) < 0)) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
     // printf("STATUS = %d\n", status);
     // blast_info("%s", buff);
     if (read_flag) {
@@ -1330,10 +1335,12 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
         char* rest = buff;
         char response[4][100];
         while ((line = strtok_r(rest, "\n", &rest))) {
-            snprintf(response[count], sizeof(line), line);
+            snprintf(response[count], sizeof(response[count]), line);
+            // blast_info("RESPONSE = %s", response[count]);
             count++;
         }
-        if (response[0] == rudat_input_serials[m_pi->which]) {
+        // blast_info("RESPONSE 0, SERIAL = %s %s", response[0], rudat_input_serials[m_pi->which - 1]);
+        if (strcmp(response[0], rudat_input_serials[m_pi->which - 1]) == 0) {
             CommandData.roach_params[m_pi->which - 1].read_in_atten = atof(response[1]);
             CommandData.roach_params[m_pi->which - 1].read_out_atten = atof(response[3]);
         } else {
@@ -1348,6 +1355,80 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
     return status;
 }
 
+int valon_client(pi_state_t *m_pi, char *command, int read_flag)
+{
+    // If read flag = 1, parse response and store
+    int status = -1;
+    int s;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    // char vcommand[strlen(argv[1]) + strlen(argv[2])];
+    char buff[1024];
+    // bzero(command, sizeof(command));
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        blast_err("Pi%d: Socket failed", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(m_pi->address)) == NULL) {
+        blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(VALON_PORT);
+      /* Copies host address to socket with aide of structures. */
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+        blast_err("ROACH%d: Connection Error", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    bzero(buff, sizeof(buff));
+    if ((status = write(s, command, strlen(command)) < 0)) {
+    // printf("STATUS = %d\n", status);
+        blast_err("ROACH%d: Error sending Pi command", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    if ((status = read(s, buff, sizeof(buff)) < 0)) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    // printf("STATUS = %d\n", status);
+    blast_info("%s", buff);
+    close(s);
+    status = 0;
+    return status;
+}
+
+int set_LO(pi_state_t *m_pi, double lo_freq_MHz)
+{
+    int retval = -1;
+    char* write_this;
+    blast_tmp_sprintf(write_this, "set %g", lo_freq_MHz);
+    if (valon_client(m_pi, write_this, 0) < 0) {
+        return retval;
+    } else {
+        return 0;
+    }
+}
+
+int read_LO(pi_state_t *m_pi)
+{
+    int retval = -1;
+    char write_this[] = "read";
+    if (valon_client(m_pi, write_this, 1) < 0) {
+        return retval;
+    } else {
+        return 0;
+    }
+}
+
 int read_atten(pi_state_t *m_pi)
 {
     int retval = -1;
@@ -1359,8 +1440,7 @@ int read_atten(pi_state_t *m_pi)
     }
 }
 
-int set_atten(pi_state_t *m_pi)
-{
+int set_atten(pi_state_t *m_pi) {
     int retval = -1;
     int ind = m_pi->which - 1;
     char *command;
@@ -1400,6 +1480,63 @@ int set_atten(pi_state_t *m_pi)
            roach_state_table[ind].path_to_last_attens, out_in_atten, 2) < 0)) {
         blast_info("ROACH%d, Unable to write last atten settings to file", m_pi->which);
     }
+    return 0;
+}
+
+int set_atten_conserved(pi_state_t *m_pi)
+{
+    // Must set output attenuation with command
+    int retval = -1;
+    int ind = m_pi->which - 1;
+    char *command;
+    double out_in_atten[2];
+    CommandData.roach_params[ind].in_atten =
+        ATTEN_TOTAL - CommandData.roach_params[ind].out_atten;
+    // the order of input and output attenuators is switched between PIs
+    if (ind == 0) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 1) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 2) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (ind == 3) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].in_atten,
+           CommandData.roach_params[ind].out_atten);
+    }
+    if (ind == 4) {
+        blast_tmp_sprintf(command, "set %g %g",
+           CommandData.roach_params[ind].out_atten,
+           CommandData.roach_params[ind].in_atten);
+    }
+    if (atten_client(m_pi, command, 0) < 0) {
+        return retval;
+    }
+    out_in_atten[0] = CommandData.roach_params[ind].out_atten;
+    out_in_atten[1] = CommandData.roach_params[ind].in_atten;
+    if ((roach_save_1D_file(&roach_state_table[ind],
+           roach_state_table[ind].path_to_last_attens, out_in_atten, 2) < 0)) {
+        blast_info("ROACH%d, Unable to write last atten settings to file", m_pi->which);
+    }
+    return 0;
+}
+
+int find_atten(roach_state_t *m_roach, double pow_per_tone) {
+    double out_atten = -47.0 - pow_per_tone - 10.0*log10(m_roach->current_ntones/1000.0);
+    double out_atten_rounded = round(out_atten / 0.5) * 0.5;
+    CommandData.roach_params[m_roach->which - 1].out_atten = out_atten_rounded;
+    CommandData.roach_params[m_roach->which - 1].in_atten = ATTEN_TOTAL - out_atten_rounded;
+    blast_info("ROACH%d, output atten = %f for %f dBm/tone with Ntones = %zd",
+       m_roach->which, out_atten, pow_per_tone, m_roach->current_ntones);
     return 0;
 }
 
@@ -2056,9 +2193,13 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
         return retval;
     }
     // handle case where either not enough, or too many channels are found
-    if ((m_roach->num_kids > max_targ_tones[m_roach->which - 1]) |
-          (m_roach->num_kids < min_targ_tones[m_roach->which - 1])) {
-        blast_err("ROACH%d, Too many TARG freqs, bad sweep likely", m_roach->which);
+    if (m_roach->num_kids > max_targ_tones[m_roach->which - 1]) {
+        blast_err("ROACH%d, Too many TARG freqs found, bad sweep likely", m_roach->which);
+        m_roach->num_kids = 0;
+        return retval;
+    }
+    if (m_roach->num_kids < min_targ_tones[m_roach->which - 1]) {
+        blast_err("ROACH%d, Too few TARG freqs found, bad sweep likely", m_roach->which);
         m_roach->num_kids = 0;
         return retval;
     }
@@ -2382,7 +2523,7 @@ int setLO_oneshot(int which_pi, double loFreq)
     struct hostent *hp;
     char buff[1024];
     bzero(buff, sizeof(buff));
-    blast_tmp_sprintf(lo_freq, "%f", loFreq);
+    blast_tmp_sprintf(lo_freq, "set %g", loFreq);
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", which_pi + 1);
         pi_state_table[which_pi].error_count += 1;
@@ -2457,9 +2598,6 @@ int pi_reboot_now(pi_state_t *m_pi)
 
 int recenter_lo(roach_state_t *m_roach)
 {
-    char *lo_command;
-    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
-                  m_roach->lo_centerfreq/1.0e6);
     if (setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6) < 0) {
         blast_err("PI%d, Failed to set LO", m_roach->which);
         return -1;
@@ -2495,9 +2633,9 @@ int shift_lo(roach_state_t *m_roach)
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
     int ind = m_roach->which - 1;
-    blast_info("DO SWEEPS = %d", CommandData.roach[ind].do_sweeps);
+    // blast_info("DO SWEEPS = %d", CommandData.roach[ind].do_sweeps);
     if (!CommandData.roach[ind].do_sweeps) {
-        blast_err("DO SWEEPS NOT SET");
+        blast_err("do_sweeps NOT SET");
         return SWEEP_INTERRUPT;
     }
     // blast_info("INSIDE DO SWEEP");
@@ -2537,7 +2675,7 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
         if (m_roach->array == 500) {
-            m_span = 200.0e3;
+            m_span = 250.0e3;
         }
         if (create_sweepdir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
@@ -2595,13 +2733,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
-            /* pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
-            // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
-            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-                blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-                return PI_READ_ERROR;
-            } */
+            set_LO(&pi_state_table[ind], m_roach->lo_freq_req);
+            // setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
@@ -4146,6 +4279,12 @@ void start_flight_mode(roach_state_t *m_roach)
 int roach_targ_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    char* var_name;
+    if (m_roach->has_vna_tones) {
+        blast_err("ROACH%d: Search comb is loaded. Must write TARG tones before TARG sweep", m_roach->which);
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        return retval;
+    }
     m_roach->is_sweeping = 2;
     if ((roach_write_int(m_roach, "PFB_fft_shift", TARG_FFT_SHIFT, 0) < 0)) {
         retval = -2;
@@ -4158,6 +4297,10 @@ int roach_targ_sweep(roach_state_t *m_roach)
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
         // save params for delta f calculation
         save_ref_params(m_roach);
+        // write environment variable linking to last sweep
+        blast_tmp_sprintf(var_name, "R%d_LAST_TARG_SWEEP", m_roach->which);
+        // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+        setenv(var_name, m_roach->last_targ_path, 1);
         // check lamp response
         CommandData.roach_params[m_roach->which - 1].num_sec = 4;
         CommandData.roach[m_roach->which - 1].check_response = 1;
@@ -4557,6 +4700,13 @@ int roach_write_vna(roach_state_t *m_roach)
 int roach_vna_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    char *var_name;
+    // char *echo_command;
+    if (m_roach->has_targ_tones) {
+        blast_info("ROACH%d: Must write search comb before running VNA sweep.", m_roach->which);
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        return retval;
+    }
     m_roach->is_sweeping = 1;
     /* if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
         return retval;
@@ -4568,6 +4718,10 @@ int roach_vna_sweep(roach_state_t *m_roach)
     if (retval == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
+        // write environment variable for sweep path
+        blast_tmp_sprintf(var_name, "R%d_LAST_VNA_SWEEP", m_roach->which);
+        // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+        setenv(var_name, m_roach->last_vna_path, 1);
     } else if (retval == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
     } else if (retval == SWEEP_FAIL) {
@@ -4638,6 +4792,20 @@ void *roach_cmd_loop(void* ind)
             }
             CommandData.roach[i].set_lo = 0;
         }
+        if (CommandData.roach[i].set_lo == 3) {
+            if (set_LO(&pi_state_table[i], CommandData.roach_params[i].lo_freq_MHz) < 0) {
+                blast_err("PI%d, Failed to set LO", i + 1);
+                CommandData.roach[i].set_lo = 0;
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
+        if (CommandData.roach[i].read_lo == 1) {
+            if (read_LO(&pi_state_table[i]) < 0) {
+                blast_err("PI%d, Failed to read LO", i + 1);
+                CommandData.roach[i].read_lo = 0;
+            }
+            CommandData.roach[i].read_lo = 0;
+        }
         if (CommandData.roach[i].get_roach_state) {
             blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));
             CommandData.roach[i].get_roach_state = 0;
@@ -4656,6 +4824,7 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].set_attens == 1) {
             if (set_atten(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                CommandData.roach[i].set_attens = 0;
             } else {
                 CommandData.roach[i].set_attens = 0;
             }
@@ -4663,14 +4832,33 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].set_attens == 2) {
             if (set_attens_to_default(&pi_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
-            } else {
-                CommandData.roach[i].set_attens = 0;
             }
+            CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 3) {
             if (write_last_attens(&roach_state_table[i]) < 0) {
                 blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
                 CommandData.roach[i].set_attens = 0;
+            }
+            CommandData.roach[i].set_attens = 0;
+        }
+        if (CommandData.roach[i].set_attens == 4) {
+            if (set_atten_conserved(&pi_state_table[i]) < 0) {
+                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                CommandData.roach[i].set_attens = 0;
+            }
+            CommandData.roach[i].set_attens = 0;
+        }
+        if (CommandData.roach[i].set_attens == 5) {
+            if (find_atten(&roach_state_table[i], CommandData.roach_params[i].dBm_per_tone) < 0) {
+                blast_info("ROACH%d: Failed to calculate output_atten...", i + 1);
+                CommandData.roach[i].set_attens = 0;
+            } else {
+                if (set_atten(&pi_state_table[i]) < 0) {
+                    blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                    CommandData.roach[i].set_attens = 0;
+                }
+            CommandData.roach[i].set_attens = 0;
             }
         }
         if (CommandData.roach[i].read_attens == 1) {

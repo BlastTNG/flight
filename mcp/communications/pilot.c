@@ -99,18 +99,33 @@ void pilot_compress_and_send(void *arg) {
 
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
-      // send allframe if necessary
-      if (allframe_bytes >= superframe->allframe_size) {
-        transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
-        allframe_bytes = 0;
-      } else {
-        // compress the linklist
-        compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
-        decrementFifo(&pilot_fifo);
+      if (!strcmp(CommandData.pilot_linklist_name, FILE_LINKLIST)) { // special file downlinking 
+				// use the full bandwidth
+				transmit_size = bandwidth;
 
-        // bandwidth limit; frames are 1 Hz, so bandwidth == size
-        transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.pilot_allframe_fraction));  
-        allframe_bytes += bandwidth*CommandData.pilot_allframe_fraction;
+				// fill the downlink buffer as much as the downlink will allow 
+				unsigned int bytes_packed = 0;
+				while ((bytes_packed+ll->blk_size) <= transmit_size) {
+						compress_linklist(compbuffer+bytes_packed, ll, getFifoRead(&pilot_fifo));
+						bytes_packed += ll->blk_size;
+				} 
+				decrementFifo(&pilot_fifo);
+
+      } else { // normal linklist
+				// send allframe if necessary
+				if (allframe_bytes >= superframe->allframe_size) {
+					transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));
+					allframe_bytes = 0;
+				} else {
+					transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.pilot_allframe_fraction));  
+
+					// compress the linklist
+					compress_linklist(compbuffer, ll, getFifoRead(&pilot_fifo));
+
+					// bandwidth limit; frames are 1 Hz, so bandwidth == size
+					allframe_bytes += bandwidth*CommandData.pilot_allframe_fraction;
+				  decrementFifo(&pilot_fifo);
+				}
       }
 
 			// no packetization if there is nothing to transmit
