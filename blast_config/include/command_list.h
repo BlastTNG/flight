@@ -147,7 +147,7 @@ enum singleCommand {
 	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
 	of_lj_on, of_lj_off, gps_timing_on, gps_timing_off,
-	if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
+        gps_sw_reset, if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
 	timing_dist_on, timing_dist_off, bi0_on, bi0_off,
 	vtx_on, vtx_off, if_relay_6_on, if_relay_6_off,
 	if_eth_switch_on, if_eth_switch_off, if_relay_8_on, if_relay_8_off,
