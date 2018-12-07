@@ -3286,7 +3286,7 @@ void InitCommandData()
 
     CommandData.highrate_bw = 6000/8.0; /* Bps */
     CommandData.pilot_bw = 8000000/8.0; /* Bps */
-    CommandData.biphase_bw = 920000/8.0; /* Bps */
+    CommandData.biphase_bw = 1000000/8.0; /* Bps */
 
     CommandData.highrate_allframe_fraction = 0.1;
     CommandData.pilot_allframe_fraction = 0.1;
@@ -3296,7 +3296,7 @@ void InitCommandData()
     CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;
     copysvalue(CommandData.pilot_linklist_name, ALL_TELEMETRY_NAME);
-    copysvalue(CommandData.bi0_linklist_name, "test2.ll");
+    copysvalue(CommandData.bi0_linklist_name, "roach_noise_psd.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     copysvalue(CommandData.sbd_linklist_name, "sbd.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
