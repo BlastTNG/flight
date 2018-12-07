@@ -163,7 +163,7 @@ void biphase_receive(void *args)
                   // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
                   // this is a file that has been downlinked, so unpack and extract to disk
-                  if (!strcmp(ll->name, LOS_FILE_LINKLIST)) {
+                  if (!strcmp(ll->name, FILE_LINKLIST)) {
                       unsigned int bytes_unpacked = 0;
                       uint8_t dummy_buffer[4096] = {0};
                       while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
