@@ -369,6 +369,7 @@ typedef struct roach
     unsigned int do_check_retune;
     unsigned int do_retune;
     unsigned int set_lo;
+    unsigned int read_lo;
     unsigned int find_kids_default;
     unsigned int change_targ_freq;
     unsigned int change_tone_phase;
@@ -404,6 +405,7 @@ typedef struct roach_params
     double freq_offset;
     int resp_thresh;
     double dBm_per_tone;
+    double lo_freq_MHz;
 } roach_params_t;
 
 // Ethercat controller/device commands

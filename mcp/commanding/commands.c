@@ -1217,6 +1217,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].set_attens = 2;
             }
             break;
+        case set_attens_min_output:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].out_atten = 30.0;
+              CommandData.roach[i].set_attens = 1;
+          }
+          break;
         case set_attens_last_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].set_attens = 3;
@@ -2301,6 +2307,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_lo = 1;
       }
       break;
+    case read_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].read_lo = 1;
+      }
+      break;
+    case set_lo_MHz:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].lo_freq_MHz = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_lo = 3;
+      }
+      break;
     case change_amp:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].change_tone_amps = 1;
@@ -3001,6 +3018,7 @@ void InitCommandData()
         CommandData.roach[i].calc_ref_params = 0;
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
+        CommandData.roach[i].read_lo = 0;
         CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
@@ -3015,6 +3033,7 @@ void InitCommandData()
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
+        CommandData.roach_params[i].lo_freq_MHz = 750.0;
     }
     CommandData.roach_params[0].out_atten = 4;
     CommandData.roach_params[1].out_atten = 4;
