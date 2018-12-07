@@ -171,7 +171,7 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 
   // set the block variables to initialize transfer
   theblock->fp = fp;
-  for (i = strlen(filename)-1; i > 0; i++) {
+  for (i = strlen(filename)-1; i >= 0; i--) {
     if (filename[i] == '/') break;
   }
   strcpy(theblock->filename, filename+i+1); // copy the filename stripped of path

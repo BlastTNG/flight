@@ -1579,7 +1579,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_ymax_mag[1] = rvalues[2];
       CommandData.cal_ymin_mag[1] = rvalues[3];
       CommandData.cal_mag_align[1] = rvalues[4];
-      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f",
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f, align = %f",
                  CommandData.cal_xmax_mag[1], CommandData.cal_xmin_mag[1],
                  CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
@@ -1974,6 +1974,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
+      break;
+    case request_los_file:
+			snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
+			telemetries_linklist[BI0_TELEMETRY_INDEX] =
+					linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+                             "file_block", svalues[0]);
+      break;
+    case request_oth_file:
+			snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
+			telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+					linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+                             "file_block", svalues[0]);
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
@@ -3238,11 +3252,11 @@ void InitCommandData()
 
     CommandData.highrate_bw = 6000/8.0; /* Bps */
     CommandData.pilot_bw = 8000000/8.0; /* Bps */
-    CommandData.biphase_bw = 1000000/8.0; /* Bps */
+    CommandData.biphase_bw = 920000/8.0; /* Bps */
 
     CommandData.highrate_allframe_fraction = 0.1;
     CommandData.pilot_allframe_fraction = 0.1;
-    CommandData.biphase_allframe_fraction = 0.1;
+    CommandData.biphase_allframe_fraction = 0.0;
 
     CommandData.biphase_clk_speed = 1000000; /* bps */
     CommandData.biphase_rnrz = false;
