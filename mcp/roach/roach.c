@@ -159,8 +159,8 @@ double test_freq[] = {10.0125e6};
 
 // min and max allowable number of tones for each Roach
 // Assumes channel mapping in roach state structure
-int max_targ_tones[5] = {400, 650, 650, 750, 650};
-int min_targ_tones[5] = {50, 50, 50, 100, 50};
+int max_targ_tones[5] = {500, 750, 750, 750, 750};
+int min_targ_tones[5] = {50, 50, 50, 50, 50};
 
 // UDP destination MAC addresses
 
@@ -1322,7 +1322,11 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
         m_pi->error_count += 1;
         return status;
     }
-    status = read(s, buff, sizeof(buff));
+    if ((status = read(s, buff, sizeof(buff)) < 0)) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
     // printf("STATUS = %d\n", status);
     // blast_info("%s", buff);
     if (read_flag) {
@@ -1349,6 +1353,80 @@ int atten_client(pi_state_t *m_pi, char *command, int read_flag)
     close(s);
     status = 0;
     return status;
+}
+
+int valon_client(pi_state_t *m_pi, char *command, int read_flag)
+{
+    // If read flag = 1, parse response and store
+    int status = -1;
+    int s;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    // char vcommand[strlen(argv[1]) + strlen(argv[2])];
+    char buff[1024];
+    // bzero(command, sizeof(command));
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        blast_err("Pi%d: Socket failed", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(m_pi->address)) == NULL) {
+        blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(VALON_PORT);
+      /* Copies host address to socket with aide of structures. */
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+        blast_err("ROACH%d: Connection Error", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    bzero(buff, sizeof(buff));
+    if ((status = write(s, command, strlen(command)) < 0)) {
+    // printf("STATUS = %d\n", status);
+        blast_err("ROACH%d: Error sending Pi command", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    if ((status = read(s, buff, sizeof(buff)) < 0)) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        m_pi->error_count += 1;
+        return status;
+    }
+    // printf("STATUS = %d\n", status);
+    blast_info("%s", buff);
+    close(s);
+    status = 0;
+    return status;
+}
+
+int set_LO(pi_state_t *m_pi, double lo_freq_MHz)
+{
+    int retval = -1;
+    char* write_this;
+    blast_tmp_sprintf(write_this, "set %g", lo_freq_MHz);
+    if (valon_client(m_pi, write_this, 0) < 0) {
+        return retval;
+    } else {
+        return 0;
+    }
+}
+
+int read_LO(pi_state_t *m_pi)
+{
+    int retval = -1;
+    char write_this[] = "read";
+    if (valon_client(m_pi, write_this, 1) < 0) {
+        return retval;
+    } else {
+        return 0;
+    }
 }
 
 int read_atten(pi_state_t *m_pi)
@@ -2115,9 +2193,13 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
         return retval;
     }
     // handle case where either not enough, or too many channels are found
-    if ((m_roach->num_kids > max_targ_tones[m_roach->which - 1]) |
-          (m_roach->num_kids < min_targ_tones[m_roach->which - 1])) {
-        blast_err("ROACH%d, Too many TARG freqs, bad sweep likely", m_roach->which);
+    if (m_roach->num_kids > max_targ_tones[m_roach->which - 1]) {
+        blast_err("ROACH%d, Too many TARG freqs found, bad sweep likely", m_roach->which);
+        m_roach->num_kids = 0;
+        return retval;
+    }
+    if (m_roach->num_kids < min_targ_tones[m_roach->which - 1]) {
+        blast_err("ROACH%d, Too few TARG freqs found, bad sweep likely", m_roach->which);
         m_roach->num_kids = 0;
         return retval;
     }
@@ -2441,7 +2523,7 @@ int setLO_oneshot(int which_pi, double loFreq)
     struct hostent *hp;
     char buff[1024];
     bzero(buff, sizeof(buff));
-    blast_tmp_sprintf(lo_freq, "%f", loFreq);
+    blast_tmp_sprintf(lo_freq, "set %g", loFreq);
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", which_pi + 1);
         pi_state_table[which_pi].error_count += 1;
@@ -2516,9 +2598,6 @@ int pi_reboot_now(pi_state_t *m_pi)
 
 int recenter_lo(roach_state_t *m_roach)
 {
-    char *lo_command;
-    blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
-                  m_roach->lo_centerfreq/1.0e6);
     if (setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6) < 0) {
         blast_err("PI%d, Failed to set LO", m_roach->which);
         return -1;
@@ -2654,13 +2733,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
             m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
-            /* pi_write_string(m_pi, (unsigned char*)lo_command, strlen(lo_command));
-            // pi_write_string(m_pi, (unsigned char*)lo_command2, strlen(lo_command2));
-            if (pi_read_string(&pi_state_table[ind], PI_READ_NTRIES, LO_READ_TIMEOUT) < 0) {
-                blast_info("Error setting LO... reboot Pi%d?", ind + 1);
-                return PI_READ_ERROR;
-            } */
+            set_LO(&pi_state_table[ind], m_roach->lo_freq_req);
+            // setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
             usleep(SWEEP_TIMEOUT);
             if (roach_save_sweep_packet(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
@@ -4207,6 +4281,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
     int retval = -1;
     if (m_roach->has_vna_tones) {
         blast_err("ROACH%d: Search comb is loaded. Must write TARG tones before TARG sweep", m_roach->which);
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
         return retval;
     }
     m_roach->is_sweeping = 2;
@@ -4620,6 +4695,11 @@ int roach_write_vna(roach_state_t *m_roach)
 int roach_vna_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    if (m_roach->has_targ_tones) {
+        blast_info("ROACH%d: Must write search comb before running VNA sweep.", m_roach->which);
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        return retval;
+    }
     m_roach->is_sweeping = 1;
     /* if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
         return retval;
@@ -4700,6 +4780,20 @@ void *roach_cmd_loop(void* ind)
                 blast_info("Roach%d, LO shifted", i + 1);
             }
             CommandData.roach[i].set_lo = 0;
+        }
+        if (CommandData.roach[i].set_lo == 3) {
+            if (set_LO(&pi_state_table[i], CommandData.roach_params[i].lo_freq_MHz) < 0) {
+                blast_err("PI%d, Failed to set LO", i + 1);
+                CommandData.roach[i].set_lo = 0;
+            }
+            CommandData.roach[i].set_lo = 0;
+        }
+        if (CommandData.roach[i].read_lo == 1) {
+            if (read_LO(&pi_state_table[i]) < 0) {
+                blast_err("PI%d, Failed to read LO", i + 1);
+                CommandData.roach[i].read_lo = 0;
+            }
+            CommandData.roach[i].read_lo = 0;
         }
         if (CommandData.roach[i].get_roach_state) {
             blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));

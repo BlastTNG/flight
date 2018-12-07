@@ -158,7 +158,7 @@ enum singleCommand {
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
   change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off, allow_watchdog,
-    disallow_watchdog, set_attens_last_all,
+    disallow_watchdog, set_attens_last_all, set_attens_min_output,
 
   xyzzy
 };
@@ -304,6 +304,8 @@ enum multiCommand {
   read_attens,
   set_attens_conserve,
   set_attens_calc,
+  set_lo_MHz,
+  read_lo,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

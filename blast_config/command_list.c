@@ -328,6 +328,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
   {COMMAND(set_attens_default), "(All Roaches) Set all attens to default values", GR_ROACH},
+  {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
@@ -1153,6 +1154,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(set_lo_MHz), "set the LO frequency", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"lo freq MHz", 100.0, 3000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   {COMMAND(find_kids_default), "Find res freqs from VNA sweeps using default params", GR_ROACH, 1,

@@ -154,37 +154,49 @@ void biphase_receive(void *args)
 
        
               if ((retval == 0) && (ll != NULL)) {
-                  if (*(uint32_t *) ll->serial != prev_serial) {
-                    ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, "BI0");
-                  }
-                  prev_serial = *(uint32_t *) ll->serial;
-
                   // hijack the frame number for transmit size
                   transmit_size = *frame_number;
-                  if (transmit_size > ll->blk_size) {
-                      blast_err("Transmit size larger than assigned linklist");
-                      transmit_size = ll->blk_size;
-                  }  
 
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
+                  // The compressed linklist has been fully reconstructed
+                  if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
+                  // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
-                  if (read_allframe(local_superframe, superframe, compbuffer)) {
-                      if (verbose) blast_info("[Biphase] Received an allframe :)\n");
-                      memcpy(local_allframe, compbuffer, superframe->allframe_size);
-                  } else {
-                      // The compressed linklist has been fully reconstructed
-                      if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
-                      // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
-
-                      // write the linklist data to disk
-                      if (ll_rawfile) {
-                        memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
-                        write_linklist_rawfile(ll_rawfile, compbuffer);
-                        flush_linklist_rawfile(ll_rawfile);
+                  // this is a file that has been downlinked, so unpack and extract to disk
+                  if (!strcmp(ll->name, LOS_FILE_LINKLIST)) {
+                      unsigned int bytes_unpacked = 0;
+                      uint8_t dummy_buffer[4096] = {0};
+                      while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
+                          decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
+                          bytes_unpacked += ll->blk_size;
+                          usleep(1000);
                       }
-                      memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
-                      compbuffer_size = 0;
-                  } 
+
+                  } else { // write the linklist data to disk
+                      if (read_allframe(local_superframe, superframe, compbuffer)) {
+                          if (verbose) blast_info("[Biphase] Received an allframe :)\n");
+                          memcpy(local_allframe, compbuffer, superframe->allframe_size);
+                      } else {
+                          // check the serials
+                          if (*(uint32_t *) ll->serial != prev_serial) {
+                            ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, "BI0");
+                          }
+                          prev_serial = *(uint32_t *) ll->serial;
+
+                          if (transmit_size > ll->blk_size) {
+                              blast_err("Transmit size larger than assigned linklist");
+                              transmit_size = ll->blk_size;
+                          }  
+                          if (ll_rawfile) {
+                            // copy the allframe, write to disk, and flush
+                            memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                            write_linklist_rawfile(ll_rawfile, compbuffer);
+                            flush_linklist_rawfile(ll_rawfile);
+                          }
+                      }
+                  }
+                  memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
+                  compbuffer_size = 0;
               }
           }
           i_word++;
