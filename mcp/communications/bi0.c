@@ -493,7 +493,7 @@ void biphase_writer(void * arg)
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
-            if (!strcmp(CommandData.bi0_linklist_name, LOS_FILE_LINKLIST)) { // special file downlinking
+            if (!strcmp(CommandData.bi0_linklist_name, FILE_LINKLIST)) { // special file downlinking
                 // use the full bandwidth
                 transmit_size = bandwidth;
 
