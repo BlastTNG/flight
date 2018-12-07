@@ -129,6 +129,7 @@ void biphase_receive(void *args)
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
+  uint8_t * dummy_buffer = calloc(1, superframe->size);
 
   while(true) {
       while ((read(decom_fp, &raw_word_in, sizeof(uint16_t))) > 0) {
@@ -164,8 +165,8 @@ void biphase_receive(void *args)
 
                   // this is a file that has been downlinked, so unpack and extract to disk
                   if (!strcmp(ll->name, FILE_LINKLIST)) {
+                      printf("I'm here\n");
                       unsigned int bytes_unpacked = 0;
-                      uint8_t dummy_buffer[4096] = {0};
                       while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
                           decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
                           bytes_unpacked += ll->blk_size;
