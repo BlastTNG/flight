@@ -104,7 +104,11 @@ static int motors_exit = false;
 /**
  * Ethercat driver status
  */
+
+static ec_device_state_t controller_state[N_MCs] = {0};
+/*
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
+*/
 ec_state_t ec_mcp_state = {0};
 
 /**
@@ -558,6 +562,7 @@ static int find_controllers(void)
     }
     ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
+        controller_state[i-1].index = i;
         /**
          * There is only one PEPER FUCHS encoder on the chain, so we test for this
          * first.  It doesn't have a fixed index number like the motor controllers,
@@ -570,6 +575,8 @@ static int find_controllers(void)
             blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
                         ec_slave[i].aliasadr, ec_slave[i].name, serial);
             hwp_index = i;
+            controller_state[i-1].is_hwp = 1;
+            break;
         }
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
@@ -583,19 +590,23 @@ static int find_controllers(void)
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
             blast_info("Setting rw_index to %d", rw_index);
+            controller_state[i-1].is_mc = 1;
         } else if (serial == PIV_SN) {
             blast_startup("Pivot Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
             blast_info("Setting piv_index to %d", piv_index);
+            controller_state[i-1].is_mc = 1;
         } else if (serial == EL_SN) {
             blast_startup("Elevation Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
+            controller_state[i-1].is_mc = 1;
             blast_info("Setting el_index to %d", el_index);
         } else {
             blast_warn("Got unknown MC %s at position %d with alias %d",
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
+            controller_state[i-1].ec_unknown = 1;
         }
     }
     while (ec_iserror()) {
@@ -620,30 +631,30 @@ static int hwp_pdo_init(void)
         return -1;
     }
 
-    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
-            hwp_index, ec_slave[hwp_index].name);
+//     blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+//             hwp_index, ec_slave[hwp_index].name);
 
     /**
      * To program the PDO mapping, we first must clear the old state
      */
-/*
+
     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
     for (int i = 0; i < 4; i++) {
         if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
     }
-*/
+
     /**
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
 
-    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
-    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
-/*
-    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
-        blast_err("Failed mapping!");
-    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
-        blast_err("Failed mapping!");
-*/
+//     map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+//     if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+//
+//     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
+//         blast_err("Failed mapping!");
+//     if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+//         blast_err("Failed mapping!");
+
     return 0;
 }
 
@@ -863,7 +874,7 @@ static void map_motor_vars(void)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-	blast_info("Finished map_motor_vars.");
+    blast_info("Finished map_motor_vars.");
 }
 
 /**
@@ -1139,13 +1150,13 @@ int configure_ec_motors()
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i == hwp_index) {
+        if (controller_state[i-1].is_hwp) {
             // hwp_pdo_init();
-        } else {
+        } else if (controller_state[i-1].is_mc) {
             motor_pdo_init(i);
             mc_readPDOassign(i);
         }
-	}
+    }
     /// We re-configure the map now that we have assigned the PDOs
     blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
@@ -1155,8 +1166,10 @@ int configure_ec_motors()
      * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        *target_current[i] = 0;
-        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        if (controller_state[i-1].is_mc) {
+            *target_current[i] = 0;
+            *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        }
     }
 
     if (CommandData.disable_az) {
@@ -1181,7 +1194,7 @@ int configure_ec_motors()
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i != hwp_index) {
+        if (controller_state[i-1].is_mc) {
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }
@@ -1253,7 +1266,7 @@ static void* motor_control(void* arg)
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;
-	blast_info("expectedWKC = %i", expectedWKC);
+    blast_info("expectedWKC = %i", expectedWKC);
 
     clock_gettime(CLOCK_REALTIME, &ts);
     while (!shutdown_mcp) {
