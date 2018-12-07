@@ -165,7 +165,6 @@ void biphase_receive(void *args)
 
                   // this is a file that has been downlinked, so unpack and extract to disk
                   if (!strcmp(ll->name, FILE_LINKLIST)) {
-                      printf("I'm here\n");
                       unsigned int bytes_unpacked = 0;
                       while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
                           decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
