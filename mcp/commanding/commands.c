@@ -1986,21 +1986,29 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       filename = svalues[0];
       if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
 
-			snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
-			telemetries_linklist[BI0_TELEMETRY_INDEX] =
-					linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
-			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-                             "file_block", filename);
+      if (filename) {
+				snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
+				telemetries_linklist[BI0_TELEMETRY_INDEX] =
+						linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+															 "file_block", filename);
+      } else {
+        blast_err("Could not resolve filename \"%s\"", svalues[0]);
+      }
       break;
     case request_oth_file:
       filename = svalues[0];
-      if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
+			if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
 
-			snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
-			telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-					linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
-			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-                             "file_block", filename);
+      if (filename) {
+				snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
+				telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+						linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+															 "file_block", filename);
+      } else {
+        blast_err("Could not resolve filename \"%s\"", svalues[0]);
+      }
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
