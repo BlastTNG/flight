@@ -1312,6 +1312,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 {
   int i;
   int is_new;
+  char * filename;
 
 //   Update CommandData struct with new info
 //   * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1982,18 +1983,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case request_los_file:
+      filename = svalues[0];
+      if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
+
 			snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
 			telemetries_linklist[BI0_TELEMETRY_INDEX] =
 					linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
 			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-                             "file_block", svalues[0]);
+                             "file_block", filename);
       break;
     case request_oth_file:
-			snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
-			telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
-					linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+      filename = svalues[0];
+      if (svalues[0][0] == '$') filename = getenv(svalues[0]+1); // hook for environment variable
+
+			snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
+			telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+					linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
 			send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-                             "file_block", svalues[0]);
+                             "file_block", filename);
       break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
