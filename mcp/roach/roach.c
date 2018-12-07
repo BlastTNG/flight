@@ -2633,9 +2633,9 @@ int shift_lo(roach_state_t *m_roach)
 int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
 {
     int ind = m_roach->which - 1;
-    blast_info("DO SWEEPS = %d", CommandData.roach[ind].do_sweeps);
+    // blast_info("DO SWEEPS = %d", CommandData.roach[ind].do_sweeps);
     if (!CommandData.roach[ind].do_sweeps) {
-        blast_err("DO SWEEPS NOT SET");
+        blast_err("do_sweeps NOT SET");
         return SWEEP_INTERRUPT;
     }
     // blast_info("INSIDE DO SWEEP");
@@ -4279,6 +4279,7 @@ void start_flight_mode(roach_state_t *m_roach)
 int roach_targ_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    char* var_name;
     if (m_roach->has_vna_tones) {
         blast_err("ROACH%d: Search comb is loaded. Must write TARG tones before TARG sweep", m_roach->which);
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
@@ -4296,6 +4297,10 @@ int roach_targ_sweep(roach_state_t *m_roach)
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
         // save params for delta f calculation
         save_ref_params(m_roach);
+        // write environment variable linking to last sweep
+        blast_tmp_sprintf(var_name, "R%d_LAST_TARG_SWEEP", m_roach->which);
+        // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+        setenv(var_name, m_roach->last_targ_path, 1);
         // check lamp response
         CommandData.roach_params[m_roach->which - 1].num_sec = 4;
         CommandData.roach[m_roach->which - 1].check_response = 1;
@@ -4695,6 +4700,8 @@ int roach_write_vna(roach_state_t *m_roach)
 int roach_vna_sweep(roach_state_t *m_roach)
 {
     int retval = -1;
+    char *var_name;
+    // char *echo_command;
     if (m_roach->has_targ_tones) {
         blast_info("ROACH%d: Must write search comb before running VNA sweep.", m_roach->which);
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
@@ -4711,6 +4718,10 @@ int roach_vna_sweep(roach_state_t *m_roach)
     if (retval == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
+        // write environment variable for sweep path
+        blast_tmp_sprintf(var_name, "R%d_LAST_VNA_SWEEP", m_roach->which);
+        // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+        setenv(var_name, m_roach->last_vna_path, 1);
     } else if (retval == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
     } else if (retval == SWEEP_FAIL) {
