@@ -38,22 +38,21 @@
 
 extern labjack_state_t state[NUM_LABJACKS];
 
-static labjack_10hz_filter_t vPSSfilt[NUM_LABJACKS][NUM_PSS_V];
-static labjack_10hz_filter_t TPSSfilt[NUM_LABJACKS];
+static labjack_10hz_filter_t vPSSfilt[NUM_PSS_V][NUM_PSS];
+static labjack_10hz_filter_t TPSSfilt[NUM_PSS];
 
 void process_sun_sensors(void) {
     static int first_time = 1;
     if (first_time) {
-        for (int i = 0; i < NUM_LABJACKS; i++) {
-            for (int j = 0; j < NUM_PSS_V; j++) {
+        for (int i = 0; i < NUM_PSS_V; i++) {
+            for (int j = 0; j < NUM_PSS; j++) {
                 init_labjack_10hz_filter(&vPSSfilt[i][j]);
             }
             init_labjack_10hz_filter(&TPSSfilt[i]);
         }
         first_time = 0;
     }
-    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 26), &vPSSfilt[0][0]);
-	// labjack_get_value(LABJACK_MULT_PSS, 26);
+    /* filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 26), &vPSSfilt[0][0]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 24), &vPSSfilt[1][0]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 22), &vPSSfilt[2][0]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 20), &vPSSfilt[3][0]);
@@ -92,8 +91,48 @@ void process_sun_sensors(void) {
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 43), &vPSSfilt[1][7]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 40), &vPSSfilt[2][7]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 38), &vPSSfilt[3][7]);
-    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 36), &TPSSfilt[7]);
-}
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 36), &TPSSfilt[7]); */
+
+    labjack_get_value(LABJACK_MULT_PSS, 26);
+    labjack_get_value(LABJACK_MULT_PSS, 24);
+    labjack_get_value(LABJACK_MULT_PSS, 22);
+    labjack_get_value(LABJACK_MULT_PSS, 20);
+    labjack_get_value(LABJACK_MULT_PSS, 18);
+    labjack_get_value(LABJACK_MULT_PSS, 17);
+    labjack_get_value(LABJACK_MULT_PSS, 15);
+    labjack_get_value(LABJACK_MULT_PSS, 13);
+    labjack_get_value(LABJACK_MULT_PSS, 11);
+    labjack_get_value(LABJACK_MULT_PSS, 9);
+    labjack_get_value(LABJACK_MULT_PSS, 7);
+    labjack_get_value(LABJACK_MULT_PSS, 5);
+    labjack_get_value(LABJACK_MULT_PSS, 27);
+    labjack_get_value(LABJACK_MULT_PSS, 25);
+    labjack_get_value(LABJACK_MULT_PSS, 23);
+    labjack_get_value(LABJACK_MULT_PSS, 21);
+    labjack_get_value(LABJACK_MULT_PSS, 19);
+    labjack_get_value(LABJACK_MULT_PSS, 16);
+    labjack_get_value(LABJACK_MULT_PSS, 14);
+    labjack_get_value(LABJACK_MULT_PSS, 12);
+    labjack_get_value(LABJACK_MULT_PSS, 50);
+    labjack_get_value(LABJACK_MULT_PSS, 48);
+    labjack_get_value(LABJACK_MULT_PSS, 46);
+    labjack_get_value(LABJACK_MULT_PSS, 44);
+    labjack_get_value(LABJACK_MULT_PSS, 42);
+    labjack_get_value(LABJACK_MULT_PSS, 41);
+    labjack_get_value(LABJACK_MULT_PSS, 39);
+    labjack_get_value(LABJACK_MULT_PSS, 37);
+    labjack_get_value(LABJACK_MULT_PSS, 35);
+    labjack_get_value(LABJACK_MULT_PSS, 33);
+    labjack_get_value(LABJACK_MULT_PSS, 31);
+    labjack_get_value(LABJACK_MULT_PSS, 29);
+    labjack_get_value(LABJACK_MULT_PSS, 51);
+    labjack_get_value(LABJACK_MULT_PSS, 49);
+    labjack_get_value(LABJACK_MULT_PSS, 47);
+    labjack_get_value(LABJACK_MULT_PSS, 45);
+    labjack_get_value(LABJACK_MULT_PSS, 43);
+    labjack_get_value(LABJACK_MULT_PSS, 40);
+    labjack_get_value(LABJACK_MULT_PSS, 38);
+}   labjack_get_value(LABJACK_MULT_PSS, 36);
 
 void update_sun_sensors(void) {
     static int firsttime = 1;
