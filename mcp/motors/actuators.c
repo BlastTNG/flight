@@ -341,8 +341,8 @@ static void ServoActuators(int* goal)
   int i;
   char buf[EZ_BUS_BUF_LEN];
 
-  if (CheckMove(goal[0], goal[1], goal[2]))
-    return;
+  // if (CheckMove(goal[0], goal[1], goal[2]))
+    // return;
 
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;

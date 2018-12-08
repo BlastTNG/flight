@@ -493,18 +493,34 @@ void biphase_writer(void * arg)
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
-            // send allframe if necessary
-            if (allframe_bytes >= superframe->allframe_size) {
-                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
-                allframe_bytes = 0;
-            } else {
-                // compress the linklist to compbuffer
-                compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
-                decrementFifo(&bi0_fifo);
+            if (!strcmp(CommandData.bi0_linklist_name, FILE_LINKLIST)) { // special file downlinking
+                // use the full bandwidth
+                transmit_size = bandwidth;
 
-                // bandwidth limit; frames are 1 Hz, so bandwidth == size
-                transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
-                allframe_bytes += bandwidth*CommandData.biphase_allframe_fraction;
+                // fill the downlink buffer as much as the downlink will allow 
+                unsigned int bytes_packed = 0;
+                while ((bytes_packed+ll->blk_size) <= transmit_size) {
+                    compress_linklist(compbuffer+bytes_packed, ll, getFifoRead(&bi0_fifo));
+                    bytes_packed += ll->blk_size;
+                } 
+                decrementFifo(&bi0_fifo);
+            
+            } else { // normal linklist
+                // send allframe if necessary
+                if (allframe_bytes >= superframe->allframe_size) {
+                    transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
+                    allframe_bytes = 0;
+                } else {
+                    // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                    transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
+
+                    // compress the linklist to compbuffer
+                    compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
+
+                    // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                    allframe_bytes += bandwidth*CommandData.biphase_allframe_fraction;
+                    decrementFifo(&bi0_fifo);
+                }
             }
 
             // no packetization if there is nothing to transmit

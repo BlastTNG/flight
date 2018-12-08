@@ -123,6 +123,16 @@ typedef enum {
 } ec_contol_status_t;
 
 typedef struct {
+    uint8_t index;
+    uint8_t is_hwp;
+    uint8_t ec_unknown;
+    uint8_t is_mc;
+    uint8_t comms_ok;
+    uint16_t network_error_count;
+    ec_contol_status_t status;
+} ec_device_state_t;
+
+typedef struct {
 	int8_t n_found;
 	int8_t slave_count;
 	uint16_t network_error_count;
