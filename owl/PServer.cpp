@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <QDebug>
 #include "PServer.h"
 
 PServer::PServer(QString ckey) : _sema("_owlSema"+ckey,1,QSystemSemaphore::Create), _smemHtml("_owlHtml"+ckey),
@@ -36,6 +37,7 @@ PServer::~PServer() {
 }
 
 void PServer::clockOn(const QString& html,const QString&css,const QString&layout,const QString&data) {
+  qDebug() << "pserver clockon";
     if(_smemHtml.isAttached()) _smemHtml.detach();
     if(_smemCSS.isAttached()) _smemCSS.detach();
     if(_smemLayout.isAttached()) _smemLayout.detach();
@@ -51,10 +53,10 @@ void PServer::clockOn(const QString& html,const QString&css,const QString&layout
     _smemLayout.lock();
     _smemData.lock();
 
-    memcpy(_smemHtml.data(),html.toAscii().data(),html.size()+1);
-    memcpy(_smemCSS.data(),css.toAscii().data(),css.size()+1);
-    memcpy(_smemLayout.data(),layout.toAscii().data(),layout.size()+1);
-    memcpy(_smemData.data(),data.toAscii().data(),data.size()+1);
+    memcpy(_smemHtml.data(),html.toLatin1().data(),html.size()+1);
+    memcpy(_smemCSS.data(),css.toLatin1().data(),css.size()+1);
+    memcpy(_smemLayout.data(),layout.toLatin1().data(),layout.size()+1);
+    memcpy(_smemData.data(),data.toLatin1().data(),data.size()+1);
 
     _smemHtml.unlock();
     _smemCSS.unlock();

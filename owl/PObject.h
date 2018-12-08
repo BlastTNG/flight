@@ -29,19 +29,33 @@ class PMainWindow;
 
 class PObject
 {
-    int _id;
     static bool isLoading;
 public:
+    int _id;
     friend QDataStream& operator<<(QDataStream& a,PObject& b);
     friend QDataStream& operator>>(QDataStream& a,PObject& b);
     friend QVariant save(PObject&);
-    friend void load(QVariant s,PObject& b);
-    friend void load(QVariant s,PMainWindow& b);
+    friend void load(QVariant v,PObject& b);
+    friend void load(QVariant v,PMainWindow& b);
     friend class PMainWindow;
     static QMap<int, PObject*> _u;
 
-    PObject(int id=qrand()) : _id(id) { if(isLoading) return; while(_u.contains(_id)) {qDebug()<<"Broken random number generator?"; id=qrand(); } _u.insert(id,this); }
-    virtual ~PObject() { if((_id !=0) && _u.contains(_id)) _u[_id]=0; }
+    PObject(int id=qrand()) {
+      if (isLoading) return;
+
+      _id = id;
+      while (_u.contains(_id)) {
+        qDebug()<<"Broken random number generator?";
+        id=qrand();
+      }
+      _u.insert(id,this);
+    }
+
+    virtual ~PObject() {
+      if((_id !=0) && _u.contains(_id)) {
+        _u[_id]=0;
+      }
+    }
 
     bool isCurrentObject();
     QString idText() const { return "(P"+QString::number(_id)+")"; }
