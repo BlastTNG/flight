@@ -202,6 +202,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case disallow_cycle:
             CommandData.Cryo.cycle_allowed = 0;
             break;
+        case allow_watchdog:
+            CommandData.Cryo.watchdog_allowed = 1;
+            break;
+        case disallow_watchdog:
+            CommandData.Cryo.watchdog_allowed = 0;
+            break;
         case force_cycle:
             CommandData.Cryo.forced = 1;
             break;
@@ -548,6 +554,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[15] = 0;
             break;
+        case gps_sw_reset:
+            system("/usr/local/bin/gps_sw_reset");
+            // berror(fatal, "Commands: failed to reboot gps software\n");
+            break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;
             CommandData.Relays.cycled_if = 1;
@@ -628,28 +638,28 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[2] = 0;
             break;
-        case bi0_on:
+        case vtx_on:
             CommandData.power.bi0.rst_count = 0;
             CommandData.power.bi0.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 1;
             break;
-        case bi0_off:
+        case vtx_off:
             CommandData.power.bi0.set_count = 0;
             CommandData.power.bi0.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_4_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[3] = 0;
             break;
-        case vtx_on:
+        case bi0_on:
             CommandData.power.sc_tx.rst_count = 0;
             CommandData.power.sc_tx.set_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[4] = 1;
             break;
-        case vtx_off:
+        case bi0_off:
             CommandData.power.sc_tx.set_count = 0;
             CommandData.power.sc_tx.rst_count = LATCH_PULSE_LEN;
             CommandData.Relays.if_5_off = 1;
@@ -1211,6 +1221,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].set_attens = 2;
             }
             break;
+        case set_attens_min_output:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].out_atten = 30.0;
+              CommandData.roach[i].set_attens = 1;
+          }
+          break;
         case set_attens_last_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].set_attens = 3;
@@ -1300,6 +1316,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 {
   int i;
   int is_new;
+  char * filename;
 
 //   Update CommandData struct with new info
 //   * If the parameter is type 'i'/'l' set CommandData using ivalues[i]
@@ -1573,7 +1590,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.cal_ymax_mag[1] = rvalues[2];
       CommandData.cal_ymin_mag[1] = rvalues[3];
       CommandData.cal_mag_align[1] = rvalues[4];
-      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f",
+      blast_info("Updating mag1 cal coeffs: xmax = %f, xmin = %f, ymin = %f, ymax = %f, align = %f",
                  CommandData.cal_xmax_mag[1], CommandData.cal_xmin_mag[1],
                  CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
@@ -1899,6 +1916,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case level_length: // specify length in seconds
       CommandData.Cryo.level_length = (ivalues[0]*5);
       break;
+    case set_tcrit_fpa: // specify temp in ADC counts
+      CommandData.Cryo.tcrit_fpa = ivalues[0];
+      break;
     case periodic_cal:
       CommandData.Cryo.periodic_pulse = 1;
       CommandData.Cryo.num_pulse = ivalues[0];
@@ -1964,6 +1984,33 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             (char *) linklist_nt[ivalues[0]], linklist_array), "file_block", svalues[1]);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
+      }
+      break;
+    case request_stream_file:
+      filename = svalues[0];
+			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
+
+      if (filename) {
+        if (ivalues[0] == 0) { // pilot
+					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+        } else if (ivalues[0] == 1) { // BI0
+					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[BI0_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+        } else if (ivalues[0] == 2) { // highrate
+					snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
+					telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
+							linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+        } else {
+          blast_err("Cannot send files over link index %d", ivalues[0]);
+          break;
+        }
+				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+															 "file_block", filename);
+      } else {
+        blast_err("Could not resolve filename \"%s\"", svalues[1]);
       }
       break;
     case biphase_clk_speed:
@@ -2148,6 +2195,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
+    case set_attens_conserve:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)) {
+          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_attens = 4;
+      }
+      break;
+    case set_attens_calc:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_attens = 5;
+      }
+      break;
     case reboot_pi:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].reboot_pi_now = 1;
@@ -2278,6 +2337,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case center_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].set_lo = 1;
+      }
+      break;
+    case read_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].read_lo = 1;
+      }
+      break;
+    case set_lo_MHz:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].lo_freq_MHz = rvalues[1];
+          CommandData.roach[ivalues[0]-1].set_lo = 3;
       }
       break;
     case change_amp:
@@ -2980,6 +3050,7 @@ void InitCommandData()
         CommandData.roach[i].calc_ref_params = 0;
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
+        CommandData.roach[i].read_lo = 0;
         CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
@@ -2994,6 +3065,7 @@ void InitCommandData()
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
+        CommandData.roach_params[i].lo_freq_MHz = 750.0;
     }
     CommandData.roach_params[0].out_atten = 4;
     CommandData.roach_params[1].out_atten = 4;
@@ -3187,6 +3259,7 @@ void InitCommandData()
     CommandData.Cryo.labjack = 0;
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
+    CommandData.Cryo.watchdog_allowed = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
     CommandData.Relays.update_video = 0;
@@ -3205,6 +3278,7 @@ void InitCommandData()
     bputs(warning, "Commands: Regenerating Command Data and prev_status\n");
 
     /* prev_status overrides this stuff */
+    CommandData.Cryo.tcrit_fpa = 9900;
     CommandData.Relays.video_trans = 0;
     CommandData.command_count = 0;
     CommandData.last_command = 0xffff;
@@ -3225,7 +3299,7 @@ void InitCommandData()
     CommandData.biphase_rnrz = false;
     CommandData.highrate_through_tdrss = true;
     copysvalue(CommandData.pilot_linklist_name, ALL_TELEMETRY_NAME);
-    copysvalue(CommandData.bi0_linklist_name, "test2.ll");
+    copysvalue(CommandData.bi0_linklist_name, "roach_noise_psd.ll");
     copysvalue(CommandData.highrate_linklist_name, "test3.ll");
     copysvalue(CommandData.sbd_linklist_name, "sbd.ll");
     CommandData.vtx_sel[0] = vtx_xsc0;
@@ -3375,6 +3449,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
+        CommandData.roach_params[i].dBm_per_tone = -60;
     }
 
     CommandData.rox_bias.amp = 56;
@@ -3414,10 +3489,10 @@ void InitCommandData()
     CommandData.actbus.sf_time = 0;
     CommandData.actbus.sf_offset = 6667;
 
-    CommandData.actbus.act_vel = 20;
-    CommandData.actbus.act_acc = 500;
+    CommandData.actbus.act_vel = 200;
+    CommandData.actbus.act_acc = 1000;
     CommandData.actbus.act_move_i = 75;
-    CommandData.actbus.act_hold_i = 50;
+    CommandData.actbus.act_hold_i = 45;
     CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;

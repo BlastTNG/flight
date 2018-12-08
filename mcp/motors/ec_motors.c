@@ -104,7 +104,11 @@ static int motors_exit = false;
 /**
  * Ethercat driver status
  */
+
+static ec_device_state_t controller_state[N_MCs] = {0};
+/*
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
+*/
 ec_state_t ec_mcp_state = {0};
 
 /**
@@ -558,6 +562,7 @@ static int find_controllers(void)
     }
     ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
+        controller_state[i-1].index = i;
         /**
          * There is only one PEPER FUCHS encoder on the chain, so we test for this
          * first.  It doesn't have a fixed index number like the motor controllers,
@@ -570,35 +575,38 @@ static int find_controllers(void)
             blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
                         ec_slave[i].aliasadr, ec_slave[i].name, serial);
             hwp_index = i;
+            controller_state[i-1].is_hwp = 1;
+            break;
         }
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
-        if (ec_slave[i].aliasadr == RW_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %d",
+        int32_t serial = 0;
+        int size = 4;
+        ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
+        if (serial == RW_SN) {
+            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
-        } else if (ec_slave[i].aliasadr == PIV_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Pivot Motor Controller %d: %s: SN: %d",
+            blast_info("Setting rw_index to %d", rw_index);
+            controller_state[i-1].is_mc = 1;
+        } else if (serial == PIV_SN) {
+            blast_startup("Pivot Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
-        } else if (ec_slave[i].aliasadr == EL_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Elevation Motor Controller %d: %s: SN: %d",
+            blast_info("Setting piv_index to %d", piv_index);
+            controller_state[i-1].is_mc = 1;
+        } else if (serial == EL_SN) {
+            blast_startup("Elevation Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
+            controller_state[i-1].is_mc = 1;
+            blast_info("Setting el_index to %d", el_index);
         } else {
             blast_warn("Got unknown MC %s at position %d with alias %d",
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
+            controller_state[i-1].ec_unknown = 1;
         }
     }
     while (ec_iserror()) {
@@ -623,30 +631,30 @@ static int hwp_pdo_init(void)
         return -1;
     }
 
-    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
-            hwp_index, ec_slave[hwp_index].name);
+//     blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+//             hwp_index, ec_slave[hwp_index].name);
 
     /**
      * To program the PDO mapping, we first must clear the old state
      */
-/*
+
     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
     for (int i = 0; i < 4; i++) {
         if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
     }
-*/
+
     /**
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
 
-    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
-    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
-/*
-    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
-        blast_err("Failed mapping!");
-    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
-        blast_err("Failed mapping!");
-*/
+//     map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+//     if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+//
+//     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
+//         blast_err("Failed mapping!");
+//     if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+//         blast_err("Failed mapping!");
+
     return 0;
 }
 
@@ -705,14 +713,14 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    map_pdo(&map, ECAT_NET_STATUS, 32); // Network Status (including heartbeat monitor)
     retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
     if (!retval) {
         blast_err("Failed mapping!");
     }
     blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -752,6 +760,10 @@ static int motor_pdo_init(int m_slave)
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4)) /// There are four maps in the TX PDOs
         blast_err("Failed mapping!");
 
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+    return 0;
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -843,9 +855,18 @@ static void map_index_vars(int m_index)
 static void map_motor_vars(void)
 {
 	blast_info("Starting map_motor_vars.");
-    if (el_index) map_index_vars(el_index);
-    if (rw_index) map_index_vars(rw_index);
-    if (piv_index) map_index_vars(piv_index);
+    if (el_index) {
+        blast_info("mapping el_motors to index: %d", el_index);
+        map_index_vars(el_index);
+    }
+    if (rw_index) {
+        blast_info("mapping rw_motors to index: %d", rw_index);
+        map_index_vars(rw_index);
+    }
+    if (piv_index) {
+        blast_info("mapping piv_motors to index: %d", piv_index);
+        map_index_vars(piv_index);
+    }
     if (hwp_index) {
         hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
     }
@@ -853,7 +874,7 @@ static void map_motor_vars(void)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-	blast_info("Finished map_motor_vars.");
+    blast_info("Finished map_motor_vars.");
 }
 
 /**
@@ -865,12 +886,18 @@ static void motor_configure_timing(void)
 {
     int found_dc_master = 0;
     ec_configdc();
+    while (ec_iserror()) {
+        blast_err("Error after ec_iserror(), %s", ec_elist2string());
+    }
     for (int i = 1; i <= ec_slavecount; i++) {
         if (!found_dc_master && ec_slave[i].hasdc) {
             ec_dcsync0(i, true, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
             found_dc_master = 1;
         } else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
+        }
+        while (ec_iserror()) {
+            blast_err("Slave %i, %s", i, ec_elist2string());
         }
         /**
          * Set the SYNC Manager mode to free-running so that we get data from the drive as soon as
@@ -880,6 +907,7 @@ static void motor_configure_timing(void)
         while (ec_iserror()) {
             blast_err("Slave %i, %s", i, ec_elist2string());
         }
+        blast_info("Slave %i, has_dc = %d, found_dc_master = %d", i, ec_slave[i].hasdc, found_dc_master);
     }
 }
 
@@ -909,6 +937,7 @@ static int motor_set_operational()
      * If we've reached fully operational state, return
      */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
+        blast_info("We have reached a fully operational state.");
         ec_mcp_state.status = ECAT_MOTOR_RUNNING;
         return 0;
     }
@@ -1053,14 +1082,16 @@ void mc_readPDOassign(int m_slave) {
         if (idx <= 0) {
         	continue;
         } else {
-            blast_info("found idx = %i at wkc = %i, idxloop = %i", idx, wkc, idxloop);
+            blast_info("found idx = %2x at wkc = %i, idxloop = %i", idx, wkc, idxloop);
         }
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
         wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
+        blast_info("Number of subindexes: %i", subidx);
         /* for each subindex */
+        blast_info("Reading our the SDOs");
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
             pdo_channel_map_t *channel = NULL;
             pdo_mapping_t pdo_map = { 0 };
@@ -1072,8 +1103,8 @@ void mc_readPDOassign(int m_slave) {
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
             pdo_list[m_slave] = g_slist_prepend(pdo_list[m_slave], channel);
-            blast_info("Read SDO wkc = %i, idx = %i, len = %i", wkc, idx, len);
-            blast_info("Appending channel to m_pdo_list = %p: index = %i, subindex = %i, offset = %i",
+            blast_info("Read SDO subidxloop = %i, wkc = %i, idx = %i, len = %i", subidxloop, wkc, idx, len);
+            blast_info("Appending channel to m_pdo_list = %p: index = %2x, subindex = %i, offset = %i",
                        pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
@@ -1103,6 +1134,9 @@ void set_ec_motor_defaults()
     ec_init_heartbeat(rw_index);
     ec_init_heartbeat(el_index);
     ec_init_heartbeat(piv_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 }
 
 int close_ec_motors()
@@ -1116,13 +1150,13 @@ int configure_ec_motors()
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i == hwp_index) {
+        if (controller_state[i-1].is_hwp) {
             // hwp_pdo_init();
-        } else {
+        } else if (controller_state[i-1].is_mc) {
             motor_pdo_init(i);
             mc_readPDOassign(i);
         }
-	}
+    }
     /// We re-configure the map now that we have assigned the PDOs
     blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
@@ -1132,8 +1166,10 @@ int configure_ec_motors()
      * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        *target_current[i] = 0;
-        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        if (controller_state[i-1].is_mc) {
+            *target_current[i] = 0;
+            *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        }
     }
 
     if (CommandData.disable_az) {
@@ -1158,7 +1194,7 @@ int configure_ec_motors()
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i != hwp_index) {
+        if (controller_state[i-1].is_mc) {
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }
@@ -1230,7 +1266,7 @@ static void* motor_control(void* arg)
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;
-	blast_info("expectedWKC = %i", expectedWKC);
+    blast_info("expectedWKC = %i", expectedWKC);
 
     clock_gettime(CLOCK_REALTIME, &ts);
     while (!shutdown_mcp) {

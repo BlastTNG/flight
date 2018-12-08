@@ -95,7 +95,7 @@ void highrate_compress_and_send(void *arg) {
   uint8_t * data_buffer = header_buffer+PACKET_HEADER_SIZE;
   uint8_t * csbf_checksum = header_buffer+HIGHRATE_DATA_PACKET_SIZE;
 
-  uint8_t * compressed_buffer = calloc(1, buffer_size);
+  uint8_t * compbuffer = calloc(1, buffer_size);
   unsigned int allframe_bytes = 0;
   double bandwidth = 0;
   uint32_t transmit_size = 0;
@@ -137,19 +137,37 @@ void highrate_compress_and_send(void *arg) {
     bandwidth = CommandData.highrate_bw;
 
     if (!fifoIsEmpty(&highrate_fifo) && ll) { // data is ready to be sent
-      // send allframe if necessary
-      if (allframe_bytes >= superframe->allframe_size) {
-          transmit_size = write_allframe(compressed_buffer, superframe, getFifoRead(&highrate_fifo));
-          allframe_bytes = 0;
-      } else {
-				// compress the linklist
-        highrate_read_buffer = getFifoRead(&highrate_fifo);
-				compress_linklist(compressed_buffer, ll, highrate_read_buffer);
+
+		  highrate_read_buffer = getFifoRead(&highrate_fifo);
+
+      if (!strcmp(CommandData.highrate_linklist_name, FILE_LINKLIST)) { // special file downlinking
+				// use the full bandwidth
+				transmit_size = bandwidth;
+
+				// fill the downlink buffer as much as the downlink will allow 
+				unsigned int bytes_packed = 0;
+				while ((bytes_packed+ll->blk_size) <= transmit_size) {
+						compress_linklist(compbuffer+bytes_packed, ll, highrate_read_buffer);
+						bytes_packed += ll->blk_size;
+				} 
 				decrementFifo(&highrate_fifo);
 
-				// bandwidth limit; frames are 1 Hz, so bandwidth == size
-				transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.highrate_allframe_fraction)); 
-        allframe_bytes += bandwidth*CommandData.highrate_allframe_fraction;
+      } else { // normal linklist
+				// send allframe if necessary
+				if (allframe_bytes >= superframe->allframe_size) {
+						transmit_size = write_allframe(compbuffer, superframe, highrate_read_buffer);
+						allframe_bytes = 0;
+				} else {
+					// bandwidth limit; frames are 1 Hz, so bandwidth == size
+					transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.highrate_allframe_fraction)); 
+
+					// compress the linklist
+					compress_linklist(compbuffer, ll, highrate_read_buffer);
+
+					// bandwidth limit; frames are 1 Hz, so bandwidth == size
+          allframe_bytes += bandwidth*CommandData.highrate_allframe_fraction;
+				  decrementFifo(&highrate_fifo);
+        }
       }
 
 			// no packetization if there is nothing to transmit
@@ -164,10 +182,10 @@ void highrate_compress_and_send(void *arg) {
       // write the CSBF header
       csbf_header[0] = HIGHRATE_SYNC1;
       csbf_header[1] = (CommandData.highrate_through_tdrss) ? HIGHRATE_TDRSS_SYNC2 : HIGHRATE_IRIDIUM_SYNC2;
-      csbf_header[2] = HIGHRATE_ORIGIN_COMM1; // TODO(javier): check if this needs to be commanded 
+      csbf_header[2] = HIGHRATE_ORIGIN_COMM1;
       csbf_header[3] = 0x69; // !zero
 
-      while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compressed_buffer, transmit_size,
+      while ((i_pkt < n_pkt) && (chunk = packetizeBuffer(compbuffer, transmit_size,
                                     &chunksize, &i_pkt, &n_pkt))) {
 
         // set the size for the csbf header
@@ -211,7 +229,7 @@ void highrate_compress_and_send(void *arg) {
         usleep(1000);
       }
 
-      memset(compressed_buffer, 0, buffer_size);
+      memset(compbuffer, 0, buffer_size);
     } else {
       usleep(100000); // zzz...
     }

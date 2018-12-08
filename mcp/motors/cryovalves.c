@@ -262,14 +262,14 @@ void DoPotValve(struct ezbus* bus)
 
 	if (CommandData.Cryo.potvalve_goal == opened) {
 		potvalve_data.goal =  CommandData.Cryo.potvalve_goal;
-		// blast_info("set goal open"); // DEBUG PAW
+		blast_info("set goal open"); // DEBUG PAW
 	} else if (CommandData.Cryo.potvalve_goal == closed) {
 		if ((potvalve_data.state == opened) || (potvalve_data.state == intermed)) {
 			potvalve_data.goal = loose_closed;
-			// blast_info("set goal loose_closed"); // DEBUG PAW
+			blast_info("set goal loose_closed"); // DEBUG PAW
 		} else {
 			potvalve_data.goal = closed;
-			// blast_info("set goal closed"); // DEBUG PAW
+			blast_info("set goal closed"); // DEBUG PAW
 		}
 	}
 
@@ -340,7 +340,7 @@ void DoPotValve(struct ezbus* bus)
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MAX) != EZ_ERR_OK)
                         	bputs(info, "Error opening pot valve");
-			// blast_info("called EZBus_RelMove"); // DEBUG PAW
+            blast_info("potvalve_open: called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			tight_flag = 0;
 			break;
@@ -350,7 +350,7 @@ void DoPotValve(struct ezbus* bus)
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
 				bputs(info, "Error closing pot valve");
-			// blast_info("called EZBus_RelMove"); // DEBUG PAW
+            blast_info("potvalve_close: called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			break;
 		case(tighten):
