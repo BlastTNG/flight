@@ -441,13 +441,13 @@ static void DoActuators(void)
       CommandData.actbus.goal[2] = act_data[2].enc + delta;
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-	ServoActuators(CommandData.actbus.goal);
-	break;
+	  ServoActuators(CommandData.actbus.goal);
+	  break;
     case ACTBUS_FM_TRIM:
-	actEncTrim(CommandData.actbus.trim);
-	break;
+	  actEncTrim(CommandData.actbus.trim);
+	  break;
     case ACTBUS_FM_SLEEP:
-	break;
+	  break;
     default:
 	blast_err("Unknown Focus Mode (%i), sleeping",
 	    CommandData.actbus.focus_mode);
@@ -1446,7 +1446,7 @@ void *ActuatorBus(void *param)
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
     int which_act_used;
 
-    int hwp_pos; // DEBUG PCA
+    // int hwp_pos; // DEBUG PCA
 
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
@@ -1480,16 +1480,16 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
+    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPRNUM = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
     // blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
     //           LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
-         EZBus_Add(&bus, id[i], name[i]);
+        EZBus_Add(&bus, id[i], name[i]);
         if (i == BALANCENUM) {
             EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
-	} else if (i == LOCKNUM) {
+		} else if (i == LOCKNUM) {
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
         } else if (i == SHUTTERNUM) {
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
@@ -1497,9 +1497,9 @@ void *ActuatorBus(void *param)
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
         } else if (i == POTVALVE_NUM) {
 	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-	} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+		} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
 	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
-	} else {
+		} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
     	}
     }
@@ -1520,15 +1520,15 @@ void *ActuatorBus(void *param)
         }
 
     if (poll_timeout <= 0 && !all_ok && actbus_reset) {
-            // suppress non-error messages during repoll
+        // suppress non-error messages during repoll
 	    // blast_info("supressing non-errors during repoll"); // DEBUG PAW
-            // bus.chatter = EZ_CHAT_ERR;
+        // bus.chatter = EZ_CHAT_ERR;
 	    // for now, not changing chatter during repoll
 	    // blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
-            all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
+        all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
 	    // blast_info("done repolling"); // DEBUG PAW
-            bus.chatter = ACTBUS_CHATTER;
-            poll_timeout = POLL_TIMEOUT;
+        bus.chatter = ACTBUS_CHATTER;
+        poll_timeout = POLL_TIMEOUT;
         }
 
         /* Send the uplinked command, if any */

@@ -969,67 +969,67 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-	case potvalve_open:
-        CommandData.Cryo.potvalve_goal = opened;
-        break;
-    case potvalve_close:
-        CommandData.Cryo.potvalve_goal = closed;
-        break;
-    case potvalve_on:
-        CommandData.Cryo.potvalve_on = 1;
-	    CommandData.Cryo.potvalve_goal = 0;
-        break;
-    case potvalve_off:
-        CommandData.Cryo.potvalve_on = 0;
-	    CommandData.Cryo.potvalve_goal = 0;
-        break;
-    case pump_valve_open:
-	    CommandData.Cryo.valve_goals[0] = opened;
-	    break;
-	case pump_valve_close:
-	    CommandData.Cryo.valve_goals[0] = closed;
-	    break;
-	case pump_valve_off:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 1;
-	    break;
-	case pump_valve_on:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 0;
-	case fill_valve_open:
-	    CommandData.Cryo.valve_goals[1] = opened;
-	    break;
-	case fill_valve_close:
-	    CommandData.Cryo.valve_goals[1] = closed;
-	    break;
-	case fill_valve_off:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 1;
-	    break;
-	case fill_valve_on:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 0;
-	    break;
-	case l_valve_open:
-        CommandData.Cryo.lvalve_open = 100;
-        CommandData.Cryo.lvalve_close = 0;
-        break;
-    case l_valve_close:
-        CommandData.Cryo.lvalve_close = 100;
-        CommandData.Cryo.lvalve_open = 0;
-        break;
-    case he_valve_on:
-        CommandData.Cryo.lhevalve_on = 1;
-        break;
-    case he_valve_off:
-        CommandData.Cryo.lhevalve_on = 0;
-        break;
-    case ln_valve_on:
-        CommandData.Cryo.lnvalve_on = 1;
-        break;
-    case ln_valve_off:
-        CommandData.Cryo.lnvalve_on = 0;
-        break;
+		case potvalve_open:
+        	CommandData.Cryo.potvalve_goal = opened;
+        	break;
+    	case potvalve_close:
+        	CommandData.Cryo.potvalve_goal = closed;
+        	break;
+    	case potvalve_on:
+        	CommandData.Cryo.potvalve_on = 1;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case potvalve_off:
+        	CommandData.Cryo.potvalve_on = 0;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case pump_valve_open:
+	    	CommandData.Cryo.valve_goals[0] = opened;
+	    	break;
+		case pump_valve_close:
+	    	CommandData.Cryo.valve_goals[0] = closed;
+	    	break;
+		case pump_valve_off:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 1;
+	    	break;
+		case pump_valve_on:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 0;
+		case fill_valve_open:
+	    	CommandData.Cryo.valve_goals[1] = opened;
+	    	break;
+		case fill_valve_close:
+	    	CommandData.Cryo.valve_goals[1] = closed;
+	    	break;
+		case fill_valve_off:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 1;
+	    	break;
+		case fill_valve_on:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 0;
+	    	break;
+		case l_valve_open:
+            CommandData.Cryo.lvalve_open = 100;
+            CommandData.Cryo.lvalve_close = 0;
+            break;
+        case l_valve_close:
+            CommandData.Cryo.lvalve_close = 100;
+            CommandData.Cryo.lvalve_open = 0;
+            break;
+        case he_valve_on:
+            CommandData.Cryo.lhevalve_on = 1;
+            break;
+        case he_valve_off:
+            CommandData.Cryo.lhevalve_on = 0;
+            break;
+        case ln_valve_on:
+            CommandData.Cryo.lnvalve_on = 1;
+            break;
+        case ln_valve_off:
+            CommandData.Cryo.lnvalve_on = 0;
+            break;
 
             // Lock
         case pin_in:
@@ -1116,6 +1116,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+	case balance_terminate:
+	  // after lock45, before termination, drive balance system to lower limit
+	  CommandData.balance.vel = 200000;
+	  CommandData.balance.mode = bal_manual;
+	  CommandData.balance.bal_move_type = 2;
+	  break;
+
 
 #ifndef BOLOTEST
         case blast_rocks:
@@ -1793,9 +1800,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO;
       CommandData.hwpr.is_new = 1;
       break;
-    case hwpr_jump:
+    case hwpr_goto_rel:
       CommandData.hwpr.target = ivalues[0];
-      CommandData.hwpr.mode = HWPR_JUMP;
+      CommandData.hwpr.mode = HWPR_GOTO_REL;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_repeat:
@@ -1825,6 +1832,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
+	case hwpr_set_margin:
+	  CommandData.hwpr.margin = ivalues[0];
+	  break;
     case potvalve_set_vel:
       CommandData.Cryo.potvalve_vel = ivalues[0];
       break;
@@ -3542,6 +3552,7 @@ void InitCommandData()
     CommandData.hwpr.pos[0] = 0.4047;
 
     CommandData.hwpr.overshoot = 300;
+	CommandData.hwpr.backoff = 0.9;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;
