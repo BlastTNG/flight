@@ -484,8 +484,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	psi[j] = (M_PI/180.)*(psi_rough[j] + CommandData.cal_roll_pss[j]);
   }
 
-  // TODO(who put this here?): Remove GSL nonsense.  Replace with calculation
-  // GSL is a calculation, a matrix one PAW 2018/12/09
   for (i = 0; i < NUM_PSS; i++) {
   	rot[i] = gsl_matrix_alloc(3, 3);
   	rxalpha[i] = gsl_matrix_alloc(3, 3);
