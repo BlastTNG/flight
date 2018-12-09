@@ -393,9 +393,9 @@ void read_5hz_acs(void)
     firsttime = 0;
     for (i = 0; i < NUM_PSS; i++) {
       for (j = 0; j < NUM_PSS_V; j++) {
-	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
-	vPssAddr[i][j] = channels_find_by_name(channel_name);
-	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
+	    snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
+	    vPssAddr[i][j] = channels_find_by_name(channel_name);
+	    // blast_info("PSS read, i=%d, j=%d, channel name =%s", i, j, channel_name);
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
@@ -411,8 +411,6 @@ void read_5hz_acs(void)
       ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
     }
   }
-
-  /// TODO(seth): Add PSS3-8 read functions
 
   GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
   ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;

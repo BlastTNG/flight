@@ -44,7 +44,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NUM_PSS 8
+#define NUM_PSS 6
 #define NUM_PSS_V 4
 
 #define NUM_MAGS 2
