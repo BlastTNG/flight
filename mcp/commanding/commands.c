@@ -2313,6 +2313,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
+    case all_roach_df:
+      if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].num_sec = rvalues[0];
+              CommandData.roach[i].get_timestream = 3;
+          }
+      }
+      break;
     case set_attens_all:
       if  ((rvalues[0] >= 0.0) && (rvalues[0] <= 30.0) &&
               ((rvalues[1] >= 0.0) && (rvalues[1] <= 30.0))) {
