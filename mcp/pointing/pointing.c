@@ -416,7 +416,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 		}
     }
 
-    pss_imin = CommandData.cal_imin_pss/M_16PRE;
+    // pss_imin = CommandData.cal_imin_pss/M_16PRE;
+    pss_imin = CommandData.cal_imin_pss;
 
     i_point = GETREADINDEX(point_index);
 
