@@ -44,6 +44,7 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
                                     [GRPOS_FOCUS] = "Focus",
+                                    [GRPOS_PSS] = "PSS",
   };
 
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
@@ -424,7 +425,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(pss_cal_array_az), "set pss azimuth calibration for entire array(deg)", GR_TRIM | GR_PSS, 6,
+  {COMMAND(pss_cal_array_az), "set pss azimuth calibration for entire array(deg)", GR_TRIM | GR_PSS, 1,
     {
       {"Azimuth offset of array", -20.0, 20.0, 'f', "CAL_AZ_PSS_ARRAY"},
     }
