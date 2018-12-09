@@ -23,23 +23,22 @@
 #define PTIMEDATAITEM_H
 
 #include "PMap.h"
-#include "PAbstractDataItem.h"
+#include "PExtremaDataItem.h"
 #include <getdata/dirfile.h>
 
-class PTimeDataItem : public PAbstractDataItem
+class PTimeDataItem : public PExtremaDataItem
 {
     Q_OBJECT
     QString _format;
-    PStyle* _pstyle;
 public:
     friend QDataStream& operator<<(QDataStream&a,PAbstractDataItem&b);
     friend QDataStream& operator>>(QDataStream&a,PTimeDataItem &b);
     friend QVariant save(PAbstractDataItem&);
     friend void load(QVariant v,PTimeDataItem&);
     friend class PMainWindow;
-    PTimeDataItem(PBox*p,QString caption) : PAbstractDataItem(p,caption) {}
-    PTimeDataItem(PBox*p,PTimeDataItem* other) : PAbstractDataItem(p,other), _format(other->_format), _pstyle(other->_pstyle) {}
-    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
+    PTimeDataItem(PBox*p,QString caption) : PExtremaDataItem(p,caption) {}
+    PTimeDataItem(PBox*p,PTimeDataItem* other) : PExtremaDataItem(p,other), _format(other->_format) {}
+    virtual void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     QString format() const;
 
 public slots:

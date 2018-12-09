@@ -32,7 +32,7 @@ void PMdiArea::dragEnterEvent(QDragEnterEvent *ev)
         int row, col;
         QMap<int,  QVariant> roleDataMap;
         stream >> row >> col >> roleDataMap;
-        if((!row||row==5)&&!col) {    //HACKHACKHACKHACK!!!
+        if((!row||row==6)&&!col) {    //HACKHACKHACKHACK!!!
             ev->acceptProposedAction();
         }
     }
@@ -50,7 +50,7 @@ void PMdiArea::dropEvent(QDropEvent *ev)
         stream >> row >> col >> roleDataMap;
         if(!row&&!col) {    //HACKHACKHACKHACK!!!
             createPBox(ev->pos().x(),ev->pos().y());
-        } else if(row==5&&!col) {   //HACKHACKHACKHACK!!!
+        } else if(row==6&&!col) {   //HACKHACKHACKHACK!!!
             createOwl(ev->pos().x(),ev->pos().y());
         }
     }
@@ -58,12 +58,14 @@ void PMdiArea::dropEvent(QDropEvent *ev)
 
 void PMdiArea::createPBox(int x,int y,PBox*c_pbox)
 {
-    PBox* pbox=c_pbox?c_pbox:new PBox("New Box");
+    PBox* pbox=c_pbox?c_pbox:new PBox("New Box", font());
     pbox->setParent(this);
-    if(c_pbox) pbox->setGeometry(c_pbox->geometry().x()/20*20,c_pbox->geometry().y()/20*20,
-                                 c_pbox->geometry().width()/20*20,c_pbox->geometry().height()/20*20);
-    else {
-        pbox->setGeometry(x/20*20,y/20*20,pbox->width()/20*20,pbox->height()/20*20);
+
+    if (c_pbox) {
+      pbox->setGeometry(c_pbox->geometry().x()/_H*_H,c_pbox->geometry().y()/_H*_H,
+                        c_pbox->geometry().width()/_H*_H,c_pbox->geometry().height()/_H*_H);
+    } else {
+        pbox->setGeometry(x/_H*_H,y/_H*_H,pbox->width()/_H*_H,pbox->height()/_H*_H);
         pbox->adjustSize();
     }
     dynamic_cast<PMainWindow*>(PMainWindow::me)->_pboxList.push_back(pbox);
@@ -73,10 +75,10 @@ void PMdiArea::createPBox(int x,int y,PBox*c_pbox)
 
 void PMdiArea::createOwl(int x,int y,POwlAnimation*c_owl)
 {
-    POwlAnimation* owl=c_owl?c_owl:new POwlAnimation();
+    POwlAnimation* owl=c_owl?c_owl:new POwlAnimation(_H);
     owl->setParent(this);
     if(!c_owl) {
-        owl->setGeometry(x/20*20,y/20*20,owl->sizeHint().width()/20*20,owl->sizeHint().height()/20*20);
+        owl->setGeometry(x/_H*_H,y/_H*_H,owl->sizeHint().width()/_H*_H,owl->sizeHint().height()/_H*_H);
     }
     dynamic_cast<PMainWindow*>(PMainWindow::me)->_owlList.push_back(owl);
     owl->show();

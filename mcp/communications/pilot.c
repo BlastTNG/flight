@@ -59,19 +59,16 @@
 
 extern int16_t InCharge;
 
-struct Fifo pilot_fifo = {0};
+#define NUM_PILOT_TARGETS 4
 
-char * pilot_oth_addr[2] = {"67.239.76.162", "67.239.76.163"};
-unsigned int pilot_oth_port[2] = {PILOT_PORT, PILOT_PORT+1};
+struct Fifo pilot_fifo = {0};
 
 void pilot_compress_and_send(void *arg) {
   // initialize UDP connection using bitserver/BITSender
-  struct BITSender pilotsender = {0};
-  struct BITSender pilotothsender[2] = {{0}};
+  struct BITSender pilotothsender[4] = {{0}};
   unsigned int fifosize = MAX(PILOT_MAX_SIZE, superframe->allframe_size);
-  initBITSender(&pilotsender, PILOT_ADDR, PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
-  for (int i = 0; i < 2; i++) {  
-    initBITSender(&pilotothsender[i], pilot_oth_addr[i], pilot_oth_port[i], 10, fifosize, PILOT_MAX_PACKET_SIZE);
+  for (int i = 0; i < NUM_PILOT_TARGETS; i++) {  
+    initBITSender(&pilotothsender[i], pilot_target_names[i], PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
   }
   linklist_t * ll = NULL, * ll_old = NULL;
   linklist_t ** ll_array = arg;
@@ -131,28 +128,17 @@ void pilot_compress_and_send(void *arg) {
 			// no packetization if there is nothing to transmit
 			if (!transmit_size) continue;
 
-      if (CommandData.pilot_oth) {
-        // send the data to pilot oth via bitsender
-        for (int i = 0; i < 2; i++) {
-				  // have packet header serials match the linklist serials
-				  setBITSenderSerial(&pilotothsender[i], *(uint32_t *) ll->serial);
+			// send the data to pilot oth via bitsender
+      int ind = CommandData.pilot_oth;
 
-				  // commendeer the framenum for total transmit size
-				  setBITSenderFramenum(&pilotothsender[i], transmit_size);
+			// have packet header serials match the linklist serials
+			setBITSenderSerial(&pilotothsender[ind], *(uint32_t *) ll->serial);
 
-          // send the data over pilot via bitsender
-          sendToBITSender(&pilotothsender[i], compbuffer, transmit_size, 0);
-        }
-      } else {
-				// have packet header serials match the linklist serials
-				setBITSenderSerial(&pilotsender, *(uint32_t *) ll->serial);
+			// commendeer the framenum for total transmit size
+			setBITSenderFramenum(&pilotothsender[ind], transmit_size);
 
-				// commendeer the framenum for total transmit size
-				setBITSenderFramenum(&pilotsender, transmit_size);
-
-        // send the data to the ground station via bitsender
-        sendToBITSender(&pilotsender, compbuffer, transmit_size, 0);
-      }
+			// send the data over pilot via bitsender
+			sendToBITSender(&pilotothsender[ind], compbuffer, transmit_size, 0);
 
       memset(compbuffer, 0, PILOT_MAX_SIZE);
     } else {

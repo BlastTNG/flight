@@ -76,6 +76,7 @@ extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
+extern const char *pilot_target_names[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
@@ -160,7 +161,7 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off, allow_watchdog,
+  change_freqs_all, debug_mode, allow_watchdog,
     disallow_watchdog, set_attens_last_all, set_attens_min_output,
 
   xyzzy
@@ -189,7 +190,7 @@ enum multiCommand {
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute, reconnect_lj,     set_roach_mode,
-  request_stream_file,
+  request_stream_file, set_pilot_oth,
 
   // t_gyro_gain,
   timeout,           vcap,

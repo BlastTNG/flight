@@ -23,6 +23,7 @@
 #include "PObject.h"
 #include "PAbstractDataItem.h"
 #include "PNumberDataItem.h"
+#include "PBitMultiDataItem.h"
 #include "PMultiDataItem.h"
 #include "PStyle.h"
 #include <QDataStream>
@@ -45,6 +46,7 @@ class PBox : public QFrame, public PObject
     PBoxTitle* _pbt;
     int _geoMode;
     friend class PBoxTitle;
+    int _H;
 
 public:
     bool _dirty;
@@ -56,7 +58,7 @@ public:
     friend class PMainWindow;
 
     QList<PAbstractDataItem*> _dataItems;
-    PBox(QString boxTitle, QWidget*p=0);
+    PBox(QString boxTitle, const QFont &F, QWidget*p=0);
     ~PBox();
     const QString& boxTitle() const { return _boxTitle; }
     const PStyle* getStyle() const { return _pstyle; }

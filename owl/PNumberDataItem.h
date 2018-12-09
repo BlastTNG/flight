@@ -19,20 +19,17 @@
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <QLabel>
-
-#include "PAbstractDataItem.h"
-#include "PExtrema.h"
-
 #ifndef PNUMBERDATAITEM_H
 #define PNUMBERDATAITEM_H
 
-class PNumberDataItem : public PAbstractDataItem
+#include <QLabel>
+
+#include "PExtremaDataItem.h"
+
+class PNumberDataItem : public PExtremaDataItem
 {
     Q_OBJECT
     QString _format;
-    PExtrema* _extrema;
-    PStyle* prevStyle;
 public:
     friend QDataStream& operator<<(QDataStream&a,PAbstractDataItem&b);
     friend QDataStream& operator>>(QDataStream&a,PNumberDataItem &b);
@@ -40,12 +37,10 @@ public:
     friend void load(QVariant v,PNumberDataItem&);
     friend class PMainWindow;
     friend class PDotPal;
-    PNumberDataItem(PBox* parent, QString caption) : PAbstractDataItem(parent,caption), _extrema(0),prevStyle(0) {}
-    PNumberDataItem(PBox* parent, PNumberDataItem*b) : PAbstractDataItem(parent,b),
-        _format(b->_format), _extrema(b->_extrema), prevStyle(0) {}
-    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
+    PNumberDataItem(PBox* parent, QString caption) : PExtremaDataItem(parent, caption) {}
+    PNumberDataItem(PBox* parent, PNumberDataItem* b) : PExtremaDataItem(parent,b), _format(b->_format) {}
+    virtual void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     QString format() const;
-    virtual PStyle* getPrevDataStyle() { return prevStyle?prevStyle:_defaultDataStyle; }
 
 public slots:
     void setFormat(QString format,bool force=0);

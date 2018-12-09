@@ -1,0 +1,3968 @@
+{
+  "OWL FILE rev." : "20140928",
+  "PObject" : {
+    "_id" : "0" 
+  },
+  "boxes" : [ {
+    "PObject" : {
+      "_id" : "1997403783" 
+    },
+    "_boxTitle" : "T IF",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1493602773" 
+      },
+      "_caption" : "MT Vent",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MT_VENT_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2051153258" 
+      },
+      "_caption" : "TopDome ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_TOPDOME_TOP_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2079077595" 
+      },
+      "_caption" : "Win Flange ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_WINDOW_FLANGE_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "400082689" 
+      },
+      "_caption" : "MCE Pow",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE_POWER_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "13267759" 
+      },
+      "_caption" : "DAS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_DAS_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1100446440" 
+      },
+      "_caption" : "MValve1",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MOTVALVE_PORT_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1127322202" 
+      },
+      "_caption" : "MValve2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MOTVALVE_STAR_IF",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1389935592" 
+      },
+      "_caption" : "MCC Pow",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC_POWER",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 120,
+    "geometryX" : 300,
+    "geometryY" : 320 
+  }, {
+    "PObject" : {
+      "_id" : "505255770" 
+    },
+    "_boxTitle" : "MPC/MCC/MCE",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1135767870" 
+      },
+      "_caption" : "Alive",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P44161324)",
+      "_highWord" : "654321",
+      "_lowWord" : "------",
+      "_nBits" : 6,
+      "_source" : "ALIVE_MPCS",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2056235960" 
+      },
+      "_caption" : "Reporting ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P44161324)",
+      "_highWord" : "654321",
+      "_lowWord" : "------",
+      "_nBits" : 6,
+      "_source" : "REPORTING_MPCS",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1055597221" 
+      },
+      "_caption" : "MCE veto",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P674282744)",
+      "_highWord" : "------",
+      "_lowWord" : "654321",
+      "_nBits" : 6,
+      "_source" : "SQUID_VETO_MPC",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "687185366" 
+      },
+      "_caption" : "Sync veto",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P674282744)",
+      "_highWord" : "------",
+      "_lowWord" : "654321",
+      "_nBits" : 6,
+      "_source" : "SYNC_VETO_MPC",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1677625354" 
+      },
+      "_caption" : "Therm veto ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P674282744)",
+      "_highWord" : "------",
+      "_lowWord" : "654321",
+      "_nBits" : 6,
+      "_source" : "THERM_VETO_MPC",
+      "type" : "PBDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "20137422" 
+        },
+        "_map" : {
+          "0" : "654321[style=normal (P2123291925)]",
+          "1" : "654--1[style=high (P678762312)]",
+          "2" : "-5-321[style=high (P678762312)]",
+          "3" : "-5---1[style=high (P678762312)]",
+          "4" : "6-432-[style=high (P678762312)]",
+          "5" : "6-4---[style=high (P678762312)]",
+          "6" : "---32-[style=high (P678762312)]",
+          "7" : "------[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "211057794" 
+      },
+      "_caption" : "MCE pow",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MCE_POWER",
+      "type" : "PMDI" 
+    } ],
+    "geometryHeight" : 140,
+    "geometryWidth" : 140,
+    "geometryX" : 780,
+    "geometryY" : 260 
+  }, {
+    "PObject" : {
+      "_id" : "913654205" 
+    },
+    "_boxTitle" : "X6",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1362452171" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1444124959" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "466543404" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAIL_COUNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1132643462" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "711564840" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1377664898" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1459337687" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "328726973" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE6",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 700,
+    "geometryY" : 320 
+  }, {
+    "PObject" : {
+      "_id" : "151716183" 
+    },
+    "_boxTitle" : "X5",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "748649045" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1360998604" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1496422915" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "FRAIL_COUNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "518840336" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "96713138" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1266615231" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "872410322" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "707492530" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE5",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 620,
+    "geometryY" : 320 
+  }, {
+    "PObject" : {
+      "_id" : "1847696777" 
+    },
+    "_boxTitle" : "X4",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "746147926" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "827821738" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "909495550" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAIL_COUNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2078348043" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "596964454" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "678638266" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1318911139" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "892036301" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE4",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 540,
+    "geometryY" : 320 
+  }, {
+    "PObject" : {
+      "_id" : "1914157861" 
+    },
+    "_boxTitle" : "X3",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1531006001" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "553424446" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "635098258" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAIL_COUNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "715723495" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "797396283" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "879071119" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "459040049" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "786420951" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE3",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 700,
+    "geometryY" : 160 
+  }, {
+    "PObject" : {
+      "_id" : "1300354735" 
+    },
+    "_boxTitle" : "X2",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1989170876" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1922709792" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2004383604" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAIL_COUNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1025752449" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "604673827" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1773526320" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "849694239" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "447995823" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE2",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 620,
+    "geometryY" : 160 
+  }, {
+    "PObject" : {
+      "_id" : "1078636784" 
+    },
+    "_boxTitle" : "X3",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1979957623" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC3",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1144720389" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC3",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1735787935" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC3",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1851626832" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2117229445" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "142728374" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE3",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 240,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "2100960732" 
+    },
+    "_boxTitle" : "X1",
+    "_style" : "(P514418070)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "488107516" 
+      },
+      "_caption" : "Ramp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "RAMP_COUNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1050661261" 
+      },
+      "_caption" : "Clamp ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "CLAMP_COUNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "808140943" 
+      },
+      "_caption" : "Frail ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAIL_COUNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "755845035" 
+      },
+      "_caption" : "Dead ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DEAD_COUNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1015029599" 
+      },
+      "_caption" : "Norm",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_NORM_CNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "55159842" 
+      },
+      "_caption" : "OK",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_OK_CNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1838865061" 
+      },
+      "_caption" : "SC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "TRANS_SC_CNT_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2091960665" 
+      },
+      "_caption" : "Bias",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1369988879)",
+      "_format" : "%.0f",
+      "_source" : "MEAN_TES_BIAS_MCE1",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 80,
+    "geometryX" : 540,
+    "geometryY" : 160 
+  }, {
+    "PObject" : {
+      "_id" : "717174242" 
+    },
+    "_boxTitle" : "Waveplates",
+    "_style" : "(P409642238)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "2039677250" 
+      },
+      "_caption" : "CNT 1 ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X1_HWP",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "796655324" 
+      },
+      "_caption" : "CNT 2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X2_HWP",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1435879622" 
+      },
+      "_caption" : "CNT 3",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X3_HWP",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "960002949" 
+      },
+      "_caption" : "CNT 4",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X4_HWP",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1545477771" 
+      },
+      "_caption" : "CNT 5",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X5_HWP",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "539970854" 
+      },
+      "_caption" : "CNT 6",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%7.1f",
+      "_source" : "ENC_CNT_X6_HWP",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 140,
+    "geometryWidth" : 120,
+    "geometryX" : 300,
+    "geometryY" : 80 
+  }, {
+    "PObject" : {
+      "_id" : "125901968" 
+    },
+    "_boxTitle" : "T PV",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1886428906" 
+      },
+      "_caption" : "FLC    ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PV_FLC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1907465642" 
+      },
+      "_caption" : "1-4-5",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PV_DATA2_MCE145",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1297617200" 
+      },
+      "_caption" : "2-3-6",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PV_DATA2_MCE236",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1328042656" 
+      },
+      "_caption" : "1-3-6",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PV_DATA3_MCE136",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1424928172" 
+      },
+      "_caption" : "2-4-5",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PV_DATA3_MCE245",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 100,
+    "geometryWidth" : 100,
+    "geometryX" : 200,
+    "geometryY" : 240 
+  }, {
+    "PObject" : {
+      "_id" : "1039678390" 
+    },
+    "_boxTitle" : "T Point",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "2074560138" 
+      },
+      "_caption" : "BSC Lens ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_BSC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1233357158" 
+      },
+      "_caption" : "RSC Lens",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_RSC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1824240524" 
+      },
+      "_caption" : "Gyros",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P495871500)",
+      "_format" : "% 2.0f",
+      "_source" : "T_GY",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "855426028" 
+      },
+      "_caption" : "PSS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PSS1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1210043566" 
+      },
+      "_caption" : "dGPS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_DGPS",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "348399819" 
+      },
+      "_caption" : "Enc Port",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_ENC_PORT",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 140,
+    "geometryWidth" : 100,
+    "geometryX" : 200,
+    "geometryY" : 340 
+  }, {
+    "PObject" : {
+      "_id" : "1806132846" 
+    },
+    "_boxTitle" : "T CPU",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "960869193" 
+      },
+      "_caption" : "Itsy",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_CPU_I_FLC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "80630575" 
+      },
+      "_caption" : "Bitsy",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_CPU_B_FLC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1034623944" 
+      },
+      "_caption" : "BSC-G",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_CPU_G",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1938036066" 
+      },
+      "_caption" : "RSC-B ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_CPU_B",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2034921582" 
+      },
+      "_caption" : "RSC-U",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_CPU_U",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1089012006" 
+      },
+      "_caption" : "MCC1",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2063483483" 
+      },
+      "_caption" : "MCC2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "527300819" 
+      },
+      "_caption" : "MCC3",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "269569821" 
+      },
+      "_caption" : "MCC4",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2022848560" 
+      },
+      "_caption" : "MCC5",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P672665020)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "541464971" 
+      },
+      "_caption" : "MCC6",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1768245484)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC6",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 240,
+    "geometryWidth" : 100,
+    "geometryX" : 100,
+    "geometryY" : 240 
+  }, {
+    "PObject" : {
+      "_id" : "1603667955" 
+    },
+    "_boxTitle" : "Elevation",
+    "_style" : "(P584528583)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1816793152" 
+      },
+      "_caption" : "Enc1",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% .1f",
+      "_source" : "EL_RAW_1_ENC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1564116702" 
+      },
+      "_caption" : "Enc2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% .1f",
+      "_source" : "EL_RAW_2_ENC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2127825858" 
+      },
+      "_caption" : "Twist ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P2048653164)",
+      "_format" : "% .2f",
+      "_source" : "TWIST_EL",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 80,
+    "geometryWidth" : 120,
+    "geometryX" : 300,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "359280901" 
+    },
+    "_boxTitle" : "Azimuth",
+    "_style" : "(P584528583)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "620427628" 
+        },
+        "_map" : {
+          "0" : "Not Set[style=xhigh (P43734275)]",
+          "1" : "Az El Goto[style=high (P678762312)]",
+          "2" : "Az Scan[style=high (P678762312)]",
+          "3" : "Drift[style=high (P678762312)]",
+          "4" : "RaDec Goto[style=high (P678762312)]",
+          "5" : "Lock[style=high (P678762312)]",
+          "6" : "Spider[style=normal (P2123291925)]",
+          "7" : "Sine[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "326359938" 
+      },
+      "_caption" : "Mode",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "MODE_P",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1091894509" 
+      },
+      "_caption" : "Az-Sun min",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ_REL_SUN_MIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1460947808" 
+      },
+      "_caption" : "Az-Sun max",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ_REL_SUN_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "86389641" 
+      },
+      "_caption" : "Az",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "707128428" 
+      },
+      "_caption" : "Mag Az",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ_MAG",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1201491635" 
+      },
+      "_caption" : "PSS Az",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ_PSS",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "168062429" 
+      },
+      "_caption" : "GPS Az",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.0f",
+      "_source" : "AZ_DGPS",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1164410716" 
+      },
+      "_caption" : "Yaw Gy Max",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+3.1f",
+      "_source" : "OFYAW_GY_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1745383545" 
+      },
+      "_caption" : "Yaw Gy Min",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 3.1f",
+      "_source" : "OFYAW_GY_MIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1883427494" 
+      },
+      "_caption" : "Yaw Rq Max",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+3.1f",
+      "_source" : "VEL_REQ_AZ_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "909560842" 
+      },
+      "_caption" : "Yaw Rq Min",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+3.1f",
+      "_source" : "VEL_REQ_AZ_MIN",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 220,
+    "geometryWidth" : 120,
+    "geometryX" : 420,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "1970021114" 
+    },
+    "_boxTitle" : "BSC - Good",
+    "_style" : "(P1431356812)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "837339757" 
+      },
+      "_caption" : "Mean",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "MAPMEAN_G",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "742286976" 
+      },
+      "_caption" : "#Blob",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "NBLOBS_G",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "475575598" 
+      },
+      "_caption" : "Frame ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAME_G",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 80,
+    "geometryWidth" : 120,
+    "geometryX" : 660,
+    "geometryY" : 80 
+  }, {
+    "PObject" : {
+      "_id" : "1186869971" 
+    },
+    "_boxTitle" : "RSC - Bad",
+    "_style" : "(P1431356812)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1147097670" 
+      },
+      "_caption" : "Mean",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "MAPMEAN_B",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1490650173" 
+      },
+      "_caption" : "#Blob",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1875750140)",
+      "_format" : "%.0f",
+      "_source" : "NBLOBS_B",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "3019177" 
+      },
+      "_caption" : "Frame ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAME_B",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 80,
+    "geometryWidth" : 120,
+    "geometryX" : 660,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "1889369025" 
+    },
+    "_boxTitle" : "RSC - Ugly",
+    "_style" : "(P1431356812)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "417638756" 
+      },
+      "_caption" : "Mean ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "MAPMEAN_U",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "58901432" 
+      },
+      "_caption" : "#Blob",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1875750140)",
+      "_format" : "%.0f",
+      "_source" : "NBLOBS_U",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "252230199" 
+      },
+      "_caption" : "Frame ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "FRAME_U",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "242212289" 
+      },
+      "_caption" : "Enc Min ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "ENC_TABLE_MIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1584148188" 
+      },
+      "_caption" : "Enc Max ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "ENC_TABLE_MAX",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 140,
+    "geometryX" : 780,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "1829691298" 
+    },
+    "_boxTitle" : "T Elect",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "486907775" 
+      },
+      "_caption" : "RW MC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_RW_MC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "718954165" 
+      },
+      "_caption" : "Piv MC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PIV_MC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1344643193" 
+      },
+      "_caption" : "ACS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1127073332)",
+      "_format" : "% 2.0f",
+      "_source" : "T_OF_CLIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "972507686" 
+      },
+      "_caption" : "Serial ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_SERIAL",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1574071943" 
+      },
+      "_caption" : "OF CC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_HS_IF_CC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1892639664" 
+      },
+      "_caption" : "IF CC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_HS_OF_CC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "804076072" 
+      },
+      "_caption" : "MCE1",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "670104303" 
+      },
+      "_caption" : "MCE2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "752826691" 
+      },
+      "_caption" : "MCE3",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "834500503" 
+      },
+      "_caption" : "MCE4",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "330699493" 
+      },
+      "_caption" : "MCE5",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "412372281" 
+      },
+      "_caption" : "MCE6",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "% 2.0f",
+      "_source" : "T_MCE6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "394395194" 
+      },
+      "_caption" : "MCC Pow",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1399331109)",
+      "_format" : "% 2.0f",
+      "_source" : "T_MCC_POWER",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 240,
+    "geometryWidth" : 100,
+    "geometryX" : 0,
+    "geometryY" : 240 
+  }, {
+    "PObject" : {
+      "_id" : "1478874918" 
+    },
+    "_boxTitle" : "T Motors",
+    "_style" : "(P685041766)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "175651623" 
+      },
+      "_caption" : "Port El ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_ELPORT_MOT",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "385511161" 
+      },
+      "_caption" : "Star El",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_ELSTAR_MOT",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "921580654" 
+      },
+      "_caption" : "Piv",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_PIV",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "367469928" 
+      },
+      "_caption" : "RSC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_SC_MOT",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1833007583" 
+      },
+      "_caption" : "RW",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P350266588)",
+      "_format" : "% 2.0f",
+      "_source" : "T_RW_MOT",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 100,
+    "geometryWidth" : 120,
+    "geometryX" : 300,
+    "geometryY" : 220 
+  }, {
+    "PObject" : {
+      "_id" : "1743976038" 
+    },
+    "_boxTitle" : "OF Charger",
+    "_style" : "(P1393980314)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1601801088" 
+      },
+      "_caption" : "V Batt",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P417844299)",
+      "_format" : "% 6.1f",
+      "_source" : "V_BATT_OF_CC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "552083449" 
+      },
+      "_caption" : "I CC Out ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P392383588)",
+      "_format" : "% 6.1f",
+      "_source" : "I_BATT_OF_CC",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 60,
+    "geometryWidth" : 120,
+    "geometryX" : 180,
+    "geometryY" : 120 
+  }, {
+    "PObject" : {
+      "_id" : "1222945807" 
+    },
+    "_boxTitle" : "IF Charger",
+    "_style" : "(P1393980314)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1962553005" 
+      },
+      "_caption" : "V Batt",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P417844299)",
+      "_format" : "% 6.1f",
+      "_source" : "V_BATT_IF_CC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1909219594" 
+      },
+      "_caption" : "I CC Out ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P392383588)",
+      "_format" : "% 6.1f",
+      "_source" : "I_BATT_IF_CC",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 60,
+    "geometryWidth" : 120,
+    "geometryX" : 180,
+    "geometryY" : 180 
+  }, {
+    "PObject" : {
+      "_id" : "453372797" 
+    },
+    "_boxTitle" : "Theo",
+    "_style" : "(P412446087)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1165747579" 
+      },
+      "_caption" : "Capillary",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1557648301)",
+      "_format" : "%7.2f",
+      "_source" : "TD_CAPILLARY_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1576616734" 
+      },
+      "_caption" : "SFT Nose",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1557648301)",
+      "_format" : "%7.2f",
+      "_source" : "TD_SFT_NOSE_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1676003368" 
+      },
+      "_caption" : "SFT Ring",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1557648301)",
+      "_format" : "%7.2f",
+      "_source" : "TD_SFT_RING_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "497375002" 
+      },
+      "_caption" : "MT Bot Lo",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1488394955)",
+      "_format" : "%7.2f",
+      "_source" : "TD_MT_BOTLO_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "265702739" 
+      },
+      "_caption" : "VCS1 Filt ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P2122527791)",
+      "_format" : "%7.1f",
+      "_source" : "TD_VCS1_FILTER_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "72774265" 
+      },
+      "_caption" : "VCS2 Filt ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P912431415)",
+      "_format" : "%7.0f",
+      "_source" : "TD_VCS2_FILTER_T_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1258758887" 
+      },
+      "_caption" : "X1 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP_X1_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "141535532" 
+      },
+      "_caption" : "X2 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP_X2_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "226934237" 
+      },
+      "_caption" : "X3 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP_X3_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "931576783" 
+      },
+      "_caption" : "X4 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP_X4_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1525282973" 
+      },
+      "_caption" : "X5 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP2_X5_HK",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1373499062" 
+      },
+      "_caption" : "X6 FP",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P1077769700)",
+      "_format" : "%7.3f",
+      "_source" : "TR_FP_X6_HK",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 260,
+    "geometryWidth" : 120,
+    "geometryX" : 420,
+    "geometryY" : 220 
+  }, {
+    "PObject" : {
+      "_id" : "965545790" 
+    },
+    "_boxTitle" : "State",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1431486368" 
+      },
+      "_caption" : "TImeout - B ",
+      "_captionStyle" : "(P577228399)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%H:%M:%S",
+      "_source" : "TIMEOUT_B",
+      "type" : "PTDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "490142634" 
+        },
+        "_map" : {
+          "0" : "Itsy[style=normal (P2123291925)]",
+          "1" : "Bitsy[style=standard (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1913792237" 
+      },
+      "_caption" : "ICC ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "BITSY_I_AM",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2003462571" 
+      },
+      "_caption" : "Index",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "INDEX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1366717001" 
+      },
+      "_caption" : "Timeout - I",
+      "_captionStyle" : "(P1395788922)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%H:%M:%S",
+      "_source" : "TIMEOUT_I",
+      "type" : "PTDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2029031029" 
+      },
+      "_caption" : "#Cmds - B ",
+      "_captionStyle" : "(P577228399)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "COUNT_B_CMD",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1442149529" 
+      },
+      "_caption" : "#Cmds  - I ",
+      "_captionStyle" : "(P1395788922)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "COUNT_I_CMD",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1360108016" 
+      },
+      "_caption" : "Last cmd - B ",
+      "_captionStyle" : "(P577228399)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "LAST_B_CMD",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1232227916" 
+      },
+      "_caption" : "Last cmd - I ",
+      "_captionStyle" : "(P1395788922)",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "LAST_I_CMD",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1871413209" 
+      },
+      "_caption" : "Plover",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "PLOVER",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "924874615" 
+      },
+      "_caption" : "Bitsy  df",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DF_B_FLC",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1545886443" 
+      },
+      "_caption" : "Itsy df",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%.0f",
+      "_source" : "DF_I_FLC",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 180,
+    "geometryWidth" : 180,
+    "geometryX" : 0,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "152883576" 
+    },
+    "_boxTitle" : "Time",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1771950537" 
+      },
+      "_caption" : "I ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P1667171907)",
+      "_extrema" : true,
+      "_extremaID" : "(P561573660)",
+      "_format" : "%e %b %Y, %H:%M:%S",
+      "_source" : "TIME_I_FLC",
+      "type" : "PTDI" 
+    }, {
+      "PObject" : {
+        "_id" : "626098829" 
+      },
+      "_caption" : "B ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P1667171907)",
+      "_extrema" : true,
+      "_extremaID" : "(P561573660)",
+      "_format" : "%e %b %Y, %H:%M:%S",
+      "_source" : "TIME_B_FLC",
+      "type" : "PTDI" 
+    } ],
+    "geometryHeight" : 60,
+    "geometryWidth" : 180,
+    "geometryX" : 0,
+    "geometryY" : 180 
+  }, {
+    "PObject" : {
+      "_id" : "873748834" 
+    },
+    "_boxTitle" : "Sensors",
+    "_style" : "(P1431356812)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1896862021" 
+        },
+        "_map" : {
+          "0" : "Allow[style=normal (P2123291925)]",
+          "1" : "Veto[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "158347896" 
+      },
+      "_caption" : "El Enc1  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "VETO_EL_1_ENC",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1896862021" 
+        },
+        "_map" : {
+          "0" : "Allow[style=normal (P2123291925)]",
+          "1" : "Veto[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "389758822" 
+      },
+      "_caption" : "El Enc2",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "VETO_EL_2_ENC",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1896862021" 
+        },
+        "_map" : {
+          "0" : "Allow[style=normal (P2123291925)]",
+          "1" : "Veto[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "269427931" 
+      },
+      "_caption" : "Mag",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "VETO_MAG",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1896862021" 
+        },
+        "_map" : {
+          "0" : "Allow[style=normal (P2123291925)]",
+          "1" : "Veto[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "2061363749" 
+      },
+      "_caption" : "PSS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "VETO_PSS",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1319193308" 
+        },
+        "_map" : {
+          "0" : "Pissy[style=high (P678762312)]",
+          "1" : "OK[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "988348196" 
+      },
+      "_caption" : "Mag",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "ATT_OK_MAG",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1896862021" 
+        },
+        "_map" : {
+          "0" : "Allow[style=high (P678762312)]",
+          "1" : "Veto[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "578931584" 
+      },
+      "_caption" : "dGPS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "VETO_GPS",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1319193308" 
+        },
+        "_map" : {
+          "0" : "Pissy[style=high (P678762312)]",
+          "1" : "OK[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1070022009" 
+      },
+      "_caption" : "PSS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "ATT_OK_PSS",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1319193308" 
+        },
+        "_map" : {
+          "0" : "Pissy[style=normal (P2123291925)]",
+          "1" : "OK[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "37640355" 
+      },
+      "_caption" : "dGPS",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_source" : "ATT_OK_DGPS",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "574805226" 
+      },
+      "_caption" : "Gyros",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : true,
+      "_extremaID" : "(P44161324)",
+      "_highWord" : "PPYYRR",
+      "_lowWord" : "------",
+      "_nBits" : 6,
+      "_source" : "MASK_GY",
+      "type" : "PBDI" 
+    } ],
+    "geometryHeight" : 160,
+    "geometryWidth" : 120,
+    "geometryX" : 540,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "1500734954" 
+    },
+    "_boxTitle" : "Drive maps",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "2024482754" 
+      },
+      "_caption" : "MPC1",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC1",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1709531124" 
+      },
+      "_caption" : "MPC2  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC2",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1569015924" 
+      },
+      "_caption" : "MPC3  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC3",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "68563319" 
+      },
+      "_caption" : "MPC4  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC4",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "721425303" 
+      },
+      "_caption" : "MPC5  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC5",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1034570011" 
+        },
+        "_map" : {
+          "130" : "2,0,-[style=high (P678762312)]",
+          "131" : "3,0,-[style=high (P678762312)]",
+          "138" : "2,1,-[style=high (P678762312)]",
+          "139" : "3,1,-[style=No style (P1745720926)]",
+          "147" : "3,2,-[style=high (P678762312)]",
+          "154" : "2,3,-[style=high (P678762312)]",
+          "160" : "0,-,-[style=No style (P1745720926)]",
+          "161" : "1,-,-[style=No style (P1745720926)]",
+          "162" : "2,-,-[style=No style (P1745720926)]",
+          "163" : "3,-,-[style=No style (P1745720926)]",
+          "19" : "3,2,0[style=normal (P2123291925)]",
+          "26" : "2,3,0[style=normal (P2123291925)]",
+          "83" : "3,2,1[style=normal (P2123291925)]",
+          "90" : "2,3,1[style=normal (P2123291925)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1340203960" 
+      },
+      "_caption" : "MPC6  ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "DRIVE_MAP_MPC6",
+      "type" : "PMDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 180,
+    "geometryY" : 0 
+  }, {
+    "PObject" : {
+      "_id" : "437553035" 
+    },
+    "_boxTitle" : "Motors",
+    "_style" : "(P409642238)",
+    "dataItems" : [ {
+      "PObject" : {
+        "_id" : "1042018795" 
+      },
+      "_caption" : "I Ser Piv Max ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "I_SER_PIV_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1784260345" 
+      },
+      "_caption" : "I Ser Piv Min",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "I_SER_PIV_MIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "778754452" 
+      },
+      "_caption" : "I Ser RW Max ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "I_SER_RW_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1865934157" 
+      },
+      "_caption" : "I Ser RW Min ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "I_SER_RW_MIN",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "833552503" 
+      },
+      "_caption" : "Vel RW Max",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "VEL_SER_RW_MAX",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "860428264" 
+      },
+      "_caption" : "Vel RW MIN",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%+.1f",
+      "_source" : "VEL_SER_RW_MIN",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 140,
+    "geometryWidth" : 140,
+    "geometryX" : 780,
+    "geometryY" : 120 
+  }, {
+    "PObject" : {
+      "_id" : "721182978" 
+    },
+    "_boxTitle" : "X5",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "937861270" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC5",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "926249472" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC5",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "766781904" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC5",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1457422947" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "296090678" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "729955609" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE5",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 480,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "1611450805" 
+    },
+    "_boxTitle" : "X6",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "643517767" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC6",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "449592990" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC6",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1635320737" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC6",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1036343301" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "946462026" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC6",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1753462770" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE6",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 600,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "2018795650" 
+    },
+    "_boxTitle" : "X4",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "397675386" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC4",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1563506898" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC4",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "977249651" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC4",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1933301668" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "768718731" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1798794265" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE4",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 360,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "155597458" 
+    },
+    "_boxTitle" : "X1",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1334260098" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC1",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1097813808" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC1",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "678798526" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC1",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1567630057" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "513514952" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC1",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1130626247" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE2",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 0,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "1709890561" 
+    },
+    "_boxTitle" : "X2",
+    "_style" : "(P1353768376)",
+    "dataItems" : [ {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1143215552" 
+        },
+        "_map" : {
+          "0" : "Pause[style=No style (P1007670312)]",
+          "1" : "Tune[style=high (P678762312)]",
+          "2" : "iv[style=high (P678762312)]",
+          "3" : "Stop[style=No style (P1007670312)]",
+          "4" : "cycle[style=No style (P1007670312)]",
+          "5" : "acq[style=normal (P2123291925)]",
+          "6" : "bstep[style=normal (P2123291925)]",
+          "7" : "bramp[style=high (P678762312)]",
+          "8" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "1709761507" 
+      },
+      "_caption" : "Goal ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "GOAL_MPC2",
+      "type" : "PMDI" 
+    }, {
+      "PMDI" : {
+        "PObject" : {
+          "_id" : "1978528653" 
+        },
+        "_map" : {
+          "0" : "none[style=No style (P1007670312)]",
+          "1" : "tune[style=high (P678762312)]",
+          "2" : "iv crv[style=high (P678762312)]",
+          "3" : "Running[style=normal (P2123291925)]",
+          "4" : "Bias Step[style=normal (P2123291925)]",
+          "5" : "b-ramp[style=high (P678762312)]",
+          "6" : "partial[style=high (P678762312)]" 
+        } 
+      },
+      "PObject" : {
+        "_id" : "742872692" 
+      },
+      "_caption" : "Mode ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P43734275)",
+      "_source" : "MODA_MPC2",
+      "type" : "PMDI" 
+    }, {
+      "PObject" : {
+        "_id" : "2036357924" 
+      },
+      "_caption" : "State ",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_highWord" : "UNICORNS",
+      "_lowWord" : "--------",
+      "_nBits" : 8,
+      "_source" : "STATE_BITS_MPC2",
+      "type" : "PBDI" 
+    }, {
+      "PObject" : {
+        "_id" : "681726787" 
+      },
+      "_caption" : "TTry",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "%06o",
+      "_source" : "TUNE_STAT_MPC2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1990158061" 
+      },
+      "_caption" : "TUse",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "USED_TUNE_MPC2",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1344665830" 
+      },
+      "_caption" : "SQE",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "(P2123291925)",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "SEQERR_MCE2",
+      "type" : "PNDI" 
+    } ],
+    "geometryHeight" : 120,
+    "geometryWidth" : 120,
+    "geometryX" : 120,
+    "geometryY" : 480 
+  } ],
+  "extremas" : [ {
+    "PObject" : {
+      "_id" : "502158681" 
+    },
+    "_high" : 2048.0,
+    "_low" : 254.0,
+    "_name" : "mpcstate",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 2049.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "2033523043" 
+    },
+    "_high" : 64.0,
+    "_low" : 62.0,
+    "_name" : "Alive",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 65.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "2102669453" 
+    },
+    "_high" : 100.0,
+    "_low" : 10.0,
+    "_name" : "pss snr limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 200.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "2048653164" 
+    },
+    "_high" : 0.4,
+    "_low" : 0.2,
+    "_name" : "Twist limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 1.0,
+    "_xlow" : -1.0 
+  }, {
+    "PObject" : {
+      "_id" : "1768245484" 
+    },
+    "_high" : 75.0,
+    "_low" : 15.0,
+    "_name" : "cputemp",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 78.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "752121930" 
+    },
+    "_high" : 360.0,
+    "_low" : -180.0,
+    "_name" : "angle",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 360.0,
+    "_xlow" : -180.0 
+  }, {
+    "PObject" : {
+      "_id" : "1230459543" 
+    },
+    "_high" : 24.0,
+    "_low" : -12.0,
+    "_name" : "rahour",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 24.0,
+    "_xlow" : -12.0 
+  }, {
+    "PObject" : {
+      "_id" : "2090963858" 
+    },
+    "_high" : 2.0,
+    "_low" : -2.0,
+    "_name" : "dps",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 3.0,
+    "_xlow" : -3.0 
+  }, {
+    "PObject" : {
+      "_id" : "350266588" 
+    },
+    "_high" : 46.0,
+    "_low" : -23.0,
+    "_name" : "temp",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 60.0,
+    "_xlow" : -40.0 
+  }, {
+    "PObject" : {
+      "_id" : "522086723" 
+    },
+    "_high" : 64.0,
+    "_low" : 62.0,
+    "_name" : "gyros",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 64.0,
+    "_xlow" : 62.0 
+  }, {
+    "PObject" : {
+      "_id" : "1399331109" 
+    },
+    "_high" : 65.0,
+    "_low" : -22.0,
+    "_name" : "T_DCDC",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 75.0,
+    "_xlow" : -40.0 
+  }, {
+    "PObject" : {
+      "_id" : "392383588" 
+    },
+    "_high" : 50.0,
+    "_low" : 6.0,
+    "_name" : "V_ARRAY",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 60.0,
+    "_xlow" : 2.0 
+  }, {
+    "PObject" : {
+      "_id" : "417844299" 
+    },
+    "_high" : 29.3,
+    "_low" : 23.0,
+    "_name" : "V batt",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 30.0,
+    "_xlow" : 22.0 
+  }, {
+    "PObject" : {
+      "_id" : "1488394955" 
+    },
+    "_high" : 5.5,
+    "_low" : 4.0,
+    "_name" : "4k limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 8.0,
+    "_xlow" : 3.5 
+  }, {
+    "PObject" : {
+      "_id" : "1557648301" 
+    },
+    "_high" : 2.2,
+    "_low" : 1.0,
+    "_name" : "SFT limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 3.0,
+    "_xlow" : 0.5 
+  }, {
+    "PObject" : {
+      "_id" : "1733490370" 
+    },
+    "_high" : 35.0,
+    "_low" : 20.0,
+    "_name" : "HSW limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 40.0,
+    "_xlow" : 15.0 
+  }, {
+    "PObject" : {
+      "_id" : "1077769700" 
+    },
+    "_high" : 0.4,
+    "_low" : 0.22,
+    "_name" : "det limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 4.0,
+    "_xlow" : 0.19 
+  }, {
+    "PObject" : {
+      "_id" : "2122527791" 
+    },
+    "_high" : 50.0,
+    "_low" : 25.0,
+    "_name" : "vcs1 limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 60.0,
+    "_xlow" : 15.0 
+  }, {
+    "PObject" : {
+      "_id" : "912431415" 
+    },
+    "_high" : 120.0,
+    "_low" : 95.0,
+    "_name" : "vcs2 limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 180.0,
+    "_xlow" : 77.0 
+  }, {
+    "PObject" : {
+      "_id" : "1530089099" 
+    },
+    "_high" : 2.0,
+    "_low" : 1.0,
+    "_name" : "DBS limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 2.0,
+    "_xlow" : -2.0 
+  }, {
+    "PObject" : {
+      "_id" : "40471041" 
+    },
+    "_high" : 1.0,
+    "_low" : -1.0,
+    "_name" : "SS1 limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 2.0,
+    "_xlow" : -2.0 
+  }, {
+    "PObject" : {
+      "_id" : "590418227" 
+    },
+    "_high" : 56.0,
+    "_low" : 49.0,
+    "_name" : "row len",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 60.0,
+    "_xlow" : 45.0 
+  }, {
+    "PObject" : {
+      "_id" : "2099520136" 
+    },
+    "_high" : 34.0,
+    "_low" : 32.0,
+    "_name" : "numrows",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 42.0,
+    "_xlow" : 1.0 
+  }, {
+    "PObject" : {
+      "_id" : "81818950" 
+    },
+    "_high" : 22.0,
+    "_low" : 18.0,
+    "_name" : "MCE Current",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 25.0,
+    "_xlow" : 15.0 
+  }, {
+    "PObject" : {
+      "_id" : "1106087265" 
+    },
+    "_high" : 3.0,
+    "_low" : 2.0,
+    "_name" : "I_HK limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 5.0,
+    "_xlow" : 2.0 
+  }, {
+    "PObject" : {
+      "_id" : "1732600976" 
+    },
+    "_high" : 25.0,
+    "_low" : 21.0,
+    "_name" : "IFTOTAL Limits",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 30.0,
+    "_xlow" : 18.0 
+  }, {
+    "PObject" : {
+      "_id" : "1369988879" 
+    },
+    "_high" : 5000.0,
+    "_low" : 500.0,
+    "_name" : "bias",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 8000.0,
+    "_xlow" : 10.0 
+  }, {
+    "PObject" : {
+      "_id" : "2129225336" 
+    },
+    "_high" : 1.0,
+    "_low" : -1.0,
+    "_name" : "veto",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 200.0,
+    "_xlow" : -2.0 
+  }, {
+    "PObject" : {
+      "_id" : "44161324" 
+    },
+    "_high" : 64.0,
+    "_low" : 62.0,
+    "_name" : "6bits high",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 64.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "674282744" 
+    },
+    "_high" : 1.0,
+    "_low" : -1.0,
+    "_name" : "any != 0",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 1.0,
+    "_xlow" : -1.0 
+  }, {
+    "PObject" : {
+      "_id" : "495871500" 
+    },
+    "_high" : 45.0,
+    "_low" : -10.0,
+    "_name" : "mmmm Gyros",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 55.0,
+    "_xlow" : -15.0 
+  }, {
+    "PObject" : {
+      "_id" : "1875750140" 
+    },
+    "_high" : 40.0,
+    "_low" : 0.0,
+    "_name" : "blobs",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 50.0,
+    "_xlow" : 0.0 
+  }, {
+    "PObject" : {
+      "_id" : "672665020" 
+    },
+    "_high" : 40.0,
+    "_low" : -15.0,
+    "_name" : "mcetemp",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 55.0,
+    "_xlow" : -20.0 
+  }, {
+    "PObject" : {
+      "_id" : "1127073332" 
+    },
+    "_high" : 40.0,
+    "_low" : -15.0,
+    "_name" : "T_ACS",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P1139746622)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1714366560)",
+    "_xhigh" : 55.0,
+    "_xlow" : -25.0 
+  }, {
+    "PObject" : {
+      "_id" : "561573660" 
+    },
+    "_high" : 840.0,
+    "_low" : 420.0,
+    "_name" : "Time",
+    "_shigh" : "(P678762312)",
+    "_slow" : "(P2123291925)",
+    "_sxhigh" : "(P43734275)",
+    "_sxlow" : "(P1139746622)",
+    "_xhigh" : 1260.0,
+    "_xlow" : -1.0 
+  } ],
+  "linkSelected" : 4,
+  "owls" : [ {
+    "PObject" : {
+      "_id" : "1114803672" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 720,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "324081303" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 780,
+    "geometryY" : 460 
+  }, {
+    "PObject" : {
+      "_id" : "815930729" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 820,
+    "geometryY" : 420 
+  }, {
+    "PObject" : {
+      "_id" : "796074740" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 800,
+    "geometryY" : 400 
+  }, {
+    "PObject" : {
+      "_id" : "805034370" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 820,
+    "geometryY" : 380 
+  }, {
+    "PObject" : {
+      "_id" : "1065680490" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 800,
+    "geometryY" : 420 
+  }, {
+    "PObject" : {
+      "_id" : "878379450" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 780,
+    "geometryY" : 480 
+  }, {
+    "PObject" : {
+      "_id" : "1120826672" 
+    },
+    "geometryHeight" : 120,
+    "geometryWidth" : 100,
+    "geometryX" : 820,
+    "geometryY" : 460 
+  } ],
+  "styles" : [ {
+    "PObject" : {
+      "_id" : "2123291925" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#000050",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "normal" 
+  }, {
+    "PObject" : {
+      "_id" : "1714366560" 
+    },
+    "_bg" : "#cdcdcd",
+    "_bold" : true,
+    "_fg" : "#808080",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "xlow" 
+  }, {
+    "PObject" : {
+      "_id" : "1431356812" 
+    },
+    "_bg" : "#ffffbe",
+    "_bold" : true,
+    "_fg" : "#505000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "sensor_box" 
+  }, {
+    "PObject" : {
+      "_id" : "1395788922" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : false,
+    "_fg" : "#00009e",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "I Caption" 
+  }, {
+    "PObject" : {
+      "_id" : "1393980314" 
+    },
+    "_bg" : "#b6ffbf",
+    "_bold" : true,
+    "_fg" : "#004040",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "Chargers" 
+  }, {
+    "PObject" : {
+      "_id" : "1384060598" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#800080",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "Max Power" 
+  }, {
+    "PObject" : {
+      "_id" : "1353768376" 
+    },
+    "_bg" : "#f5f5f5",
+    "_bold" : true,
+    "_fg" : "#3c3c3c",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "status_box" 
+  }, {
+    "PObject" : {
+      "_id" : "1204249956" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : false,
+    "_fg" : "#000000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "time" 
+  }, {
+    "PObject" : {
+      "_id" : "1139746622" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#008000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "low" 
+  }, {
+    "PObject" : {
+      "_id" : "685041766" 
+    },
+    "_bg" : "#d3e6f3",
+    "_bold" : true,
+    "_fg" : "#000080",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "Temperatures" 
+  }, {
+    "PObject" : {
+      "_id" : "678762312" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#ff0000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "high" 
+  }, {
+    "PObject" : {
+      "_id" : "584528583" 
+    },
+    "_bg" : "#ffe7cf",
+    "_bold" : true,
+    "_fg" : "#783c00",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "position_box" 
+  }, {
+    "PObject" : {
+      "_id" : "577228399" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : false,
+    "_fg" : "#003d00",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "B Caption" 
+  }, {
+    "PObject" : {
+      "_id" : "556632594" 
+    },
+    "_bg" : "#f0f0c8",
+    "_bold" : true,
+    "_fg" : "#410000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "motor_box" 
+  }, {
+    "PObject" : {
+      "_id" : "514418070" 
+    },
+    "_bg" : "#b1fff1",
+    "_bold" : true,
+    "_fg" : "#000000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "Rec" 
+  }, {
+    "PObject" : {
+      "_id" : "509364827" 
+    },
+    "_bg" : "#ffe6ff",
+    "_bold" : true,
+    "_fg" : "#500050",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "gond_hk_box" 
+  }, {
+    "PObject" : {
+      "_id" : "412446087" 
+    },
+    "_bg" : "#f3d7ff",
+    "_bold" : true,
+    "_fg" : "#800080",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "Cryo Box" 
+  }, {
+    "PObject" : {
+      "_id" : "409642238" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#0000ff",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "defbox" 
+  }, {
+    "PObject" : {
+      "_id" : "43734275" 
+    },
+    "_bg" : "#ff8000",
+    "_bold" : true,
+    "_fg" : "#000000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "xhigh" 
+  }, {
+    "PObject" : {
+      "_id" : "1424603342" 
+    },
+    "_bg" : "#e9caff",
+    "_bold" : true,
+    "_fg" : "#000000",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "mcc" 
+  }, {
+    "PObject" : {
+      "_id" : "1667171907" 
+    },
+    "_bg" : "#ffffff",
+    "_bold" : true,
+    "_fg" : "#878787",
+    "_italic" : false,
+    "_linked" : true,
+    "_name" : "oldTime" 
+  } ],
+  "webPort" : "0",
+  "windowHeight" : 708,
+  "windowWidth" : 997 
+}

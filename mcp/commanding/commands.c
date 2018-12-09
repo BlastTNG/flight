@@ -1272,14 +1272,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
           }
-        case pilot_oth_on:
-            CommandData.pilot_oth = 1;
-            blast_info("Switched to Pilot OTH\n");
-            break;
-        case pilot_oth_off:
-            CommandData.pilot_oth = 0;
-            blast_info("Switch to Pilot GND\n");
-            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -2050,6 +2042,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         blast_err("Could not resolve filename \"%s\"", svalues[1]);
       }
       break;
+		case set_pilot_oth:
+				CommandData.pilot_oth = ivalues[0];
+				blast_info("Switched to Pilot to stream to \"%s\"\n", pilot_target_names[CommandData.pilot_oth]);
+				break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
       if (ivalues[0] == 100) {

@@ -24,9 +24,7 @@
 #include "PMdiArea.h"
 #include "PTimeDataItem.h"
 #include "PDirfileDataItem.h"
-#include "PDotPal.h"
 #include "PStyle.h"
-#include "PWebServerInfo.h"
 #include "POwlAnimation.h"
 
 #include "ui_PMainWindow.h"
@@ -44,21 +42,30 @@
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFileSystemModel>
+#include <QDateTime>
+#include <QMenu>
+#include <QWidgetAction>
+
 #ifdef __APPLE__
 #include <python2.6/Python.h>
 #else
 #include <python2.7/Python.h>   //you may need to change this
 #endif
+
+
+#if QT_VERSION >= 0x050000
+#include <QJsonDocument>
+#include <QJsonObject>
+#else
 #include <qjson/parser.h>
 #include <qjson/serializer.h>
+#endif
 
 PMainWindow* PMainWindow::me=0;
 
-QString PMainWindow::key;
-
 static QString _filename;
 
-PMainWindow::PMainWindow(QString file, QWidget *parent) :
+PMainWindow::PMainWindow(int font_size, QString file, QWidget *parent) :
     QMainWindow(parent),
     PObject(0),
     _currentObject(0),
@@ -66,15 +73,30 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     _scrollArea(new QScrollArea()),
     styleVersion(0),
     layoutVersion(0),
+#if QT_VERSION >= 0x050300
     _server(0),
+#endif
     _deleteScheduled(0),
+    _lastNFrames(-1),
     ui(new Ui::PMainWindow)
 {
-
+    _link = 0; /* LOS */
     _settings = new QSettings("UToronto", "owl");
+    setWindowIcon(QIcon(":icons/Owl0.png"));
+
     PStyle::noStyle = PStyle::noStyle?PStyle::noStyle:new PStyle("No style");
     me=this;
+
+    QFont my_font = font();
+    my_font.setPointSize(font_size);
+    setFont(my_font);
+
     ui->setupUi(this);
+
+    int listHeight = ui->listWidgetInsertReal->fontMetrics().height() *
+                     ui->listWidgetInsertReal->count() * 1.05 + 2*ui->listWidgetInsertReal->frameWidth();
+
+    ui->listWidgetInsertReal->setMaximumHeight(listHeight);
     ui->comboBox->addItem("Owl "+idText());
     _mdiArea=new PMdiArea;
     _scrollArea->setParent(centralWidget());
@@ -82,29 +104,31 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     QPalette p=_scrollArea->palette();
     p.setColor(_scrollArea->backgroundRole(),"white");
     _scrollArea->setPalette(p);
-    _mdiArea->setMinimumSize(1600,1200);
     _scrollArea->setWidget(_mdiArea);
     _mdiArea->adjustSize();
     centralWidget()->layout()->addWidget(_scrollArea);
     connect(_mdiArea,SIGNAL(newBox(PBox*)),this,SLOT(uiLogic()));
     connect(ui->comboBox,SIGNAL(activated(int)),this,SLOT(uiLogic()));
-    connect(ui->actionSave,SIGNAL(activated()),this,SLOT(owlSave()));
-    connect(ui->actionSaveAs,SIGNAL(activated()),this,SLOT(owlSaveAs()));
-    connect(ui->actionLoad,SIGNAL(activated()),this,SLOT(owlLoad()));
+    connect(ui->actionSave,SIGNAL(triggered()),this,SLOT(owlSave()));
+    connect(ui->actionSaveAs,SIGNAL(triggered()),this,SLOT(owlSaveAs()));
+    connect(ui->actionLoad,SIGNAL(triggered()),this,SLOT(owlLoad()));
+    connect(ui->actionReset, SIGNAL(triggered()), this, SLOT(resetLink()));
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(currowLogic()));
-    connect(ui->toolButtonHelp,SIGNAL(clicked()),this,SLOT(webServerHelp()));
-    connect(ui->actionHelp,SIGNAL(activated()),this,SLOT(readmeHelp()));
+    connect(ui->actionHelp,SIGNAL(triggered()),this,SLOT(readmeHelp()));
     connect(_mdiArea,SIGNAL(newOwl(POwlAnimation*)),this,SLOT(addOwl()));
+#if QT_VERSION >= 0x050300
+    connect(ui->checkBoxServer, SIGNAL(toggled(bool)), this, SLOT(setWebEnabled(bool)));
+    connect(ui->spinBoxServerPort, SIGNAL(valueChanged(int)), this, SLOT(setWebPort(int)));
+#else
+    ui->actionServer_Options->setVisible(false);
+#endif
     QFileSystemModel* fsm=new QFileSystemModel();
     fsm->setRootPath(QDir::currentPath());
     ui->lineEditHighGain->setCompleter(new QCompleter(fsm));
     ui->lineEditTDRSSOmni->setCompleter(new QCompleter(fsm));
     ui->lineEditLOS->setCompleter(new QCompleter(fsm));
-    ui->lineEditIridum->setCompleter(new QCompleter(fsm));
-    ui->lineEditHtmlPath->setText(key);
-    if (!key.isEmpty()) {
-      ui->checkboxWeb_server_on->setChecked(true);
-    }
+    ui->lineEditIridium->setCompleter(new QCompleter(fsm));
+    ui->lineEditLoRate->setCompleter(new QCompleter(fsm));
 
     curfileLogic();
 
@@ -117,44 +141,44 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
     connect(_ut,SIGNAL(timeout()),this,SLOT(gdUpdate()));
     _ut->start();
 
+    _reset_timer=new QTimer(this);
+    _reset_timer->setInterval(30000); /* twice a minute is good...? */
+    connect(_reset_timer,SIGNAL(timeout()),this,SLOT(resetLink()));
+    _reset_timer->start();
+
     activate();
 
+    //_mdiArea->setMinimumSize(1000,900);
     setMinimumSize(1,1);
 
-    ui->label_kst->hide();
-    ui->pushButton_kst->hide();
-    connect(ui->pushButton_kst,SIGNAL(clicked()),this,SLOT(showInKst()));
-
-    setWindowTitle(_WINDOW_TITLE_);
+    //setWindowTitle(_WINDOW_TITLE_);
 
     if (file == "__lastfile") {
         file = _settings->value("filename").toString();
     }
 
-    if (_settings->value("hideWeb", false).toBool()) {
-        ui->actionWeb_Server->setChecked(false);
-        ui->dockWeb_Server->hide();
-    }
-    if (_settings->value("hideInsert", false).toBool()) {
-      ui->actionInsert->setChecked(false);
-      ui->dockInsert->hide();
-    }
-    if (_settings->value("hideConfig", false).toBool()) {
+    restoreState(_settings->value("windowState").toByteArray());
+
+    //if (_settings->value("hideWeb", false).toBool()) {
+        ui->actionServer_Options->setChecked(false);
+        ui->dockWebServer->hide();
+    //}
+    //if (_settings->value("hideConfig", false).toBool()) {
       ui->actionConfigure->setChecked(false);
       ui->dockConfigure->hide();
-    }
-    if (_settings->value("hideLink", false).toBool()) {
+    //}
+    //if (_settings->value("hideLink", false).toBool()) {
       ui->actionLink->setChecked(false);
       ui->dockLink->hide();
-    }
-
+    //}
     if(file.size()) {
         owlLoad(file);
         _filename = file;
     }
 
-    if(!_deleteScheduled&&!PObject::isLoading) show();
+    setStatusBar(0);
 
+    if(!_deleteScheduled&&!PObject::isLoading) show();
 }
 
 #define reconnect(a,b,c,d) \
@@ -163,12 +187,6 @@ PMainWindow::PMainWindow(QString file, QWidget *parent) :
 
 PMainWindow::~PMainWindow()
 {
-
-    _settings->setValue("hideWeb",!ui->dockWeb_Server->isVisible());
-    _settings->setValue("hideInsert",!ui->dockInsert->isVisible());
-    _settings->setValue("hideConfig",!ui->dockConfigure->isVisible());
-    _settings->setValue("hideLink",!ui->dockLink->isVisible());
-
     while(_pboxList.size()) {
         delete _pboxList.takeFirst();
     }
@@ -177,9 +195,63 @@ PMainWindow::~PMainWindow()
     }
 }
 
+void PMainWindow::keyPressEvent ( QKeyEvent * e ) {
+  if (e->key()== Qt::Key_T) {
+    ui->toolBar->setVisible(!ui->toolBar->isVisible());
+  }
+  QMainWindow::keyPressEvent(e);
+}
+
+void PMainWindow::contextMenuEvent(QContextMenuEvent *event) {
+
+  QMenu menu;
+
+#if 0
+  QWidgetAction *title = new QWidgetAction(&menu);
+  title->setEnabled(false);
+
+  QLabel *label = new QLabel("Test Title");
+  label->setAlignment(Qt::AlignCenter);
+  label->setStyleSheet("QLabel {"
+                       "border-bottom: 2px solid lightGray;"
+                       "font: bold large;"
+                       "padding: 3px;"
+                       "margin: 1px;"
+                       "}");
+  title->setDefaultWidget(label);
+  menu.addAction(title);
+#endif
+
+  QAction *show_toolbar_action = new QAction(tr("Show Toolbar (T)"),this);
+  show_toolbar_action->setCheckable(true);
+  show_toolbar_action->setChecked(!ui->toolBar->isHidden());
+  connect(show_toolbar_action, SIGNAL(toggled(bool)), this, SLOT(showToolbar(bool)));
+
+  menu.addAction(show_toolbar_action);
+
+  menu.exec(event->globalPos());
+  //QMainWindow::contextMenuEvent(event);
+}
+
+void PMainWindow::showToolbar(bool show) {
+  if (show) {
+    ui->toolBar->show();
+  } else {
+    ui->toolBar->hide();
+  }
+}
+
 void PMainWindow::closeEvent(QCloseEvent* e)
 {
-    e->setAccepted(QMessageBox::question(this,"Really Quit?","If you quit, you will lose all unsaved data. Quit anyway?",QMessageBox::Yes,QMessageBox::No)==QMessageBox::Yes);
+  Q_UNUSED(e);
+
+/*
+  _settings->setValue("hideWeb",!ui->dockWebServer->isVisible());
+  _settings->setValue("hideConfig",!ui->dockConfigure->isVisible());
+  _settings->setValue("hideLink",!ui->dockLink->isVisible());
+*/
+  _settings->setValue("windowState", saveState());
+  //e->setAccepted(QMessageBox::question(this,"Really Quit?","If you quit, you will lose all unsaved data. Quit anyway?",QMessageBox::Yes,QMessageBox::No)==QMessageBox::Yes);
 }
 
 void PMainWindow::readmeHelp()
@@ -206,12 +278,6 @@ void PMainWindow::readmeHelp()
     x.setGeometry(x.x(),x.y(),680,480);
 
     x.exec();
-}
-
-void PMainWindow::webServerHelp()
-{
-    PWebServerInfo wsi;
-    wsi.exec();
 }
 
 void PMainWindow::hideEverything()
@@ -242,6 +308,15 @@ void PMainWindow::hideEverything()
     ui->labelFormat_num->hide();
     ui->lineEditFormat->hide();
     disconnect(ui->lineEditFormat,0,0,0);
+    ui->labelNBits->hide();
+    ui->spinBoxNBits->hide();
+    disconnect(ui->spinBoxNBits,0,0,0);
+    ui->labelHighWord->hide();
+    ui->lineEditHighWord->hide();
+    disconnect(ui->lineEditHighWord,0,0,0);
+    ui->labelLowWord->hide();
+    ui->lineEditLowWord->hide();
+    disconnect(ui->lineEditLowWord,0,0,0);
     ui->labelExtrema->hide();
     ui->comboBoxExtrema->hide();
     disconnect(ui->comboBoxExtrema,0,0,0);
@@ -263,7 +338,6 @@ void PMainWindow::hideEverything()
 
     ui->labelCurRow->hide();
     disconnect(ui->labelCurRow,0,0,0);
-    ui->labelRemove->hide();
     ui->pushButtonRemove->hide();
     disconnect(ui->pushButtonRemove,0,0,0);
 
@@ -292,17 +366,13 @@ void PMainWindow::addPBox()
 
     ui->pstyleCaption->setWidgetStyleRef(_pboxList.back()->_pstyle);
     ui->pushButtonRemove->show();
-    ui->labelRemove->show();
     connect(ui->pushButtonRemove,SIGNAL(clicked()),_pboxList.back(),SLOT(deleteLater()));
     setUpdatesEnabled(1);
 }
 
 void PMainWindow::setCurrentObject(POwlAnimation*obj)
 {
-    ui->pushButton_kst->hide();
-    ui->label_kst->hide();
     ui->pushButtonRemove->show();
-    ui->labelRemove->show();
     reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
     for(int i=0;i<ui->comboBox->count();i++) {
         if(ui->comboBox->itemText(i).contains(obj->idText())) {
@@ -315,8 +385,6 @@ void PMainWindow::setCurrentObject(POwlAnimation*obj)
 
 void PMainWindow::setCurrentObject(PBox*obj)
 {
-    ui->pushButton_kst->hide();
-    ui->label_kst->hide();
     setUpdatesEnabled(0);
     QString x=obj->idText();
     _currentObject=obj;
@@ -330,7 +398,6 @@ void PMainWindow::setCurrentObject(PBox*obj)
     Q_ASSERT(ok);
     ui->pstyleCaption->setWidgetStyleRef(obj->_pstyle);
     ui->pushButtonRemove->show();
-    ui->labelRemove->show();
     connect(ui->pushButtonRemove,SIGNAL(clicked()),obj,SLOT(deleteLater()));
     setUpdatesEnabled(1);
 }
@@ -362,16 +429,18 @@ void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
     ui->pstyleCaption->show();
     ui->pstyleCaption->setWidgetStyleRef(obj->_captionStyle);
 
-    ui->labelRemove->show();
     ui->pushButtonRemove->show();
-    ui->labelRemove->show();
     reconnect(ui->pushButtonRemove,SIGNAL(clicked()),this,SLOT(removeCurrentDataItem()));
 
     ui->pstyleData->show();
     ui->pstyleData->setWidgetStyleRef(obj->_defaultDataStyle);
 
+    if(dynamic_cast<PExtremaDataItem*>(obj))
+      setCurrentObject(dynamic_cast<PExtremaDataItem*>(obj));
+
     if(dynamic_cast<PNumberDataItem*>(obj)) setCurrentObject(dynamic_cast<PNumberDataItem*>(obj));
     else if(dynamic_cast<PMultiDataItem*>(obj)) setCurrentObject(dynamic_cast<PMultiDataItem*>(obj));
+    else if(dynamic_cast<PBitMultiDataItem*>(obj)) setCurrentObject(dynamic_cast<PBitMultiDataItem*>(obj));
     else if(dynamic_cast<PTimeDataItem*>(obj)) setCurrentObject(dynamic_cast<PTimeDataItem*>(obj));
     else if(dynamic_cast<PDirfileDataItem*>(obj)) {
         ui->labelSource->hide();
@@ -382,8 +451,6 @@ void PMainWindow::setCurrentObject(PAbstractDataItem*obj)
 
 void PMainWindow::setCurrentObject(PNumberDataItem*obj)
 {
-    ui->pushButton_kst->show();
-    ui->label_kst->show();
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
@@ -391,7 +458,12 @@ void PMainWindow::setCurrentObject(PNumberDataItem*obj)
     ui->lineEditFormat->setPlaceholderText("printf format str (\"man printf\")");
     reconnect(ui->lineEditFormat,SIGNAL(textChanged(QString)),obj,SLOT(setFormat(QString)));
     reconnect(obj,SIGNAL(formatChanged(QString)),this,SLOT(uiLogic()));
+    setUpdatesEnabled(1);
+}
 
+void PMainWindow::setCurrentObject(PExtremaDataItem *obj)
+{
+    setUpdatesEnabled(0);
     ui->labelExtrema->show();
     ui->comboBoxExtrema->show();
     reconnect(ui->comboBoxExtrema,SIGNAL(currentIndexChanged(QString)),this,SLOT(extremaLogic(QString)));
@@ -460,8 +532,6 @@ void PMainWindow::setCurrentObject(PNumberDataItem*obj)
 
 void PMainWindow::setCurrentObject(PMultiDataItem*obj)
 {
-    ui->pushButton_kst->show();
-    ui->label_kst->show();
     setUpdatesEnabled(0);
     disconnect(ui->tableWidgetFormat,0,0,0);
 
@@ -501,10 +571,34 @@ void PMainWindow::setCurrentObject(PMultiDataItem*obj)
     setUpdatesEnabled(1);
 }
 
+void PMainWindow::setCurrentObject(PBitMultiDataItem*obj)
+{
+    setUpdatesEnabled(0);
+    ui->labelNBits->show();
+    ui->spinBoxNBits->show();
+    ui->spinBoxNBits->setValue(obj->nBits());
+    reconnect(ui->spinBoxNBits,SIGNAL(valueChanged(int)),obj,SLOT(setNBits(int)));
+    reconnect(obj,SIGNAL(nBitsChanged(int)),this,SLOT(uiLogic()));
+
+    ui->labelHighWord->show();
+    ui->lineEditHighWord->show();
+    ui->lineEditHighWord->setText(obj->highWord());
+    ui->lineEditHighWord->setPlaceholderText("11111111");
+    reconnect(ui->lineEditHighWord,SIGNAL(textChanged(QString)),obj,SLOT(setHighWord(QString)));
+    reconnect(obj,SIGNAL(highWordChanged(QString)),this,SLOT(uiLogic()));
+
+    ui->labelLowWord->show();
+    ui->lineEditLowWord->show();
+    ui->lineEditLowWord->setText(obj->lowWord());
+    ui->lineEditLowWord->setPlaceholderText("00000000");
+    reconnect(ui->lineEditLowWord,SIGNAL(textChanged(QString)),obj,SLOT(setLowWord(QString)));
+    reconnect(obj,SIGNAL(lowWordChanged(QString)),this,SLOT(uiLogic()));
+
+    setUpdatesEnabled(1);
+}
+
 void PMainWindow::setCurrentObject(PTimeDataItem*obj)
 {
-    ui->pushButton_kst->show();
-    ui->label_kst->show();
     setUpdatesEnabled(0);
     ui->labelFormat_num->show();
     ui->lineEditFormat->show();
@@ -524,7 +618,6 @@ void PMainWindow::addOwl()
     ui->comboBox->setCurrentIndex(ui->comboBox->count()-1);
 
     ui->pushButtonRemove->show();
-    ui->labelRemove->show();
     hideEverything();
     setCurrentObject(dynamic_cast<POwlAnimation*>(_owlList.back()));
     setUpdatesEnabled(1);
@@ -564,29 +657,60 @@ void PMainWindow::setFileLineEditValidity(QLineEdit* fle)
     fle->setPalette(pal);
 }
 
+/* Set the current link based on an .owl file value */
+void PMainWindow::setLink(int link, QStringList linkNames)
+{
+  /* LOS is the default link */
+  if (link < 0 || link > 4)
+    link = 0;
+
+  if (linkNames.size()>4) {
+    ui->lineEditLOS->setText(linkNames[0]);
+    ui->lineEditIridium->setText(linkNames[1]);
+    ui->lineEditTDRSSOmni->setText(linkNames[2]);
+    ui->lineEditHighGain->setText(linkNames[3]);
+    ui->lineEditLoRate->setText(linkNames[4]);
+  }
+  ui->radioButtonLoRate->setChecked(link == 4);
+  ui->radioButtonHighGain->setChecked(link == 3);
+  ui->radioButtonTDRSSOmni->setChecked(link == 2);
+  ui->radioButtonIridium->setChecked(link == 1);
+  ui->radioButtonLOS->setChecked(link == 0);
+
+  /* do the link logic */
+  curfileLogic(true);
+}
+
 void PMainWindow::curfileLogic(bool force)
 {
     setUpdatesEnabled(0);
+    setFileLineEditValidity(ui->lineEditLoRate);
     setFileLineEditValidity(ui->lineEditHighGain);
     setFileLineEditValidity(ui->lineEditTDRSSOmni);
-    setFileLineEditValidity(ui->lineEditIridum);
+    setFileLineEditValidity(ui->lineEditIridium);
     setFileLineEditValidity(ui->lineEditLOS);
     QString filename;
-    if (ui->radioButtonHighGain->isChecked()) {
+    if (ui->radioButtonLoRate->isChecked()) {
+        filename = ui->lineEditLoRate->text();
+        _link = 4;
+    } else if (ui->radioButtonHighGain->isChecked()) {
         filename = ui->lineEditHighGain->text();
+        _link = 3;
     } else if (ui->radioButtonTDRSSOmni->isChecked()) {
         filename = ui->lineEditTDRSSOmni->text();
-    } else if (ui->radioButtonIridum->isChecked()) {
-        filename = ui->lineEditIridum->text();
+        _link = 2;
+    } else if (ui->radioButtonIridium->isChecked()) {
+        filename = ui->lineEditIridium->text();
+        _link = 1;
     } else {
         filename = ui->lineEditLOS->text();
+        _link = 0;
     }
-
 
     if(QFile::exists(filename) && ((filename != _dirfileFilename) || (force))) {
         delete _dirfile;
         _dirfileFilename=filename;
-        _dirfile = new GetData::Dirfile(_dirfileFilename.toAscii(), GD_RDONLY);
+        _dirfile = new GetData::Dirfile(_dirfileFilename.toLatin1(), GD_RDONLY);
 
         int flc=_dirfile->NFields();
         const char** flv=_dirfile->FieldList();
@@ -605,10 +729,24 @@ void PMainWindow::curfileLogic(bool force)
         }
     }
     setUpdatesEnabled(1);
+
+    setWindowTitle("Owl - " + filename);
 }
 
 bool PMainWindow::mouseInactive() {
     return !(ui->actionConfigure->isChecked());
+}
+
+QStringList PMainWindow::linkNames() {
+  QStringList names;
+
+  names.append(ui->lineEditLOS->text());
+  names.append(ui->lineEditIridium->text());
+  names.append(ui->lineEditTDRSSOmni->text());
+  names.append(ui->lineEditHighGain->text());
+  names.append(ui->lineEditLoRate->text());
+
+  return names;
 }
 
 void PMainWindow::newLabelLogic(PAbstractDataItem *padi)
@@ -622,19 +760,21 @@ void PMainWindow::newLabelLogic(PAbstractDataItem *padi)
 
 void PMainWindow::extremaLogic(QString)
 {
-    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
-    if(!pndi) return;
+    PExtremaDataItem* pedi=dynamic_cast<PExtremaDataItem*>(_currentObject);
+    if (!pedi)
+      return;
 
     setUpdatesEnabled(0);
     QLineEdit* le=dynamic_cast<QLineEdit*>(sender());
     QComboBox* cb=dynamic_cast<QComboBox*>(sender());
     PExtrema* ex=dynamic_cast<PExtrema*>(sender());
-    if(le&&pndi->_extrema) {    //change current extrema name
-        Q_ASSERT(pndi->_extrema);
-        pndi->_extrema->setName(le->text());
+    if (le && pedi->_extrema) {    //change current extrema name
+        Q_ASSERT(pedi->_extrema);
+        pedi->_extrema->setName(le->text());
     } else if(cb) {             //change current extrema
-        if(pndi->_extrema) {
-            disconnect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+        if (pedi->_extrema) {
+            disconnect(pedi->_extrema, SIGNAL(nameChanged(QString)), this,
+                    SLOT(extremaLogic(QString)));
         }
         PExtrema* extrema=0;
         for(int i=0;i<PExtrema::_u.count();i++) {
@@ -649,28 +789,30 @@ void PMainWindow::extremaLogic(QString)
         ui->pstyleXLow->setEnabled(extrema);
 
         if(extrema) {
-            pndi->_extrema=extrema;
+            pedi->_extrema = extrema;
             ui->lineEditExtremaName->setText(extrema->name());
             ui->lineEditExtremaName->setEnabled(1);
             ui->doubleSpinBoxXHigh->setEnabled(1);
-            ui->doubleSpinBoxXHigh->setValue(pndi->_extrema->_xhigh);
+            ui->doubleSpinBoxXHigh->setValue(pedi->_extrema->_xhigh);
             ui->doubleSpinBoxHigh->setEnabled(1);
-            ui->doubleSpinBoxHigh->setValue(pndi->_extrema->_high);
+            ui->doubleSpinBoxHigh->setValue(pedi->_extrema->_high);
             ui->doubleSpinBoxLow->setEnabled(1);
-            ui->doubleSpinBoxLow->setValue(pndi->_extrema->_low);
+            ui->doubleSpinBoxLow->setValue(pedi->_extrema->_low);
             ui->doubleSpinBoxXLow->setEnabled(1);
-            ui->doubleSpinBoxXLow->setValue(pndi->_extrema->_xlow);
-            disconnect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
-            connect(pndi->_extrema,SIGNAL(nameChanged(QString)), this,SLOT(extremaLogic(QString)));
+            ui->doubleSpinBoxXLow->setValue(pedi->_extrema->_xlow);
+            disconnect(pedi->_extrema, SIGNAL(nameChanged(QString)), this,
+                    SLOT(extremaLogic(QString)));
+            connect(pedi->_extrema, SIGNAL(nameChanged(QString)), this,
+                    SLOT(extremaLogic(QString)));
 
-            ui->pstyleXHigh->setWidgetStyleRef(pndi->_extrema->_sxhigh);
-            ui->pstyleHigh->setWidgetStyleRef(pndi->_extrema->_shigh);
-            ui->pstyleLow->setWidgetStyleRef(pndi->_extrema->_slow);
-            ui->pstyleXLow->setWidgetStyleRef(pndi->_extrema->_sxlow);
+            ui->pstyleXHigh->setWidgetStyleRef(pedi->_extrema->_sxhigh);
+            ui->pstyleHigh->setWidgetStyleRef(pedi->_extrema->_shigh);
+            ui->pstyleLow->setWidgetStyleRef(pedi->_extrema->_slow);
+            ui->pstyleXLow->setWidgetStyleRef(pedi->_extrema->_sxlow);
 
         } else if (!extrema) {
             if(cb->currentText()==tr("No Extrema")) {
-                pndi->_extrema=0;
+                pedi->_extrema = 0;
                 ui->lineEditExtremaName->setText("");
                 ui->lineEditExtremaName->setDisabled(1);
                 ui->doubleSpinBoxXHigh->setDisabled(1);
@@ -707,33 +849,78 @@ void PMainWindow::extremaLogic(QString)
 
 void PMainWindow::extremaXHighLogic(double x)
 {
-    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
-    Q_ASSERT(pndi&&pndi->_extrema);
-    pndi->_extrema->_xhigh=x;
+    PExtremaDataItem* pedi=dynamic_cast<PExtremaDataItem*>(_currentObject);
+    Q_ASSERT(pedi && pedi->_extrema);
+    pedi->_extrema->_xhigh=x;
 }
 
 void PMainWindow::extremaHighLogic(double x)
 {
-    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
-    Q_ASSERT(pndi&&pndi->_extrema);
-    pndi->_extrema->_high=x;
+    PExtremaDataItem* pedi=dynamic_cast<PExtremaDataItem*>(_currentObject);
+    Q_ASSERT(pedi && pedi->_extrema);
+    pedi->_extrema->_high=x;
 }
 
 void PMainWindow::extremaLowLogic(double x)
 {
-    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
-    Q_ASSERT(pndi&&pndi->_extrema);
-    pndi->_extrema->_low=x;
+    PExtremaDataItem* pedi=dynamic_cast<PExtremaDataItem*>(_currentObject);
+    Q_ASSERT(pedi&&pedi->_extrema);
+    pedi->_extrema->_low=x;
 }
 
 void PMainWindow::extremaXLowLogic(double x)
 {
-    PNumberDataItem* pndi=dynamic_cast<PNumberDataItem*>(_currentObject);
-    Q_ASSERT(pndi&&pndi->_extrema);
-    pndi->_extrema->_xlow=x;
+    PExtremaDataItem* pedi=dynamic_cast<PExtremaDataItem*>(_currentObject);
+    Q_ASSERT(pedi && pedi->_extrema);
+    pedi->_extrema->_xlow=x;
 }
 
 void PMainWindow::multiLogic()
+{
+    setUpdatesEnabled(0);
+    PMultiDataItem* pmdi=dynamic_cast<PMultiDataItem*>(_currentObject);
+    Q_ASSERT(pmdi);
+    bool update=0;
+    if(sender()==ui->pushButtonAddFormat) {
+        ui->tableWidgetFormat->insertRow(ui->tableWidgetFormat->rowCount());
+    } else if(sender()==ui->pushButtonDelFormat) {
+        ui->tableWidgetFormat->removeRow(1);
+        update=1;
+    } else if(sender()==ui->tableWidgetFormat) {
+        update=1;
+    }
+
+    if(update) {
+        pmdi->_map->reset();
+        for(int i=0;i<ui->tableWidgetFormat->rowCount();i++) {
+            if(ui->tableWidgetFormat->item(i,0))
+            {
+                int a=ui->tableWidgetFormat->item(i,0)->data(Qt::EditRole).toInt();
+                QString b;
+                if(ui->tableWidgetFormat->columnCount()>=2&&
+                        ui->tableWidgetFormat->item(i,1) &&
+                        !ui->tableWidgetFormat->item(i,1)->data(Qt::EditRole).isNull()) {
+                    b=ui->tableWidgetFormat->item(i,1)->data(Qt::EditRole).toString();
+                } else {
+                    continue;
+                }
+                pmdi->_map->set(a,b);
+            }
+        }
+
+        if(ui->tableWidgetFormat->currentRow()!=-1&&ui->tableWidgetFormat->item(ui->tableWidgetFormat->currentRow(),0)) {
+            _currowStyle=pmdi->_map->style(ui->tableWidgetFormat->item(
+                                               ui->tableWidgetFormat->currentRow(),0)->text().toInt(),PStyle::noStyle);
+            ui->pstyleSelected->setWidgetStyleRef(_currowStyle);
+            ui->pstyleSelected->setEnabled(1);
+        } else {
+            ui->pstyleSelected->setEnabled(0);
+        }
+    }
+    setUpdatesEnabled(1);
+}
+
+void PMainWindow::bitmultiLogic()
 {
     setUpdatesEnabled(0);
     PMultiDataItem* pmdi=dynamic_cast<PMultiDataItem*>(_currentObject);
@@ -801,16 +988,33 @@ void PMainWindow::currowLogic()
 
 void PMainWindow::gdUpdate()
 {
-    if(!_dirfile) {
+    if (!_dirfile) {
       return;
     }
-    setUpdatesEnabled(0);
+
+    static int last_nFrames = 0;
     int nFrames = _dirfile->NFrames();
+
+    if (nFrames != last_nFrames) {
+        last_nFrames = nFrames;
+        /* reset the resetLink timer */
+        _reset_timer->start();
+    }
+    PAbstractDataItem::newCycle(); // reset delay timeout so
+    // item updates don't take too long
     for(int i=0;i<_pboxList.size();i++) {
         _pboxList[i]->gdUpdate(_dirfile,nFrames);
     }
+
+
+    if (_lastNFrames != nFrames) {
+      _lastNFrames = nFrames;
+      _lastUpdate = time(NULL);
+    }
+
+    int dT = time(NULL) - _lastUpdate;
     for(int i=0;i<_owlList.size();i++) {
-        _owlList[i]->gdUpdate(_dirfile,nFrames);
+        _owlList[i]->gdUpdate(_dirfile,nFrames, dT);
     }
     if(_dirty) {
         bool ok=0;
@@ -851,108 +1055,7 @@ void PMainWindow::gdUpdate()
         _dirty=0;
     }
     PStyleNotifier::me->notifyChange();
-    setUpdatesEnabled(1);
     serverUpdate();
-}
-
-void PMainWindow::serverUpdate()
-{
-    if(ui->checkboxWeb_server_on->isChecked()) {
-        if(!_server) {_server=new PServer(ui->lineEditHtmlPath->text()); }
-        if(_server->key!=ui->lineEditHtmlPath->text()) {
-            delete _server;
-            _server=new PServer(ui->lineEditHtmlPath->text());
-        }
-
-        QString layoutxmlx,cssx,dataxmlx;
-        QTextStream layout(&layoutxmlx);
-        layout<<"<OWL-LAYOUT>";
-        QTextStream css(&cssx);
-        QTextStream data(&dataxmlx);
-        data<<"{\"owlData\": { \"Obj\":[\n";
-
-        QMap<int,int> map;
-
-        map.insert(PStyle::noStyle->id(),0);
-        css<<"div.S0"<<"{background-color:"<<PStyle::noStyle->bgColour().name()<<";"<<
-             "color:"<<PStyle::noStyle->fgColour().name()<<";font-weight:"<<(PStyle::noStyle->isBold()?"bold":"normal")<<";"<<
-             "font-style"<<(PStyle::noStyle->isItalic()?"italic":"normal")<<
-             "}"<<"/*"<<PStyle::noStyle->name()<<"*/\n";
-        css<<"span.S0"<<"{background-color:"<<PStyle::noStyle->bgColour().name()<<";"<<
-             "color:"<<PStyle::noStyle->fgColour().name()<<";font-weight:"<<(PStyle::noStyle->isBold()?"bold":"normal")<<";"<<
-             "font-style"<<(PStyle::noStyle->isItalic()?"italic":"normal")<<
-             "}"<<"/*"<<PStyle::noStyle->name()<<"*/\n\n";
-
-        for(int i=0;i<PStyle::_u.size();i++) {
-            map.insert(PStyle::_u[i]->id(),i+1);
-            css<<"div.S"<<QString::number(i+1)<<"{background-color:"<<PStyle::_u[i]->bgColour().name()<<";"<<
-                 "color:"<<PStyle::_u[i]->fgColour().name()<<";font-weight:"<<(PStyle::_u[i]->isBold()?"bold":"normal")<<";"<<
-                 "font-style"<<(PStyle::noStyle->isItalic()?"italic":"normal")<<
-                 "}"<<"/*"<<PStyle::_u[i]->name()<<"*/\n";
-            css<<"span.S"<<QString::number(i+1)<<"{background-color:"<<PStyle::_u[i]->bgColour().name()<<";"<<
-                 "color:"<<PStyle::_u[i]->fgColour().name()<<";font-weight:"<<(PStyle::_u[i]->isBold()?"bold":"normal")<<";"<<
-                 "font-style"<<(PStyle::noStyle->isItalic()?"italic":"normal")<<
-                 "}"<<"/*"<<PStyle::_u[i]->name()<<"*/\n\n";
-        }
-        if(cssx!=oldStyle) {
-            oldStyle=cssx;
-            ++styleVersion;
-        }
-
-        for(int i=0;i<_owlList.size();i++) {
-            layout<<"<Owl> "
-                 "<top>"<<_owlList[i]->geometry().y()<<"</top>"
-                 "<left>"<<_owlList[i]->geometry().x()<<"</left>"
-                 "<width>"<<_owlList[i]->geometry().width()-10<<"</width>"
-                 "<height>"<<_owlList[i]->geometry().height()-10<<"</height></Owl>\n";
-        }
-
-        for(int i=0;i<_pboxList.size();i++) {
-                layout<<"<PBox>"<<
-                     "<top>"<<_pboxList[i]->geometry().y()<<"</top>"<<
-                     "<left>"<<_pboxList[i]->geometry().x()<<"</left>"<<
-                     "<width>"<<(_pboxList[i]->geometry().width()-10)<<"</width>"<<
-                     "<height>"<<_pboxList[i]->geometry().height()-10<<"</height>"<<
-                     "<boxStyle>"<<map.value(_pboxList[i]->getStyle()->id())<<"</boxStyle>"<<
-                     "<title>"<<_pboxList[i]->boxTitle()<<"</title>";
-
-            for(int j=0;j<_pboxList[i]->_dataItems.size();j++) {
-                PAbstractDataItem* padi=_pboxList[i]->_dataItems[j];
-                layout<<"<PDataItem>"<<
-                     "<capStyle>"<<map.value(padi->captionStyle()->id())<<"</capStyle>"<<
-                     "<caption>"<<padi->caption()<<"</caption>"<<
-                     "<dataID>"<<padi->id()<<"</dataID></PDataItem>\n";
-
-                if(padi->_serverDirty<0) {
-                    data<<"\t{\"i\":"<<padi->id()<<","<<"\"d\":\""<<padi->data()<<"\","<<"\"s\":\""<<
-                          map.value(padi->getPrevDataStyle()->id())<<"\"},\n";
-                    padi->_serverDirty=5;
-                }
-            }
-            layout<<"</PBox>\n";
-        }
-        layout<<"</OWL-LAYOUT>";
-        if(layoutxmlx!=oldLayout) {
-            oldLayout=layoutxmlx;
-            ++layoutVersion;
-        }
-        data<<"{}],";
-        data<<"\t\"styleVer\":"<<styleVersion<<",\n";
-        data<<"\t\"layoutVer\":"<<layoutVersion<<",\n";
-        if(_owlList.size()) {
-            data<<"\t\"owlStage\":"<<_owlList[0]->stage()<<"\n";
-        } else {
-            data<<"\t\"owlStage\":"<<-1<<"\n";
-        }
-        data<<"} }";
-
-        QFile htmlFile(":/client/PClient.html");
-        htmlFile.open(QFile::ReadOnly);
-        QString html=htmlFile.readAll();
-        html.replace("SERVERNAME",_server->key);
-
-        _server->clockOn(html,cssx,layoutxmlx,dataxmlx);
-    }
 }
 
 void PMainWindow::removeCurrentDataItem()
@@ -1039,17 +1142,137 @@ void PMainWindow::recognizeExtrema(PExtrema *e)
     ui->comboBoxExtrema->addItem(e->name()+" "+e->idText());
 }
 
+QVariant PMainWindow::state()
+{
+    QVariantMap state;
+    state.insert("statics", save(*this));
+    state.insert("data", _data());
+    return state;
+}
+
+QVariant PMainWindow::_data()
+{
+    QVariantMap data;
+    for (int i = 0; i < _pboxList.size(); ++i) {
+        for (int j = 0; j < _pboxList[i]->_dataItems.size(); ++j) {
+            PAbstractDataItem* padi = _pboxList[i]->_dataItems[j];
+            QVariantList list;
+            list.push_back(padi->data());
+            list.push_back(padi->getPrevDataStyle()->id());
+            data.insert("(P" + QString::number(padi->id()) + ")", list);
+        }
+    }
+    return data;
+}
+
+QVariant PMainWindow::stateChanges()
+{
+    // This does not currently send changes to layout and such.
+    QVariantMap state;
+
+    QVariantMap data;
+    for (int i = 0; i < _pboxList.size(); ++i) {
+        for (int j = 0; j < _pboxList[i]->_dataItems.size(); ++j) {
+            PAbstractDataItem* padi = _pboxList[i]->_dataItems[j];
+            if (padi->_serverDirty) {
+              QVariantList list;
+              list.push_back(padi->data());
+              list.push_back(padi->getPrevDataStyle()->id());
+              data.insert("(P" + QString::number(padi->id()) + ")", list);
+              //data.insert("(P" + QString::number(padi->id()) + ")", padi->data());
+              padi->_serverDirty = false;
+            }
+        }
+    }
+
+    state.insert("data", data);
+    return state;
+}
+
+void PMainWindow::serverUpdate()
+{
+#if QT_VERSION >= 0x050300
+    if (_server) {
+        _server->update();
+    }
+#endif
+}
+
+#if QT_VERSION >= 0x050300
+int PMainWindow::webPort()
+{
+    if (ui->checkBoxServer->isChecked()) {
+        return ui->spinBoxServerPort->value();
+    } else {
+        return -1;
+    }
+}
+
+void PMainWindow::setWebEnabled(const bool &enabled) {
+    this->setWebPort(enabled ? ui->spinBoxServerPort->value() : -1);
+}
+
+void PMainWindow::setWebPort(const int &port)
+{
+    static bool noRecurse = false;
+    if (noRecurse) {
+        return;
+    }
+    noRecurse = true;
+
+    delete _server;
+    _server = 0;
+    if (port == -1) {
+        ui->checkBoxServer->setChecked(false);
+        ui->spinBoxServerPort->setValue(8001);
+    } else {
+        ui->checkBoxServer->setChecked(true);
+        ui->spinBoxServerPort->setValue(port);
+        _server = new PWebServer(this, port);
+    }
+
+    noRecurse = false;
+}
+#endif
+
 void PMainWindow::activate()
 {
     reconnect(ui->pushButtonResetLink, SIGNAL(clicked()), this, SLOT(resetLink()));
     reconnect(ui->lineEditLOS,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->lineEditLoRate,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
     reconnect(ui->lineEditHighGain,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
-    reconnect(ui->lineEditIridum,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
+    reconnect(ui->lineEditIridium,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
     reconnect(ui->lineEditTDRSSOmni,SIGNAL(textChanged(QString)),this,SLOT(curfileLogic()));
     reconnect(ui->radioButtonLOS,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonLoRate,SIGNAL(clicked()),this,SLOT(curfileLogic()));
     reconnect(ui->radioButtonHighGain,SIGNAL(clicked()),this,SLOT(curfileLogic()));
-    reconnect(ui->radioButtonIridum,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+    reconnect(ui->radioButtonIridium,SIGNAL(clicked()),this,SLOT(curfileLogic()));
     reconnect(ui->radioButtonTDRSSOmni,SIGNAL(clicked()),this,SLOT(curfileLogic()));
+}
+
+QByteArray formatStream(QByteArray &rawS) {
+  QByteArray formatedS;
+  int n_spaces = 0;
+
+  formatedS.reserve(rawS.size()*1.5);
+
+  rawS.replace("{ ","{\n").replace('}',"\n}").replace(", \"", ",\n\"");
+
+  for (int i=0; i<rawS.size(); i++) {
+    formatedS.append(rawS.at(i));
+    if ((i+1<rawS.size()) && (rawS.at(i+1)=='}')) {
+      n_spaces--;
+    }
+    if (rawS.at(i)=='\n') {
+      for (int j=0; j<n_spaces*2; j++) {
+        formatedS.append(' ');
+      }
+    } else if (rawS.at(i)=='{') {
+      n_spaces++;
+    }
+  }
+
+  return formatedS;
 }
 
 QVariant save(PMainWindow&b);
@@ -1060,8 +1283,17 @@ void PMainWindow::owlSave()
     if (qfi.exists()) {
         QFile file(filename);
         file.open(QFile::WriteOnly | QFile::Text);
+
+#if QT_VERSION >= 0x050000
+        QJsonDocument document = QJsonDocument::fromVariant(save(*this));
+        file.write(document.toJson(QJsonDocument::Indented));
+#else
         QJson::Serializer s;
-        file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
+        QByteArray rawS(s.serialize(save(*this)));
+        file.write(formatStream(rawS));
+        //file.write(rawS);
+#endif
+
         _settings->setValue("filename", file.fileName());
 
         file.close();
@@ -1070,6 +1302,7 @@ void PMainWindow::owlSave()
     }
 }
 
+
 void PMainWindow::owlSaveAs()
 {
     QString filename = _filename; //settings->value("filename").toString();
@@ -1077,9 +1310,19 @@ void PMainWindow::owlSaveAs()
 
     QFile file(QFileDialog::getSaveFileName(this,"Save the current owl project",qfi.dir().dirName(),"Owl projects(*.owl)"));
     file.open(QFile::WriteOnly | QFile::Text);
+
+#if QT_VERSION >= 0x050000
+    QJsonDocument document = QJsonDocument::fromVariant(save(*this));
+    file.write(document.toJson(QJsonDocument::Indented));
+#else
     QJson::Serializer s;
-    file.write(s.serialize(save(*this)).replace('{',"\n{").replace('}',"}\n"));
+    QByteArray rawS(s.serialize(save(*this)));
+    file.write(formatStream(rawS));
+    //file.write(rawS);
+#endif
+
     _settings->setValue("filename", file.fileName());
+
     _filename = file.fileName();
 
     file.close();
@@ -1090,7 +1333,7 @@ void load(QVariant v,PMainWindow&b);
 void PMainWindow::owlLoad(QString filename)
 {
     if(filename.isEmpty()) {
-        filename = QFileDialog::getOpenFileName(0,"Load a pal/owl project","","Pal/Owl projects(*.pal *.owl)");
+        filename = QFileDialog::getOpenFileName(0,"Load an Owl project","","Owl projects(*.owl)");
     }
 
     QFileInfo f(filename);
@@ -1118,53 +1361,49 @@ void PMainWindow::owlLoad(QString filename)
     if(filename.endsWith("owl")) {
         QFile file(filename);
         file.open(QFile::ReadOnly);
-        QJson::Parser p;
-        bool ok;
-        QVariant v=p.parse(file.readAll(),&ok);
-        if(ok&&v.isValid()) {
-            PObject::isLoading=1;
-            PMainWindow* evenNewer=new PMainWindow(0);
-            evenNewer->setUpdatesEnabled(0);
-            evenNewer->_ut->stop();
-            load(v,*evenNewer);
-            evenNewer->setWindowTitle(_WINDOW_TITLE_);
-            evenNewer->show();
-            evenNewer->_ut->start();
-            evenNewer->setUpdatesEnabled(1);
-            file.close();
-        } else {    //try legacy format
-            PObject::isLoading=1;
-            qDebug()<<"Trying to open legacy...";
-            file.close();
-            QFile file(filename);
-            file.open(QFile::ReadOnly);
-            QDataStream xds(&file);
-            PMainWindow* evenNewer=new PMainWindow(0);
-            PObject::isLoading=0;
-            evenNewer->setUpdatesEnabled(0);
-            evenNewer->_ut->stop();
-            xds>>*evenNewer;
-            evenNewer->setWindowTitle(_WINDOW_TITLE_);
-            evenNewer->show();
-            evenNewer->_ut->start();
-            evenNewer->setUpdatesEnabled(1);
-            file.close();
-        }
-    } else if(filename.endsWith("pal")) {
-        PObject::isLoading=1;
-        PMainWindow* newMain=new PMainWindow(0);
-        PObject::isLoading=0;
-        qApp->setActiveWindow(newMain);
-        PDotPal dotPal(filename);
-        for(int i=0;i<dotPal._pbox.size();i++) {
-            newMain->_mdiArea->createPBox(0,0,dotPal._pbox[i]);
-            newMain->_pboxList.back()->show();
-        }
-        newMain->show();
-    } else {
-        QMessageBox::warning(0,"Could not load file",filename+" does not seem to be either a .owl file or a .pal file!");
+        QByteArray qba = file.readAll();
 
-        PMainWindow* newMain=new PMainWindow(0);
+#if QT_VERSION >= 0x050000
+        QJsonParseError error;
+
+        QJsonDocument d = QJsonDocument::fromJson(qba, &error);
+        QVariant root = d.toVariant();
+
+        if (error.error != QJsonParseError::NoError) {
+            QMessageBox::critical(0, "Parse Error", "Could not parse JSON: " + error.errorString());
+            return;
+        }
+#else
+        QJson::Parser p;  // QT4
+        bool ok;
+        QVariant root=p.parse(qba,&ok); // QT4
+
+        if (!(ok&&root.isValid())) {
+          QMessageBox::critical(0, "Parse Error", "Could not parse JSON: ");
+          return;
+        }
+#endif
+
+        PObject::isLoading=1;
+        PMainWindow* newWindow=new PMainWindow(font().pointSize(), 0);
+        newWindow->setUpdatesEnabled(0);
+        newWindow->_ut->stop();
+        newWindow->_reset_timer->stop();
+        load(root,*newWindow);
+
+        newWindow->_mdiArea->adjustSize();
+        newWindow->_mdiArea->setMinimumSize(newWindow->width()-70, newWindow->height()-70);
+
+        //newWindow->setWindowTitle(_WINDOW_TITLE_);
+        newWindow->show();
+        newWindow->_ut->start();
+        newWindow->_reset_timer->start();
+        newWindow->setUpdatesEnabled(1);
+        file.close();
+    } else {
+        QMessageBox::warning(0,"Could not load file",filename+" does not seem to be either a .owl file!");
+
+        PMainWindow* newMain=new PMainWindow(font().pointSize(), 0);
         qApp->setActiveWindow(newMain);
         newMain->show();
         PStyleNotifier::me->enable();
@@ -1179,12 +1418,29 @@ void PMainWindow::owlLoad(QString filename)
     setUpdatesEnabled(1);
 }
 
+void PMainWindow::setMDIMinSize(int w, int h) {
+  _mdiArea->setMinimumSize(QSize(w, h));
+}
+
 void PMainWindow::showInKst() {
     PAbstractDataItem* padi=dynamic_cast<PAbstractDataItem*>(currentObject());
     if(!padi) return;
+    /*
+    qDebug() << QString("import pykst as kst\n"
+                        "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"
+                        "x=client.new_data_vector(\""+QString(_dirfileFilename)+"\",field = \"INDEX\", start=-1, num_frames=1000)\n"
+                        "y=client.new_data_vector(\""+QString(_dirfileFilename)+"\",field = \""+QString(padi->source())+"\", start=-1, num_frames=1000)\n"
+                        "c=client.new_curve(x,y)\n"
+                        "p=client.new_plot((0.5, 0.5), (1.0, 1.0))\n"
+                        "p.add(c)\n"
+                        );
+                        */
     PyRun_SimpleString(QString("import pykst as kst\n"
-                       "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"    //this should be USERNAME for windows
-                       "x=kst.DataVector(client,\""+QString(_dirfileFilename)+"\",\"INDEX\")\n"
-                       "y=kst.DataVector(client,\""+QString(_dirfileFilename)+"\",\""+QString(padi->source())+"\")\n"
-                       "client.plot(x,y)\n").toAscii());
+                       "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"
+                       "x=client.new_data_vector(\""+QString(_dirfileFilename)+"\",field = \"INDEX\", start=-1, num_frames=1000)\n"
+                       "y=client.new_data_vector(\""+QString(_dirfileFilename)+"\",field = \""+QString(padi->source())+"\", start=-1, num_frames=1000)\n"
+                       "c=client.new_curve(x,y)\n"
+                       "p=client.new_plot((0.5, 0.5), (1.0, 1.0))\n"
+                       "p.add(c)\n"
+                       ).toLatin1());
 }
