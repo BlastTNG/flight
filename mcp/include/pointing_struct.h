@@ -135,8 +135,11 @@ struct PointingDataStruct {
   double pss_az;
   double pss_el;
 
+  // solutions for individual sensors, from PSSConvert
   double pss_azraw[NUM_PSS]; // degrees
   double pss_elraw[NUM_PSS]; // degrees
+  // weighted solution for the entire array, from PSSConvert
+  double pss_array_azraw, pss_array_elraw;
   double pss_snr[NUM_PSS];
   double pss_sigma;
   double offset_ifrollpss_gy;

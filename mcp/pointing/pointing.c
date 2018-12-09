@@ -568,8 +568,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   NormalizeAngle(azraw_pss);
   NormalizeAngle(elraw_pss);
 
-  PointingData[point_index].pss_azraw = *azraw_pss;
-  PointingData[point_index].pss_elraw = *elraw_pss;
+  PointingData[point_index].pss_array_azraw = *azraw_pss;
+  PointingData[point_index].pss_array_elraw = *elraw_pss;
 
   return 1;
 }
