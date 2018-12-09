@@ -81,7 +81,7 @@ void process_sun_sensors(void) {
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 39), &vPSSfilt[5][1]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 37), &vPSSfilt[5][2]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 35), &vPSSfilt[5][3]);
-    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 33), &TPSSfilt[5]);  
+    filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 33), &TPSSfilt[5]);
     /* filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 31), &vPSSfilt[6][0]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 29), &vPSSfilt[6][1]);
     filter_labjack_channel_10hz(labjack_get_value(LABJACK_MULT_PSS, 51), &vPSSfilt[6][2]);

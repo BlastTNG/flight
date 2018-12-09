@@ -348,20 +348,20 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     double	azraw[NUM_PSS];
     double	elraw[NUM_PSS];
     double  new_val;
-  
+
     static double i_pss[NUM_PSS][NUM_PSS_V];
     static double itot[NUM_PSS];
     double        x[NUM_PSS], y[NUM_PSS];
     double        usun[NUM_PSS][3], u2[NUM_PSS][3];
     gsl_matrix    *rot[NUM_PSS];
     gsl_matrix    *rxalpha[NUM_PSS], *rzpsi[NUM_PSS];
-  
+
     double weight[NUM_PSS];
     double weightsum;
 	// the rough values are defined in pointing.h, don't include commanded cal values
-	static double pss_d_rough[NUM_PSS]; // sensor to pinhole in mm 
+	static double pss_d_rough[NUM_PSS]; // sensor to pinhole in mm
 	static double beta_rough[NUM_PSS]; // az in deg
-   	static double alpha_rough[NUM_PSS]; // el in deg
+	static double alpha_rough[NUM_PSS]; // el in deg
 	static double psi_rough[NUM_PSS]; // roll in deg
 	// these are the final values, actually used in the calculation
 	static double pss_d[NUM_PSS], beta[NUM_PSS], alpha[NUM_PSS], psi[NUM_PSS];
@@ -370,7 +370,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	int i;
 	int j;
 	int k;
-	static int firsttime = 1;	
+	static int firsttime = 1;
 
 	if (firsttime) {
 		pss_d_rough[0] = PSS0_D;
@@ -386,8 +386,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	    beta_rough[3] = PSS3_BETA;
 	    beta_rough[4] = PSS4_BETA;
 	    beta_rough[5] = PSS5_BETA;
-	    
- 	    alpha_rough[0] = PSS0_ALPHA;
+
+		alpha_rough[0] = PSS0_ALPHA;
         alpha_rough[1] = PSS1_ALPHA;
         alpha_rough[2] = PSS2_ALPHA;
         alpha_rough[3] = PSS3_ALPHA;
@@ -403,7 +403,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
 		firsttime = 0;
 	}
-  
+
 	for (j = 0; j < NUM_PSS; j++) {
 		for (k = 0; k < NUM_PSS_V; k++) {
 			i_pss[j][k] = ACSData.pss_i[j][k];
@@ -415,11 +415,11 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     		itot[j] += i_pss[j][k];
 		}
     }
-  
+
     pss_imin = CommandData.cal_imin_pss/M_16PRE;
-  
+
     i_point = GETREADINDEX(point_index);
-  
+
 	for (j = 0; j < NUM_PSS; j++) {
 		if (fabs(itot[j]) > pss_imin) {
 			PointingData[point_index].pss_snr[j] = itot[j]/PSS_IMAX; // 10.
@@ -429,11 +429,11 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
       		weight[j] = 0.0;
     	}
 	}
-  
+
 	for (j = 0; j < NUM_PSS; j++) {
-		pss_d[j] = pss_d_rough[j] + CommandData.cal_d_pss[j];	
+		pss_d[j] = pss_d_rough[j] + CommandData.cal_d_pss[j];
 	}
-  
+
     for (j = 0; j < NUM_PSS; j++) {
     	x[j] = -PSS_XSTRETCH*(PSS_L/2.)*((i_pss[j][2]+i_pss[j][3])-(i_pss[j][1]+i_pss[j][4]))/itot[j];
     	y[j] = -PSS_YSTRETCH*(PSS_L/2.)*((i_pss[j][2]+i_pss[j][4])-(i_pss[j][1]+i_pss[j][3]))/itot[j];
@@ -442,7 +442,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     	usun[j][1] = -y[j] / norm[j];
     	usun[j][2] = pss_d[j] / norm[j];
     }
-  
+
     // Then spot is at the edge of the sensor
 	for (j = 0; j < NUM_PSS; j++) {
     	if ((fabs(x[j]) > 4.) | (fabs(y[j]) > 4.)) {
@@ -471,7 +471,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	  weightsum += weight[j];
   }
 
-  if (weightsum == 0 ) {
+  if (weightsum == 0) {
     return 0;
   }
 
@@ -484,20 +484,21 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	psi[j] = (M_PI/180.)*(psi_rough[j] + CommandData.cal_roll_pss[j]);
   }
 
-  //TODO: Remove GSL nonsense.  Replace with calculation
+  // TODO(who put this here?): Remove GSL nonsense.  Replace with calculation
+  // GSL is a calculation, a matrix one PAW 2018/12/09
   for (i = 0; i < NUM_PSS; i++) {
   	rot[i] = gsl_matrix_alloc(3, 3);
   	rxalpha[i] = gsl_matrix_alloc(3, 3);
   	rzpsi[i] = gsl_matrix_alloc(3, 3);
 
-    gsl_matrix_set(rxalpha[i], 0, 0, 1.);
-   	gsl_matrix_set(rxalpha[i], 0, 1, 0.);
+	gsl_matrix_set(rxalpha[i], 0, 0, 1.);
+	gsl_matrix_set(rxalpha[i], 0, 1, 0.);
   	gsl_matrix_set(rxalpha[i], 0, 2, 0.);
-    gsl_matrix_set(rxalpha[i], 1, 0, 0.);
-   	gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i]));
+	gsl_matrix_set(rxalpha[i], 1, 0, 0.);
+	gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i]));
   	gsl_matrix_set(rxalpha[i], 1, 2, -sin(-alpha[i]));
-    gsl_matrix_set(rxalpha[i], 2, 0, 0.);
-   	gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i]));
+	gsl_matrix_set(rxalpha[i], 2, 0, 0.);
+	gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i]));
   	gsl_matrix_set(rxalpha[i], 2, 2, cos(-alpha[i]));
 
     gsl_matrix_set(rzpsi[i], 0, 0, cos(psi[i]));
@@ -532,7 +533,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   }
 
   for (i = 0; i < NUM_PSS; i++) {
-	PointingData[point_index].pss_azraw[j] = azraw[j]; 
+	PointingData[point_index].pss_azraw[j] = azraw[j];
     PointingData[point_index].pss_elraw[j] = elraw[j];
   }
   for (i = 0; i < NUM_PSS; i++) {
