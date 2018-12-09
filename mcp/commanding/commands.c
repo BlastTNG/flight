@@ -3536,7 +3536,7 @@ void InitCommandData()
     CommandData.actbus.act_vel = 200;
     CommandData.actbus.act_acc = 1000;
     CommandData.actbus.act_move_i = 75;
-    CommandData.actbus.act_hold_i = 45;
+    CommandData.actbus.act_hold_i = 10;
     CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;
