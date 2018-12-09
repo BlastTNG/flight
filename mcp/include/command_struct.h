@@ -559,6 +559,7 @@ struct CommandDataStruct {
 
   double cal_d_pss[NUM_PSS];
   double cal_az_pss[NUM_PSS];
+  double cal_az_pss_array;
   double cal_el_pss[NUM_PSS];
   double cal_roll_pss[NUM_PSS];
 

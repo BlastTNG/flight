@@ -733,6 +733,7 @@ channel_t channel_list[] =
     { "cal_roll_pss4",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_roll_pss5",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_roll_pss6",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
+    { "cal_az_pss_array",    40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_az_pss1",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_az_pss2",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_az_pss3",         40.0 / 65536.0,   0.0, TYPE_INT16, RATE_5HZ, U_TRIM_DEG, 0 },

@@ -424,6 +424,12 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(pss_cal_array_az), "set pss azimuth calibration for entire array(deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Azimuth offset of array", -20.0, 20.0, 'f', "CAL_AZ_PSS_ARRAY"},
+    }
+  },
+
   {COMMAND(pss_cal_el), "set pss elevation calibration (deg)", GR_TRIM | GR_PSS, 6,
     {
       {"Elevation offset 1", -10.0, 10.0, 'f', "CAL_EL_PSS1"},

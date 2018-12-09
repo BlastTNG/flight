@@ -477,7 +477,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
   for (j = 0; j < NUM_PSS; j++) {
   // Define beta (az rotation)
-  	beta[j] = (M_PI/180.)*(beta_rough[j] + CommandData.cal_az_pss[j]);
+  	beta[j] = (M_PI/180.)*(beta_rough[j] + CommandData.cal_az_pss[j] + CommandData.cal_az_pss_array);
   // Define alpha (el rotation)
   	alpha[j] = (M_PI/180.)*(alpha_rough[j] + CommandData.cal_el_pss[j]);
   // Define psi (roll)

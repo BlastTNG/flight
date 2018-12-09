@@ -1621,6 +1621,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 		  CommandData.cal_az_pss[i] = rvalues[i];
 	  }
 	  break;
+	case pss_cal_array_az:
+	  CommandData.cal_az_pss_array = rvalues[0];
+	  break;
 
 	case pss_cal_el:
 	  for (i = 0; i < NUM_PSS; i++) {

@@ -1085,6 +1085,7 @@ void store_5hz_acs(void)
     static channel_t* calXMinMagSAddr;
     static channel_t* calYMaxMagSAddr;
     static channel_t* calYMinMagSAddr;
+	static channel_t* calAzPssArrayAddr;
     static channel_t* calAzPss1Addr;
     static channel_t* calAzPss2Addr;
     static channel_t* calAzPss3Addr;
@@ -1232,6 +1233,7 @@ void store_5hz_acs(void)
         calYMaxMagSAddr = channels_find_by_name("cal_ymax_mag2");
         calYMinMagSAddr = channels_find_by_name("cal_ymin_mag2");
 
+		calAzPssArrayAddr = channels_find_by_name("cal_az_pss_array");
         calAzPss1Addr = channels_find_by_name("cal_az_pss1");
         calAzPss2Addr = channels_find_by_name("cal_az_pss2");
         calAzPss3Addr = channels_find_by_name("cal_az_pss3");
@@ -1426,6 +1428,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calYMaxMagSAddr, CommandData.cal_ymax_mag[1]);
     SET_SCALED_VALUE(calYMinMagSAddr, CommandData.cal_ymin_mag[1]);
 
+	SET_SCALED_VALUE(calAzPssArrayAddr, CommandData.cal_az_pss_array);
     SET_SCALED_VALUE(calAzPss1Addr, CommandData.cal_az_pss[0]);
     SET_SCALED_VALUE(calAzPss2Addr, CommandData.cal_az_pss[1]);
     SET_SCALED_VALUE(calAzPss3Addr, CommandData.cal_az_pss[2]);
