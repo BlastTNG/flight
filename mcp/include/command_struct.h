@@ -158,13 +158,13 @@ struct PivGainStruct {
 #define XYSTAGE_JUMP   2
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
-#define HWPR_PANIC	0
-#define HWPR_SLEEP	1
-#define HWPR_GOTO	2
-#define HWPR_JUMP	3
-#define HWPR_STEP	4
-#define HWPR_REPEAT	5
-#define HWPR_GOTO_I	6
+#define HWPR_PANIC		0
+#define HWPR_SLEEP		1
+#define HWPR_GOTO		2
+#define HWPR_GOTO_REL	3
+#define HWPR_STEP		4
+#define HWPR_REPEAT		5
+#define HWPR_GOTO_I		6
 #define HWPR_GOTO_POT	7
 
 #define ROACH_TLM_IQDF 0x1
@@ -649,11 +649,13 @@ struct CommandDataStruct {
     int force_repoll;
     int mode, is_new, target;
     int n_pos, repeats, step_wait, step_size, overshoot;
+	int backoff;
     double pos[4];
     int i_pos;
     int no_step;
     int use_pot;
     double pot_targ;
+	int margin;
   } hwpr;
 
   int pin_is_in;

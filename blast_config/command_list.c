@@ -290,6 +290,8 @@ struct scom scommands[xyzzy + 1] = {
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
+  {COMMAND(balance_terminate),  "Drive balance system to lower limit, after sending lock45,"
+	  "before termination", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -743,7 +745,7 @@ struct mcom mcommands[plugh + 2] = {
       {"destination", 0, 80000, 'l', "ENC_HWPR"}
     }
   },
-  {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
+  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
     GR_HWPR, 1,
     {
       {"delta", -80000, 80000, 'l', "0"}
@@ -790,7 +792,13 @@ struct mcom mcommands[plugh + 2] = {
       {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
     }
   },
-
+  {COMMAND(hwpr_set_margin),
+    "Set HWPR margin for determinting which indexed position we are at",
+    GR_HWPR, 1,
+    {
+      {"hwpr margin", 0, 64000, 'i', "NONE"},
+    }
+  },
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,

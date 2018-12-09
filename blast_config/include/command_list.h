@@ -78,7 +78,7 @@ extern const char *downlink_names[];
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
-  balance_auto,     balance_off,
+  balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
@@ -175,7 +175,7 @@ enum multiCommand {
   // cal_repeat,
   cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
-  hwpr_jump,         hwpr_goto_i,
+  hwpr_goto_rel,         hwpr_goto_i,
   autotrim_to_sc,
   lock,              phase,             act_offset,
   pivot_gain,        ra_dec_goto,      ra_dec_set,
@@ -202,7 +202,7 @@ enum multiCommand {
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   motors_verbose,    fix_ethercat,      bias_step,
   // phase_step,
-  hwpr_repeat,      hwpr_define_pos,          params_test,
+  hwpr_repeat,      hwpr_define_pos, hwpr_set_margin,         params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
