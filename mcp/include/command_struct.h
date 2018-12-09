@@ -32,6 +32,7 @@
 #include "channels_tng.h"
 #include "mcp_sched.h"
 #include "roach.h"
+#include "pointing_struct.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -556,12 +557,11 @@ struct CommandDataStruct {
   double cal_ymin_mag[2];
   double cal_mag_align[2];
 
-  double cal_off_pss1;
-  double cal_off_pss2;
-  double cal_off_pss3;
-  double cal_off_pss4;
-
   double cal_d_pss[NUM_PSS];
+  double cal_az_pss[NUM_PSS];
+  double cal_el_pss[NUM_PSS];
+  double cal_roll_pss[NUM_PSS];
+
 
   double cal_imin_pss;
   struct {

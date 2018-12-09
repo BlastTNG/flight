@@ -212,8 +212,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(mag_allow_fc1), "un-veto magnetometer attached to fc1", GR_VETO},
   {COMMAND(mag_veto_fc2), "veto magnotometer attached to fc2", GR_VETO},
   {COMMAND(mag_allow_fc2), "un-veto magnetometer attached to fc2", GR_VETO},
-  {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
-  {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
+  {COMMAND(pss_veto), "veto pss sensor", GR_VETO | GR_PSS},
+  {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO | GR_PSS},
   {COMMAND(dgps_veto), "veto CSBF DGPS sensor", GR_VETO},
   {COMMAND(dgps_allow), "un-veto CSBF DGPS sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
@@ -389,7 +389,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Mag Angle Offset", -180.0, 180.0, 'f', "CAL_ALIGNMENT_MAG2"}
     }
   }, // 10 10 10.5 10.34
-  {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
+  {COMMAND(pss_cal), "set pss calibration", GR_TRIM | GR_PSS, 9,
     {
       {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
       {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
@@ -400,6 +400,50 @@ struct mcom mcommands[plugh + 2] = {
       {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
       {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
       {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
+    }
+  },
+
+  {COMMAND(pss_cal_d), "set pss distance calibration (mm)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Distance offset 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
+      {"Distance offset 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
+      {"Distance offset 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
+      {"Distance offset 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
+      {"Distance offset 5", -2.0, 2.0, 'f', "CAL_D_PSS5"},
+      {"Distance offset 6", -2.0, 2.0, 'f', "CAL_D_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_az), "set pss azimuth calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Azimuth offset 1", -10.0, 10.0, 'f', "CAL_AZ_PSS1"},
+      {"Azimuth offset 2", -10.0, 10.0, 'f', "CAL_AZ_PSS2"},
+      {"Azimuth offset 3", -10.0, 10.0, 'f', "CAL_AZ_PSS3"},
+      {"Azimuth offset 4", -10.0, 10.0, 'f', "CAL_AZ_PSS4"},
+      {"Azimuth offset 5", -10.0, 10.0, 'f', "CAL_AZ_PSS5"},
+      {"Azimuth offset 6", -10.0, 10.0, 'f', "CAL_AZ_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_el), "set pss elevation calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Elevation offset 1", -10.0, 10.0, 'f', "CAL_EL_PSS1"},
+      {"Elevation offset 2", -10.0, 10.0, 'f', "CAL_EL_PSS2"},
+      {"Elevation offset 3", -10.0, 10.0, 'f', "CAL_EL_PSS3"},
+      {"Elevation offset 4", -10.0, 10.0, 'f', "CAL_EL_PSS4"},
+      {"Elevation offset 5", -10.0, 10.0, 'f', "CAL_EL_PSS5"},
+      {"Elevation offset 6", -10.0, 10.0, 'f', "CAL_EL_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_roll), "set pss roll calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Roll offset 1", -5.0, 5.0, 'f', "CAL_ROLL_PSS1"},
+      {"Roll offset 2", -5.0, 5.0, 'f', "CAL_ROLL_PSS2"},
+      {"Roll offset 3", -5.0, 5.0, 'f', "CAL_ROLL_PSS3"},
+      {"Roll offset 4", -5.0, 5.0, 'f', "CAL_ROLL_PSS4"},
+      {"Roll offset 5", -5.0, 5.0, 'f', "CAL_ROLL_PSS5"},
+      {"Roll offset 6", -5.0, 5.0, 'f', "CAL_ROLL_PSS6"},
     }
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,

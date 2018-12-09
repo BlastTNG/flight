@@ -1603,17 +1603,44 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
 
     case pss_cal:
-      CommandData.cal_off_pss1 = rvalues[0];
-      CommandData.cal_d_pss1 = rvalues[1];
-      CommandData.cal_off_pss2 = rvalues[2];
-      CommandData.cal_d_pss2 = rvalues[3];
-      CommandData.cal_off_pss3 = rvalues[4];
-      CommandData.cal_d_pss3 = rvalues[5];
-      CommandData.cal_off_pss4 = rvalues[6];
-      CommandData.cal_d_pss4 = rvalues[7];
-      CommandData.cal_imin_pss = rvalues[8];
+      CommandData.cal_az_pss[0] = rvalues[0];
+      CommandData.cal_d_pss[0] = rvalues[1];
+      CommandData.cal_az_pss[1] = rvalues[2];
+      CommandData.cal_d_pss[1] = rvalues[3];
+      CommandData.cal_az_pss[2] = rvalues[4];
+      CommandData.cal_d_pss[2] = rvalues[5];
+      CommandData.cal_az_pss[3] = rvalues[6];
+      CommandData.cal_d_pss[3] = rvalues[7];
+      CommandData.cal_az_pss[4] = rvalues[8];
+      CommandData.cal_d_pss[4] = rvalues[9];
+      CommandData.cal_az_pss[5] = rvalues[10];
+      CommandData.cal_d_pss[5] = rvalues[11];
+      CommandData.cal_imin_pss = rvalues[12];
       break;
 
+	case pss_cal_d:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_d_pss[i] = rvalues[i];
+	  }
+	  break;
+
+	case pss_cal_az:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_az_pss[i] = rvalues[i];
+	  }
+	  break;
+
+	case pss_cal_el:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_el_pss[i] = rvalues[i];
+	  }
+	  break;
+
+	case pss_cal_roll:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_roll_pss[i] = rvalues[i];
+	  }
+	  break;
 
     /*************************************
      ********* Pointing Motor Gains ******/
@@ -3413,15 +3440,19 @@ void InitCommandData()
     CommandData.cal_ymin_mag[1] = 0.1898;
     CommandData.cal_mag_align[1] = 0.0;
 
-    CommandData.cal_off_pss1 = 0.0;
-    CommandData.cal_off_pss2 = 2.7997;
-    CommandData.cal_off_pss3 = 4.9994;
-    CommandData.cal_off_pss4 = 10.3497;
+    CommandData.cal_az_pss[0] = 0.0;
+    CommandData.cal_az_pss[1] = 0.0;
+    CommandData.cal_az_pss[2] = 0.0;
+    CommandData.cal_az_pss[3] = 0.0;
+    CommandData.cal_az_pss[4] = 0.0;
+    CommandData.cal_az_pss[5] = 0.0;
 
-    CommandData.cal_d_pss1 = 0.0;
-    CommandData.cal_d_pss2 = 0.0;
-    CommandData.cal_d_pss3 = 0.0;
-    CommandData.cal_d_pss4 = 0.0;
+    CommandData.cal_d_pss[0] = 0.0;
+    CommandData.cal_d_pss[1] = 0.0;
+    CommandData.cal_d_pss[2] = 0.0;
+    CommandData.cal_d_pss[3] = 0.0;
+    CommandData.cal_d_pss[4] = 0.0;
+    CommandData.cal_d_pss[5] = 0.0;
 
     CommandData.cal_imin_pss = 4.5;
 

@@ -47,6 +47,7 @@
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
 #define GRPOS_ROACH 18
+#define GRPOS_PSS   19
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -67,6 +68,8 @@
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
 #define GR_ROACH        (1 << GRPOS_ROACH)
+#define GR_PSS          (1 << GRPOS_PSS)
+
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
@@ -206,6 +209,7 @@ enum multiCommand {
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
+  pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll,
   actuators_set_used,
   potvalve_set_thresholds,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
