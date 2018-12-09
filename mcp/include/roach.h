@@ -157,7 +157,8 @@ typedef struct roach_state {
     double vna_sweep_span;
     size_t vna_comb_len;
     char *vna_path_root;
-    char *chop_path_root;
+    char *iq_path_root;
+    char *df_path_root;
     double p_max_freq;
     double p_min_freq;
     double n_max_freq;
@@ -169,6 +170,7 @@ typedef struct roach_state {
     char *targ_path_root;
     char *last_vna_path;
     char *last_targ_path;
+    char *last_iq_path;
     char *channels_path;
 
     // For detector retune decision
@@ -197,6 +199,7 @@ typedef struct roach_state {
     char *last_cal_path;
     // path to the last master chop directory
     char *last_chop_path;
+    char *last_df_path;
     char *cal_path_root;
     // array of tone amplitudes used for calibration
     double cal_amps[MAX_CHANNELS_PER_ROACH][5];
