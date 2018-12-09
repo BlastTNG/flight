@@ -561,10 +561,7 @@ struct CommandDataStruct {
   double cal_off_pss3;
   double cal_off_pss4;
 
-  double cal_d_pss1;
-  double cal_d_pss2;
-  double cal_d_pss3;
-  double cal_d_pss4;
+  double cal_d_pss[NUM_PSS];
 
   double cal_imin_pss;
   struct {

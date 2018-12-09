@@ -340,38 +340,26 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     return (1);
 }
 
-// PSSConvert versions added 12 June 2010 -GST
-// PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
-#define  PSS_L  10.     // 10 mm = effective length of active area
-#define  PSS_D  {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}     // 10 mm = Distance between pinhole and sensor
-#define  PSS_IMAX  8192.  // Maximum current (place holder for now)
-#define  PSS_XSTRETCH  1.  // 0.995
-#define  PSS_YSTRETCH  1.  // 1.008
-#define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
-PSS6_ALIGNMENT, PSS7_ALIGNMENT, PSS8_ALIGNMENT}
-#define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
-#define  PSS_PSI     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 // TODO(seth): Reenable PSSConvert
     int     i_point;
     double  sun_ra, sun_dec;
-    double        az[PSS_NUM];
-    double	azraw[PSS_NUM];
-    double	elraw[PSS_NUM];
+    double        az[NUM_PSS];
+    double	azraw[NUM_PSS];
+    double	elraw[NUM_PSS];
     double new_val;
   
-    static double i[NUM_PSS_V][PSS_NUM];
-    double        itot[PSS_NUM];
-    double        x[PSS_NUM], y[PSS_NUM];
-    double        usun[PSS_NUM][3], u2[PSS_NUM][3];
-    gsl_matrix    *rot[PSS_NUM];
-    gsl_matrix    *rxalpha[PSS_NUM], *rzpsi[PSS_NUM];
+    static double i[NUM_PSS][NUM_PSS_V];
+    double        itot[NUM_PSS];
+    double        x[NUM_PSS], y[NUM_PSS];
+    double        usun[NUM_PSS][3], u2[NUM_PSS][3];
+    gsl_matrix    *rot[NUM_PSS];
+    gsl_matrix    *rxalpha[NUM_PSS], *rzpsi[NUM_PSS];
   
-    double weight[PSS_NUM];
+    double weight[NUM_PSS];
     double weightsum;
-    double pss_d[PSS_NUM], beta[PSS_NUM], alpha[PSS_NUM], psi[PSS_NUM];
-    double norm[PSS_NUM];
+    double pss_d[NUM_PSS], beta[NUM_PSS], alpha[NUM_PSS], psi[NUM_PSS];
+    double norm[NUM_PSS];
     double pss_imin;
   
     /* i1[0] = ACSData.pss1_i1 - 32768.;
@@ -393,42 +381,33 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   
 	for (i = 0, i < NUM_PSS, i++) {
 		for (j = 0, j < NUM_PSS_V, j++) {
-			i[j][i] = ACSData.pss_i[j][i];
+			i[i][j] = ACSData.pss_i[i][j];
 		}
 	}
-    for (i=0; i<NUM_PSS; i++) {
-    	itot[i] = i1[i]+i2[i]+i3[i]+i4[i];
+    for (i = 0; i < NUM_PSS; i++) {
+		itot[i] = 0;
+		for (j = 0 , j < NUM_PSS_V) {
+    		itot[i] += i[i][j];
+		}
     }
   
     pss_imin = CommandData.cal_imin_pss/M_16PRE;
   
     i_point = GETREADINDEX(point_index);
   
-    PointingData[point_index].pss1_snr = itot[0]/PSS_IMAX;  // 10.
-    weight[0]= PointingData[point_index].pss1_snr;
-    PointingData[point_index].pss2_snr = itot[1]/PSS_IMAX;  // 10.
-    weight[1]= PointingData[point_index].pss2_snr;
-    PointingData[point_index].pss3_snr = itot[2]/PSS_IMAX;  // 10.
-    weight[2]= PointingData[point_index].pss3_snr;
-    PointingData[point_index].pss4_snr = itot[3]/PSS_IMAX;  // 10.
-    weight[3]= PointingData[point_index].pss4_snr;
+	for (i = 0, i < NUM_PSS, i++) {
+		if (fabs(itot[i]) > pss_imin) {
+			PointingData[point_index].pss_snr[i] = itot[i]/PSS_IMAX; // 10.
+    		weight[i]= PointingData[point_index].pss_snr[i];
+		} else {
+      		PointingData[point_index].pss_snr[i] = 1.;  // 1.
+      		weight[i] = 0.0;
+    	}
+	}
   
-    if (fabs(itot[0]) < pss_imin) {
-      	PointingData[point_index].pss1_snr = 1.;  // 1.
-      weight[0] = 0.0;
-    }
-    if (fabs(itot[1]) < pss_imin) {
-      	PointingData[point_index].pss2_snr = 1.;  // 1.
-      weight[1] = 0.0;
-    }
-      if (fabs(itot[2]) < pss_imin) {
-        	PointingData[point_index].pss3_snr = 1.;  // 1.
-        weight[2] = 0.0;
-      }
-      if (fabs(itot[3]) < pss_imin) {
-        	PointingData[point_index].pss4_snr = 1.;  // 1.
-        weight[3] = 0.0;
-      }
+	for (i = 0, i < NUM_PSS, i++) {
+		pss_d[i] = PSS_D[i] + CommandData.cal_d_pss[i];	
+	}
   
     // Define pss_d (distance to pinhole)
     pss_d[0] = PSS1_D[0] + CommandData.cal_d_pss1;
@@ -440,7 +419,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     pss_d[6] = PSS4_D[6] + CommandData.cal_d_pss7;
     pss_d[7] = PSS4_D[7] + CommandData.cal_d_pss8;
   
-    for (i=0; i<PSS_NUM; i++) {
+    for (i = 0; i < NUM_PSS; i++) {
     	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
     	y[i] = -PSS_YSTRETCH*(PSS_L/2.)*((i2[i]+i4[i])-(i1[i]+i3[i]))/itot[i];
     	norm[i] = sqrt(x[i]*x[i] + y[i]*y[i] + pss_d[i]*pss_d[i]);
@@ -505,7 +484,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 //  psi[3] = (M_PI/180.)*PSS4_PSI;
 //
 //  //TODO: Remove GSL nonsense.  Replace with calculation
-//  for (i=0; i<PSS_NUM; i++) {
+//  for (i=0; i<NUM_PSS; i++) {
 //  	rot[i] = gsl_matrix_alloc(3, 3);
 //  	rxalpha[i] = gsl_matrix_alloc(3, 3);
 //  	rzpsi[i] = gsl_matrix_alloc(3, 3);

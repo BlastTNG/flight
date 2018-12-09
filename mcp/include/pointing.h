@@ -49,6 +49,16 @@
 #define PSS5_ALIGNMENT    (PSS_ALIGNMENT + 36.4)
 #define PSS6_ALIGNMENT    (PSS_ALIGNMENT + 15.0)
 
+#define  PSS_L  10.     // 10 mm = effective length of active area
+#define  PSS_D  {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}     // 10 mm = Distance between pinhole and sensor
+#define  PSS_IMAX  8192.  // Maximum current (place holder for now)
+#define  PSS_XSTRETCH  1.  // 0.995
+#define  PSS_YSTRETCH  1.  // 1.008
+#define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
+PSS6_ALIGNMENT}
+#define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
+#define  PSS_PSI     {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+
 #define SSS_ALIGNMENT     1.5532
 
 #define NUM_CHARS_CHAN_P_ICC   128

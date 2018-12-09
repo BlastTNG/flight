@@ -135,12 +135,9 @@ struct PointingDataStruct {
   double pss_az;
   double pss_el;
 
-  double pss1_azraw; // degrees
-  double pss1_elraw; // degrees
-  double pss1_snr;
-  double pss2_azraw; // degrees
-  double pss2_elraw; // degrees
-  double pss2_snr;
+  double pss_azraw[NUM_PSS]; // degrees
+  double pss_elraw[NUM_PSS]; // degrees
+  double pss_snr[NUM_PSS];
   double pss_sigma;
   double offset_ifrollpss_gy;
   double offset_ifyawpss_gy;
