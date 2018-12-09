@@ -49,6 +49,7 @@ const char *GroupNames[N_GROUPS] = {
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
+const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel"};
 const char *linklist_names[] = {0};
 
 
@@ -60,8 +61,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_POWER},
   {COMMAND(vtx_xsc0), "Setting video transmitter to XSC0", GR_XSC_MODE | GR_TELEM},
   {COMMAND(vtx_xsc1), "Setting video transmitter to XSC1", GR_XSC_MODE | GR_TELEM},
-  {COMMAND(pilot_oth_on), "Pilot set to OTH", GR_TELEM},
-  {COMMAND(pilot_oth_off), "Pilot set to not OTH (GND)", GR_TELEM},
   {COMMAND(heater_300mk_on), "turning on 300mK heater", GR_CRYO},
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
   {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
@@ -856,6 +855,12 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {LINKLIST_SELECT}
+    }
+  },
+
+  {COMMAND(set_pilot_oth), "Set the pilot target to downlink", GR_TELEM, 1,
+    {
+      {"Downlink", 0, 3, 'i', "NONE", {pilot_target_names}},
     }
   },
 
