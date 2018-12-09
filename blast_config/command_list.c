@@ -389,17 +389,20 @@ struct mcom mcommands[plugh + 2] = {
       {"Mag Angle Offset", -180.0, 180.0, 'f', "CAL_ALIGNMENT_MAG2"}
     }
   }, // 10 10 10.5 10.34
-  {COMMAND(pss_cal), "set pss calibration", GR_TRIM | GR_PSS, 9,
+
+  {COMMAND(pss_set_imin), "set pss minimum current", GR_TRIM | GR_PSS, 1,
     {
-      {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
-      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
-      {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
-      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
-      {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
-      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
-      {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
-      {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
       {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
+    }
+  },
+
+{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 6,
+    {
+      {"PSS number (1-6)",  1, 6, 'i', "NONE"},
+      {"Distance offset",  -2.0, 2.0, 'f', "NONE"},
+      {"Azimuth offset",   -2.0, 2.0, 'f', "NONE"},
+      {"Elevation offset", -2.0, 2.0, 'f', "NONE"},
+      {"Roll offset",      -2.0, 2.0, 'f', "NONE"},
     }
   },
 

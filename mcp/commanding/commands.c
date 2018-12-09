@@ -1594,21 +1594,17 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                  CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
 
-    case pss_cal:
-      CommandData.cal_az_pss[0] = rvalues[0];
-      CommandData.cal_d_pss[0] = rvalues[1];
-      CommandData.cal_az_pss[1] = rvalues[2];
-      CommandData.cal_d_pss[1] = rvalues[3];
-      CommandData.cal_az_pss[2] = rvalues[4];
-      CommandData.cal_d_pss[2] = rvalues[5];
-      CommandData.cal_az_pss[3] = rvalues[6];
-      CommandData.cal_d_pss[3] = rvalues[7];
-      CommandData.cal_az_pss[4] = rvalues[8];
-      CommandData.cal_d_pss[4] = rvalues[9];
-      CommandData.cal_az_pss[5] = rvalues[10];
-      CommandData.cal_d_pss[5] = rvalues[11];
-      CommandData.cal_imin_pss = rvalues[12];
+    case pss_set_imin:
+      CommandData.cal_imin_pss = rvalues[0];
       break;
+
+	case pss_cal_n:
+	  i = ivalues[0]-1;
+	  CommandData.cal_d_pss[i] = rvalues[1];
+	  CommandData.cal_az_pss[i] = rvalues[2];
+	  CommandData.cal_el_pss[i] = rvalues[3];
+	  CommandData.cal_roll_pss[i] = rvalues[4];
+	  break;
 
 	case pss_cal_d:
 	  for (i = 0; i < NUM_PSS; i++) {
