@@ -408,7 +408,7 @@ void read_5hz_acs(void)
   }
   for (i = 0; i < NUM_PSS; i++) {
     for (j = 0; j < NUM_PSS_V; j++) {
-      ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
+      ACSData.pss_i[i][j] = GET_FLOAT(vPssAddr[i][j]);
     }
   }
 
