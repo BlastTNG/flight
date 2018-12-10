@@ -362,29 +362,36 @@
                     "_format": "0x%x",
                     "_source": "LAST_CMD_S",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1654977475"
+                    },
+                    "_caption": "Date",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%B %d, %Y",
+                    "_source": "TIME",
+                    "type": "PTDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2079314512"
+                    },
+                    "_caption": "Time (UTC)",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%H:%M:%S",
+                    "_source": "TIME",
+                    "type": "PTDI"
                 }
             ],
             "geometryHeight": 188,
             "geometryWidth": 256,
             "geometryX": 323,
             "geometryY": 51
-        },
-        {
-            "PObject": {
-                "_id": "1107182636"
-            },
-            "_boxTitle": "Pointing",
-            "_style": "(P1145347128)",
-            "cellHeight": 3,
-            "cellWidth": 6,
-            "cellX": 38,
-            "cellY": 6,
-            "dataItems": [
-            ],
-            "geometryHeight": 51,
-            "geometryWidth": 94,
-            "geometryX": 646,
-            "geometryY": 102
         },
         {
             "PObject": {
@@ -486,11 +493,249 @@
                     "_format": "",
                     "_source": "LON",
                     "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1601866419"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "883633348"
+                    },
+                    "_caption": "RW State  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_RW",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "91313261"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "420153865"
+                    },
+                    "_caption": "Eldrive State  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_EL",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1697958064"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "812695683"
+                    },
+                    "_caption": "Pivot State",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PIV",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 392,
             "geometryWidth": 290,
             "geometryX": 578,
+            "geometryY": 51
+        },
+        {
+            "PObject": {
+                "_id": "2006563740"
+            },
+            "_boxTitle": "ROACHES",
+            "_style": "(P604285081)",
+            "cellHeight": 23,
+            "cellWidth": 17,
+            "cellX": 51,
+            "cellY": 3,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1625456133"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1087645255"
+                    },
+                    "_caption": "Roach 1  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH1",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1492932784"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1134360187"
+                    },
+                    "_caption": "Roach 2  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH2",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "770047200"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1254512854"
+                    },
+                    "_caption": "Roach 3 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH3",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1502373517"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1459603409"
+                    },
+                    "_caption": "Roach 4",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH4",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "448259194"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "249970160"
+                    },
+                    "_caption": "Roach 5",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH5",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1695179163"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "635122636"
+                    },
+                    "_caption": "Pi 1 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PI_ROACH1",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "249897208"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2110035985"
+                    },
+                    "_caption": "Pi 2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PI_ROACH2",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "81700900"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1426782565"
+                    },
+                    "_caption": "Pi 3",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PI_ROACH3",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "535849677"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "928091075"
+                    },
+                    "_caption": "Pi 4",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PI_ROACH4",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1990264574"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "595792268"
+                    },
+                    "_caption": "Pi 5",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_PI_ROACH5",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 392,
+            "geometryWidth": 290,
+            "geometryX": 867,
             "geometryY": 51
         }
     ],
@@ -596,11 +841,22 @@
             "_italic": false,
             "_linked": true,
             "_name": "Pointing"
+        },
+        {
+            "PObject": {
+                "_id": "604285081"
+            },
+            "_bg": "#ffaa7f",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Roaches"
         }
     ],
     "webPort": "￿",
     "windowCellHeight": 60,
-    "windowCellWidth": 75,
+    "windowCellWidth": 103,
     "windowHeight": 1028,
-    "windowWidth": 1274
+    "windowWidth": 1747
 }
