@@ -190,7 +190,8 @@ typedef struct {
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
 
-#define ECAT_FUCHS_POSITION 0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
+#define ECAT_FUCHS_POSITION  0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
+#define ECAT_FUCHS_OP_STATUS 0x6500, 0 /* PEPERL+FUCHS encoder position value UINT16 */
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
 #  define ECAT_STATUS_SHORTCIRCUIT          (1<<0)

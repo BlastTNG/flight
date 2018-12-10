@@ -631,8 +631,8 @@ static int hwp_pdo_init(void)
         return -1;
     }
 
-//     blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
-//             hwp_index, ec_slave[hwp_index].name);
+     blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+             hwp_index, ec_slave[hwp_index].name);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -647,13 +647,15 @@ static int hwp_pdo_init(void)
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
 
-//     map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
-//     if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+//       map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+//       if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+//       map_pdo(&map, ECAT_FUCHS_OP_STATUS, 32);     // Actual Motor Velocity
+//       if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 2, map.val)) blast_err("Failed mapping!");
 //
-//     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
-//         blast_err("Failed mapping!");
-//     if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
-//         blast_err("Failed mapping!");
+//      if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 2)) /// Set the 0x1a00 map to contain 1 elements
+//          blast_err("Failed mapping!");
+//      if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+//          blast_err("Failed mapping!");
 
     return 0;
 }
