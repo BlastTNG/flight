@@ -408,17 +408,17 @@ void read_5hz_acs(void)
   }
   for (i = 0; i < NUM_PSS; i++) {
     for (j = 0; j < NUM_PSS_V; j++) {
-      ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
+		GET_SCALED_VALUE(vPssAddr[i][j], ACSData.pss_i[i][j]);
     }
   }
 
-  GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
+  /* GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
   ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
   ACSData.mag_y[0] = ((double)GET_INT16(mag_y_n_addr))*M_16MAG;
   ACSData.mag_z[0] = ((double)GET_INT16(mag_z_n_addr))*M_16MAG;
   ACSData.mag_x[1] = ((double)GET_INT16(mag_x_s_addr))*M_16MAG;
   ACSData.mag_y[1] = ((double)GET_INT16(mag_y_s_addr))*M_16MAG;
-  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG;
+  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG; */
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores
