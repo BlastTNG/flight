@@ -262,15 +262,235 @@
             },
             "_boxTitle": "Temperatures",
             "_style": "(P2146903282)",
-            "cellHeight": 6,
+            "cellHeight": 7,
+            "cellWidth": 15,
+            "cellX": 19,
+            "cellY": 19,
+            "dataItems": [
+            ],
+            "geometryHeight": 120,
+            "geometryWidth": 256,
+            "geometryX": 323,
+            "geometryY": 323
+        },
+        {
+            "PObject": {
+                "_id": "1371110930"
+            },
+            "_boxTitle": "Flight Computers",
+            "_style": "(P695404123)",
+            "cellHeight": 11,
             "cellWidth": 15,
             "cellX": 19,
             "cellY": 3,
             "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1647403610"
+                        },
+                        "_map": {
+                            "0": "FC1[style=Bold (P1059175281)]",
+                            "1": "FC2[style=Bold (P1059175281)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "385035989"
+                    },
+                    "_caption": "InCharge  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "SOUTH_I_AM",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1864783427"
+                    },
+                    "_caption": "Plover",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PLOVER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "80969314"
+                    },
+                    "_caption": "Cmd Count FC1  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "COUNT_CMD_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1845922756"
+                    },
+                    "_caption": "Cmd Count FC2 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "COUNT_CMD_S",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1925281899"
+                    },
+                    "_caption": "Last Cmd FC1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "0x%x",
+                    "_source": "LAST_CMD_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1755922305"
+                    },
+                    "_caption": "Last Cmd FC2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "0x%x",
+                    "_source": "LAST_CMD_S",
+                    "type": "PNDI"
+                }
             ],
-            "geometryHeight": 102,
-            "geometryWidth": 255,
+            "geometryHeight": 188,
+            "geometryWidth": 256,
             "geometryX": 323,
+            "geometryY": 51
+        },
+        {
+            "PObject": {
+                "_id": "1107182636"
+            },
+            "_boxTitle": "Pointing",
+            "_style": "(P1145347128)",
+            "cellHeight": 3,
+            "cellWidth": 6,
+            "cellX": 38,
+            "cellY": 6,
+            "dataItems": [
+            ],
+            "geometryHeight": 51,
+            "geometryWidth": 94,
+            "geometryX": 646,
+            "geometryY": 102
+        },
+        {
+            "PObject": {
+                "_id": "764591220"
+            },
+            "_boxTitle": "Pointing",
+            "_style": "(P1145347128)",
+            "cellHeight": 23,
+            "cellWidth": 17,
+            "cellX": 34,
+            "cellY": 3,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "189960814"
+                        },
+                        "_map": {
+                            "3": "Stop[style=Bold (P1059175281)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "521768515"
+                    },
+                    "_caption": "Mode  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "MODE_P",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1953627914"
+                    },
+                    "_caption": "RA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "RA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "20550589"
+                    },
+                    "_caption": "Dec ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "DEC",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "367169999"
+                    },
+                    "_caption": "Az",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "601540703"
+                    },
+                    "_caption": "El ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "EL",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "865847420"
+                    },
+                    "_caption": "Lat",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "LAT",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "100648291"
+                    },
+                    "_caption": "Lon",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "LON",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 392,
+            "geometryWidth": 290,
+            "geometryX": 578,
             "geometryY": 51
         }
     ],
@@ -291,12 +511,12 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 3,
-            "cellY": 25,
+            "cellX": 19,
+            "cellY": 13,
             "geometryHeight": 119,
             "geometryWidth": 85,
-            "geometryX": 51,
-            "geometryY": 425
+            "geometryX": 323,
+            "geometryY": 221
         }
     ],
     "styles": [
@@ -343,11 +563,44 @@
             "_italic": false,
             "_linked": true,
             "_name": "temperatures"
+        },
+        {
+            "PObject": {
+                "_id": "695404123"
+            },
+            "_bg": "#ffaaff",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "computers"
+        },
+        {
+            "PObject": {
+                "_id": "1059175281"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Bold"
+        },
+        {
+            "PObject": {
+                "_id": "1145347128"
+            },
+            "_bg": "#ffff7f",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Pointing"
         }
     ],
     "webPort": "￿",
     "windowCellHeight": 60,
-    "windowCellWidth": 67,
+    "windowCellWidth": 75,
     "windowHeight": 1028,
-    "windowWidth": 1135
+    "windowWidth": 1274
 }
