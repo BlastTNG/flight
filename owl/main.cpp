@@ -20,42 +20,52 @@
  * You should have received a copy of the GNU General Public License
  * along with Owl; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * owl is also used by BIT!! 
  */
 
 #include <QApplication>
+#include <QStyleFactory>
 #include <time.h>
 #include "PMainWindow.h"
-#include "PDotPal.h"
 #include <QTime>
-#include <qjson/serializer.h>
 #include <iostream>
+#include <QDebug>
 #ifdef __APPLE__
 #include <python2.6/Python.h>
 #else
-#include <python2.7/Python.h>   //you may need to change this...
+#include <python2.7/Python.h>   // Replace python2.7 with your version of Python
 #endif
 
 void usage(QString appname) {
-  std::cout<<"usage: "<<qPrintable(appname)<<"[--webkey <key>] [--new | <filename>]"<<std::endl;
-    exit(1);
+  std::cout<<"usage: "<<qPrintable(appname)<<" [--fs <fontsize>] [--new | <filename>]"<<std::endl;
+  exit(1);
 }
 
 int main(int argc, char* argv[]) {
+
   QApplication app(argc, argv);
-  QString webkey;
 
   QString filename("__lastfile");
 
-  if (app.arguments().size() > 4) {
+  app.setStyle(QStyleFactory::create("GTK+"));
+  app.setWindowIcon(QIcon(":icons/icons/Owl0.svg"));
+
+
+  if (app.arguments().size() > 6) {
       usage(app.arguments()[0]);
   }
 
+  int font_size = app.font().pointSize();
+
   for (int i_arg=1; i_arg<app.arguments().size(); i_arg++) {
-    if (app.arguments().at(i_arg)=="--webkey") {
-      webkey = app.arguments().at(i_arg+1);
-      i_arg++;
-    } else if (app.arguments().at(i_arg) == "--new") {
+    if (app.arguments().at(i_arg) == "--new") {
       filename.clear();
+    } else if (app.arguments().at(i_arg) == "--fs") {
+      if (++i_arg <app.arguments().size()) {
+        font_size = app.arguments().at(i_arg).toInt();
+      } else {
+        usage(app.arguments()[0]);
+      }
     } else if (app.arguments().at(i_arg).startsWith('-')) {
       usage(app.arguments()[0]);
     } else {
@@ -64,11 +74,14 @@ int main(int argc, char* argv[]) {
   }
 
   time_t seconds= time (NULL);
-  qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX);  //for concurrent ids. do not remove this line.
+  qsrand((seconds*1000+QTime::currentTime().msec())%RAND_MAX); // For unique ids.
 
   Py_Initialize();
-  PMainWindow::key = webkey;
-  new PMainWindow(filename);
+  PMainWindow *mw = new PMainWindow(font_size, filename);
+
+  if (filename.isEmpty()) {
+    mw->setMDIMinSize(1900, 1200);
+  }
 
   app.exec();
 

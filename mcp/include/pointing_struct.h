@@ -44,7 +44,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NUM_PSS 8
+#define NUM_PSS 6
 #define NUM_PSS_V 4
 
 #define NUM_MAGS 2
@@ -135,12 +135,12 @@ struct PointingDataStruct {
   double pss_az;
   double pss_el;
 
-  double pss1_azraw; // degrees
-  double pss1_elraw; // degrees
-  double pss1_snr;
-  double pss2_azraw; // degrees
-  double pss2_elraw; // degrees
-  double pss2_snr;
+  // solutions for individual sensors, from PSSConvert
+  double pss_azraw[NUM_PSS]; // degrees
+  double pss_elraw[NUM_PSS]; // degrees
+  // weighted solution for the entire array, from PSSConvert
+  double pss_array_azraw, pss_array_elraw;
+  double pss_snr[NUM_PSS];
   double pss_sigma;
   double offset_ifrollpss_gy;
   double offset_ifyawpss_gy;

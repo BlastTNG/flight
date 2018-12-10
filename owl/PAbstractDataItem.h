@@ -48,6 +48,7 @@ protected:
     int _serverDirty;
     bool _neverGood;
     bool _sourceBad;
+
 public:
     friend class PBox;
     friend class PMainWindow;
@@ -59,6 +60,7 @@ public:
     PAbstractDataItem(PBox* parent, QString caption);
     PAbstractDataItem(PBox* parent, PAbstractDataItem* other);
     virtual void gdUpdate(GetData::Dirfile*,int){}
+    virtual double gdReadRawData(GetData::Dirfile* df,int nf, bool &ok);
     QString caption() const;
     const PStyle* captionStyle() const { return _captionStyle; }
     const PStyle* defaultDataStyle() const { return _defaultDataStyle; }
@@ -66,9 +68,13 @@ public:
     QString source() const;
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent*);
+    void mouseDoubleClickEvent(QMouseEvent*);
     virtual QString format() { return "???"; }
     virtual PStyle* getPrevDataStyle() { return _defaultDataStyle; }
     void resetSource() {_neverGood = true; _sourceBad = false;}
+    int delaysThisCycle();
+    void incrementDelays();
+    static void newCycle();
 
 public slots:
     void setCaption(QString x, bool force=0);
@@ -82,7 +88,7 @@ signals:
     void textChanged(QString);
     void sourceChanged(QString);
     void formatChanged(QString);
-    void styleChanged();
+    void styleChanged();    
 };
 
 QDataStream& operator<<(QDataStream&a,PAbstractDataItem&b);

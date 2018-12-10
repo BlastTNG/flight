@@ -30,12 +30,11 @@
 #include "ezstep.h"
 
 // #define HWPR_STEPS_PER_MOTENC (64)
-#define HWPR_REV_PER_MOTREV (24./100.)
+// #define HWPR_REV_PER_MOTREV (24./100.) // is this from BLAST-Pol? PAW 20181203
 
 #define HWPR_NAME "HWPR Motor"
-// #define HWPR_ADDR 6 // 13
 #define HWPRNUM 5
-#define HWPR_PREAMBLE "j256" // "aE64000" is this from Blast-Pol? PAW
+#define HWPR_PREAMBLE "j256"
 
 #define HWPR_CHECK_NONE 0
 #define HWPR_CHECK_BEFORE 1

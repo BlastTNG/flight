@@ -26,8 +26,9 @@
 #include "PBoxTitle.h"
 #include <QInputDialog>
 #include <QDesktopServices>
+#include <QMimeData>
 
-PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _lastPStyle(0),_layout(new QVBoxLayout()),
+PBox::PBox(QString boxTitle, const QFont &F, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _lastPStyle(0),_layout(new QVBoxLayout()),
     _boxTitle(boxTitle), _geoMode(-1), _dirty(1)
 {
     bool ok=0;
@@ -40,34 +41,39 @@ PBox::PBox(QString boxTitle, QWidget*p) : QFrame(p), _pstyle(PStyle::noStyle), _
         }
     }
 
+    setFont(F);
+    _H = fontMetrics().height();
+
     _pstyle=ok?_pstyle:new PStyle("defbox",1,0,"white","blue",1);
 
-    setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
+    setFrameStyle(QFrame::NoFrame | QFrame::Plain);
 
     setLineWidth(1);
-    setContentsMargins(2,2,2,2);
+    int margin = fontMetrics().height()/3;
+    setContentsMargins(0,0,0,0);
     setMidLineWidth(1);
     //setFrameShadow(QFrame::Plain);
     _pbt=new PBoxTitle;
     _pbt->setText("[change me]");
+    _pbt->setFont(F);
     addTitle(_pbt);
     connect(PStyleNotifier::me,SIGNAL(change()),this,SLOT(styleLogic()));
     setWindowTitle(boxTitle);
     setLayout(_layout);
     _layout->setSpacing(0);
-    setMinimumSize(100,50);
+    setMinimumSize(_H*2,_H*3);
     setAcceptDrops(1);
-    _layout->setContentsMargins(4,4,4,4);
+    _layout->setContentsMargins(margin,0,margin,0);
     _layout->addSpacerItem(new QSpacerItem(0,0,QSizePolicy::Minimum,QSizePolicy::MinimumExpanding));
 
-    QRect geo=geometry();
-    geo.setX(((int)geo.x()/20)*20);
-    geo.setY(((int)geo.y()/20)*20);
-    geo.setWidth(((int)geo.width()/20)*20);
-    geo.setHeight(((int)geo.height()/20)*20);
-    if(geo!=geometry()) {
-        setGeometry(geo);
-    }
+    // QRect geo=geometry();
+    // geo.setX(((int)geo.x()/_H)*_H);
+    // geo.setY(((int)geo.y()/_H)*_H);
+    // geo.setWidth(((int)geo.width()/_H)*_H+0);
+    // geo.setHeight(((int)geo.height()/_H)*_H+0);
+    // if(geo!=geometry()) {
+    //     setGeometry(geo);
+    // }
     setAutoFillBackground(1);
     setMouseTracking(1);
 }
@@ -92,11 +98,20 @@ void PBox::styleLogic() {
     setAutoFillBackground(1);
 }
 
-void PBox::setBoxTitle(const QString& boxTitle,bool force)
+void PBox::setBoxTitle(const QString& boxTitle, bool force)
 {
-    if(!isCurrentObject()&&!force) return;
+  if (boxTitle.isEmpty()) {
+    _pbt->setFixedHeight(0);
+  }
 
-    if(_boxTitle==boxTitle) return; _boxTitle=boxTitle; _pbt->setText(boxTitle); emit textChanged(boxTitle);
+    if (!isCurrentObject() && !force) return;
+
+    if(_boxTitle==boxTitle) return;
+
+    _boxTitle=boxTitle;
+    _pbt->setText(boxTitle);
+
+    emit textChanged(boxTitle);
 }
 
 void PBox::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
@@ -105,18 +120,21 @@ void PBox::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
         _dataItems[i]->gdUpdate(dirFile,lastNFrames);
     }
     if(_dirty) {
-        int minCapWidth=0;
+        int maxCapWidth = 0;
+        int maxCapHeight = 0;
         for(int i=0;i<_dataItems.size();i++) {
-            _dataItems[i]->gdUpdate(dirFile,lastNFrames);
-            int x=_dataItems[i]->_caption->fontMetrics().size(0,_dataItems[i]->_caption->text()).width();
-            minCapWidth=qMax(minCapWidth,x);
-            _dataItems[i]->_caption->setFixedHeight(12);
-            _dataItems[i]->_data->setFixedHeight(12);
+            _dataItems[i]->gdUpdate(dirFile, lastNFrames);
+            QSize size = _dataItems[i]->_caption->fontMetrics().size(0, _dataItems[i]->_caption->text());
+
+            maxCapWidth=qMax(maxCapWidth, size.width());
+            maxCapHeight = qMax(maxCapHeight, _dataItems[i]->_caption->fontMetrics().height());
         }
         for(int i=0;i<_dataItems.size();i++) {
-            if(_dataItems[i]->_caption->width()!=minCapWidth) {
-                _dataItems[i]->_caption->setFixedWidth(minCapWidth);
+            if(_dataItems[i]->_caption->width()!=maxCapWidth) {
+                _dataItems[i]->_caption->setFixedWidth(maxCapWidth);
             }
+            _dataItems[i]->_caption->setFixedHeight(maxCapHeight);
+            _dataItems[i]->_data->setFixedHeight(maxCapHeight);
         }
         _dirty=0;
     }
@@ -132,7 +150,7 @@ void PBox::dragEnterEvent(QDragEnterEvent *ev)
         int row, col;
         QMap<int,  QVariant> roleDataMap;
         stream >> row >> col >> roleDataMap;
-        if(row&&row<5&&!col) {    //HACKHACKHACKHACK!!!
+        if(row&&row<6&&!col) {    //HACKHACKHACKHACK!!!
             ev->acceptProposedAction();
         }
     }
@@ -172,7 +190,7 @@ void PBox::dropEvent(QDropEvent *ev)
         stream >> row >> col >> roleDataMap;
         int pos=getWhereToInsert(ev->pos());
         if(pos!=-1) ++pos;
-        if(row&&row<5&&!col) {    //HACKHACKHACKHACK!!!
+        if(row&&row<6&&!col) {    //HACKHACKHACKHACK!!!
             switch(row) {
             case 1:
                 addProperty("Number",pos);
@@ -185,6 +203,9 @@ void PBox::dropEvent(QDropEvent *ev)
                 break;
             case 4:
                 addProperty("Dirfile",pos);
+                break;
+            case 5:
+                addProperty("BitMulti",pos);
                 break;
             default:
                 addProperty("Item",pos);
@@ -217,6 +238,8 @@ void PBox::dropEvent(QDropEvent *ev)
                         addProperty(new PNumberDataItem(this,dynamic_cast<PNumberDataItem*>(PObject::_u.values()[i])),pos);
                     } else if(dynamic_cast<PMultiDataItem*>(PObject::_u.values()[i])) {
                         addProperty(new PMultiDataItem(this,dynamic_cast<PMultiDataItem*>(PObject::_u.values()[i])),pos);
+                    } else if(dynamic_cast<PBitMultiDataItem*>(PObject::_u.values()[i])) {
+                        addProperty(new PBitMultiDataItem(this,dynamic_cast<PBitMultiDataItem*>(PObject::_u.values()[i])),pos);
                     } else if(dynamic_cast<PTimeDataItem*>(PObject::_u.values()[i])) {
                         addProperty(new PTimeDataItem(this,dynamic_cast<PTimeDataItem*>(PObject::_u.values()[i])),pos);
                     } else if(dynamic_cast<PDirfileDataItem*>(PObject::_u.values()[i])) {
@@ -242,6 +265,8 @@ void PBox::addProperty(QString property,int pos)
 {
     if(property=="Number") {
         addProperty(new PNumberDataItem(this, property),pos);
+    } else if(property=="BitMulti") {
+        addProperty(new PBitMultiDataItem(this, property),pos);
     } else if(property=="Multi") {
         addProperty(new PMultiDataItem(this, property),pos);
     } else if(property=="Time/Date") {
@@ -256,19 +281,26 @@ void PBox::addProperty(QString property,int pos)
 
 void PBox::addProperty(PAbstractDataItem* padi,int pos)
 {
-    if(pos==-1) _dataItems.push_back(padi);
-    else _dataItems.insert(pos,padi);
+    if (pos==-1) {
+      _dataItems.push_back(padi);
+    } else { /* if != -1, then pos has biased by one by the caller */
+      _dataItems.insert(pos - 1,padi);
+    }
 
-    _layout->insertWidget((pos==-1)?_dataItems.size():pos,padi); //not -1 because of title
-    padi->setFixedHeight(17);
+    _layout->insertWidget((pos==-1)?_dataItems.size():pos, padi); //not -1 because of title
+    padi->setFixedHeight(padi->fontMetrics().height());
     padi->show();
     emit newChild(padi);
 }
 
 void PBox::addTitle(PBoxTitle* pbt)
 {
+    if (pbt->text().isEmpty()) {
+      printf("Empty Title!\n");
+    }
+
     _layout->insertWidget(0,pbt);
-    pbt->setFixedHeight(17);
+    pbt->setFixedHeight(pbt->fontMetrics().height());
     pbt->show();
 }
 
@@ -277,15 +309,6 @@ void PBox::mousePressEvent(QMouseEvent *e)
     if (PMainWindow::me->mouseInactive()) return;
 
     _geoMode=-1;
-//    if(parentWidget()->children().indexOf(this)!= <-- I don't really know what this code is for, but it causes problems.
-//            parentWidget()->children().size()-1)          -- Josh
-//    {
-//        QWidget*p =parentWidget();
-//        setParent(0);
-//        setParent(p);
-//        show();
-//        setFocus();
-//    }
     emit activated();
     QWidget::mousePressEvent(e);
 }
@@ -315,19 +338,19 @@ void PBox::mouseMoveEvent(QMouseEvent *ev)
         int mcase=-1;
 
         int dis2TL=(p1-geometry().topLeft()).manhattanLength();
-        if(dis2TL<mdis&&(resize||dis2TL<20)) { mdis=dis2TL; mcase=0; }
+        if(dis2TL<mdis&&(resize||dis2TL<_H)) { mdis=dis2TL; mcase=0; }
 
         int dis2TR=(p1-geometry().topRight()).manhattanLength();
-        if(dis2TR<mdis&&(resize||dis2TR<20)) { mdis=dis2TR; mcase=1; }
+        if(dis2TR<mdis&&(resize||dis2TR<_H)) { mdis=dis2TR; mcase=1; }
 
         int dis2BL=(p1-geometry().bottomLeft()).manhattanLength();
-        if(dis2BL<mdis&&(resize||dis2BL<20)) { mdis=dis2BL; mcase=2; }
+        if(dis2BL<mdis&&(resize||dis2BL<_H)) { mdis=dis2BL; mcase=2; }
 
         int dis2BR=(p1-geometry().bottomRight()).manhattanLength();
-        if(dis2BR<mdis&&(resize||dis2BR<20)) { mdis=dis2BR; mcase=3; }
+        if(dis2BR<mdis&&(resize||dis2BR<_H)) { mdis=dis2BR; mcase=3; }
 
         int dis2TC=(p1-QPoint((geometry().left()+geometry().right())/2,geometry().top())).manhattanLength();
-        if(dis2TC<mdis&&(resize||dis2TC<20)) { mdis=dis2TC; mcase=4; }
+        if(dis2TC<mdis&&(resize||dis2TC<_H)) { mdis=dis2TC; mcase=4; }
 
         Q_ASSERT(!resize||(mcase!=-1));
         _geoMode=mcase;
@@ -335,23 +358,23 @@ void PBox::mouseMoveEvent(QMouseEvent *ev)
     switch(_geoMode) {
     case 0: //TL
         setCursor(QCursor(Qt::SizeFDiagCursor));
-        geo.setX(parentWidget()->mapFromGlobal(ev->globalPos()).x()/20*20);
-        geo.setY(parentWidget()->mapFromGlobal(ev->globalPos()).y()/20*20);
+        geo.setX(parentWidget()->mapFromGlobal(ev->globalPos()).x()/_H*_H);
+        geo.setY(parentWidget()->mapFromGlobal(ev->globalPos()).y()/_H*_H);
         break;
     case 1: //TR
         setCursor(QCursor(Qt::SizeBDiagCursor));
-        geo.setRight(parentWidget()->mapFromGlobal(ev->globalPos()).x()/20*20);
-        geo.setY(parentWidget()->mapFromGlobal(ev->globalPos()).y()/20*20);
+        geo.setRight(parentWidget()->mapFromGlobal(ev->globalPos()).x()/_H*_H+0);
+        geo.setY(parentWidget()->mapFromGlobal(ev->globalPos()).y()/_H*_H);
         break;
     case 2: //BL
         setCursor(QCursor(Qt::SizeBDiagCursor));
-        geo.setX(parentWidget()->mapFromGlobal(ev->globalPos()).x()/20*20);
-        geo.setBottom(parentWidget()->mapFromGlobal(ev->globalPos()).y()/20*20);
+        geo.setX(parentWidget()->mapFromGlobal(ev->globalPos()).x()/_H*_H);
+        geo.setBottom(parentWidget()->mapFromGlobal(ev->globalPos()).y()/_H*_H+0);
         break;
     case 3: //BR
         setCursor(QCursor(Qt::SizeFDiagCursor));
-        geo.setRight(parentWidget()->mapFromGlobal(ev->globalPos()).x()/20*20);
-        geo.setBottom(parentWidget()->mapFromGlobal(ev->globalPos()).y()/20*20);
+        geo.setRight(parentWidget()->mapFromGlobal(ev->globalPos()).x()/_H*_H+0);
+        geo.setBottom(parentWidget()->mapFromGlobal(ev->globalPos()).y()/_H*_H+0);
         break;
     case 4: //TC
         if(ev->buttons()&Qt::LeftButton) {
@@ -361,14 +384,14 @@ void PBox::mouseMoveEvent(QMouseEvent *ev)
         }
     {
         QPoint origCenter=QPoint((geometry().left()+geometry().right())/2,geometry().top());
-        int moveX=(origCenter.x()-p1.x())/20*20;
+        int moveX=(origCenter.x()-p1.x())/_H*_H;
         int origWidth=geometry().width();
-        int moveY=(origCenter.y()-p1.y())/20*20;
+        int moveY=(origCenter.y()-p1.y())/_H*_H;
         int origHeight=geometry().height();
-        geo.setX((geo.x()-moveX)/20*20);
-        geo.setY((geo.y()-moveY)/20*20);
-        geo.setWidth(origWidth/20*20);
-        geo.setHeight(origHeight/20*20);
+        geo.setX((geo.x()-moveX)/_H*_H);
+        geo.setY((geo.y()-moveY)/_H*_H);
+        geo.setWidth(origWidth/_H*_H);
+        geo.setHeight(origHeight/_H*_H);
     }
         break;
 

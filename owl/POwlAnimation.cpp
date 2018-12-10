@@ -24,15 +24,18 @@
 #include "PMdiArea.h"
 
 #include <QMainWindow>
+#include <QPainter>
 
-POwlAnimation::POwlAnimation() : _lastNFrames(0),_label(new QLabel), _stage(0)
+POwlAnimation::POwlAnimation(int font_height) : _lastNFrames(0), _nUpdates(0), _label(new QLabel), _stage(0), _H(font_height)
 {
     _moveThingy=QPoint(-1,-1);
     for(int i=0;i<4;i++) {
-        _pixMaps[i]=new QPixmap(":/icons/owl"+QString::number(i)+".png");
-    }
-    _pixMaps[4]=new QPixmap(":/icons/owl-1.png");
+        _pixMaps[i] = QIcon(":/icons/icons/Owl"+QString::number(i)+".svg").pixmap(_H*4,_H*4);
 
+    }
+    _pixMaps[4]=QIcon(":/icons/icons/Owl-empty.svg").pixmap(_H*4,_H*4);
+
+    _label->setPixmap(_pixMaps[4]);
     setLayout(new QHBoxLayout);
     layout()->addWidget(_label);
     layout()->setAlignment(_label,Qt::AlignCenter);
@@ -40,29 +43,43 @@ POwlAnimation::POwlAnimation() : _lastNFrames(0),_label(new QLabel), _stage(0)
 
 POwlAnimation::~POwlAnimation()
 {
-    for(int i=0;i<5;i++) {
-        delete _pixMaps[i];
-    }
     PMainWindow* np=PMainWindow::me;
     np->_owlList.removeOne(this);
 }
 
-void POwlAnimation::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames)
+void POwlAnimation::gdUpdate(GetData::Dirfile* dirFile,int lastNFrames, int dt)
 {
-    if(lastNFrames!=_lastNFrames) {
-        qsrand(dirFile->NFrames());
-        _stage=qrand()%4;
-        _label->setPixmap(*_pixMaps[_stage]);
+
+    if (dt < 2) {
+      if(lastNFrames!=_lastNFrames) {
+        _nUpdates++;
+        if (_nUpdates>1) {
+          //qsrand(dirFile->NFrames());
+          _stage=qrand()%4;
+        } else {
+          _stage = 4;
+        }
+        _label->setPixmap(_pixMaps[_stage]);
         _lastNFrames=lastNFrames;
+      }
     } else {
         _stage=-1;
-        _label->setPixmap(*_pixMaps[4]);
+        QPixmap branch = _pixMaps[4];
+
+        if (_nUpdates>1) {
+          QPainter p(&branch);
+          p.drawText(QPoint(4,60), QString("%1s").arg(dt));
+        }
+        _label->setPixmap(branch);
     }
+    //QRect R = geometry();
+    //R.setWidth(100);
+    //setGeometry(R);
 }
 
 QSize POwlAnimation::sizeHint()
 {
-    return QSize(85,120);
+    return QSize(95,120);
 }
 
 const int& POwlAnimation::stage() const
@@ -77,8 +94,8 @@ void POwlAnimation::mouseMoveEvent(QMouseEvent *ev)
 
     if(ev->buttons()&Qt::LeftButton&&_moveThingy!=QPoint(-1,-1)) {
         QPoint p1=parentWidget()->mapFromGlobal(ev->globalPos());   //setGeometry refers to parent's (x,y)
-        setGeometry((p1.x()-_moveThingy.x())/20*20,(p1.y()-_moveThingy.y())/20*20,
-                    geometry().width()/20*20,geometry().height()/20*20);
+        setGeometry((p1.x()-_moveThingy.x())/_H*_H,(p1.y()-_moveThingy.y())/_H*_H,
+                    geometry().width()/_H*_H,geometry().height()/_H*_H);
     }
 }
 

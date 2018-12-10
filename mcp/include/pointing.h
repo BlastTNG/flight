@@ -42,14 +42,42 @@
 
 /* Calibrations of the az of each sensor  */
 #define PSS_ALIGNMENT     0.0
-#define PSS1_ALIGNMENT    (PSS_ALIGNMENT - 50.0)
-#define PSS2_ALIGNMENT    (PSS_ALIGNMENT - 85.0 + 3.9)
-#define PSS3_ALIGNMENT    (PSS_ALIGNMENT - 120.0 + 3.9 + 0.53)
-#define PSS4_ALIGNMENT    (PSS_ALIGNMENT - 155.0 + 3.9 + 0.53 + 3.31)
-#define PSS5_ALIGNMENT    (PSS_ALIGNMENT)
-#define PSS6_ALIGNMENT    (PSS_ALIGNMENT)
-#define PSS7_ALIGNMENT    (PSS_ALIGNMENT)
-#define PSS8_ALIGNMENT    (PSS_ALIGNMENT)
+// PSS azimuth in deg
+#define PSS0_BETA    PSS_ALIGNMENT + 180.0 - 15.0
+#define PSS1_BETA    PSS_ALIGNMENT + 180.0 - 36.4
+#define PSS2_BETA    PSS_ALIGNMENT + 180.0 - 79.3
+#define PSS3_BETA    PSS_ALIGNMENT + 79.3
+#define PSS4_BETA    PSS_ALIGNMENT + 36.4
+#define PSS5_BETA    PSS_ALIGNMENT + 15.0
+
+// PSS elevation in deg
+#define PSS0_ALPHA 25.0
+#define PSS1_ALPHA 25.0
+#define PSS2_ALPHA 25.0
+#define PSS3_ALPHA 25.0
+#define PSS4_ALPHA 25.0
+#define PSS5_ALPHA 25.0
+
+// PSS roll in deg
+#define PSS0_PSI 0.0
+#define PSS1_PSI 0.0
+#define PSS2_PSI 0.0
+#define PSS3_PSI 0.0
+#define PSS4_PSI 0.0
+#define PSS5_PSI 0.0
+
+// distance from pinhole to sensor in mm
+#define PSS0_D 10.12
+#define PSS1_D 10.12
+#define PSS2_D 10.12
+#define PSS3_D 10.12
+#define PSS4_D 10.12
+#define PSS5_D 10.12
+
+#define  PSS_L  10.0     // 10 mm = effective length of active area
+#define  PSS_IMAX  8192.  // Maximum current (place holder for now)
+#define  PSS_XSTRETCH  1.  // 0.995
+#define  PSS_YSTRETCH  1.  // 1.008
 
 #define SSS_ALIGNMENT     1.5532
 

@@ -37,7 +37,7 @@ public:
     friend class PMainWindow;
     PDirfileDataItem(PBox*p,QString caption) : PAbstractDataItem(p,caption) {}
     PDirfileDataItem(PBox*p,PDirfileDataItem* other) : PAbstractDataItem(p,other) {}
-    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
+    virtual void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
 };
 
 #endif // PDIRFILEDATAITEM_H

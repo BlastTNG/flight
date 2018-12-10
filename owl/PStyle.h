@@ -84,6 +84,7 @@ public slots:
 template<class T> void applyStyle(T* obj,PStyle* s)
 {
     QFont f=obj->font();
+    //f.setFamily("Droid Sans");
     f.setBold(s->isBold());
     f.setItalic(s->isItalic());
     if(obj->font()!=f) obj->setFont(f);

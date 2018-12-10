@@ -1,0 +1,4563 @@
+{
+    "OWL FILE rev.": "20140928",
+    "PObject": {
+        "_id": "0"
+    },
+    "boxes": [
+        {
+            "PObject": {
+                "_id": "913238025"
+            },
+            "_boxTitle": "Status",
+            "_style": "(P1921767950)",
+            "cellHeight": 8,
+            "cellWidth": 12,
+            "cellX": 0,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "604544280"
+                    },
+                    "_caption": "Dirfile",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_source": "",
+                    "type": "PDDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "630714105"
+                    },
+                    "_caption": "Qual:  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1738735997)",
+                    "_format": "",
+                    "_source": "mole_quality_avg",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1159998594"
+                    },
+                    "_caption": "Index: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "INDEX",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1862802998"
+                    },
+                    "_caption": "T MCC: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%e %b %Y, %H:%M:%S",
+                    "_source": "gps_time",
+                    "type": "PTDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1125587780"
+                        },
+                        "_map": {
+                            "0": "Telemlist[style=No style (P194662653)]",
+                            "1": "udp150K[style=Warn (P669419692)]",
+                            "10": "Images100k[style=Warn (P669419692)]",
+                            "11": "Images70k[style=Warn (P669419692)]",
+                            "12": "Images50k[style=Warn (P669419692)]",
+                            "2": "udpTC113K[style=Warn (P669419692)]",
+                            "3": "udp106K[style=Warn (P669419692)]",
+                            "4": "Pilot100k[style=Warn (P669419692)]",
+                            "5": "Pilot70k[style=Warn (P669419692)]",
+                            "6": "Pilot50k[style=Warn (P669419692)]",
+                            "7": "PilotTC53k[style=Warn (P669419692)]",
+                            "8": "Images400k[style=Warn (P669419692)]",
+                            "9": "Images160k[style=Warn (P669419692)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "305848802"
+                    },
+                    "_caption": "Bi-0: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LL_BI0",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "717100822"
+                        },
+                        "_map": {
+                            "0": "Telemlist[style=high (P1019400727)]",
+                            "1": "udp150K[style=No style (P194662653)]",
+                            "10": "Images100k[style=No style (P194662653)]",
+                            "11": "Images70k[style=No style (P194662653)]",
+                            "12": "Images50k[style=No style (P194662653)]",
+                            "2": "udpTC113K[style=No style (P194662653)]",
+                            "3": "udp106K[style=No style (P194662653)]",
+                            "4": "Pilot100k[style=No style (P194662653)]",
+                            "5": "Pilot70k[style=No style (P194662653)]",
+                            "6": "Pilot50k[style=No style (P194662653)]",
+                            "7": "PilotTC53k[style=No style (P194662653)]",
+                            "8": "Images400k[style=high (P1019400727)]",
+                            "9": "Images160k[style=No style (P194662653)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1400291583"
+                    },
+                    "_caption": "UDP: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LL_UDP",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "2051620216"
+                        },
+                        "_map": {
+                            "0": "Telemlist[style=high (P1019400727)]",
+                            "1": "udp150K[style=high (P1019400727)]",
+                            "10": "Images100k[style=No style (P194662653)]",
+                            "11": "Images70k[style=No style (P194662653)]",
+                            "12": "Images50k[style=No style (P194662653)]",
+                            "2": "udpTC113K[style=high (P1019400727)]",
+                            "3": "udp106K[style=high (P1019400727)]",
+                            "4": "Pilot100k[style=No style (P194662653)]",
+                            "5": "Pilot70k[style=No style (P194662653)]",
+                            "6": "Pilot50k[style=No style (P194662653)]",
+                            "7": "PilotTC53k[style=No style (P194662653)]",
+                            "8": "Images400k[style=high (P1019400727)]",
+                            "9": "Images160k[style=high (P1019400727)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "49060031"
+                    },
+                    "_caption": "Pilot:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LL_PILOT",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 144,
+            "geometryWidth": 216,
+            "geometryX": 0,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "432200752"
+            },
+            "_boxTitle": "T Computers",
+            "_style": "(P529230954)",
+            "cellHeight": 8,
+            "cellWidth": 7,
+            "cellX": 67,
+            "cellY": 23,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1079510819"
+                    },
+                    "_caption": "MCC CPU:  ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "t_mcc_cpu",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "250865918"
+                    },
+                    "_caption": "IFC CPU: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "t_ifc_cpu",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "874562234"
+                    },
+                    "_caption": "IFC SSD: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1967251661)",
+                    "_format": "",
+                    "_source": "t_ifc_ssd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1563239968"
+                    },
+                    "_caption": "FPC CPU: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "t_fpc_cpu",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1345424077"
+                    },
+                    "_caption": "FPC HS: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_fpc_box",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "236265475"
+                    },
+                    "_caption": "SCC HS: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_scc_box",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 144,
+            "geometryWidth": 126,
+            "geometryX": 1206,
+            "geometryY": 414
+        },
+        {
+            "PObject": {
+                "_id": "2076564030"
+            },
+            "_boxTitle": "Power",
+            "_style": "(P115279231)",
+            "cellHeight": 14,
+            "cellWidth": 8,
+            "cellX": 28,
+            "cellY": 17,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1350227305"
+                    },
+                    "_caption": "V Batt: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "v_batt",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1128430292"
+                        },
+                        "_map": {
+                            "0": "Off[style=Warn (P669419692)]",
+                            "1": "On"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "321752833"
+                    },
+                    "_caption": "Use Mon:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "BAT_USED_ON",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1139822657"
+                    },
+                    "_caption": "Ah Used:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1966406904)",
+                    "_format": "%.2f",
+                    "_source": "BAT_USED",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "823457142"
+                    },
+                    "_caption": "I Batt:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "i_tot",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "794857150"
+                    },
+                    "_caption": "I SCC:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P69206885)",
+                    "_format": "%.2f",
+                    "_source": "i_scc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1064878628"
+                    },
+                    "_caption": "I FGSPSC: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1058192132)",
+                    "_format": "%.2f",
+                    "_source": "i_fgspsc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1324000647"
+                    },
+                    "_caption": "I Optics: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1732909670)",
+                    "_format": "%.2f",
+                    "_source": "i_telescope",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2042416211"
+                    },
+                    "_caption": "I Gy:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P470575320)",
+                    "_format": "%.2f",
+                    "_source": "i_gyros",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1629697734"
+                    },
+                    "_caption": "I FMOT: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1080782833)",
+                    "_format": "%.2f",
+                    "_source": "i_fmot",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1255612658"
+                    },
+                    "_caption": "I Lock:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "i_locks",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2095161089"
+                    },
+                    "_caption": "I RW/PIV: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1080782833)",
+                    "_format": "%.2f",
+                    "_source": "i_rwpiv",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2010648170"
+                    },
+                    "_caption": "I El:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1080782833)",
+                    "_format": "%.2f",
+                    "_source": "i_el",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1928916077"
+                    },
+                    "_caption": "I Bi0: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P346992355)",
+                    "_extrema": true,
+                    "_extremaID": "(P1080782833)",
+                    "_format": "%.2f",
+                    "_source": "i_bi0",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 252,
+            "geometryWidth": 144,
+            "geometryX": 504,
+            "geometryY": 306
+        },
+        {
+            "PObject": {
+                "_id": "451359443"
+            },
+            "_boxTitle": "Motors",
+            "_style": "(P151372739)",
+            "cellHeight": 11,
+            "cellWidth": 8,
+            "cellX": 20,
+            "cellY": 20,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "482089654"
+                    },
+                    "_caption": "RW rad/s: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "rw_speed",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1052638089"
+                    },
+                    "_caption": "Torq RW: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "rw_torque_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1852442354"
+                    },
+                    "_caption": "Piv rad/s: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "pivot_speed_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1273121641"
+                    },
+                    "_caption": "Torq Roll: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1581711692)",
+                    "_format": "%.2f",
+                    "_source": "roll_torque_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1693228399"
+                    },
+                    "_caption": "Torq Pitch:  ",
+                    "_captionStyle": "(P639979583)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1581711692)",
+                    "_format": "%.2f",
+                    "_source": "pitch_torque_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "417682069"
+                    },
+                    "_caption": "El dps:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "coarse_el_speed",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1316796444"
+                    },
+                    "_caption": "Roll Enc: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1667437646)",
+                    "_format": "%.1f",
+                    "_source": "roll_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "753620272"
+                    },
+                    "_caption": "Pitch Enc: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "pitch_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "174462802"
+                    },
+                    "_caption": "Pitch Step: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "coarse_el_pos",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 198,
+            "geometryWidth": 144,
+            "geometryX": 360,
+            "geometryY": 360
+        },
+        {
+            "PObject": {
+                "_id": "1673482487"
+            },
+            "_boxTitle": "Pointing",
+            "_style": "(P1866815068)",
+            "cellHeight": 18,
+            "cellWidth": 12,
+            "cellX": 0,
+            "cellY": 13,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "457441222"
+                        },
+                        "_map": {
+                            "0": "Twisting[style=high (P1019400727)]",
+                            "1": "Gimble[style=high (P1019400727)]",
+                            "2": "Fine (2)[style=Warn (P669419692)]",
+                            "3": "M3CI[style=low (P1418578615)]",
+                            "4": "Fine BR (4)[style=Locked (P1080835791)]",
+                            "5": "Suspect[style=Warn (P669419692)]",
+                            "6": "Locked[style=Locked (P1080835791)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2010848138"
+                    },
+                    "_caption": "Mode:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "pointing_mode",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1856391739"
+                    },
+                    "_caption": "RA ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_ra",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1740170049"
+                    },
+                    "_caption": "RA Targ ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_RA_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "18278602"
+                    },
+                    "_caption": "Dec ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_dec",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "744122421"
+                    },
+                    "_caption": "Dec Targ ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_DEC_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1151324789"
+                    },
+                    "_caption": "F Rot:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_fr",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "930039152"
+                    },
+                    "_caption": "AZ ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_az",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "27332704"
+                    },
+                    "_caption": "Mag Az",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "mag_az",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "724705760"
+                    },
+                    "_caption": "Az targ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_AZ_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "904700549"
+                    },
+                    "_caption": "Pitch: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "pitch",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "496613718"
+                    },
+                    "_caption": "El",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_el",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "818924443"
+                    },
+                    "_caption": "El targ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_EL_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "799426021"
+                    },
+                    "_caption": "Roll: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "roll_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1332396567"
+                    },
+                    "_caption": "Roll targ 1:  ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_ROLL1_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "696205175"
+                    },
+                    "_caption": "Roll targ 2:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FADCS_ROLL2_D",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1911760633"
+                    },
+                    "_caption": "Im Rot:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ps_ir",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 324,
+            "geometryWidth": 216,
+            "geometryX": 0,
+            "geometryY": 234
+        },
+        {
+            "PObject": {
+                "_id": "340549967"
+            },
+            "_boxTitle": "             Tube",
+            "_style": "(P529230954)",
+            "cellHeight": 18,
+            "cellWidth": 5,
+            "cellX": 59,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1156789707"
+                    },
+                    "_caption": "R4 Set: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_R4_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "868784880"
+                    },
+                    "_caption": "r4c1: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c1_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1472206837"
+                    },
+                    "_caption": "r4c2:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1490386677"
+                    },
+                    "_caption": "r4c5: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "146888379"
+                    },
+                    "_caption": "r4c6: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c6_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "94321920"
+                    },
+                    "_caption": "r4c4: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "146982498"
+                    },
+                    "_caption": "R3 Set: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_R3_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1713596752"
+                    },
+                    "_caption": "r3c1: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r3c1_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "814450647"
+                    },
+                    "_caption": "r3c5: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r3c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1835662038"
+                    },
+                    "_caption": "R2 Set: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_R2_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1270107395"
+                    },
+                    "_caption": "r2c8:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r2c8_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "619807286"
+                    },
+                    "_caption": "r2c6:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r2c6_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "992404893"
+                    },
+                    "_caption": "R1 Set:",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_R1_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1604902631"
+                    },
+                    "_caption": "r1c2: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2065574607"
+                    },
+                    "_caption": "r1c4:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r1c4_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "182243585"
+                    },
+                    "_caption": "r1c6: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r1c6",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 324,
+            "geometryWidth": 90,
+            "geometryX": 1062,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "656289228"
+            },
+            "_boxTitle": "FP Cam",
+            "_style": "(P2105429234)",
+            "cellHeight": 17,
+            "cellWidth": 8,
+            "cellX": 28,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1507499347"
+                        },
+                        "_map": {
+                            "0": "Unlked[style=high (P1019400727)]",
+                            "1": "Suspect[style=Warn (P669419692)]",
+                            "2": "Locked[style=normal (P639979583)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1696140828"
+                    },
+                    "_caption": "Status:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "focal_locked",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1526263505"
+                    },
+                    "_caption": "Count: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "focal_count",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1769796677"
+                    },
+                    "_caption": "X:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "focal_cent_x",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1954878704"
+                    },
+                    "_caption": "Y:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "focal_cent_y",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "577389682"
+                    },
+                    "_caption": "Blob I:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "focal_cent_amp",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1869457924"
+                        },
+                        "_map": {
+                            "0": "Manual[style=low (P1418578615)]",
+                            "1": "Dyn[style=PNormal (P657130449)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "834190498"
+                    },
+                    "_caption": "Int mode:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "FOCL_DYN_ON",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "115062111"
+                    },
+                    "_caption": "Dyn F Max:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FOCL_DYN_UPPER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1820805500"
+                    },
+                    "_caption": "Dyn F Min:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FOCL_DYN_LOWER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2060184421"
+                    },
+                    "_caption": "Int Time:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P449929461)",
+                    "_format": "",
+                    "_source": "FAST_FOCL_INT_TIME",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "217472088"
+                    },
+                    "_caption": "Gain: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_FOCL_GAIN",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1723403250"
+                    },
+                    "_caption": "Misses: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_FOCL_MISSES",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1196709391"
+                        },
+                        "_map": {
+                            "0": "No[style=No style (P1486351593)]",
+                            "1": "Yes"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1994490021"
+                    },
+                    "_caption": "High Pass: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_FOCL_HPF",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1448927549"
+                        },
+                        "_map": {
+                            "0": "None[style=No style (P1486351593)]",
+                            "1": "File[style=No style (P1486351593)]",
+                            "2": "Dyn[style=No style (P703462289)]",
+                            "3": "Both[style=No style (P1486351593)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "650092473"
+                    },
+                    "_caption": "Hot Pix:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_FOCL_FILTER",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "34519221"
+                    },
+                    "_caption": "HP Lim: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_FOCL_SPIKE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1039726093"
+                    },
+                    "_caption": "N Sigma:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_FOCL_SIGMA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1175835151"
+                    },
+                    "_caption": "Period",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P543982432)",
+                    "_format": "%0.3f",
+                    "_source": "focal_period",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 306,
+            "geometryWidth": 144,
+            "geometryX": 504,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "2140973828"
+            },
+            "_boxTitle": "Bore",
+            "_style": "(P2105429234)",
+            "cellHeight": 20,
+            "cellWidth": 8,
+            "cellX": 12,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1507499347"
+                        },
+                        "_map": {
+                            "0": "Unlked[style=high (P1019400727)]",
+                            "1": "Locked[style=No style (P1127373169)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "85020874"
+                    },
+                    "_caption": "Status:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "bore_locked",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "424325055"
+                    },
+                    "_caption": "Count: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "bore_count",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "398336119"
+                    },
+                    "_caption": "X:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "bore_cent_x",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "425971337"
+                    },
+                    "_caption": "Y:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "bore_cent_y",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "766563691"
+                    },
+                    "_caption": "Blob I:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "bore_cent_amp",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1869457924"
+                        },
+                        "_map": {
+                            "0": "Manual[style=low (P1418578615)]",
+                            "1": "Dyn[style=PNormal (P657130449)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1539695758"
+                    },
+                    "_caption": "Int mode:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P2135435925)",
+                    "_source": "BORE_DYN_ON",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "715363919"
+                    },
+                    "_caption": "Dyn F Max:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BORE_DYN_UPPER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1640868132"
+                    },
+                    "_caption": "Dyn F Min:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BORE_DYN_LOWER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1528140675"
+                    },
+                    "_caption": "Int Time:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P223553197)",
+                    "_format": "",
+                    "_source": "FAST_BORE_INT_TIME",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "472726494"
+                    },
+                    "_caption": "Gain: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_BORE_GAIN",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1474481526"
+                    },
+                    "_caption": "Misses: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_BORE_MISSES",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1196709391"
+                        },
+                        "_map": {
+                            "0": "No[style=No style (P1486351593)]",
+                            "1": "Yes"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "674622566"
+                    },
+                    "_caption": "High Pass: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_BORE_HPF",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1448927549"
+                        },
+                        "_map": {
+                            "0": "None[style=No style (P1486351593)]",
+                            "1": "File[style=No style (P1486351593)]",
+                            "2": "Dyn[style=No style (P703462289)]",
+                            "3": "Both[style=No style (P1486351593)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "766606564"
+                    },
+                    "_caption": "Hot Pix:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_BORE_FILTER",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1543030058"
+                    },
+                    "_caption": "HP Lim: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_BORE_SPIKE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1200575944"
+                    },
+                    "_caption": "N Sigma:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_BORE_SIGMA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "652796480"
+                    },
+                    "_caption": "Latency:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "bore_latency",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "946518642"
+                    },
+                    "_caption": "Trig Rate:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "SCC_TRIG_RATE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1462394991"
+                    },
+                    "_caption": "Focus: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BORE_FOCUS",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 360,
+            "geometryWidth": 144,
+            "geometryX": 216,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "1350428294"
+            },
+            "_boxTitle": "Roll",
+            "_style": "(P2105429234)",
+            "cellHeight": 20,
+            "cellWidth": 8,
+            "cellX": 20,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1507499347"
+                        },
+                        "_map": {
+                            "0": "Unlked[style=high (P1019400727)]",
+                            "1": "Suspect[style=Warn (P669419692)]",
+                            "2": "Locked[style=normal (P639979583)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1577347373"
+                    },
+                    "_caption": "Status:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "roll_locked",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1536192952"
+                    },
+                    "_caption": "Count: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "roll_count",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "41557405"
+                    },
+                    "_caption": "X:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "roll_cent_x",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "846729433"
+                    },
+                    "_caption": "Y:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "roll_cent_y",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "117491349"
+                    },
+                    "_caption": "Blob I:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "roll_cent_amp",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1869457924"
+                        },
+                        "_map": {
+                            "0": "Manual[style=low (P1418578615)]",
+                            "1": "Dyn[style=PNormal (P657130449)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1018288502"
+                    },
+                    "_caption": "Int mode:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "ROLL_DYN_ON",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "379056239"
+                    },
+                    "_caption": "Dyn F Max:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ROLL_DYN_UPPER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1929565851"
+                    },
+                    "_caption": "Dyn F Min:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ROLL_DYN_LOWER",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "429817397"
+                    },
+                    "_caption": "Int Time:  ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P223553197)",
+                    "_format": "",
+                    "_source": "FAST_ROLL_INT_TIME",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "918433903"
+                    },
+                    "_caption": "Gain: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_ROLL_GAIN",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1260141834"
+                    },
+                    "_caption": "Misses: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FAST_ROLL_MISSES",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1196709391"
+                        },
+                        "_map": {
+                            "0": "No[style=No style (P1486351593)]",
+                            "1": "Yes"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1759110700"
+                    },
+                    "_caption": "High Pass: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_ROLL_HPF",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1448927549"
+                        },
+                        "_map": {
+                            "0": "None[style=No style (P1486351593)]",
+                            "1": "File[style=No style (P1486351593)]",
+                            "2": "Dyn[style=No style (P703462289)]",
+                            "3": "Both[style=No style (P1486351593)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1949179121"
+                    },
+                    "_caption": "Hot Pix:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_source": "BLOB_ROLL_FILTER",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1675484588"
+                    },
+                    "_caption": "HP Lim: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_ROLL_SPIKE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "784746587"
+                    },
+                    "_caption": "N Sigma:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "BLOB_ROLL_SIGMA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "865396696"
+                    },
+                    "_caption": "Latency:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "roll_latency",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2015428445"
+                    },
+                    "_caption": "Trig Rate:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "SCC_TRIG_RATE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1125111312"
+                    },
+                    "_caption": "Focus: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ROLL_FOCUS",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 360,
+            "geometryWidth": 144,
+            "geometryX": 360,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "558747123"
+            },
+            "_boxTitle": "Heaters",
+            "_style": "(P115279231)",
+            "cellHeight": 9,
+            "cellWidth": 8,
+            "cellX": 36,
+            "cellY": 22,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1280136899"
+                    },
+                    "_caption": "V Heat: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "v_heat",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1128430292"
+                        },
+                        "_map": {
+                            "0": "Off[style=Warn (P669419692)]",
+                            "1": "On"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "921758302"
+                    },
+                    "_caption": "Use Mon: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "HEAT_BAT_USED_ON",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "773326037"
+                    },
+                    "_caption": "Ah Used:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1189734787)",
+                    "_format": "%.2f",
+                    "_source": "HEAT_BAT_USED",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2123666255"
+                    },
+                    "_caption": "I Heat: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.1f",
+                    "_source": "i_heat",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "396176504"
+                    },
+                    "_caption": "DIO 2A:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "%8b",
+                    "_source": "dio_2a",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "799993670"
+                    },
+                    "_caption": "DIO 2B:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "%8b",
+                    "_source": "dio_2b",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "280447034"
+                    },
+                    "_caption": "DIO 2C:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "%8b",
+                    "_source": "dio_2c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "228963725"
+                    },
+                    "_caption": "DIO 3A:",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "%8b",
+                    "_source": "dio_3a",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 162,
+            "geometryWidth": 144,
+            "geometryX": 648,
+            "geometryY": 396
+        },
+        {
+            "PObject": {
+                "_id": "412718860"
+            },
+            "_boxTitle": "T ESensors",
+            "_style": "(P529230954)",
+            "cellHeight": 22,
+            "cellWidth": 8,
+            "cellX": 36,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1036227182"
+                    },
+                    "_caption": "Bow enc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P852840016)",
+                    "_format": "%.1f",
+                    "_source": "t_roll_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1607657438"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_ROLL_ENC_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1439349439"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_roll_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1426470732"
+                    },
+                    "_caption": "El enc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P852840016)",
+                    "_format": "%.1f",
+                    "_source": "t_pitch_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1299653815"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_PITCH_ENC_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1387693368"
+                    },
+                    "_caption": " • H:",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_pitch_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1974680035"
+                    },
+                    "_caption": "Roll SC: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P19041430)",
+                    "_format": "%.1f",
+                    "_source": "t_rsc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1479933328"
+                    },
+                    "_caption": "RSC ring: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P461063791)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_rsc_adapt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1504699120"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_SC_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "786297494"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_rsc_adapt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1571569371"
+                    },
+                    "_caption": "Bore SC: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P461063791)",
+                    "_extrema": true,
+                    "_extremaID": "(P19041430)",
+                    "_format": "%.1f",
+                    "_source": "t_bsc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "581899111"
+                    },
+                    "_caption": "BSC ring: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P461063791)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_bsc_adapt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2039818334"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_SC_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "177424921"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_bsc_adapt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1836030801"
+                    },
+                    "_caption": "Mag: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P852840016)",
+                    "_format": "%.1f",
+                    "_source": "t_mag",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1240329672"
+                    },
+                    "_caption": "RW enc: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P852840016)",
+                    "_format": "%.1f",
+                    "_source": "t_rw_enc",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1495845757"
+                    },
+                    "_caption": "Gyros: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_gyro",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1817809979"
+                    },
+                    "_caption": "Heat Box: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_heater_board",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "313284907"
+                    },
+                    "_caption": "Batteries: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_batt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1952633"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_BATT_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "292927037"
+                    },
+                    "_caption": " • H:",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_batt",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 396,
+            "geometryWidth": 144,
+            "geometryX": 648,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "940810083"
+            },
+            "_boxTitle": "T Motors",
+            "_style": "(P529230954)",
+            "cellHeight": 22,
+            "cellWidth": 7,
+            "cellX": 44,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "862364900"
+                    },
+                    "_caption": "Sec: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1490386519)",
+                    "_format": "%.1f",
+                    "_source": "t_sec_mot",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "672136136"
+                    },
+                    "_caption": "Z Stage: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1490386519)",
+                    "_format": "%.1f",
+                    "_source": "t_z_actu",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "20806443"
+                    },
+                    "_caption": "RW: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_rw",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1003514269"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_RW_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "150694536"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_rw",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1889720630"
+                    },
+                    "_caption": "Pivot:",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P247451796)",
+                    "_format": "%.1f",
+                    "_source": "t_piv",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1573237059"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_PIV_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "190525040"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_piv",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1124276653"
+                    },
+                    "_caption": "Pitch (p): ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_fm_pitch_p",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "455101343"
+                    },
+                    "_caption": "Pitch (s): ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_fm_pitch_s",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "612658685"
+                    },
+                    "_caption": "Roll (b): ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_fm_roll_b",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2003548493"
+                    },
+                    "_caption": "Roll (s): ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_fm_roll_s",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2067301745"
+                    },
+                    "_caption": "CEL (p): ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_cel_p",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1987937864"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_CEL_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1523738254"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_cel_p",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "286150421"
+                    },
+                    "_caption": "CEL (s)",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_cel_s",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "910186119"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_CEL_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1615922828"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_cel_s",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 396,
+            "geometryWidth": 126,
+            "geometryX": 792,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "1115659581"
+            },
+            "_boxTitle": "Gyro Bias",
+            "_style": "(P857365351)",
+            "cellHeight": 5,
+            "cellWidth": 8,
+            "cellX": 12,
+            "cellY": 26,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "990759439"
+                    },
+                    "_caption": "X:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2E",
+                    "_source": "ps_gbx",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "59961698"
+                    },
+                    "_caption": "Y:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2E",
+                    "_source": "ps_gby",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "435298244"
+                    },
+                    "_caption": "Z: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.2E",
+                    "_source": "ps_gbz",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 90,
+            "geometryWidth": 144,
+            "geometryX": 216,
+            "geometryY": 468
+        },
+        {
+            "PObject": {
+                "_id": "69459709"
+            },
+            "_boxTitle": "Telescope",
+            "_style": "(P2105429234)",
+            "cellHeight": 9,
+            "cellWidth": 7,
+            "cellX": 44,
+            "cellY": 22,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "785232216"
+                        },
+                        "_map": {
+                            "0": "Ready[style=No style (P861744270)]",
+                            "1": "Busy[style=No style (P861744270)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "483226158"
+                    },
+                    "_caption": "SC Stat: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "scicam_status",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1884464477"
+                        },
+                        "_map": {
+                            "0": "0 (Open)[style=No style (P1846447346)]",
+                            "1": "1 (Lum)[style=No style (P1846447346)]",
+                            "2": "2 (IR)[style=No style (P1846447346)]",
+                            "3": "3 (R)[style=No style (P1846447346)]",
+                            "4": "4 (V)[style=No style (P1846447346)]",
+                            "5": "5 (U)[style=No style (P1846447346)]",
+                            "6": "6 (U')[style=No style (P1846447346)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1143864237"
+                    },
+                    "_caption": "Filter: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "FILTER_WHEEL_POS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "785232216"
+                        },
+                        "_map": {
+                            "0": "Ready[style=No style (P861744270)]",
+                            "1": "Moving[style=No style (P861744270)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1706724608"
+                    },
+                    "_caption": "Filt Stat: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "filt_wheel_status",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1976026392"
+                    },
+                    "_caption": "Z Stage:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "FOCL_FOCUS",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1033903058"
+                    },
+                    "_caption": "Sec Foc: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "bf_position",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "142241794"
+                    },
+                    "_caption": "A1: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "a1_position",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "217755301"
+                    },
+                    "_caption": "A2: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "a2_position",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1125542763"
+                    },
+                    "_caption": "A3: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "a3_position",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 162,
+            "geometryWidth": 126,
+            "geometryX": 792,
+            "geometryY": 396
+        },
+        {
+            "PObject": {
+                "_id": "385750160"
+            },
+            "_boxTitle": "T Telescope",
+            "_style": "(P529230954)",
+            "cellHeight": 23,
+            "cellWidth": 7,
+            "cellX": 67,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "123110011"
+                    },
+                    "_caption": "Sec mir: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P1260495790)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_sec",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1113263975"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_SEC_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "411414207"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P1260495790)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_sec",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1718592380"
+                    },
+                    "_caption": "Sec BF: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_sec_mot",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1934264550"
+                    },
+                    "_caption": "Sec align: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_sec_align",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "723569583"
+                    },
+                    "_caption": "Tel r1c3: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r1c3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "536077868"
+                    },
+                    "_caption": "Tel r1c7: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r1c7",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1785393286"
+                    },
+                    "_caption": "Tel r2c2:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r2c2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "384458592"
+                    },
+                    "_caption": "Tel r2c6:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r2c6",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "212883707"
+                    },
+                    "_caption": "Tel r3c1:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r3c1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "287784326"
+                    },
+                    "_caption": "Tel r4c7: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_tel_r4c7",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "661536498"
+                    },
+                    "_caption": "Prim 1: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "336318822"
+                    },
+                    "_caption": "Prim 2: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1331631284"
+                    },
+                    "_caption": "Prim 3: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1196070422"
+                    },
+                    "_caption": "Prim 4: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "97069242"
+                    },
+                    "_caption": "Prim 5: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "709020669"
+                    },
+                    "_caption": "Prim 6: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_6",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1072818400"
+                    },
+                    "_caption": "Prim 7: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_7",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1503573545"
+                    },
+                    "_caption": "Prim 8: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_8",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "787727933"
+                    },
+                    "_caption": "Prim fs: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_fs",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2004357415"
+                    },
+                    "_caption": "Prim fp:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "t_prim_fp",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 414,
+            "geometryWidth": 126,
+            "geometryX": 1206,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "1705018083"
+            },
+            "_boxTitle": "Optics Box",
+            "_style": "(P529230954)",
+            "cellHeight": 13,
+            "cellWidth": 8,
+            "cellX": 59,
+            "cellY": 18,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1898632980"
+                    },
+                    "_caption": "FPSC CCD: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P19041430)",
+                    "_format": "%.1f",
+                    "_source": "t_fpsc_ccd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1334461480"
+                    },
+                    "_caption": "FPSC PCB: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P19041430)",
+                    "_format": "%.1f",
+                    "_source": "t_fpsc_pcb",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1473694978"
+                    },
+                    "_caption": "SciCam int: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_scicam_int",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "671546118"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_SCICAM",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "235747038"
+                    },
+                    "_caption": "SciCam ext: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1751755179)",
+                    "_format": "%.1f",
+                    "_source": "t_scicam_ext",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1751437710"
+                    },
+                    "_caption": "SciCam Rad: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P1999342242)",
+                    "_extrema": true,
+                    "_extremaID": "(P1967251661)",
+                    "_format": "%.1f",
+                    "_source": "t_scicam_rad",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "269665816"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_SCICAM_RAD_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2002901560"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_scicam_rad",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "933300814"
+                    },
+                    "_caption": "FGM:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1751755179)",
+                    "_format": "%.1f",
+                    "_source": "t_fgs",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "208874519"
+                    },
+                    "_caption": "Filt Wheel:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1751755179)",
+                    "_format": "%.1f",
+                    "_source": "t_filt_wheel",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 234,
+            "geometryWidth": 144,
+            "geometryX": 1062,
+            "geometryY": 324
+        },
+        {
+            "PObject": {
+                "_id": "2105445543"
+            },
+            "_boxTitle": "T Ambient",
+            "_style": "(P529230954)",
+            "cellHeight": 14,
+            "cellWidth": 8,
+            "cellX": 51,
+            "cellY": 17,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1593351905"
+                    },
+                    "_caption": "IF Plate:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_if_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "236177709"
+                    },
+                    "_caption": "Op Box Ext: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_optic_box_ext",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1178717066"
+                    },
+                    "_caption": "Tube out:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_tube_r4c7_out",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1359064265"
+                    },
+                    "_caption": "MF Strbd:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_mf_s",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1233986807"
+                    },
+                    "_caption": "MF Floor:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_mf_f",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "257992137"
+                    },
+                    "_caption": "MF Port:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_mf_p",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1574538133"
+                    },
+                    "_caption": "MF Stern:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_mf_sn",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "435762508"
+                    },
+                    "_caption": "OF In:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_of_in",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1164343317"
+                    },
+                    "_caption": "OF Out:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1556409109)",
+                    "_format": "%.1f",
+                    "_source": "t_of_out",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "240582394"
+                    },
+                    "_caption": "Lock 3: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_lock3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1588891628"
+                    },
+                    "_caption": "Lock 4: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P347487856)",
+                    "_format": "%.1f",
+                    "_source": "t_lock4",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 252,
+            "geometryWidth": 144,
+            "geometryX": 918,
+            "geometryY": 306
+        },
+        {
+            "PObject": {
+                "_id": "1011402752"
+            },
+            "_boxTitle": "T Mot Cont",
+            "_style": "(P529230954)",
+            "cellHeight": 17,
+            "cellWidth": 8,
+            "cellX": 51,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "158710611"
+                    },
+                    "_caption": "RW mc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P360817755)",
+                    "_format": "%.1f",
+                    "_source": "t_rw_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "225742275"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_RW_CONT_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1010258032"
+                    },
+                    "_caption": " • H: ",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_rw_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "255176776"
+                    },
+                    "_caption": "Piv mc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_piv_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1469971119"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_PIV_CONT_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "152910081"
+                    },
+                    "_caption": " • H:",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_piv_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "276315945"
+                    },
+                    "_caption": "FM mc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_fm_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1242938179"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_FM_CONT_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "43026365"
+                    },
+                    "_caption": " • H:",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_fm_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "131557551"
+                    },
+                    "_caption": "CEL mc: ",
+                    "_captionStyle": "(P1999342242)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_cel_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "421535693"
+                    },
+                    "_caption": " • Set: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P1907135836)",
+                    "_format": "%.1f",
+                    "_source": "T_CEL_CONT_SET",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1847715724"
+                    },
+                    "_caption": " • H:",
+                    "_captionStyle": "(P1382257739)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_cel_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1159123111"
+                    },
+                    "_caption": "FGM mc ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_fgs_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "431985079"
+                    },
+                    "_caption": "Z mc ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_z_actu_cont",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "838506150"
+                    },
+                    "_caption": "Sec mc: ",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P1313366280)",
+                    "_format": "%.1f",
+                    "_source": "t_sec_cont",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 306,
+            "geometryWidth": 144,
+            "geometryX": 918,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "293207627"
+            },
+            "_boxTitle": " ",
+            "_style": "(P529230954)",
+            "cellHeight": 18,
+            "cellWidth": 3,
+            "cellX": 64,
+            "cellY": 0,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "448152433"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "(P1222008090)",
+                    "_defaultStyle": "(P1222008090)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "h_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2140368605"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r4c1_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "486347706"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r4c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1414309961"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r4c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1391140647"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r4c6_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1306919486"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1222008090)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "h_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1787634753"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "(P1222008090)",
+                    "_defaultStyle": "(P1222008090)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "h_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "562398219"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c1_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "476858518"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1465997982"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "(P1222008090)",
+                    "_defaultStyle": "(P1222008090)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "h_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1883810651"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1044971758"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "572817944"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "(P1222008090)",
+                    "_defaultStyle": "(P1222008090)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "h_tube_r1c2_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "39401200"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c5_c",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2021080219"
+                    },
+                    "_caption": "",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": true,
+                    "_extremaID": "(P276340783)",
+                    "_format": "%.0f",
+                    "_source": "h_tube_r3c5_c",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 324,
+            "geometryWidth": 54,
+            "geometryX": 1152,
+            "geometryY": 0
+        },
+        {
+            "PObject": {
+                "_id": "1606016548"
+            },
+            "_boxTitle": "",
+            "_style": "(P1921767950)",
+            "cellHeight": 5,
+            "cellWidth": 6,
+            "cellX": 0,
+            "cellY": 8,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1745291887"
+                    },
+                    "_caption": "Image I: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "image_i",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "414378759"
+                    },
+                    "_caption": "Image N: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "image_n",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1205673824"
+                    },
+                    "_caption": "Cmd N: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "num_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "390126165"
+                    },
+                    "_caption": "last cmd:",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "id_cmd",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1808068460"
+                    },
+                    "_caption": "Int16: ",
+                    "_captionStyle": "(P2135435925)",
+                    "_defaultStyle": "(P657130449)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "INT16_TEST",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 90,
+            "geometryWidth": 108,
+            "geometryX": 0,
+            "geometryY": 144
+        },
+        {
+            "PObject": {
+                "_id": "1066344595"
+            },
+            "_boxTitle": "GPS",
+            "_style": "(P2112698219)",
+            "cellHeight": 6,
+            "cellWidth": 8,
+            "cellX": 12,
+            "cellY": 20,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1756627838"
+                    },
+                    "_caption": "Lat:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "gps_latitude",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "883395603"
+                    },
+                    "_caption": "Lon:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "gps_longitude",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "157799761"
+                    },
+                    "_caption": "Alt:",
+                    "_captionStyle": "(P1219604888)",
+                    "_defaultStyle": "(P639979583)",
+                    "_extrema": false,
+                    "_format": "%.0f",
+                    "_source": "gps_altitude",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "775497192"
+                        },
+                        "_map": {
+                            "-1": "Invalid[style=high (P1019400727)]",
+                            "0": "No Packets[style=xhigh (P1261639623)]",
+                            "1": "GPS Fix[style=normal (P639979583)]",
+                            "2": "DGPS Fix[style=No style (P81557374)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1207395967"
+                    },
+                    "_caption": "Status: ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "gps_state",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 108,
+            "geometryWidth": 144,
+            "geometryX": 216,
+            "geometryY": 360
+        }
+    ],
+    "extremas": [
+        {
+            "PObject": {
+                "_id": "1313366280"
+            },
+            "_high": 40,
+            "_low": 5,
+            "_name": "T_0C",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 70,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "1907135836"
+            },
+            "_high": 40,
+            "_low": -35,
+            "_name": "T_tube",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 70,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "900302132"
+            },
+            "_high": 40,
+            "_low": -17,
+            "_name": "T-_-20",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 57,
+            "_xlow": -20
+        },
+        {
+            "PObject": {
+                "_id": "449929461"
+            },
+            "_high": 50,
+            "_low": 2,
+            "_name": "integration",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 101,
+            "_xlow": 0.008999999612569809
+        },
+        {
+            "PObject": {
+                "_id": "543982432"
+            },
+            "_high": 0.03999999910593033,
+            "_low": 0.00800000037997961,
+            "_name": "fpperiod",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 0.20000000298023224,
+            "_xlow": 0.0010000000474974513
+        },
+        {
+            "PObject": {
+                "_id": "1581711692"
+            },
+            "_high": 0.699999988079071,
+            "_low": -0.699999988079071,
+            "_name": "torque",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 2,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "1667437646"
+            },
+            "_high": 3.200000047683716,
+            "_low": -3.200000047683716,
+            "_name": "encoders",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 3.5,
+            "_xlow": -3.5
+        },
+        {
+            "PObject": {
+                "_id": "1195065324"
+            },
+            "_high": 42,
+            "_low": -20,
+            "_name": "scicam",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 45,
+            "_xlow": -25
+        },
+        {
+            "PObject": {
+                "_id": "1556409109"
+            },
+            "_high": 65,
+            "_low": -35,
+            "_name": "T-40-70",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 70,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "247451796"
+            },
+            "_high": 45,
+            "_low": -17,
+            "_name": "T-20-50",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 50,
+            "_xlow": -20
+        },
+        {
+            "PObject": {
+                "_id": "347487856"
+            },
+            "_high": 48,
+            "_low": -7,
+            "_name": "T-10-50",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 50,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "1490386519"
+            },
+            "_high": 45,
+            "_low": -15,
+            "_name": "T-SEC",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P325337255)",
+            "_xhigh": 50,
+            "_xlow": -65
+        },
+        {
+            "PObject": {
+                "_id": "19041430"
+            },
+            "_high": 55,
+            "_low": -15,
+            "_name": "T-20-60",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 60,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "360817755"
+            },
+            "_high": 65,
+            "_low": 3,
+            "_name": "T-0-75",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P325337255)",
+            "_xhigh": 75,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "1967251661"
+            },
+            "_high": 40,
+            "_low": 3,
+            "_name": "T-0-40",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P325337255)",
+            "_xhigh": 45,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "1751755179"
+            },
+            "_high": 40,
+            "_low": -28,
+            "_name": "T-30-45",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 45,
+            "_xlow": -30
+        },
+        {
+            "PObject": {
+                "_id": "852840016"
+            },
+            "_high": 65,
+            "_low": -45,
+            "_name": "T-50-70",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 70,
+            "_xlow": -75
+        },
+        {
+            "PObject": {
+                "_id": "470575320"
+            },
+            "_high": 0.6200000047683716,
+            "_low": 0.30000001192092896,
+            "_name": "i_gyros",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 1,
+            "_xlow": 0.10000000149011612
+        },
+        {
+            "PObject": {
+                "_id": "69206885"
+            },
+            "_high": 1.600000023841858,
+            "_low": 0.8999999761581421,
+            "_name": "i_scc",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 2,
+            "_xlow": 0.10000000149011612
+        },
+        {
+            "PObject": {
+                "_id": "1058192132"
+            },
+            "_high": 2.200000047683716,
+            "_low": 1.2000000476837158,
+            "_name": "i_fgspsc",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 2.5999999046325684,
+            "_xlow": 0.10000000149011612
+        },
+        {
+            "PObject": {
+                "_id": "1732909670"
+            },
+            "_high": 1.8200000524520874,
+            "_low": 1,
+            "_name": "i_optic",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 2,
+            "_xlow": 0.10000000149011612
+        },
+        {
+            "PObject": {
+                "_id": "1080782833"
+            },
+            "_high": 20,
+            "_low": 0.05999999865889549,
+            "_name": "i_mot",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 100,
+            "_xlow": -0.10000000149011612
+        },
+        {
+            "PObject": {
+                "_id": "223553197"
+            },
+            "_high": 70,
+            "_low": 10,
+            "_name": "BRIntegration",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 145,
+            "_xlow": 2
+        },
+        {
+            "PObject": {
+                "_id": "457336396"
+            },
+            "_high": 0.9900000095367432,
+            "_low": 0.6000000238418579,
+            "_name": "M3Speed",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 2,
+            "_xlow": 0.20000000298023224
+        },
+        {
+            "PObject": {
+                "_id": "276340783"
+            },
+            "_high": 100,
+            "_low": 0,
+            "_name": "pwm",
+            "_shigh": "(P669419692)",
+            "_slow": "(P325337255)",
+            "_sxhigh": "(P1999342242)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 1000,
+            "_xlow": -1001
+        },
+        {
+            "PObject": {
+                "_id": "1966406904"
+            },
+            "_high": 150,
+            "_low": -1,
+            "_name": "main_bat_used",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 200,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "1189734787"
+            },
+            "_high": 50,
+            "_low": -1,
+            "_name": "heat_bat_used",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P1418578615)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1849073533)",
+            "_xhigh": 65,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "1738735997"
+            },
+            "_high": 1.100000023841858,
+            "_low": 0.8999999761581421,
+            "_name": "dataQual",
+            "_shigh": "(P1019400727)",
+            "_slow": "(P669419692)",
+            "_sxhigh": "(P1261639623)",
+            "_sxlow": "(P1019400727)",
+            "_xhigh": 1.5,
+            "_xlow": 0.800000011920929
+        }
+    ],
+    "linkNames": [
+        "/data/etc/mole.lnk",
+        "/data/etc/dialup.lnk",
+        "/data/etc/tdrss.lnk",
+        "/data/etc/pilot.lnk",
+        "/data/etc/packets.lnk"
+    ],
+    "linkSelected": 0,
+    "owls": [
+        {
+            "PObject": {
+                "_id": "344402181"
+            },
+            "cellHeight": 6,
+            "cellWidth": 6,
+            "cellX": 6,
+            "cellY": 8,
+            "geometryHeight": 108,
+            "geometryWidth": 108,
+            "geometryX": 108,
+            "geometryY": 144
+        }
+    ],
+    "styles": [
+        {
+            "PObject": {
+                "_id": "2112698219"
+            },
+            "_bg": "#b5dfff",
+            "_bold": false,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "defbox"
+        },
+        {
+            "PObject": {
+                "_id": "1219604888"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Caption"
+        },
+        {
+            "PObject": {
+                "_id": "639979583"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "normal"
+        },
+        {
+            "PObject": {
+                "_id": "2016058561"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "T_0C"
+        },
+        {
+            "PObject": {
+                "_id": "1261639623"
+            },
+            "_bg": "#ffaaaa",
+            "_bold": false,
+            "_fg": "#000055",
+            "_italic": false,
+            "_linked": true,
+            "_name": "xhigh"
+        },
+        {
+            "PObject": {
+                "_id": "1019400727"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#ff0000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "high"
+        },
+        {
+            "PObject": {
+                "_id": "1418578615"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#00bb00",
+            "_italic": false,
+            "_linked": true,
+            "_name": "low"
+        },
+        {
+            "PObject": {
+                "_id": "1849073533"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#d6d6d6",
+            "_italic": false,
+            "_linked": true,
+            "_name": "xlow"
+        },
+        {
+            "PObject": {
+                "_id": "346992355"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Currents"
+        },
+        {
+            "PObject": {
+                "_id": "1866815068"
+            },
+            "_bg": "#8bfcff",
+            "_bold": false,
+            "_fg": "#800000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "pbox"
+        },
+        {
+            "PObject": {
+                "_id": "529230954"
+            },
+            "_bg": "#fff7c2",
+            "_bold": false,
+            "_fg": "#000080",
+            "_italic": false,
+            "_linked": true,
+            "_name": "tbox"
+        },
+        {
+            "PObject": {
+                "_id": "857365351"
+            },
+            "_bg": "#dae2ff",
+            "_bold": false,
+            "_fg": "#800000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "tbox"
+        },
+        {
+            "PObject": {
+                "_id": "115279231"
+            },
+            "_bg": "#ffcad0",
+            "_bold": false,
+            "_fg": "#004000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "pwrbox"
+        },
+        {
+            "PObject": {
+                "_id": "1921767950"
+            },
+            "_bg": "#dcdcdc",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "statbox"
+        },
+        {
+            "PObject": {
+                "_id": "151372739"
+            },
+            "_bg": "#d2ffa8",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "motbox"
+        },
+        {
+            "PObject": {
+                "_id": "2105429234"
+            },
+            "_bg": "#ffdca8",
+            "_bold": false,
+            "_fg": "#391a00",
+            "_italic": false,
+            "_linked": true,
+            "_name": "camera"
+        },
+        {
+            "PObject": {
+                "_id": "1913677210"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "hotpixfilter"
+        },
+        {
+            "PObject": {
+                "_id": "436402902"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "YesNo"
+        },
+        {
+            "PObject": {
+                "_id": "2135435925"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000080",
+            "_italic": false,
+            "_linked": true,
+            "_name": "PCaption"
+        },
+        {
+            "PObject": {
+                "_id": "657130449"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000080",
+            "_italic": false,
+            "_linked": true,
+            "_name": "PNormal"
+        },
+        {
+            "PObject": {
+                "_id": "30187626"
+            },
+            "_bg": "#f7ffb5",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Gains"
+        },
+        {
+            "PObject": {
+                "_id": "669419692"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#cb8700",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Warn"
+        },
+        {
+            "PObject": {
+                "_id": "1080835791"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Locked"
+        },
+        {
+            "PObject": {
+                "_id": "461063791"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "T-0-45"
+        },
+        {
+            "PObject": {
+                "_id": "1924817748"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "PMode"
+        },
+        {
+            "PObject": {
+                "_id": "1382257739"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#910000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Heater"
+        },
+        {
+            "PObject": {
+                "_id": "1999342242"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "bold"
+        },
+        {
+            "PObject": {
+                "_id": "325337255"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#989898",
+            "_italic": false,
+            "_linked": true,
+            "_name": "grey"
+        },
+        {
+            "PObject": {
+                "_id": "1222008090"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#fff7c2",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Invisible"
+        },
+        {
+            "PObject": {
+                "_id": "1260495790"
+            },
+            "_bg": "#f3ffc2",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "heated"
+        }
+    ],
+    "webPort": "\u0000",
+    "windowCellHeight": 33,
+    "windowCellWidth": 76,
+    "windowHeight": 594,
+    "windowWidth": 1368
+}

@@ -27,11 +27,12 @@
 #define INCLUDE_ACTUATORS_H_
 // set microstep resolution for lockpin and shutter
 #define LOCK_PREAMBLE "j256"
-#define SHUTTER_PREAMBLE "j256"
+#define SHUTTER_PREAMBLE "j256n2"
 // set encoder/microstep ratio (aE25600), coarse correction band (aC50),
 // fine correction tolerance (ac%d), stall retries (au5),
 // enable encoder feedback mode (n8)
 // NB: this is a printf template now, requires a move tolerance (ac) to be set, default from BLAST-Pol is 2
+// but ac5 has been tested by Peter and Paul
 #define ACT_PREAMBLE  "aE25600aC50ac%dau5n8"
 
 void StoreActBus(void);

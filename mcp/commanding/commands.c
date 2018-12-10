@@ -554,6 +554,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[15] = 0;
             break;
+        case gps_sw_reset:
+            system("/usr/local/bin/gps_sw_reset");
+            // berror(fatal, "Commands: failed to reboot gps software\n");
+            break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;
             CommandData.Relays.cycled_if = 1;
@@ -965,48 +969,48 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-	case potvalve_open:
-            CommandData.Cryo.potvalve_goal = opened;
-            break;
-        case potvalve_close:
-            CommandData.Cryo.potvalve_goal = closed;
-            break;
-        case potvalve_on:
-            CommandData.Cryo.potvalve_on = 1;
-	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case potvalve_off:
-            CommandData.Cryo.potvalve_on = 0;
-	    CommandData.Cryo.potvalve_goal = 0;
-            break;
-        case pump_valve_open:
-	    CommandData.Cryo.valve_goals[0] = opened;
-	    break;
-	case pump_valve_close:
-	    CommandData.Cryo.valve_goals[0] = closed;
-	    break;
-	case pump_valve_off:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 1;
-	    break;
-	case pump_valve_on:
-	    CommandData.Cryo.valve_goals[0] = 0;
-	    CommandData.Cryo.valve_stop[0] = 0;
-	case fill_valve_open:
-	    CommandData.Cryo.valve_goals[1] = opened;
-	    break;
-	case fill_valve_close:
-	    CommandData.Cryo.valve_goals[1] = closed;
-	    break;
-	case fill_valve_off:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 1;
-	    break;
-	case fill_valve_on:
-	    CommandData.Cryo.valve_goals[1] = 0;
-	    CommandData.Cryo.valve_stop[1] = 0;
-	    break;
-	case l_valve_open:
+		case potvalve_open:
+        	CommandData.Cryo.potvalve_goal = opened;
+        	break;
+    	case potvalve_close:
+        	CommandData.Cryo.potvalve_goal = closed;
+        	break;
+    	case potvalve_on:
+        	CommandData.Cryo.potvalve_on = 1;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case potvalve_off:
+        	CommandData.Cryo.potvalve_on = 0;
+	    	CommandData.Cryo.potvalve_goal = 0;
+        	break;
+    	case pump_valve_open:
+	    	CommandData.Cryo.valve_goals[0] = opened;
+	    	break;
+		case pump_valve_close:
+	    	CommandData.Cryo.valve_goals[0] = closed;
+	    	break;
+		case pump_valve_off:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 1;
+	    	break;
+		case pump_valve_on:
+	    	CommandData.Cryo.valve_goals[0] = 0;
+	    	CommandData.Cryo.valve_stop[0] = 0;
+		case fill_valve_open:
+	    	CommandData.Cryo.valve_goals[1] = opened;
+	    	break;
+		case fill_valve_close:
+	    	CommandData.Cryo.valve_goals[1] = closed;
+	    	break;
+		case fill_valve_off:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 1;
+	    	break;
+		case fill_valve_on:
+	    	CommandData.Cryo.valve_goals[1] = 0;
+	    	CommandData.Cryo.valve_stop[1] = 0;
+	    	break;
+		case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
             CommandData.Cryo.lvalve_close = 0;
             break;
@@ -1112,6 +1116,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	case balance_off:
 	    CommandData.balance.mode = bal_rest;
 	    break;
+	case balance_terminate:
+	  // after lock45, before termination, drive balance system to lower limit
+	  CommandData.balance.vel = 200000;
+	  CommandData.balance.mode = bal_manual;
+	  CommandData.balance.bal_move_type = 2;
+	  break;
+
 
 #ifndef BOLOTEST
         case blast_rocks:
@@ -1261,14 +1272,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
           }
-        case pilot_oth_on:
-            CommandData.pilot_oth = 1;
-            blast_info("Switched to Pilot OTH\n");
-            break;
-        case pilot_oth_off:
-            CommandData.pilot_oth = 0;
-            blast_info("Switch to Pilot GND\n");
-            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -1591,18 +1594,44 @@ void MultiCommand(enum multiCommand command, double *rvalues,
                  CommandData.cal_ymax_mag[1], CommandData.cal_ymin_mag[1], CommandData.cal_mag_align[1]);
       break;
 
-    case pss_cal:
-      CommandData.cal_off_pss1 = rvalues[0];
-      CommandData.cal_d_pss1 = rvalues[1];
-      CommandData.cal_off_pss2 = rvalues[2];
-      CommandData.cal_d_pss2 = rvalues[3];
-      CommandData.cal_off_pss3 = rvalues[4];
-      CommandData.cal_d_pss3 = rvalues[5];
-      CommandData.cal_off_pss4 = rvalues[6];
-      CommandData.cal_d_pss4 = rvalues[7];
-      CommandData.cal_imin_pss = rvalues[8];
+    case pss_set_imin:
+      CommandData.cal_imin_pss = rvalues[0];
       break;
 
+	case pss_cal_n:
+	  i = ivalues[0]-1;
+	  CommandData.cal_d_pss[i] = rvalues[1];
+	  CommandData.cal_az_pss[i] = rvalues[2];
+	  CommandData.cal_el_pss[i] = rvalues[3];
+	  CommandData.cal_roll_pss[i] = rvalues[4];
+	  break;
+
+	case pss_cal_d:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_d_pss[i] = rvalues[i];
+	  }
+	  break;
+
+	case pss_cal_az:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_az_pss[i] = rvalues[i];
+	  }
+	  break;
+	case pss_cal_array_az:
+	  CommandData.cal_az_pss_array = rvalues[0];
+	  break;
+
+	case pss_cal_el:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_el_pss[i] = rvalues[i];
+	  }
+	  break;
+
+	case pss_cal_roll:
+	  for (i = 0; i < NUM_PSS; i++) {
+		  CommandData.cal_roll_pss[i] = rvalues[i];
+	  }
+	  break;
 
     /*************************************
      ********* Pointing Motor Gains ******/
@@ -1789,9 +1818,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO;
       CommandData.hwpr.is_new = 1;
       break;
-    case hwpr_jump:
+    case hwpr_goto_rel:
       CommandData.hwpr.target = ivalues[0];
-      CommandData.hwpr.mode = HWPR_JUMP;
+      CommandData.hwpr.mode = HWPR_GOTO_REL;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_repeat:
@@ -1821,6 +1850,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
+	case hwpr_set_margin:
+	  CommandData.hwpr.margin = ivalues[0];
+	  break;
     case potvalve_set_vel:
       CommandData.Cryo.potvalve_vel = ivalues[0];
       break;
@@ -2009,6 +2041,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         blast_err("Could not resolve filename \"%s\"", svalues[1]);
       }
       break;
+		case set_pilot_oth:
+				CommandData.pilot_oth = ivalues[0];
+				blast_info("Switched to Pilot to stream to \"%s\"\n", pilot_target_names[CommandData.pilot_oth]);
+				break;
     case biphase_clk_speed:
       // Value entered by user in kbps but stored in bps
       if (ivalues[0] == 100) {
@@ -3399,15 +3435,19 @@ void InitCommandData()
     CommandData.cal_ymin_mag[1] = 0.1898;
     CommandData.cal_mag_align[1] = 0.0;
 
-    CommandData.cal_off_pss1 = 0.0;
-    CommandData.cal_off_pss2 = 2.7997;
-    CommandData.cal_off_pss3 = 4.9994;
-    CommandData.cal_off_pss4 = 10.3497;
+    CommandData.cal_az_pss[0] = 0.0;
+    CommandData.cal_az_pss[1] = 0.0;
+    CommandData.cal_az_pss[2] = 0.0;
+    CommandData.cal_az_pss[3] = 0.0;
+    CommandData.cal_az_pss[4] = 0.0;
+    CommandData.cal_az_pss[5] = 0.0;
 
-    CommandData.cal_d_pss1 = 0.0;
-    CommandData.cal_d_pss2 = 0.0;
-    CommandData.cal_d_pss3 = 0.0;
-    CommandData.cal_d_pss4 = 0.0;
+    CommandData.cal_d_pss[0] = 0.0;
+    CommandData.cal_d_pss[1] = 0.0;
+    CommandData.cal_d_pss[2] = 0.0;
+    CommandData.cal_d_pss[3] = 0.0;
+    CommandData.cal_d_pss[4] = 0.0;
+    CommandData.cal_d_pss[5] = 0.0;
 
     CommandData.cal_imin_pss = 4.5;
 
@@ -3488,7 +3528,7 @@ void InitCommandData()
     CommandData.actbus.act_vel = 200;
     CommandData.actbus.act_acc = 1000;
     CommandData.actbus.act_move_i = 75;
-    CommandData.actbus.act_hold_i = 45;
+    CommandData.actbus.act_hold_i = 10;
     CommandData.actbus.act_tol = 5;
 
     CommandData.actbus.lock_vel = 110000;
@@ -3538,6 +3578,7 @@ void InitCommandData()
     CommandData.hwpr.pos[0] = 0.4047;
 
     CommandData.hwpr.overshoot = 300;
+	CommandData.hwpr.backoff = 0.9;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;
