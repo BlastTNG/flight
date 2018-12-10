@@ -1,0 +1,353 @@
+{
+    "OWL FILE rev.": "20140928",
+    "PObject": {
+        "_id": "0"
+    },
+    "boxes": [
+        {
+            "PObject": {
+                "_id": "391793455"
+            },
+            "_boxTitle": "Cryo Status",
+            "_style": "(P2072147126)",
+            "cellHeight": 23,
+            "cellWidth": 16,
+            "cellX": 3,
+            "cellY": 3,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1044646091"
+                        },
+                        "_map": {
+                            "0": "Closed[style=Important (P564751211)]",
+                            "1": "Open[style=No style (P680910645)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "43466910"
+                    },
+                    "_caption": "Potvalve ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "POT_VALVE",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1132560810"
+                    },
+                    "_caption": "VCS1 HX",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs1_hx",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1639144508"
+                    },
+                    "_caption": "VCS2 HX",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs2_hx",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "121931520"
+                    },
+                    "_caption": "3He Char   ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_charcoal",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "890339389"
+                    },
+                    "_caption": "M3",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_m3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "410428068"
+                    },
+                    "_caption": "VCS1 Plate ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs1_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "593607558"
+                    },
+                    "_caption": "VCS2 Plate ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs2_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2085562844"
+                    },
+                    "_caption": "3He Char HS ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_charcoal_hs",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "607263298"
+                    },
+                    "_caption": "HWP Mount ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_m4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "551240834"
+                    },
+                    "_caption": "VCS1 Filt",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs1_filt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "941499730"
+                    },
+                    "_caption": "VCS2 Filt",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_vcs2_filt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1432908282"
+                    },
+                    "_caption": "N2 Blowoff",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Nitrogen_Flow",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "206488280"
+                    },
+                    "_caption": "Dichroic Ring ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_hwp",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1599955911"
+                    },
+                    "_caption": "4K Plate",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_4k_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "914857509"
+                    },
+                    "_caption": "Pot purge flow",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "He_Pot_Purge",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1225541991"
+                    },
+                    "_caption": "OB Filt",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_ob_filter",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1529869540"
+                    },
+                    "_caption": "4K Filt",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_4k_filt",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1471974930"
+                    },
+                    "_caption": "Pump pot",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_1k_fridge",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "845424335"
+                    },
+                    "_caption": "350 FPA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Td_250fpa",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 391,
+            "geometryWidth": 272,
+            "geometryX": 51,
+            "geometryY": 51
+        },
+        {
+            "PObject": {
+                "_id": "739666076"
+            },
+            "_boxTitle": "Temperatures",
+            "_style": "(P2146903282)",
+            "cellHeight": 6,
+            "cellWidth": 15,
+            "cellX": 19,
+            "cellY": 3,
+            "dataItems": [
+            ],
+            "geometryHeight": 102,
+            "geometryWidth": 255,
+            "geometryX": 323,
+            "geometryY": 51
+        }
+    ],
+    "extremas": [
+    ],
+    "linkNames": [
+        "/data/etc/mole.lnk",
+        "/data/etc/dialup.lnk",
+        "/data/etc/tdrss.lnk",
+        "/data/etc/pilot.lnk",
+        "/data/etc/packets.lnk"
+    ],
+    "linkSelected": 0,
+    "owls": [
+        {
+            "PObject": {
+                "_id": "773272044"
+            },
+            "cellHeight": 7,
+            "cellWidth": 5,
+            "cellX": 3,
+            "cellY": 25,
+            "geometryHeight": 119,
+            "geometryWidth": 85,
+            "geometryX": 51,
+            "geometryY": 425
+        }
+    ],
+    "styles": [
+        {
+            "PObject": {
+                "_id": "2072147126"
+            },
+            "_bg": "#aaff7f",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "defbox"
+        },
+        {
+            "PObject": {
+                "_id": "477273981"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": ""
+        },
+        {
+            "PObject": {
+                "_id": "564751211"
+            },
+            "_bg": "#ff0000",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Important"
+        },
+        {
+            "PObject": {
+                "_id": "2146903282"
+            },
+            "_bg": "#aaffff",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "temperatures"
+        }
+    ],
+    "webPort": "￿",
+    "windowCellHeight": 60,
+    "windowCellWidth": 67,
+    "windowHeight": 1028,
+    "windowWidth": 1135
+}
