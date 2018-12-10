@@ -97,7 +97,7 @@ static struct lock_struct {
 #define  SHUTTER_TIMEOUT 3000         /* 30 seconds */
 #define  SHUTTER_CLOSED_BIT 0x04      // /7?4 returns 15 when shutter is closed and
                                       // returns 11 when shutter is not closed
-// #define  SHUTTER_OPEN 7            // The choice of 7 is arbitrary
+// #define  SHUTTER_OPEN 7
 #define SHUTTER_SLEEP 100000 /* 100 milliseconds */
 // #define  SHUTTER_SLEEP 50000
 #define  SHUTTER_IS_CLOSED 2
