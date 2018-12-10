@@ -416,7 +416,6 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 		}
     }
 
-    // pss_imin = CommandData.cal_imin_pss/M_16PRE;
     pss_imin = CommandData.cal_imin_pss;
 	blast_info("PSS itot[0]=%f, pss_imin=%f, fabs(itot[0])=%f", itot[0], pss_imin, fabs(itot[0]));
 
