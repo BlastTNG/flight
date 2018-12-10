@@ -417,7 +417,9 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     }
 
     pss_imin = CommandData.cal_imin_pss;
-	blast_info("PSS itot[0]=%f, pss_imin=%f, fabs(itot[0])=%f", itot[0], pss_imin, fabs(itot[0]));
+	// blast_info("PSS1 values: v1_1_pss:%f v2_1_pss:%f v3_1_pss:%f v4_1_pss:%f", i_pss[0][0],
+	// i_pss[0][1], i_pss[0][2], i_pss[0][3]);
+	// blast_info("PSS itot[0]=%f, pss_imin=%f, fabs(itot[0])=%f", itot[0], pss_imin, fabs(itot[0]));
 
     i_point = GETREADINDEX(point_index);
 
