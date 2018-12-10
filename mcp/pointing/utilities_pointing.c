@@ -89,5 +89,3 @@ void calc_sun_position(time_t m_utc, double *m_ra, double *m_dec)
         *m_dec = asin(sin_eo * sin_el);
     }
 }
-
-
