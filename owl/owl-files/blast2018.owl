@@ -21,8 +21,9 @@
                             "_id": "1044646091"
                         },
                         "_map": {
-                            "0": "Closed[style=Important (P564751211)]",
-                            "1": "Open[style=No style (P680910645)]"
+                            "0": "Intermediate[style=No style (P680910645)]",
+                            "1": "OPEN[style=Important (P564751211)]",
+                            "2": "CLOSED[style=Important Green (P1055304642)]"
                         }
                     },
                     "PObject": {
@@ -31,7 +32,7 @@
                     "_caption": "Potvalve ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_source": "POT_VALVE",
+                    "_source": "STATE_POTVALVE",
                     "type": "PMDI"
                 },
                 {
@@ -568,6 +569,8 @@
                             "_id": "1625456133"
                         },
                         "_map": {
+                            "0": "Idle[style=No style (P680910645)]",
+                            "1": "running[style=No style (P680910645)]"
                         }
                     },
                     "PObject": {
@@ -731,6 +734,47 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_PI_ROACH5",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2043191694"
+                    },
+                    "_caption": "Roach TLM Mode ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ROACH_TLM_MODE",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1181107951"
+                    },
+                    "_caption": "gyro",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "GYR",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "194574713"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "988216910"
+                    },
+                    "_caption": "Multi",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 392,
@@ -852,6 +896,17 @@
             "_italic": false,
             "_linked": true,
             "_name": "Roaches"
+        },
+        {
+            "PObject": {
+                "_id": "1055304642"
+            },
+            "_bg": "#00ff00",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Important Green"
         }
     ],
     "webPort": "￿",
