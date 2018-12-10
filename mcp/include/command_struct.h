@@ -585,7 +585,6 @@ struct CommandDataStruct {
   struct {
     int off;
     int force_repoll;
-    int which_used;
 
     /* arbitrary command */
     int cindex;
