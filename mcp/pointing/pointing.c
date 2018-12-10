@@ -533,7 +533,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
   	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
   }
 
-  for (i = 0; i < NUM_PSS; i++) {
+  for (j = 0; j < NUM_PSS; j++) {
 	PointingData[point_index].pss_azraw[j] = azraw[j];
     PointingData[point_index].pss_elraw[j] = elraw[j];
   }
