@@ -24,7 +24,20 @@
 #include <QMouseEvent>
 #include <QApplication>
 #include <QDebug>
-#include <QPlastiqueStyle>
+#include <QDrag>
+#include <QMimeData>
+#include <QProcess>
+#include <QTemporaryFile>
+
+//#include <QPlastiqueStyle>
+
+#ifdef __APPLE__
+#include <python2.6/Python.h>
+#else
+#include <python2.7/Python.h>   //you may need to change this
+#endif
+
+static int _delaysThisCycle = 0;
 
 PAbstractDataItem::PAbstractDataItem(PBox* parent, QString caption) : QWidget(parent), _layout(new QHBoxLayout()),
     _caption(new QLabel(caption)), _captionStyle(PStyle::noStyle), _defaultDataStyle(PStyle::noStyle),
@@ -37,9 +50,9 @@ PAbstractDataItem::PAbstractDataItem(PBox* parent, QString caption) : QWidget(pa
     _layout->addWidget(_caption);
     _layout->addWidget(_data);
     parent->_dirty=1;
-    QPlastiqueStyle* ps=new QPlastiqueStyle;
-    _caption->setStyle(ps);
-    _data->setStyle(ps);
+//    QPlastiqueStyle* ps=new QPlastiqueStyle;
+//    _caption->setStyle(ps);
+//    _data->setStyle(ps);
 }
 
 PAbstractDataItem::PAbstractDataItem(PBox* parent, PAbstractDataItem* other) : QWidget(parent), _layout(new QHBoxLayout()),
@@ -53,9 +66,21 @@ PAbstractDataItem::PAbstractDataItem(PBox* parent, PAbstractDataItem* other) : Q
     _layout->addWidget(_caption);
     _layout->addWidget(_data);
     parent->_dirty=1;
-    QPlastiqueStyle* ps=new QPlastiqueStyle;
-    _caption->setStyle(ps);
-    _data->setStyle(ps);
+//    QPlastiqueStyle* ps=new QPlastiqueStyle;
+//    _caption->setStyle(ps);
+//    _data->setStyle(ps);
+}
+
+int PAbstractDataItem::delaysThisCycle() {
+  return _delaysThisCycle;
+}
+
+void PAbstractDataItem::newCycle() {
+  _delaysThisCycle = 0;
+}
+
+void PAbstractDataItem::incrementDelays() {
+  _delaysThisCycle++;
 }
 
 QString PAbstractDataItem::caption() const
@@ -86,6 +111,40 @@ void PAbstractDataItem::mousePressEvent(QMouseEvent *event)
     }
 }
 
+void PAbstractDataItem::mouseDoubleClickEvent(QMouseEvent*)
+{
+  QTemporaryFile tmpfile;
+  if (tmpfile.open()) { //QIODevice::WriteOnly | QIODevice::Text)) {
+    tmpfile.write(QString(
+                    "import pykst as kst\n"
+                    "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"
+                    "x=client.new_data_vector(\""+QString(PMainWindow::me->_dirfileFilename)+"\",field = \"INDEX\", start=-1, num_frames=1000)\n"
+                    "y=client.new_data_vector(\""+QString(PMainWindow::me->_dirfileFilename)+"\",field = \""+QString(source())+"\", start=-1, num_frames=1000)\n"
+                    "c=client.new_curve(x,y)\n"
+                    "p=client.new_plot()\n"
+                    "p.add(c)\n"
+                    ).toLatin1());
+    QString filename = tmpfile.fileName();
+    tmpfile.close();
+    QProcess::execute ("python2.7 " + filename);
+  } else {
+    printf("could not write to file!");
+  }
+
+  /* // This died.  Don't know why.
+  PyRun_SimpleString(QString(
+                     "import pykst as kst\n"
+                     "client = kst.Client(\""+QString(getenv("USER"))+"-owl\")\n"
+                     "x=client.new_data_vector(\""+QString(PMainWindow::me->_dirfileFilename)+"\",field = \"INDEX\", start=-1, num_frames=1000)\n"
+                     "y=client.new_data_vector(\""+QString(PMainWindow::me->_dirfileFilename)+"\",field = \""+QString(source())+"\", start=-1, num_frames=1000)\n"
+                     "c=client.new_curve(x,y)\n"
+                     "p=client.new_plot()\n"
+                     "p.add(c)\n"
+                     ).toLatin1());
+  */
+
+}
+
 void PAbstractDataItem::mouseMoveEvent(QMouseEvent *event)
 {
     if (PMainWindow::me->mouseInactive()) return;
@@ -98,7 +157,7 @@ void PAbstractDataItem::mouseMoveEvent(QMouseEvent *event)
     QDrag *drag = new QDrag(this);
     QMimeData *mimeData = new QMimeData;
 
-    mimeData->setData("text/plain", (PMainWindow::me->_dirfileFilename+"#"+_source).toAscii());
+    mimeData->setData("text/plain", (PMainWindow::me->_dirfileFilename+"#"+_source).toLatin1());
     mimeData->setData("application/x-owlid", QByteArray::number(id()));
     drag->setMimeData(mimeData);
 
@@ -140,4 +199,52 @@ void PAbstractDataItem::setSource(QString x,bool force) {
 void PAbstractDataItem::activate()
 {
     emit activated();
+}
+
+double PAbstractDataItem::gdReadRawData(GetData::Dirfile* dirFile,int lastNFrames, bool &ok)
+{
+    double indata;
+
+    ok = false;
+
+    // Read in from disk
+    int i=0;
+    if (_sourceBad) { // we have determined that this field does not exist in the dirfile, so quit trying.
+      return 0.0;
+    }
+    while (dirFile->GetData(_source.toStdString().c_str(),
+                         lastNFrames-1, 0, 0, 1, // 1 sample from frame nf-1
+                         GetData::Float64, (void*)(&indata))==0) {
+
+        if (dirFile->Error()== GD_E_BAD_CODE) {
+            _sourceBad = true;
+            _data->setText("bad src");
+            return 0.0;
+        }
+        if (delaysThisCycle()<=5) {
+          if (++i>=5) { // keep trying for 10 x 10000 uS = 0.05s
+              if (_neverGood) {
+                  if(_data->text()!="bad src") {
+                      _data->setText("bad src");
+                      _serverDirty=-1;
+                      //_sourceBad = true;
+                      //qDebug() << "field" << _source << "giving up after 50 tries";
+                  } else {
+                      --_serverDirty;
+                  }
+              }
+              //qDebug() << "field" << _source << "giving up after 5 tries";
+              return 0.0;
+          }
+          //qDebug() << "field" << _source << "couldn't be read. Sleeping before trying again." << i;
+          incrementDelays();
+          usleep(10000);
+        } else {
+          return 0.0;
+        }
+    }
+    _neverGood = false;
+
+    ok = true;
+    return (indata);
 }

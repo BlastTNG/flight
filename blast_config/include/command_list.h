@@ -47,6 +47,7 @@
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
 #define GRPOS_ROACH 18
+#define GRPOS_PSS   19
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -67,18 +68,21 @@
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
 #define GR_ROACH        (1 << GRPOS_ROACH)
+#define GR_PSS          (1 << GRPOS_PSS)
+
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
+extern const char *pilot_target_names[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
-  balance_auto,     balance_off,
+  balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
   elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
@@ -147,7 +151,7 @@ enum singleCommand {
 	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
 	of_lj_on, of_lj_off, gps_timing_on, gps_timing_off,
-	if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
+        gps_sw_reset, if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
 	timing_dist_on, timing_dist_off, bi0_on, bi0_off,
 	vtx_on, vtx_off, if_relay_6_on, if_relay_6_off,
 	if_eth_switch_on, if_eth_switch_off, if_relay_8_on, if_relay_8_off,
@@ -157,8 +161,8 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off, allow_watchdog,
-    disallow_watchdog, set_attens_last_all,
+  change_freqs_all, debug_mode, allow_watchdog,
+    disallow_watchdog, set_attens_last_all, set_attens_min_output,
 
   xyzzy
 };
@@ -175,7 +179,7 @@ enum multiCommand {
   // cal_repeat,
   cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
-  hwpr_jump,         hwpr_goto_i,
+  hwpr_goto_rel,         hwpr_goto_i,
   autotrim_to_sc,
   lock,              phase,             act_offset,
   pivot_gain,        ra_dec_goto,      ra_dec_set,
@@ -186,6 +190,7 @@ enum multiCommand {
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute, reconnect_lj,     set_roach_mode,
+  request_stream_file, set_pilot_oth,
 
   // t_gyro_gain,
   timeout,           vcap,
@@ -201,10 +206,11 @@ enum multiCommand {
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   motors_verbose,    fix_ethercat,      bias_step,
   // phase_step,
-  hwpr_repeat,      hwpr_define_pos,          params_test,
+  hwpr_repeat,      hwpr_define_pos, hwpr_set_margin,         params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
-  set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
+  set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal, pss_cal_n,
+  pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll, pss_cal_array_az, pss_set_imin,
   actuators_set_used,
   potvalve_set_thresholds,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
@@ -301,6 +307,11 @@ enum multiCommand {
   set_attens_all,
   reboot_pi,
   read_attens,
+  set_attens_conserve,
+  set_attens_calc,
+  set_lo_MHz,
+  read_lo,
+  all_roach_df,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

@@ -44,11 +44,13 @@ const char *GroupNames[N_GROUPS] = {
                                     [GRPOS_TELEM] =  "Telemetry",
                                     [GRPOS_MISC] = "Miscellaneous",
                                     [GRPOS_FOCUS] = "Focus",
+                                    [GRPOS_PSS] = "PSS",
   };
 
 #define LINKLIST_SELECT "Linklist", 0, 64, 'i', "NONE", {linklist_names}
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
+const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
 const char *linklist_names[] = {0};
 
 
@@ -60,8 +62,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_POWER},
   {COMMAND(vtx_xsc0), "Setting video transmitter to XSC0", GR_XSC_MODE | GR_TELEM},
   {COMMAND(vtx_xsc1), "Setting video transmitter to XSC1", GR_XSC_MODE | GR_TELEM},
-  {COMMAND(pilot_oth_on), "Pilot set to OTH", GR_TELEM},
-  {COMMAND(pilot_oth_off), "Pilot set to not OTH (GND)", GR_TELEM},
   {COMMAND(heater_300mk_on), "turning on 300mK heater", GR_CRYO},
   {COMMAND(heater_300mk_off), "turning off 300mK heater", GR_CRYO},
   {COMMAND(charcoal_hs_on), "turning on charcoal hs", GR_CRYO},
@@ -131,6 +131,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(clino_on), "turning on clinometers", GR_POWER},
   {COMMAND(of_lj_on), "turning on OF labjack", GR_POWER},
   {COMMAND(gps_timing_on), "turning on gps timing", GR_POWER},
+  {COMMAND(gps_sw_reset), "reset gps software", GR_TELEM},
   {COMMAND(hd_pv_off), "turning off HD PV", GR_POWER},
   {COMMAND(eth_switch_off), "turning off Eth Switch", GR_POWER},
   {COMMAND(fc1_off), "turning off FC1", GR_POWER},
@@ -211,8 +212,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(mag_allow_fc1), "un-veto magnetometer attached to fc1", GR_VETO},
   {COMMAND(mag_veto_fc2), "veto magnotometer attached to fc2", GR_VETO},
   {COMMAND(mag_allow_fc2), "un-veto magnetometer attached to fc2", GR_VETO},
-  {COMMAND(pss_veto), "veto pss sensor", GR_VETO},
-  {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO},
+  {COMMAND(pss_veto), "veto pss sensor", GR_VETO | GR_PSS},
+  {COMMAND(pss_allow), "un-veto pss sensor", GR_VETO | GR_PSS},
   {COMMAND(dgps_veto), "veto CSBF DGPS sensor", GR_VETO},
   {COMMAND(dgps_allow), "un-veto CSBF DGPS sensor", GR_VETO},
   {COMMAND(ifroll_1_gy_allow), "enable ifroll_1_gy", GR_VETO},
@@ -289,6 +290,8 @@ struct scom scommands[xyzzy + 1] = {
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
   {COMMAND(balance_off),  "Turn off the balance motor", GR_BAL},
+  {COMMAND(balance_terminate),  "Drive balance system to lower limit, after sending lock45,"
+	  "before termination", GR_BAL},
 
   {COMMAND(pin_in), "close lock pin without checking encoder (dangerous)",
     GR_LOCK | CONFIRM},
@@ -328,6 +331,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
   {COMMAND(set_attens_default), "(All Roaches) Set all attens to default values", GR_ROACH},
+  {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
@@ -385,17 +389,70 @@ struct mcom mcommands[plugh + 2] = {
       {"Mag Angle Offset", -180.0, 180.0, 'f', "CAL_ALIGNMENT_MAG2"}
     }
   }, // 10 10 10.5 10.34
-  {COMMAND(pss_cal), "set pss calibration", GR_TRIM, 9,
+
+  {COMMAND(pss_set_imin), "set pss minimum current", GR_TRIM | GR_PSS, 1,
     {
-      {"Offset 1", -20.0, 20.0, 'f', "CAL_OFF_PSS1"},
-      {"Distance 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
-      {"Offset 2", -20.0, 20.0, 'f', "CAL_OFF_PSS2"},
-      {"Distance 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
-      {"Offset 3", -20.0, 20.0, 'f', "CAL_OFF_PSS3"},
-      {"Distance 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
-      {"Offset 4", -20.0, 20.0, 'f', "CAL_OFF_PSS4"},
-      {"Distance 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
       {"I Min", 0.0, 20.0, 'f', "CAL_IMIN_PSS"}
+    }
+  },
+
+{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 6,
+    {
+      {"PSS number (1-6)",  1, 6, 'i', "NONE"},
+      {"Distance offset",  -2.0, 2.0, 'f', "NONE"},
+      {"Azimuth offset",   -2.0, 2.0, 'f', "NONE"},
+      {"Elevation offset", -2.0, 2.0, 'f', "NONE"},
+      {"Roll offset",      -2.0, 2.0, 'f', "NONE"},
+    }
+  },
+
+  {COMMAND(pss_cal_d), "set pss distance calibration (mm)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Distance offset 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
+      {"Distance offset 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
+      {"Distance offset 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
+      {"Distance offset 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
+      {"Distance offset 5", -2.0, 2.0, 'f', "CAL_D_PSS5"},
+      {"Distance offset 6", -2.0, 2.0, 'f', "CAL_D_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_az), "set pss azimuth calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Azimuth offset 1", -10.0, 10.0, 'f', "CAL_AZ_PSS1"},
+      {"Azimuth offset 2", -10.0, 10.0, 'f', "CAL_AZ_PSS2"},
+      {"Azimuth offset 3", -10.0, 10.0, 'f', "CAL_AZ_PSS3"},
+      {"Azimuth offset 4", -10.0, 10.0, 'f', "CAL_AZ_PSS4"},
+      {"Azimuth offset 5", -10.0, 10.0, 'f', "CAL_AZ_PSS5"},
+      {"Azimuth offset 6", -10.0, 10.0, 'f', "CAL_AZ_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_array_az), "set pss azimuth calibration for entire array(deg)", GR_TRIM | GR_PSS, 1,
+    {
+      {"Azimuth offset of array", -20.0, 20.0, 'f', "CAL_AZ_PSS_ARRAY"},
+    }
+  },
+
+  {COMMAND(pss_cal_el), "set pss elevation calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Elevation offset 1", -10.0, 10.0, 'f', "CAL_EL_PSS1"},
+      {"Elevation offset 2", -10.0, 10.0, 'f', "CAL_EL_PSS2"},
+      {"Elevation offset 3", -10.0, 10.0, 'f', "CAL_EL_PSS3"},
+      {"Elevation offset 4", -10.0, 10.0, 'f', "CAL_EL_PSS4"},
+      {"Elevation offset 5", -10.0, 10.0, 'f', "CAL_EL_PSS5"},
+      {"Elevation offset 6", -10.0, 10.0, 'f', "CAL_EL_PSS6"},
+    }
+  },
+
+  {COMMAND(pss_cal_roll), "set pss roll calibration (deg)", GR_TRIM | GR_PSS, 6,
+    {
+      {"Roll offset 1", -5.0, 5.0, 'f', "CAL_ROLL_PSS1"},
+      {"Roll offset 2", -5.0, 5.0, 'f', "CAL_ROLL_PSS2"},
+      {"Roll offset 3", -5.0, 5.0, 'f', "CAL_ROLL_PSS3"},
+      {"Roll offset 4", -5.0, 5.0, 'f', "CAL_ROLL_PSS4"},
+      {"Roll offset 5", -5.0, 5.0, 'f', "CAL_ROLL_PSS5"},
+      {"Roll offset 6", -5.0, 5.0, 'f', "CAL_ROLL_PSS6"},
     }
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
@@ -741,7 +798,7 @@ struct mcom mcommands[plugh + 2] = {
       {"destination", 0, 80000, 'l', "ENC_HWPR"}
     }
   },
-  {COMMAND(hwpr_jump), "move the waveplate rotator to relative position",
+  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
     GR_HWPR, 1,
     {
       {"delta", -80000, 80000, 'l', "0"}
@@ -788,7 +845,13 @@ struct mcom mcommands[plugh + 2] = {
       {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
     }
   },
-
+  {COMMAND(hwpr_set_margin),
+    "Set HWPR margin for determinting which indexed position we are at",
+    GR_HWPR, 1,
+    {
+      {"hwpr margin", 0, 64000, 'i', "NONE"},
+    }
+  },
   /* XY Stage */
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,
@@ -849,13 +912,24 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(set_pilot_oth), "Set the pilot target to downlink", GR_TELEM, 1,
+    {
+      {"Downlink", 0, 3, 'i', "NONE", {pilot_target_names}},
+    }
+  },
+
   {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
     {
       {LINKLIST_SELECT},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-
+  {COMMAND(request_stream_file), "Stream a file at bandwidth over given link", GR_TELEM, 2,
+    {
+      {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"Absolute file path", 0, 64, 's', ""}
+    }
+  },
   {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
     {
       {"Clock speed (kbps)", 100, 2000, 'i', "mpsse_clock_speed"}
@@ -1010,6 +1084,18 @@ struct mcom mcommands[plugh + 2] = {
       {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
     }
   },
+  {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Desired dBm per tone", -47.0, -17.0, 'f', "NONE"},
+    }
+  },
   {COMMAND(read_attens), "Read attenuators", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1068,6 +1154,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
+    {
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(all_roach_df), "Save DF timestreams for all Roaches", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
@@ -1131,6 +1222,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
+    }
+  },
+  {COMMAND(set_lo_MHz), "set the LO frequency", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"lo freq MHz", 100.0, 3000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   {COMMAND(find_kids_default), "Find res freqs from VNA sweeps using default params", GR_ROACH, 1,

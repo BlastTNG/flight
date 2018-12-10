@@ -97,7 +97,7 @@ static struct lock_struct {
 #define  SHUTTER_TIMEOUT 3000         /* 30 seconds */
 #define  SHUTTER_CLOSED_BIT 0x04      // /7?4 returns 15 when shutter is closed and
                                       // returns 11 when shutter is not closed
-// #define  SHUTTER_OPEN 7            // The choice of 7 is arbitrary
+// #define  SHUTTER_OPEN 7
 #define SHUTTER_SLEEP 100000 /* 100 milliseconds */
 // #define  SHUTTER_SLEEP 50000
 #define  SHUTTER_IS_CLOSED 2
@@ -341,8 +341,8 @@ static void ServoActuators(int* goal)
   int i;
   char buf[EZ_BUS_BUF_LEN];
 
-  if (CheckMove(goal[0], goal[1], goal[2]))
-    return;
+  // if (CheckMove(goal[0], goal[1], goal[2]))
+    // return;
 
   if (CommandData.actbus.focus_mode == ACTBUS_FM_PANIC)
     return;
@@ -441,13 +441,13 @@ static void DoActuators(void)
       CommandData.actbus.goal[2] = act_data[2].enc + delta;
       /* fallthrough */
     case ACTBUS_FM_SERVO:
-	ServoActuators(CommandData.actbus.goal);
-	break;
+	  ServoActuators(CommandData.actbus.goal);
+	  break;
     case ACTBUS_FM_TRIM:
-	actEncTrim(CommandData.actbus.trim);
-	break;
+	  actEncTrim(CommandData.actbus.trim);
+	  break;
     case ACTBUS_FM_SLEEP:
-	break;
+	  break;
     default:
 	blast_err("Unknown Focus Mode (%i), sleeping",
 	    CommandData.actbus.focus_mode);
@@ -1260,7 +1260,6 @@ void StoreActBus(void)
     static channel_t* focusSfAddr;
 
     static channel_t* statusActbusAddr;
-    static channel_t* usedActbusAddr;
 
     if (firsttime) {
         firsttime = 0;
@@ -1319,7 +1318,6 @@ void StoreActBus(void)
         stepSlowShutterAddr = channels_find_by_name("steps_slow_shutter");
 
         statusActbusAddr = channels_find_by_name("status_actbus");
-	usedActbusAddr = channels_find_by_name("used_actbus");
     }
 
     UpdateActFlags();
@@ -1395,7 +1393,6 @@ void StoreActBus(void)
     SET_UINT16(goalSfAddr, CommandData.actbus.focus);
 
     SET_UINT16(statusActbusAddr, actuators_init);
-    SET_UINT16(usedActbusAddr, CommandData.actbus.which_used);
 }
 
 /************************************************************************/
@@ -1444,9 +1441,8 @@ void *ActuatorBus(void *param)
     int first_time = 1;
     int sf_ok;
     int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
-    int which_act_used;
 
-    int hwp_pos; // DEBUG PCA
+    // int hwp_pos; // DEBUG PCA
 
     nameThread("ActBus");
     bputs(startup, "ActuatorBus startup.");
@@ -1480,16 +1476,16 @@ void *ActuatorBus(void *param)
         j++;
     }
 
-    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPR_ADDR = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
+    // blast_info("LOCKNUM = %i, SHUTTERNUM = %i, HWPRNUM = %i", LOCKNUM, SHUTTERNUM, HWPRNUM);
     // blast_info("LOCK_PREAMBLE = %s, SHUTTER_PREAMBLE = %s, HWPR_PREAMBLE= %s, act_tol=%s",
     //           LOCK_PREAMBLE, SHUTTER_PREAMBLE, HWPR_PREAMBLE, actPreamble(CommandData.actbus.act_tol));
     for (i = 0; i < NACT; i++) {
         blast_info("Actuator %i, id[i] =%i", i, id[i]);
         blast_info("name[i] = %s", name[i]);
-         EZBus_Add(&bus, id[i], name[i]);
+        EZBus_Add(&bus, id[i], name[i]);
         if (i == BALANCENUM) {
             EZBus_SetPreamble(&bus, id[i], BALANCE_PREAMBLE);
-	} else if (i == LOCKNUM) {
+		} else if (i == LOCKNUM) {
             EZBus_SetPreamble(&bus, id[i], LOCK_PREAMBLE);
         } else if (i == SHUTTERNUM) {
             EZBus_SetPreamble(&bus, id[i], SHUTTER_PREAMBLE);
@@ -1497,9 +1493,9 @@ void *ActuatorBus(void *param)
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
         } else if (i == POTVALVE_NUM) {
 	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-	} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+		} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
 	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
-	} else {
+		} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
     	}
     }
@@ -1519,105 +1515,91 @@ void *ActuatorBus(void *param)
             CommandData.actbus.force_repoll = 0;
         }
 
-    if (poll_timeout <= 0 && !all_ok && actbus_reset) {
-            // suppress non-error messages during repoll
-	    // blast_info("supressing non-errors during repoll"); // DEBUG PAW
-            // bus.chatter = EZ_CHAT_ERR;
-	    // for now, not changing chatter during repoll
-	    // blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
-            all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
-	    // blast_info("done repolling"); // DEBUG PAW
-            bus.chatter = ACTBUS_CHATTER;
-            poll_timeout = POLL_TIMEOUT;
-        }
+    	if (poll_timeout <= 0 && !all_ok && actbus_reset) {
+        	// suppress non-error messages during repoll
+	    	// blast_info("supressing non-errors during repoll"); // DEBUG PAW
+        	// bus.chatter = EZ_CHAT_ERR;
+	    	// for now, not changing chatter during repoll
+	    	// blast_info("about to call EZBus_PollInit (repolling steppers that were flagged)"); // DEBUG PAW
+        	all_ok = !(EZBus_PollInit(&bus, InitializeActuator) & EZ_ERR_POLL);
+	    	// blast_info("done repolling"); // DEBUG PAW
+        	bus.chatter = ACTBUS_CHATTER;
+        	poll_timeout = POLL_TIMEOUT;
+		}
 
         /* Send the uplinked command, if any */
-        my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-        caddr_match = 0;
-        for (i = 0; i < NACT; i++)
-            if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
-        if (caddr_match) {
-            // blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
-            //            CommandData.actbus.caddr[my_cindex]);
-            // increase print level for uplinked manual commands
-            bus.chatter = EZ_CHAT_BUS;
-            EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
-            CommandData.actbus.caddr[my_cindex] = 0;
-            bus.chatter = ACTBUS_CHATTER;
-        }
-	// TODO(paul): which_act_used doesn't work because all steppers are added before the for loop starts
+    	my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+    	caddr_match = 0;
+    	for (i = 0; i < NACT; i++)
+        	if (CommandData.actbus.caddr[my_cindex] == id[i]) caddr_match = 1;
+    	if (caddr_match) {
+        	// blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+        	//            CommandData.actbus.caddr[my_cindex]);
+        	// increase print level for uplinked manual commands
+        	bus.chatter = EZ_CHAT_BUS;
+        	EZBus_Comm(&bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
+        	CommandData.actbus.caddr[my_cindex] = 0;
+        	bus.chatter = ACTBUS_CHATTER;
+    	}
 
-	which_act_used = CommandData.actbus.which_used;
-
-        if (which_act_used & (0x1 << LOCKNUM)) {
-            if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
+        if (EZBus_IsUsable(&bus, id[LOCKNUM])) {
 	        // blast_info("calling DoLock"); // DEBUG PAW
-                DoLock();
-                actuators_init |= 0x1 << LOCKNUM;
-            } else {
-	        // blast_info("forcing repoll of lockpin"); // DEBUG PAW
-                EZBus_ForceRepoll(&bus, id[LOCKNUM]);
-                all_ok = 0;
-                actuators_init &= ~(0x1 << LOCKNUM);
-            }
-	}
+            DoLock();
+            actuators_init |= 0x1 << LOCKNUM;
+        } else {
+	    // blast_info("forcing repoll of lockpin"); // DEBUG PAW
+            EZBus_ForceRepoll(&bus, id[LOCKNUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << LOCKNUM);
+        }
 
-        if (which_act_used & (0x1 << SHUTTERNUM)) {
-            if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
-	        // blast_info("calling DoShutter"); // DEBUG PAW
-                DoShutter();
-                actuators_init |= 0x1 << SHUTTERNUM;
-            } else {
+        if (EZBus_IsUsable(&bus, id[SHUTTERNUM])) {
+	    	// blast_info("calling DoShutter"); // DEBUG PAW
+            DoShutter();
+            actuators_init |= 0x1 << SHUTTERNUM;
+        } else {
 	        // blast_info("forcing repoll of shutter"); // DEBUG PAW
-                EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
-                all_ok = 0;
-                actuators_init &= ~(0x1 << SHUTTERNUM);
-            }
-	}
+            EZBus_ForceRepoll(&bus, id[SHUTTERNUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << SHUTTERNUM);
+        }
 
         sf_ok = 1;
         for (i = 0; i < 3; i++) {
-            if (which_act_used & (0x1 << i)) {
-                if (EZBus_IsUsable(&bus, id[i])) {
-                    actuators_init |= 0x1 << i;
-                } else {
-                    EZBus_ForceRepoll(&bus, id[i]);
-                    all_ok = 0;
-                    sf_ok = 0;
-                    actuators_init &= ~(0x1 << i);
-                }
-	    }
-	}
+            if (EZBus_IsUsable(&bus, id[i])) {
+                actuators_init |= 0x1 << i;
+            } else {
+                EZBus_ForceRepoll(&bus, id[i]);
+                all_ok = 0;
+                sf_ok = 0;
+                actuators_init &= ~(0x1 << i);
+            }
+		}
 
         if (sf_ok) DoActuators();
 
-        if (which_act_used & (0x1 << HWPRNUM)) {
-            if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
-	        // blast_info("calling DoHWPR"); // DEBUG PAW
+        if (EZBus_IsUsable(&bus, id[HWPRNUM])) {
+	    	// blast_info("calling DoHWPR"); // DEBUG PAW
 	        DoHWPR(&bus);
-                actuators_init |= 0x1 << HWPRNUM;
-            } else {
-                EZBus_ForceRepoll(&bus, id[HWPRNUM]);
-                all_ok = 0;
-                actuators_init &= ~(0x1 << HWPRNUM);
-            }
+            actuators_init |= 0x1 << HWPRNUM;
+        } else {
+            EZBus_ForceRepoll(&bus, id[HWPRNUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << HWPRNUM);
         }
 
-        if (which_act_used & (0x1 << BALANCENUM)) {
-            if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
+        if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
 	        // blast_info("calling DoBalance"); // DEBUG PAW
-                DoBalance(&bus);
-                actuators_init |= 0x1 << BALANCENUM;
-            } else {
+            DoBalance(&bus);
+            actuators_init |= 0x1 << BALANCENUM;
+        } else {
 	        // blast_info("forcing repoll of balance"); // DEBUG PAW
-                EZBus_ForceRepoll(&bus, id[BALANCENUM]);
-                all_ok = 0;
-                actuators_init &= ~(0x1 << BALANCENUM);
-            }
-	}
+            EZBus_ForceRepoll(&bus, id[BALANCENUM]);
+            all_ok = 0;
+            actuators_init &= ~(0x1 << BALANCENUM);
+        }
 
-	for (i = 0; i < 3; i++) {
-            if (which_act_used & (0x1 << valve_arr[i])) {
+		for (i = 0; i < 3; i++) {
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {
@@ -1627,14 +1609,13 @@ void *ActuatorBus(void *param)
 		    actuators_init &= ~(0x1 << valve_arr[i]);
 		}
 		valve_check |= 0x1 << valve_arr[i];
-	    }
-	}
+		}
 
-	if (valve_check & actuators_init) {
+		if (valve_check & actuators_init) {
 	        // blast_info("calling DoCryovalves"); // DEBUG PAW
-		DoCryovalves(&bus, actuators_init);
-	}
+			DoCryovalves(&bus, actuators_init);
+		}
 
-	usleep(10000);
+		usleep(10000);
     }
 }

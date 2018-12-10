@@ -340,127 +340,119 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
     return (1);
 }
 
-// PSSConvert versions added 12 June 2010 -GST
-// PSS1 for Lupus, PSS2 for Vela, PSS3 and PSS4 TBD
-#define  PSS_L  10.     // 10 mm = effective length of active area
-#define  PSS_D  {10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}     // 10 mm = Distance between pinhole and sensor
-#define  PSS_IMAX  8192.  // Maximum current (place holder for now)
-#define  PSS_XSTRETCH  1.  // 0.995
-#define  PSS_YSTRETCH  1.  // 1.008
-#define  PSS_BETA  {PSS1_ALIGNMENT, PSS2_ALIGNMENT, PSS3_ALIGNMENT, PSS4_ALIGNMENT, PSS5_ALIGNMENT, \
-PSS6_ALIGNMENT, PSS7_ALIGNMENT, PSS8_ALIGNMENT}
-#define  PSS_ALPHA   {25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0}
-#define  PSS_PSI     {-15.5, 11., 0., 0., 0., 0., 0., 0.}
-
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 // TODO(seth): Reenable PSSConvert
     int     i_point;
     double  sun_ra, sun_dec;
-//  double        az[4];
-//  double	azraw[4];
-//  double	elraw[4];
-//  double new_val;
-//
-//  static double i1[4], i2[4], i3[4], i4[4];
-//  double        itot[4];
-//  double        x[4], y[4];
-//  double        usun[4][3], u2[4][3];
-//  gsl_matrix    *rot[4];
-//  gsl_matrix    *rxalpha[4], *rzpsi[4];
-//
-//  double	weight[4];
-//  double	weightsum;
-//  double        pss_d[4], beta[4], alpha[4], psi[4];
-//  double        norm[4];
-//  double        pss_imin;
-//
-//  i1[0] = ACSData.pss1_i1 - 32768.;
-//  i2[0] = ACSData.pss1_i2 - 32768.;
-//  i3[0] = ACSData.pss1_i3 - 32768.;
-//  i4[0] = ACSData.pss1_i4 - 32768.;
-//  i1[1] = ACSData.pss2_i1 - 32768.;
-//  i2[1] = ACSData.pss2_i2 - 32768.;
-//  i3[1] = ACSData.pss2_i3 - 32768.;
-//  i4[1] = ACSData.pss2_i4 - 32768.;
-////  i1[2] = ACSData.pss3_i1 - 32768.;
-////  i2[2] = ACSData.pss3_i2 - 32768.;
-////  i3[2] = ACSData.pss3_i3 - 32768.;
-////  i4[2] = ACSData.pss3_i4 - 32768.;
-////  i1[3] = ACSData.pss4_i1 - 32768.;
-////  i2[3] = ACSData.pss4_i2 - 32768.;
-////  i3[3] = ACSData.pss4_i3 - 32768.;
-////  i4[3] = ACSData.pss4_i4 - 32768.;
-//
-//  for (i=0; i<4; i++) {
-//  	itot[i] = i1[i]+i2[i]+i3[i]+i4[i];
-//  }
-//
-//  pss_imin = CommandData.cal_imin_pss/M_16PRE;
-//
+    double  az[NUM_PSS];
+    double	azraw[NUM_PSS];
+    double	elraw[NUM_PSS];
+    double  new_val;
+
+    static double i_pss[NUM_PSS][NUM_PSS_V];
+    static double itot[NUM_PSS];
+    double        x[NUM_PSS], y[NUM_PSS];
+    double        usun[NUM_PSS][3], u2[NUM_PSS][3];
+    gsl_matrix    *rot[NUM_PSS];
+    gsl_matrix    *rxalpha[NUM_PSS], *rzpsi[NUM_PSS];
+
+    double weight[NUM_PSS];
+    double weightsum;
+	// the rough values are defined in pointing.h, don't include commanded cal values
+	static double pss_d_rough[NUM_PSS]; // sensor to pinhole in mm
+	static double beta_rough[NUM_PSS]; // az in deg
+	static double alpha_rough[NUM_PSS]; // el in deg
+	static double psi_rough[NUM_PSS]; // roll in deg
+	// these are the final values, actually used in the calculation
+	static double pss_d[NUM_PSS], beta[NUM_PSS], alpha[NUM_PSS], psi[NUM_PSS];
+    double norm[NUM_PSS];
+    double pss_imin;
+	int i;
+	int j;
+	int k;
+	static int firsttime = 1;
+
+	if (firsttime) {
+		pss_d_rough[0] = PSS0_D;
+	    pss_d_rough[1] = PSS1_D;
+	    pss_d_rough[2] = PSS2_D;
+	    pss_d_rough[3] = PSS3_D;
+	    pss_d_rough[4] = PSS4_D;
+	    pss_d_rough[5] = PSS5_D;
+
+	    beta_rough[0] = PSS0_BETA;
+	    beta_rough[1] = PSS1_BETA;
+	    beta_rough[2] = PSS2_BETA;
+	    beta_rough[3] = PSS3_BETA;
+	    beta_rough[4] = PSS4_BETA;
+	    beta_rough[5] = PSS5_BETA;
+
+		alpha_rough[0] = PSS0_ALPHA;
+        alpha_rough[1] = PSS1_ALPHA;
+        alpha_rough[2] = PSS2_ALPHA;
+        alpha_rough[3] = PSS3_ALPHA;
+        alpha_rough[4] = PSS4_ALPHA;
+        alpha_rough[5] = PSS5_ALPHA;
+
+		psi_rough[0] = PSS0_PSI;
+        psi_rough[1] = PSS1_PSI;
+        psi_rough[2] = PSS2_PSI;
+        psi_rough[3] = PSS3_PSI;
+        psi_rough[4] = PSS4_PSI;
+        psi_rough[5] = PSS5_PSI;
+
+		firsttime = 0;
+	}
+
+	for (j = 0; j < NUM_PSS; j++) {
+		for (k = 0; k < NUM_PSS_V; k++) {
+			i_pss[j][k] = ACSData.pss_i[j][k];
+		}
+	}
+    for (j = 0; j < NUM_PSS; j++) {
+		itot[j] = 0;
+		for (k = 0; k < NUM_PSS_V; k++) {
+    		itot[j] += i_pss[j][k];
+		}
+    }
+
+    pss_imin = CommandData.cal_imin_pss;
+	// blast_info("PSS1 values: v1_1_pss:%f v2_1_pss:%f v3_1_pss:%f v4_1_pss:%f", i_pss[0][0],
+	// i_pss[0][1], i_pss[0][2], i_pss[0][3]);
+	// blast_info("PSS itot[0]=%f, pss_imin=%f, fabs(itot[0])=%f", itot[0], pss_imin, fabs(itot[0]));
+
     i_point = GETREADINDEX(point_index);
-//
-//  PointingData[point_index].pss1_snr = itot[0]/PSS_IMAX;  // 10.
-//  weight[0]= PointingData[point_index].pss1_snr;
-//  PointingData[point_index].pss2_snr = itot[1]/PSS_IMAX;  // 10.
-//  weight[1]= PointingData[point_index].pss2_snr;
-////  PointingData[point_index].pss3_snr = itot[2]/PSS_IMAX;  // 10.
-////  weight[2]= PointingData[point_index].pss3_snr;
-////  PointingData[point_index].pss4_snr = itot[3]/PSS_IMAX;  // 10.
-////  weight[3]= PointingData[point_index].pss4_snr;
-//
-//  if (fabs(itot[0]) < pss_imin) {
-//    	PointingData[point_index].pss1_snr = 1.;  // 1.
-//    weight[0] = 0.0;
-//  }
-//  if (fabs(itot[1]) < pss_imin) {
-//    	PointingData[point_index].pss2_snr = 1.;  // 1.
-//    weight[1] = 0.0;
-//  }
-////  if (fabs(itot[2]) < pss_imin) {
-////    	PointingData[point_index].pss3_snr = 1.;  // 1.
-////    weight[2] = 0.0;
-////  }
-////  if (fabs(itot[3]) < pss_imin) {
-////    	PointingData[point_index].pss4_snr = 1.;  // 1.
-////    weight[3] = 0.0;
-////  }
-//
-//  // Define pss_d (distance to pinhole)
-//  pss_d[0] = PSS1_D[0] + CommandData.cal_d_pss1;
-//  pss_d[1] = PSS2_D[1] + CommandData.cal_d_pss2;
-//  pss_d[2] = PSS3_D[2] + CommandData.cal_d_pss3;
-//  pss_d[3] = PSS4_D[3] + CommandData.cal_d_pss4;
-//  pss_d[4] = PSS4_D[4] + CommandData.cal_d_pss5;
-//  pss_d[5] = PSS4_D[5] + CommandData.cal_d_pss6;
-//  pss_d[6] = PSS4_D[6] + CommandData.cal_d_pss7;
-//  pss_d[7] = PSS4_D[7] + CommandData.cal_d_pss8;
-//
-//  for (i=0; i<4; i++) {
-//  	x[i] = -PSS_XSTRETCH*(PSS_L/2.)*((i2[i]+i3[i])-(i1[i]+i4[i]))/itot[i];
-//  	y[i] = -PSS_YSTRETCH*(PSS_L/2.)*((i2[i]+i4[i])-(i1[i]+i3[i]))/itot[i];
-//  	norm[i] = sqrt(x[i]*x[i] + y[i]*y[i] + pss_d[i]*pss_d[i]);
-//  	usun[i][0] = -x[i] / norm[i];
-//  	usun[i][1] = -y[i] / norm[i];
-//  	usun[i][2] = pss_d[i] / norm[i];
-//  }
-//
-//  // Then spot is at the edge of the sensor
-//  if ((fabs(x[0]) > 4.) | (fabs(y[0]) > 4.)) {
-//    PointingData[point_index].pss1_snr = 0.1;  // 0.1
-//    weight[0]=0.0;
-//  }
-//  if ((fabs(x[1]) > 4.) | (fabs(y[1]) > 4.)) {
-//    PointingData[point_index].pss2_snr = 0.1;  // 0.1
-//    weight[1]=0.0;
-//  }
-////  if ((fabs(x[2]) > 4.) | (fabs(y[2]) > 4.)) {
-////    PointingData[point_index].pss3_snr = 0.1;  // 0.1
-////    weight[2]=0.0;
-////  }
-////  if ((fabs(x[3]) > 4.) | (fabs(y[3]) > 4.)) {
-////    PointingData[point_index].pss4_snr = 0.1;  // 0.1
-////    weight[3]=0.0;
-////  }
+
+	for (j = 0; j < NUM_PSS; j++) {
+		if (fabs(itot[j]) > pss_imin) {
+			PointingData[point_index].pss_snr[j] = itot[j]/PSS_IMAX; // 10.
+    		weight[j]= PointingData[point_index].pss_snr[j];
+		} else {
+      		PointingData[point_index].pss_snr[j] = 1.;  // 1.
+      		weight[j] = 0.0;
+    	}
+	}
+
+	for (j = 0; j < NUM_PSS; j++) {
+		pss_d[j] = pss_d_rough[j] + CommandData.cal_d_pss[j];
+	}
+
+    for (j = 0; j < NUM_PSS; j++) {
+    	x[j] = -PSS_XSTRETCH*(PSS_L/2.)*((i_pss[j][2]+i_pss[j][3])-(i_pss[j][1]+i_pss[j][4]))/itot[j];
+    	y[j] = -PSS_YSTRETCH*(PSS_L/2.)*((i_pss[j][2]+i_pss[j][4])-(i_pss[j][1]+i_pss[j][3]))/itot[j];
+    	norm[j] = sqrt(x[j]*x[j] + y[j]*y[j] + pss_d[j]*pss_d[j]);
+    	usun[j][0] = -x[j] / norm[j];
+    	usun[j][1] = -y[j] / norm[j];
+    	usun[j][2] = pss_d[j] / norm[j];
+    }
+
+    // Then spot is at the edge of the sensor
+	for (j = 0; j < NUM_PSS; j++) {
+    	if ((fabs(x[j]) > 4.) | (fabs(y[j]) > 4.)) {
+      		PointingData[point_index].pss_snr[j] = 0.1;  // 0.1
+      		weight[j]=0.0;
+		}
+	}
 
     /* get current sun az, el */
     calc_sun_position(PointingData[i_point].t, &sun_ra, &sun_dec);
@@ -476,105 +468,110 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     NormalizeAngle(&sun_az);
     PointingData[point_index].sun_az = sun_az;
     PointingData[point_index].sun_el = sun_el;
-//
-//  weightsum=weight[0]+weight[1]+weight[2]+weight[3];
-//  if (weightsum == 0 ) {
-//    return 0;
-//  }
-//
-//  // Define beta (az rotation)
-//  beta[0] = (M_PI/180.)*(PSS1_BETA + CommandData.cal_off_pss1);
-//  beta[1] = (M_PI/180.)*(PSS2_BETA + CommandData.cal_off_pss2);
-//  beta[2] = (M_PI/180.)*(PSS3_BETA + CommandData.cal_off_pss3);
-//  beta[3] = (M_PI/180.)*(PSS4_BETA + CommandData.cal_off_pss4);
-//
-//  // Define alpha (el rotation)
-//  alpha[0] = (M_PI/180.)*PSS1_ALPHA;
-//  alpha[1] = (M_PI/180.)*PSS2_ALPHA;
-//  alpha[2] = (M_PI/180.)*PSS3_ALPHA;
-//  alpha[3] = (M_PI/180.)*PSS4_ALPHA;
-//  // Define psi (roll)
-//  psi[0] = (M_PI/180.)*PSS1_PSI;
-//  psi[1] = (M_PI/180.)*PSS2_PSI;
-//  psi[2] = (M_PI/180.)*PSS3_PSI;
-//  psi[3] = (M_PI/180.)*PSS4_PSI;
-//
-//  //TODO: Remove GSL nonsense.  Replace with calculation
-//  for (i=0; i<4; i++) {
-//  	rot[i] = gsl_matrix_alloc(3, 3);
-//  	rxalpha[i] = gsl_matrix_alloc(3, 3);
-//  	rzpsi[i] = gsl_matrix_alloc(3, 3);
-//
-//    gsl_matrix_set(rxalpha[i], 0, 0, 1.); gsl_matrix_set(rxalpha[i], 0, 1, 0.);
-//  gsl_matrix_set(rxalpha[i], 0, 2, 0.);
-//    gsl_matrix_set(rxalpha[i], 1, 0, 0.); gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i]));
-//  gsl_matrix_set(rxalpha[i], 1, 2, -sin(-alpha[i]));
-//    gsl_matrix_set(rxalpha[i], 2, 0, 0.); gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i]));
-//  gsl_matrix_set(rxalpha[i], 2, 2, cos(-alpha[i]));
-//
-//    gsl_matrix_set(rzpsi[i], 0, 0, cos(psi[i]));  gsl_matrix_set(rzpsi[i], 0, 1, -sin(psi[i]));
-//    gsl_matrix_set(rzpsi[i], 0, 2, 0.);
-//    gsl_matrix_set(rzpsi[i], 1, 0, sin(psi[i]));  gsl_matrix_set(rzpsi[i], 1, 1, cos(psi[i]));
-//    gsl_matrix_set(rzpsi[i], 1, 2, 0.);
-//    gsl_matrix_set(rzpsi[i], 2, 0, 0.);           gsl_matrix_set(rzpsi[i], 2, 1, 0.);
-//    gsl_matrix_set(rzpsi[i], 2, 2, 1.);
-//
-//    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
-//                 1.0, rxalpha[i], rzpsi[i],
-//                 0.0, rot[i]);
-//
-//    // identity is the inverse of the rotation matrix
-//    u2[i][0] = gsl_matrix_get(rot[i], 0, 0)*usun[i][0]
-//        	 + gsl_matrix_get(rot[i], 0, 1)*usun[i][1]
-//        	 + gsl_matrix_get(rot[i], 0, 2)*usun[i][2];
-//    u2[i][1] = gsl_matrix_get(rot[i], 1, 0)*usun[i][0]
-//        	 + gsl_matrix_get(rot[i], 1, 1)*usun[i][1]
-//        	 + gsl_matrix_get(rot[i], 1, 2)*usun[i][2];
-//    u2[i][2] = gsl_matrix_get(rot[i], 2, 0)*usun[i][0]
-//        	 + gsl_matrix_get(rot[i], 2, 1)*usun[i][1]
-//        	 + gsl_matrix_get(rot[i], 2, 2)*usun[i][2];
-//
-//    // az is "az_rel_sun"
-//    az[i] = atan(u2[i][0]/u2[i][2]);                // az is in radians
-//  	azraw[i] = sun_az + (180./M_PI)*(az[i] - beta[i]);
-//  	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
-//  }
-//  PointingData[point_index].pss1_azraw = azraw[0];
-//  PointingData[point_index].pss2_azraw = azraw[1];
-////  PointingData[point_index].pss3_azraw = azraw[2];
-////  PointingData[point_index].pss4_azraw = azraw[3];
-//  PointingData[point_index].pss1_elraw = elraw[0];
-//  PointingData[point_index].pss2_elraw = elraw[1];
-////  PointingData[point_index].pss3_elraw = elraw[2];
-////  PointingData[point_index].pss4_elraw = elraw[3];
-//  for (i=0; i<4; i++) {
-//  	gsl_matrix_free(rot[i]);
-//  	gsl_matrix_free(rxalpha[i]);
-//  	gsl_matrix_free(rzpsi[i]);
-//  }
-//
-//  new_val = (weight[0]*azraw[0] + weight[1]*azraw[1] + weight[2]*azraw[2] + weight[3]*azraw[3])/weightsum;
-//
-//  if ((!isinf(new_val)) && (!isnan(new_val))) {
-//    *azraw_pss = new_val;
-//  } else {
-//    *azraw_pss = 0.0;
-//    return 0;
-//  }
-//
-//  new_val = (weight[0]*elraw[0] + weight[1]*elraw[1] + weight[2]*elraw[2] + weight[3]*elraw[3])/weightsum;
-//  if ((!isinf(new_val)) && (!isnan(new_val))) {
-//    *elraw_pss = new_val;
-//  } else {
-//    *elraw_pss = 0.0;
-//    return 0;
-//  }
-//
-//  NormalizeAngle(azraw_pss);
-//  NormalizeAngle(elraw_pss);
 
-//  PointingData[point_index].pss_azraw = *azraw_pss;
-//  PointingData[point_index].pss_elraw = *elraw_pss;
+  weightsum = 0;
+  for (j = 0; j < NUM_PSS; j++) {
+	  weightsum += weight[j];
+  }
+
+  if (weightsum == 0) {
+    return 0;
+  }
+
+  for (j = 0; j < NUM_PSS; j++) {
+  // Define beta (az rotation)
+  	beta[j] = (M_PI/180.)*(beta_rough[j] + CommandData.cal_az_pss[j] + CommandData.cal_az_pss_array);
+  // Define alpha (el rotation)
+  	alpha[j] = (M_PI/180.)*(alpha_rough[j] + CommandData.cal_el_pss[j]);
+  // Define psi (roll)
+  	psi[j] = (M_PI/180.)*(psi_rough[j] + CommandData.cal_roll_pss[j]);
+  }
+
+  for (i = 0; i < NUM_PSS; i++) {
+  	rot[i] = gsl_matrix_alloc(3, 3);
+  	rxalpha[i] = gsl_matrix_alloc(3, 3);
+  	rzpsi[i] = gsl_matrix_alloc(3, 3);
+
+	gsl_matrix_set(rxalpha[i], 0, 0, 1.);
+	gsl_matrix_set(rxalpha[i], 0, 1, 0.);
+  	gsl_matrix_set(rxalpha[i], 0, 2, 0.);
+	gsl_matrix_set(rxalpha[i], 1, 0, 0.);
+	gsl_matrix_set(rxalpha[i], 1, 1, cos(-alpha[i]));
+  	gsl_matrix_set(rxalpha[i], 1, 2, -sin(-alpha[i]));
+	gsl_matrix_set(rxalpha[i], 2, 0, 0.);
+	gsl_matrix_set(rxalpha[i], 2, 1, sin(-alpha[i]));
+  	gsl_matrix_set(rxalpha[i], 2, 2, cos(-alpha[i]));
+
+    gsl_matrix_set(rzpsi[i], 0, 0, cos(psi[i]));
+  	gsl_matrix_set(rzpsi[i], 0, 1, -sin(psi[i]));
+    gsl_matrix_set(rzpsi[i], 0, 2, 0.);
+    gsl_matrix_set(rzpsi[i], 1, 0, sin(psi[i]));
+	gsl_matrix_set(rzpsi[i], 1, 1, cos(psi[i]));
+    gsl_matrix_set(rzpsi[i], 1, 2, 0.);
+    gsl_matrix_set(rzpsi[i], 2, 0, 0.);
+	gsl_matrix_set(rzpsi[i], 2, 1, 0.);
+    gsl_matrix_set(rzpsi[i], 2, 2, 1.);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
+                 1.0, rxalpha[i], rzpsi[i],
+                 0.0, rot[i]);
+
+    // identity is the inverse of the rotation matrix
+    u2[i][0] = gsl_matrix_get(rot[i], 0, 0)*usun[i][0]
+        	 + gsl_matrix_get(rot[i], 0, 1)*usun[i][1]
+        	 + gsl_matrix_get(rot[i], 0, 2)*usun[i][2];
+    u2[i][1] = gsl_matrix_get(rot[i], 1, 0)*usun[i][0]
+        	 + gsl_matrix_get(rot[i], 1, 1)*usun[i][1]
+        	 + gsl_matrix_get(rot[i], 1, 2)*usun[i][2];
+    u2[i][2] = gsl_matrix_get(rot[i], 2, 0)*usun[i][0]
+        	 + gsl_matrix_get(rot[i], 2, 1)*usun[i][1]
+        	 + gsl_matrix_get(rot[i], 2, 2)*usun[i][2];
+
+    // az is "az_rel_sun"
+    az[i] = atan(u2[i][0]/u2[i][2]);                // az is in radians
+  	azraw[i] = sun_az + (180./M_PI)*(az[i] - beta[i]);
+  	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
+  }
+
+  for (j = 0; j < NUM_PSS; j++) {
+	PointingData[point_index].pss_azraw[j] = azraw[j];
+    PointingData[point_index].pss_elraw[j] = elraw[j];
+  }
+  for (i = 0; i < NUM_PSS; i++) {
+  	gsl_matrix_free(rot[i]);
+  	gsl_matrix_free(rxalpha[i]);
+  	gsl_matrix_free(rzpsi[i]);
+  }
+
+  new_val = 0;
+  for (i = 0; i < NUM_PSS; i++) {
+	  new_val += weight[i]*azraw[i]/weightsum;
+  }
+
+  if ((!isinf(new_val)) && (!isnan(new_val))) {
+    *azraw_pss = new_val;
+  } else {
+    *azraw_pss = 0.0;
+    return 0;
+  }
+
+  new_val = 0;
+  for (i = 0; i < NUM_PSS; i++) {
+	  new_val += weight[i]*elraw[i]/weightsum;
+  }
+
+  if ((!isinf(new_val)) && (!isnan(new_val))) {
+    *elraw_pss = new_val;
+  } else {
+    *elraw_pss = 0.0;
+    return 0;
+  }
+
+  NormalizeAngle(azraw_pss);
+  NormalizeAngle(elraw_pss);
+
+  PointingData[point_index].pss_array_azraw = *azraw_pss;
+  PointingData[point_index].pss_array_elraw = *elraw_pss;
 
   return 1;
 }

@@ -393,34 +393,32 @@ void read_5hz_acs(void)
     firsttime = 0;
     for (i = 0; i < NUM_PSS; i++) {
       for (j = 0; j < NUM_PSS_V; j++) {
-	snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
-	vPssAddr[i][j] = channels_find_by_name(channel_name);
-	blast_info("i=%d, j=%d, channel name =%s", i, j, channel_name);
+	    snprintf(channel_name, sizeof(channel_name), "v%d_%d_pss", j+1, i+1);
+	    vPssAddr[i][j] = channels_find_by_name(channel_name);
+	    // blast_info("PSS read, i=%d, j=%d, channel name =%s", i, j, channel_name);
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
-    mag_x_n_addr = channels_find_by_name("x_mag1_n");
+    /* mag_x_n_addr = channels_find_by_name("x_mag1_n");
     mag_y_n_addr = channels_find_by_name("y_mag1_n");
     mag_z_n_addr = channels_find_by_name("z_mag1_n");
     mag_x_s_addr = channels_find_by_name("x_mag2_s");
     mag_y_s_addr = channels_find_by_name("y_mag2_s");
-    mag_z_s_addr = channels_find_by_name("z_mag2_s");
+    mag_z_s_addr = channels_find_by_name("z_mag2_s"); */
   }
   for (i = 0; i < NUM_PSS; i++) {
     for (j = 0; j < NUM_PSS_V; j++) {
-      ACSData.pss_i[i][j] = GET_UINT16(vPssAddr[i][j]);
+		GET_SCALED_VALUE(vPssAddr[i][j], ACSData.pss_i[i][j]);
     }
   }
 
-  /// TODO(seth): Add PSS3-8 read functions
-
   GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
-  ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
+  /* ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
   ACSData.mag_y[0] = ((double)GET_INT16(mag_y_n_addr))*M_16MAG;
   ACSData.mag_z[0] = ((double)GET_INT16(mag_z_n_addr))*M_16MAG;
   ACSData.mag_x[1] = ((double)GET_INT16(mag_x_s_addr))*M_16MAG;
   ACSData.mag_y[1] = ((double)GET_INT16(mag_y_s_addr))*M_16MAG;
-  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG;
+  ACSData.mag_z[1] = ((double)GET_INT16(mag_z_s_addr))*M_16MAG; */
 }
 /**
  * Reads the 100Hz data from the most recent frame received from UEIs and stores
@@ -1087,24 +1085,41 @@ void store_5hz_acs(void)
     static channel_t* calXMinMagSAddr;
     static channel_t* calYMaxMagSAddr;
     static channel_t* calYMinMagSAddr;
-    static channel_t* calOffPss1Addr;
-    static channel_t* calOffPss2Addr;
-    static channel_t* calOffPss3Addr;
-    static channel_t* calOffPss4Addr;
+	static channel_t* calAzPssArrayAddr;
+    static channel_t* calAzPss1Addr;
+    static channel_t* calAzPss2Addr;
+    static channel_t* calAzPss3Addr;
+    static channel_t* calAzPss4Addr;
+    static channel_t* calAzPss5Addr;
+    static channel_t* calAzPss6Addr;
     static channel_t* calDPss1Addr;
     static channel_t* calDPss2Addr;
     static channel_t* calDPss3Addr;
     static channel_t* calDPss4Addr;
+    static channel_t* calDPss5Addr;
+    static channel_t* calDPss6Addr;
     static channel_t* calIMinPssAddr;
     static channel_t* sigmaMagNAddr;
     static channel_t* sigmaMagSAddr;
     static channel_t* sigmaPssAddr;
     static channel_t* azrawPss1Addr;
     static channel_t* azrawPss2Addr;
+    static channel_t* azrawPss3Addr;
+    static channel_t* azrawPss4Addr;
+    static channel_t* azrawPss5Addr;
+    static channel_t* azrawPss6Addr;
     static channel_t* elrawPss1Addr;
     static channel_t* elrawPss2Addr;
+    static channel_t* elrawPss3Addr;
+    static channel_t* elrawPss4Addr;
+    static channel_t* elrawPss5Addr;
+    static channel_t* elrawPss6Addr;
     static channel_t* snrPss1Addr;
     static channel_t* snrPss2Addr;
+    static channel_t* snrPss3Addr;
+    static channel_t* snrPss4Addr;
+    static channel_t* snrPss5Addr;
+    static channel_t* snrPss6Addr;
     static channel_t* azPssAddr;
     static channel_t* PssOkAddr;
     static channel_t* azSunAddr;
@@ -1218,14 +1233,19 @@ void store_5hz_acs(void)
         calYMaxMagSAddr = channels_find_by_name("cal_ymax_mag2");
         calYMinMagSAddr = channels_find_by_name("cal_ymin_mag2");
 
-        calOffPss1Addr = channels_find_by_name("cal_off_pss1");
-        calOffPss2Addr = channels_find_by_name("cal_off_pss2");
-        calOffPss3Addr = channels_find_by_name("cal_off_pss3");
-        calOffPss4Addr = channels_find_by_name("cal_off_pss4");
+		calAzPssArrayAddr = channels_find_by_name("cal_az_pss_array");
+        calAzPss1Addr = channels_find_by_name("cal_az_pss1");
+        calAzPss2Addr = channels_find_by_name("cal_az_pss2");
+        calAzPss3Addr = channels_find_by_name("cal_az_pss3");
+        calAzPss4Addr = channels_find_by_name("cal_az_pss4");
+        calAzPss5Addr = channels_find_by_name("cal_az_pss5");
+        calAzPss6Addr = channels_find_by_name("cal_az_pss6");
         calDPss1Addr = channels_find_by_name("cal_d_pss1");
         calDPss2Addr = channels_find_by_name("cal_d_pss2");
         calDPss3Addr = channels_find_by_name("cal_d_pss3");
         calDPss4Addr = channels_find_by_name("cal_d_pss4");
+        calDPss5Addr = channels_find_by_name("cal_d_pss5");
+        calDPss6Addr = channels_find_by_name("cal_d_pss6");
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagNAddr = channels_find_by_name("sigma_mag1");
         sigmaMagSAddr = channels_find_by_name("sigma_mag2");
@@ -1235,10 +1255,22 @@ void store_5hz_acs(void)
         sigmaPssAddr = channels_find_by_name("sigma_pss");
         azrawPss1Addr = channels_find_by_name("az_raw_pss1");
         azrawPss2Addr = channels_find_by_name("az_raw_pss2");
+        azrawPss3Addr = channels_find_by_name("az_raw_pss3");
+        azrawPss4Addr = channels_find_by_name("az_raw_pss4");
+        azrawPss5Addr = channels_find_by_name("az_raw_pss5");
+        azrawPss6Addr = channels_find_by_name("az_raw_pss6");
         elrawPss1Addr = channels_find_by_name("el_raw_pss1");
         elrawPss2Addr = channels_find_by_name("el_raw_pss2");
+        elrawPss3Addr = channels_find_by_name("el_raw_pss3");
+        elrawPss4Addr = channels_find_by_name("el_raw_pss4");
+        elrawPss5Addr = channels_find_by_name("el_raw_pss5");
+        elrawPss6Addr = channels_find_by_name("el_raw_pss6");
         snrPss1Addr = channels_find_by_name("snr_pss1");
         snrPss2Addr = channels_find_by_name("snr_pss2");
+        snrPss3Addr = channels_find_by_name("snr_pss3");
+        snrPss4Addr = channels_find_by_name("snr_pss4");
+        snrPss5Addr = channels_find_by_name("snr_pss5");
+        snrPss6Addr = channels_find_by_name("snr_pss6");
         azPssAddr = channels_find_by_name("az_pss");  // evolved az
         PssOkAddr = channels_find_by_name("ok_pss");
         hwprCalAddr = channels_find_by_name("hwpr_cal");
@@ -1306,12 +1338,24 @@ void store_5hz_acs(void)
     i_point = GETREADINDEX(point_index);
 
     /********* PSS data *************/
-    SET_SCALED_VALUE(azrawPss1Addr, PointingData[i_point].pss1_azraw);
-    SET_SCALED_VALUE(azrawPss2Addr, PointingData[i_point].pss2_azraw);
-    SET_SCALED_VALUE(elrawPss1Addr, PointingData[i_point].pss1_elraw);
-    SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss2_elraw);
-    SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss1_snr);
-    SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss2_snr);
+    SET_SCALED_VALUE(azrawPss1Addr, PointingData[i_point].pss_azraw[0]);
+    SET_SCALED_VALUE(azrawPss2Addr, PointingData[i_point].pss_azraw[1]);
+    SET_SCALED_VALUE(azrawPss3Addr, PointingData[i_point].pss_azraw[2]);
+    SET_SCALED_VALUE(azrawPss4Addr, PointingData[i_point].pss_azraw[3]);
+    SET_SCALED_VALUE(azrawPss5Addr, PointingData[i_point].pss_azraw[4]);
+    SET_SCALED_VALUE(azrawPss6Addr, PointingData[i_point].pss_azraw[5]);
+    SET_SCALED_VALUE(elrawPss1Addr, PointingData[i_point].pss_elraw[0]);
+    SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss_elraw[1]);
+    SET_SCALED_VALUE(elrawPss3Addr, PointingData[i_point].pss_elraw[2]);
+    SET_SCALED_VALUE(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
+    SET_SCALED_VALUE(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
+    SET_SCALED_VALUE(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
+    SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss_snr[0]);
+    SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss_snr[1]);
+    SET_SCALED_VALUE(snrPss3Addr, PointingData[i_point].pss_snr[2]);
+    SET_SCALED_VALUE(snrPss4Addr, PointingData[i_point].pss_snr[3]);
+    SET_SCALED_VALUE(snrPss5Addr, PointingData[i_point].pss_snr[4]);
+    SET_SCALED_VALUE(snrPss6Addr, PointingData[i_point].pss_snr[5]);
     // TODO(seth): Why are we manually adding the trim here?
     SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
     SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
@@ -1384,14 +1428,19 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calYMaxMagSAddr, CommandData.cal_ymax_mag[1]);
     SET_SCALED_VALUE(calYMinMagSAddr, CommandData.cal_ymin_mag[1]);
 
-    SET_SCALED_VALUE(calOffPss1Addr, CommandData.cal_off_pss1);
-    SET_SCALED_VALUE(calOffPss2Addr, CommandData.cal_off_pss2);
-    SET_SCALED_VALUE(calOffPss3Addr, CommandData.cal_off_pss3);
-    SET_SCALED_VALUE(calOffPss4Addr, CommandData.cal_off_pss4);
-    SET_SCALED_VALUE(calDPss1Addr, CommandData.cal_d_pss1);
-    SET_SCALED_VALUE(calDPss2Addr, CommandData.cal_d_pss2);
-    SET_SCALED_VALUE(calDPss3Addr, CommandData.cal_d_pss3);
-    SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss4);
+	SET_SCALED_VALUE(calAzPssArrayAddr, CommandData.cal_az_pss_array);
+    SET_SCALED_VALUE(calAzPss1Addr, CommandData.cal_az_pss[0]);
+    SET_SCALED_VALUE(calAzPss2Addr, CommandData.cal_az_pss[1]);
+    SET_SCALED_VALUE(calAzPss3Addr, CommandData.cal_az_pss[2]);
+    SET_SCALED_VALUE(calAzPss4Addr, CommandData.cal_az_pss[3]);
+    SET_SCALED_VALUE(calAzPss5Addr, CommandData.cal_az_pss[4]);
+    SET_SCALED_VALUE(calAzPss6Addr, CommandData.cal_az_pss[5]);
+    SET_SCALED_VALUE(calDPss1Addr, CommandData.cal_d_pss[0]);
+    SET_SCALED_VALUE(calDPss2Addr, CommandData.cal_d_pss[1]);
+    SET_SCALED_VALUE(calDPss3Addr, CommandData.cal_d_pss[2]);
+    SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss[3]);
+    SET_SCALED_VALUE(calDPss5Addr, CommandData.cal_d_pss[4]);
+    SET_SCALED_VALUE(calDPss6Addr, CommandData.cal_d_pss[5]);
     SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
 
     SET_SCALED_VALUE(sigmaMagNAddr, PointingData[i_point].mag_sigma[0]);
