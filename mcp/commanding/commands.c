@@ -1687,19 +1687,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
      /*************************************
       ********* Lock / Actuators  *********/
-    case actuators_set_used:
-      CommandData.actbus.which_used = 0;
-      CommandData.actbus.which_used |= ivalues[0] << 0;
-      CommandData.actbus.which_used |= ivalues[1] << 1;
-      CommandData.actbus.which_used |= ivalues[2] << 2;
-      CommandData.actbus.which_used |= ivalues[3] << 3;
-      CommandData.actbus.which_used |= ivalues[4] << 4;
-      CommandData.actbus.which_used |= ivalues[5] << 5;
-      CommandData.actbus.which_used |= ivalues[6] << 6;
-      CommandData.actbus.which_used |= ivalues[7] << 7;
-      CommandData.actbus.which_used |= ivalues[8] << 8;
-      CommandData.actbus.which_used |= ivalues[9] << 9;
-      break;
     case lock:   // Lock Inner Frame
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
@@ -3048,7 +3035,6 @@ void InitCommandData()
     CommandData.actbus.caddr[0] = 0;
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
-    CommandData.actbus.which_used = 1023; // 2^10-1, so that all ten actuators are enabled
 
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
@@ -3143,6 +3129,8 @@ void InitCommandData()
     // CommandData.Cryo.BDAHeat = 0;
 
     CommandData.Cryo.potvalve_on = 1;
+	CommandData.Cryo.valve_stop[0] = 0;
+	CommandData.Cryo.valve_stop[1] = 0;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
