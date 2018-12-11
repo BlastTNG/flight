@@ -161,7 +161,7 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, debug_mode, allow_watchdog,
+  change_freqs_all, df_targ_all, debug_mode, allow_watchdog,
     disallow_watchdog, set_attens_last_all, set_attens_min_output,
 
   xyzzy
@@ -288,6 +288,8 @@ enum multiCommand {
   cal_amps,
   refit_freqs,
   refit_freqs_all,
+  targ_refit,
+  targ_refit_all,
   chop_template,
   load_freqs,
   new_ref_params,
@@ -311,6 +313,8 @@ enum multiCommand {
   set_attens_calc,
   set_lo_MHz,
   read_lo,
+  all_roach_df,
+  df_targ,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

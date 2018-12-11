@@ -1183,6 +1183,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_sweeps = 2;
             }
             break;
+        case df_targ_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_df_targ = 1;
+            }
+          break;
         case find_kids_default_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].find_kids_default = 1;
@@ -1687,19 +1692,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
      /*************************************
       ********* Lock / Actuators  *********/
-    case actuators_set_used:
-      CommandData.actbus.which_used = 0;
-      CommandData.actbus.which_used |= ivalues[0] << 0;
-      CommandData.actbus.which_used |= ivalues[1] << 1;
-      CommandData.actbus.which_used |= ivalues[2] << 2;
-      CommandData.actbus.which_used |= ivalues[3] << 3;
-      CommandData.actbus.which_used |= ivalues[4] << 4;
-      CommandData.actbus.which_used |= ivalues[5] << 5;
-      CommandData.actbus.which_used |= ivalues[6] << 6;
-      CommandData.actbus.which_used |= ivalues[7] << 7;
-      CommandData.actbus.which_used |= ivalues[8] << 8;
-      CommandData.actbus.which_used |= ivalues[9] << 9;
-      break;
     case lock:   // Lock Inner Frame
       if (CommandData.pointing_mode.nw >= 0)
         CommandData.pointing_mode.nw = VETO_MAX;
@@ -2313,6 +2305,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
+    case all_roach_df:
+      if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach_params[i].num_sec = rvalues[0];
+              CommandData.roach[i].get_timestream = 3;
+          }
+      }
+      break;
     case set_attens_all:
       if  ((rvalues[0] >= 0.0) && (rvalues[0] <= 30.0) &&
               ((rvalues[1] >= 0.0) && (rvalues[1] <= 30.0))) {
@@ -2338,11 +2338,34 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].on_res = ivalues[1];
       }
       break;
+    case df_targ:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_df_targ = 1;
+      }
+      break;
+    case targ_refit_all:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[ivalues[i]].do_sweeps = 2;
+              CommandData.roach[ivalues[i]].refit_res_freqs = 1;
+              CommandData.roach[ivalues[i]].on_res = 1;
+              CommandData.roach[ivalues[i]].check_response = ivalues[1];
+          }
+      }
+      break;
+    case targ_refit:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_sweeps = 2;
+          CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+          CommandData.roach[ivalues[0]-1].on_res = 1;
+          CommandData.roach[ivalues[0]-1].check_response = ivalues[1];
+      }
+      break;
     case refit_freqs_all:
         for (int i = 0; i < NUM_ROACHES; i++) {
             CommandData.roach[i].refit_res_freqs = 1;
+            CommandData.roach[i].on_res = ivalues[0];
         }
-        CommandData.roach[ivalues[0]-1].on_res = ivalues[0];
         break;
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
@@ -3048,7 +3071,6 @@ void InitCommandData()
     CommandData.actbus.caddr[0] = 0;
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
-    CommandData.actbus.which_used = 1023; // 2^10-1, so that all ten actuators are enabled
 
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
@@ -3095,6 +3117,7 @@ void InitCommandData()
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
+        CommandData.roach[i].do_df_targ = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
@@ -3143,6 +3166,8 @@ void InitCommandData()
     // CommandData.Cryo.BDAHeat = 0;
 
     CommandData.Cryo.potvalve_on = 1;
+	CommandData.Cryo.valve_stop[0] = 0;
+	CommandData.Cryo.valve_stop[1] = 0;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;

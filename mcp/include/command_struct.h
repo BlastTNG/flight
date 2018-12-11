@@ -381,6 +381,7 @@ typedef struct roach
     unsigned int go_flight_mode;
     unsigned int check_response;
     unsigned int reboot_pi_now;
+    unsigned int do_df_targ;
 } roach_status_t;
 
 typedef struct roach_params
@@ -585,7 +586,6 @@ struct CommandDataStruct {
   struct {
     int off;
     int force_repoll;
-    int which_used;
 
     /* arbitrary command */
     int cindex;

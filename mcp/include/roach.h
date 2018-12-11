@@ -137,6 +137,8 @@ typedef struct roach_state {
     bool has_adc_cal;
     bool write_flag;
     bool is_averaging;
+    bool tone_finding_error;
+    bool sweep_fail;
 
     float adc_rms[2];
     double *freq_residuals;
@@ -183,7 +185,8 @@ typedef struct roach_state {
     double ref_grads[MAX_CHANNELS_PER_ROACH][2]; // The reference grad values
     double ref_vals[MAX_CHANNELS_PER_ROACH][2]; // reference I,Q values for df calculation
     double df_offset[MAX_CHANNELS_PER_ROACH]; // Correction to df value
-    double df[MAX_CHANNELS_PER_ROACH]; // Delta f
+    double df[MAX_CHANNELS_PER_ROACH]; // Delta f from timestreams
+    double sweep_df[MAX_CHANNELS_PER_ROACH]; // Delta f from sweeps
 
     // for cal lamp check
     double I_on[MAX_CHANNELS_PER_ROACH];
