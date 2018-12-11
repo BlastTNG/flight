@@ -340,6 +340,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
+  {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 

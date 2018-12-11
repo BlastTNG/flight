@@ -1183,6 +1183,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_sweeps = 2;
             }
             break;
+        case df_targ_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_df_targ = 1;
+            }
+          break;
         case find_kids_default_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
                 CommandData.roach[i].find_kids_default = 1;
