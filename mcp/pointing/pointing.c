@@ -341,7 +341,6 @@ static int MagConvert(double *mag_az, double *m_el, uint8_t mag_index) {
 }
 
 static int PSSConvert(double *azraw_pss, double *elraw_pss) {
-// TODO(seth): Reenable PSSConvert
     int     i_point;
     double  sun_ra, sun_dec;
     double  az[NUM_PSS];
