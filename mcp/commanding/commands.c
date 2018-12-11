@@ -1277,6 +1277,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
           }
+        case trigger_retune_check:
+            CommandData.trigger_roach_tuning_check = 1;
+            break;
         case xyzzy:
             break;
 	#ifdef USE_XY_THREAD
@@ -2443,6 +2446,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             CommandData.roach_params[i].num_sec = rvalues[0];
         }
         break;
+    case roach_allow_scan_check:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+        CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+      }
+      break;
+    case roach_disallow_scan_check:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+        CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3122,6 +3135,7 @@ void InitCommandData()
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
     }
+    CommandData.trigger_roach_tuning_check = 0;
     CommandData.roach_params[0].out_atten = 4;
     CommandData.roach_params[1].out_atten = 4;
     CommandData.roach_params[2].out_atten = 4;
@@ -3511,6 +3525,7 @@ void InitCommandData()
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
         CommandData.roach_params[i].dBm_per_tone = -60;
+        CommandData.roach[i].auto_scan_retune = 0;
     }
 
     CommandData.rox_bias.amp = 56;
