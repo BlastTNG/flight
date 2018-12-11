@@ -399,12 +399,12 @@ void read_5hz_acs(void)
       }
     }
     elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
-    mag_x_n_addr = channels_find_by_name("x_mag1_n");
+    /* mag_x_n_addr = channels_find_by_name("x_mag1_n");
     mag_y_n_addr = channels_find_by_name("y_mag1_n");
     mag_z_n_addr = channels_find_by_name("z_mag1_n");
     mag_x_s_addr = channels_find_by_name("x_mag2_s");
     mag_y_s_addr = channels_find_by_name("y_mag2_s");
-    mag_z_s_addr = channels_find_by_name("z_mag2_s");
+    mag_z_s_addr = channels_find_by_name("z_mag2_s"); */
   }
   for (i = 0; i < NUM_PSS; i++) {
     for (j = 0; j < NUM_PSS_V; j++) {
@@ -412,8 +412,8 @@ void read_5hz_acs(void)
     }
   }
 
-  /* GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
-  ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
+  GET_VALUE(elRawIfClinAddr, ACSData.clin_elev);
+  /* ACSData.mag_x[0] = ((double)GET_INT16(mag_x_n_addr))*M_16MAG;
   ACSData.mag_y[0] = ((double)GET_INT16(mag_y_n_addr))*M_16MAG;
   ACSData.mag_z[0] = ((double)GET_INT16(mag_z_n_addr))*M_16MAG;
   ACSData.mag_x[1] = ((double)GET_INT16(mag_x_s_addr))*M_16MAG;
