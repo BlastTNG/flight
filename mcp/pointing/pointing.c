@@ -438,8 +438,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	}
 
     for (j = 0; j < NUM_PSS; j++) {
-    	x[j] = -PSS_XSTRETCH*(PSS_L/2.)*((i_pss[j][1]+i_pss[j][2])-(i_pss[j][0]+i_pss[j][3]))/itot[j];
-    	y[j] = -PSS_YSTRETCH*(PSS_L/2.)*((i_pss[j][1]+i_pss[j][3])-(i_pss[j][0]+i_pss[j][3]))/itot[j];
+    	x[j] = -PSS_XSTRETCH*(PSS_L/2.)*((i_pss[j][3]+i_pss[j][2])-(i_pss[j][0]+i_pss[j][1]))/itot[j];
+    	y[j] = -PSS_YSTRETCH*(PSS_L/2.)*((i_pss[j][3]+i_pss[j][1])-(i_pss[j][0]+i_pss[j][2]))/itot[j];
     	norm[j] = sqrt(x[j]*x[j] + y[j]*y[j] + pss_d[j]*pss_d[j]);
     	usun[j][0] = -x[j] / norm[j];
     	usun[j][1] = -y[j] / norm[j];
