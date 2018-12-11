@@ -316,6 +316,8 @@ enum multiCommand {
   df_targ,
   roach_allow_scan_check,
   roach_disallow_scan_check,
+  full_loop,
+  full_loop_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

@@ -383,6 +383,7 @@ typedef struct roach
     unsigned int reboot_pi_now;
     unsigned int do_df_targ;
     unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
+    unsigned int do_full_loop;
 } roach_status_t;
 
 typedef struct roach_params

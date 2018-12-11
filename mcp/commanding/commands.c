@@ -1190,7 +1190,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
           break;
         case find_kids_default_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].find_kids_default = 1;
+                CommandData.roach[i].find_kids = 1;
             }
             break;
         case center_lo_all:
@@ -2255,12 +2255,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
           CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
-          CommandData.roach[ivalues[0]-1].find_kids = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 2;
       }
       break;
     case find_kids_default:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].find_kids_default = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
       }
       break;
     case show_adc_rms:
@@ -2454,6 +2454,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case roach_disallow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
         CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+      }
+      break;
+    case full_loop:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_full_loop = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = ivalues[1];
+      }
+      break;
+    case full_loop_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_full_loop = 1;
+          CommandData.roach[i].find_kids = ivalues[0];
       }
       break;
       /*************************************
@@ -3118,7 +3130,6 @@ void InitCommandData()
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
         CommandData.roach[i].read_lo = 0;
-        CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
         CommandData.roach[i].change_tone_phase = 0;
@@ -3131,6 +3142,7 @@ void InitCommandData()
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach[i].do_df_targ = 0;
+        CommandData.roach[i].do_full_loop = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
