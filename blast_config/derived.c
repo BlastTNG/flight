@@ -848,8 +848,8 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_roach3_ppc", "Rt_therm70", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_roach2_ppc", "Rt_therm71", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_roach5_ppc", "Rt_therm72", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_therm73", "Rt_therm73", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_therm74", "Rt_therm74", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_of_lj_1", "Rt_therm73", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_of_lj_2", "Rt_therm74", LUT_DIR "Thermistor_RtoT.lut"),
 
 
     BITWORD("Labjack0_conn_status", "labjack_conn_status", 0, 1),
