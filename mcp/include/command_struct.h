@@ -382,6 +382,8 @@ typedef struct roach
     unsigned int check_response;
     unsigned int reboot_pi_now;
     unsigned int do_df_targ;
+    unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
+    unsigned int do_full_loop;
 } roach_status_t;
 
 typedef struct roach_params
@@ -487,6 +489,8 @@ struct CommandDataStruct {
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
   roach_params_t roach_params[NUM_ROACHES];
+  unsigned int trigger_roach_tuning_check; // motors.c sets this flag when a scan is nearly complete
+                                   // to (optionally) trigger a retune
 
   uei_commands_t uei_command;
 

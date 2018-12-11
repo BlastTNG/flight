@@ -808,6 +808,7 @@ static void output_cycle(void) {
     }
     SET_SCALED_VALUE(cycle_state.cycle_state_Addr, state_value);
 }
+
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
@@ -858,6 +859,11 @@ static void pot_watchdog() {
         pot_addr = channels_find_by_name("td_1k_fridge");
         blast_info("starting pot watchdog");
         first_time = 0;
+    }
+    if (CommandData.Cryo.watchdog_allowed == 0) {
+        counter = 0;
+        open_required = 0;
+        open_counter = 0;
     }
     if (CommandData.Cryo.watchdog_allowed == 1) {
         if (state[0].connected && state[1].connected) {
