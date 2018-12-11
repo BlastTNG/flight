@@ -74,10 +74,10 @@
 #define PSS4_D 10.12
 #define PSS5_D 10.12
 
-#define  PSS_L  10.0     // 10 mm = effective length of active area
-#define  PSS_IMAX  8192.  // Maximum current (place holder for now)
-#define  PSS_XSTRETCH  1.  // 0.995
-#define  PSS_YSTRETCH  1.  // 1.008
+#define PSS_L  10.0     // 10 mm = effective length of active area
+#define PSS_IMAX  8192.  // Maximum current (place holder for now)
+#define PSS_XSTRETCH  1.  // 0.995
+#define PSS_YSTRETCH  1.  // 1.008
 
 #define SSS_ALIGNMENT     1.5532
 

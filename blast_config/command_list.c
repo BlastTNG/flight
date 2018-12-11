@@ -340,6 +340,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
+  {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1181,6 +1182,22 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(refit_freqs_all), "Refit freqs on all Roaches", GR_ROACH, 1,
     {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(df_targ), "Performs a short sweep, calculates df from ref sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(targ_refit), "Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Check lamp cal", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(targ_refit_all), "(All Roaches) Performs a short sweep, fits res freqs and rewrites comb", GR_ROACH, 1,
+    {
+      {"Check lamp cal", 0, 1, 'i', "NONE"},
     }
   },
   {COMMAND(chop_template), "Saves timestreams for all channel and calculates avg chop", GR_ROACH, 1,
