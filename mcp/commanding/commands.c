@@ -2333,11 +2333,34 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].on_res = ivalues[1];
       }
       break;
+    case df_targ:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_df_targ = 1;
+      }
+      break;
+    case targ_refit_all:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[ivalues[i]].do_sweeps = 2;
+              CommandData.roach[ivalues[i]].refit_res_freqs = 1;
+              CommandData.roach[ivalues[i]].on_res = 1;
+              CommandData.roach[ivalues[i]].check_response = ivalues[1];
+          }
+      }
+      break;
+    case targ_refit:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_sweeps = 2;
+          CommandData.roach[ivalues[0]-1].refit_res_freqs = 1;
+          CommandData.roach[ivalues[0]-1].on_res = 1;
+          CommandData.roach[ivalues[0]-1].check_response = ivalues[1];
+      }
+      break;
     case refit_freqs_all:
         for (int i = 0; i < NUM_ROACHES; i++) {
             CommandData.roach[i].refit_res_freqs = 1;
+            CommandData.roach[i].on_res = ivalues[0];
         }
-        CommandData.roach[ivalues[0]-1].on_res = ivalues[0];
         break;
     case chop_template:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
@@ -3089,6 +3112,7 @@ void InitCommandData()
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
+        CommandData.roach[i].do_df_targ = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;

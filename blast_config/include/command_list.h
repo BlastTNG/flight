@@ -288,6 +288,8 @@ enum multiCommand {
   cal_amps,
   refit_freqs,
   refit_freqs_all,
+  targ_refit,
+  targ_refit_all,
   chop_template,
   load_freqs,
   new_ref_params,
@@ -312,6 +314,7 @@ enum multiCommand {
   set_lo_MHz,
   read_lo,
   all_roach_df,
+  df_targ,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

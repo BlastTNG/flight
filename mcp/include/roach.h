@@ -137,6 +137,8 @@ typedef struct roach_state {
     bool has_adc_cal;
     bool write_flag;
     bool is_averaging;
+    bool tone_finding_error;
+    bool sweep_fail;
 
     float adc_rms[2];
     double *freq_residuals;
