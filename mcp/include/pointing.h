@@ -59,12 +59,12 @@
 #define PSS5_ALPHA 25.0
 
 // PSS roll in deg
-#define PSS0_PSI 0.0
-#define PSS1_PSI 0.0
-#define PSS2_PSI 0.0
-#define PSS3_PSI 0.0
-#define PSS4_PSI 0.0
-#define PSS5_PSI 0.0
+#define PSS0_PSI 180.0
+#define PSS1_PSI 180.0
+#define PSS2_PSI 180.0
+#define PSS3_PSI 180.0
+#define PSS4_PSI 180.0
+#define PSS5_PSI 180.0
 
 // distance from pinhole to sensor in mm
 #define PSS0_D 10.12
