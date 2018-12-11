@@ -1715,6 +1715,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_step_slow:
       CommandData.actbus.shutter_step_slow = ivalues[0];
       break;
+    case shutter_i:
+      CommandData.actbus.shutter_move_i = ivalues[0];
+      CommandData.actbus.shutter_hold_i = ivalues[1];
+      break;
+    case shutter_vel:
+      CommandData.actbus.shutter_vel = ivalues[0];
+      CommandData.actbus.shutter_acc = ivalues[0];
+      break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
