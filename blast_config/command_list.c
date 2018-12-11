@@ -1184,6 +1184,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
+  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    }
+  },
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 1,
+    {
+      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    }
+  },
   {COMMAND(df_targ), "Performs a short sweep, calculates df from ref sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},

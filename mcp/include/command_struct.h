@@ -382,6 +382,7 @@ typedef struct roach
     unsigned int check_response;
     unsigned int reboot_pi_now;
     unsigned int do_df_targ;
+    unsigned int do_full_loop;
 } roach_status_t;
 
 typedef struct roach_params
