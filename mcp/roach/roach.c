@@ -1036,7 +1036,7 @@ int roach_write_QDR(roach_state_t *m_roach)
         blast_info("Could not write to qdr1!");
         return retval;
     }
-    usleep(3000);
+    usleep(1000);
     roach_write_int(m_roach, "start_dac", 1, 0);
     usleep(100);
     if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 0, 0) < 0)) {
@@ -2207,9 +2207,10 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
         }
     }
     char *py_command;
-    char *m_targ_freq_path;
-    double m_temp_freqs[MAX_CHANNELS_PER_ROACH];
-    char m_line[READ_LINE];
+    char *targ_freq_path;
+    char *path_to_mags_and_freqs;
+    double temp_freqs[MAX_CHANNELS_PER_ROACH];
+    char line[READ_LINE];
     blast_info("Calling Python script...");
     if (!m_use_default_params) {
         blast_tmp_sprintf(py_command, "python %s %d %s %g %g %g %g %g > %s",
@@ -2239,21 +2240,30 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
         blast_strerror("Could not open %s for reading", m_roach->find_kids_log);
         return retval;
     }
-    while (fgets(m_line, sizeof(m_line), log)) {
-        blast_info("%s", m_line);
+    while (fgets(line, sizeof(line), log)) {
+        blast_info("%s", line);
     }
     fclose(log);
-    blast_tmp_sprintf(m_targ_freq_path, "%s/bb_targ_freqs.dat", m_roach->sweep_root_path);
+    blast_tmp_sprintf(targ_freq_path, "%s/bb_targ_freqs.dat", m_roach->sweep_root_path);
+    blast_tmp_sprintf(path_to_mags_and_freqs, "%s/targ_mags_and_freqs.dat", m_roach->sweep_root_path);
     // blast_tmp_sprintf(m_targ_freq_path, "%s/bb_targ_freqs.dat", m_roach->last_targ_path);
     FILE *fd;
-    fd = fopen(m_targ_freq_path, "r");
+    fd = fopen(targ_freq_path, "r");
     if (!fd) {
-        blast_strerror("Could not open %s for reading", m_targ_freq_path);
+        blast_strerror("Could not open %s for reading", targ_freq_path);
         return retval;
     }
+    // Set environmental variable linking to last bb targ freqs
+    char *var_name;
+    blast_tmp_sprintf(var_name, "R%d_LAST_BB_TARG_FREQS", m_roach->which);
+    setenv(var_name, targ_freq_path, 1);
+    // Set environmental variable linking to last freqs/mags array
+    char *var_name1;
+    blast_tmp_sprintf(var_name1, "R%d_LAST_TARG_FREQS_MAGS", m_roach->which);
+    setenv(var_name, path_to_mags_and_freqs, 1);
     m_roach->num_kids = 0;
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
-            && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
+            && fscanf(fd, "%lg\n", &temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
     fclose(fd);
     if (m_roach->num_kids > 0) {
@@ -2276,7 +2286,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     blast_info("NUM kids = %zd", m_roach->num_kids);
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
     for (size_t j = 0; j < m_roach->num_kids; j++) {
-        m_roach->targ_tones[j] = m_temp_freqs[j];
+        m_roach->targ_tones[j] = temp_freqs[j];
         // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
     }
     if (CommandData.roach[m_roach->which - 1].find_kids) {
@@ -2350,6 +2360,16 @@ int roach_dfs(roach_state_t* m_roach)
                m_roach->ref_vals[chan][0],
                m_roach->df_offset[chan]);*/
     }
+    // save list of dfs
+    char* path_to_ts_dfs;
+    blast_tmp_sprintf(path_to_ts_dfs, "%s/df.dat", m_roach->sweep_root_path);
+    if ((roach_save_1D_file(m_roach, path_to_ts_dfs, m_roach->df, m_roach->current_ntones) < 0)) {
+        return retval;
+    }
+    char *var_name;
+    blast_tmp_sprintf(var_name, "R%d_DF_LIST", m_roach->which);
+    // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+    setenv(var_name, path_to_ts_dfs, 1);
     m_roach->is_averaging = 0;
     retval = 0;
     return retval;
@@ -2832,7 +2852,7 @@ void cal_get_mags(roach_state_t *m_roach, uint32_t m_sweep_freq,
     double *I_avg = calloc(m_freqlen, sizeof(double)); // Array to store averaged I values
     double *Q_avg = calloc(m_freqlen, sizeof(double)); // Array to store averaged Q values
     while (m_num_received < N_AVG) {
-        usleep(3000);
+        usleep(1000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -2879,7 +2899,7 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     FILE *fd = fopen(file_out, "wb");
     for (int i = 0; i < npoints; i++) {
         // blast_info("i = %d", i);
-        usleep(3000);
+        usleep(1000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -3090,7 +3110,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     uint8_t i_udp_read;
     blast_info("Getting data...");
     for (int i = 0; i < npoints; i++) {
-        usleep(3000);
+        usleep(1000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -3583,6 +3603,8 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     char *pycommand;
     char *ref_sweep;
     char *new_sweep;
+    char *path_to_sweep_dfs;
+    char *var_name;
     // original sweep
     if (!m_roach->last_targ_path) {
         if ((load_last_sweep_path(m_roach, TARG) < 0)) {
@@ -3591,6 +3613,7 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     } else {
         ref_sweep = m_roach->last_targ_path;
     }
+    new_sweep = m_roach->last_targ_path;
     // do new sweep
     CommandData.roach[m_roach->which - 1].do_sweeps = 2;
     if (roach_targ_sweep(m_roach) < 0) {
@@ -3599,10 +3622,22 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
         return retval;
     }
     CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-    new_sweep = m_roach->last_targ_path;
+    // new_sweep = m_roach->last_targ_path;
     blast_tmp_sprintf(pycommand, "python %s %s %s %s", df_from_sweeps_script,
           ref_sweep, new_sweep, m_roach->sweep_root_path);
-    return retval;
+    pyblast_system(pycommand);
+    blast_info("%s", pycommand);
+    blast_tmp_sprintf(path_to_sweep_dfs, "%s/sweep_df.dat", m_roach->sweep_root_path);
+    if ((roach_read_1D_file(m_roach, path_to_sweep_dfs, m_roach->sweep_df, m_roach->num_kids) < 0)) {
+        return retval;
+    }
+    blast_tmp_sprintf(var_name, "R%d_SWEEP_DF_LIST", m_roach->which);
+    // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+    setenv(var_name, path_to_sweep_dfs, 1);
+    for (size_t i = 0; i < m_roach->num_kids; i++) {
+        blast_info("chan %zd, df = %g", i, m_roach->sweep_df[i]);
+    }
+    return 0;
 }
 
 int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
@@ -4529,6 +4564,7 @@ void reset_roach_flags(roach_state_t *m_roach)
     m_roach->current_ntones = 0;
     m_roach->num_kids = 0;
     m_roach->tone_finding_error = 0;
+    m_roach->sweep_fail = 0;
     // CommandData.roach[m_roach->which - 1].do_sweeps = 0;
 }
 
