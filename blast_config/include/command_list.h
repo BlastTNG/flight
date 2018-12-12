@@ -293,8 +293,6 @@ enum multiCommand {
   chop_template,
   load_freqs,
   new_ref_params,
-  check_retune,
-  retune,
   center_lo,
   offset_lo,
   all_roach_ts,
@@ -322,6 +320,10 @@ enum multiCommand {
   check_lamp_retune_all,
   check_df_retune,
   check_dfsweep_retune,
+  auto_correct,
+  auto_correct_all,
+  set_retune_type,
+  set_retune_type_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
