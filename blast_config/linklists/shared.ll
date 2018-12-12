@@ -167,12 +167,6 @@ current_rw_mot
 current_hd_pv
 current_gyros
 current_data_transmit
-current_if1
-current_if2
-current_if3
-current_if4
-current_if5
-current_if6
 
 clin_of_x
 clin_of_y

@@ -1,4 +1,12 @@
 enc_hwpr
+enc_real_hwpr
+enc_targ_hwpr
+i_pos_hwpr
+
 pos_hwpr
+pos0_hwpr
+pos1_hwpr
 vel_hwpr
 acc_hwpr
+i_move_hwpr
+i_hold_hwpr
