@@ -1502,9 +1502,9 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
-      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "THRESH_CLOS_POTVALVE"},
-      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "THRESHLCLOS_POTVALVE"},
-      {"Open threshold (10100-16000)", 10200, 16000, 'i', "THRESH_OPEN_POTVALVE"},
+      {"Closed threshold (1000-7000)", 1000, 7000, 'i', "THRESH_CLOS_POTVALVE"},
+      {"Loose close threshold (7000-10000)", 7000, 10000, 'i', "THRESHLCLOS_POTVALVE"},
+      {"Open threshold (10000-16000)", 10000, 16000, 'i', "THRESH_OPEN_POTVALVE"},
     }
   },
 
