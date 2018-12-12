@@ -556,6 +556,33 @@ static void ResetShutter()
 	bputs(info, "ResetShutter: Error moving after reset");
 }
 
+static void KeepClosedShutter(int* cancel)
+{
+  /* while not cancel
+     check switch
+     if not closed
+     close
+     else wait
+   */
+
+  bputs(info, "Enter KeepClosedShutter mode");
+
+  while (*cancel == 0) {
+    	if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
+		bputs(info, "KeepClosedShutter: Error polling limit switches");
+
+    	if ((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
+		bputs(warning, "KeepClosed mode sees shutter not closed! Commanding close...");
+		EZBus_Stop(&bus, id[SHUTTERNUM]); // stop current action
+
+		if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "D0") != EZ_ERR_OK)
+			bputs(info, "KeepClosedShutter: error commanding close move");
+    	} else {
+		usleep(SHUTTER_SLEEP);
+	}
+  } // end while
+  *cancel = 1;
+}
 
 static void OpenCloseShutter()
 {
@@ -707,11 +734,13 @@ static void GetShutterData(int *position)
 #define SHUTTER_DO_RESET   7
 #define SHUTTER_DO_INIT    8
 #define SHUTTER_DO_NOP     9
+#define SHUTTER_DO_KEEPCLOSED	10
 
 static void DoShutter(void)
 {
   int action = SHUTTER_EXIT;
   static int  shutter_pos;
+  int cancel = 0;
 
   if (shutter_data.state == SHUTTER_UNK) {
     // bputs(info, "Initializing shutter...");
@@ -760,12 +789,19 @@ static void DoShutter(void)
       shutter_data.state = SHUTTER_OPEN;
       CommandData.actbus.shutter_goal = SHUTTER_NOP;
       break;
+    case  SHUTTER_KEEPCLOSED:
+      action = SHUTTER_DO_KEEPCLOSED;
+      shutter_data.state = SHUTTER_CLOSED;
+      CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED; // don't clear goal in CommandData
+      break;
       // case  SHUTTER_NOP:
       // action = SHUTTER_DO_NOP;
       // break;
   }
 
   /* Figure out what to do... */
+  if (action != SHUTTER_DO_KEEPCLOSED)
+	cancel = 1;
   switch (action) {
     case SHUTTER_DO_OFF:
       bputs(warning, "Turning off shutter.  Shutter will open.");
@@ -824,6 +860,13 @@ static void DoShutter(void)
       EZBus_Take(&bus, id[SHUTTERNUM]);
       EZBus_Stop(&bus, id[SHUTTERNUM]);  /* stop current action first */
       ResetShutter();
+      EZBus_Release(&bus, id[SHUTTERNUM]);
+      break;
+    case SHUTTER_DO_KEEPCLOSED:
+      EZBus_Take(&bus, id[SHUTTERNUM]);
+      EZBus_Stop(&bus, id[SHUTTERNUM]);
+      cancel = 0;
+      KeepClosedShutter(&cancel);
       EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_NOP:

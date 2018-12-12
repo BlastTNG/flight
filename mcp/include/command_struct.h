@@ -137,7 +137,7 @@ struct PivGainStruct {
 #define SHUTTER_CLOSED2 0x0040
 #define SHUTTER_CLOSED_SLOW 0x0080
 #define SHUTTER_UNK     0x0100
-
+#define SHUTTER_KEEPCLOSED 0x0200
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1
