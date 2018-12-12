@@ -9,7 +9,7 @@ SOURCES = ../common/CRC_func.c ../common/channels_tng.c \
 			linklistcheck.c
 
 CFLAGS = `pkg-config --cflags glib-2.0` $(INCLUDEDIRS) 
-LIBS = -lssl -lcrypto -lpthread -lmosquitto `pkg-config --libs glib-2.0`
+LIBS = -lssl -lcrypto -lpthread `pkg-config --libs glib-2.0`
 
 OBJECTS = $(SOURCES:.c=.o)
 
