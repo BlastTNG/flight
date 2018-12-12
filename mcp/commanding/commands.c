@@ -1183,9 +1183,14 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].do_sweeps = 2;
             }
             break;
+        case df_targ_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_df_targ = 1;
+            }
+          break;
         case find_kids_default_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].find_kids_default = 1;
+                CommandData.roach[i].find_kids = 1;
             }
             break;
         case center_lo_all:
@@ -1272,8 +1277,19 @@ void SingleCommand(enum singleCommand command, int scheduled)
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
           }
+          break;
+        case check_dfsweep_retune_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_check_retune = 3;
+          }
+          break;
+        case check_df_retune_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_check_retune = 1;
+          }
+          break;
         case xyzzy:
-            break;
+           break;
 	#ifdef USE_XY_THREAD
 	case xy_panic:
 	    CommandData.xystage.mode = XYSTAGE_PANIC;
@@ -2187,18 +2203,19 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].chan = ivalues[1];
       }
       break;
-    case check_retune:
-      if ((ivalues[0] > 0)) {
-          CommandData.roach[ivalues[0]-1].do_check_retune = 1;
-      }
-    case retune:
-      if ((ivalues[0] > 0)) {
-          CommandData.roach[ivalues[0]-1].do_retune = 1;
-      }
-      break;
     case auto_retune:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
           CommandData.roach[ivalues[0]-1].auto_retune = ivalues[1];
+      }
+      break;
+    case auto_correct:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((ivalues[1] >= 0) && ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].auto_correct_freqs = ivalues[1];
+      }
+      break;
+    case auto_correct_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].auto_correct_freqs = ivalues[1];
       }
       break;
     case opt_tones:
@@ -2247,12 +2264,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
           CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
           CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
-          CommandData.roach[ivalues[0]-1].find_kids = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 2;
       }
       break;
     case find_kids_default:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].find_kids_default = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
       }
       break;
     case show_adc_rms:
@@ -2432,12 +2449,60 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         CommandData.roach[ivalues[0]-1].auto_find = 1;
       }
       break;
-    case lamp_check_all:
+    case check_df_retune:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+            CommandData.roach[ivalues[0]-1].do_check_retune = 1;
+      }
+      break;
+    case check_dfsweep_retune:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+            CommandData.roach[ivalues[0]-1].do_check_retune = 3;
+      }
+      break;
+    case check_lamp_retune:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_check_retune = 2;
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[0];
+      }
+      break;
+    case check_lamp_retune_all:
         for (int i = 0; i < NUM_ROACHES; i++) {
-            CommandData.roach[i].check_response = 1;
+            CommandData.roach[i].do_check_retune = 2;
             CommandData.roach_params[i].num_sec = rvalues[0];
         }
         break;
+    case full_loop:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_full_loop = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = ivalues[1];
+      }
+      break;
+    case full_loop_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_full_loop = 1;
+          CommandData.roach[i].find_kids = ivalues[0];
+      }
+      break;
+    case roach_allow_scan_check:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+      }
+      break;
+    case roach_disallow_scan_check:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].auto_scan_retune = 0;
+      }
+      break;
+    case set_retune_type:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_check_retune = ivalues[1];
+      }
+      break;
+    case set_retune_type_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_check_retune = ivalues[0];
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3100,7 +3165,6 @@ void InitCommandData()
         CommandData.roach[i].do_retune = 0;
         CommandData.roach[i].set_lo = 0;
         CommandData.roach[i].read_lo = 0;
-        CommandData.roach[i].find_kids_default = 0;
         CommandData.roach[i].chan = 0;
         CommandData.roach[i].change_targ_freq = 0;
         CommandData.roach[i].change_tone_phase = 0;
@@ -3113,6 +3177,10 @@ void InitCommandData()
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach[i].do_df_targ = 0;
+        CommandData.roach[i].do_full_loop = 0;
+        CommandData.roach[i].do_check_retune = 0;
+        CommandData.roach[i].auto_correct_freqs = 0;
+        CommandData.roach[i].auto_scan_retune = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;

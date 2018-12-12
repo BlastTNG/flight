@@ -161,7 +161,9 @@ int GetActAddr(int ind) {
 // simple check for encoder in a well-initialized state
 static inline int encOK(int enc)
 {
-  return (enc > MIN_ENC);
+  // return (enc > MIN_ENC);
+  // setting this to always be true, we don't care if the enc reads under 1000
+  return 1;
 }
 
 // write DR to disk
@@ -1456,7 +1458,7 @@ void *ActuatorBus(void *param)
         CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
         SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-        // SyncDR(); /* get encoder absolute state from the ICC */
+        SyncDR(); /* get encoder absolute state from the ICC */
 
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */

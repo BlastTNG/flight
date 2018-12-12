@@ -340,6 +340,10 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
+  {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
+  {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
+  {COMMAND(check_dfsweep_retune_all),
+      "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1057,10 +1061,21 @@ struct mcom mcommands[plugh + 2] = {
       {"Channel number", 0, 1015, 'i', "NONE"},
     }
   },
-  {COMMAND(auto_retune), "Set mcp to retune the kid freqs based on settings in roach_check_retune()", GR_ROACH, 2,
+  {COMMAND(auto_retune), "Initializes auto retuning", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"0 = Manually retune, 1 = Auto retune"}
+    }
+  },
+  {COMMAND(auto_correct), "Causes retune functions to automatically apply correction", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"0 = Disable, 1 = Enable"}
+    }
+  },
+  {COMMAND(auto_correct_all), "(All Roaches) Causes retune functions to automatically apply correction", GR_ROACH, 1,
+    {
+      {"0 = Disable, 1 = Enable"}
     }
   },
   {COMMAND(opt_tones), "Attempt to fine tune targ tones found by get_targ_freqs()", GR_ROACH, 2,
@@ -1183,6 +1198,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
+  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    }
+  },
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 1,
+    {
+      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    }
+  },
   {COMMAND(df_targ), "Performs a short sweep, calculates df from ref sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1209,19 +1235,9 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(new_ref_params), "calculates and saves ref params from last (or reference) target sweep", GR_ROACH, 1,
+  {COMMAND(new_ref_params), "calculates and saves ref params", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
-    }
-  },
-  {COMMAND(retune), "Calculate df for each channel", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-    }
-  },
-  {COMMAND(check_retune), "Calculate df for each channel", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   {COMMAND(offset_lo), "shift LO by specified amount in Hz", GR_ROACH, 2,
@@ -1288,9 +1304,47 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(lamp_check_all), "(All Roaches) Checks response to cal lamp (I,Q,mag(I,Q)) and saves to disk", GR_ROACH, 1,
+  {COMMAND(check_df_retune), "Checks df status for each channel and makes retune recommendation", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(check_dfsweep_retune), "Checks df status with sweep method and makes retune recommendation", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(check_lamp_retune), "Checks response to cal lamp (I,Q,df(I,Q)) and makes retune recommendation", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(check_lamp_retune_all),
+        "(All Roaches) Checks response to cal lamp (I,Q,df(I,Q)) and recommends retune", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(roach_allow_scan_check), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_disallow_scan_check), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_retune_type_all), "(All Roaches) Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 1,
+    {
+      {"Sets do_check_retune", 0, 3, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_retune_type), "Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sets do_check_retune", 0, 3, 'i', "NONE"},
     }
   },
   /***************************************/
