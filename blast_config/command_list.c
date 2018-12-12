@@ -337,11 +337,13 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
   {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
   {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
-  {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
-  {COMMAND(trigger_retune_check), "(All Roaches) Trigger a roach tuning check with the cal lamp.", GR_ROACH},
+  {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
   {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
+  {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
+  {COMMAND(check_dfsweep_retune_all),
+      "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1301,23 +1303,28 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(lamp_check_all), "(All Roaches) Checks response to cal lamp (I,Q,mag(I,Q)) and saves to disk", GR_ROACH, 1,
+  {COMMAND(check_df_retune), "Checks df status for each channel and makes retune recommendation", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(check_dfsweep_retune), "Checks df status with sweep method and makes retune recommendation", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(check_lamp_retune), "Checks response to cal lamp (I,Q,df(I,Q)) and makes retune recommendation", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(check_lamp_retune_all),
+                 "(All Roaches) Checks response to cal lamp (I,Q,df(I,Q)) and makes retune recommendation", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(roach_allow_scan_check), "Allows roach tuning checks to be scheduled at the end of each scan.", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-    }
-  },
-  {COMMAND(roach_disallow_scan_check), "Turns off auto-roach tuning checks scheduled at the end of each scan.",
-                                     GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-    }
-  },
-
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
