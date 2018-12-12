@@ -1456,7 +1456,7 @@ void *ActuatorBus(void *param)
         CommandData.actbus.force_repoll = 1; /* repoll bus as soon as gaining control */
 
         SetLockState(1); /* to ensure the NiC MCC knows the pin state */
-        // SyncDR(); /* get encoder absolute state from the ICC */
+        SyncDR(); /* get encoder absolute state from the ICC */
 
         CommandData.actbus.focus_mode = ACTBUS_FM_SLEEP; /* ignore all commands */
         CommandData.actbus.caddr[my_cindex] = 0; /* prevent commands from executing twice if we switch to ICC */
