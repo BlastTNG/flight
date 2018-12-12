@@ -342,8 +342,7 @@ int roach_qdr_cal(roach_state_t *m_roach)
     }
     m_roach->has_qdr_cal = 1;
     blast_info("ROACH%d, Calibration complete", m_roach->which);
-    retval = 0;
-    return retval;
+    return 0;
 }
 
 /* Function: roach_buffer_htons
@@ -4448,6 +4447,25 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
     return 0;
 }
 
+int roach_exec_retune(roach_state_t *m_roach)
+{
+    int status = -1;
+    if (CommandData.roach[m_roach->which - 1].do_check_retune == 3) {
+        if ((status = roach_check_df_sweep_retune(m_roach)) < 0) {
+            return status;
+        }
+    } else if (CommandData.roach[m_roach->which - 1].do_check_retune == 2) {
+        if ((status = roach_check_lamp_retune(m_roach)) < 0) {
+            return status;
+        }
+    } else if (CommandData.roach[m_roach->which - 1].do_check_retune == 1) {
+        if ((status = roach_check_df_retune(m_roach)) < 0) {
+            return status;
+        }
+    }
+    return 0;
+}
+
 /** Phenom/Callback functions to upload firmware **/
 /**
  * If we have an error, we'll disable the socket and schedule a reconnection attempt.
@@ -4634,28 +4652,41 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                           .timeout.tv_usec = 0,
                           .roach = m_roach
     };
-    blast_info("Getting permission to upload fpg...");
+    blast_info("ROACH%d: Getting permission to upload fpg", m_roach->which);
     int retval = send_rpc_katcl(m_roach->rpc_conn, QDR_TIMEOUT,
                    KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                    NULL);
     if (retval != KATCP_RESULT_OK) {
         return -1;
-        printf("Failed\n");
+        blast_info("ROACH%d: Failed to connect with KATCP", m_roach->which);
     }
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
     pyblast_system(upload_command);
     sleep(3);
-    int success_val = send_rpc_katcl(m_roach->rpc_conn, 1000,
+    int ntries = 10;
+    int count = 0;
+    int success_val;
+    while (count < ntries) {
+        success_val = send_rpc_katcl(m_roach->rpc_conn, 1000,
             KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?fpgastatus",
         KATCP_FLAG_LAST | KATCP_FLAG_STRING, "",
         NULL);
-    while (success_val != KATCP_RESULT_OK) {
-        usleep(1000);
+        if (success_val != KATCP_RESULT_OK) {
+            count++;
+            usleep(100000);
+        } else {
+            break;
+        }
     }
-    char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
-    blast_info("FPGA programmed %s", ret);
+    // blast_info("ROACH%d: COUNT = %d", m_roach->which - 1, count);
+    if (count == ntries) {
+        return -1;
+    }
+    blast_info("ROACH%d: FPGA programmed", m_roach->which);
+    // char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
+    // blast_info("ROACH%d: FPGA programmed %s", m_roach->which, ret);
     return 0;
 }
 
@@ -5060,8 +5091,9 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             }
             break;
         case ROACH_STATE_CONNECTED:
-            // Upoad firmare
+            // Upoad firmware
             if (result == -1) {
+                m_roach->state = ROACH_STATE_BOOT;
             }
             if (result == 0) {
                 m_roach->state = ROACH_STATE_PROGRAMMED;
@@ -5077,6 +5109,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == -2) {
                 m_roach->state -= 1;
                 // qdr cal fail
+                m_roach->state = ROACH_STATE_CONNECTED;
             }
             if (result == -3) {
                 m_roach->state -= 1;
@@ -5378,6 +5411,14 @@ void *roach_cmd_loop(void* ind)
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
+            // Check for scan retune flag
+            if (CommandData.roach[i].auto_scan_retune) {
+                if (CommandData.trigger_roach_tuning_check) {
+                    if (roach_exec_retune(&roach_state_table[i]) < 0) {
+                        blast_err("ROACH%d: FAILED TO EXECUTE RETUNE", i + 1);
+                    }
+                }
+            }
             // FULL LOOP
             if (CommandData.roach[i].do_full_loop == 1) {
                 if (roach_full_loop(&roach_state_table[i]) < 0) {
