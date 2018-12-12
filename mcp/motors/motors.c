@@ -1030,6 +1030,8 @@ static void do_mode_new_cap(void)
             blast_info("Approaching the bottom: next targ_el = %f, -r = %f,"
                         "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                     targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         }
     }
 
@@ -1214,6 +1216,8 @@ static void do_mode_el_box(void)
                     "Approaching the bottom %i: next targ_az = %f, h*0.5 = %f,"
                     "az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",
                     j, targ_az, h * 0.5, az_next_dir, axes_mode.az_dir, v_az);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         }
     }
     /* check for out of range in az */
@@ -1390,6 +1394,8 @@ static void do_mode_new_box(void)
                     "Approaching the bottom: next targ_el = %f, h*0.5 = %f,"
                     "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                     targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         }
     }
     /* check for out of range in el */
@@ -1530,7 +1536,7 @@ void do_mode_quad(void) // aka radbox
             axes_mode.el_vel = 0.0;
             v_el = 0.0;
             targ_el = 0.0;
-            el_next_dir = 1;
+            el_next_dir = 1; // First we go up in El then down.
             return;
         }
     }
@@ -1593,6 +1599,8 @@ void do_mode_quad(void) // aka radbox
                     "Approaching the bottom: next targ_el = %f, top-bottom = %f, "
                     "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         }
     }
 
