@@ -1289,7 +1289,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
           }
           break;
         case xyzzy:
-            break;
+           break;
 	#ifdef USE_XY_THREAD
 	case xy_panic:
 	    CommandData.xystage.mode = XYSTAGE_PANIC;
@@ -3166,6 +3166,7 @@ void InitCommandData()
         CommandData.roach[i].do_df_targ = 0;
         CommandData.roach[i].do_full_loop = 0;
         CommandData.roach[i].do_check_retune = 0;
+        CommandData.roach[i].auto_correct_freqs = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;

@@ -1,11 +1,10 @@
 status_actbus
-pos_0_act
-pos_1_act
-pos_2_act
 enc_0_act
 enc_1_act
 enc_2_act
-enc_3_act
+pos_0_act
+pos_1_act
+pos_2_act
 vel_act
 mode_act
 tol_act
