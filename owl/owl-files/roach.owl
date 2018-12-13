@@ -238,7 +238,8 @@
                     "_caption": "FPGA_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_66",
                     "type": "PNDI"
@@ -250,7 +251,8 @@
                     "_caption": "PPC_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_69",
                     "type": "PNDI"
@@ -495,7 +497,8 @@
                     "_caption": "FPGA_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_63",
                     "type": "PNDI"
@@ -507,7 +510,8 @@
                     "_caption": "PPC_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_71",
                     "type": "PNDI"
@@ -529,6 +533,28 @@
             "cellX": 29,
             "cellY": 27,
             "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1527755711"
+                        },
+                        "_map": {
+                            "0": "Boot[style=No style (P634346397)]",
+                            "1": "Connected",
+                            "2": "Programmed[style=No style (P634346397)]",
+                            "3": "Configured[style=No style (P634346397)]",
+                            "4": "Streaming[style=Streaming (P1553648692)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1737123232"
+                    },
+                    "_caption": "STATE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P155758072)",
+                    "_source": "STATE_ROACH3",
+                    "type": "PMDI"
+                },
                 {
                     "PObject": {
                         "_id": "1904226259"
@@ -740,7 +766,8 @@
                     "_caption": "LO_CENTER_FREQ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P395081801)",
                     "_format": "",
                     "_source": "LO_CENTER_FREQ_ROACH3",
                     "type": "PNDI"
@@ -752,7 +779,8 @@
                     "_caption": "FPGA_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_67",
                     "type": "PNDI"
@@ -764,7 +792,8 @@
                     "_caption": "PPC_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_70",
                     "type": "PNDI"
@@ -1009,7 +1038,8 @@
                     "_caption": "FPGA_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_65",
                     "type": "PNDI"
@@ -1021,7 +1051,8 @@
                     "_caption": "PPC_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_68",
                     "type": "PNDI"
@@ -1266,7 +1297,8 @@
                     "_caption": "FPGA_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_64",
                     "type": "PNDI"
@@ -1278,7 +1310,8 @@
                     "_caption": "PPC_TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1601442318)",
                     "_format": "",
                     "_source": "thermistor_72",
                     "type": "PNDI"
@@ -1435,6 +1468,35 @@
             "geometryWidth": 154,
             "geometryX": 17,
             "geometryY": 238
+        },
+        {
+            "PObject": {
+                "_id": "252462357"
+            },
+            "_boxTitle": "New Box",
+            "_style": "(P2072147126)",
+            "cellHeight": 7,
+            "cellWidth": 9,
+            "cellX": 24,
+            "cellY": 17,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "2099368661"
+                    },
+                    "_caption": "Number",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH1",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 119,
+            "geometryWidth": 154,
+            "geometryX": 408,
+            "geometryY": 289
         }
     ],
     "extremas": [
@@ -1451,6 +1513,20 @@
             "_sxlow": "(P1489452979)",
             "_xhigh": "70",
             "_xlow": "10"
+        },
+        {
+            "PObject": {
+                "_id": "395081801"
+            },
+            "_high": "8.51e+08",
+            "_low": "8.49e+08",
+            "_name": "lo_roach3",
+            "_shigh": "(P2012763546)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1489452979)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "8.51e+08",
+            "_xlow": "8.49e+08"
         }
     ],
     "linkNames": [
@@ -1663,11 +1739,33 @@
             "_italic": false,
             "_linked": true,
             "_name": "roach_stats"
+        },
+        {
+            "PObject": {
+                "_id": "1553648692"
+            },
+            "_bg": "#00aa00",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Streaming"
+        },
+        {
+            "PObject": {
+                "_id": "155758072"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "states"
         }
     ],
     "webPort": "0",
     "windowCellHeight": 60,
-    "windowCellWidth": 88,
+    "windowCellWidth": 92,
     "windowHeight": 1020,
-    "windowWidth": 1498
+    "windowWidth": 1562
 }
