@@ -46,7 +46,7 @@ static struct hwpr_struct {
   int32_t pos;
   float enc;
   double pot;
-  float enc_real_hwp;
+  float enc_real_hwpr;
 } hwpr_data;
 
 enum move_type
@@ -147,7 +147,7 @@ void StoreHWPRBus(void)
   // static channel_t* potTargHwprAddr;
   static channel_t* encTargHwprAddr;
   static channel_t* encErrHwprAddr;
-  static channel_t* encRealHwpAddr;
+  static channel_t* encRealHwprAddr;
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -173,7 +173,7 @@ void StoreHWPRBus(void)
     encTargHwprAddr = channels_find_by_name("enc_targ_hwpr");
     encErrHwprAddr = channels_find_by_name("enc_err_hwpr");
     // potErrHwprAddr = channels_find_by_name("pot_err_hwpr");
-	encRealHwpAddr = channels_find_by_name("enc_real_hwp");
+	encRealHwprAddr = channels_find_by_name("enc_real_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -198,7 +198,7 @@ void StoreHWPRBus(void)
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
-  SET_FLOAT(encRealHwpAddr, hwpr_data.enc_real_hwp);
+  SET_FLOAT(encRealHwprAddr, hwpr_data.enc_real_hwpr);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007;
@@ -621,7 +621,7 @@ void ControlHWPR(struct ezbus *bus)
 #ifdef DEBUG_HWPR
 				blast_info("Going to backoff to break thermal link");
 #endif
-				hwpr_data.enc_real_hwp = hwpr_data.enc;
+				hwpr_data.enc_real_hwpr = hwpr_data.enc;
 				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
 				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
 				hwpr_control.move_cur = moving;

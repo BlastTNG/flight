@@ -161,7 +161,7 @@ enum singleCommand {
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, df_targ_all, debug_mode, allow_watchdog,
+  change_freqs_all, df_targ_all, check_df_retune_all, check_dfsweep_retune_all, debug_mode, allow_watchdog,
     disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check,
   xyzzy
 };
@@ -292,8 +292,6 @@ enum multiCommand {
   chop_template,
   load_freqs,
   new_ref_params,
-  check_retune,
-  retune,
   center_lo,
   offset_lo,
   all_roach_ts,
@@ -304,7 +302,6 @@ enum multiCommand {
   change_phase,
   auto_find_kids,
   offset_freq,
-  lamp_check_all,
   set_attens_all,
   reboot_pi,
   read_attens,
@@ -318,6 +315,14 @@ enum multiCommand {
   roach_disallow_scan_check,
   full_loop,
   full_loop_all,
+  check_lamp_retune,
+  check_lamp_retune_all,
+  check_df_retune,
+  check_dfsweep_retune,
+  auto_correct,
+  auto_correct_all,
+  set_retune_type,
+  set_retune_type_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

@@ -161,7 +161,9 @@ int GetActAddr(int ind) {
 // simple check for encoder in a well-initialized state
 static inline int encOK(int enc)
 {
-  return (enc > MIN_ENC);
+  // return (enc > MIN_ENC);
+  // setting this to always be true, we don't care if the enc reads under 1000
+  return 1;
 }
 
 // write DR to disk
