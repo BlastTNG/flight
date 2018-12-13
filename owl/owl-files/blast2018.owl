@@ -269,8 +269,8 @@
             "cellY": 19,
             "dataItems": [
             ],
-            "geometryHeight": 120,
-            "geometryWidth": 256,
+            "geometryHeight": 119,
+            "geometryWidth": 255,
             "geometryX": 323,
             "geometryY": 323
         },
@@ -389,8 +389,8 @@
                     "type": "PTDI"
                 }
             ],
-            "geometryHeight": 188,
-            "geometryWidth": 256,
+            "geometryHeight": 187,
+            "geometryWidth": 255,
             "geometryX": 323,
             "geometryY": 51
         },
@@ -547,8 +547,8 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 392,
-            "geometryWidth": 290,
+            "geometryHeight": 391,
+            "geometryWidth": 289,
             "geometryX": 578,
             "geometryY": 51
         },
@@ -777,8 +777,8 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 392,
-            "geometryWidth": 290,
+            "geometryHeight": 391,
+            "geometryWidth": 289,
             "geometryX": 867,
             "geometryY": 51
         }
@@ -909,9 +909,9 @@
             "_name": "Important Green"
         }
     ],
-    "webPort": "￿",
-    "windowCellHeight": 60,
-    "windowCellWidth": 103,
-    "windowHeight": 1028,
-    "windowWidth": 1747
+    "webPort": "\u0000",
+    "windowCellHeight": 58,
+    "windowCellWidth": 71,
+    "windowHeight": 1000,
+    "windowWidth": 1215
 }
