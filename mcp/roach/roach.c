@@ -198,6 +198,7 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 char df_from_sweeps_script[] = "/data/etc/blast/roachPython/dfSweeps.py";
+char noise_comp_script[] = "/data/etc/blast/roachPython/noise_comp.py";
 
 char rudat_input_serials[5][100] = {"11505170016", "11505170014", "11505170022", "11505170009", "11508260120"};
 char rudat_output_serials[5][100] = {"11505170019", "11505170023", "11505170003", "11505170021", "11508260127"};
@@ -3650,6 +3651,43 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     return 0;
 }
 
+int roach_noise_comp(roach_state_t *m_roach)
+{
+    int status = -1;
+    char *pycommand;
+    char *path_to_ts_on;
+    char *path_to_ts_off;
+    char *path_to_noise_comp;
+    char *var_name;
+    int i = m_roach->which - 1;
+    // with output atten at current setting
+    if ((status = save_all_timestreams(m_roach,
+            CommandData.roach_params[i].num_sec) < 0)) {
+        blast_err("ROACH%d: Error saving I/Q timestream", i + 1);
+        return status;
+    }
+    blast_tmp_sprintf(path_to_ts_on, "%s", m_roach->last_iq_path);
+    // output atten at max
+    CommandData.roach_params[i].out_atten = 30.0;
+    CommandData.roach[i].set_attens = 1;
+    if ((status = set_atten(&pi_state_table[i]) < 0)) {
+        blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
+        CommandData.roach[i].set_attens = 0;
+        return status;
+    }
+    CommandData.roach[i].set_attens = 0;
+    blast_tmp_sprintf(path_to_ts_off, "%s", m_roach->last_iq_path);
+    blast_tmp_sprintf(pycommand, "python %s %s %s %s", noise_comp_script,
+         path_to_ts_on, path_to_ts_off, m_roach->sweep_root_path);
+    blast_info("%s", pycommand);
+    pyblast_system(pycommand);
+    blast_tmp_sprintf(path_to_noise_comp, "%s/noise_comp.npy", m_roach->sweep_root_path);
+    blast_tmp_sprintf(var_name, "R%d_LAST_NOISE_COMP", m_roach->which);
+    // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
+    setenv(var_name, path_to_noise_comp, 1);
+    return 0;
+}
+
 int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
 {
     int retval = -1;
@@ -5345,7 +5383,7 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].set_attens == 1) {
             if (set_atten(&pi_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
                 CommandData.roach[i].set_attens = 0;
             } else {
                 CommandData.roach[i].set_attens = 0;
@@ -5353,31 +5391,31 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].set_attens == 2) {
             if (set_attens_to_default(&pi_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
             }
             CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 3) {
             if (write_last_attens(&roach_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
                 CommandData.roach[i].set_attens = 0;
             }
             CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 4) {
             if (set_atten_conserved(&pi_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
                 CommandData.roach[i].set_attens = 0;
             }
             CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 5) {
             if (find_atten(&roach_state_table[i], CommandData.roach_params[i].dBm_per_tone) < 0) {
-                blast_info("ROACH%d: Failed to calculate output_atten...", i + 1);
+                blast_err("ROACH%d: Failed to calculate output_atten...", i + 1);
                 CommandData.roach[i].set_attens = 0;
             } else {
                 if (set_atten(&pi_state_table[i]) < 0) {
-                    blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                    blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
                     CommandData.roach[i].set_attens = 0;
                 }
             CommandData.roach[i].set_attens = 0;
@@ -5385,7 +5423,7 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].read_attens == 1) {
             if (read_atten(&pi_state_table[i]) < 0) {
-                blast_info("ROACH%d: Failed to read RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to read RUDATs...", i + 1);
             } else {
                 CommandData.roach[i].read_attens = 0;
             }
@@ -5393,7 +5431,7 @@ void *roach_cmd_loop(void* ind)
         if (CommandData.roach[i].new_atten) {
             if (set_output_atten(&roach_state_table[i],
                    CommandData.roach_params[i].new_out_atten) < 0) {
-                blast_info("ROACH%d: Failed to set RUDATs...", i + 1);
+                blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
             } else {
                 CommandData.roach[i].new_atten = 0;
             }
@@ -5506,6 +5544,11 @@ void *roach_cmd_loop(void* ind)
                 result = roach_vna_sweep(&roach_state_table[i]);
                 roach_state_manager(&roach_state_table[i], result);
             }
+            if (CommandData.roach[i].do_noise_comp == 1) {
+                if (roach_noise_comp(&roach_state_table[i]) < 0) {
+                    blast_err("ROACH%d: NOISE COMP FAILED", i + 1);
+                }
+            }
             /* if (CommandData.roach[i].auto_find == 1) {
                 // write attens?
                 // do vna sweep 
@@ -5558,7 +5601,10 @@ void *roach_cmd_loop(void* ind)
             }
             if (CommandData.roach[i].get_timestream == 2) {
                 blast_info("Saving all timestreams");
-                save_all_timestreams(&roach_state_table[i], CommandData.roach_params[i].num_sec);
+                if (save_all_timestreams(&roach_state_table[i],
+                    CommandData.roach_params[i].num_sec) < 0) {
+                    blast_err("ROACH%d: Error saving I/Q timestream", i + 1);
+                }
                 CommandData.roach[i].get_timestream = 0;
             }
             if (CommandData.roach[i].get_timestream == 3) {

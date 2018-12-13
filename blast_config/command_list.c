@@ -1168,12 +1168,18 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
+  {COMMAND(roach_ts), "Save IQ timestreams for one Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(roach_ts_all), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_roach_df), "Save DF timestreams for all Roaches", GR_ROACH, 1,
+  {COMMAND(roach_df_all), "Save DF timestreams for all Roaches", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
@@ -1345,6 +1351,17 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Sets do_check_retune", 0, 3, 'i', "NONE"},
+    }
+  },
+  {COMMAND(noise_comp), "Run noise comp for one Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(noise_comp_all), "Run noise comp for all Roaches", GR_ROACH, 1,
+    {
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
   /***************************************/

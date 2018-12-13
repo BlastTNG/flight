@@ -385,6 +385,7 @@ typedef struct roach
     unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
     unsigned int do_full_loop;
     unsigned int auto_correct_freqs;
+    unsigned int do_noise_comp;
 } roach_status_t;
 
 typedef struct roach_params

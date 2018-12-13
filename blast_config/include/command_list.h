@@ -294,7 +294,8 @@ enum multiCommand {
   new_ref_params,
   center_lo,
   offset_lo,
-  all_roach_ts,
+  roach_ts_all,
+  roach_ts,
   offset_lo_all,
   find_kids_default,
   change_amp,
@@ -309,7 +310,7 @@ enum multiCommand {
   set_attens_calc,
   set_lo_MHz,
   read_lo,
-  all_roach_df,
+  roach_df_all,
   df_targ,
   roach_allow_scan_check,
   roach_disallow_scan_check,
@@ -323,6 +324,8 @@ enum multiCommand {
   auto_correct_all,
   set_retune_type,
   set_retune_type_all,
+  noise_comp,
+  noise_comp_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
