@@ -501,12 +501,21 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 
     if (block->fp) { // there is a file instead of data in a buffer
       *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
+			// special hook for tar'ed files
+			if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
+					(strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
+				*(uint16_t *) buffer |= TARGZ_FILE_MASK; 
+			} else {
+				*(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
+			}
+
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
       if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
         linklist_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
       }
     } else { // there is data in the buffer
+      *(uint16_t *) buffer &= ~BLOCK_FILE_MASK; // no mask for non-file types
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
@@ -578,13 +587,20 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
   if (id & BLOCK_FILE_MASK) { // receiving a file
     // a different id packet was received, so close file if that packet is open
-    id ^= BLOCK_FILE_MASK; // remove the mask
+    id &= ~BLOCK_FILE_MASK; // remove the mask
+
+    char ext[16] = "";
+    if (id & TARGZ_FILE_MASK) {
+      strcpy(ext, TARGZ_EXT);
+    }
+    id &= ~TARGZ_FILE_MASK;
+
     if ((id != block->id) && block->fp) {
       fclose(block->fp);
       block->fp = NULL;
     }
     if (!block->fp) { // file not open yet
-      sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
+      sprintf(block->filename, "%s/%s_%d%s", LINKLIST_FILESAVE_DIR, block->name, id, ext); // build filename
       if (!(block->fp = fpreopenb(block->filename))) {
         linklist_err("Cannot open file %s", block->filename);
         return;
