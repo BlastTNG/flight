@@ -21,9 +21,10 @@
                             "_id": "1044646091"
                         },
                         "_map": {
-                            "0": "Intermediate[style=No style (P680910645)]",
+                            "0": "Intermediate[style=No style (P1911761389)]",
                             "1": "OPEN[style=Important (P564751211)]",
-                            "2": "CLOSED[style=Important Green (P1055304642)]"
+                            "2": "CLOSED[style=Important Green (P1055304642)]",
+                            "3": "LOOSE CLOSED[style=No style (P1911761389)]"
                         }
                     },
                     "PObject": {
@@ -231,7 +232,7 @@
                     "PObject": {
                         "_id": "1471974930"
                     },
-                    "_caption": "Pump pot",
+                    "_caption": "Pump Pot",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
@@ -781,6 +782,292 @@
             "geometryWidth": 289,
             "geometryX": 867,
             "geometryY": 51
+        },
+        {
+            "PObject": {
+                "_id": "646961831"
+            },
+            "_boxTitle": "ROACH1",
+            "_style": "(P2072147126)",
+            "cellHeight": 22,
+            "cellWidth": 13,
+            "cellX": 45,
+            "cellY": 27,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1613957099"
+                    },
+                    "_caption": "STATE   ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "STATE_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "886484695"
+                    },
+                    "_caption": "STATE_PI",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "STATE_PI_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1309330332"
+                    },
+                    "_caption": "STATUS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "STATUS_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "46527931"
+                    },
+                    "_caption": "STREAM_STATE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "STREAM_STATE_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "652184679"
+                    },
+                    "_caption": "ATTEN_OUT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ATTEN_OUT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "663925491"
+                    },
+                    "_caption": "ATTEN_IN",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ATTEN_IN_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "238651862"
+                    },
+                    "_caption": "HAS_QDR_CAL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_QDR_CAL_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1602809510"
+                    },
+                    "_caption": "HAS_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_TONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1897201546"
+                    },
+                    "_caption": "CURRENT_N_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "431511806"
+                    },
+                    "_caption": "HAS_VNA_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_VNA_TONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "392554042"
+                    },
+                    "_caption": "HAS_TARG_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_TARG_TONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "872323209"
+                    },
+                    "_caption": "HAS_VNA_SWEEP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_VNA_SWEEP_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "335020110"
+                    },
+                    "_caption": "HAS_TARG_SWEEP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_TARG_SWEEP_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1686416232"
+                    },
+                    "_caption": "ADC_RMS_I",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ADCI_RMS_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "852660760"
+                    },
+                    "_caption": "ADC_RMS_Q",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ADCQ_RMS_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "671720691"
+                    },
+                    "_caption": "HAS_REF",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_REF_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1966224558"
+                    },
+                    "_caption": "HAS_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_ERROR_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1354663628"
+                    },
+                    "_caption": "LO_CENTER_FREQ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "LO_CENTER_FREQ_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1552669864"
+                    },
+                    "_caption": "FPGA_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "thermistor_66",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "738931021"
+                    },
+                    "_caption": "PPC_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "thermistor_69",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 375,
+            "geometryWidth": 222,
+            "geometryX": 765,
+            "geometryY": 459
+        },
+        {
+            "PObject": {
+                "_id": "284824448"
+            },
+            "_boxTitle": "ROACH1",
+            "_style": "(P2072147126)",
+            "cellHeight": 20,
+            "cellWidth": 12,
+            "cellX": 31,
+            "cellY": 28,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1164987922"
+                    },
+                    "_caption": "STATE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "STATE_ROACH1",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 341,
+            "geometryWidth": 205,
+            "geometryX": 527,
+            "geometryY": 476
         }
     ],
     "extremas": [
@@ -907,11 +1194,44 @@
             "_italic": false,
             "_linked": true,
             "_name": "Important Green"
+        },
+        {
+            "PObject": {
+                "_id": "1999017657"
+            },
+            "_bg": "#00aaff",
+            "_bold": true,
+            "_fg": "#ff5500",
+            "_italic": true,
+            "_linked": true,
+            "_name": "Green OK"
+        },
+        {
+            "PObject": {
+                "_id": "150990864"
+            },
+            "_bg": "#aaaaff",
+            "_bold": true,
+            "_fg": "#0000ff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "Sunsensor Box"
+        },
+        {
+            "PObject": {
+                "_id": "338000295"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "steppers status"
         }
     ],
-    "webPort": "\u0000",
-    "windowCellHeight": 58,
-    "windowCellWidth": 71,
-    "windowHeight": 1000,
-    "windowWidth": 1215
+    "webPort": "0",
+    "windowCellHeight": 69,
+    "windowCellWidth": 109,
+    "windowHeight": 1176,
+    "windowWidth": 1855
 }

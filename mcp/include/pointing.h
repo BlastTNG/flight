@@ -47,8 +47,8 @@
 #define PSS1_BETA    PSS_ALIGNMENT + 180.0 - 36.4
 #define PSS2_BETA    PSS_ALIGNMENT + 180.0 - 79.3
 #define PSS3_BETA    PSS_ALIGNMENT + 79.3
-#define PSS4_BETA    PSS_ALIGNMENT + 36.4
-#define PSS5_BETA    PSS_ALIGNMENT + 15.0
+#define PSS4_BETA    PSS_ALIGNMENT + 57.9
+#define PSS5_BETA    PSS_ALIGNMENT + 36.4
 
 // PSS elevation in deg
 #define PSS0_ALPHA 25.0
