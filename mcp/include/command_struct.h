@@ -137,7 +137,8 @@ struct PivGainStruct {
 #define SHUTTER_CLOSED2 0x0040
 #define SHUTTER_CLOSED_SLOW 0x0080
 #define SHUTTER_UNK     0x0100
-
+#define SHUTTER_KEEPCLOSED 0x0200
+#define SHUTTER_KEEPOPEN 0X0400
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1
@@ -385,6 +386,7 @@ typedef struct roach
     unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
     unsigned int do_full_loop;
     unsigned int auto_correct_freqs;
+    unsigned int do_noise_comp;
 } roach_status_t;
 
 typedef struct roach_params

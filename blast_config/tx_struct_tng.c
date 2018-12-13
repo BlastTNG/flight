@@ -887,6 +887,11 @@ channel_t channel_list[] =
     { "steps_shutter",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "steps_slow_shutter",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "pos_shutter",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "lims_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "i_hold_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "i_move_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "vel_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "acc_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "ra_sbsc",              1.0 / 1000.0,     0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "dec_sbsc",             1.0 / 1000.0,     0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
