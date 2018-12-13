@@ -320,6 +320,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
+  {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
+  
   {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
   {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
@@ -1667,6 +1670,18 @@ struct mcom mcommands[plugh + 2] = {
           {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
         }
     },
+    {COMMAND(shutter_i), "set shutter move and hold currents", GR_MISC, 2,
+	{
+	  {"Shutter move current", 0, 40, 'i', "I_MOVE_SHUTTER"},
+	  {"Shutter hold current", 0, 40, 'i', "I_HOLD_SHUTTER"}, 
+	}
+    },
+    {COMMAND(shutter_vel), "set shutter velocity and acceleration", GR_MISC, 2,
+	{
+	  {"Shutter velocity", 0, 10000, 'i', "VEL_SHUTTER"},
+	  {"Shutter acceleration", 0, 20, 'i', "ACC_SHUTTER"},
+	}
+    }, 
     {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,
         {
           {"i", 0, CMD_I_MAX, 'i', "NONE"},

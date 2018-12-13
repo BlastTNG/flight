@@ -124,6 +124,7 @@ enum singleCommand {
   hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
+  shutter_keepopen, shutter_keepclosed,
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
   charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,

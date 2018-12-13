@@ -1093,6 +1093,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case shutter_close_slow:
             CommandData.actbus.shutter_goal = SHUTTER_CLOSED_SLOW;
             break;
+	case shutter_keepopen:
+	    CommandData.actbus.shutter_goal = SHUTTER_KEEPOPEN;
+	case shutter_keepclosed:
+	    CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED;
 
             // Actuators
         case actuator_stop:
@@ -3650,8 +3654,8 @@ void InitCommandData()
     CommandData.actbus.shutter_step_slow = 300;
     CommandData.actbus.shutter_move_i = 40;
     CommandData.actbus.shutter_hold_i = 40;
-    CommandData.actbus.shutter_vel = 5000;
-    CommandData.actbus.shutter_acc = 1000;
+    CommandData.actbus.shutter_vel = 3000;
+    CommandData.actbus.shutter_acc = 1;
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
