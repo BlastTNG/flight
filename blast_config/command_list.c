@@ -320,6 +320,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
+  {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
+
   {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
   {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
@@ -1168,12 +1171,18 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_roach_ts), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
+  {COMMAND(roach_ts), "Save IQ timestreams for one Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(roach_ts_all), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(all_roach_df), "Save DF timestreams for all Roaches", GR_ROACH, 1,
+  {COMMAND(roach_df_all), "Save DF timestreams for all Roaches", GR_ROACH, 1,
     {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
@@ -1347,6 +1356,17 @@ struct mcom mcommands[plugh + 2] = {
       {"Sets do_check_retune", 0, 3, 'i', "NONE"},
     }
   },
+  {COMMAND(noise_comp), "Run noise comp for one Roach", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
+  {COMMAND(noise_comp_all), "Run noise comp for all Roaches", GR_ROACH, 1,
+    {
+      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
@@ -1502,9 +1522,9 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_thresholds), "Set pumped pot valve thresholds", GR_CRYO, 3,
     {
-      {"Closed threshold (1000-8000)", 1000, 8000, 'i', "THRESH_CLOS_POTVALVE"},
-      {"Loose close threshold (8100-10000)", 8200, 10000, 'i', "THRESHLCLOS_POTVALVE"},
-      {"Open threshold (10100-16000)", 10200, 16000, 'i', "THRESH_OPEN_POTVALVE"},
+      {"Closed threshold (1000-7000)", 1000, 7000, 'i', "THRESH_CLOS_POTVALVE"},
+      {"Loose close threshold (7000-10000)", 7000, 10000, 'i', "THRESHLCLOS_POTVALVE"},
+      {"Open threshold (10000-16000)", 10000, 16000, 'i', "THRESH_OPEN_POTVALVE"},
     }
   },
 
@@ -1665,6 +1685,18 @@ struct mcom mcommands[plugh + 2] = {
     {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
         {
           {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
+        }
+    },
+    {COMMAND(shutter_i), "set shutter move and hold currents", GR_MISC, 2,
+        {
+	  {"Shutter move current", 0, 40, 'i', "I_MOVE_SHUTTER"},
+	  {"Shutter hold current", 0, 40, 'i', "I_HOLD_SHUTTER"},
+        }
+    },
+    {COMMAND(shutter_vel), "set shutter velocity and acceleration", GR_MISC, 2,
+        {
+	  {"Shutter velocity", 0, 10000, 'i', "VEL_SHUTTER"},
+	  {"Shutter acceleration", 0, 20, 'i', "ACC_SHUTTER"},
         }
     },
     {COMMAND(params_test), "Do nothing, with all paramter types", GR_MISC, 5,

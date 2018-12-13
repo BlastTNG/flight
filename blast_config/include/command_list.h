@@ -124,6 +124,7 @@ enum singleCommand {
   hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
+  shutter_keepopen, shutter_keepclosed,
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
   charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
@@ -208,6 +209,7 @@ enum multiCommand {
   hwpr_repeat,      hwpr_define_pos, hwpr_set_margin,         params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
+  shutter_i, 	    shutter_vel,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal, pss_cal_n,
   pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll, pss_cal_array_az, pss_set_imin,
   actuators_set_used,
@@ -294,7 +296,8 @@ enum multiCommand {
   new_ref_params,
   center_lo,
   offset_lo,
-  all_roach_ts,
+  roach_ts_all,
+  roach_ts,
   offset_lo_all,
   find_kids_default,
   change_amp,
@@ -309,7 +312,7 @@ enum multiCommand {
   set_attens_calc,
   set_lo_MHz,
   read_lo,
-  all_roach_df,
+  roach_df_all,
   df_targ,
   roach_allow_scan_check,
   roach_disallow_scan_check,
@@ -323,6 +326,8 @@ enum multiCommand {
   auto_correct_all,
   set_retune_type,
   set_retune_type_all,
+  noise_comp,
+  noise_comp_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

@@ -1093,6 +1093,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case shutter_close_slow:
             CommandData.actbus.shutter_goal = SHUTTER_CLOSED_SLOW;
             break;
+	case shutter_keepopen:
+	    CommandData.actbus.shutter_goal = SHUTTER_KEEPOPEN;
+	case shutter_keepclosed:
+	    CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED;
 
             // Actuators
         case actuator_stop:
@@ -1731,6 +1735,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_step_slow:
       CommandData.actbus.shutter_step_slow = ivalues[0];
       break;
+    case shutter_i:
+      CommandData.actbus.shutter_move_i = ivalues[0];
+      CommandData.actbus.shutter_hold_i = ivalues[1];
+      break;
+    case shutter_vel:
+      CommandData.actbus.shutter_vel = ivalues[0];
+      CommandData.actbus.shutter_acc = ivalues[0];
+      break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
       copysvalue(CommandData.actbus.command[CommandData.actbus.cindex],
@@ -2011,8 +2023,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       i = 0;
       while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
-        send_file_to_linklist(linklist_find_by_name(
-            (char *) linklist_nt[ivalues[0]], linklist_array), "file_block", svalues[1]);
+        send_file_to_linklist(linklist_find_by_name((char *) linklist_nt[ivalues[0]], linklist_array),
+                               "file_block", svalues[1]);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
@@ -2309,7 +2321,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].get_timestream = 1;
       }
       break;
-    case all_roach_ts:
+    case roach_ts_all:
       if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
@@ -2317,7 +2329,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
-    case all_roach_df:
+    case roach_ts:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+            (rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+          CommandData.roach[ivalues[0]-1].get_timestream = 2;
+      }
+      break;
+    case roach_df_all:
       if ((rvalues[0] >= 0.0) && (rvalues[0] <= 300.0)) {
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].num_sec = rvalues[0];
@@ -2501,6 +2520,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_retune_type_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_check_retune = ivalues[0];
+      }
+      break;
+    case noise_comp:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_noise_comp = 1;
+          CommandData.roach_params[i].num_sec = rvalues[2];
+          CommandData.roach[ivalues[0]-1].get_timestream = 2;
+      }
+      break;
+    case noise_comp_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_noise_comp = 1;
+          CommandData.roach_params[i].num_sec = rvalues[0];
+          CommandData.roach[i].get_timestream = 2;
       }
       break;
       /*************************************
@@ -3181,6 +3214,7 @@ void InitCommandData()
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].auto_correct_freqs = 0;
         CommandData.roach[i].auto_scan_retune = 0;
+        CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
@@ -3642,8 +3676,8 @@ void InitCommandData()
     CommandData.actbus.shutter_step_slow = 300;
     CommandData.actbus.shutter_move_i = 40;
     CommandData.actbus.shutter_hold_i = 40;
-    CommandData.actbus.shutter_vel = 5000;
-    CommandData.actbus.shutter_acc = 1000;
+    CommandData.actbus.shutter_vel = 3000;
+    CommandData.actbus.shutter_acc = 1;
 
     CommandData.Cryo.potvalve_opencurrent = 75;
     CommandData.Cryo.potvalve_closecurrent = 50;
