@@ -737,7 +737,6 @@ static void GetShutterData(int *position)
     if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?0", &shutter_data.pos) != EZ_ERR_OK) {
 	bputs(warning, "GetShutterData: EZBus_ReadInt error -- pos");
     }
-	blast_info("DEBUG: SHUTTER LIMIT = %d", shutter_data.lims);
   } else {
 	bputs(warning, "GetShutterData: EZBus is busy");
   }
