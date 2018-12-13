@@ -2023,8 +2023,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       i = 0;
       while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
-        send_file_to_linklist(linklist_find_by_name(
-            (char *) linklist_nt[ivalues[0]], linklist_array), "file_block", svalues[1]);
+        send_file_to_linklist(linklist_find_by_name((char *) linklist_nt[ivalues[0]], linklist_array),
+                               "file_block", svalues[1]);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }

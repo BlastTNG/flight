@@ -7,9 +7,6 @@ import soco
 
 DEVICE_ADDRESS = "192.168.0.135"
 DATAFILE = "/data/etc/mole.lnk"
-REF_FIELD = "MCP_1HZ_FRAMECOUNT"
-
-LUNCH_SONG = "Mmm Mmm"
 
 sonos = soco.SoCo(DEVICE_ADDRESS)
 df = gd.dirfile(DATAFILE, gd.RDONLY)
@@ -66,8 +63,8 @@ class AutoSonos:
   # If the song is already playing, doesn't try to play again 
   def trigger(self):
     if (get_current_track_title() != self.track.title):
-      sonos.add_to_queue(self.track, 0)
-      sonos.play_from_queue(0, True)
+      sonos.add_to_queue(self.track, 1) # add to queue indexing by 1
+      sonos.play_from_queue(0, True) # play from queue indexing from 0
       print("Playing " + self.track.title)
       return 1
     return 0
@@ -78,8 +75,8 @@ class AutoSonos:
 
 
 # Looks at field "STATE_POTVALVE" and .truestate() == True when STATE_POTVALVE == 1
-# When the .trigger() function is called, will play "Island Girl" on the SONOS
-PotvalveOpen = AutoSonos("Let my love open the door", "STATE_POTVALVE", 1)
+# When the .trigger() function is called, will play the requested song on the SONOS
+PotvalveOpen = AutoSonos("Flagpole Sitta", "STATE_POTVALVE", 1)
 
 Lunch = AutoSonos("Sandstorm", "TIME")
 
