@@ -128,11 +128,11 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
 	*accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
-void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
+int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 {
   if (!ll) {
     linklist_err("Invalid linklist given");
-    return;
+    return 0;
   }
 
   int i = 0;
@@ -147,20 +147,20 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
   }
   if (!theblock) {
     linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
-    return;
+    return 0;
   }
 
   // check to see if the previous send is done
   if (theblock->i != theblock->n) { // previous transfer not done
     linklist_info("Previous transfer for block \"%s\" is incomplete.", blockname);
-    return;
+    return 0;
   }
  
   // open the file
   FILE * fp = fopen(filename, "rb+");
   if (!fp) {
     linklist_err("File \"%s\" not found", filename);
-    return;
+    return 0;
   }
   
   // get the size of the file
@@ -181,7 +181,7 @@ void send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 
   linklist_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
 
-  return;
+  return 1;
 }
 
 // randomizes/unrandomizes a buffer of a given size using a given seed
