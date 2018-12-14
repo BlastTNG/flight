@@ -143,6 +143,7 @@ typedef struct roach_state {
     bool sweep_fail;
     bool tone_write_fail;
     bool lamp_check_error;
+    bool fridge_cycle_warning;
 
     float adc_rms[2];
     double *freq_residuals;

@@ -331,6 +331,8 @@ enum multiCommand {
   find_kids_loop,
   find_kids_loop_all,
   kill_roach,
+  set_df_retune_threshold,
+  set_df_retune_threshold_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

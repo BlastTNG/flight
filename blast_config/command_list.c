@@ -1111,7 +1111,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Desired dBm per tone", -47.0, -17.0, 'f', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
     }
   },
   {COMMAND(read_attens), "Read attenuators", GR_ROACH, 1,
@@ -1382,6 +1382,17 @@ struct mcom mcommands[plugh + 2] = {
     "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_df_retune_threshold), "Set DF retune threshold for one Roach (Hz)", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
+  {
+    {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
   /***************************************/

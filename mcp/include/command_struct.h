@@ -415,6 +415,7 @@ typedef struct roach_params
     int resp_thresh;
     double dBm_per_tone;
     double lo_freq_MHz;
+    double df_retune_threshold;
 } roach_params_t;
 
 // Ethercat controller/device commands
