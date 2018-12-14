@@ -2553,6 +2553,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].kill = 1;
       }
       break;
+    case set_df_retune_threshold:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].df_retune_threshold = rvalues[1];
+      }
+      break;
+    case set_df_retune_threshold_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach_params[i].df_retune_threshold = rvalues[0];
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3627,6 +3637,7 @@ void InitCommandData()
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
         CommandData.roach_params[i].dBm_per_tone = -60;
+        CommandData.roach_params[i].df_retune_threshold = 100000;
     }
 
     CommandData.rox_bias.amp = 56;
