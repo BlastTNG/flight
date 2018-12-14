@@ -830,8 +830,8 @@
             "_style": "(P2072147126)",
             "cellHeight": 22,
             "cellWidth": 13,
-            "cellX": 45,
-            "cellY": 27,
+            "cellX": 53,
+            "cellY": 26,
             "dataItems": [
                 {
                     "PObject": {
@@ -1074,10 +1074,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 375,
-            "geometryWidth": 222,
-            "geometryX": 765,
-            "geometryY": 459
+            "geometryHeight": 374,
+            "geometryWidth": 221,
+            "geometryX": 901,
+            "geometryY": 442
         },
         {
             "PObject": {
@@ -1087,8 +1087,8 @@
             "_style": "(P2072147126)",
             "cellHeight": 20,
             "cellWidth": 12,
-            "cellX": 31,
-            "cellY": 28,
+            "cellX": 37,
+            "cellY": 40,
             "dataItems": [
                 {
                     "PObject": {
@@ -1103,10 +1103,173 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 341,
-            "geometryWidth": 205,
-            "geometryX": 527,
-            "geometryY": 476
+            "geometryHeight": 340,
+            "geometryWidth": 204,
+            "geometryX": 629,
+            "geometryY": 680
+        },
+        {
+            "PObject": {
+                "_id": "1386403626"
+            },
+            "_boxTitle": "Sun Sensors",
+            "_style": "(P2072147126)",
+            "cellHeight": 14,
+            "cellWidth": 17,
+            "cellX": 34,
+            "cellY": 26,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "896065531"
+                        },
+                        "_map": {
+                            "0": "Not connected :([style=Important (P564751211)]",
+                            "1": "Connected [style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1857261260"
+                    },
+                    "_caption": "PSS Labjack        ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "Labjack5_conn_status",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "142332105"
+                        },
+                        "_map": {
+                            "0": "Not OK[style=shutter (P2059868534)]",
+                            "1": "OK![style=No style (P973798250)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "949605361"
+                    },
+                    "_caption": "PSS Ok?",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "OK_PSS",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2147386061"
+                    },
+                    "_caption": "PSS AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_PSS",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1982200588"
+                    },
+                    "_caption": "PSS Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "957050872"
+                    },
+                    "_caption": "PSS Raw EL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "EL_RAW_PSS",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "158924440"
+                    },
+                    "_caption": "PSS1 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1065069129"
+                    },
+                    "_caption": "PSS2 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "246427451"
+                    },
+                    "_caption": "PSS3 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1361172890"
+                    },
+                    "_caption": "PSS4 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1112254632"
+                    },
+                    "_caption": "PSS5 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "213585112"
+                    },
+                    "_caption": "PSS6 Raw AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ_RAW_PSS6",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 238,
+            "geometryWidth": 290,
+            "geometryX": 578,
+            "geometryY": 442
         }
     ],
     "extremas": [
@@ -1114,15 +1277,15 @@
             "PObject": {
                 "_id": "1555967448"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "closed",
             "_shigh": "(P1913941534)",
             "_slow": "(P2017040817)",
             "_sxhigh": "(P956360347)",
             "_sxlow": "(P949614266)",
-            "_xhigh": "2",
-            "_xlow": "-2"
+            "_xhigh": 2,
+            "_xlow": -2
         }
     ],
     "linkNames": [
@@ -1337,9 +1500,9 @@
             "_name": "shutter"
         }
     ],
-    "webPort": "0",
-    "windowCellHeight": 69,
-    "windowCellWidth": 109,
-    "windowHeight": 1176,
-    "windowWidth": 1855
+    "webPort": "\u0000",
+    "windowCellHeight": 58,
+    "windowCellWidth": 71,
+    "windowHeight": 1000,
+    "windowWidth": 1215
 }
