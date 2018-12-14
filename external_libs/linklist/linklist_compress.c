@@ -179,7 +179,7 @@ int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
 
   theblock->id++; // increment the block counter
 
-  linklist_info("File \"%s\" sent to linklist \"%s\"", filename, ll->name);
+  linklist_info("File \"%s\" sent to linklist \"%s\"\n", filename, ll->name);
 
   return 1;
 }
