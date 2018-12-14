@@ -1378,6 +1378,12 @@ struct mcom mcommands[plugh + 2] = {
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
   }
   },
+  {COMMAND(kill_roach),
+    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+  }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

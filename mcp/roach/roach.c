@@ -4625,6 +4625,16 @@ int roach_upload_status(roach_state_t *m_roach)
     }
 }
 
+int roach_halt_ppc(roach_state_t *m_roach)
+{
+    blast_info("ROACH%d: Sending SHUTDOWN command. Restarting will require full power cycle",
+       m_roach->which);
+    int status = send_rpc_katcl(m_roach->rpc_conn, 1000,
+        KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?halt",
+    KATCP_FLAG_LAST | KATCP_FLAG_STRING, "", NULL);
+    return status;
+}
+
 /*
  * Function: roach_upload_fpg
  * -----------------------------
@@ -4752,6 +4762,7 @@ void shutdown_roaches(void)
 
 void reset_roach_flags(roach_state_t *m_roach)
 {
+    CommandData.roach[m_roach->which - 1].kill = 0;
     m_roach->has_firmware = 0;
     m_roach->firmware_upload_fail = 0;
     m_roach->is_streaming = 0;
@@ -4768,6 +4779,7 @@ void reset_roach_flags(roach_state_t *m_roach)
     m_roach->sweep_fail = 0;
     m_roach->tone_write_fail = 0;
     m_roach->lamp_check_error = 0;
+    m_roach->katcp_connect_error = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
@@ -4873,7 +4885,7 @@ int roach_boot_sequence(roach_state_t *m_roach)
 {
     int retval = -1;
     int flags = 0;
-    if (!m_roach->have_warned_connect) {
+    if (!m_roach->katcp_connect_error) {
         blast_info("Attempting to connect to %s", m_roach->address);
         flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     }
@@ -4881,11 +4893,13 @@ int roach_boot_sequence(roach_state_t *m_roach)
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
     if (m_roach->katcp_fd > 0) {
         blast_info("ROACH%d, KATCP up", m_roach->which);
-        m_roach->have_warned_connect = 0;
+        m_roach->katcp_connect_error = 0;
         retval = 0;
     } else {
-        if (!m_roach->have_warned_connect) blast_err("ROACH%d, KATCP connection error", m_roach->which);
-        m_roach->have_warned_connect = 1;
+        if (!m_roach->katcp_connect_error) {
+            blast_err("ROACH%d, KATCP connection error", m_roach->which);
+            m_roach->katcp_connect_error = 1;
+        }
         sleep(3);
     }
     return retval;
@@ -5366,6 +5380,10 @@ void *roach_cmd_loop(void* ind)
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
         start_flight_mode(&roach_state_table[i]);
+        if (CommandData.roach[i].kill) {
+            roach_halt_ppc(&roach_state_table[i]);
+            CommandData.roach[i].kill = 0;
+        }
         if (pi_state_table[i].error_count >= MAX_PI_ERRORS_REBOOT) {
             CommandData.roach[i].reboot_pi_now = 1;
         }
@@ -6155,7 +6173,8 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint16_t)roach_state_table[i].firmware_upload_fail) << 17);
         roach_status_field |= (((uint16_t)roach_state_table[i].has_firmware) << 18);
         roach_status_field |= (((uint16_t)roach_state_table[i].lamp_check_error) << 19);
-        roach_status_field |= (((uint16_t)pi_state_table[i].error_count) << 20);
+        roach_status_field |= (((uint16_t)roach_state_table[i].katcp_connect_error) << 20);
+        roach_status_field |= (((uint16_t)pi_state_table[i].error_count) << 21);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_SCALED_VALUE(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
