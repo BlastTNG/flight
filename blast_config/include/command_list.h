@@ -328,6 +328,9 @@ enum multiCommand {
   set_retune_type_all,
   noise_comp,
   noise_comp_all,
+  find_kids_loop,
+  find_kids_loop_all,
+  kill_roach,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

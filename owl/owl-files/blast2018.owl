@@ -30,10 +30,50 @@
                     "PObject": {
                         "_id": "43466910"
                     },
-                    "_caption": "Potvalve ",
+                    "_caption": "Pot Valve ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_POTVALVE",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "423137424"
+                        },
+                        "_map": {
+                            "11": "OPEN[style=Important Green (P1055304642)]",
+                            "3": "Intermediate",
+                            "7": "CLOSED[style=Important (P564751211)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2030093021"
+                    },
+                    "_caption": "Pump-line Valve ",
+                    "_captionStyle": "(P1653115880)",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LIMS_PUMPVALVE",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1333828410"
+                        },
+                        "_map": {
+                            "11": "OPEN[style=Important (P564751211)]",
+                            "3": "Intermediate[style=No style (P1911761389)]",
+                            "7": "CLOSED[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2123354357"
+                    },
+                    "_caption": "Boiloff Valve",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1653115880)",
+                    "_source": "LIMS_FILLVALVE",
                     "type": "PMDI"
                 },
                 {
@@ -251,6 +291,25 @@
                     "_format": "",
                     "_source": "Td_250fpa",
                     "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1239853820"
+                        },
+                        "_map": {
+                            "0": "OFF[style=Important (P564751211)]",
+                            "1": "ON[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1484570975"
+                    },
+                    "_caption": "Heat Switch",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATUS_CHARCOAL_HS",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 391,
@@ -422,6 +481,26 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "MODE_P",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "569433025"
+                        },
+                        "_map": {
+                            "11": "OPEN[style=Important Green (P1055304642)]",
+                            "3": "Intermediate[style=No style (P1911761389)]",
+                            "7": "CLOSED[style=Important (P564751211)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "269007743"
+                    },
+                    "_caption": "shutter",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LIMS_SHUTTER",
                     "type": "PMDI"
                 },
                 {
@@ -1071,6 +1150,20 @@
         }
     ],
     "extremas": [
+        {
+            "PObject": {
+                "_id": "1555967448"
+            },
+            "_high": "1",
+            "_low": "-1",
+            "_name": "closed",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": "2",
+            "_xlow": "-2"
+        }
     ],
     "linkNames": [
         "/data/etc/mole.lnk",
@@ -1227,6 +1320,72 @@
             "_italic": false,
             "_linked": true,
             "_name": "steppers status"
+        },
+        {
+            "PObject": {
+                "_id": "956360347"
+            },
+            "_bg": "#ffaaaa",
+            "_bold": true,
+            "_fg": "#000055",
+            "_italic": false,
+            "_linked": true,
+            "_name": "xhigh"
+        },
+        {
+            "PObject": {
+                "_id": "1913941534"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#ff0000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "high"
+        },
+        {
+            "PObject": {
+                "_id": "2017040817"
+            },
+            "_bg": "#ffffff",
+            "_bold": true,
+            "_fg": "#00bb00",
+            "_italic": false,
+            "_linked": true,
+            "_name": "low"
+        },
+        {
+            "PObject": {
+                "_id": "949614266"
+            },
+            "_bg": "#00ff00",
+            "_bold": true,
+            "_fg": "#000033",
+            "_italic": false,
+            "_linked": true,
+            "_name": "xlow"
+        },
+        {
+            "PObject": {
+                "_id": "2059868534"
+            },
+            "_bg": "#ffff00",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "shutter"
+        },
+        {
+            "PObject": {
+                "_id": "1653115880"
+            },
+            "_bg": "#ffffff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "CryoValves"
         }
     ],
     "webPort": "0",

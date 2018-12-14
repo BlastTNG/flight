@@ -765,7 +765,6 @@ static int motor_pdo_init(int m_slave)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-    return 0;
 
     /**
      * To program the PDO mapping, we first must clear the old state

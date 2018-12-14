@@ -1367,6 +1367,23 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
+  {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+  }
+  },
+  {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 1,
+  {
+    {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+  }
+  },
+  {COMMAND(kill_roach),
+    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+  }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

@@ -2536,6 +2536,23 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[i].get_timestream = 2;
       }
       break;
+    case find_kids_loop:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].find_kids = ivalues[1];
+          CommandData.roach[ivalues[0]-1].do_fk_loop = 1;
+      }
+      break;
+    case find_kids_loop_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_fk_loop = 1;
+          CommandData.roach[i].find_kids = ivalues[0];
+      }
+      break;
+    case kill_roach:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].kill = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3215,6 +3232,8 @@ void InitCommandData()
         CommandData.roach[i].auto_correct_freqs = 0;
         CommandData.roach[i].auto_scan_retune = 0;
         CommandData.roach[i].do_noise_comp = 0;
+        CommandData.roach[i].do_fk_loop = 0;
+        CommandData.roach[i].kill = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
