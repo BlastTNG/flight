@@ -1319,6 +1319,13 @@ channel_t channel_list[] =
     { "nflag_thresh_roach3",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "nflag_thresh_roach4",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "nflag_thresh_roach5",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    //
+    { "has_firmware",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    { "firmware_upload_fail",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    { "fridge_cycle_warning",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    { "katcp_connect_error",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    { "tone_finding_error",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    // { "",     SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
 
 /*
     { "status_valon_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_5HZ, U_NONE, 0 },
