@@ -58,6 +58,11 @@ static ph_thread_t *ecmonitor_ctl_id;
 
 extern int16_t InCharge;
 
+/**
+ * Number of ethercat controllers (including the HWP encoder)
+ */
+#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
+
 // device node Serial Numbers
 #define RW_SN 0x01bbbb65
 #define PIV_SN 0x02924687
@@ -77,7 +82,7 @@ typedef struct {
     uint8_t     subindex;
     int         offset;
 } pdo_channel_map_t;
-static GSList *pdo_list[4];
+static GSList *pdo_list[N_MCs];
 
 
 /**
@@ -94,12 +99,6 @@ static int hwp_index = 0;
 static char io_map[4096];
 
 static int motors_exit = false;
-
-
-/**
- * Number of ethercat controllers (including the HWP encoder)
- */
-#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
 
 /**
  * Ethercat driver status
@@ -147,11 +146,12 @@ static int16_t *target_current[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*
                                           (int16_t*) &dummy_write_var };
 
 /// Read word from encoder
-static uint32_t *hwp_position = (uint32_t*) &dummy_var;
+static uint32_t *hwp_position[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
+                                         (uint32_t*) &dummy_var, (uint32_t*) &dummy_var};
 
 uint32_t hwp_get_position(void)
 {
-    return *hwp_position;
+    return *hwp_position[hwp_index];
 }
 
 uint16_t hwp_get_state(void)
@@ -361,15 +361,21 @@ int16_t piv_get_amp_temp(void)
  */
 void rw_set_current(int16_t m_cur)
 {
-    *target_current[rw_index] = m_cur;
+    if (!controller_state[rw_index].slave_error) {
+        *target_current[rw_index] = m_cur;
+    }
 }
 void el_set_current(int16_t m_cur)
 {
-    *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
+    if (!controller_state[el_index].slave_error) {
+        *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
+    }
 }
 void piv_set_current(int16_t m_cur)
 {
-    *target_current[piv_index] = m_cur;
+    if (!controller_state[piv_index].slave_error) {
+        *target_current[piv_index] = m_cur;
+    }
 }
 
 /**
@@ -378,15 +384,21 @@ void piv_set_current(int16_t m_cur)
  */
 void rw_enable(void)
 {
-    *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (!controller_state[rw_index].slave_error) {
+        *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 void el_enable(void)
 {
-    *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (!controller_state[el_index].slave_error) {
+        *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 void piv_enable(void)
 {
-    *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (!controller_state[piv_index].slave_error) {
+        *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 
 /**
@@ -395,15 +407,21 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
-    *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
+    if (!controller_state[rw_index].slave_error) {
+        *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 void el_disable(void)
 {
-    *control_word[el_index] &= (~ECAT_CTL_ENABLE);
+    if (!controller_state[el_index].slave_error) {
+        *control_word[el_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 void piv_disable(void)
 {
-    *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
+    if (!controller_state[piv_index].slave_error) {
+        *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 
 /**
@@ -411,15 +429,21 @@ void piv_disable(void)
  */
 void rw_quick_stop(void)
 {
-    *control_word[rw_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (!controller_state[rw_index].slave_error) {
+        *control_word[rw_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 void el_quick_stop(void)
 {
-    *control_word[el_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (!controller_state[el_index].slave_error) {
+        *control_word[el_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 void piv_quick_stop(void)
 {
-    *control_word[piv_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (!controller_state[piv_index].slave_error) {
+        *control_word[piv_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 
 /**
@@ -427,15 +451,21 @@ void piv_quick_stop(void)
  */
 void rw_reset_fault(void)
 {
-    *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
+    if (!controller_state[rw_index].slave_error) {
+        *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 void el_reset_fault(void)
 {
-    *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
+    if (!controller_state[el_index].slave_error) {
+        *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 void piv_reset_fault(void)
 {
-    *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
+    if (!controller_state[piv_index].slave_error) {
+        *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 
 /**
@@ -534,7 +564,9 @@ static void ec_init_heartbeat(int slave_index)
  */
 static int find_controllers(void)
 {
+    blast_info("initial io_map pointer %p pointer to pointer %p", io_map, &io_map);
     ec_mcp_state.n_found = ec_config(false, &io_map);
+    blast_info("after ec_config io_map pointer %p pointer to pointer %p", io_map, &io_map);
     if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
@@ -562,7 +594,7 @@ static int find_controllers(void)
     }
     ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
-        controller_state[i-1].index = i;
+        controller_state[i].index = i;
         /**
          * There is only one PEPER FUCHS encoder on the chain, so we test for this
          * first.  It doesn't have a fixed index number like the motor controllers,
@@ -575,7 +607,8 @@ static int find_controllers(void)
             blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
                         ec_slave[i].aliasadr, ec_slave[i].name, serial);
             hwp_index = i;
-            controller_state[i-1].is_hwp = 1;
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+            controller_state[i].is_hwp = 1;
             break;
         }
         /**
@@ -590,23 +623,26 @@ static int find_controllers(void)
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
             blast_info("Setting rw_index to %d", rw_index);
-            controller_state[i-1].is_mc = 1;
+             blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+           controller_state[i].is_mc = 1;
         } else if (serial == PIV_SN) {
             blast_startup("Pivot Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
             blast_info("Setting piv_index to %d", piv_index);
-            controller_state[i-1].is_mc = 1;
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+            controller_state[i].is_mc = 1;
         } else if (serial == EL_SN) {
             blast_startup("Elevation Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
-            controller_state[i-1].is_mc = 1;
+            controller_state[i].is_mc = 1;
             blast_info("Setting el_index to %d", el_index);
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
         } else {
             blast_warn("Got unknown MC %s at position %d with alias %d",
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
-            controller_state[i-1].ec_unknown = 1;
+            controller_state[i].ec_unknown = 1;
         }
     }
     while (ec_iserror()) {
@@ -683,6 +719,7 @@ static int motor_pdo_init(int m_slave)
     }
 
     blast_startup("Configuring PDO Mappings for controller %d (%s)", m_slave, ec_slave[m_slave].name);
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -766,6 +803,8 @@ static int motor_pdo_init(int m_slave)
         blast_err("%s", ec_elist2string());
     }
 
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
+
     /**
      * To program the PDO mapping, we first must clear the old state
      */
@@ -794,6 +833,7 @@ static int motor_pdo_init(int m_slave)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
     return 0;
 }
 
@@ -829,21 +869,41 @@ static void map_index_vars(int m_index)
     	blast_info("Found PDO map for %s", #_map); \
     } \
     }
-    PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
-    PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
-    PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
-    PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
-    PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
-    PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
-    PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
-    PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-    PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+    if (m_index > 1) {
+        if (controller_state[m_index].is_mc) {
+            PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
+            PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
+            PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
+            PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
+            PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
+            PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
+            PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
+            PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+            PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+            while (ec_iserror()) {
+                blast_err("%s", ec_elist2string());
+            }
+        } else if (controller_state[m_index].is_hwp) {
+            PDO_SEARCH_LIST(ECAT_FUCHS_POSITION, hwp_position);
+            while (ec_iserror()) {
+                blast_err("%s", ec_elist2string());
+            }
+        }
+    }
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
     /// Outputs
-    control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
-    target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+    if (controller_state[m_index].is_mc) {
+        control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
+        target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+        if (!(ec_slave[m_index].outputs)) {
+            blast_err("Error: IOmap was not configured correctly!  Setting slave_error = 1 for slave %d...", m_index);
+            controller_state[m_index].slave_error = 1;
+        } else {
+            controller_state[m_index].slave_error = 0;
+        }
+    }
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
@@ -869,7 +929,9 @@ static void map_motor_vars(void)
         map_index_vars(piv_index);
     }
     if (hwp_index) {
-        hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
+        blast_info("mapping hwp to index: %d", hwp_index);
+        map_index_vars(hwp_index);
+        // hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
     }
 
     while (ec_iserror()) {
@@ -1064,7 +1126,8 @@ void mc_readPDOassign(int m_slave) {
     wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
     rdat = etohs(rdat);
     /* positive result from slave ? */
-    blast_info("Result from ec_SDOread wkc = %i, len = %i, rdat = %04x", wkc, len, rdat);
+    blast_info("Result from ec_SDOread at index %04x, wkc = %i, len = %i, rdat = %04x",
+               ECAT_TXPDO_ASSIGNMENT, wkc, len, rdat);
     if ((wkc <= 0) || (rdat <= 0))  {
     	blast_info("no data returned from ec_SDOread ... returning.");
     	return;
@@ -1092,7 +1155,7 @@ void mc_readPDOassign(int m_slave) {
         subidx = subcnt;
         blast_info("Number of subindexes: %i", subidx);
         /* for each subindex */
-        blast_info("Reading our the SDOs");
+        blast_info("Reading out the SDOs");
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
             pdo_channel_map_t *channel = NULL;
             pdo_mapping_t pdo_map = { 0 };
@@ -1151,9 +1214,10 @@ int configure_ec_motors()
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (controller_state[i-1].is_hwp) {
+        if (controller_state[i].is_hwp) {
             // hwp_pdo_init();
-        } else if (controller_state[i-1].is_mc) {
+            mc_readPDOassign(i);
+        } else if (controller_state[i].is_mc) {
             motor_pdo_init(i);
             mc_readPDOassign(i);
         }
@@ -1167,7 +1231,8 @@ int configure_ec_motors()
      * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (controller_state[i-1].is_mc) {
+        if ((controller_state[i].is_mc) && !(controller_state[i].slave_error)) {
+            blast_info("Initializing target current for ec_slave %d, ptr %p", i, target_current);
             *target_current[i] = 0;
             *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
         }
@@ -1195,7 +1260,7 @@ int configure_ec_motors()
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (controller_state[i-1].is_mc) {
+        if (controller_state[i].is_mc) {
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }

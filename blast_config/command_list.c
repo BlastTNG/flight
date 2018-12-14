@@ -471,10 +471,10 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_MOTOR, 4,
     {
-      {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
-      {"Integral Time",     0, 200, 'f', "g_i_az"},
+      {"Proportional Gain", 0, CMD_I_MAX, 'd', "g_p_az"},
+      {"Integral Time",     0, 200, 'd', "g_i_az"},
       {"Derivative Time",     0, 200, 'f', "g_d_az"},
-      {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"},
+      {"Pointing Gain", 0, CMD_I_MAX, 'd', "g_pt_az"},
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_MOTOR, 1,
@@ -628,17 +628,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, CMD_L_MAX, 'f', "G_PE_PIV"},
-      {"V_RW Gain (prop)", 0, CMD_L_MAX, 'f', "G_PV_PIV"},
-      {"V_RW Integral time", 0, 200, 'f', "G_IV_PIV"},
+      {"V_err Gain (prop)", 0, CMD_L_MAX, 'd', "G_PE_PIV"},
+      {"V_RW Gain (prop)", 0, CMD_L_MAX, 'd', "G_PV_PIV"},
+      {"V_RW Integral time", 0, 200, 'd', "G_IV_PIV"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_MOTOR, 6,
     {
-      {"Proportional Gain", 0, CMD_L_MAX, 'f', "G_P_EL"},
-      {"Integral Time",     0, 200, 'f', "G_I_EL"},
-      {"Derivative Time",   0, 200, 'f', "G_D_EL"},
+      {"Proportional Gain", 0, CMD_L_MAX, 'd', "G_P_EL"},
+      {"Integral Time",     0, 200, 'd', "G_I_EL"},
+      {"Derivative Time",   0, 200, 'd', "G_D_EL"},
       {"Pointing Gain",     0, CMD_L_MAX, 'f', "G_PT_EL"},
       {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_EL"},
@@ -646,13 +646,13 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
-      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFROLL_GY"},
-      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFYAW_GY"}
+      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFROLL_GY"},
+      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFYAW_GY"}
     }
   },
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
-      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFEL_GY"},
+      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFEL_GY"},
     }
   },
 {COMMAND(fix_ethercat), "Attempt to fix EC device? (1=yes, 0=no)", GR_MOTOR, 4,

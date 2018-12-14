@@ -128,6 +128,7 @@ typedef struct {
     uint8_t ec_unknown;
     uint8_t is_mc;
     uint8_t comms_ok;
+    uint8_t slave_error;
     uint16_t network_error_count;
     ec_contol_status_t status;
 } ec_device_state_t;
