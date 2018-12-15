@@ -33,5 +33,6 @@
 #define LABJACK_OF_SPP 1 // Number of scans to readout per streaming packet
 void mult_labjack_networking_init(int m_which, size_t m_numchannels, size_t m_scans_per_packet);
 ph_thread_t* mult_initialize_labjack_commands(int m_which);
+void mult_labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 
 #endif /* MULTIPLEXED_LABJACK_H_ */

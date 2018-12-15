@@ -454,6 +454,127 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
 }
 
 /**
+ * Process an incoming LabJack packet.  If we have an error, we'll disable
+ * the socket and schedule a reconnection attempt.  Otherwise, read and store the
+ * camera data.
+ *
+ * @param m_sock Unused
+ * @param m_why Flag indicating why the routine was called
+ * @param m_data Pointer to our state data
+ */
+void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
+{
+    ph_buf_t *buf = NULL, *prev_buf = NULL;
+    labjack_state_t *state = (labjack_state_t*) m_data;
+    labjack_data_pkt_t *data_pkt;
+    labjack_data_t *state_data = (labjack_data_t*)state->conn_data;
+    static uint32_t gainList[MAX_NUM_ADDRESSES];
+    static uint32_t gainList2[MAX_NUM_ADDRESSES];
+    static labjack_device_cal_t labjack_cal;
+    size_t read_buf_size;
+    int ret, i, state_number;
+    state_number = state->which;
+
+    if (!state->calibration_read) {
+        // gain index 0 = +/-10V. Used for conversion to volts.
+        if (state_number == 1) {
+            gainList2[0] = 0;
+            gainList2[1] = 0;
+            gainList2[2] = 1;
+            gainList2[3] = 1;
+            gainList2[4] = 1;
+            gainList2[5] = 1;
+            gainList2[6] = 1;
+            gainList2[7] = 1;
+            gainList2[8] = 1;
+            gainList2[9] = 1;
+            gainList2[10] = 1;
+            gainList2[11] = 0;
+            gainList2[12] = 0;
+            gainList2[13] = 0;
+        } else {
+            for (i = 0; i < state_data->num_channels; i++) {
+                gainList[i] = 0;
+            }
+        }
+        // For now read nominal calibration data (rather than specific calibration data from the device.
+        // TODO(laura) fix labjack_get_cal and use that instead
+        labjack_get_nominal_cal(state, &labjack_cal);
+        //        labjack_get_cal(state, &labjack_cal);
+    }
+    /**
+     * If we have an error, or do not receive data from the LabJack in the expected
+     * amount of time, we tear down the socket and schedule a reconnection attempt.
+     */
+    if ((m_why & (PH_IOMASK_ERR|PH_IOMASK_TIME) || (state->force_reconnect))) {
+        state->connected = false;
+
+        // effectively resetting all the stuff from connect_lj
+        blast_err("Reconnected Cmd and Data for LabJack at %s", state->address);
+        ph_sock_shutdown(m_sock, PH_SOCK_SHUT_RDWR);
+        ph_sock_enable(m_sock, 0);
+        CommandData.Relays.labjack[state->which] = 0;
+        state->force_reconnect = false;
+        ph_job_set_timer_in_ms(&state->connect_job, state->backoff_sec * 1000);
+
+        // restart command thread
+        state->shutdown = true;
+        while (state->cmd_mb) usleep(10000);
+        state->shutdown = false;
+        initialize_labjack_commands(state->which);
+        return;
+    }
+    read_buf_size = sizeof(labjack_data_header_t) + state_data->num_channels * state_data->scans_per_packet * 2;
+
+    // read as many packets as necessary to clear the queue
+    do {
+        if (prev_buf) ph_buf_delref(prev_buf); // had an old packet, but also have a newer packet, so remove old one
+        prev_buf = buf; // the new packet is the next old packet
+        buf = ph_sock_read_bytes_exact(m_sock, read_buf_size);
+    } while (buf);
+    buf = prev_buf; // reference the newest non-null packet
+
+    if (!buf) return; /// We do not have (and never had) enough data
+    data_pkt = (labjack_data_pkt_t*)ph_buf_mem(buf);
+
+    // Correct for the fact that Labjack readout is MSB first.
+    ret = labjack_data_word_swap(data_pkt, read_buf_size);
+    if (data_pkt->header.resp.trans_id != ++(state_data->trans_id)) {
+        // blast_warn("Expected transaction ID %d but received %d from LabJack at %s",
+        //            state_data->trans_id, data_pkt->header.resp.trans_id, state->address);
+    }
+    state_data->trans_id = data_pkt->header.resp.trans_id;
+
+    if (data_pkt->header.resp.type != STREAM_TYPE) {
+        blast_warn("Unknown packet type %d received from LabJack at %s", data_pkt->header.resp.type, state->address);
+        ph_buf_delref(buf);
+        return;
+    }
+
+    // TODO(laura): Finish adding error handling.
+    switch (data_pkt->header.status) {
+        case STREAM_STATUS_AUTO_RECOVER_ACTIVE:
+        case STREAM_STATUS_AUTO_RECOVER_END:
+        case STREAM_STATUS_AUTO_RECOVER_END_OVERFLOW:
+        case STREAM_STATUS_BURST_COMPLETE:
+        case STREAM_STATUS_SCAN_OVERLAP:
+            break;
+    }
+
+    memcpy(state_data->data, data_pkt->data, state_data->num_channels * sizeof(uint16_t));
+
+    // Convert digital data into voltages.
+    if (state->calibration_read) {
+        if ((state_number == 1)) {
+            labjack_convert_stream_data(state, &labjack_cal, gainList2, state_data->num_channels);
+        } else {
+            labjack_convert_stream_data(state, &labjack_cal, gainList, state_data->num_channels);
+        }
+    }
+    ph_buf_delref(buf);
+}
+
+/**
  * Handles the connection job.  Formatted this way to allow us to schedule
  * a future timeout in the PH_JOB infrastructure
  *
