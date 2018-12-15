@@ -549,7 +549,7 @@ void ControlHWPR(struct ezbus *bus)
 #endif
 				// this is exactly the same as the line at the beginning of the ready block
 				// but we need it to include the overshoot, if one is present
-                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
+                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
