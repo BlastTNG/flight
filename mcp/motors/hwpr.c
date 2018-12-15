@@ -47,7 +47,8 @@ static struct hwpr_struct {
   float enc;
   double pot;
   float enc_real_hwpr;
-} hwpr_data;
+} hwpr_data = {0};
+
 
 enum move_type
 {
@@ -94,7 +95,6 @@ int hwpr_calpulse_flag = 0;
 void MonitorHWPR(struct ezbus *bus)
 {
   EZBus_ReadInt(bus, hwpr_data.addr, "?0", &hwpr_data.pos);
-  hwpr_data.enc = hwp_get_position() * ENC_TO_DEG; //  absolute degrees on hwpr
 }
 
 /* Clear out the hwpr_control structure*/
@@ -361,7 +361,7 @@ void ControlHWPR(struct ezbus *bus)
 				if (hwpr_control.go == step) {
                     enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-						hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+						hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                 		blast_info("Current enc value: hwpr_enc_cur = %f", hwpr_enc_cur);
 #endif
@@ -402,7 +402,7 @@ void ControlHWPR(struct ezbus *bus)
                 	// Not changing for flight.  Fix if we fly again. -lmf
                     enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-					    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+					    hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                         blast_info("This is where I calculate the relative step from the pot value.");
                         blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
@@ -438,7 +438,7 @@ void ControlHWPR(struct ezbus *bus)
                 } else if (hwpr_control.go == pot) {
                     enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG;
+    				    hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                         blast_info("This is where I calculate the relative step from the pot value.");
                         blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
@@ -470,7 +470,7 @@ void ControlHWPR(struct ezbus *bus)
                 } else if (hwpr_control.go == goto_abs) {
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    				    hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG; // hwpr_enc_cur is in degrees
+    				    hwpr_enc_cur = hwpr_data.enc; // hwpr_enc_cur is in degrees
 						hwpr_control.enc_targ = CommandData.hwpr.target; // enc_targ in degrees
 						// rel_move in steps
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
@@ -485,7 +485,7 @@ void ControlHWPR(struct ezbus *bus)
                 } else if (hwpr_control.go == goto_rel) {
 					enc_state = hwp_get_state();
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
-    				 	hwpr_enc_cur = hwp_get_position() * ENC_TO_DEG; // hwpr_enc_cur is in degrees
+    				 	hwpr_enc_cur = hwpr_data.enc; // hwpr_enc_cur is in degrees
 						hwpr_control.enc_targ = hwpr_enc_cur + CommandData.hwpr.target; // enc_targ in degrees
 						// rel_move in steps
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
@@ -549,7 +549,7 @@ void ControlHWPR(struct ezbus *bus)
 #endif
 				// this is exactly the same as the line at the beginning of the ready block
 				// but we need it to include the overshoot, if one is present
-                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
+                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
@@ -717,8 +717,6 @@ void DoHWPR(struct ezbus* bus)
         firsttime = 0;
         /* initialize hwpr_data */
         hwpr_data.addr = GetActAddr(HWPRNUM);
-        hwpr_data.pos = 0;
-        hwpr_data.enc = 0;
         hwpr_control.i_next_step = 0;
     }
 
@@ -730,4 +728,10 @@ void DoHWPR(struct ezbus* bus)
     ControlHWPR(bus);
 
     MonitorHWPR(bus);
+}
+
+// ReadHWPREnc called from the mcp 5Hz loop.  Reads from the EtherCat data structure.
+void ReadHWPREnc(void)
+{
+    hwpr_data.enc = hwp_get_position() * ENC_TO_DEG;
 }
