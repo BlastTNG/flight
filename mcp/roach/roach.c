@@ -6209,7 +6209,7 @@ void write_roach_channels_1hz(void)
     static channel_t *roachStatusFieldAddr[NUM_ROACHES];
     static channel_t *CurrentNTonesAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
-    static channel_t *LoFreqReadAddr[NUM_ROACHES];
+    // static channel_t *LoFreqReadAddr[NUM_ROACHES];
     static channel_t *LoCenterFreqAddr[NUM_ROACHES];
     static channel_t *NFlagThreshFieldAddr[NUM_ROACHES];
     static channel_t *NKidsTlmRoach[NUM_ROACHES];
@@ -6225,7 +6225,7 @@ void write_roach_channels_1hz(void)
     char channel_name_current_ntones[128] = { 0 };
     char channel_name_lo_center_freq[128] = { 0 };
     char channel_name_lo_freq_req[128] = { 0 };
-    char channel_name_lo_freq_read[128] = { 0 };
+    // char channel_name_lo_freq_read[128] = { 0 };
     char channel_name_nflag_thresh[128] = { 0 };
     char channel_name_nkids_tlm[128] = { 0 };
     char channel_name_skids_tlm[128] = { 0 };
@@ -6252,8 +6252,8 @@ void write_roach_channels_1hz(void)
                         "lo_center_freq_roach%d", i + 1);
             snprintf(channel_name_lo_freq_req, sizeof(channel_name_lo_freq_req),
                         "lo_freq_req_roach%d", i + 1);
-            snprintf(channel_name_lo_freq_read, sizeof(channel_name_lo_freq_read),
-                        "lo_freq_read_roach%d", i + 1);
+            /* snprintf(channel_name_lo_freq_read, sizeof(channel_name_lo_freq_read),
+                        "lo_freq_read_roach%d", i + 1); */
             snprintf(channel_name_nflag_thresh, sizeof(channel_name_nflag_thresh),
                         "nflag_thresh_roach%d", i + 1);
             snprintf(channel_name_nkids_tlm, sizeof(channel_name_nkids_tlm),
@@ -6266,7 +6266,7 @@ void write_roach_channels_1hz(void)
             roachStatusFieldAddr[i] = channels_find_by_name(channel_name_roach_status);
             CurrentNTonesAddr[i] = channels_find_by_name(channel_name_current_ntones);
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
-            LoFreqReadAddr[i] = channels_find_by_name(channel_name_lo_freq_read);
+            // LoFreqReadAddr[i] = channels_find_by_name(channel_name_lo_freq_read);
             LoCenterFreqAddr[i] = channels_find_by_name(channel_name_lo_center_freq);
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
@@ -6321,7 +6321,7 @@ void write_roach_channels_1hz(void)
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_SCALED_VALUE(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
-        SET_SCALED_VALUE(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
+        // SET_SCALED_VALUE(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
         SET_SCALED_VALUE(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq);
         SET_UINT16(NFlagThreshFieldAddr[i], roach_state_table[i].nflag_thresh);
         SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);

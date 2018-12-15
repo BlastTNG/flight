@@ -1319,11 +1319,13 @@ channel_t channel_list[] =
     { "lo_freq_req_roach3",      0.1,    8.5e8,         TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_req_roach4",      0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_req_roach5",      0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    /* 
     { "lo_freq_read_roach1",      0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_read_roach2",      0.1,    5.4e8,         TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_read_roach3",      0.1,    8.5e8,         TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_read_roach4",      0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_freq_read_roach5",      0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    */
     { "lo_center_freq_roach1",   0.1,    5.4e8,         TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_center_freq_roach1",   0.1,    5.4e8,         TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "lo_center_freq_roach2",   0.1,    8.28e8,        TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
