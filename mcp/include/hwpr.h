@@ -48,5 +48,6 @@
 
 void DoHWPR(struct ezbus* bus);
 void StoreHWPRBus(void);
+void ReadHWPREnc(void);
 
 #endif
