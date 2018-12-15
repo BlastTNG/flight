@@ -141,6 +141,8 @@
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
 #define VNA_COMB_LEN 1000 /* Number of tones in search comb */
 #define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
+#define DEFAULT_OUTPUT_ATTEN 4 /* dB */
+#define DEFAULT_INPUT_ATTEN 19 /* dB */
 
 extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
@@ -1337,8 +1339,8 @@ int atten_client(pi_state_t *m_pi, char *command)
         m_pi->error_count += 1;
         return status;
     }
-    // printf("STATUS = %d\n", status);
-    // blast_info("%s", buff);
+    printf("STATUS = %d\n", status);
+    blast_info("%s", buff);
     int count = 0;
     char* line;
     char* rest = buff;
@@ -1479,6 +1481,7 @@ int set_atten(pi_state_t *m_pi) {
            CommandData.roach_params[ind].set_out_atten,
            CommandData.roach_params[ind].set_in_atten);
     }
+    // blast_info("COMMAND ========= %s", command);
     if (atten_client(m_pi, command) < 0) {
         return retval;
     }
@@ -1540,6 +1543,16 @@ int set_atten_conserved(pi_state_t *m_pi)
 
 int find_atten(roach_state_t *m_roach, double pow_per_tone) {
     double out_atten = -47.0 - pow_per_tone - 10.0*log10(m_roach->current_ntones/1000.0);
+    // Check if out_atten is inside allowable limits
+    if (out_atten < 0) {
+        out_atten = 0;
+        blast_err("ROACH%d: Atten request too low, setting to 30 dB (max possible)",
+               m_roach->which);
+    } else if (out_atten > 30) {
+        out_atten = 30;
+        blast_err("ROACH%d: Atten request too high, setting to 30 dB (max possible)",
+               m_roach->which);
+    }
     double out_atten_rounded = round(out_atten / 0.5) * 0.5;
     CommandData.roach_params[m_roach->which - 1].set_out_atten = out_atten_rounded;
     CommandData.roach_params[m_roach->which - 1].set_in_atten = ATTEN_TOTAL - out_atten_rounded;
@@ -1624,34 +1637,53 @@ int set_attens_to_default(pi_state_t *m_pi)
     int ind = m_pi->which - 1;
     // the order of input and output attenuators is switched between PIs
     if (ind == 0) {
-        blast_tmp_sprintf(command, "set %g %g",
-           19.0,
-           4.0);
+        blast_tmp_sprintf(command, "set %d %d",
+           DEFAULT_INPUT_ATTEN,
+           DEFAULT_OUTPUT_ATTEN);
     }
     if (ind == 1) {
-        blast_tmp_sprintf(command, "set %g %g",
-           4.0,
-           19.0);
+        blast_tmp_sprintf(command, "set %d %d",
+           DEFAULT_OUTPUT_ATTEN,
+           DEFAULT_INPUT_ATTEN);
     }
     if (ind == 2) {
-        blast_tmp_sprintf(command, "set %g %g",
-           4.0,
-           19.0);
+        blast_tmp_sprintf(command, "set %d %d",
+           DEFAULT_OUTPUT_ATTEN,
+           DEFAULT_INPUT_ATTEN);
     }
     if (ind == 3) {
-        blast_tmp_sprintf(command, "set %g %g",
-           19.0,
-           4.0);
+        blast_tmp_sprintf(command, "set %d %d",
+           DEFAULT_INPUT_ATTEN,
+           DEFAULT_OUTPUT_ATTEN);
     }
     if (ind == 4) {
-        blast_tmp_sprintf(command, "set %g %g",
-           4.0,
-           19.0);
+        blast_tmp_sprintf(command, "set %d %d",
+           DEFAULT_OUTPUT_ATTEN,
+           DEFAULT_INPUT_ATTEN);
     }
     if (atten_client(m_pi, command) < 0) {
         retval = -1;
     }
     return retval;
+}
+
+int set_attens_targ_output(roach_state_t *m_roach)
+{
+    int status = -1;
+    int i = m_roach->which - 1;
+    if ((status = find_atten(&roach_state_table[i], CommandData.roach_params[i].dBm_per_tone) < 0)) {
+        blast_err("ROACH%d: Failed to calculate output_atten...", i + 1);
+        CommandData.roach[i].set_attens = 0;
+        return status;
+    } else {
+        if ((status = set_atten(&pi_state_table[i]) < 0)) {
+            blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
+            CommandData.roach[i].set_attens = 0;
+            return status;
+        }
+    CommandData.roach[i].set_attens = 0;
+    }
+    return 0;
 }
 
 // TODO(Sam) Finish and test this function
@@ -2338,7 +2370,7 @@ int roach_dfs(roach_state_t* m_roach)
     for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
         double deltaI = comp_vals[chan][0] - m_roach->ref_vals[chan][0];
         double deltaQ = comp_vals[chan][1] - m_roach->ref_vals[chan][1];
-        m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
+        m_roach->df[chan] = ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
         (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
         m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
         // if recenter_df is false, apply df_offset to each df value
@@ -3034,7 +3066,7 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
         for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
             double deltaI = comp_vals[chan][0] - m_roach->ref_vals[chan][0];
             double deltaQ = comp_vals[chan][1] - m_roach->ref_vals[chan][1];
-            m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI)
+            m_roach->df[chan] = ((m_roach->ref_grads[chan][0] * deltaI)
                       + (m_roach->ref_grads[chan][1] * deltaQ)) /
             (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
             m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
@@ -3195,7 +3227,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
                 }*/
             double deltaI = m_roach->I_on[chan] - m_roach->ref_vals[chan][0];
             double deltaQ = m_roach->Q_on[chan] - m_roach->ref_vals[chan][1];
-            m_roach->df_on[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI)
+            m_roach->df_on[chan] = ((m_roach->ref_grads[chan][0] * deltaI)
                            + (m_roach->ref_grads[chan][1] * deltaQ)) /
                     (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
                               m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
@@ -3212,7 +3244,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
                 }*/
             double deltaI = m_roach->I_off[chan] - m_roach->ref_vals[chan][0];
             double deltaQ = m_roach->Q_off[chan] - m_roach->ref_vals[chan][1];
-            m_roach->df_off[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI)
+            m_roach->df_off[chan] = ((m_roach->ref_grads[chan][0] * deltaI)
                        + (m_roach->ref_grads[chan][1] * deltaQ)) /
                     (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
                               m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
@@ -4136,7 +4168,7 @@ int roach_df(roach_state_t* m_roach)
     // calculate df for each selected channel
     double deltaI = comp_vals[0] - m_roach->ref_vals[chan][0];
     double deltaQ = comp_vals[1] - m_roach->ref_vals[chan][1];
-    m_roach->df[chan] = -1. * ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
+    m_roach->df[chan] = ((m_roach->ref_grads[chan][0] * deltaI) + (m_roach->ref_grads[chan][1] * deltaQ)) /
             (m_roach->ref_grads[chan][0]*m_roach->ref_grads[chan][0] +
                       m_roach->ref_grads[chan][1]*m_roach->ref_grads[chan][1]);
     if (!CommandData.roach[m_roach->which - 1].recenter_df) {
@@ -4217,7 +4249,7 @@ float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, i
     // calculate df for each selected channel
     double deltaI = comp_vals[0] - m_roach->ref_vals[i_kid][0];
     double deltaQ = comp_vals[1] - m_roach->ref_vals[i_kid][1];
-    df =  -1. * ((m_roach->ref_grads[i_kid][0] * deltaI) +
+    df =  ((m_roach->ref_grads[i_kid][0] * deltaI) +
                      (m_roach->ref_grads[i_kid][1] * deltaQ)) /
                      (m_roach->ref_grads[i_kid][0]*m_roach->ref_grads[i_kid][0] +
                       m_roach->ref_grads[i_kid][1]*m_roach->ref_grads[i_kid][1]);
@@ -5130,6 +5162,11 @@ int roach_full_loop(roach_state_t *m_roach)
 {
     int status;
     int i = m_roach->which - 1;
+    // Set Attens
+    CommandData.roach[m_roach->which - 1].set_attens = 5;
+    if ((status = set_attens_targ_output(m_roach) < 0)) {
+        blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+    }
     // VNA sweep
     CommandData.roach[i].do_sweeps = 1;
     if ((status = roach_vna_sweep(m_roach) < 0)) {
@@ -5163,6 +5200,11 @@ int roach_full_loop(roach_state_t *m_roach)
            CommandData.roach[i].do_full_loop = 0;
            return status;
     }
+    // Set attens again to account for change in number of tones
+    CommandData.roach[m_roach->which - 1].set_attens = 5;
+    if ((status = set_attens_targ_output(m_roach) < 0)) {
+        blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+    }
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
     if ((status = roach_refit_freqs(m_roach, 1) < 0)) {
@@ -5180,6 +5222,11 @@ int roach_fk_loop(roach_state_t* m_roach)
 {
     int status;
     int i = m_roach->which - 1;
+    // Set Attens
+    CommandData.roach[m_roach->which - 1].set_attens = 5;
+    if ((status = set_attens_targ_output(m_roach) < 0)) {
+        blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+    }
     // VNA sweep
     CommandData.roach[i].do_sweeps = 1;
     if ((status = roach_vna_sweep(m_roach) < 0)) {
@@ -5419,9 +5466,11 @@ void *roach_cmd_loop(void* ind)
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     // center LO
-    if (recenter_lo(&roach_state_table[i]) < 0) {
+    // TODO(Sam) Error handling
+    if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
+    // set_attens_to_default(&pi_state_table[i]);
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
         // start_flight_mode(&roach_state_table[i]);
@@ -5440,9 +5489,9 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].set_lo == 1) {
             if (recenter_lo(&roach_state_table[i]) < 0) {
-                blast_info("Error recentering LO");
+                blast_err("Error recentering LO");
             } else {
-                blast_info("Roach%d, LO recentered", i + 1);
+                blast_info("ROACH%d, LO recentered", i + 1);
             }
             CommandData.roach[i].set_lo = 0;
         }
@@ -5512,20 +5561,13 @@ void *roach_cmd_loop(void* ind)
             CommandData.roach[i].set_attens = 0;
         }
         if (CommandData.roach[i].set_attens == 5) {
-            if (find_atten(&roach_state_table[i], CommandData.roach_params[i].dBm_per_tone) < 0) {
-                blast_err("ROACH%d: Failed to calculate output_atten...", i + 1);
-                CommandData.roach[i].set_attens = 0;
-            } else {
-                if (set_atten(&pi_state_table[i]) < 0) {
-                    blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
-                    CommandData.roach[i].set_attens = 0;
-                }
-            CommandData.roach[i].set_attens = 0;
-            }
+            set_attens_targ_output(&roach_state_table[i]);
+            CommandData.roach[i].set_attens = 5;
         }
         if (CommandData.roach[i].read_attens == 1) {
             if (read_atten(&pi_state_table[i]) < 0) {
                 blast_err("ROACH%d: Failed to read RUDATs...", i + 1);
+                CommandData.roach[i].read_attens = 0;
             } else {
                 CommandData.roach[i].read_attens = 0;
             }
@@ -5974,7 +6016,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].in_flight_mode = 0;
     roach_state_table[ind].n_watchdog_fails = 0;
     CommandData.roach[ind].go_flight_mode = 0;
-    CommandData.roach[ind].auto_correct_freqs = 1;
+    CommandData.roach[ind].auto_correct_freqs = 0;
     // blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
     // blast_info("Spawned command thread for roach%i", ind + 1);
