@@ -3731,7 +3731,7 @@ void InitCommandData()
     CommandData.hwpr.pos[0] = 0.4047;
 
     CommandData.hwpr.overshoot = 300;
-	CommandData.hwpr.backoff = 0.9;
+	CommandData.hwpr.backoff = 90;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;
