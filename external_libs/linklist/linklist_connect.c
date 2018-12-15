@@ -1060,6 +1060,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
     if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
       linklist_err("Failed to send archive select request\n");
       close_connection(tc);
+      if (tc->flag & TCPCONN_NOLOOP) return -1;
       continue;
     }
 
@@ -1070,6 +1071,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
       // receive name header
       if (recv(tc->fd,request_msg,TCP_PACKET_HEADER_SIZE,MSG_WAITALL) <= 0) {
         linklist_err("Failed to receive archive name header\n");
+				if (tc->flag & TCPCONN_NOLOOP) return -1;
         break;
       }
       readTCPHeader(request_msg,&recv_ser,&recv_fn,&recv_i,&recv_n);
@@ -1077,6 +1079,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
       // no files on server
       if (!(*recv_i) && !(*recv_n)) {
         linklist_err("No files avaiable on server %s\n", tc->ip);
+				if (tc->flag & TCPCONN_NOLOOP) return -1;
         break;
       }
 
@@ -1084,6 +1087,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
       if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
         linklist_err("Failed to receive archive name\n");
         close_connection(tc);
+				if (tc->flag & TCPCONN_NOLOOP) return -1;
         break; 
       }
 
