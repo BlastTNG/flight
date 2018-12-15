@@ -1,0 +1,37 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/guaca.svg</file>
+        <file>images/guaca-0.svg</file>
+        <file>images/guaca-1.svg</file>
+        <file>images/guaca-2.svg</file>
+        <file>images/guaca-3.svg</file>
+        <file>images/guaca-4.svg</file>
+        <file>images/guaca-5.svg</file>
+        <file>images/guaca-6.svg</file>
+        <file>images/guaca-7.svg</file>
+        <file>images/guaca-8.svg</file>
+        <file>images/guaca-9.svg</file>
+        <file>images/guaca-10.svg</file>
+        <file>images/guaca-11.svg</file>
+        <file>images/guaca-12.svg</file>
+        <file>images/guaca-13.svg</file>
+        <file>images/guaca-14.svg</file>
+        <file>images/guaca-15.svg</file>
+        <file>images/guaca-16.svg</file>
+        <file>images/guaca-17.svg</file>
+        <file>images/guaca-18.svg</file>
+        <file>images/guaca-19.svg</file>
+        <file>images/guaca-20.svg</file>
+        <file>images/guaca-21.svg</file>
+        <file>images/guaca-22.svg</file>
+        <file>images/guaca-23.svg</file>
+        <file>images/guaca-24.svg</file>
+        <file>images/guaca-25.svg</file>
+        <file>images/guaca-26.svg</file>
+        <file>images/guaca-27.svg</file>
+        <file>images/guaca-28.svg</file>
+        <file>images/guaca-29.svg</file>
+        <file>images/guaca-30.svg</file>
+        <file>images/guaca-31.svg</file>
+    </qresource>
+</RCC>
