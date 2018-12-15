@@ -2030,15 +2030,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case request_stream_file:
-      filename = svalues[0];
+      filename = svalues[1];
 			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
 
-      if (filename) {
+      if (filename && send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+															              "file_block", filename)) {
         if (ivalues[0] == 0) { // pilot
+          CommandData.pilot_bw = MIN(1000.0*1000.0/8.0, CommandData.pilot_bw); // max out bw
 					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
 							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
         } else if (ivalues[0] == 1) { // BI0
+          CommandData.biphase_bw = MIN(1000.0*1000.0/8.0, CommandData.biphase_bw); // max out bw
 					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[BI0_TELEMETRY_INDEX] =
 							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
@@ -2050,8 +2053,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
-				send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-															 "file_block", filename);
       } else {
         blast_err("Could not resolve filename \"%s\"", svalues[1]);
       }
