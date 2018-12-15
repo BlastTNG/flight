@@ -398,8 +398,8 @@ typedef struct roach_params
     double peak_threshold;
     double spacing_threshold;
 //  Set attenuators
-    double in_atten;
-    double out_atten;
+    double set_in_atten;
+    double set_out_atten;
     double read_in_atten;
     double read_out_atten;
     double new_out_atten;

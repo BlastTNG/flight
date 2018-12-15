@@ -1239,7 +1239,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case set_attens_min_output:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach_params[i].out_atten = 30.0;
+              CommandData.roach_params[i].set_out_atten = 30.0;
               CommandData.roach[i].set_attens = 1;
           }
           break;
@@ -2238,14 +2238,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_attens:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)
                  && ((rvalues[2] >= 0.0) && rvalues[2] <= 30.0)) {
-          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
-          CommandData.roach_params[ivalues[0]-1].in_atten = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].set_out_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].set_in_atten = rvalues[2];
           CommandData.roach[ivalues[0]-1].set_attens = 1;
       }
       break;
     case set_attens_conserve:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)) {
-          CommandData.roach_params[ivalues[0]-1].out_atten = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].set_out_atten = rvalues[1];
           CommandData.roach[ivalues[0]-1].set_attens = 4;
       }
       break;
@@ -2348,8 +2348,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if  ((rvalues[0] >= 0.0) && (rvalues[0] <= 30.0) &&
               ((rvalues[1] >= 0.0) && (rvalues[1] <= 30.0))) {
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach_params[i].out_atten = rvalues[0];
-              CommandData.roach_params[i].in_atten = rvalues[1];
+              CommandData.roach_params[i].set_out_atten = rvalues[0];
+              CommandData.roach_params[i].set_in_atten = rvalues[1];
               CommandData.roach[i].set_attens = 1;
           }
       }
@@ -3231,7 +3231,7 @@ void InitCommandData()
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
         CommandData.roach[i].auto_find = 0;
-        CommandData.roach_params[i].in_atten = 19;
+        CommandData.roach_params[i].set_in_atten = 19;
         CommandData.roach[i].recenter_df = 0;
         CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
@@ -3248,11 +3248,11 @@ void InitCommandData()
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
     }
-    CommandData.roach_params[0].out_atten = 4;
-    CommandData.roach_params[1].out_atten = 4;
-    CommandData.roach_params[2].out_atten = 4;
-    CommandData.roach_params[3].out_atten = 4;
-    CommandData.roach_params[4].out_atten = 4;
+    CommandData.roach_params[0].set_out_atten = 4;
+    CommandData.roach_params[1].set_out_atten = 4;
+    CommandData.roach_params[2].set_out_atten = 4;
+    CommandData.roach_params[3].set_out_atten = 4;
+    CommandData.roach_params[4].set_out_atten = 4;
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
