@@ -547,6 +547,10 @@ void ControlHWPR(struct ezbus *bus)
                 blast_info("ControlHWPR: Here's where I will send a relative move command of %i",
                                hwpr_control.rel_move);
 #endif
+				// this is exactly the same as the line at the beginning of the ready block
+				// but we need it to include the overshoot, if one is present
+                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
+
                 EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
                 hwpr_control.move_cur = moving;
 				hwpr_control.do_main_move = 0;
@@ -561,9 +565,6 @@ void ControlHWPR(struct ezbus *bus)
 				if (!hwpr_control.do_overshoot) {
 					hwpr_control.do_backoff = 1;
 				}
-				// this is exactly the same as the line at the beginning of the ready block
-				// but we need it to include the overshoot, if one is present
-                // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS
 
             /*** We are moving.  Wait until we are done. ***/
             } else if (hwpr_control.move_cur == moving) {

@@ -474,7 +474,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	}
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
-		SET_UINT16(encPotValveAddr, potvalve_data.adc[0]);
+		SET_INT16(encPotValveAddr, potvalve_data.adc[0]);
 		SET_INT32(posPotValveAddr, potvalve_data.pos);
 		SET_UINT8(statePotValveAddr, potvalve_data.state);
 		SET_UINT32(velPotValveAddr, CommandData.Cryo.potvalve_vel);

@@ -457,7 +457,7 @@ channel_t channel_list[] =
     { "i_el_req_avg_bal",     CUR15_M,     CUR15_B, TYPE_UINT16, RATE_5HZ, U_I_A, 0 },
     { "status_bal",           SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
-    {"enc_potvalve",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"enc_potvalve",            SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0},
     {"pos_potvalve",            SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
     {"state_potvalve",          SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"vel_potvalve",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0},
