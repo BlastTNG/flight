@@ -2555,7 +2555,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_fk_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
-          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+          CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
     case kill_roach:
