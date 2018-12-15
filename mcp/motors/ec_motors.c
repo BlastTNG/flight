@@ -869,25 +869,23 @@ static void map_index_vars(int m_index)
     	blast_info("Found PDO map for %s", #_map); \
     } \
     }
-    if (m_index > 1) {
-        if (controller_state[m_index].is_mc) {
-            PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
-            PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
-            PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
-            PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
-            PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
-            PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
-            PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
-            PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-            PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
-            while (ec_iserror()) {
-                blast_err("%s", ec_elist2string());
-            }
-        } else if (controller_state[m_index].is_hwp) {
-            PDO_SEARCH_LIST(ECAT_FUCHS_POSITION, hwp_position);
-            while (ec_iserror()) {
-                blast_err("%s", ec_elist2string());
-            }
+    if (controller_state[m_index].is_mc) {
+        PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
+        PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
+        PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
+        PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
+        PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
+        PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
+        PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
+        PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+        PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+        while (ec_iserror()) {
+            blast_err("%s", ec_elist2string());
+        }
+    } else if (controller_state[m_index].is_hwp) {
+        PDO_SEARCH_LIST(ECAT_FUCHS_POSITION, hwp_position);
+        while (ec_iserror()) {
+            blast_err("%s", ec_elist2string());
         }
     }
 #undef PDO_SEARCH_LIST
