@@ -1232,11 +1232,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].calc_ref_params = 1;
             }
             break;
-        case set_attens_default:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].set_attens = 2;
-            }
-            break;
         case set_attens_min_output:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach_params[i].set_out_atten = 30.0;
@@ -1290,6 +1285,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case check_df_retune_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].do_check_retune = 1;
+          }
+          break;
+        case set_attens_default_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].set_attens = 2;
           }
           break;
         case xyzzy:
@@ -2256,6 +2256,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].set_attens = 5;
       }
       break;
+    case set_attens_default:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+            CommandData.roach[ivalues[0]-1].set_attens = 2;
+        }
+        break;
     case reboot_pi:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].reboot_pi_now = 1;
@@ -2495,12 +2500,14 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_full_loop = 1;
           CommandData.roach[ivalues[0]-1].find_kids = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[2];
       }
       break;
     case full_loop_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_full_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
       }
       break;
     case roach_allow_scan_check:
@@ -2562,6 +2569,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_df_retune_threshold_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach_params[i].df_retune_threshold = rvalues[0];
+      }
+      break;
+    case set_default_tone_power:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+      }
+      break;
+    case set_default_tone_power_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach_params[ivalues[0]-1].df_retune_threshold = rvalues[0];
       }
       break;
       /*************************************
@@ -3631,7 +3648,7 @@ void InitCommandData()
         CommandData.roach_params[i].npoints = 11;
         CommandData.roach_params[i].ncycles = 3;
         // For saving short timestream
-        CommandData.roach_params[i].num_sec = 3.0;
+        CommandData.roach_params[i].num_sec = 10.0;
         CommandData.roach_params[i].lo_offset = 1000.;
         CommandData.roach_params[i].delta_amp = 0.0;
         CommandData.roach_params[i].delta_phase = 0.0;
