@@ -296,6 +296,7 @@ static void mcp_5hz_routines(void)
 //    PhaseControl();
     StoreHWPRBus();
     SetGyroMask();
+    ReadHWPREnc();
 //    ChargeController();
 //    VideoTx();
 //    cameraFields();

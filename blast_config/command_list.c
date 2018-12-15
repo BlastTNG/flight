@@ -333,7 +333,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
-  {COMMAND(set_attens_default), "(All Roaches) Set all attens to default values", GR_ROACH},
+  {COMMAND(set_attens_default_all), "(All Roaches) Set all attens to default values", GR_ROACH},
   {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
@@ -347,6 +347,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches, default params", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -471,10 +472,10 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(az_gain), "az reaction wheel gains", GR_MOTOR, 4,
     {
-      {"Proportional Gain", 0, CMD_I_MAX, 'f', "g_p_az"},
-      {"Integral Time",     0, 200, 'f', "g_i_az"},
+      {"Proportional Gain", 0, CMD_I_MAX, 'd', "g_p_az"},
+      {"Integral Time",     0, 200, 'd', "g_i_az"},
       {"Derivative Time",     0, 200, 'f', "g_d_az"},
-      {"Pointing Gain", 0, CMD_I_MAX, 'f', "g_pt_az"},
+      {"Pointing Gain", 0, CMD_I_MAX, 'd', "g_pt_az"},
     }
   },
   {COMMAND(az_scan_accel), "set azimuth scan turnaround acceleration", GR_MOTOR, 1,
@@ -628,17 +629,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
-      {"V_err Gain (prop)", 0, CMD_L_MAX, 'f', "G_PE_PIV"},
-      {"V_RW Gain (prop)", 0, CMD_L_MAX, 'f', "G_PV_PIV"},
-      {"V_RW Integral time", 0, 200, 'f', "G_IV_PIV"},
+      {"V_err Gain (prop)", 0, CMD_L_MAX, 'd', "G_PE_PIV"},
+      {"V_RW Gain (prop)", 0, CMD_L_MAX, 'd', "G_PV_PIV"},
+      {"V_RW Integral time", 0, 200, 'd', "G_IV_PIV"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},
     }
   },
   {COMMAND(el_gain), "elevation motor gains", GR_MOTOR, 6,
     {
-      {"Proportional Gain", 0, CMD_L_MAX, 'f', "G_P_EL"},
-      {"Integral Time",     0, 200, 'f', "G_I_EL"},
-      {"Derivative Time",   0, 200, 'f', "G_D_EL"},
+      {"Proportional Gain", 0, CMD_L_MAX, 'd', "G_P_EL"},
+      {"Integral Time",     0, 200, 'd', "G_I_EL"},
+      {"Derivative Time",   0, 200, 'd', "G_D_EL"},
       {"Pointing Gain",     0, CMD_L_MAX, 'f', "G_PT_EL"},
       {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_EL"},
@@ -646,13 +647,13 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(az_gyro_offset), "manually set az gyro offsets", GR_TRIM, 2,
     {
-      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFROLL_GY"},
-      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFYAW_GY"}
+      {"IF Roll Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFROLL_GY"},
+      {"IF Yaw Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFYAW_GY"}
     }
   },
   {COMMAND(el_gyro_offset), "manually set el gyro offset", GR_TRIM, 1,
     {
-      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'f', "OFFSET_IFEL_GY"},
+      {"IF Elev Gyro offset (deg/s)", -0.5, 0.5, 'd', "OFFSET_IFEL_GY"},
     }
   },
 {COMMAND(fix_ethercat), "Attempt to fix EC device? (1=yes, 0=no)", GR_MOTOR, 4,
@@ -1207,15 +1208,22 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 2,
+  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
     }
   },
-  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 1,
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 2,
     {
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(full_loop_default), "Performs full loop for single Roach", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   {COMMAND(df_targ), "Performs a short sweep, calculates df from ref sweep", GR_ROACH, 1,
@@ -1394,6 +1402,23 @@ struct mcom mcommands[plugh + 2] = {
   {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
+  },
+  {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_default_tone_power_all),
+     "(All Roaches) Set default tone power (target output power in dBm/tone)", GR_ROACH, 1,
+  {
+    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_attens_default), "Set attenuators", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
   },
   /***************************************/
   /*************** ROX Bias  *************/
