@@ -144,11 +144,16 @@ typedef struct roach_state {
     bool tone_write_fail;
     bool lamp_check_error;
     bool fridge_cycle_warning;
+    bool doing_full_loop;
+    bool is_finding_kids;
+    bool doing_find_kids_loop;
+    int pi_error_count;
 
     float adc_rms[2];
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
+    double lo_freq_read;
     size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
@@ -247,7 +252,6 @@ typedef struct pi_state {
     bool has_output_atten;
     remote_serial_t *pi_comm;
     char *address;
-    int error_count;
 } pi_state_t;
 
 typedef struct {

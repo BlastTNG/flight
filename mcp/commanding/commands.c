@@ -2507,7 +2507,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_full_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
-          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+          CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
     case roach_allow_scan_check:
@@ -2533,7 +2533,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case noise_comp:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_noise_comp = 1;
-          CommandData.roach_params[i].num_sec = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[2];
           CommandData.roach[ivalues[0]-1].get_timestream = 2;
       }
       break;
@@ -2547,6 +2547,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case find_kids_loop:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].find_kids = ivalues[1];
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[2];
           CommandData.roach[ivalues[0]-1].do_fk_loop = 1;
       }
       break;
@@ -2554,6 +2555,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_fk_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
       }
       break;
     case kill_roach:
@@ -2578,7 +2580,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case set_default_tone_power_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
-          CommandData.roach_params[ivalues[0]-1].df_retune_threshold = rvalues[0];
+          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[0];
       }
       break;
       /*************************************
@@ -3262,6 +3264,7 @@ void InitCommandData()
         CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;
+        CommandData.roach[i].do_check_retune = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
