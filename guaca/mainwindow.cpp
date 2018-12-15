@@ -738,6 +738,11 @@ void MainWindow::on_remoteHost_activated(const int &arg1)
     QString thehost;
     bool ok;
     hostname = QInputDialog::getText(this, "Choose Remote Host", "What remote host should mole connect to?", QLineEdit::Normal, thehost, &ok);
+    if (!ok)
+    {
+      printf("No host to connect to. Exiting.\n");
+      exit(0);
+    }
     hostname += SELECTION_APPEND_TEXT;
     ui->remoteHost->setItemText(arg1,hostname);
   }
@@ -782,6 +787,12 @@ void MainWindow::change_remote_host(const QString &arg)
     }
 
     ui->linkDir->setText("Available telemetry streams from "+QString(hostname.data()));
+  }
+  else
+  {
+    printf("No archive found at %s\n", tcpconn.ip);
+    ui->remoteHost->setCurrentIndex(ui->remoteHost->count()-1);
+    on_remoteHost_activated(ui->remoteHost->count()-1);
   }
   close_connection(&tcpconn);
 }
