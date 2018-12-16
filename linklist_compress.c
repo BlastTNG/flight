@@ -195,12 +195,18 @@ int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, in
   filesize = ftell(fp);
   fseek(fp, 0L, SEEK_SET);
 
+  unsigned int n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  if (n_total > UINT16_MAX) {
+    linklist_err("File \"%s\" is too large\n", filename);
+    return 0;
+  }
+
   // set the block variables to initialize transfer
   theblock->fp = fp;
   strcpy(theblock->filename, filename); // copy the filename stripped of path
   theblock->i = 0;
   theblock->num = 0;
-  theblock->n = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  theblock->n = n_total;
   theblock->curr_size = filesize;
 
   // theblock->id++; // increment the block counter
@@ -588,7 +594,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      linklist_info("Closing \"%s\"\n\n", block->filename);
+      linklist_info("Completed \"%s\"\n\n", block->filename);
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
@@ -623,7 +629,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
         linklist_err("Cannot open file %s", block->filename);
         return;
       }
-      linklist_info("New file \"%s\" opened\n", block->filename);
+      linklist_info("File \"%s\" opened\n", block->filename);
     }
     fseek(block->fp, loc, SEEK_SET); 
     int retval = 0;
@@ -651,7 +657,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  // linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
 }
 
