@@ -1411,7 +1411,7 @@ int valon_client(pi_state_t *m_pi, char *command)
     // printf("STATUS = %d\n", status);
     // blast_info("%s", buff);
     roach_state_table[m_pi->which - 1].lo_freq_read = atof(buff);
-    blast_info("%g", roach_state_table[m_pi->which - 1].lo_freq_read);
+    // blast_info("%g", roach_state_table[m_pi->which - 1].lo_freq_read);
     close(s);
     return 0;
 }
@@ -2718,8 +2718,8 @@ int pi_reboot_now(pi_state_t *m_pi)
 
 int recenter_lo(roach_state_t *m_roach)
 {
-    if (setLO_oneshot(m_roach->which - 1, m_roach->lo_centerfreq/1.0e6) < 0) {
-        blast_err("PI%d, Failed to set LO", m_roach->which);
+    if (set_LO(&pi_state_table[m_roach->which - 1], m_roach->lo_centerfreq/1.0e6) < 0) {
+        blast_err("PI%d, Failed to recenter LO", m_roach->which);
         return -1;
     }
     return 0;
@@ -2731,7 +2731,7 @@ int shift_lo(roach_state_t *m_roach)
     double shift = (double)CommandData.roach_params[m_roach->which - 1].lo_offset;
     blast_info("LO SHIFT ======================== %g", shift);
     double set_freq = (m_roach->lo_centerfreq + shift)/1.0e6;
-    if (setLO_oneshot(m_roach->which - 1, set_freq) < 0) {
+    if (set_LO(&pi_state_table[m_roach->which - 1], set_freq) < 0) {
         blast_err("ROACH%d LO error", m_roach->which);
         return retval;
     }
@@ -2864,9 +2864,9 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
             return SWEEP_INTERRUPT;
         }
     }
-    if (recenter_lo(m_roach) < 0) {
+    /* if (recenter_lo(m_roach) < 0) {
         blast_info("Error recentering LO");
-    }
+    } */
     free(m_sweep_freqs);
     CommandData.roach[ind].do_sweeps = 0;
     return SWEEP_SUCCESS;
@@ -3588,7 +3588,6 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
             return SWEEP_INTERRUPT;
         }
     }
-    usleep(SWEEP_TIMEOUT);
     if (recenter_lo(m_roach) < 0) {
         blast_info("ROACH%d, Error recentering LO", m_roach->which);
     }
@@ -3644,6 +3643,9 @@ int roach_targ_sweep(roach_state_t *m_roach)
     }
     CommandData.roach[m_roach->which - 1].do_sweeps = 0;
     m_roach->is_sweeping = 0;
+    if (recenter_lo(m_roach) < 0) {
+        blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+    }
     return 0;
 }
 
@@ -5143,23 +5145,23 @@ int roach_write_vna(roach_state_t *m_roach)
 
 int roach_vna_sweep(roach_state_t *m_roach)
 {
-    int retval = -1;
+    int status = -1;
     char *var_name;
     if (CommandData.roach[m_roach->which - 1].do_sweeps == 0) {
         blast_err("ROACH%d: DO SWEEP NOT SET", m_roach->which);
-        return retval;
+        return status;
     }
     // char *echo_command;
     if (m_roach->has_targ_tones) {
         blast_info("ROACH%d: Must write search comb before running VNA sweep.", m_roach->which);
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-        return retval;
+        return status;
     }
     m_roach->is_sweeping = 1;
     blast_info("ROACH%d, Initializing VNA sweep", m_roach->which);
     blast_info("ROACH%d, Starting VNA sweep...", m_roach->which);
-    retval = roach_do_sweep(m_roach, VNA);
-    if (retval == SWEEP_SUCCESS) {
+    status = roach_do_sweep(m_roach, VNA);
+    if (status == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
         pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
         // write environment variable for sweep path
@@ -5167,13 +5169,16 @@ int roach_vna_sweep(roach_state_t *m_roach)
         // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
         setenv(var_name, path_to_vna_tarball[m_roach->which - 1], 1);
         compress_data(m_roach, VNA);
-    } else if (retval == SWEEP_INTERRUPT) {
+    } else if (status == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
-    } else if (retval == SWEEP_FAIL) {
+    } else if (status == SWEEP_FAIL) {
         blast_info("ROACH%d, VNA sweep failed reattempt", m_roach->which);
     }
     m_roach->is_sweeping = 0;
-    return retval;
+    if (recenter_lo(m_roach) < 0) {
+        blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+    }
+    return status;
 }
 
 int roach_full_loop(roach_state_t *m_roach)
@@ -6116,6 +6121,7 @@ void write_roach_channels_5hz(void)
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
         SET_SCALED_VALUE(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
+        // blast_info("LO FREQ READ = %g", roach_state_table[i].lo_freq_read);
         SET_SCALED_VALUE(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
         SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
     }
