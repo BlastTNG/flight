@@ -627,7 +627,8 @@ void ControlHWPR(struct ezbus *bus)
 				blast_info("Going to backoff to break thermal link");
 #endif
 				hwpr_data.enc_real_hwpr = hwpr_data.enc;
-				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS);
+				// again, backoff in deg on input shaft, so divide by 100
+				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
 				hwpr_control.move_cur = moving;
 				hwpr_control.stop_cnt = 0;
