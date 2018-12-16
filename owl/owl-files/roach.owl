@@ -263,7 +263,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCI_RMS_ROACH1",
                     "type": "PNDI"
                 },
@@ -275,7 +275,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH1",
                     "type": "PNDI"
                 },
@@ -334,7 +334,8 @@
                     "_caption": "TONE_FINDING_ERROR   ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_FINDING_ERROR_ROACH1",
                     "type": "PNDI"
@@ -346,7 +347,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH1",
                     "type": "PNDI"
@@ -370,7 +372,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL   ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH1",
                     "type": "PNDI"
@@ -394,7 +397,8 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH1",
                     "type": "PNDI"
@@ -418,7 +422,8 @@
                     "_caption": "FRIDGE_CYCLE_WARNING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
                     "type": "PNDI"
@@ -442,7 +447,8 @@
                     "_caption": "DOING_FULL_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FULL_LOOP_ROACH1",
                     "type": "PNDI"
@@ -454,7 +460,8 @@
                     "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FIND_KIDS_LOOP_ROACH1",
                     "type": "PNDI"
@@ -466,7 +473,8 @@
                     "_caption": "IS_FINDING_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_FINDING_KIDS_ROACH1",
                     "type": "PNDI"
@@ -507,7 +515,7 @@
             "PObject": {
                 "_id": "284824448"
             },
-            "_boxTitle": "ROACH2 (?)",
+            "_boxTitle": "ROACH2 (PIECES)",
             "_style": "(P2072147126)",
             "cellHeight": 41,
             "cellWidth": 18,
@@ -762,7 +770,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCI_RMS_ROACH2",
                     "type": "PNDI"
                 },
@@ -774,7 +782,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH2",
                     "type": "PNDI"
                 },
@@ -833,7 +841,8 @@
                     "_caption": "TONE_FINDING_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_FINDING_ERROR_ROACH2",
                     "type": "PNDI"
@@ -941,7 +950,8 @@
                     "_caption": "DOING_FULL_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FULL_LOOP_ROACH2",
                     "type": "PNDI"
@@ -953,7 +963,8 @@
                     "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FIND_KIDS_LOOP_ROACH2",
                     "type": "PNDI"
@@ -965,7 +976,8 @@
                     "_caption": "IS_FINDING_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_FINDING_KIDS_ROACH2",
                     "type": "PNDI"
@@ -1261,7 +1273,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCI_RMS_ROACH3",
                     "type": "PNDI"
                 },
@@ -1273,7 +1285,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH3",
                     "type": "PNDI"
                 },
@@ -1308,8 +1320,7 @@
                     "_caption": "LO_CENTER_FREQ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P395081801)",
+                    "_extrema": false,
                     "_format": "%f",
                     "_source": "LO_CENTER_FREQ_ROACH3",
                     "type": "PNDI"
@@ -1441,7 +1452,8 @@
                     "_caption": "DOING_FULL_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FULL_LOOP_ROACH3",
                     "type": "PNDI"
@@ -1453,7 +1465,8 @@
                     "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FIND_KIDS_LOOP_ROACH3",
                     "type": "PNDI"
@@ -1465,7 +1478,8 @@
                     "_caption": "IS_FINDING_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_FINDING_KIDS_ROACH3",
                     "type": "PNDI"
@@ -1761,7 +1775,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCI_RMS_ROACH4",
                     "type": "PNDI"
                 },
@@ -1773,7 +1787,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH4",
                     "type": "PNDI"
                 },
@@ -1832,7 +1846,8 @@
                     "_caption": "TONE_FINDING_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_FINDING_ERROR_ROACH4",
                     "type": "PNDI"
@@ -1940,7 +1955,8 @@
                     "_caption": "DOING_FULL_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FULL_LOOP_ROACH4",
                     "type": "PNDI"
@@ -1952,7 +1968,8 @@
                     "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FIND_KIDS_LOOP_ROACH4",
                     "type": "PNDI"
@@ -1964,7 +1981,8 @@
                     "_caption": "IS_FINDING_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_FINDING_KIDS_ROACH4",
                     "type": "PNDI"
@@ -2260,7 +2278,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCI_RMS_ROACH5",
                     "type": "PNDI"
                 },
@@ -2272,7 +2290,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH5",
                     "type": "PNDI"
                 },
@@ -2704,6 +2722,20 @@
             "_sxlow": "(P1042125667)",
             "_xhigh": "1",
             "_xlow": "-1"
+        },
+        {
+            "PObject": {
+                "_id": "1407645461"
+            },
+            "_high": "1",
+            "_low": "-1",
+            "_name": "FULL_LOOP",
+            "_shigh": "(P2012763546)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1443171059)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "1",
+            "_xlow": "-1"
         }
     ],
     "linkNames": [
@@ -2938,11 +2970,22 @@
             "_italic": false,
             "_linked": true,
             "_name": "states"
+        },
+        {
+            "PObject": {
+                "_id": "1443171059"
+            },
+            "_bg": "#0055ff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "CAUTION"
         }
     ],
     "webPort": "0",
     "windowCellHeight": 60,
     "windowCellWidth": 96,
-    "windowHeight": 1020,
+    "windowHeight": 1028,
     "windowWidth": 1632
 }
