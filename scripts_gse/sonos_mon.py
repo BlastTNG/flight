@@ -112,7 +112,7 @@ while True:
   # lunch
   Lunch.update()
   date = datetime.utcfromtimestamp(Lunch.lastval)
-  if ((date.hour+13)%24 == 11) and (date.minute >= 45):
+  if ((date.hour+13)%24 == 11) and (date.minute >= 55) and (datetime.today().isoweekday() != 7):
     print("Lunchtime!")
     if not song_requested: 
       Lunch.trigger(volume=50)
