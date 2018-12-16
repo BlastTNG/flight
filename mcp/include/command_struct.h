@@ -389,6 +389,7 @@ typedef struct roach
     unsigned int do_noise_comp;
     unsigned int do_fk_loop;
     unsigned int kill;
+    unsigned int data_type;
 } roach_status_t;
 
 typedef struct roach_params
@@ -495,6 +496,8 @@ struct CommandDataStruct {
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
   roach_params_t roach_params[NUM_ROACHES];
+  unsigned int tar_all_data;
+  unsigned int data_type;
   unsigned int trigger_roach_tuning_check; // motors.c sets this flag when a scan is nearly complete
                                    // to (optionally) trigger a retune
 
