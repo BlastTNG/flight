@@ -1088,7 +1088,7 @@ struct mcom mcommands[plugh + 2] = {
       {"0 = Default, off, 1 = Run", 0, 1, 'i', "NONE"}
     }
   },
-  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm, then execute", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
@@ -1420,6 +1420,15 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens_default), "Set attenuators", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_find_kids_params),
+      "Set the parameters for the kid finding algorithm. Does not execute", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
     }
   },
   /***************************************/
