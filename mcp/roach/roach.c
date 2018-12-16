@@ -5859,11 +5859,6 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].refit_res_freqs = 1;
                 CommandData.roach[i].do_retune = 0;
             }
-            /*
-            if (CommandData.tar_all_data) {
-                compress_all_data(CommandData.data_type);
-                CommandData.tar_all_data = 0;
-            } */
             if (CommandData.roach[i].find_kids == 2) {
                 if ((get_targ_freqs(&roach_state_table[i], 0)) < 0) {
                        roach_state_table[i].tone_finding_error = 1;

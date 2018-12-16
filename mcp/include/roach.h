@@ -337,6 +337,7 @@ int roach_read_data(roach_state_t *m_roach, uint8_t *m_dest, const char *m_regis
 int roach_write_int(roach_state_t *m_roach, const char *m_register, uint32_t m_val, uint32_t m_offset);
 int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename);
 int init_roach(uint16_t ind);
+int compress_all_data(int type);
 void write_roach_channels_5hz(void);
 int get_roach_state(uint16_t ind);
 int roach_timestamp_init(roach_state_t *m_roach);
