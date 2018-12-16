@@ -39,6 +39,12 @@
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+/* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
+ * it is working so we will leave it for now. If this were changed, the thresholds
+ * and maybe the 750000 (microsteps to overshoot closed) would need to be changed
+ * and we don't have time to do that before flight
+ * -PAW and PCA 2018/12/16
+ */
 #define POTVALVE_STEP_ADC_RATIO 318.75
 
 typedef enum {

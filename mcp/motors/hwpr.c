@@ -351,6 +351,7 @@ void ControlHWPR(struct ezbus *bus)
     }
     /*** Begin fall through control ***/
 
+	// TODO(paul): check units (encoder vs deg vs motor steps) in control code
     /* if are doing anything with the HWPR other than sleeping, panicing or repeating */
     if (CommandData.hwpr.mode >= HWPR_GOTO && CommandData.hwpr.mode != HWPR_REPEAT) {
             /*** Do we want to move? ***/
@@ -444,12 +445,12 @@ void ControlHWPR(struct ezbus *bus)
                         blast_info("Current pot value: hwpr_data.pot = %f, hwpr_enc_cur = %f", hwpr_data.pot,
                                        hwpr_enc_cur);
 #endif
-                        hwpr_control.enc_targ = CommandData.hwpr.pot_targ; // pot_targ in encoder counts?
+                        hwpr_control.enc_targ = CommandData.hwpr.pot_targ; // pot_targ in deg, enc_targ is always deg
                         // hwpr_enc_dest = LutCal(&HwprPotLut, hwpr_control.pot_targ);
 
 						//
                         hwpr_control.rel_move =
-							(int32_t)((hwpr_control.enc_targ - hwpr_enc_cur / ENC_TO_DEG) * ENC_TO_DEG * DEG_TO_STEPS);
+							(int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 #ifdef DEBUG_HWPR
                         blast_info("Destination is index %i, pot value = %f, required rel encoder move is %i:",
                                        CommandData.hwpr.i_pos, CommandData.hwpr.pos[i_next_step],
@@ -523,11 +524,12 @@ void ControlHWPR(struct ezbus *bus)
             } else if (hwpr_control.move_cur == ready) {
             	/* Is the hwpr move negative?
                 If so check if we need to add an overshoot for backlash correction */
-                hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 		    	if (hwpr_control.rel_move < 0) {
                 	if (CommandData.hwpr.overshoot < 0) {
                     hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
                     hwpr_control.do_overshoot = 1;
+					// change target to include the overshoot
+                	hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 #ifdef DEBUG_HWPR
                     blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
 #endif
@@ -538,6 +540,8 @@ void ControlHWPR(struct ezbus *bus)
                 	if (CommandData.hwpr.overshoot > 0) {
                     hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
                     hwpr_control.do_overshoot = 1;
+					// change target to include the overshoot
+                	hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 #ifdef DEBUG_HWPR
                     blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
 #endif
