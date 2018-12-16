@@ -2954,9 +2954,9 @@ int compress_data(roach_state_t *m_roach, int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
-    is_compressing_data = 1;
+    m_roach->is_compressing_data = 1;
     pyblast_system(tar_cmd);
-    is_compressing_data = 0;
+    m_roach->is_compressing_data = 0;
     return 0;
 }
 
@@ -3011,11 +3011,11 @@ int compress_all_data(int type)
         setenv(var_name, path_to_all_df, 1);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
-    is_compressing_data = 1;
+    // is_compressing_data = 1;
     pyblast_system(tar_cmd);
     blast_tmp_sprintf(echo_cmd, "echo $%s", var_name);
     pyblast_system(echo_cmd);
-    is_compressing_data = 0;
+    // is_compressing_data = 0;
     return 0;
 }
 
@@ -4787,6 +4787,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         return -1;
     }
     blast_info("ROACH%d: FPGA programmed", m_roach->which);
+    m_roach->has_firmware = 1;
     // char *ret = arg_string_katcl(m_roach->rpc_conn, 1);
     // blast_info("ROACH%d: FPGA programmed %s", m_roach->which, ret);
     return 0;
@@ -4835,7 +4836,6 @@ void reset_roach_flags(roach_state_t *m_roach)
     m_roach->tone_write_fail = 0;
     m_roach->lamp_check_error = 0;
     m_roach->katcp_connect_error = 0;
-    m_roach->fridge_cycle_warning = 0;
     m_roach->pi_error_count = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
@@ -5307,7 +5307,7 @@ void check_cycle_status(void)
         blast_info("CYCLE STATE =============== %d", cycle_state);
         if ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
             for (int i = 0; i < NUM_ROACHES; i++) {
-                roach_state_table[i].fridge_cycle_warning = 1;
+                fridge_cycle_warning = 1;
             }
             while ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
                 GET_VALUE(stateCycleAddr, cycle_state);
@@ -5320,7 +5320,7 @@ void check_cycle_status(void)
             }
         } else {
             for (int i = 0; i < NUM_ROACHES; i++) {
-                roach_state_table[i].fridge_cycle_warning = 0;
+                fridge_cycle_warning = 0;
             }
         }
     }
@@ -5498,8 +5498,6 @@ void *roach_cmd_loop(void* ind)
         usleep(2000);
     }
     blast_info("Starting Roach Commanding Thread");
-    // start cycle checker
-    start_cycle_checker();
     pi_state_table[i].state = PI_STATE_BOOT;
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
@@ -6329,11 +6327,11 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 16);
         roach_status_field |= (((uint32_t)roach_state_table[i].lamp_check_error) << 17);
         roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-        roach_status_field |= (((uint32_t)roach_state_table[i].fridge_cycle_warning) << 19);
-        roach_status_field |= (((uint32_t)roach_state_table[i].pi_error_count) << 20);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 21);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 22);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 23);
+        roach_status_field |= (((uint32_t)roach_state_table[i].pi_error_count) << 19);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
