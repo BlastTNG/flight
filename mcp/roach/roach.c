@@ -2899,8 +2899,8 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
 int compress_data(roach_state_t *m_roach, int type)
 {
 // type can be: VNA, TARG, IQ or DF
-    int retval = -1;
-    char *tar_command;
+    // int status = -1;
+    char *tar_cmd;
     char *tarball;
     char *path;
     char *result;
@@ -2949,23 +2949,23 @@ int compress_data(roach_state_t *m_roach, int type)
         tarball = path_to_df_tarball[m_roach->which - 1];
     }
     if ((type == DF)) {
-        blast_tmp_sprintf(tar_command, "tar -czf %s %s &", tarball, path);
+        blast_tmp_sprintf(tar_cmd, "tar -czf %s %s &", tarball, path);
     } else {
-        blast_tmp_sprintf(tar_command, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     }
-    blast_info("Creating sweep tarball: %s", tar_command);
-    if (system(tar_command) < 0) {
-        blast_err("ROACH%d: Failed to tar sweep data", m_roach->which);
-        return retval;
-    }
+    blast_info("Creating sweep tarball: %s", tar_cmd);
+    is_compressing_data = 1;
+    pyblast_system(tar_cmd);
+    is_compressing_data = 0;
     return 0;
 }
 
 int compress_all_data(int type)
 {
-    int status = -1;
+    // int status = -1;
     char *tar_cmd;
     char *var_name;
+    char *echo_cmd;
     blast_info("Building tarball");
     blast_tmp_sprintf(tar_cmd, "tar -czvf");
     if ((type == VNA)) {
@@ -2976,6 +2976,7 @@ int compress_all_data(int type)
            path_to_vna_tarball[2],
            path_to_vna_tarball[3],
            path_to_vna_tarball[4]);
+        blast_tmp_sprintf(var_name, "ALL_VNA_SWEEPS");
         var_name = "ALL_VNA_SWEEPS";
         setenv(var_name, path_to_all_vna, 1);
     } else if (type == TARG) {
@@ -2986,7 +2987,7 @@ int compress_all_data(int type)
            path_to_targ_tarball[2],
            path_to_targ_tarball[3],
            path_to_targ_tarball[4]);
-        var_name = "ALL_TARG_SWEEPS";
+        blast_tmp_sprintf(var_name, "ALL_TARG_SWEEPS");
         setenv(var_name, path_to_all_targ, 1);
     } else if (type == IQ) {
         blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
@@ -2996,7 +2997,7 @@ int compress_all_data(int type)
            path_to_iq_tarball[2],
            path_to_iq_tarball[3],
            path_to_iq_tarball[4]);
-        var_name = "ALL_IQ_DATA";
+        blast_tmp_sprintf(var_name, "ALL_IQ_DATA");
         setenv(var_name, path_to_all_iq, 1);
     } else if (type == DF) {
         blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
@@ -3006,14 +3007,15 @@ int compress_all_data(int type)
            path_to_df_tarball[2],
            path_to_df_tarball[3],
            path_to_df_tarball[4]);
-        var_name = "ALL_DF_DATA";
+        blast_tmp_sprintf(var_name, "ALL_DF_DATA");
         setenv(var_name, path_to_all_df, 1);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
-    if (system(tar_cmd) < 0) {
-        blast_err(" Failed to tar all data");
-        return status;
-    }
+    is_compressing_data = 1;
+    pyblast_system(tar_cmd);
+    blast_tmp_sprintf(echo_cmd, "echo $%s", var_name);
+    pyblast_system(echo_cmd);
+    is_compressing_data = 0;
     return 0;
 }
 
@@ -5293,31 +5295,33 @@ int roach_fk_loop(roach_state_t* m_roach)
 
 void check_cycle_status(void)
 {
-    // do the following every check once per minute
-    sleep(60);
-    static channel_t* stateCycleAddr;
-    uint16_t cycle_state;
-    stateCycleAddr = channels_find_by_name("state_cycle");
-    // Check cycle_state channel
-    // If == 2, 3, or 4, put Roaches into cycle_mode (streaming state)
-    stateCycleAddr = channels_find_by_name("state_cycle");
-    GET_VALUE(stateCycleAddr, cycle_state);
-    if ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
-        for (int i = 0; i < NUM_ROACHES; i++) {
-            roach_state_table[i].fridge_cycle_warning = 1;
-        }
-        while ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
-            GET_VALUE(stateCycleAddr, cycle_state);
-            sleep(60);
-        }
-        // Once cycle ends, trigger full loop
-        for (int i = 0; i < NUM_ROACHES; i++) {
-            CommandData.roach[i].do_full_loop = 1;
-            roach_full_loop(&roach_state_table[i]);
-        }
-    } else {
-        for (int i = 0; i < NUM_ROACHES; i++) {
-            roach_state_table[i].fridge_cycle_warning = 0;
+    while (CommandData.roach_run_cycle_checker) {
+        // do the following every check once per minute
+        sleep(60);
+        static channel_t* stateCycleAddr;
+        uint16_t cycle_state;
+        stateCycleAddr = channels_find_by_name("state_cycle");
+        // Check cycle_state channel
+        // If == 2, 3, or 4, put Roaches into cycle_mode (streaming state)
+        GET_VALUE(stateCycleAddr, cycle_state);
+        blast_info("CYCLE STATE =============== %d", cycle_state);
+        if ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                roach_state_table[i].fridge_cycle_warning = 1;
+            }
+            while ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
+                GET_VALUE(stateCycleAddr, cycle_state);
+                sleep(60);
+            }
+            // Once cycle ends, trigger full loop
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                CommandData.roach[i].do_full_loop = 1;
+                roach_full_loop(&roach_state_table[i]);
+            }
+        } else {
+            for (int i = 0; i < NUM_ROACHES; i++) {
+                roach_state_table[i].fridge_cycle_warning = 0;
+            }
         }
     }
 }

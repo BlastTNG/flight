@@ -25,6 +25,10 @@ owl/owl
 owl/Makefile
 quick_diagnostics/QuickDiag
 
+guaca/guaca
+katie/katie
+groundhog/test.cs
+
 stars/windows/stars
 
 

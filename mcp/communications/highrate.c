@@ -140,11 +140,10 @@ void highrate_compress_and_send(void *arg) {
 
 		  highrate_read_buffer = getFifoRead(&highrate_fifo);
 
-      if (!strcmp(CommandData.highrate_linklist_name, FILE_LINKLIST)) { // special file downlinking
+      if (!strcmp(ll->name, FILE_LINKLIST)) { // special file downlinking
         // done sending, so revert to other linklist
         if (ll->blocks[0].i >= ll->blocks[0].n) {
 						ll_array[HIGHRATE_TELEMETRY_INDEX] = ll_saved;
-						if (ll_saved) strcpy(CommandData.highrate_linklist_name, ll_saved->name);
 						continue;
         }
 

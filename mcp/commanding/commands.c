@@ -2025,37 +2025,39 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
         send_file_to_linklist(linklist_find_by_name((char *) linklist_nt[ivalues[0]], linklist_array),
-                               "file_block", svalues[1]);
+                               "file_block", svalues[1], 1024);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
       break;
     case request_stream_file:
-      filename = svalues[1];
-			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
+      filename = svalues[3];
+			if (svalues[3][0] == '$') filename = getenv(svalues[3]+1); // hook for environment variable
 
       if (filename && send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-															              "file_block", filename)) {
+															              "file_block", filename, ivalues[1])) {
+        // a block fragment has been requested
+        if (ivalues[2] > 0) {
+          set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+                                            "file_block", ivalues[2]-1, ivalues[2]);
+        }
         if (ivalues[0] == 0) { // pilot
           CommandData.pilot_bw = MIN(1000.0*1000.0/8.0, CommandData.pilot_bw); // max out bw
-					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 1) { // BI0
           CommandData.biphase_bw = MIN(1000.0*1000.0/8.0, CommandData.biphase_bw); // max out bw
-					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[BI0_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 2) { // highrate
-					snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else {
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
       } else {
-        blast_err("Could not resolve filename \"%s\"", svalues[1]);
+        blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
 		case set_pilot_oth:
@@ -2593,10 +2595,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case compress_roach_data:
       if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
-          compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 1;
+          compress_all_data(ivalues[0]);
+          CommandData.tar_all_data = 0;
       }
       break;
+    case enable_cycle_checker:
+        if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+            CommandData.roach_run_cycle_checker = ivalues[0];
+        }
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3214,7 +3221,10 @@ void InitCommandData()
     CommandData.checksum = 0;
     is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
 
+    // Compress all Roach data (sweeps or timestreams)
     CommandData.tar_all_data = 0;
+    // Run Roach cycle checker thread
+    CommandData.roach_run_cycle_checker = 1;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;

@@ -347,7 +347,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(full_loop_all), "Performs full loop for all Roaches, default params", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -932,9 +931,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_stream_file), "Stream a file at bandwidth over given link", GR_TELEM, 2,
+  {COMMAND(request_stream_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"File block number", 0, 255, 'i', ""},
+      {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
@@ -1389,7 +1390,7 @@ struct mcom mcommands[plugh + 2] = {
   }
   },
   {COMMAND(kill_roach),
-    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 2,
+    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 1,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
   }
@@ -1436,6 +1437,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3)", 0, 3, 'i', "NONE"}
     }
   },
+  {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
+    {
+      {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+    }
+  },
+  /***************************************/
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

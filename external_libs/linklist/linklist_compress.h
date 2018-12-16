@@ -43,7 +43,6 @@ extern "C"{
 
 #endif
 
-
 enum dataCompressTypes {
   FIXED_PT_16BIT, // fixed point 16 bit compression
   FIXED_PT_32BIT, // fixed point 32 bit compression
@@ -76,7 +75,8 @@ int write_allframe(uint8_t *, superframe_t *, uint8_t *);
 int read_allframe(uint8_t *, superframe_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);
 void depacketize_block_raw(struct block_container * , uint8_t *);
-int send_file_to_linklist(linklist_t *, char *, char *);
+int send_file_to_linklist(linklist_t *, char *, char *, int);
+void set_block_indices_linklist(linklist_t *, char *, unsigned int, unsigned int);
 FILE * fpreopenb(char *);
 uint8_t randomized_buffer(uint8_t *, unsigned int, unsigned int);
 
