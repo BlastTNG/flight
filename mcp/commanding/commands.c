@@ -2598,7 +2598,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case compress_roach_data:
       if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
-          CommandData.data_type = ivalues[0];
+          compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 1;
       }
       break;
@@ -3220,7 +3220,6 @@ void InitCommandData()
     is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
 
     CommandData.tar_all_data = 0;
-    CommandData.data_type = 0;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
