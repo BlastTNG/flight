@@ -8,7 +8,8 @@ import soco
 DEVICE_ADDRESS = "192.168.0.135"
 DATAFILE = "/data/etc/mole.lnk"
 
-sonos = soco.SoCo(DEVICE_ADDRESS)
+#sonos = soco.SoCo(DEVICE_ADDRESS)
+sonos = soco.discovery.any_soco()
 df = gd.dirfile(DATAFILE, gd.RDONLY)
 
 # find the tracks
@@ -61,10 +62,14 @@ class AutoSonos:
 
   # Queues the assigned song
   # If the song is already playing, doesn't try to play again 
-  def trigger(self):
-    if (get_current_track_title() != self.track.title):
+  # If persist=True, will play even if queue is stopped
+  def trigger(self, persist=True, volume=None):
+    if (get_current_track_title() != self.track.title) or (persist and sonos.get_current_transport_info()['current_transport_state'] != 'PLAYING'):
+      sonos.pause()
       sonos.add_to_queue(self.track, 1) # add to queue indexing by 1
       sonos.play_from_queue(0, True) # play from queue indexing from 0
+      if volume is not None:
+        sonos.ramp_to_volume(volume)
       print("Playing " + self.track.title)
       return 1
     return 0
@@ -79,6 +84,7 @@ class AutoSonos:
 PotvalveOpen = AutoSonos("Flagpole Sitta", "STATE_POTVALVE", 1)
 
 Lunch = AutoSonos("Sandstorm", "TIME")
+Leave = AutoSonos("End of the World as", "TIME")
 
 while True:
   song_requested = False
@@ -94,15 +100,26 @@ while True:
       PotvalveOpen.trigger()
     song_requested = True
 
+  # time to leave
+  Leave.update()
+  date = datetime.utcfromtimestamp(Leave.lastval)
+  if ((date.hour+13)%24 == 17) and (15 <= date.minute <= 30):
+    print("Time to leave!")
+    if not song_requested: 
+      Leave.trigger(volume=65)
+    song_requested = True
+
   # lunch
   Lunch.update()
   date = datetime.utcfromtimestamp(Lunch.lastval)
-  if ((date.hour+13)%24 == 11) and (date.minute >= 45):
+  if ((date.hour+13)%24 == 11) and (date.minute >= 55) and (datetime.today().isoweekday() != 7):
     print("Lunchtime!")
     if not song_requested: 
-      Lunch.trigger()
+      Lunch.trigger(volume=50)
     song_requested = True
 
+
+  # reload the datafile if necessary
   if (Lunch.timeout > 5):
     df.close()
     df = gd.dirfile(DATAFILE, gd.RDONLY)

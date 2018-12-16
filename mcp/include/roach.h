@@ -115,7 +115,7 @@ typedef struct roach_state {
     int array;
     int which;
     int katcp_fd;
-    uint8_t have_warned_connect;
+    uint8_t katcp_connect_error;
     e_roach_state state;
     e_roach_state desired_state;
 
@@ -124,12 +124,14 @@ typedef struct roach_state {
     bool katcp_is_busy;
     char *address;
     uint16_t port;
+    bool has_firmware;
+    bool firmware_upload_fail;
     bool has_qdr_cal;
     bool has_tones;
     bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
-    int is_sweeping;
+    bool is_sweeping;
     bool in_flight_mode;
     bool has_vna_sweep;
     bool has_targ_sweep;
@@ -139,13 +141,19 @@ typedef struct roach_state {
     bool is_averaging;
     bool tone_finding_error;
     bool sweep_fail;
-    bool write_fail;
-    bool lamp_check_fail;
+    bool tone_write_fail;
+    bool lamp_check_error;
+    bool fridge_cycle_warning;
+    bool doing_full_loop;
+    bool is_finding_kids;
+    bool doing_find_kids_loop;
+    int pi_error_count;
 
     float adc_rms[2];
     double *freq_residuals;
     double *targ_tones; // kid frequencies found with get_targ_freqs()
     double lo_freq_req;
+    double lo_freq_read;
     size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
     double lo_centerfreq;
@@ -244,7 +252,6 @@ typedef struct pi_state {
     bool has_output_atten;
     remote_serial_t *pi_comm;
     char *address;
-    int error_count;
 } pi_state_t;
 
 typedef struct {

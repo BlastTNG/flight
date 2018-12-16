@@ -387,6 +387,8 @@ typedef struct roach
     unsigned int do_full_loop;
     unsigned int auto_correct_freqs;
     unsigned int do_noise_comp;
+    unsigned int do_fk_loop;
+    unsigned int kill;
 } roach_status_t;
 
 typedef struct roach_params
@@ -396,8 +398,8 @@ typedef struct roach_params
     double peak_threshold;
     double spacing_threshold;
 //  Set attenuators
-    double in_atten;
-    double out_atten;
+    double set_in_atten;
+    double set_out_atten;
     double read_in_atten;
     double read_out_atten;
     double new_out_atten;
@@ -413,6 +415,7 @@ typedef struct roach_params
     int resp_thresh;
     double dBm_per_tone;
     double lo_freq_MHz;
+    double df_retune_threshold;
 } roach_params_t;
 
 // Ethercat controller/device commands

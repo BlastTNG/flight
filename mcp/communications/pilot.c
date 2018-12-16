@@ -70,7 +70,7 @@ void pilot_compress_and_send(void *arg) {
   for (int i = 0; i < NUM_PILOT_TARGETS; i++) {  
     initBITSender(&pilotothsender[i], pilot_target_names[i], PILOT_PORT, 10, fifosize, PILOT_MAX_PACKET_SIZE);
   }
-  linklist_t * ll = NULL, * ll_old = NULL;
+  linklist_t * ll = NULL, * ll_old = NULL, * ll_saved = NULL;
   linklist_t ** ll_array = arg;
 
   uint8_t * compbuffer = calloc(1, fifosize);
@@ -97,6 +97,13 @@ void pilot_compress_and_send(void *arg) {
     if (!fifoIsEmpty(&pilot_fifo) && ll && InCharge) { // data is ready to be sent
 
       if (!strcmp(CommandData.pilot_linklist_name, FILE_LINKLIST)) { // special file downlinking 
+        // done sending, so revert to other linklist
+        if (ll->blocks[0].i >= ll->blocks[0].n) {
+          ll_array[PILOT_TELEMETRY_INDEX] = ll_saved;
+          if (ll_saved) strcpy(CommandData.pilot_linklist_name, ll_saved->name);
+          continue;
+        }
+
 				// use the full bandwidth
 				transmit_size = bandwidth;
 
@@ -109,6 +116,8 @@ void pilot_compress_and_send(void *arg) {
 				decrementFifo(&pilot_fifo);
 
       } else { // normal linklist
+        ll_saved = ll;
+
 				// send allframe if necessary
 				if (allframe_bytes >= superframe->allframe_size) {
 					transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&pilot_fifo));

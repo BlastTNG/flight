@@ -160,11 +160,11 @@ enum singleCommand {
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
-  reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
+  reload_vna_all, end_sweeps_all, new_ref_params_all,
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
   change_freqs_all, df_targ_all, check_df_retune_all, check_dfsweep_retune_all, debug_mode, allow_watchdog,
-    disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check,
-  xyzzy
+    disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check, full_loop_all_default,
+  set_attens_default_all, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -318,6 +318,7 @@ enum multiCommand {
   roach_disallow_scan_check,
   full_loop,
   full_loop_all,
+  full_loop_default,
   check_lamp_retune,
   check_lamp_retune_all,
   check_df_retune,
@@ -328,6 +329,14 @@ enum multiCommand {
   set_retune_type_all,
   noise_comp,
   noise_comp_all,
+  find_kids_loop,
+  find_kids_loop_all,
+  kill_roach,
+  set_df_retune_threshold,
+  set_df_retune_threshold_all,
+  set_default_tone_power,
+  set_default_tone_power_all,
+  set_attens_default,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

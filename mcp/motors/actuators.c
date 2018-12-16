@@ -826,7 +826,7 @@ static void DoShutter(void)
   /* Figure out what to do... */
   if (action != SHUTTER_DO_KEEPCLOSED && action != SHUTTER_DO_KEEPOPEN) {
 		cancel = 1;
-		bputs(warning, "debug: cancel = 1");
+		// bputs(warning, "debug: cancel = 1");
 	}
   switch (action) {
     case SHUTTER_DO_OFF:

@@ -416,7 +416,7 @@ void biphase_writer(void * arg)
 
     // setup linklists
     linklist_t ** ll_array = arg;
-    linklist_t * ll = NULL, * ll_old = NULL;
+    linklist_t * ll = NULL, * ll_old = NULL, * ll_saved = NULL;
     unsigned int allframe_bytes = 0; 
     double bandwidth = 0; 
     uint32_t transmit_size = 0;
@@ -494,6 +494,13 @@ void biphase_writer(void * arg)
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
             if (!strcmp(CommandData.bi0_linklist_name, FILE_LINKLIST)) { // special file downlinking
+                // done sending, so revert to other linklist
+                if (ll->blocks[0].i >= ll->blocks[0].n) {
+                    ll_array[BI0_TELEMETRY_INDEX] = ll_saved;
+                    if (ll_saved) strcpy(CommandData.bi0_linklist_name, ll_saved->name);
+                    continue;
+                }
+
                 // use the full bandwidth
                 transmit_size = bandwidth;
 
@@ -506,6 +513,8 @@ void biphase_writer(void * arg)
                 decrementFifo(&bi0_fifo);
             
             } else { // normal linklist
+                ll_saved = ll;
+
                 // send allframe if necessary
                 if (allframe_bytes >= superframe->allframe_size) {
                     transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
