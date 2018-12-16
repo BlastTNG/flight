@@ -1421,6 +1421,7 @@ int set_LO(pi_state_t *m_pi, double lo_freq_MHz)
     int retval = -1;
     char* write_this;
     blast_tmp_sprintf(write_this, "set %g", lo_freq_MHz);
+    roach_state_table[m_pi->which - 1].lo_freq_req = lo_freq_MHz;
     if (valon_client(m_pi, write_this) < 0) {
         return retval;
     } else {
@@ -1577,58 +1578,6 @@ int write_last_attens(roach_state_t *m_roach) {
     CommandData.roach[m_roach->which - 1].set_attens = 0;
     return 0;
 }
-
-/* Function: set_atten
- * ----------------------------
- * Sets Roach attenuators; levels are in dB, between 0 and 30.
- *
- * @param m_pi pi state table
- *
-*/
-/*
-int set_atten(pi_state_t *m_pi)
-{
-    int retval = -1;
-    char *m_command;
-    char *m_command2;
-    int ind = m_pi->which - 1;
-    // the order of input and output attenuators is switched between PIs
-    if (ind == 0) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].in_atten,
-           CommandData.roach_params[ind].out_atten);
-    }
-    if (ind == 1) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].out_atten,
-           CommandData.roach_params[ind].in_atten);
-    }
-    if (ind == 2) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].out_atten,
-           CommandData.roach_params[ind].in_atten);
-    }
-    if (ind == 3) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].in_atten,
-           CommandData.roach_params[ind].out_atten);
-    }
-    if (ind == 4) {
-        blast_tmp_sprintf(m_command, "sudo ./dual_RUDAT %g %g > rudat.log",
-           CommandData.roach_params[ind].out_atten,
-           CommandData.roach_params[ind].in_atten);
-    }
-    blast_tmp_sprintf(m_command2, "cat rudat.log");
-    pi_write_string(m_pi, (unsigned char*)m_command, strlen(m_command));
-    pi_write_string(m_pi, (unsigned char*)m_command2, strlen(m_command2));
-    if (pi_read_string(m_pi, PI_READ_NTRIES, PI_READ_TIMEOUT) < 0) {
-        blast_info("Error setting Atten... reboot Pi%d?", ind + 1);
-        return PI_READ_ERROR;
-    } else {
-        retval = 0;
-    }
-    return retval;
-}*/
 
 int set_attens_to_default(pi_state_t *m_pi)
 {
@@ -2852,10 +2801,8 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
         if (CommandData.roach[ind].do_sweeps) {
                 blast_tmp_sprintf(lo_command, "python /home/pi/device_control/set_lo.py %g",
                    m_sweep_freqs[i]/1.0e6);
-            m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
-            set_LO(&pi_state_table[ind], m_roach->lo_freq_req);
-            // setLO_oneshot(m_roach->which - 1, m_roach->lo_freq_req);
-            // usleep(SWEEP_TIMEOUT);
+            // m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
+            set_LO(&pi_state_table[ind], m_sweep_freqs[i]/1.0e6);
             if (roach_save_sweep_packet_binary(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
             }
@@ -6120,9 +6067,9 @@ void write_roach_channels_5hz(void)
         roach_udp[i].roach_valid_packet_count);
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
-        SET_SCALED_VALUE(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
+        SET_FLOAT(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
         // blast_info("LO FREQ READ = %g", roach_state_table[i].lo_freq_read);
-        SET_SCALED_VALUE(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
+        SET_FLOAT(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
         SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
     }
 }
@@ -6290,7 +6237,6 @@ void write_roach_channels_1hz(void)
         SET_UINT16(nKidsBadAddr[i], (roach_state_table[i].num_kids - n_good_kids));
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].state);
         SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
-        // TODO(laura/sam): Replace next write with a streaming status bitfield.
         SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
@@ -6299,8 +6245,8 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
         SET_SCALED_VALUE(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
         SET_SCALED_VALUE(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
-        SET_SCALED_VALUE(RoachAdcIRmsAddr[i], roach_state_table[i].adc_rms[0]);
-        SET_SCALED_VALUE(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
+        SET_FLOAT(RoachAdcIRmsAddr[i], roach_state_table[i].adc_rms[0]);
+        SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
     // Make Roach status field
         roach_status_field |= (roach_state_table[i].has_error & 0x0001);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_qdr_cal) << 1);
@@ -6328,7 +6274,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 23);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
-        SET_SCALED_VALUE(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq);
+        SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
         SET_UINT16(NFlagThreshFieldAddr[i], roach_state_table[i].nflag_thresh);
         SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);
         SET_UINT16(SKidsTlmRoach[i], CommandData.roach_tlm[i].kid);
