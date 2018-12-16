@@ -1433,6 +1433,11 @@ struct mcom mcommands[plugh + 2] = {
       {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
     }
   },
+  {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
+    {
+      {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3)", 0, 3, 'i', "NONE"}
+    }
+  },
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,

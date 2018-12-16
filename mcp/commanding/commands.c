@@ -54,6 +54,7 @@
 #include "relay_control.h"
 #include "bias_tone.h"
 #include "sip.h"
+#include "roach.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -2595,6 +2596,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
       }
       break;
+    case compress_roach_data:
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+          CommandData.data_type = ivalues[0];
+          CommandData.tar_all_data = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3211,6 +3218,9 @@ void InitCommandData()
     prev_crc = CommandData.checksum;
     CommandData.checksum = 0;
     is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
+
+    CommandData.tar_all_data = 0;
+    CommandData.data_type = 0;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
