@@ -497,7 +497,6 @@ void biphase_writer(void * arg)
                 // done sending, so revert to other linklist
                 if (ll->blocks[0].i >= ll->blocks[0].n) {
                     ll_array[BI0_TELEMETRY_INDEX] = ll_saved;
-                    if (ll_saved) strcpy(CommandData.bi0_linklist_name, ll_saved->name);
                     continue;
                 }
 
