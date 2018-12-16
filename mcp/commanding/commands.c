@@ -2595,10 +2595,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case compress_roach_data:
       if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
-          compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 1;
+          compress_all_data(ivalues[0]);
+          CommandData.tar_all_data = 0;
       }
       break;
+    case enable_cycle_checker:
+        if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+            CommandData.roach_run_cycle_checker = ivalues[0];
+        }
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3216,7 +3221,10 @@ void InitCommandData()
     CommandData.checksum = 0;
     is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
 
+    // Compress all Roach data (sweeps or timestreams)
     CommandData.tar_all_data = 0;
+    // Run Roach cycle checker thread
+    CommandData.roach_run_cycle_checker = 1;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
