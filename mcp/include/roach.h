@@ -63,7 +63,7 @@ static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "
 static const char udp_dest[32] = "239.1.1.234";
 static const char udp_dest_name[32] = "roach-udp-dest";
 int roach_sock_fd;
-int is_compressing_data;
+int fridge_cycle_warning;
 
 typedef struct {
     int32_t Ival;
@@ -144,10 +144,10 @@ typedef struct roach_state {
     bool sweep_fail;
     bool tone_write_fail;
     bool lamp_check_error;
-    bool fridge_cycle_warning;
     bool doing_full_loop;
     bool is_finding_kids;
     bool doing_find_kids_loop;
+    bool is_compressing_data;
     int pi_error_count;
 
     float adc_rms[2];
@@ -345,6 +345,7 @@ int roach_timestamp_init(roach_state_t *m_roach);
 float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, int i_roach, int i_kid);
 // Defined in roach_udp.c
 void roach_udp_networking_init(void);
+void start_cycle_checker();
 void write_roach_channels_244hz(void);
 void write_roach_channels_488hz(void);
 void shutdown_roaches(void);
