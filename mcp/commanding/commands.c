@@ -2043,18 +2043,15 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         }
         if (ivalues[0] == 0) { // pilot
           CommandData.pilot_bw = MIN(1000.0*1000.0/8.0, CommandData.pilot_bw); // max out bw
-					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 1) { // BI0
           CommandData.biphase_bw = MIN(1000.0*1000.0/8.0, CommandData.biphase_bw); // max out bw
-					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[BI0_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 2) { // highrate
-					snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else {
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;

@@ -493,7 +493,7 @@ void biphase_writer(void * arg)
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
-            if (!strcmp(CommandData.bi0_linklist_name, FILE_LINKLIST)) { // special file downlinking
+            if (!strcmp(ll->name, FILE_LINKLIST)) { // special file downlinking
                 // done sending, so revert to other linklist
                 if (ll->blocks[0].i >= ll->blocks[0].n) {
                     ll_array[BI0_TELEMETRY_INDEX] = ll_saved;
