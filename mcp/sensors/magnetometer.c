@@ -41,7 +41,7 @@
 #include "command_struct.h"
 
 #define MAGCOM "/dev/ttyMAG"
-#define MAG_ERR_THRESHOLD 200
+#define MAG_ERR_THRESHOLD 1000
 #define MAG_TIMEOUT_THRESHOLD 10
 #define MAG_RESET_THRESHOLD 5
 
@@ -344,6 +344,15 @@ void initialize_magnetometer()
     blast_startup("Initialized Magnetometer");
 }
 
+void power_cycle_mag()
+{
+          mag_state.reset_count = 0;
+          blast_info("This is where we would power cycle the mag.");
+//           CommandData.Relays.cycle_of_11 = 1;
+//           CommandData.Relays.cycled_of = 1;
+//           CommandData.Relays.of_relays[10] = 1;
+}
+
 void *monitor_magnetometer(void *m_arg)
 {
   static int has_warned = 0;
@@ -356,10 +365,8 @@ void *monitor_magnetometer(void *m_arg)
           }
           has_warned = 1;
           mag_state.reset_count = 0;
+          power_cycle_mag();
           // TODO(laura) this is mag_cycle. Functionalize this!
-          CommandData.Relays.cycle_of_11 = 1;
-          CommandData.Relays.cycled_of = 1;
-          CommandData.Relays.of_relays[10] = 1;
       }
       if (verbose_level) blast_info("Received a request to reset the magnetometer communications.");
       ph_stm_printf(mag_comm->stream, "\e");
@@ -369,7 +376,7 @@ void *monitor_magnetometer(void *m_arg)
       mag_state.reset_count++;
       if (verbose_level) blast_info("Magnetometer reset complete. reset counter = %d", mag_state.reset_count);
     }
-    usleep(1000);
+    usleep(10000);
   }
   return NULL;
 }
