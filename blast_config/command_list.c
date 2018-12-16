@@ -932,9 +932,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_stream_file), "Stream a file at bandwidth over given link", GR_TELEM, 2,
+  {COMMAND(request_stream_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"File block number", 0, 255, 'i', ""},
+      {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },

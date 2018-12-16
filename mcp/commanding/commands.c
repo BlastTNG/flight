@@ -2024,17 +2024,22 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
         send_file_to_linklist(linklist_find_by_name((char *) linklist_nt[ivalues[0]], linklist_array),
-                               "file_block", svalues[1]);
+                               "file_block", svalues[1], 1024);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
       break;
     case request_stream_file:
-      filename = svalues[1];
-			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
+      filename = svalues[3];
+			if (svalues[3][0] == '$') filename = getenv(svalues[3]+1); // hook for environment variable
 
       if (filename && send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-															              "file_block", filename)) {
+															              "file_block", filename, ivalues[1])) {
+        // a block fragment has been requested
+        if (ivalues[2] > 0) {
+          set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+                                            "file_block", ivalues[2]-1, ivalues[2]);
+        }
         if (ivalues[0] == 0) { // pilot
           CommandData.pilot_bw = MIN(1000.0*1000.0/8.0, CommandData.pilot_bw); // max out bw
 					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
@@ -2054,7 +2059,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           break;
         }
       } else {
-        blast_err("Could not resolve filename \"%s\"", svalues[1]);
+        blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
 		case set_pilot_oth:
