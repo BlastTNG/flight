@@ -846,7 +846,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_fc2", "Rt_therm18", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_gyro_2", "Rt_therm19", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_bal_sys", "Rt_therm20", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_ob_back_1", "Rt_therm21", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_cryostat_lid", "Rt_therm21", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_port", "Rt_therm22", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_m1_back_port", "Rt_therm23", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_ob_back_port", "Rt_therm24", LUT_DIR "Thermistor_RtoT.lut"),

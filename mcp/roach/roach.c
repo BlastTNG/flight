@@ -5961,7 +5961,7 @@ int init_roach(uint16_t ind)
     }
     if ((ind == 3)) {
         roach_state_table[ind].array = 250;
-        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].lo_centerfreq = 827.0e6;
         roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;

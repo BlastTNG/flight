@@ -337,6 +337,7 @@ enum multiCommand {
   set_default_tone_power,
   set_default_tone_power_all,
   set_attens_default,
+  set_find_kids_params,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

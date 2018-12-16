@@ -2588,6 +2588,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[0];
       }
       break;
+    case set_find_kids_params:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3642,13 +3649,30 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
+    // Set find kids default parameters
+    CommandData.roach_params[0].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[0].peak_threshold = 0.5; // dB
+    CommandData.roach_params[0].spacing_threshold = 100; // kHz
+
+    CommandData.roach_params[1].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[1].peak_threshold = 0.5; // dB
+    CommandData.roach_params[1].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[2].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[2].peak_threshold = 0.5; // dB
+    CommandData.roach_params[2].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[3].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[3].peak_threshold = 0.5; // dB
+    CommandData.roach_params[3].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[4].smoothing_scale = 5.0e3; // kHz
+    CommandData.roach_params[4].peak_threshold = 0.5; // dB
+    CommandData.roach_params[4].spacing_threshold = 80; // kHz
+
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.udp_roach[i].store_udp = 1;
         CommandData.udp_roach[i].publish_udp = 1;
-        // find_kids
-        CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
-        CommandData.roach_params[i].peak_threshold = 1; // dB
-        CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
         // these settings were determined on August 2, 2018 (Palestine)
         CommandData.roach_params[i].test_freq = 10.0125e6;
@@ -3662,7 +3686,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
-        CommandData.roach_params[i].dBm_per_tone = -60;
+        CommandData.roach_params[i].dBm_per_tone = -50;
         CommandData.roach_params[i].df_retune_threshold = 100000;
     }
 
