@@ -52,6 +52,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1897201546"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1200198471"
                     },
                     "_caption": "RETUNE_FLAG",
@@ -193,18 +205,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "HAS_TONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1897201546"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -419,13 +419,13 @@
                     "PObject": {
                         "_id": "565185256"
                     },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
+                    "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
+                    "_source": "IS_COMPRESSING_DATA_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -555,6 +555,18 @@
                     "_extremaID": "(P674313813)",
                     "_format": "",
                     "_source": "IS_SWEEPING_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1226095952"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -700,18 +712,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "HAS_TONES_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1226095952"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -923,12 +923,12 @@
                     "PObject": {
                         "_id": "130003399"
                     },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
+                    "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH2",
+                    "_source": "IS_COMPRESSING_DATA_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1058,6 +1058,18 @@
                     "_extremaID": "(P674313813)",
                     "_format": "",
                     "_source": "IS_SWEEPING_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "54445023"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1203,18 +1215,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "54445023"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1425,12 +1425,12 @@
                     "PObject": {
                         "_id": "1660081751"
                     },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
+                    "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH3",
+                    "_source": "IS_COMPRESSING_DATA_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1560,6 +1560,18 @@
                     "_extremaID": "(P674313813)",
                     "_format": "",
                     "_source": "IS_SWEEPING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1727334100"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1705,18 +1717,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "HAS_TONES_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1727334100"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1928,12 +1928,12 @@
                     "PObject": {
                         "_id": "1453603194"
                     },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
+                    "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH4",
+                    "_source": "IS_COMPRESSING_DATA_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -2063,6 +2063,18 @@
                     "_extremaID": "(P674313813)",
                     "_format": "",
                     "_source": "IS_SWEEPING_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2144253437"
+                    },
+                    "_caption": "CURRENT_N_TONES    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2208,18 +2220,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "HAS_TONES_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2144253437"
-                    },
-                    "_caption": "CURRENT_N_TONES    ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2430,12 +2430,12 @@
                     "PObject": {
                         "_id": "478211681"
                     },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
+                    "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH5",
+                    "_source": "IS_COMPRESSING_DATA_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2457,9 +2457,10 @@
                     "_caption": "DOING_FULL_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH4",
+                    "_source": "DOING_FULL_LOOP_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2481,7 +2482,8 @@
                     "_caption": "IS_FINDING_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_FINDING_KIDS_ROACH5",
                     "type": "PNDI"
@@ -2525,7 +2527,7 @@
             "_boxTitle": "TEMPERATURES",
             "_style": "(P2072147126)",
             "cellHeight": 11,
-            "cellWidth": 9,
+            "cellWidth": 10,
             "cellX": 1,
             "cellY": 1,
             "dataItems": [
@@ -2661,8 +2663,49 @@
                 }
             ],
             "geometryHeight": 187,
-            "geometryWidth": 153,
+            "geometryWidth": 171,
             "geometryX": 17,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "873898590"
+            },
+            "_boxTitle": "CRYO STATUS",
+            "_style": "(P119413738)",
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 19,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "70587161"
+                    },
+                    "_caption": "TR_HE3_FRIDGE      ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tr_he3_fridge",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1866068315"
+                    },
+                    "_caption": "Number",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 187,
+            "geometryWidth": 306,
+            "geometryX": 323,
             "geometryY": 17
         }
     ],
@@ -2753,12 +2796,12 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 13,
-            "cellY": 0,
+            "cellX": 43,
+            "cellY": 2,
             "geometryHeight": 119,
             "geometryWidth": 85,
-            "geometryX": 221,
-            "geometryY": 0
+            "geometryX": 731,
+            "geometryY": 34
         }
     ],
     "styles": [
@@ -2981,11 +3024,22 @@
             "_italic": false,
             "_linked": true,
             "_name": "CAUTION"
+        },
+        {
+            "PObject": {
+                "_id": "119413738"
+            },
+            "_bg": "#9c9c9c",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "CRYO_STATUS"
         }
     ],
     "webPort": "0",
     "windowCellHeight": 60,
-    "windowCellWidth": 96,
-    "windowHeight": 1028,
-    "windowWidth": 1632
+    "windowCellWidth": 54,
+    "windowHeight": 1020,
+    "windowWidth": 915
 }
