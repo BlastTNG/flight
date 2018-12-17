@@ -457,6 +457,12 @@ derived_tng_t derived_list[] = {
     BITWORD("MC_EC_CMD_FIX_EL", "mc_cmd_status", 2, 1),
     BITWORD("MC_EC_CMD_FIX_PIV", "mc_cmd_status", 3, 1),
     BITWORD("MC_EC_CMD_FIX_HWPR", "mc_cmd_status", 4, 1),
+    BITWORD("SLAVE_INDEX_EC_HWPR", "status_ec_hwpr", 0, 3),
+    BITWORD("COMMS_OK_EC_HWPR", "status_ec_hwpr", 3, 1),
+    BITWORD("SLAVE_ERROR_EC_HWPR", "status_ec_hwpr", 4, 1),
+    BITWORD("EC_UNKNOWN_EC_HWPR", "status_ec_hwpr", 5, 1),
+    BITWORD("IS_MC_EC_HWPR", "status_ec_hwpr", 6, 1),
+    BITWORD("IS_HWPR_EC_HWPR", "status_ec_hwpr", 7, 1),
 
 //  /* HWPR Control Info */
     BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 10, 1),
