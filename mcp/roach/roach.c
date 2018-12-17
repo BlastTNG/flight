@@ -3446,6 +3446,7 @@ int get_lamp_response(roach_state_t *m_roach)
     char *file_out;
     // chop the lamp
     int lamp_sec = (int)CommandData.roach_params[m_roach->which - 1].num_sec;
+    // blast_info("LAMP SEC ================ %d", lamp_sec);
     CommandData.Cryo.periodic_pulse = 1;
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = 200 * lamp_sec;
@@ -3479,7 +3480,6 @@ int get_lamp_response(roach_state_t *m_roach)
         blast_err("Error opening %s for writing", file_out);
         return retval;
     }
-    fclose(fd);
     for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
         m_roach->I_diff[chan] = m_roach->I_on[chan] - m_roach->I_off[chan];
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
@@ -4436,7 +4436,7 @@ static int roach_check_df_retune(roach_state_t *m_roach)
         } else {
             for (int chan = 0; chan < m_roach->num_kids; ++chan) {
                 if ((m_roach->df[chan] >
-                   CommandData.roach_params[m_roach->which - 1].df_retune_threshold)) {
+                    CommandData.roach_params[m_roach->which - 1].df_retune_threshold)) {
                     nflags++;
                     m_roach->out_of_range[chan] = 1;
                 } else {
@@ -5107,7 +5107,6 @@ int roach_init_gbe(roach_state_t *m_roach)
 int roach_config_sequence(roach_state_t *m_roach)
 {
     int retval;
-    reset_roach_flags(m_roach);
     // program firmware registers
     if ((roach_prog_registers(m_roach) < 0)) {
         retval = -1;
@@ -6060,6 +6059,8 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_vna_sweep = 0;
     roach_state_table[ind].has_targ_sweep = 0;
     roach_state_table[ind].in_flight_mode = 0;
+    roach_state_table[ind].has_firmware = 0;
+    roach_state_table[ind].firmware_upload_fail = 0;
     roach_state_table[ind].n_watchdog_fails = 0;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].go_flight_mode = 0;
@@ -6078,7 +6079,7 @@ int init_roach(uint16_t ind)
 // code, presumably because they have been changed.  Update and remove or reimplement the write calls.
 void write_roach_channels_5hz(void)
 {
-    int i, j;
+    int i;
     static int firsttime = 1;
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
@@ -6143,6 +6144,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *DfRetuneThreshAddr[NUM_ROACHES];
     static channel_t *PiStatusAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
     static channel_t *RoachStreamStateAddr[NUM_ROACHES];
@@ -6168,6 +6170,7 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachAdcQRmsAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
+    char channel_name_df_retune_thresh[128] = { 0 };
     char channel_name_flags_kids[128] = { 0 };
     char channel_name_kids_found[128] = { 0 };
     char channel_name_kids_good[128] = { 0 };
@@ -6199,6 +6202,8 @@ void write_roach_channels_1hz(void)
                         "flags_kids%04d_roach%d", j*16, i + 1);
                 FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+            snprintf(channel_name_df_retune_thresh, sizeof(channel_name_df_retune_thresh),
+                        "df_retune_thresh_roach%d", i + 1);
             snprintf(channel_name_kids_found, sizeof(channel_name_kids_found),
                         "nkids_found_roach%d", i + 1);
             snprintf(channel_name_kids_good, sizeof(channel_name_kids_good),
@@ -6252,6 +6257,7 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
             PiStatusAddr[i] = channels_find_by_name(channel_name_pi_state);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
             RoachStreamStateAddr[i] = channels_find_by_name(channel_name_roach_stream_state);
@@ -6298,6 +6304,7 @@ void write_roach_channels_1hz(void)
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].state);
         SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
         SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
+        SET_INT32(DfRetuneThreshAddr[i], CommandData.roach_params[i].df_retune_threshold);
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
