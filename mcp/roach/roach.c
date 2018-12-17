@@ -321,7 +321,6 @@ int roach_qdr_cal(roach_state_t *m_roach)
                                     m_roach->address, m_roach->qdr_log);
     blast_info("ROACH%d, Calibrating QDR RAM", m_roach->which);
     pyblast_system(m_cal_command);
-    sleep(5);
     FILE *fd = fopen(m_roach->qdr_log, "r");
     if (!fd) {
         blast_err("Error opening QDR log file");
@@ -2212,7 +2211,6 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     }
     blast_info("%s", py_command);
     pyblast_system(py_command);
-    sleep(3);
     FILE *log = fopen(m_roach->find_kids_log, "r");
     if (!log) {
         blast_strerror("Could not open %s for reading", m_roach->find_kids_log);
@@ -2489,7 +2487,6 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
             m_last_targ_path, m_roach->opt_tones_log);
     blast_info("%s", py_command);
     pyblast_system(py_command);
-    sleep(3);
     FILE *log = fopen(m_roach->opt_tones_log, "r");
     if (!log) {
         blast_strerror("Could not open %s for reading", m_roach->opt_tones_log);
@@ -3670,7 +3667,7 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     } else {
         ref_sweep = m_roach->last_targ_path;
     }
-    new_sweep = m_roach->last_targ_path;
+    // new_sweep = m_roach->last_targ_path;
     // do new sweep
     CommandData.roach[m_roach->which - 1].do_sweeps = 2;
     if (roach_targ_sweep(m_roach) < 0) {
@@ -3679,11 +3676,11 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
         return retval;
     }
     CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-    // new_sweep = m_roach->last_targ_path;
+    new_sweep = m_roach->last_targ_path;
     blast_tmp_sprintf(pycommand, "python %s %s %s %s", df_from_sweeps_script,
           ref_sweep, new_sweep, m_roach->sweep_root_path);
-    pyblast_system(pycommand);
     blast_info("%s", pycommand);
+    pyblast_system(pycommand);
     blast_tmp_sprintf(path_to_sweep_dfs, "%s/sweep_df.dat", m_roach->sweep_root_path);
     if ((roach_read_1D_file(m_roach, path_to_sweep_dfs, m_roach->sweep_df, m_roach->num_kids) < 0)) {
         return retval;
@@ -4767,7 +4764,6 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
     pyblast_system(upload_command);
-    sleep(3);
     int ntries = 10;
     int count = 0;
     int success_val;
