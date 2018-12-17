@@ -43,7 +43,7 @@
 #define MAGCOM "/dev/ttyMAG"
 #define MAG_ERR_THRESHOLD 1000
 #define MAG_TIMEOUT_THRESHOLD 10
-#define MAG_RESET_THRESHOLD 5
+#define MAG_RESET_THRESHOLD 50
 
 extern int16_t SouthIAm; // defined in mcp.c
 
@@ -70,7 +70,8 @@ typedef enum {
     MAG_INIT,
     MAG_READING,
     MAG_ERROR,
-    MAG_RESET
+    MAG_RESET,
+    MAG_POWERCYCLE
 } e_mag_status_t;
 
 typedef struct {
@@ -82,7 +83,7 @@ typedef struct {
 	uint16_t reset_count;
 } mag_state_t;
 
-mag_state_t mag_state = {0, 0, 0};
+mag_state_t mag_state = {0};
 
 static mag_state_cmd_t state_cmd[MAG_END] = {
 		[MAG_WE_BIN] = { "*99WE", "OK" },
@@ -110,7 +111,6 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
             mag_y_channel = channels_find_by_name("y_mag1_n");
             mag_z_channel = channels_find_by_name("z_mag1_n");
         } else { // We are South (fc2)
-            // blast_info("Guys we are South and writing to South's magnetometer.");
             mag_x_channel = channels_find_by_name("x_mag2_s");
             mag_y_channel = channels_find_by_name("y_mag2_s");
             mag_z_channel = channels_find_by_name("z_mag2_s");
@@ -131,7 +131,6 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
 {
     static int have_warned = 0;
     static int firsttime = 1;
-    static int counter = 0;
     char x2[2], x3[2], x4[2], x5[2];
     char y2[2], y3[2], y4[2], y5[2];
     char z2[2], z3[2], z4[2], z5[2];
@@ -170,11 +169,6 @@ static void mag_get_data(char *mag_buf, size_t len_mag_buf)
     if (ysn == '-') y *= -1;
     if (zsn == '-') z *= -1;
     mag_set_framedata(x, y, z);
-    if ((counter % 200) == 0) {
-        // blast_info("read %s", mag_buf);
-        // blast_info("x = %f, y = %f, z = %f", (double)x/15000.0, (double)y/15000.0, (double)z/15000.0);
-    }
-    counter++;
 }
 
 
@@ -221,6 +215,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
         if (verbose_level) blast_info("We timed out, count = %d , status = %d, Sending CMD '%s' to the MAG",
                                mag_state.timeout_count, mag_state.status, state_cmd[mag_state.cmd_state].cmd);
         // Try again!
+        mag_state.status = MAG_ERROR;
         ph_stm_printf(serial->stream, "%s\r", state_cmd[mag_state.cmd_state].cmd);
         ph_stm_flush(serial->stream);
         if (mag_state.timeout_count > MAG_TIMEOUT_THRESHOLD) {
@@ -230,9 +225,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
     }
 
     if (why & PH_IOMASK_READ) {
-#ifdef DEBUG_MAGNETOMETER
-    	if (verbose_level) blast_info("Reading mag data!");
-#endif
+        if (verbose_level) blast_info("Reading mag data!");
         // Read until we get a carriage return (indicating the end of the response)
         buf = ph_serial_read_record(serial, "\r", 1);
         if (!buf) return; // we didn't get anything
@@ -258,6 +251,7 @@ static void mag_process_data(ph_serial_t *serial, ph_iomask_t why, void *m_data)
                  */
                 if (!has_warned) blast_info("We didn't receive the appropriate response.  Resetting...");
                 has_warned = 1;
+                mag_state.status = MAG_RESET;
                 mag_state.cmd_state = 0;
                 ph_stm_printf(serial->stream, "\e\r");
                 ph_stm_flush(serial->stream);
@@ -311,10 +305,6 @@ void initialize_magnetometer()
 {
     static int has_warned = 0;
     static int firsttime = 1;
-    if (firsttime) {
-        mag_state.reset_count = 0;
-        firsttime = 0;
-    }
     if (mag_comm) ph_serial_free(mag_comm);
     mag_set_framedata(0, 0, 0);
 
@@ -341,16 +331,18 @@ void initialize_magnetometer()
     mag_state.err_count = 0;
     mag_state.timeout_count = 0;
     mag_state.status = MAG_INIT;
-    blast_startup("Initialized Magnetometer");
+    if (firsttime) {
+        blast_startup("Initialized Magnetometer");
+        firsttime = 0;
+    }
 }
 
-void power_cycle_mag()
+void reset_mag()
 {
-          mag_state.reset_count = 0;
-          blast_info("This is where we would power cycle the mag.");
-//           CommandData.Relays.cycle_of_11 = 1;
-//           CommandData.Relays.cycled_of = 1;
-//           CommandData.Relays.of_relays[10] = 1;
+    ph_stm_printf(mag_comm->stream, "\e");
+    ph_stm_flush(mag_comm->stream);
+    usleep(1000);
+    initialize_magnetometer();
 }
 
 void *monitor_magnetometer(void *m_arg)
@@ -360,23 +352,47 @@ void *monitor_magnetometer(void *m_arg)
     if (mag_state.status == MAG_RESET) {
       if (mag_state.reset_count >= MAG_RESET_THRESHOLD) {
           if (!has_warned) {
-              blast_info("We've tried resetting the magnetometer %d times.  Power cycling the magnetometers.",
-                     mag_state.reset_count);
+              blast_info("Still not able to connect to the magnetometers. reset_count = %d", mag_state.reset_count);
           }
           has_warned = 1;
           mag_state.reset_count = 0;
-          power_cycle_mag();
-          // TODO(laura) this is mag_cycle. Functionalize this!
       }
       if (verbose_level) blast_info("Received a request to reset the magnetometer communications.");
-      ph_stm_printf(mag_comm->stream, "\e");
-      ph_stm_flush(mag_comm->stream);
-      usleep(1000);
-      initialize_magnetometer();
+      reset_mag();
       mag_state.reset_count++;
       if (verbose_level) blast_info("Magnetometer reset complete. reset counter = %d", mag_state.reset_count);
     }
-    usleep(10000);
+    usleep(100000);
   }
   return NULL;
 }
+
+// Called in store_1hz_acs of acs.c
+void store_1hz_mag(void)
+{
+    static int firsttime = 1;
+    static channel_t *StatusMagAddr;
+    static channel_t *ErrCountMagAddr;
+    static channel_t *TimeoutCountMagAddr;
+    static channel_t *ResetCountMagAddr;
+
+    if (firsttime) {
+        if (SouthIAm) {
+            StatusMagAddr = channels_find_by_name("status_mag2_s");
+            ErrCountMagAddr = channels_find_by_name("err_count_mag2_s");
+            TimeoutCountMagAddr = channels_find_by_name("timeout_count_mag2_s");
+            ResetCountMagAddr = channels_find_by_name("reset_count_mag2_s");
+        } else {
+            StatusMagAddr = channels_find_by_name("status_mag1_n");
+            ErrCountMagAddr = channels_find_by_name("err_count_mag1_n");
+            TimeoutCountMagAddr = channels_find_by_name("timeout_count_mag1_n");
+            ResetCountMagAddr = channels_find_by_name("reset_count_mag1_n");
+        }
+        firsttime = 0;
+    }
+    SET_UINT8(StatusMagAddr, mag_state.status);
+    SET_UINT16(ErrCountMagAddr, mag_state.err_count);
+    SET_UINT16(TimeoutCountMagAddr, mag_state.timeout_count);
+    SET_UINT16(ResetCountMagAddr, mag_state.reset_count);
+}
+

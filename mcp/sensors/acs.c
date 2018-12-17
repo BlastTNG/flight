@@ -34,6 +34,7 @@
 #include <channels_tng.h>
 #include <command_struct.h>
 #include <ec_motors.h>
+#include <magnetometer.h>
 #include <motors.h>
 #include <mcp.h>
 #include <pointing_struct.h>
@@ -1568,4 +1569,6 @@ void store_1hz_acs(void)
     SET_SCALED_VALUE(altDGPSAddr, CSBFGPSData.altitude);
     SET_INT8(qualityDGPSAddr, CSBFGPSData.quality);
     SET_INT8(numSatDGPSAddr, CSBFGPSData.num_sat);
+    store_1hz_ethercat();
+    store_1hz_mag();
 }
