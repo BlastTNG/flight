@@ -104,7 +104,7 @@ static int motors_exit = false;
  * Ethercat driver status
  */
 
-static ec_device_state_t controller_state[N_MCs] = {0};
+static ec_device_state_t controller_state[N_MCs] = {{0}};
 /*
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
 */
@@ -1397,5 +1397,29 @@ int initialize_motors(void)
 
     motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
     return 0;
+}
+
+uint8_t make_ec_status_field(int m_index)
+{
+    uint8_t m_stats = 0;
+    // controller_state[i].is_mc;
+}
+// Called in store_1hz_acs of acs.c
+void store_1hz_ethercat(void)
+{
+    static int firsttime = 1;
+    static channel_t *NFoundECAddr;
+    static channel_t *SlaveCountECAddr;
+    static channel_t *StatusECAddr;
+
+    if (firsttime) {
+        NFoundECAddr = channels_find_by_name("n_found_ec");
+        SlaveCountECAddr = channels_find_by_name("slave_count_ec");
+        StatusECAddr = channels_find_by_name("status_ec");
+        firsttime = 0;
+    }
+    SET_UINT8(NFoundECAddr, ec_mcp_state.n_found);
+    SET_UINT8(SlaveCountECAddr, ec_mcp_state.slave_count);
+    SET_UINT8(SlaveCountECAddr, ec_mcp_state.status);
 }
 

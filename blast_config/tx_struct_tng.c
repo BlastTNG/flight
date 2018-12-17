@@ -1030,9 +1030,17 @@ channel_t channel_list[] =
     { "x_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "y_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "z_mag1_n",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "status_mag1_n",           SCALE(CONVERT_UNITY),   TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "err_count_mag1_n",        SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    { "timeout_count_mag1_n",    SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    { "reset_count_mag1_n",      SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "x_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "y_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
     { "z_mag2_s",                M_16MAG,              0,  TYPE_INT16, RATE_100HZ, U_NONE, 0 },
+    { "status_mag2_s",           SCALE(CONVERT_UNITY),   TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "err_count_mag2_s",        SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    { "timeout_count_mag2_s",    SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    { "reset_count_mag2_s",      SCALE(CONVERT_UNITY),   TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
     { "lat_dgps",                I2DEG,              0,  TYPE_INT16, RATE_1HZ, U_NONE, 0 },
     { "lon_dgps",                I2DEG,              0,  TYPE_INT16, RATE_1HZ, U_NONE, 0 },
     { "alt_dgps",                I2DEG,              0,  TYPE_INT16, RATE_1HZ, U_NONE, 0 },
@@ -1107,6 +1115,15 @@ channel_t channel_list[] =
     { "mc_piv_i_read",          1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, U_NONE, 0 },
     { "mc_rw_i_read",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, U_NONE, 0 },
     { "mc_el_i_read",           1.0/100.0,  0.0, TYPE_INT16, RATE_200HZ, U_NONE, 0 },
+
+    /** EtherCat Status Info */
+    { "n_found_ec",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "slave_count_ec",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "status_ec",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "status_ec_hwpr",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "status_ec_rw",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "status_ec_piv",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
+    { "status_ec_el",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_1HZ, U_NONE, 0 },
 
     /** Velocity control loop commanded P/I terms */
     { "g_p_el",               SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },

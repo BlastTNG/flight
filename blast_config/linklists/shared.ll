@@ -187,9 +187,17 @@ status_cal_lamp
 x_mag1_n
 y_mag1_n
 z_mag1_n
+status_mag1_n
+err_count_mag1_n
+timeout_count_mag1_n
+reset_count_mag1_n
 x_mag2_s
 y_mag2_s
 z_mag2_s
+status_mag2_s
+err_count_mag2_s
+timeout_count_mag2_s
+reset_count_mag2_s
 
 pos_lock
 state_lock
