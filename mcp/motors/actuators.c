@@ -977,7 +977,7 @@ static void SetLockState(int nic)
     }
 
     i_point = GETREADINDEX(point_index);
-    if (fabs(PointingData[i_point].enc_motor_el - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
+    if (fabs(ACSData.enc_motor_elev - LockPosition(CommandData.pointing_mode.Y)) <= 0.5) state |= LS_EL_OK;
 
     /* Assume the pin is out unless we're all the way closed */
     if (state & LS_CLOSED)
