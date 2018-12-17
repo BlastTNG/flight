@@ -159,7 +159,8 @@
                     "_caption": "RETUNE_FLAG",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH1",
                     "type": "PNDI"
@@ -462,28 +463,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1552669864"
+                        "_id": "705821707"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_66",
+                    "_source": "DF_RETUNE_THRESH_ROACH1",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "738931021"
+                        "_id": "1599365418"
                     },
-                    "_caption": "PPC_TEMP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_69",
+                    "_source": "NFLAG_THRESH_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1107726582"
+                    },
+                    "_caption": "N_KIDS_BAD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1918692319"
+                    },
+                    "_caption": "N_KIDS_GOOD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_good_roach1",
                     "type": "PNDI"
                 }
             ],
@@ -645,7 +668,8 @@
                     "_caption": "RETUNE_FLAG",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH2",
                     "type": "PNDI"
@@ -941,28 +965,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1647570562"
+                        "_id": "78865280"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_63",
+                    "_source": "DF_RETUNE_THRESH_ROACH2",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "976119414"
+                        "_id": "19659047"
                     },
-                    "_caption": "PPC_TEMP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_71",
+                    "_source": "NFLAG_THRESH_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1385211942"
+                    },
+                    "_caption": "N_KIDS_BAD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1309487109"
+                    },
+                    "_caption": "N_KIDS_GOOD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_good_roach2",
                     "type": "PNDI"
                 }
             ],
@@ -1126,7 +1172,8 @@
                     "_caption": "RETUNE_FLAG",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH3",
                     "type": "PNDI"
@@ -1428,28 +1475,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1308017719"
+                        "_id": "594152183"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_67",
+                    "_source": "DF_RETUNE_THRESH_ROACH3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "2111289441"
+                        "_id": "166955813"
                     },
-                    "_caption": "PPC_TEMP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_70",
+                    "_source": "NFLAG_THRESH_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "184733596"
+                    },
+                    "_caption": "N_KIDS_BAD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1706685020"
+                    },
+                    "_caption": "N_KIDS_GOOD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach3",
                     "type": "PNDI"
                 }
             ],
@@ -1587,7 +1656,8 @@
                     "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_DATA_ROACH4",
                     "type": "PNDI"
@@ -1612,7 +1682,8 @@
                     "_caption": "RETUNE_FLAG",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH4",
                     "type": "PNDI"
@@ -1910,28 +1981,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "86749966"
+                        "_id": "2057635744"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_65",
+                    "_source": "DF_RETUNE_THRESH_ROACH4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1696467153"
+                        "_id": "1896089527"
                     },
-                    "_caption": "PPC_TEMP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_68",
+                    "_source": "NFLAG_THRESH_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1938363462"
+                    },
+                    "_caption": "N_KIDS_BAD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1134264729"
+                    },
+                    "_caption": "N_KIDS_GOOD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_good_roach4",
                     "type": "PNDI"
                 }
             ],
@@ -2068,7 +2161,8 @@
                     "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_DATA_ROACH5",
                     "type": "PNDI"
@@ -2093,7 +2187,8 @@
                     "_caption": "RETUNE_FLAG",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH5",
                     "type": "PNDI"
@@ -2392,28 +2487,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "688376588"
+                        "_id": "1029316957"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_64",
+                    "_source": "DF_RETUNE_THRESH_ROACH5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1817998230"
+                        "_id": "344686132"
                     },
-                    "_caption": "PPC_TEMP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_72",
+                    "_source": "NFLAG_THRESH_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "34242048"
+                    },
+                    "_caption": "N_KIDS_BAD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1264518322"
+                    },
+                    "_caption": "N_KIDS_GOOD",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_good_roach5",
                     "type": "PNDI"
                 }
             ],
@@ -2429,7 +2546,7 @@
             "_boxTitle": "TEMPERATURES",
             "_style": "(P2072147126)",
             "cellHeight": 11,
-            "cellWidth": 10,
+            "cellWidth": 11,
             "cellX": 1,
             "cellY": 1,
             "dataItems": [
@@ -2565,7 +2682,7 @@
                 }
             ],
             "geometryHeight": 187,
-            "geometryWidth": 170,
+            "geometryWidth": 188,
             "geometryX": 17,
             "geometryY": 17
         },
@@ -2673,22 +2790,275 @@
                     "type": "PMDI"
                 },
                 {
-                    "PObject": {
-                        "_id": "261712330"
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "995519347"
+                        },
+                        "_map": {
+                            "0": "0[style=Streaming (P1553648692)]",
+                            "1": "1[style=Streaming (P1553648692)]",
+                            "2": "2[style=xhigh (P1489452979)]",
+                            "3": "3[style=xhigh (P1489452979)]",
+                            "4": "4[style=xhigh (P1489452979)]"
+                        }
                     },
-                    "_caption": "FRIDGE CYCLE STATE   ",
+                    "PObject": {
+                        "_id": "230899016"
+                    },
+                    "_caption": "FRIDGE_CYCLE_STATE",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "cycle_state",
-                    "type": "PNDI"
+                    "_source": "CYCLE_STATE",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 187,
             "geometryWidth": 306,
             "geometryX": 323,
             "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1986218169"
+            },
+            "_boxTitle": "TIMING",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 38,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "276801062"
+                    },
+                    "_caption": "R1_PPS_COUNT           ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1421239874"
+                    },
+                    "_caption": "R2_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "329798756"
+                    },
+                    "_caption": "R3_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1372633295"
+                    },
+                    "_caption": "R4_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "195387184"
+                    },
+                    "_caption": "R5_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1137578606"
+                    },
+                    "_caption": "R1_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1951459583"
+                    },
+                    "_caption": "R2_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1682493009"
+                    },
+                    "_caption": "R3_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "399330170"
+                    },
+                    "_caption": "R4_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "163309497"
+                    },
+                    "_caption": "R5_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH5",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 187,
+            "geometryWidth": 306,
+            "geometryX": 646,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1202071735"
+            },
+            "_boxTitle": "",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 19,
+            "cellX": 56,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1313789597"
+                    },
+                    "_caption": "R1_PACKET_COUNT    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1035809556"
+                    },
+                    "_caption": "R2_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "258721276"
+                    },
+                    "_caption": "R3_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "644250245"
+                    },
+                    "_caption": "R4_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1142712494"
+                    },
+                    "_caption": "R5_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "282853316"
+                    },
+                    "_caption": "Number",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 188,
+            "geometryWidth": 324,
+            "geometryX": 952,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1127546801"
+            },
+            "_boxTitle": "New Box",
+            "_style": "(P2072147126)",
+            "cellHeight": 3,
+            "cellWidth": 6,
+            "cellX": 79,
+            "cellY": 4,
+            "dataItems": [
+            ],
+            "geometryHeight": 51,
+            "geometryWidth": 94,
+            "geometryX": 1343,
+            "geometryY": 68
         }
     ],
     "extremas": [
