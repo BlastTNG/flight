@@ -302,6 +302,7 @@ enum multiCommand {
   find_kids_default,
   change_amp,
   change_freq,
+  set_cal_timeout,
   change_phase,
   auto_find_kids,
   offset_freq,

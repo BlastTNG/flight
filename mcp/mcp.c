@@ -239,7 +239,7 @@ static void mcp_200hz_routines(void)
     command_motors();
     write_motor_channels_200hz();
     // read_chopper();
-    periodic_cal_control();
+    // periodic_cal_control();
 
     share_data(RATE_200HZ);
     framing_publish_200hz();
