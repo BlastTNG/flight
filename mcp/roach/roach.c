@@ -4685,6 +4685,8 @@ int roach_halt_ppc(roach_state_t *m_roach)
     int status = send_rpc_katcl(m_roach->rpc_conn, 1000,
         KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?halt",
     KATCP_FLAG_LAST | KATCP_FLAG_STRING, "", NULL);
+    m_roach->has_firmware = 0;
+    m_roach->is_streaming = 0;
     return status;
 }
 
