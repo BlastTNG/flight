@@ -1337,7 +1337,17 @@ static int file_open_internal(fileentry_t *m_file) {
  * Returns a pointer to the string for the current disk mount point
  */
 const char * get_current_disk_mnt_point() {
+    if (!s_diskpool.current_disk) return NULL;
     return s_diskpool.current_disk->mnt_point;
+}
+
+int32_t get_current_disk_free_space() {
+    if (!s_diskpool.current_disk) return 0;
+    return s_diskpool.current_disk->free_space;
+}
+int16_t get_current_disk_index() {
+    if (!s_diskpool.current_disk) return 0;
+    return s_diskpool.current_disk->index;
 }
 
 /**
