@@ -2890,7 +2890,7 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     }
     fclose(fd);
     // Save last chop path
-    pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
+    // pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
     blast_info("ROACH%d, timestream saved", m_roach->which);
     CommandData.roach[m_roach->which - 1].get_timestream = 0;
     return 0;
@@ -2909,7 +2909,7 @@ int compress_data(roach_state_t *m_roach, int type)
         result = m_roach->last_vna_path;
         while (*result) {
             if (*result == '/') count++;
-            if (count > 4) break;
+            if (count > 3) break;
             result++;
         }
         path = result + 1;
@@ -2919,7 +2919,7 @@ int compress_data(roach_state_t *m_roach, int type)
         result = m_roach->last_targ_path;
         while (*result) {
             if (*result == '/') count++;
-            if (count > 4) break;
+            if (count > 3) break;
             result++;
         }
         path = result + 1;
@@ -2929,7 +2929,7 @@ int compress_data(roach_state_t *m_roach, int type)
         result = m_roach->last_iq_path;
         while (*result) {
             if (*result == '/') count++;
-            if (count > 4) break;
+            if (count > 3) break;
             result++;
         }
         path = result + 1;
@@ -3177,7 +3177,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
         fclose(fd);
     }
     // Save last timestream path
-    pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
+    // pyblast_system("python /home/fc1user/sam_builds/chop_list.py");
     blast_tmp_sprintf(var_name, "R%d_LAST_IQ_PATH", m_roach->which);
     setenv(var_name, path_to_iq_tarball[m_roach->which - 1], 1);
     compress_data(m_roach, IQ);
@@ -3630,7 +3630,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
     if ((status == SWEEP_SUCCESS)) {
         blast_info("ROACH%d, TARG sweep complete", m_roach->which);
         // creates file for downlinking sweep path to local machine
-        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
+        // pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
         // save params for delta f calculation
         save_ref_params(m_roach);
         if (recenter_lo(m_roach) < 0) {
@@ -5223,7 +5223,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
     status = roach_do_sweep(m_roach, VNA);
     if (status == SWEEP_SUCCESS) {
         blast_info("ROACH%d, VNA sweep complete", m_roach->which);
-        pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
+        // pyblast_system("python /home/fc1user/sam_builds/sweep_list.py vna");
         // write environment variable for sweep path
         blast_tmp_sprintf(var_name, "R%d_LAST_VNA_SWEEP", m_roach->which);
         // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
@@ -6077,7 +6077,7 @@ int init_roach(uint16_t ind)
     }
     if ((ind == 1)) {
         roach_state_table[ind].array = 250;
-        roach_state_table[ind].lo_centerfreq = 828.0e6;
+        roach_state_table[ind].lo_centerfreq = 827.0e6;
         roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
