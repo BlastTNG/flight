@@ -2798,6 +2798,9 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
                    m_sweep_freqs[i]/1.0e6);
             // m_roach->lo_freq_req = m_sweep_freqs[i]/1.0e6;
             set_LO(&pi_state_table[ind], m_sweep_freqs[i]/1.0e6);
+            if (m_roach->pi_error_count >= MAX_PI_ERRORS_REBOOT) {
+                return SWEEP_FAIL;
+            }
             if (roach_save_sweep_packet_binary(m_roach, (uint32_t)m_sweep_freqs[i], save_path, comb_len) < 0) {
                 return SWEEP_FAIL;
             }
@@ -3434,6 +3437,17 @@ void cal_lamp_off()
     CommandData.Cryo.periodic_pulse = 0;
 }
 
+// flash cal lamp, separation = length
+void cal_pulses(float nsec, int num_pulse)
+{
+    CommandData.Cryo.periodic_pulse = 1;
+    CommandData.Cryo.num_pulse = 1;
+    CommandData.Cryo.separation = (int)(200 * nsec);
+    CommandData.Cryo.length = (int)(200 * nsec);
+    periodic_cal_control();
+    usleep(500000);
+}
+
 // Compare diff in I and Q of each channel with
 // lamp on and lamp off. Store 2D array of diff values
 int get_lamp_response(roach_state_t *m_roach)
@@ -3442,14 +3456,9 @@ int get_lamp_response(roach_state_t *m_roach)
     int retval = -1;
     char *file_out;
     // chop the lamp
-    int lamp_sec = (int)CommandData.roach_params[m_roach->which - 1].num_sec;
+    float lamp_sec = CommandData.roach_params[m_roach->which - 1].num_sec;
     // blast_info("LAMP SEC ================ %d", lamp_sec);
-    CommandData.Cryo.periodic_pulse = 1;
-    CommandData.Cryo.num_pulse = 1;
-    CommandData.Cryo.separation = 200 * lamp_sec;
-    CommandData.Cryo.length = 200 * lamp_sec;
-    periodic_cal_control();
-    usleep(500000);
+    cal_pulses(lamp_sec, 1);
     // center_df(m_roach);
     // char *path_to_I_diffs;
     /*
@@ -4503,10 +4512,12 @@ static int roach_check_df_sweep_retune(roach_state_t *m_roach)
 }
 static int roach_check_lamp_retune(roach_state_t *m_roach)
 {
+    CommandData.cal_lamp_roach_hold = 1;
     int status;
     // check for ref params
     if ((status = m_roach->has_ref < 1)) {
         blast_err("ROACH%d, No ref params found", m_roach->which);
+        CommandData.cal_lamp_roach_hold = 0;
         return status;
     }
     blast_info("ROACH%d: Checking lamp response...", m_roach->which);
@@ -4517,6 +4528,7 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
             blast_err("ROACH%d: Failed to get lamp response...", m_roach->which);
             CommandData.roach[m_roach->which - 1].check_response = 0;
             m_roach->lamp_check_error = 1;
+            CommandData.cal_lamp_roach_hold = 0;
             return status;
         } else {
             for (int chan = 0; chan < m_roach->num_kids; ++chan) {
@@ -4536,6 +4548,7 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
         blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
     }
     CommandData.roach[m_roach->which - 1].check_response = 0;
+    CommandData.cal_lamp_roach_hold = 0;
     return 0;
 }
 
@@ -4554,6 +4567,24 @@ int roach_exec_retune(roach_state_t *m_roach)
         if ((status = roach_check_df_retune(m_roach)) < 0) {
             return status;
         }
+    }
+    return 0;
+}
+
+int roach_turnaround_check(roach_state_t *m_roach)
+{
+    int status = -1;
+    // flash cal lamp
+    CommandData.cal_lamp_roach_hold = 1;
+    // pulse cal lamp, 3 pulses of 0.5 sec duration
+    cal_pulses(1.0, 1);
+    // TARG/REFIT/TARG
+    CommandData.roach[m_roach->which - 1].refit_res_freqs = 1;
+    if ((status = roach_refit_freqs(m_roach, 1) < 0)) {
+        blast_err("ROACH%d: ERROR REFITTING FREQS", m_roach->which);
+        CommandData.roach[m_roach->which - 1].refit_res_freqs = 0;
+        return status;
+        CommandData.cal_lamp_roach_hold = 0;
     }
     return 0;
 }
@@ -5190,6 +5221,9 @@ int roach_vna_sweep(roach_state_t *m_roach)
 
 int roach_full_loop(roach_state_t *m_roach)
 {
+    if (CommandData.trigger_roach_tuning_check) {
+        CommandData.trigger_roach_tuning_check = 0;
+    }
     int status;
     int i = m_roach->which - 1;
     // Set Attens
@@ -5518,6 +5552,7 @@ void *roach_cmd_loop(void* ind)
         }
         if (roach_state_table[i].pi_error_count >= MAX_PI_ERRORS_REBOOT) {
             CommandData.roach[i].reboot_pi_now = 1;
+            roach_state_table[i].pi_error_count = 0;
         }
         if (CommandData.roach[i].reboot_pi_now == 1) {
             if (pi_reboot_now(&pi_state_table[i]) < 0) {
@@ -5634,9 +5669,12 @@ void *roach_cmd_loop(void* ind)
             // Check for scan retune flag
             if (CommandData.roach[i].auto_scan_retune) {
                 if (CommandData.trigger_roach_tuning_check) {
-                    if (roach_exec_retune(&roach_state_table[i]) < 0) {
+                    // CommandData.roach[i].do_check_retune = 3;
+                    CommandData.roach[i].do_full_loop = 1;
+                    /* if (roach_exec_retune(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: FAILED TO EXECUTE RETUNE", i + 1);
                     }
+                    CommandData.trigger_roach_tuning_check = 0;*/
                 }
             }
             // FULL LOOP
@@ -6148,7 +6186,7 @@ void write_roach_channels_1hz(void)
     static int firsttime = 1;
     static channel_t *DfRetuneThreshAddr[NUM_ROACHES];
     static channel_t *DfDiffRetuneThreshAddr[NUM_ROACHES];
-    static channel_t *PiStatusAddr[NUM_ROACHES];
+    static channel_t *PiErrorCountAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
     static channel_t *RoachStreamStateAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
@@ -6187,7 +6225,7 @@ void write_roach_channels_1hz(void)
     char channel_name_skids_tlm[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
     char channel_name_roach_stream_state[128] = { 0 };
-    char channel_name_pi_state[128] = { 0 };
+    char channel_name_pi_error_count[128] = { 0 };
     char channel_name_cmd_roach_par_smooth[128] = { 0 };
     char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
     char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
@@ -6230,10 +6268,8 @@ void write_roach_channels_1hz(void)
                         "skids_tlm_roach%d", i + 1);
             snprintf(channel_name_roach_state,
                     sizeof(channel_name_roach_state), "state_roach%d", i + 1);
-            snprintf(channel_name_pi_state,
-                    sizeof(channel_name_pi_state), "state_pi_roach%d", i + 1);
-            snprintf(channel_name_roach_state, sizeof(channel_name_roach_state),
-                    "state_roach%d", i + 1);
+            snprintf(channel_name_pi_error_count,
+                    sizeof(channel_name_pi_error_count), "pi_error_count_roach%d", i + 1);
             snprintf(channel_name_roach_stream_state, sizeof(channel_name_roach_stream_state),
                     "stream_state_roach%d", i + 1);
             snprintf(channel_name_cmd_roach_par_smooth,
@@ -6265,7 +6301,7 @@ void write_roach_channels_1hz(void)
                     i + 1);
             DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
             DfDiffRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_diff_retune_thresh);
-            PiStatusAddr[i] = channels_find_by_name(channel_name_pi_state);
+            PiErrorCountAddr[i] = channels_find_by_name(channel_name_pi_error_count);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
             RoachStreamStateAddr[i] = channels_find_by_name(channel_name_roach_stream_state);
             CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
@@ -6309,7 +6345,7 @@ void write_roach_channels_1hz(void)
         SET_UINT16(nKidsGoodAddr[i], n_good_kids);
         SET_UINT16(nKidsBadAddr[i], (roach_state_table[i].num_kids - n_good_kids));
         SET_UINT16(RoachStateAddr[i], roach_state_table[i].state);
-        SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
+        SET_UINT16(PiErrorCountAddr[i], roach_state_table[i].pi_error_count);
         SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
         SET_INT32(DfRetuneThreshAddr[i], CommandData.roach_params[i].df_retune_threshold);
         SET_INT32(DfDiffRetuneThreshAddr[i], CommandData.roach_params[i].df_diff_retune_threshold);
@@ -6342,7 +6378,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 16);
         roach_status_field |= (((uint32_t)roach_state_table[i].lamp_check_error) << 17);
         roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-        roach_status_field |= (((uint32_t)roach_state_table[i].pi_error_count) << 19);
+        roach_status_field |= (((uint32_t)fridge_cycle_warning) << 19);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);

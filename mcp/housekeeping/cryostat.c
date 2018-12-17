@@ -314,25 +314,31 @@ static void cal_pulse_monitor() {
     static int first_time = 1;
     static channel_t* counter_Addr;
     static channel_t* counter_length_Addr;
+
     if (first_time == 1) {
         counter_Addr = channels_find_by_name("time_to_pulse");
         counter_length_Addr = channels_find_by_name("pulse_timer");
+        first_time = 0;
     }
+    SET_SCALED_VALUE(counter_length_Addr, CommandData.Cryo.counter_max);
+    SET_SCALED_VALUE(counter_Addr, CommandData.Cryo.counter);
+
     if (CommandData.Cryo.counter == 0) {
         CommandData.Cryo.counter = CommandData.Cryo.counter_max;
-        SET_SCALED_VALUE(counter_length_Addr, CommandData.Cryo.counter_max);
-        SET_SCALED_VALUE(counter_Addr, CommandData.Cryo.counter);
-        if (99 < CommandData.Cryo.length < 301 && 0 < CommandData.Cryo.num_pulse < 11
-            && 99 < CommandData.Cryo.separation < 300) {
-            CommandData.Cryo.periodic_pulse = 1;
+        if ((CommandData.Cryo.length > 99) && (CommandData.Cryo.length < 301)
+           && (CommandData.Cryo.num_pulse > 0) && (CommandData.Cryo.num_pulse < 11)
+           && (CommandData.Cryo.separation > 99) && (CommandData.Cryo.separation < 300)) {
             blast_info("sending current cal pulse");
         } else {
             CommandData.Cryo.length = 100;
             CommandData.Cryo.num_pulse = 3;
             CommandData.Cryo.separation = 100;
-            CommandData.Cryo.periodic_pulse = 1;
             blast_info("rewriting default cal pulse");
         }
+
+        // only pulse the cal lamp if the roach is not doing it already
+        if (CommandData.cal_lamp_roach_hold) return;
+        CommandData.Cryo.periodic_pulse = 1;
     } else {
         CommandData.Cryo.counter--;
     }

@@ -3245,6 +3245,8 @@ void InitCommandData()
     CommandData.tar_all_data = 0;
     // Run Roach cycle checker thread
     CommandData.roach_run_cycle_checker = 1;
+    // Pause automatic cal lamp pulses
+    CommandData.cal_lamp_roach_hold = 0;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
