@@ -465,16 +465,14 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_HWPR_EC_HWPR", "status_ec_hwpr", 7, 1),
 
 //  /* HWPR Control Info */
-    BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 10, 1),
-    BITWORD("DONE_MOVE_HWPR", "stat_control_hwpr", 11, 1),
-    BITWORD("DONE_ALL_HWPR", "stat_control_hwpr", 12, 1),
-    BITWORD("DEAD_POT_HWPR", "stat_control_hwpr", 13, 1),
-    BITWORD("DO_CALPULSE_HWPR", "stat_control_hwpr", 14, 1),
-
     BITWORD("MOVE_TYPE_HWPR", "stat_control_hwpr", 0, 3),
     BITWORD("MOVE_STAT_HWPR", "stat_control_hwpr", 3, 3),
-    BITWORD("READ_BEFORE_HWPR", "stat_control_hwpr", 6, 2),
-    BITWORD("READ_AFTER_HWPR", "stat_control_hwpr", 8, 2),
+    BITWORD("FORK_ENGAGED_HWPR", "stat_control_hwpr", 6, 1),
+    BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 7, 1),
+    BITWORD("DONE_MOVE_HWPR", "stat_control_hwpr", 8, 1),
+    BITWORD("DONE_ALL_HWPR", "stat_control_hwpr", 9, 1),
+	// BITWORD("RESET_ENC_HWPR", "stat_control_hwpr", 10, 1),
+
 
     /* CRYO */
     /*BITWORD("","dio_heaters",0,1) */
@@ -863,7 +861,6 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_m1_front_bottom", "Rt_therm25", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_strut_3_far", "Rt_therm26", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_strut_2_mid", "Rt_therm27", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_dead", "Rt_therm28", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_m1_back_top", "Rt_therm29", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_if_lj_bob", "Rt_therm30", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_ob_front_port", "Rt_therm31", LUT_DIR "Thermistor_RtoT.lut"),
@@ -872,7 +869,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_el_motor", "Rt_therm34", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_gyro_1", "Rt_therm35", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_port_deck", "Rt_therm36", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_of_port_frame_leg", "Rt_therm37", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_m2_back", "Rt_therm37", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_m1_back_bottom", "Rt_therm38", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_sunshield_rear", "Rt_therm39", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_hdd_1", "Rt_therm40", LUT_DIR "Thermistor_RtoT.lut"),
@@ -885,7 +882,7 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_rw_motor", "Rt_therm47", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_gps", "Rt_therm48", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_power_box", "Rt_therm49", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_of_eth_switch", "Rt_therm50", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_m2_push_plate", "Rt_therm50", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_ob_front_starboard", "Rt_therm51", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_if_batt_starboard", "Rt_therm52", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_strut_3_near", "Rt_therm53", LUT_DIR "Thermistor_RtoT.lut"),
@@ -895,9 +892,6 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_ob_back_starboard", "Rt_therm57", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_hdd_2", "Rt_therm58", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_m2_act", "Rt_therm59", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_m2_back", "Rt_therm60", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_scoop", "Rt_therm61", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_m2_push_plate", "Rt_therm62", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_roach2_fpga", "Rt_therm63", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_roach5_fpga", "Rt_therm64", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_roach4_fpga", "Rt_therm65", LUT_DIR "Thermistor_RtoT.lut"),

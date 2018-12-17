@@ -78,7 +78,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
   {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
-  {COMMAND(force_pot_refill), "forcing a pumped pot refill", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
@@ -790,8 +789,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration",
     GR_HWPR, 2,
     {
-      {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
-      {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
+      {"Velocity (usteps/sec)", 5, 500000, 'l', "VEL_HWPR"},
+      {"Acceleration (usteps/sec^2", 1, 1000, 'i', "ACC_HWPR"},
     }
   },
   {COMMAND(hwpr_i), "set the waveplate rotator currents", GR_HWPR, 2,
@@ -803,13 +802,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
-      {"destination", 0, 80000, 'l', "ENC_HWPR"}
+      {"destination (deg on the hwp)", 0.0, 50.0, 'f', "ENC_HWPR"}
     }
   },
   {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
     GR_HWPR, 1,
     {
-      {"delta", -80000, 80000, 'l', "0"}
+      {"delta (deg on the hwp)", -50.0, 50.0, 'f', "0"}
     }
   },
   {COMMAND(hwpr_repeat),
@@ -823,41 +822,46 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_define_pos),
-    "define the four hwpr potentiometer positions to be used for scans",
-    GR_HWPR, 4,
+    "define the two hwpr potentiometer positions to be used for scans",
+    GR_HWPR, 2,
     {
-      {"Position 1", 0.0, 360.0, 'f', "POS0_HWPR"},
-      {"Position 2", 0.0, 360.0, 'f', "POS1_HWPR"},
-      {"Position 3", 0.0, 360.0, 'f', "POS2_HWPR"},
-      {"Position 4", 0.0, 360.0, 'f', "POS3_HWPR"}
+      {"Position 1 (deg)", 0.0, 360.0, 'd', "POS0_HWPR"},
+      {"Position 2 (deg)", 0.0, 360.0, 'd', "POS1_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_pot),
-    "Move wave plate rotator to commanded encoder value",
+    "DEPRECATED - Move wave plate rotator to commanded encoder value",
     GR_HWPR, 1,
     {
       {"Encoder Value ", 0.0, 360.0, 'f', "POT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_overshoot),
-    "set the overshoot in encoder counts for backwards hwpr moves",
+    "set the overshoot in degrees on the hwp for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
+      {"overshoot (-7 to 7 deg)", -7.0, 7.0, 'd', "OVERSHOOT_HWPR"},
+    }
+  },
+  {COMMAND(hwpr_set_backoff),
+    "set the backoff in degrees on the input shaft for backwards hwpr moves",
+    GR_HWPR, 1,
+    {
+      {"backoff (deg input shaft)", 0.0, 120.0, 'd', "BACKOFF_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_i),
-    "goto hwpr position (0-3)",
+    "goto hwpr position (0-1)",
     GR_HWPR, 1,
     {
-      {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
+      {"hwpr position", 0, 1, 'i', "I_POS_RQ_HWPR"},
     }
   },
   {COMMAND(hwpr_set_margin),
     "Set HWPR margin for determinting which indexed position we are at",
     GR_HWPR, 1,
     {
-      {"hwpr margin", 0, 64000, 'i', "NONE"},
+      {"hwpr margin (deg)", 0.0, 5.0, 'f', "NONE"},
     }
   },
   /* XY Stage */
@@ -1378,11 +1382,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
-    }
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+  }
   },
   {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
   {
@@ -1405,17 +1409,6 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
-  }
-  },
-  {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
-  {
-    {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
-  }
-  },
-  {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
-  {
-    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
@@ -1525,12 +1518,7 @@ struct mcom mcommands[plugh + 2] = {
   // },
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
-          {"Pulse Length (ms)", 5, 1000, 'i', "PULSE_CAL"}
-      }
-  },
-  {COMMAND(set_cal_timeout), "set length of calibration pulse timeout", GR_CRYO, 1,
-      {
-          {"Timeout length (s)", 5, 1000, 'i', "timeout"}
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
       }
   },
   {COMMAND(set_tcrit_fpa), "set ADC counts of fpa critical temp", GR_CRYO, 1,
@@ -1545,9 +1533,9 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
       {
-          {"Number of Pulses", 1, 15, 'i', "NUM_PULSE"},
-          {"Separation (in 5ms steps)", 2, 1000, 'i', "SEPARATION"},
-          {"Length of Pulse (in 5ms steps)", 2, 1000, 'i', "LENGTH_PULSE"},
+          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 2, 30000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
       }
   },
   {COMMAND(set_queue_execute), "command queue changed", GR_CRYO, 1,
