@@ -4,6 +4,10 @@ count_cmd_n             NONE 1
 count_cmd_s             NONE 1
 last_cmd_n              NONE 1
 last_cmd_s              NONE 1
+hdd_disk_space_n        NONE 1
+hdd_disk_space_s        NONE 1
+hdd_disk_index_n        NONE 1
+hdd_disk_index_s        NONE 1
 status_mcc              NONE 1
 
 # pointing
