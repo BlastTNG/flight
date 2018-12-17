@@ -1850,8 +1850,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hwpr_define_pos:
       CommandData.hwpr.pos[0] = rvalues[0];
       CommandData.hwpr.pos[1] = rvalues[1];
-      CommandData.hwpr.pos[2] = rvalues[2];
-      CommandData.hwpr.pos[3] = rvalues[3];
       break;
     case hwpr_goto_pot:
 	  // deprecated, no pot in TNG - PAW
@@ -1868,7 +1866,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.is_new = 1;
       break;
 	case hwpr_set_margin:
-	  CommandData.hwpr.margin = ivalues[0];
+	  CommandData.hwpr.margin = rvalues[0];
 	  break;
     case potvalve_set_vel:
       CommandData.Cryo.potvalve_vel = ivalues[0];
@@ -3789,13 +3787,11 @@ void InitCommandData()
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
-    CommandData.hwpr.pos[3] = 0.3418;
-    CommandData.hwpr.pos[2] = 0.2168;
     CommandData.hwpr.pos[1] = 0.2779;
     CommandData.hwpr.pos[0] = 0.4047;
 
-    CommandData.hwpr.overshoot = 300;
-	CommandData.hwpr.backoff = 90;
+    CommandData.hwpr.overshoot = 300.0;
+	CommandData.hwpr.backoff = 90.0;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;

@@ -86,7 +86,7 @@ static struct hwpr_control_struct
     // int dead_pot;
     int do_calpulse;
     int reset_enc;
-	int margin; // shouldn't be reset before each move
+	float margin; // shouldn't be reset before each move
 	int engaged; // shouldn't be reset before each move
 	int32_t engage_move;
 } hwpr_control;
@@ -137,8 +137,6 @@ void StoreHWPRBus(void)
   static channel_t* encHwprAddr;
   static channel_t* pos0HwprAddr;
   static channel_t* pos1HwprAddr;
-  static channel_t* pos2HwprAddr;
-  static channel_t* pos3HwprAddr;
   static channel_t* overshootHwprAddr;
   static channel_t* iposRqHwprAddr;
   static channel_t* iposHwprAddr;
@@ -151,6 +149,7 @@ void StoreHWPRBus(void)
   static channel_t* encErrHwprAddr;
   static channel_t* encRealHwprAddr;
   static channel_t* encRealTargHwprAddr;
+  static channel_t* marginHwprAddr;
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -164,8 +163,6 @@ void StoreHWPRBus(void)
     overshootHwprAddr = channels_find_by_name("overshoot_hwpr");
     pos0HwprAddr = channels_find_by_name("pos0_hwpr");
     pos1HwprAddr = channels_find_by_name("pos1_hwpr");
-    pos2HwprAddr = channels_find_by_name("pos2_hwpr");
-    pos3HwprAddr = channels_find_by_name("pos3_hwpr");
     iposRqHwprAddr = channels_find_by_name("i_pos_rq_hwpr");
     iposHwprAddr = channels_find_by_name("i_pos_hwpr");
     // readWaitHwprAddr = channels_find_by_name("read_wait_hwpr");
@@ -178,6 +175,7 @@ void StoreHWPRBus(void)
     // potErrHwprAddr = channels_find_by_name("pot_err_hwpr");
 	encRealHwprAddr = channels_find_by_name("enc_real_hwpr");
 	encRealTargHwprAddr = channels_find_by_name("enc_real_targ_hwpr");
+	marginHwprAddr = channels_find_by_name("margin_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -191,8 +189,6 @@ void StoreHWPRBus(void)
   SET_FLOAT(overshootHwprAddr, CommandData.hwpr.overshoot);
   SET_FLOAT(pos0HwprAddr, CommandData.hwpr.pos[0]);
   SET_FLOAT(pos1HwprAddr, CommandData.hwpr.pos[1]);
-  SET_FLOAT(pos2HwprAddr, CommandData.hwpr.pos[2]);
-  SET_FLOAT(pos3HwprAddr, CommandData.hwpr.pos[3]);
   SET_VALUE(iposRqHwprAddr, CommandData.hwpr.i_pos);
   // SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
   SET_VALUE(iposHwprAddr, hwpr_control.i_next_step);
@@ -204,6 +200,7 @@ void StoreHWPRBus(void)
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
   SET_FLOAT(encRealHwprAddr, hwpr_data.enc_real_hwpr);
   SET_FLOAT(encRealTargHwprAddr, hwpr_control.enc_real_targ);
+  SET_FLOAT(marginHwprAddr, hwpr_control.margin);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007;
@@ -478,6 +475,7 @@ void ControlHWPR(struct ezbus *bus)
 					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
     				    hwpr_enc_cur = hwpr_data.enc; // hwpr_enc_cur is in degrees
 						hwpr_control.enc_targ = CommandData.hwpr.target; // enc_targ in degrees
+						hwpr_control.enc_targ_real = CommandData.hwpr.target; // enc_targ_real in degrees
 						// rel_move in steps
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 					} else { // encoder is dead
@@ -524,6 +522,7 @@ void ControlHWPR(struct ezbus *bus)
 				}
 
 				hwpr_control.move_cur = moving;
+				// after engage move, go to main move
 				hwpr_control.do_main_move = 1;
 
             } else if (hwpr_control.move_cur == ready) {
