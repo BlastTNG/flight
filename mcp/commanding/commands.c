@@ -194,6 +194,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
             break;
+        case force_pot_refill:
+            CommandData.Cryo.pot_forced = 1;
+            break;
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
@@ -1969,6 +1972,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.separation = ivalues[1];
       CommandData.Cryo.length = ivalues[2];
       break;
+    case set_cal_timeout:
+      CommandData.Cryo.counter_max = ivalues[0];
+      CommandData.Cryo.counter = ivalues[0];
+      break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
       CommandData.Cryo.labjack = ivalues[0];
@@ -3379,16 +3386,14 @@ void InitCommandData()
     CommandData.Cryo.do_cal_pulse = 0;
     CommandData.Cryo.do_level_pulse = 0;
     CommandData.Cryo.sync = 0;
-    CommandData.Cryo.num_pulse = 1;
-    CommandData.Cryo.separation = 1;
-    CommandData.Cryo.periodic_pulse = 0;
-    CommandData.Cryo.length = 1;
+    CommandData.Cryo.counter = 1200;
+    CommandData.Cryo.counter_max = 1200;
 
     /* Added for triggering cal lamp */
-    CommandData.Cryo.num_pulse = 1;
-    CommandData.Cryo.separation = 1;
+    CommandData.Cryo.num_pulse = 3;
+    CommandData.Cryo.separation = 100;
     CommandData.Cryo.periodic_pulse = 0;
-    CommandData.Cryo.length = 1;
+    CommandData.Cryo.length = 100;
     /* relays should always be set to zero when starting MCP */
     /* relays */
     CommandData.Relays.cycle_of_1 = 0;
@@ -3500,6 +3505,7 @@ void InitCommandData()
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.watchdog_allowed = 0;
+    CommandData.Cryo.pot_forced = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
     CommandData.Relays.update_video = 0;

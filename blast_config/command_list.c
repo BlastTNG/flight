@@ -78,6 +78,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
   {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
+  {COMMAND(force_pot_refill), "forcing a pumped pot refill", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
@@ -1524,7 +1525,12 @@ struct mcom mcommands[plugh + 2] = {
   // },
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
-          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
+          {"Pulse Length (ms)", 5, 1000, 'i', "PULSE_CAL"}
+      }
+  },
+  {COMMAND(set_cal_timeout), "set length of calibration pulse timeout", GR_CRYO, 1,
+      {
+          {"Timeout length (s)", 5, 1000, 'i', "timeout"}
       }
   },
   {COMMAND(set_tcrit_fpa), "set ADC counts of fpa critical temp", GR_CRYO, 1,
@@ -1539,9 +1545,9 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
       {
-          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
-          {"Separation (in 5ms steps)", 2, 30000, 'i', "SEPARATION"},
-          {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
+          {"Number of Pulses", 1, 15, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 2, 1000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 2, 1000, 'i', "LENGTH_PULSE"},
       }
   },
   {COMMAND(set_queue_execute), "command queue changed", GR_CRYO, 1,
