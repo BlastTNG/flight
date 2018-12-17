@@ -1568,20 +1568,6 @@ struct mcom mcommands[plugh + 2] = {
   //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
   //   }
   // },
-  {COMMAND(actuators_set_used), "Set each stepper as used (1) or not used (0)", GR_CRYO | GR_HWPR | GR_BAL | GR_ACT, 10,
-    {
-      {"Actuator #0", 0, 1, 'i', "NONE"},
-      {"Actuator #1", 0, 1, 'i', "NONE"},
-      {"Actuator #2", 0, 1, 'i', "NONE"},
-      {"Balance", 0, 1, 'i', "NONE"},
-      {"Lockpin", 0, 1, 'i', "NONE"},
-      {"HWPR", 0, 1, 'i', "NONE"},
-      {"Shutter", 0, 1, 'i', "NONE"},
-      {"Pumped Pot Valve", 0, 1, 'i', "NONE"},
-      {"Pump Valve", 0, 1, 'i', "NONE"},
-      {"Fill Valve", 0, 1, 'i', "NONE"},
-    }
-  },
 
   {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
     {
