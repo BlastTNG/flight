@@ -321,6 +321,7 @@ int roach_qdr_cal(roach_state_t *m_roach)
                                     m_roach->address, m_roach->qdr_log);
     blast_info("ROACH%d, Calibrating QDR RAM", m_roach->which);
     pyblast_system(m_cal_command);
+    sleep(5);
     FILE *fd = fopen(m_roach->qdr_log, "r");
     if (!fd) {
         blast_err("Error opening QDR log file");
@@ -4766,6 +4767,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
     pyblast_system(upload_command);
+    sleep(5);
     int ntries = 10;
     int count = 0;
     int success_val;
