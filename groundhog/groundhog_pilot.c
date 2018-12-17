@@ -38,7 +38,7 @@ void udp_receive(void *arg) {
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
-  uint32_t blk_size = 0;
+  int32_t blk_size = 0;
   uint32_t transmit_size = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
