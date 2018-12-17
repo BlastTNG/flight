@@ -1402,7 +1402,14 @@ int initialize_motors(void)
 uint8_t make_ec_status_field(int m_index)
 {
     uint8_t m_stats = 0;
-    // controller_state[i].is_mc;
+    if ((m_index < 1) || (m_index >= N_MCs)) return m_stats;
+    m_stats |= (controller_state[m_index].index & 0x07);
+    m_stats |= ((controller_state[m_index].comms_ok & 0x01) >> 3);
+    m_stats |= ((controller_state[m_index].slave_error & 0x01) >> 4);
+    m_stats |= ((controller_state[m_index].ec_unknown & 0x01) >> 5);
+    m_stats |= ((controller_state[m_index].is_mc & 0x01) >> 6);
+    m_stats |= ((controller_state[m_index].is_hwp & 0x01) >> 7);
+    return m_stats;
 }
 // Called in store_1hz_acs of acs.c
 void store_1hz_ethercat(void)
@@ -1411,15 +1418,27 @@ void store_1hz_ethercat(void)
     static channel_t *NFoundECAddr;
     static channel_t *SlaveCountECAddr;
     static channel_t *StatusECAddr;
+    static channel_t *StatusECHWPRAddr;
+    static channel_t *StatusECRWAddr;
+    static channel_t *StatusECElAddr;
+    static channel_t *StatusECPivAddr;
 
     if (firsttime) {
         NFoundECAddr = channels_find_by_name("n_found_ec");
         SlaveCountECAddr = channels_find_by_name("slave_count_ec");
         StatusECAddr = channels_find_by_name("status_ec");
+        StatusECHWPRAddr = channels_find_by_name("status_ec_hwpr");
+        StatusECRWAddr = channels_find_by_name("status_ec_rw");
+        StatusECElAddr = channels_find_by_name("status_ec_el");
+        StatusECPivAddr = channels_find_by_name("status_ec_piv");
         firsttime = 0;
     }
     SET_UINT8(NFoundECAddr, ec_mcp_state.n_found);
     SET_UINT8(SlaveCountECAddr, ec_mcp_state.slave_count);
-    SET_UINT8(SlaveCountECAddr, ec_mcp_state.status);
+    SET_UINT8(StatusECAddr, ec_mcp_state.status);
+    if (hwp_index) SET_UINT8(StatusECHWPRAddr, make_ec_status_field(hwp_index));
+    if (rw_index) SET_UINT8(StatusECRWAddr, make_ec_status_field(rw_index));
+    if (el_index) SET_UINT8(StatusECElAddr, make_ec_status_field(el_index));
+    if (piv_index) SET_UINT8(StatusECPivAddr, make_ec_status_field(piv_index));
 }
 
