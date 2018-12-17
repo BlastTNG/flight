@@ -659,10 +659,12 @@ struct CommandDataStruct {
   struct {
     int vel, acc, hold_i, move_i;
     int force_repoll;
-    int mode, is_new, target;
-    int n_pos, repeats, step_wait, step_size, overshoot;
-	int backoff;
-    double pos[4];
+    int mode, is_new;
+	float target;
+    int n_pos, repeats, step_wait, step_size;
+	float overshoot;
+	float backoff;
+    double pos[2];
     int i_pos;
     int no_step;
     int use_pot;

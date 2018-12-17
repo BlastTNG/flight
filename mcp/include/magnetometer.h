@@ -57,4 +57,6 @@ void *monitor_magnetometer(void *m_arg);
 
 #define FAST_MAG
 
+void store_1hz_mag(void);
+
 #endif /* INCLUDE_MAGNETOMETER_H_ */

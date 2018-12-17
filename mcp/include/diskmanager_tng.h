@@ -65,6 +65,9 @@ int file_access(const char*, int);
 int file_stat(const char*, struct stat*);
 int file_copy(const char*, const char*);
 int file_get_path(fileentry_t*, char*);
+int32_t get_current_disk_free_space();
+const char * get_current_disk_mnt_point();
+int16_t get_current_disk_index();
 
 int check_disk_init();
 

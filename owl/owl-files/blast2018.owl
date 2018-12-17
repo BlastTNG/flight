@@ -1255,8 +1255,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 58,
-    "windowCellWidth": 71,
-    "windowHeight": 986,
-    "windowWidth": 1207
+    "windowCellHeight": 64,
+    "windowCellWidth": 90,
+    "windowHeight": 1104,
+    "windowWidth": 1528
 }

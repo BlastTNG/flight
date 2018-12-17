@@ -49,6 +49,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "chrgctrl.h"
+#include "diskmanager_tng.h"
 
 #include "motors.h"
 
@@ -117,6 +118,9 @@ void WriteAux(void)
     static channel_t* last_cmd_addr[2];
     static channel_t* count_cmd_addr[2];
 
+    static channel_t* hddDiskSpaceAddr[2];
+    static channel_t* hddDiskIndexAddr[2];
+
     const char which_flc[2] = {'n', 's'};
 
 #define ASSIGN_BOTH_FLC(_ch, _str) \
@@ -172,6 +176,9 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(df_flc_addr, "df_flc");
         ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
+
+        ASSIGN_BOTH_FLC(hddDiskSpaceAddr, "hdd_disk_space");
+        ASSIGN_BOTH_FLC(hddDiskIndexAddr, "hdd_disk_index");
     }
 
     gettimeofday(&tv, &tz);
@@ -188,6 +195,8 @@ void WriteAux(void)
     SET_VALUE(df_flc_addr[0], computer_sensors.disk_free);
     SET_VALUE(partsSchedAddr, CommandData.parts_sched & 0xffffff);
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
+    SET_VALUE(hddDiskSpaceAddr[0], get_current_disk_free_space());
+    SET_VALUE(hddDiskIndexAddr[0], get_current_disk_index());
     i_point = GETREADINDEX(point_index);
 
 #ifdef BOLOTEST
