@@ -91,6 +91,7 @@ static struct hwpr_control_struct
 	int engaged; // shouldn't be reset before each move
 	int32_t engage_move;
 	int32_t disengage_move;
+	float overshoot;
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -219,7 +220,8 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.do_overshoot) & 0x0001) << 7;
   hwpr_stat_field |= ((hwpr_control.done_move) & 0x0001) << 8;
   hwpr_stat_field |= ((hwpr_control.done_all) & 0x0001) << 9;
-  // hwpr_stat_field |= ((hwpr_control.reset_enc) & 0x0001) << 10;
+  hwpr_stat_field |= ((hwpr_control.do_disengage) & 0x0001) << 10;
+  hwpr_stat_field |= ((hwpr_control.do_main_move) & 0x0001) << 11;
 
   SET_VALUE(statControlHwprAddr, hwpr_stat_field);
 }
@@ -303,7 +305,7 @@ void ControlHWPR(struct ezbus *bus)
     }
 
     if (CommandData.hwpr.mode == HWPR_PANIC) {
-        bputs(info, "Panic");
+        blast_info("HWPR Panic mode, stopping and then sleeping");
         EZBus_Stop(bus, hwpr_data.addr);
         CommandData.hwpr.mode = HWPR_SLEEP;
     } else if (CommandData.hwpr.is_new) {
@@ -326,28 +328,16 @@ void ControlHWPR(struct ezbus *bus)
             ResetControlHWPR();
             hwpr_control.go = ind;
             hwpr_control.move_cur = not_yet;
-            // hwpr_control.read_before = no; // yes;
-            // hwpr_control.read_after = no; // yes;
-            // hwpr_control.reset_enc = 0; // 1;
-            // if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
         } else if (CommandData.hwpr.mode == HWPR_GOTO_POT) {
             blast_info("ControlHWPR: Attempting to go to HWPR potentiometer position %f", CommandData.hwpr.pot_targ);
             ResetControlHWPR();
             hwpr_control.go = pot;
             hwpr_control.move_cur = not_yet;
-            // hwpr_control.read_before = yes;
-            // hwpr_control.read_after = yes;
-            // hwpr_control.reset_enc = 1;
-            // if (CommandData.Cryo.calib_pulse == repeat) hwpr_control.do_calpulse = yes;
         } else if ((CommandData.hwpr.mode == HWPR_STEP)) {
             if (!CommandData.hwpr.no_step) {
                 ResetControlHWPR();
                 hwpr_control.go = step;
                 hwpr_control.move_cur = not_yet;
-                // hwpr_control.read_before = yes;
-                // hwpr_control.read_after = yes;
-                // hwpr_control.do_calpulse = yes;
-                // hwpr_control.reset_enc = 1;
             } else {
                 blast_warn("Cannot step half wave plate.  hwpr_step_off is set.");
                 CommandData.hwpr.mode = HWPR_SLEEP;
@@ -491,6 +481,7 @@ void ControlHWPR(struct ezbus *bus)
 
 						// engage fork before main move
 						hwpr_control.move_cur = engage;
+
 					} else { // encoder is dead
 						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
 						CommandData.hwpr.mode = HWPR_SLEEP;
@@ -514,6 +505,7 @@ void ControlHWPR(struct ezbus *bus)
                     	hwpr_control.rel_move = (int32_t)((hwpr_control.enc_targ - hwpr_enc_cur) * DEG_TO_STEPS);
 						// engage fork before main move
 						hwpr_control.move_cur = engage;
+
 					} else { // encoder is dead
 						blast_warn("The HWPR encoder is dead! State = %d: Not moving", enc_state);
 						CommandData.hwpr.mode = HWPR_SLEEP;
@@ -536,9 +528,10 @@ void ControlHWPR(struct ezbus *bus)
 				 * the opposite direction from the overshoot)
 				 */
 
-				if (CommandData.hwpr.overshoot > 0) {
+				hwpr_control.overshoot = CommandData.hwpr.overshoot;
+				if (hwpr_control.overshoot > 0) {
 					hwpr_control.engage_move = (-1) * (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
-				} else if (CommandData.hwpr.overshoot < 0) {
+				} else if (hwpr_control.overshoot < 0) {
 					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 				}
 
@@ -553,13 +546,13 @@ void ControlHWPR(struct ezbus *bus)
             	/* Is the hwpr move negative?
                 If so check if we need to add an overshoot for backlash correction */
 		    	if (hwpr_control.rel_move < 0) {
-                	if (CommandData.hwpr.overshoot < 0) {
-                    	hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
+                	if (hwpr_control.overshoot < 0) {
+                    	hwpr_control.rel_move += (int32_t)(hwpr_control.overshoot * DEG_TO_STEPS);
                     	hwpr_control.do_overshoot = 1;
 						// change target to include the overshoot
                 		hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 #ifdef DEBUG_HWPR
-                    	blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
+                    	blast_info("ControlHWPR: Overshoot of %i requested.", hwpr_control.overshoot);
 #endif
                 	}
                 }
@@ -567,13 +560,13 @@ void ControlHWPR(struct ezbus *bus)
 				/* Or if the move is positive and the overshoot is also positive, then we overshoot
 				 */
 				if (hwpr_control.rel_move > 0) {
-                	if (CommandData.hwpr.overshoot > 0) {
-                    	hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);
+                	if (hwpr_control.overshoot > 0) {
+                    	hwpr_control.rel_move += (int32_t)(hwpr_control.overshoot * DEG_TO_STEPS);
                     	hwpr_control.do_overshoot = 1;
 						// change target to include the overshoot
                 		hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
 #ifdef DEBUG_HWPR
-                    	blast_info("ControlHWPR: Overshoot of %i requested.", CommandData.hwpr.overshoot);
+                    	blast_info("ControlHWPR: Overshoot of %i requested.", hwpr_control.overshoot);
 #endif
                 	}
                 }
@@ -641,9 +634,11 @@ void ControlHWPR(struct ezbus *bus)
             	blast_info("At the overshoot.");
 #endif
 				hwpr_enc_cur = hwpr_data.enc;
-				// Using enc_real_targ to calculate this move because that is where we actually
-				// want to leave the hwp, and wasn't modified by the overshoot
-				hwpr_control.rel_move = (int32_t)((hwpr_control.enc_real_targ - hwpr_enc_cur) * DEG_TO_STEPS);
+				/* Undo overshoot: moves are precise, so just use the opposite of whatever the overshoot is
+				 * We know that this goes in the correct direction, because if we got here we did the overshoot
+				 * according to its sign already
+				 */
+				hwpr_control.rel_move = (-1) * (int32_t)(hwpr_control.overshoot * DEG_TO_STEPS);
 #ifdef DEBUG_HWPR
                 blast_info("ControlHWPR: Sending overshoot move command of %i", hwpr_control.rel_move);
 		    	blast_info("ControlHWPR: Currently at %f, target is %f", hwpr_data.enc, hwpr_control.enc_targ);
@@ -653,8 +648,8 @@ void ControlHWPR(struct ezbus *bus)
                 hwpr_control.stop_cnt = 0;
                 hwpr_control.do_overshoot = 0;
 				hwpr_control.do_disengage = 1; // after overshoot correction, we should backoff
-				// I don't think this is necessary, we already calculated rel_move from hwpr_data.enc and enc_targ PAW 2018/11/25
-                // hwpr_control.enc_targ = hwpr_data.enc + hwpr_control.rel_move / DEG_TO_STEPS;
+				// So we can keep track of move accuracy, calculate enc_targ for this step
+                hwpr_control.enc_targ = hwpr_enc_cur + hwpr_control.rel_move / DEG_TO_STEPS;
 
 			} else if (hwpr_control.move_cur == needs_backoff) {
 #ifdef DEBUG_HWPR
@@ -667,9 +662,9 @@ void ControlHWPR(struct ezbus *bus)
 				 *
 				 * Again, check the sign of overshoot, disengage should be in the same direction
 				 */
-				if (CommandData.hwpr.overshoot < 0) {
+				if (hwpr_control.overshoot < 0) {
 					hwpr_control.disengage_move = (-1) * (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
-				} else if (CommandData.hwpr.overshoot > 0) {
+				} else if (hwpr_control.overshoot > 0) {
 					hwpr_control.disengage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 				}
 
@@ -737,7 +732,7 @@ void ControlHWPR(struct ezbus *bus)
             hwpr_wait_cnt = CommandData.hwpr.step_wait;
             if (overshooting) {
                 overshooting = 0;
-                EZBus_RelMove(bus, hwpr_data.addr, CommandData.hwpr.overshoot);
+                EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.overshoot);
             } else if (CommandData.hwpr.repeats-- <= 0) { // done stepping
                 CommandData.hwpr.mode = HWPR_SLEEP;
             } else {    // step the HWPR
@@ -749,7 +744,7 @@ void ControlHWPR(struct ezbus *bus)
                     overshooting = 1;
                     EZBus_RelMove(
                             bus, hwpr_data.addr,
-                            -CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1) - CommandData.hwpr.overshoot);
+                            -CommandData.hwpr.step_size * (CommandData.hwpr.n_pos - 1) - hwpr_control.overshoot);
                 }
             }
         } else if (hwpr_wait_cnt == 10) {

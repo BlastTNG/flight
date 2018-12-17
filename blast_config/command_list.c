@@ -802,13 +802,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
-      {"destination (deg on the hwp)", 0.0, 50.0, 'f', "ENC_HWPR"}
+      {"destination (deg on the hwp, limits: 14547-14592)", 14547.0, 14592.0, 'f', "ENC_HWPR"}
     }
   },
-  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
-    GR_HWPR, 1,
+  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position (slightly dangerous)",
+    GR_HWPR | CONFIRM, 1,
     {
-      {"delta (deg on the hwp)", -50.0, 50.0, 'f', "0"}
+      {"delta (deg on the hwp, limits: -45 to 45)", -45.0, 45.0, 'f', "0"}
     }
   },
   {COMMAND(hwpr_repeat),

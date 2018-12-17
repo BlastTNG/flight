@@ -3260,6 +3260,7 @@ void InitCommandData()
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
 
+	CommandData.hwpr.mode = HWPR_PANIC; // So the hwp doesn't move on startup
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
@@ -3810,8 +3811,14 @@ void InitCommandData()
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
-    CommandData.hwpr.pos[1] = 0.2779;
-    CommandData.hwpr.pos[0] = 0.4047;
+    // CommandData.hwpr.pos[1] = 0.2779;
+    // CommandData.hwpr.pos[0] = 0.4047;
+
+	/* hwpr positions for ethercat encoder 
+	 * entered by Paul Dec 18, 2018
+	 */
+	CommandData.hwpr.pos[0] = 14547.0;
+	CommandData.hwpr.pos[1] = 14592.0;
 
 	/* default overshoot is 
 	 * 0.9 for teeth chatter
