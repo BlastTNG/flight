@@ -1858,8 +1858,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_set_overshoot:
-      CommandData.hwpr.overshoot = ivalues[0];
+      CommandData.hwpr.overshoot = rvalues[0];
       break;
+	case hwpr_set_backoff:
+	  CommandData.hwpr.backoff = rvalues[0];
+	  break;
     case hwpr_goto_i:
       CommandData.hwpr.i_pos = ivalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_I;
@@ -3790,7 +3793,7 @@ void InitCommandData()
     CommandData.hwpr.pos[1] = 0.2779;
     CommandData.hwpr.pos[0] = 0.4047;
 
-    CommandData.hwpr.overshoot = 300.0;
+    CommandData.hwpr.overshoot = 5.0;
 	CommandData.hwpr.backoff = 90.0;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;

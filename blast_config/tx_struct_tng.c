@@ -837,8 +837,6 @@ channel_t channel_list[] =
     { "g_pt_el",              SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "pos0_hwpr",            SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "pos1_hwpr",            SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
-    { "pos2_hwpr",            SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
-    { "pos3_hwpr",            SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "i_pos_rq_hwpr",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rate_highrate",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_RATE, 0 },
     { "rate_biphase",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_RATE, 0 },

@@ -195,7 +195,7 @@ enum multiCommand {
   // t_gyro_gain,
   timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
-  hwpr_set_overshoot,
+  hwpr_set_overshoot, hwpr_set_backoff,
   // jfet_set,
   hwpr_vel,          hwpr_i,
   gyro_off,	         quad,

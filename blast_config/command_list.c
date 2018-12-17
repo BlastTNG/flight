@@ -822,13 +822,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_define_pos),
-    "define the four hwpr potentiometer positions to be used for scans",
-    GR_HWPR, 4,
+    "define the two hwpr potentiometer positions to be used for scans",
+    GR_HWPR, 2,
     {
-      {"Position 1", 0.0, 360.0, 'f', "POS0_HWPR"},
-      {"Position 2", 0.0, 360.0, 'f', "POS1_HWPR"},
-      {"Position 3", 0.0, 360.0, 'f', "POS2_HWPR"},
-      {"Position 4", 0.0, 360.0, 'f', "POS3_HWPR"}
+      {"Position 1 (deg)", 0.0, 360.0, 'd', "POS0_HWPR"},
+      {"Position 2 (deg)", 0.0, 360.0, 'd', "POS1_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_pot),
@@ -839,10 +837,17 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_set_overshoot),
-    "set the overshoot in encoder counts for backwards hwpr moves",
+    "set the overshoot in degrees on the hwp for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
+      {"overshoot (deg)", 0.0, , 'd', "OVERSHOOT_HWPR"},
+    }
+  },
+  {COMMAND(hwpr_set_backoff),
+    "set the backoff in degrees on the input shaft for backwards hwpr moves",
+    GR_HWPR, 1,
+    {
+      {"backoff (deg input shaft)", 0.0, 150.0, 'd', "BACKOFF_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_i),
@@ -856,7 +861,7 @@ struct mcom mcommands[plugh + 2] = {
     "Set HWPR margin for determinting which indexed position we are at",
     GR_HWPR, 1,
     {
-      {"hwpr margin (deg)", 0, 5, 'i', "NONE"},
+      {"hwpr margin (deg)", 0.0, 5.0, 'f', "NONE"},
     }
   },
   /* XY Stage */
