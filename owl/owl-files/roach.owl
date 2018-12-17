@@ -25,7 +25,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -48,6 +48,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "10146870"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -536,7 +549,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -555,9 +568,23 @@
                     "_caption": "HAS_FIRMWARE",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1891021159"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -643,7 +670,8 @@
                     "_caption": "IS_COMPRESSING_DATA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_DATA_ROACH2",
                     "type": "PNDI"
@@ -741,7 +769,8 @@
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH2",
                     "type": "PNDI"
@@ -753,7 +782,8 @@
                     "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_TONES_ROACH2",
                     "type": "PNDI"
@@ -898,7 +928,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH2",
                     "type": "PNDI"
@@ -910,7 +941,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH2",
                     "type": "PNDI"
@@ -922,7 +954,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH2",
                     "type": "PNDI"
@@ -934,7 +967,8 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH2",
                     "type": "PNDI"
@@ -946,7 +980,8 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH2",
                     "type": "PNDI"
@@ -1038,7 +1073,7 @@
                             "1": "Connected",
                             "2": "Programmed[style=No style (P634346397)]",
                             "3": "Configured[style=No style (P1211964964)]",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -1061,6 +1096,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2090638718"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1418,7 +1466,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH3",
                     "type": "PNDI"
@@ -1443,7 +1492,8 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH3",
                     "type": "PNDI"
@@ -1548,7 +1598,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -1571,6 +1621,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1726743147"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1865,7 +1928,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH4",
                     "type": "PNDI"
@@ -1914,7 +1978,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1926,7 +1991,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1938,7 +2004,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1950,7 +2017,8 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH4",
                     "type": "PNDI"
@@ -1962,7 +2030,8 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH4",
                     "type": "PNDI"
@@ -2054,7 +2123,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -2077,6 +2146,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1796931251"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2370,7 +2452,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH5",
                     "type": "PNDI"
@@ -2419,7 +2502,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2431,7 +2515,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2443,7 +2528,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2468,7 +2554,8 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH5",
                     "type": "PNDI"
@@ -2722,43 +2809,61 @@
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1147366623"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "1866068315"
+                        "_id": "1988153368"
                     },
                     "_caption": "250 LNA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
                     "_source": "status_250_LNA",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
-                    "PObject": {
-                        "_id": "969237173"
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "301560346"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
                     },
-                    "_caption": "350_LNA",
+                    "PObject": {
+                        "_id": "451389859"
+                    },
+                    "_caption": "350 LNA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
                     "_source": "status_350_LNA",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1475410991"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "1284006124"
+                        "_id": "552471752"
                     },
                     "_caption": "500 LNA",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
                     "_source": "status_500_LNA",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -2771,23 +2876,6 @@
                     "_format": "",
                     "_source": "CAL_LAMP_READ",
                     "type": "PNDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "10667086"
-                        },
-                        "_map": {
-                        }
-                    },
-                    "PObject": {
-                        "_id": "1296366747"
-                    },
-                    "_caption": "CAL_LAMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "CAL_LAMP_READ",
-                    "type": "PMDI"
                 },
                 {
                     "PMDI": {
@@ -3029,12 +3117,60 @@
                     "PObject": {
                         "_id": "282853316"
                     },
-                    "_caption": "Number",
+                    "_caption": "R1_CTIME",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
-                    "_source": "",
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "378022934"
+                    },
+                    "_caption": "R2_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "412135914"
+                    },
+                    "_caption": "R3_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "58589169"
+                    },
+                    "_caption": "R4_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1424082049"
+                    },
+                    "_caption": "R5_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH5",
                     "type": "PNDI"
                 }
             ],
@@ -3047,18 +3183,86 @@
             "PObject": {
                 "_id": "1127546801"
             },
-            "_boxTitle": "New Box",
+            "_boxTitle": "POINTING",
             "_style": "(P2072147126)",
-            "cellHeight": 3,
-            "cellWidth": 6,
-            "cellX": 79,
-            "cellY": 4,
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 76,
+            "cellY": 1,
             "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "72053412"
+                    },
+                    "_caption": "ELEVATION       ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "EL",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "156300593"
+                    },
+                    "_caption": "AZIMUTH",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "661517964"
+                        },
+                        "_map": {
+                            "11": "OPEN[style=Streaming (P1553648692)]",
+                            "3": "Intermediate[style=xhigh (P1489452979)]",
+                            "7": "CLOSED[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "445995722"
+                    },
+                    "_caption": "SHUTTER",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LIMS_SHUTTER",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "302617301"
+                    },
+                    "_caption": "RA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "RA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "895102626"
+                    },
+                    "_caption": "DEC",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "DEC",
+                    "type": "PNDI"
+                }
             ],
-            "geometryHeight": 51,
-            "geometryWidth": 94,
-            "geometryX": 1343,
-            "geometryY": 68
+            "geometryHeight": 188,
+            "geometryWidth": 307,
+            "geometryX": 1292,
+            "geometryY": 17
         }
     ],
     "extremas": [
@@ -3427,7 +3631,7 @@
     ],
     "webPort": "0",
     "windowCellHeight": 60,
-    "windowCellWidth": 108,
+    "windowCellWidth": 106,
     "windowHeight": 1020,
-    "windowWidth": 1836
+    "windowWidth": 1810
 }
