@@ -38,43 +38,43 @@
                 },
                 {
                     "PMDI": {
-                       "PObject": {
+                        "PObject": {
                             "_id": "423137424"
-                       },
+                        },
                         "_map": {
-                           "11": "OPEN[style=Important Green (P1055304642)]",
+                            "11": "OPEN[style=Important Green (P1055304642)]",
                             "3": "Intermediate",
-                           "7": "CLOSED[style=Important (P564751211)]"
+                            "7": "CLOSED[style=Important (P564751211)]"
                         }
-                   },
-                    "PObject": {
-                       "_id": "2030093021"
                     },
-                   "_caption": "Pump-line Valve ",
-                    "_captionStyle": "(P1653115880)",
-                   "_defaultStyle": "noStyle",
+                    "PObject": {
+                        "_id": "2030093021"
+                    },
+                    "_caption": "Pump-line Valve ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
                     "_source": "LIMS_PUMPVALVE",
-                   "type": "PMDI"
-                },  
+                    "type": "PMDI"
+                },
                 {
                     "PMDI": {
-                       "PObject": {
+                        "PObject": {
                             "_id": "1333828410"
-                       },  
+                        },
                         "_map": {
-                           "11": "OPEN[style=Important (P564751211)]",
+                            "11": "OPEN[style=Important (P564751211)]",
                             "3": "Intermediate[style=No style (P1911761389)]",
-                           "7": "CLOSED[style=Important Green (P1055304642)]"
-                        }   
-                   },  
+                            "7": "CLOSED[style=Important Green (P1055304642)]"
+                        }
+                    },
                     "PObject": {
-                       "_id": "2123354357"
-                    },  
-                   "_caption": "Boiloff Valve",
+                        "_id": "2123354357"
+                    },
+                    "_caption": "Boiloff Valve",
                     "_captionStyle": "noStyle",
-                   "_defaultStyle": "(P1653115880)",
+                    "_defaultStyle": "noStyle",
                     "_source": "LIMS_FILLVALVE",
-                   "type": "PMDI"
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -864,292 +864,6 @@
         },
         {
             "PObject": {
-                "_id": "646961831"
-            },
-            "_boxTitle": "ROACH1",
-            "_style": "(P2072147126)",
-            "cellHeight": 22,
-            "cellWidth": 13,
-            "cellX": 53,
-            "cellY": 26,
-            "dataItems": [
-                {
-                    "PObject": {
-                        "_id": "1613957099"
-                    },
-                    "_caption": "STATE   ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "886484695"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1309330332"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "46527931"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "652184679"
-                    },
-                    "_caption": "ATTEN_OUT",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "ATTEN_OUT_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "663925491"
-                    },
-                    "_caption": "ATTEN_IN",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "ATTEN_IN_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "238651862"
-                    },
-                    "_caption": "HAS_QDR_CAL",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_QDR_CAL_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1602809510"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1897201546"
-                    },
-                    "_caption": "CURRENT_N_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "431511806"
-                    },
-                    "_caption": "HAS_VNA_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_VNA_TONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "392554042"
-                    },
-                    "_caption": "HAS_TARG_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_TARG_TONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "872323209"
-                    },
-                    "_caption": "HAS_VNA_SWEEP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_VNA_SWEEP_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "335020110"
-                    },
-                    "_caption": "HAS_TARG_SWEEP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_TARG_SWEEP_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1686416232"
-                    },
-                    "_caption": "ADC_RMS_I",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "ADCI_RMS_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "852660760"
-                    },
-                    "_caption": "ADC_RMS_Q",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "ADCQ_RMS_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "671720691"
-                    },
-                    "_caption": "HAS_REF",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_REF_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1966224558"
-                    },
-                    "_caption": "HAS_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_ERROR_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1354663628"
-                    },
-                    "_caption": "LO_CENTER_FREQ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "LO_CENTER_FREQ_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1552669864"
-                    },
-                    "_caption": "FPGA_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "thermistor_66",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "738931021"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "thermistor_69",
-                    "type": "PNDI"
-                }
-            ],
-            "geometryHeight": 374,
-            "geometryWidth": 221,
-            "geometryX": 901,
-            "geometryY": 442
-        },
-        {
-            "PObject": {
-                "_id": "284824448"
-            },
-            "_boxTitle": "ROACH1",
-            "_style": "(P2072147126)",
-            "cellHeight": 20,
-            "cellWidth": 12,
-            "cellX": 37,
-            "cellY": 40,
-            "dataItems": [
-                {
-                    "PObject": {
-                        "_id": "1164987922"
-                    },
-                    "_caption": "STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH1",
-                    "type": "PNDI"
-                }
-            ],
-            "geometryHeight": 340,
-            "geometryWidth": 204,
-            "geometryX": 629,
-            "geometryY": 680
-        },
-        {
-            "PObject": {
                 "_id": "1386403626"
             },
             "_boxTitle": "Sun Sensors",
@@ -1307,7 +1021,7 @@
                 }
             ],
             "geometryHeight": 238,
-            "geometryWidth": 290,
+            "geometryWidth": 289,
             "geometryX": 578,
             "geometryY": 442
         }
@@ -1317,15 +1031,15 @@
             "PObject": {
                 "_id": "1555967448"
             },
-            "_high": 1,
-            "_low": -1,
+            "_high": "1",
+            "_low": "-1",
             "_name": "closed",
             "_shigh": "(P1913941534)",
             "_slow": "(P2017040817)",
             "_sxhigh": "(P956360347)",
             "_sxlow": "(P949614266)",
-            "_xhigh": 2,
-            "_xlow": -2
+            "_xhigh": "2",
+            "_xlow": "-2"
         }
     ],
     "linkNames": [
@@ -1540,9 +1254,9 @@
             "_name": "shutter"
         }
     ],
-    "webPort": "\u0000",
+    "webPort": "0",
     "windowCellHeight": 58,
     "windowCellWidth": 71,
-    "windowHeight": 1000,
-    "windowWidth": 1215
+    "windowHeight": 986,
+    "windowWidth": 1207
 }
