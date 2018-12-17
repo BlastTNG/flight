@@ -930,8 +930,14 @@ channel_t channel_list[] =
     { "df_flc_s",             1.0 / 250.0,      0.0, TYPE_UINT16, RATE_5HZ, U_GB, 0 },
     { "df_flc_n",             1.0 / 250.0,      0.0, TYPE_UINT16, RATE_5HZ, U_GB, 0 },
 
-    { "time_flc_s",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
-    { "time_flc_n",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
+    { "time_flc_s",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "time_flc_n",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+
+    { "hdd_disk_space_s",     SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+    { "hdd_disk_space_n",     SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_1HZ, U_NONE, 0 },
+
+    { "hdd_disk_index_s",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
+    { "hdd_disk_index_n",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
 
     { "timeout_s",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "timeout_n",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
