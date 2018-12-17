@@ -300,14 +300,14 @@ void ControlHWPR(struct ezbus *bus)
         CommandData.hwpr.mode = HWPR_SLEEP;
     } else if (CommandData.hwpr.is_new) {
         if ((CommandData.hwpr.mode == HWPR_GOTO)) {
-            blast_info("HWPR GOTO: %d", CommandData.hwpr.target); // DEBUG PCA
+            blast_info("HWPR GOTO: %f", CommandData.hwpr.target); // DEBUG PCA
             ResetControlHWPR();
 			hwpr_control.go = goto_abs;
 			hwpr_control.move_cur = not_yet;
 	    	// EZBus_Goto(bus, hwpr_data.addr, CommandData.hwpr.target);
             // CommandData.hwpr.mode = HWPR_SLEEP;
         } else if ((CommandData.hwpr.mode == HWPR_GOTO_REL)) {
-            blast_info("HWPR GOTO REL: %d", CommandData.hwpr.target); // DEBUG PCA
+            blast_info("HWPR GOTO REL: %f", CommandData.hwpr.target); // DEBUG PCA
             ResetControlHWPR();
 			hwpr_control.go = goto_rel;
 			hwpr_control.move_cur = not_yet;
@@ -519,14 +519,11 @@ void ControlHWPR(struct ezbus *bus)
 				/* We should be ready, but we need to re-engage the fork at the cold end
 				 * CommandData.hwpr.backoff is in deg on the input shaft, so we divide by 100 to find
 				 * degrees on the hwpr (which is what DEG_TO_STEPS assumes)
+				 *
+				 * Engage is always positive because final move always positive and disengage is negative
 				 */
-				if (hwpr_control.rel_move < 0) {
-					hwpr_control.engage_move = -(int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
-					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
-				} else if (hwpr_control.rel_move > 0) {
-					hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
-					EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
-				}
+				hwpr_control.engage_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
+				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.engage_move);
 
 				hwpr_control.move_cur = moving;
 				// after engage move, go to main move
@@ -644,7 +641,7 @@ void ControlHWPR(struct ezbus *bus)
 #endif
 				hwpr_data.enc_real_hwpr = hwpr_data.enc;
 				// again, backoff in deg on input shaft, so divide by 100
-				hwpr_control.rel_move = (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
+				hwpr_control.rel_move = (-1) * (int32_t) (CommandData.hwpr.backoff * DEG_TO_STEPS / 100);
 				EZBus_RelMove(bus, hwpr_data.addr, hwpr_control.rel_move);
 				hwpr_control.move_cur = moving;
 				hwpr_control.stop_cnt = 0;
