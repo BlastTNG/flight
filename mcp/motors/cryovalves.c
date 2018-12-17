@@ -39,6 +39,12 @@
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+/* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
+ * it is working so we will leave it for now. If this were changed, the thresholds
+ * and maybe the 750000 (microsteps to overshoot closed) would need to be changed
+ * and we don't have time to do that before flight
+ * -PAW and PCA 2018/12/16
+ */
 #define POTVALVE_STEP_ADC_RATIO 318.75
 
 typedef enum {
@@ -179,34 +185,6 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		valve_data[index].goal = 0;
 	}
 }
-
-/* Was going to write a new function to replace much of the work in DoPotValve, but not anymore
- *
- * void ControlPotValve(struct ezbus* bus)
-{
-	static int firsttime = 1;
-	static int tight_flag;
-	int new_goal;
-
-	if (firsttime) {
-		tight_flag = 1;
-		new_goal = 0;
-		firsttime = 0;
-	}
-	// update prev_goal and goal, test to see if they are the same
-	potvalve_data.prev_goal = potvalve_data.goal;
-	potvalve_data.goal = CommandData.Cryo.potvalve_goal;
-	new_goal = !(potvalve_data.prev_goal == potvalve_data.goal);
-
-	GetPotValvePos(bus);
-	SetValveState(tight_flag);
-
-	if (potvalve_data.state != potvalve_data.goal) {
-		potvalve_data.do_move = 1;
-	} else {
-		potvalve_data.do_move = 0;
-	}
-} */
 
 void DoPotValve(struct ezbus* bus)
 {

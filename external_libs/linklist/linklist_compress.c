@@ -128,7 +128,33 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
 	*accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
-int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
+void set_block_indices_linklist(linklist_t * ll, char * blockname, unsigned int i, unsigned int n)
+{
+  if (!ll) {
+    linklist_err("Invalid linklist given");
+    return;
+  }
+
+  int j = 0;
+  block_t * theblock = NULL;
+
+  // find the block
+  for (j = 0; j < ll->num_blocks; j++) {
+    if (strcmp(blockname, ll->blocks[j].name) == 0) {
+      theblock = &ll->blocks[j];
+      break;
+    }
+  }
+  if (!theblock) {
+    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    return;
+  }
+
+  theblock->i = i;
+  theblock->n = n;
+}
+
+int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, int id)
 {
   if (!ll) {
     linklist_err("Invalid linklist given");
@@ -169,15 +195,22 @@ int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename)
   filesize = ftell(fp);
   fseek(fp, 0L, SEEK_SET);
 
+  unsigned int n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  if (n_total > UINT16_MAX) {
+    linklist_err("File \"%s\" is too large\n", filename);
+    return 0;
+  }
+
   // set the block variables to initialize transfer
   theblock->fp = fp;
   strcpy(theblock->filename, filename); // copy the filename stripped of path
   theblock->i = 0;
   theblock->num = 0;
-  theblock->n = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  theblock->n = n_total;
   theblock->curr_size = filesize;
 
-  theblock->id++; // increment the block counter
+  // theblock->id++; // increment the block counter
+  theblock->id = id;
 
   linklist_info("File \"%s\" sent to linklist \"%s\"\n", filename, ll->name);
 
@@ -502,12 +535,12 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     if (block->fp) { // there is a file instead of data in a buffer
       *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
 			// special hook for tar'ed files
-			if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
-					(strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
-				*(uint16_t *) buffer |= TARGZ_FILE_MASK; 
-			} else {
+			// if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
+			//	 	 (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
+			// 	 *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
+			// } else {
 				*(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
-			}
+			//}
 
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
@@ -561,23 +594,14 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      linklist_info("Closing \"%s\"\n\n", block->filename);
+      linklist_info("Completed \"%s\"\n\n", block->filename);
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
     }
     return;
   }
-
-  if (n == 0) { // special case of block fragment
-    linklist_info("Received block fragment %d (size %d)\n",i,totalsize);
-    
-    totalsize = blksize;
-    block->num = 1;
-    
-    i = 0;
-    n = 0;
-  } else if (i >= n) { 
+  if (i >= n) { 
     linklist_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
@@ -605,7 +629,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
         linklist_err("Cannot open file %s", block->filename);
         return;
       }
-      linklist_info("New file \"%s\" opened\n", block->filename);
+      linklist_info("File \"%s\" opened\n", block->filename);
     }
     fseek(block->fp, loc, SEEK_SET); 
     int retval = 0;
@@ -633,7 +657,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  // linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
 
 }
 

@@ -54,6 +54,7 @@
 #include "relay_control.h"
 #include "bias_tone.h"
 #include "sip.h"
+#include "roach.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -2028,37 +2029,39 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       while (linklist_nt[i]) i++;
       if (ivalues[0] < i) {
         send_file_to_linklist(linklist_find_by_name((char *) linklist_nt[ivalues[0]], linklist_array),
-                               "file_block", svalues[1]);
+                               "file_block", svalues[1], 1024);
       } else {
         blast_err("Index %d is outside linklist name range", ivalues[0]);
       }
       break;
     case request_stream_file:
-      filename = svalues[1];
-			if (svalues[1][0] == '$') filename = getenv(svalues[1]+1); // hook for environment variable
+      filename = svalues[3];
+			if (svalues[3][0] == '$') filename = getenv(svalues[3]+1); // hook for environment variable
 
       if (filename && send_file_to_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
-															              "file_block", filename)) {
+															              "file_block", filename, ivalues[1])) {
+        // a block fragment has been requested
+        if (ivalues[2] > 0) {
+          set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+                                            "file_block", ivalues[2]-1, ivalues[2]);
+        }
         if (ivalues[0] == 0) { // pilot
           CommandData.pilot_bw = MIN(1000.0*1000.0/8.0, CommandData.pilot_bw); // max out bw
-					snprintf(CommandData.pilot_linklist_name, sizeof(CommandData.pilot_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[PILOT_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.pilot_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 1) { // BI0
           CommandData.biphase_bw = MIN(1000.0*1000.0/8.0, CommandData.biphase_bw); // max out bw
-					snprintf(CommandData.bi0_linklist_name, sizeof(CommandData.bi0_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[BI0_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.bi0_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else if (ivalues[0] == 2) { // highrate
-					snprintf(CommandData.highrate_linklist_name, sizeof(CommandData.highrate_linklist_name), FILE_LINKLIST);
 					telemetries_linklist[HIGHRATE_TELEMETRY_INDEX] =
-							linklist_find_by_name(CommandData.highrate_linklist_name, linklist_array);
+							linklist_find_by_name(FILE_LINKLIST, linklist_array);
         } else {
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
       } else {
-        blast_err("Could not resolve filename \"%s\"", svalues[1]);
+        blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
 		case set_pilot_oth:
@@ -2559,7 +2562,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach[i].do_fk_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
-          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[1];
+          CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
     case kill_roach:
@@ -2587,6 +2590,24 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[0];
       }
       break;
+    case set_find_kids_params:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].smoothing_scale = rvalues[1];
+          CommandData.roach_params[ivalues[0]-1].peak_threshold = rvalues[2];
+          CommandData.roach_params[ivalues[0]-1].spacing_threshold = rvalues[3];
+      }
+      break;
+    case compress_roach_data:
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+          CommandData.tar_all_data = 1;
+          compress_all_data(ivalues[0]);
+          CommandData.tar_all_data = 0;
+      }
+      break;
+    case enable_cycle_checker:
+        if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+            CommandData.roach_run_cycle_checker = ivalues[0];
+        }
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3204,6 +3225,11 @@ void InitCommandData()
     CommandData.checksum = 0;
     is_valid = (prev_crc == crc32_le(0, (uint8_t*)&CommandData, sizeof(CommandData)));
 
+    // Compress all Roach data (sweeps or timestreams)
+    CommandData.tar_all_data = 0;
+    // Run Roach cycle checker thread
+    CommandData.roach_run_cycle_checker = 1;
+
     /** this overrides prev_status **/
     CommandData.force_el = 0;
 
@@ -3639,13 +3665,30 @@ void InitCommandData()
     CommandData.offset_ifyaw_gy = 0;
     CommandData.gymask = 0x3f;
 
+    // Set find kids default parameters
+    CommandData.roach_params[0].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[0].peak_threshold = 0.5; // dB
+    CommandData.roach_params[0].spacing_threshold = 100; // kHz
+
+    CommandData.roach_params[1].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[1].peak_threshold = 0.5; // dB
+    CommandData.roach_params[1].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[2].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[2].peak_threshold = 0.5; // dB
+    CommandData.roach_params[2].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[3].smoothing_scale = 1.0e4; // kHz
+    CommandData.roach_params[3].peak_threshold = 0.5; // dB
+    CommandData.roach_params[3].spacing_threshold = 80; // kHz
+
+    CommandData.roach_params[4].smoothing_scale = 5.0e3; // kHz
+    CommandData.roach_params[4].peak_threshold = 0.5; // dB
+    CommandData.roach_params[4].spacing_threshold = 80; // kHz
+
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.udp_roach[i].store_udp = 1;
         CommandData.udp_roach[i].publish_udp = 1;
-        // find_kids
-        CommandData.roach_params[i].smoothing_scale = 1.0e4; // kHz
-        CommandData.roach_params[i].peak_threshold = 1; // dB
-        CommandData.roach_params[i].spacing_threshold = 100; // kHz
         // set_attens
         // these settings were determined on August 2, 2018 (Palestine)
         CommandData.roach_params[i].test_freq = 10.0125e6;
@@ -3659,7 +3702,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
-        CommandData.roach_params[i].dBm_per_tone = -60;
+        CommandData.roach_params[i].dBm_per_tone = -50;
         CommandData.roach_params[i].df_retune_threshold = 100000;
     }
 
@@ -3753,7 +3796,7 @@ void InitCommandData()
     CommandData.hwpr.pos[0] = 0.4047;
 
     CommandData.hwpr.overshoot = 300;
-	CommandData.hwpr.backoff = 0.9;
+	CommandData.hwpr.backoff = 90;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;

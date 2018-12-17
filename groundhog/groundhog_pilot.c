@@ -81,7 +81,6 @@ void udp_receive(void *arg) {
     transmit_size = udprecver.frame_num; 
     // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
 
-    if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
     // blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
     // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
@@ -104,6 +103,7 @@ void udp_receive(void *arg) {
                 ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
             }
             prev_serial = serial;
+            if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
 
             if (blk_size < 0) {
                 blast_info("Malformed packed received on Pilot\n");

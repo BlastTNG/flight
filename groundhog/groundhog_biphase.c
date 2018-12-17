@@ -160,7 +160,6 @@ void biphase_receive(void *args)
 
                   // blast_info("Transmit size=%d, blk_size=%d", transmit_size, ll->blk_size);
                   // The compressed linklist has been fully reconstructed
-                  if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
                   // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
                   // this is a file that has been downlinked, so unpack and extract to disk
@@ -182,6 +181,7 @@ void biphase_receive(void *args)
                             ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, "BI0");
                           }
                           prev_serial = *(uint32_t *) ll->serial;
+                          if (verbose) blast_info("[Biphase] Received linklist \"%s\"", ll->name);
 
                           if (transmit_size > ll->blk_size) {
                               blast_err("Transmit size larger than assigned linklist");

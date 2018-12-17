@@ -496,6 +496,8 @@ struct CommandDataStruct {
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
   roach_params_t roach_params[NUM_ROACHES];
+  unsigned int tar_all_data;
+  unsigned int roach_run_cycle_checker;
   unsigned int trigger_roach_tuning_check; // motors.c sets this flag when a scan is nearly complete
                                    // to (optionally) trigger a retune
 

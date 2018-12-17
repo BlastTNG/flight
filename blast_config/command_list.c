@@ -347,7 +347,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(full_loop_all), "Performs full loop for all Roaches, default params", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -932,9 +931,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_stream_file), "Stream a file at bandwidth over given link", GR_TELEM, 2,
+  {COMMAND(request_stream_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"File block number", 0, 255, 'i', ""},
+      {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
@@ -1088,7 +1089,7 @@ struct mcom mcommands[plugh + 2] = {
       {"0 = Default, off, 1 = Run", 0, 1, 'i', "NONE"}
     }
   },
-  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm", GR_ROACH, 4,
+  {COMMAND(find_kids), "Set the parameters for the kid finding algorithm, then execute", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
@@ -1389,7 +1390,7 @@ struct mcom mcommands[plugh + 2] = {
   }
   },
   {COMMAND(kill_roach),
-    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 2,
+    "Shutdown Roach PPC. To bring up requires full power cycle", CONFIRM | GR_ROACH, 1,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
   }
@@ -1422,6 +1423,26 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
+  {COMMAND(set_find_kids_params),
+      "Set the parameters for the kid finding algorithm. Does not execute", GR_ROACH, 4,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+    }
+  },
+  {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
+    {
+      {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3)", 0, 3, 'i', "NONE"}
+    }
+  },
+  {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
+    {
+      {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+    }
+  },
+  /***************************************/
   /***************************************/
   /*************** ROX Bias  *************/
   {COMMAND(set_rox_bias_amp), "Set the ROX bias amplitude", GR_CRYO, 1,
@@ -1552,20 +1573,6 @@ struct mcom mcommands[plugh + 2] = {
   //     {"Charcoal Settle Time (min)", 0, 120., 'f', "TIME_SET_CYCLE"}
   //   }
   // },
-  {COMMAND(actuators_set_used), "Set each stepper as used (1) or not used (0)", GR_CRYO | GR_HWPR | GR_BAL | GR_ACT, 10,
-    {
-      {"Actuator #0", 0, 1, 'i', "NONE"},
-      {"Actuator #1", 0, 1, 'i', "NONE"},
-      {"Actuator #2", 0, 1, 'i', "NONE"},
-      {"Balance", 0, 1, 'i', "NONE"},
-      {"Lockpin", 0, 1, 'i', "NONE"},
-      {"HWPR", 0, 1, 'i', "NONE"},
-      {"Shutter", 0, 1, 'i', "NONE"},
-      {"Pumped Pot Valve", 0, 1, 'i', "NONE"},
-      {"Pump Valve", 0, 1, 'i', "NONE"},
-      {"Fill Valve", 0, 1, 'i', "NONE"},
-    }
-  },
 
   {COMMAND(potvalve_set_vel), "Set pot valve motor velocity", GR_CRYO, 1,
     {

@@ -242,5 +242,7 @@ int labjack_data_word_swap(labjack_data_pkt_t* m_data_pkt, size_t n_bytes);
 
 void filter_labjack_channel_10hz(float new_val, labjack_10hz_filter_t *m_lj_filter);
 void init_labjack_10hz_filter(labjack_10hz_filter_t *m_lj_filter);
+void labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
+void mult_labjack_process_stream(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data);
 
 #endif /* LABJACK_FUNCTIONS_H_ */

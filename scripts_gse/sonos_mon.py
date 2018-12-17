@@ -65,7 +65,7 @@ class AutoSonos:
   # If persist=True, will play even if queue is stopped
   def trigger(self, persist=True, volume=None):
     if (get_current_track_title() != self.track.title) or (persist and sonos.get_current_transport_info()['current_transport_state'] != 'PLAYING'):
-      sonos.pause()
+      if (sonos.get_current_transport_info()['current_transport_state'] == 'PLAYING'): sonos.pause()
       sonos.add_to_queue(self.track, 1) # add to queue indexing by 1
       sonos.play_from_queue(0, True) # play from queue indexing from 0
       if volume is not None:
@@ -112,7 +112,7 @@ while True:
   # lunch
   Lunch.update()
   date = datetime.utcfromtimestamp(Lunch.lastval)
-  if ((date.hour+13)%24 == 11) and (date.minute >= 45):
+  if ((date.hour+13)%24 == 11) and (date.minute >= 55) and (datetime.today().isoweekday() != 7):
     print("Lunchtime!")
     if not song_requested: 
       Lunch.trigger(volume=50)
