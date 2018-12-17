@@ -1296,6 +1296,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].set_attens = 2;
           }
           break;
+        case turnaround_loop_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_turnaround_loop = 1;
+          }
+          break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
@@ -2571,6 +2576,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
+    case turnaround_loop:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_turnaround_loop = 1;
+      }
+      break;
     case kill_roach:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].kill = 1;
@@ -3245,6 +3255,8 @@ void InitCommandData()
     CommandData.tar_all_data = 0;
     // Run Roach cycle checker thread
     CommandData.roach_run_cycle_checker = 1;
+    // Pause automatic cal lamp pulses
+    CommandData.cal_lamp_roach_hold = 0;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
@@ -3311,6 +3323,7 @@ void InitCommandData()
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;
         CommandData.roach[i].do_check_retune = 0;
+        CommandData.roach[i].do_turnaround_loop = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
