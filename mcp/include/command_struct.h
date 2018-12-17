@@ -390,6 +390,7 @@ typedef struct roach
     unsigned int do_noise_comp;
     unsigned int do_fk_loop;
     unsigned int kill;
+    unsigned int do_turnaround_loop;
 } roach_status_t;
 
 typedef struct roach_params
