@@ -333,6 +333,8 @@ enum multiCommand {
   kill_roach,
   set_df_retune_threshold,
   set_df_retune_threshold_all,
+  set_df_diff_retune_threshold,
+  set_df_diff_retune_threshold_all,
   set_default_tone_power,
   set_default_tone_power_all,
   set_attens_default,

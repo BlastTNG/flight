@@ -128,7 +128,6 @@
 #define N_CAL_CYCLES 3 /* Number of cal cycles for tone amplitudes */
 #define START_AMP 0.90 /* Starting (digital) amplitude for carrier tones */
 #define DELTA_AMP 0.02 /* A change in tone amplitude (used for linearity calibration */
-#define DF_DIFF_THRESH 500.0 /* Hz, minimum DF response to merit retune */
 #define AUTO_CAL_ADC 0 /* Choose to run the adc cal routine after initial tone write */
 #define AUTO_CAL_AMPS 0
 #define APPLY_VNA_TRF 1 /* Apply Roach output transfer function to vna freqs by default */
@@ -3453,7 +3452,7 @@ int get_lamp_response(roach_state_t *m_roach)
     CommandData.Cryo.length = 200 * lamp_sec;
     periodic_cal_control();
     usleep(500000);
-    center_df(m_roach);
+    // center_df(m_roach);
     // char *path_to_I_diffs;
     /*
     blast_tmp_sprintf(path_to_I_diffs, "%s/I_diffs.dat", m_roach->sweep_root_path);
@@ -3484,7 +3483,7 @@ int get_lamp_response(roach_state_t *m_roach)
         m_roach->I_diff[chan] = m_roach->I_on[chan] - m_roach->I_off[chan];
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
-        blast_info("**** ROACH%d, chan %zd df = %g,", m_roach->which, chan, m_roach->df_diff[chan]);
+        blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
         fwrite(&m_roach->I_diff[chan], 4, 1, fd);
         fwrite(&m_roach->Q_diff[chan], 4, 1, fd);
         fwrite(&m_roach->df_diff[chan], 4, 1, fd);
@@ -3651,6 +3650,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
     if (recenter_lo(m_roach) < 0) {
         blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
     }
+    m_roach->sweep_fail = 0;
     return 0;
 }
 
@@ -4522,7 +4522,8 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
             return status;
         } else {
             for (int chan = 0; chan < m_roach->num_kids; ++chan) {
-                if ((m_roach->df_diff[chan] > DF_DIFF_THRESH)) {
+                if ((m_roach->df_diff[chan] <
+                   CommandData.roach_params[m_roach->which - 1].df_diff_retune_threshold)) {
                     nflags++;
                     m_roach->out_of_range[chan] = 1;
                 } else {
@@ -5183,6 +5184,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
     if (recenter_lo(m_roach) < 0) {
         blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
     }
+    m_roach->sweep_fail = 0;
     return status;
 }
 
@@ -6145,6 +6147,7 @@ void write_roach_channels_1hz(void)
     int i, j, k, i_chan;
     static int firsttime = 1;
     static channel_t *DfRetuneThreshAddr[NUM_ROACHES];
+    static channel_t *DfDiffRetuneThreshAddr[NUM_ROACHES];
     static channel_t *PiStatusAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
     static channel_t *RoachStreamStateAddr[NUM_ROACHES];
@@ -6171,6 +6174,7 @@ void write_roach_channels_1hz(void)
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
     char channel_name_df_retune_thresh[128] = { 0 };
+    char channel_name_df_diff_retune_thresh[128] = { 0 };
     char channel_name_flags_kids[128] = { 0 };
     char channel_name_kids_found[128] = { 0 };
     char channel_name_kids_good[128] = { 0 };
@@ -6204,6 +6208,8 @@ void write_roach_channels_1hz(void)
             }
             snprintf(channel_name_df_retune_thresh, sizeof(channel_name_df_retune_thresh),
                         "df_retune_thresh_roach%d", i + 1);
+            snprintf(channel_name_df_diff_retune_thresh, sizeof(channel_name_df_diff_retune_thresh),
+                        "df_diff_retune_thresh_roach%d", i + 1);
             snprintf(channel_name_kids_found, sizeof(channel_name_kids_found),
                         "nkids_found_roach%d", i + 1);
             snprintf(channel_name_kids_good, sizeof(channel_name_kids_good),
@@ -6258,6 +6264,7 @@ void write_roach_channels_1hz(void)
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
             DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
+            DfDiffRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_diff_retune_thresh);
             PiStatusAddr[i] = channels_find_by_name(channel_name_pi_state);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
             RoachStreamStateAddr[i] = channels_find_by_name(channel_name_roach_stream_state);
@@ -6305,6 +6312,7 @@ void write_roach_channels_1hz(void)
         SET_UINT16(PiStatusAddr[i], pi_state_table[i].state);
         SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
         SET_INT32(DfRetuneThreshAddr[i], CommandData.roach_params[i].df_retune_threshold);
+        SET_INT32(DfDiffRetuneThreshAddr[i], CommandData.roach_params[i].df_diff_retune_threshold);
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);

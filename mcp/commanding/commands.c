@@ -2490,7 +2490,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case check_lamp_retune:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_check_retune = 2;
-          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[0];
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
       }
       break;
     case check_lamp_retune_all:
@@ -2574,6 +2574,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case set_df_retune_threshold_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
           CommandData.roach_params[i].df_retune_threshold = rvalues[0];
+      }
+      break;
+    case set_df_diff_retune_threshold:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].df_diff_retune_threshold = rvalues[1];
+      }
+      break;
+    case set_df_diff_retune_threshold_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach_params[i].df_diff_retune_threshold = rvalues[0];
       }
       break;
     case set_default_tone_power:
@@ -3702,6 +3712,7 @@ void InitCommandData()
         CommandData.roach_params[i].resp_thresh = 2000;
         CommandData.roach_params[i].dBm_per_tone = -50;
         CommandData.roach_params[i].df_retune_threshold = 100000;
+        CommandData.roach_params[i].df_diff_retune_threshold = 100000;
     }
 
     CommandData.rox_bias.amp = 56;

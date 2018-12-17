@@ -1377,11 +1377,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
-  {
-    {"ROACH no", 1, 5, 'i', "NONE"},
-    {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
-  }
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    }
   },
   {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
   {
@@ -1404,6 +1404,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
+  {
+    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
