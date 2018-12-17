@@ -292,7 +292,7 @@ typedef struct {
   uint16_t force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
-  int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed;
+  int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed, pot_forced;
   float dac_value;
   float tcrit_fpa;
   uint16_t counter, counter_max;

@@ -78,6 +78,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
   {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
+  {COMMAND(force_pot_refill), "forcing a pumped pot refill", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},

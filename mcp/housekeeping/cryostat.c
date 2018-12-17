@@ -892,6 +892,11 @@ static void pot_watchdog() {
         blast_info("starting pot watchdog");
         first_time = 0;
     }
+    if (CommandData.Cryo.pot_forced == 1) {
+        CommandData.Cryo.watchdog_allowed = 1;
+        watchdog = 1;
+        open_required = 1;
+    }
     if (CommandData.Cryo.watchdog_allowed == 0) {
         counter = 0;
         open_required = 0;

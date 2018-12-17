@@ -194,6 +194,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
             break;
+        case force_pot_refill:
+            CommandData.Cryo.pot_forced = 1;
+            break;
         case load_curve:
             CommandData.Cryo.load_curve = 1;
             break;
@@ -3492,6 +3495,7 @@ void InitCommandData()
     CommandData.Cryo.send_dac = 0;
     CommandData.Cryo.cycle_allowed = 0;
     CommandData.Cryo.watchdog_allowed = 0;
+    CommandData.Cryo.pot_forced = 0;
     CommandData.Cryo.forced = 0;
     CommandData.Cryo.heater_update = 0;
     CommandData.Relays.update_video = 0;
