@@ -459,16 +459,14 @@ derived_tng_t derived_list[] = {
     BITWORD("MC_EC_CMD_FIX_HWPR", "mc_cmd_status", 4, 1),
 
 //  /* HWPR Control Info */
-    BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 10, 1),
-    BITWORD("DONE_MOVE_HWPR", "stat_control_hwpr", 11, 1),
-    BITWORD("DONE_ALL_HWPR", "stat_control_hwpr", 12, 1),
-    BITWORD("DEAD_POT_HWPR", "stat_control_hwpr", 13, 1),
-    BITWORD("DO_CALPULSE_HWPR", "stat_control_hwpr", 14, 1),
-
     BITWORD("MOVE_TYPE_HWPR", "stat_control_hwpr", 0, 3),
     BITWORD("MOVE_STAT_HWPR", "stat_control_hwpr", 3, 3),
-    BITWORD("READ_BEFORE_HWPR", "stat_control_hwpr", 6, 2),
-    BITWORD("READ_AFTER_HWPR", "stat_control_hwpr", 8, 2),
+    BITWORD("FORK_ENGAGED_HWPR", "stat_control_hwpr", 6, 1),
+    BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 7, 1),
+    BITWORD("DONE_MOVE_HWPR", "stat_control_hwpr", 8, 1),
+    BITWORD("DONE_ALL_HWPR", "stat_control_hwpr", 9, 1),
+	BITWORD("RESET_ENC_HWPR", "stat_control_hwpr", 10, 1),
+
 
     /* CRYO */
     /*BITWORD("","dio_heaters",0,1) */

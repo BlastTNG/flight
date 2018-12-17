@@ -3811,6 +3811,12 @@ void InitCommandData()
     CommandData.hwpr.pos[1] = 0.2779;
     CommandData.hwpr.pos[0] = 0.4047;
 
+	/* default overshoot is 
+	 * 0.9 for teeth chatter
+	 * 0.9 for shaft windup
+	 * 1.8 for fork
+	 * plus some extra
+	 */
     CommandData.hwpr.overshoot = -6.0;
 	CommandData.hwpr.backoff = 90.0;
     CommandData.hwpr.i_pos = 0;
