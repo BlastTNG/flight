@@ -1830,12 +1830,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.hold_i = ivalues[1];
       break;
     case hwpr_goto:
-      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.target = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_goto_rel:
-      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.target = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_REL;
       CommandData.hwpr.is_new = 1;
       break;
@@ -1854,6 +1854,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.pos[3] = rvalues[3];
       break;
     case hwpr_goto_pot:
+	  // deprecated, no pot in TNG - PAW
       CommandData.hwpr.pot_targ = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_POT;
       CommandData.hwpr.is_new = 1;

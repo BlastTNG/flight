@@ -79,6 +79,7 @@ static struct hwpr_control_struct
 	int do_main_move;
     int stop_cnt;
     float enc_targ;
+	float enc_real_targ;
     float enc_err;
     // double pot_targ;
     // double pot_err;
@@ -117,6 +118,7 @@ void ResetControlHWPR(void) {
   // hwpr_control.pot_targ = 0;
   // hwpr_control.pot_err = 0;
   hwpr_control.reset_enc = 0;
+  hwpr_control.enc_real_targ = 0;
 }
 
 // counter incremented in StoreHWPRBus to better time tep_repeat mode
@@ -148,6 +150,7 @@ void StoreHWPRBus(void)
   static channel_t* encTargHwprAddr;
   static channel_t* encErrHwprAddr;
   static channel_t* encRealHwprAddr;
+  static channel_t* encRealTargHwprAddr;
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -174,6 +177,7 @@ void StoreHWPRBus(void)
     encErrHwprAddr = channels_find_by_name("enc_err_hwpr");
     // potErrHwprAddr = channels_find_by_name("pot_err_hwpr");
 	encRealHwprAddr = channels_find_by_name("enc_real_hwpr");
+	encRealTargHwprAddr = channels_find_by_name("enc_real_targ_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -194,11 +198,12 @@ void StoreHWPRBus(void)
   SET_VALUE(iposHwprAddr, hwpr_control.i_next_step);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
   SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
-  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move/2); // ???
+  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move); // ???
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
   SET_FLOAT(encRealHwprAddr, hwpr_data.enc_real_hwpr);
+  SET_FLOAT(encRealTargHwprAddr, hwpr_control.enc_real_targ);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007;
@@ -536,6 +541,8 @@ void ControlHWPR(struct ezbus *bus)
                 	}
                 }
 
+				/* Or if the move is positive and the overshoot is also positive, then we overshoot
+				 */
 				if (hwpr_control.rel_move > 0) {
                 	if (CommandData.hwpr.overshoot > 0) {
                     hwpr_control.rel_move += (int32_t)(CommandData.hwpr.overshoot * DEG_TO_STEPS);

@@ -789,8 +789,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration",
     GR_HWPR, 2,
     {
-      {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
-      {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
+      {"Velocity (usteps/sec)", 5, 500000, 'l', "VEL_HWPR"},
+      {"Acceleration (usteps/sec^2", 1, 1000, 'i', "ACC_HWPR"},
     }
   },
   {COMMAND(hwpr_i), "set the waveplate rotator currents", GR_HWPR, 2,
@@ -802,13 +802,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
-      {"destination", 0, 80000, 'l', "ENC_HWPR"}
+      {"destination (deg on the hwp)", 0.0, 50.0, 'f', "ENC_HWPR"}
     }
   },
   {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
     GR_HWPR, 1,
     {
-      {"delta", -80000, 80000, 'l', "0"}
+      {"delta (deg on the hwp)", -50.0, 50.0, 'f', "0"}
     }
   },
   {COMMAND(hwpr_repeat),
@@ -832,7 +832,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_goto_pot),
-    "Move wave plate rotator to commanded encoder value",
+    "DEPRECATED - Move wave plate rotator to commanded encoder value",
     GR_HWPR, 1,
     {
       {"Encoder Value ", 0.0, 360.0, 'f', "POT_HWPR"},
@@ -846,17 +846,17 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_goto_i),
-    "goto hwpr position (0-3)",
+    "goto hwpr position (0-1)",
     GR_HWPR, 1,
     {
-      {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
+      {"hwpr position", 0, 1, 'i', "I_POS_RQ_HWPR"},
     }
   },
   {COMMAND(hwpr_set_margin),
     "Set HWPR margin for determinting which indexed position we are at",
     GR_HWPR, 1,
     {
-      {"hwpr margin", 0, 64000, 'i', "NONE"},
+      {"hwpr margin (deg)", 0, 5, 'i', "NONE"},
     }
   },
   /* XY Stage */
