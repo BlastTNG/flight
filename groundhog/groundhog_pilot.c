@@ -39,6 +39,7 @@ void udp_receive(void *arg) {
   uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
+  uint32_t recv_size = 0;
   uint32_t transmit_size = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
@@ -59,7 +60,7 @@ void udp_receive(void *arg) {
   while (true) {
     do {
       // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&udprecver, &blk_size);
+      recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
