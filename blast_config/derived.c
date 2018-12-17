@@ -465,7 +465,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DO_OVERSHOOT_HWPR", "stat_control_hwpr", 7, 1),
     BITWORD("DONE_MOVE_HWPR", "stat_control_hwpr", 8, 1),
     BITWORD("DONE_ALL_HWPR", "stat_control_hwpr", 9, 1),
-	BITWORD("RESET_ENC_HWPR", "stat_control_hwpr", 10, 1),
+	// BITWORD("RESET_ENC_HWPR", "stat_control_hwpr", 10, 1),
 
 
     /* CRYO */

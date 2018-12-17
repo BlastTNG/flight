@@ -81,11 +81,12 @@ static struct hwpr_control_struct
     float enc_targ;
 	float enc_real_targ;
     float enc_err;
+	float enc_real_err;
     // double pot_targ;
     // double pot_err;
     // int dead_pot;
     // int do_calpulse;
-    int reset_enc;
+    // int reset_enc;
 	float margin; // shouldn't be reset before each move
 	int engaged; // shouldn't be reset before each move
 	int32_t engage_move;
@@ -118,8 +119,9 @@ void ResetControlHWPR(void) {
   hwpr_control.enc_err = 0;
   // hwpr_control.pot_targ = 0;
   // hwpr_control.pot_err = 0;
-  hwpr_control.reset_enc = 0;
+  // hwpr_control.reset_enc = 0;
   hwpr_control.enc_real_targ = 0;
+  hwpr_control.enc_real_err = 0;
   hwpr_control.disengage_move = 0;
 }
 
@@ -151,7 +153,9 @@ void StoreHWPRBus(void)
   static channel_t* encErrHwprAddr;
   static channel_t* encRealHwprAddr;
   static channel_t* encRealTargHwprAddr;
+  static channel_t* encRealErrHwprAddr;
   static channel_t* marginHwprAddr;
+  static channel_t* backoffHwprAddr;
   // static channel_t* potErrHwprAddr;
 
   if (firsttime) {
@@ -178,6 +182,8 @@ void StoreHWPRBus(void)
 	encRealHwprAddr = channels_find_by_name("enc_real_hwpr");
 	encRealTargHwprAddr = channels_find_by_name("enc_real_targ_hwpr");
 	marginHwprAddr = channels_find_by_name("margin_hwpr");
+	backoffHwprAddr = channels_find_by_name("backoff_hwpr");
+	encRealErrHwprAddr = channels_find_by_name("enc_real_err_hwpr");
   }
 
   hwpr_wait_cnt--;
@@ -203,6 +209,8 @@ void StoreHWPRBus(void)
   SET_FLOAT(encRealHwprAddr, hwpr_data.enc_real_hwpr);
   SET_FLOAT(encRealTargHwprAddr, hwpr_control.enc_real_targ);
   SET_FLOAT(marginHwprAddr, hwpr_control.margin);
+  SET_FLOAT(backoffHwprAddr, CommandData.hwpr.backoff);
+  SET_FLOAT(encRealErrHwprAddr, hwpr_control.enc_real_err);
 
   /* Make HWPR status bit field */
   hwpr_stat_field |= (hwpr_control.go) & 0x0007;
@@ -211,7 +219,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.do_overshoot) & 0x0001) << 7;
   hwpr_stat_field |= ((hwpr_control.done_move) & 0x0001) << 8;
   hwpr_stat_field |= ((hwpr_control.done_all) & 0x0001) << 9;
-  hwpr_stat_field |= ((hwpr_control.reset_enc) & 0x0001) << 10;
+  // hwpr_stat_field |= ((hwpr_control.reset_enc) & 0x0001) << 10;
 
   SET_VALUE(statControlHwprAddr, hwpr_stat_field);
 }
@@ -653,6 +661,8 @@ void ControlHWPR(struct ezbus *bus)
 				blast_info("Going to backoff to break thermal link");
 #endif
 				hwpr_data.enc_real_hwpr = hwpr_data.enc;
+				// calculate how far we are from the spot we really want to be now, before backoff
+				hwpr_control.enc_real_err = hwpr_control.enc_real_targ - hwpr_data.enc_real_hwpr;
 				/* again, backoff in deg on input shaft, so divide by 100
 				 *
 				 * Again, check the sign of overshoot, disengage should be in the same direction
