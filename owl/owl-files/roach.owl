@@ -25,7 +25,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -36,6 +36,45 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_ROACH1",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1071477940"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "10146870"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1057640472"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH1",
+                    "type": "PNDI"
                 },
                 {
                     "PObject": {
@@ -52,14 +91,65 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1200198471"
+                        "_id": "266195641"
                     },
-                    "_caption": "RETUNE_FLAG",
+                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1912383166"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1897201546"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "(P1369470654)",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "853588021"
+                    },
+                    "_caption": "FOUND_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH1",
+                    "_source": "nkids_found_roach1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "565185256"
+                    },
+                    "_caption": "IS_COMPRESSING_DATA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_DATA_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -77,6 +167,19 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1200198471"
+                    },
+                    "_caption": "RETUNE_FLAG",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1613957099"
                     },
                     "_caption": "STATE   ",
@@ -85,42 +188,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "STATE_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "886484695"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1309330332"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "46527931"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -178,7 +245,8 @@
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH1",
                     "type": "PNDI"
@@ -190,21 +258,10 @@
                     "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_TONES_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1897201546"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -298,7 +355,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH1",
                     "type": "PNDI"
@@ -360,7 +418,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH1",
                     "type": "PNDI"
@@ -376,18 +435,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1071477940"
-                    },
-                    "_caption": "HAS_FIRMWARE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -417,19 +464,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "565185256"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "695980546"
                     },
                     "_caption": "PI_ERROR_COUNT",
@@ -442,67 +476,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1057640472"
+                        "_id": "705821707"
                     },
-                    "_caption": "DOING_FULL_LOOP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH1",
+                    "_source": "DF_RETUNE_THRESH_ROACH1",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "266195641"
+                        "_id": "1599365418"
                     },
-                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH1",
+                    "_source": "NFLAG_THRESH_ROACH1",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1912383166"
+                        "_id": "1107726582"
                     },
-                    "_caption": "IS_FINDING_KIDS",
+                    "_caption": "N_KIDS_BAD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH1",
+                    "_source": "nkids_bad_roach1",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1552669864"
+                        "_id": "1918692319"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "N_KIDS_GOOD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_66",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "738931021"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
-                    "_format": "",
-                    "_source": "thermistor_69",
+                    "_source": "nkids_good_roach1",
                     "type": "PNDI"
                 }
             ],
@@ -532,7 +549,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -543,6 +560,45 @@
                     "_defaultStyle": "(P155758072)",
                     "_source": "STATE_ROACH2",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2092080816"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1891021159"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1960771570"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH2",
+                    "type": "PNDI"
                 },
                 {
                     "PObject": {
@@ -559,14 +615,65 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1760202018"
+                        "_id": "1154991624"
                     },
-                    "_caption": "RETUNE_FLAG",
+                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1464581231"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1226095952"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "(P1369470654)",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1642037985"
+                    },
+                    "_caption": "FOUND_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH2",
+                    "_source": "nkids_bad_roach2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "130003399"
+                    },
+                    "_caption": "IS_COMPRESSING_DATA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_DATA_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -584,6 +691,19 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1760202018"
+                    },
+                    "_caption": "RETUNE_FLAG",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1164987922"
                     },
                     "_caption": "STATE",
@@ -592,42 +712,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "STATE_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1004092407"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1892371966"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1649537788"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -685,7 +769,8 @@
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH2",
                     "type": "PNDI"
@@ -697,21 +782,10 @@
                     "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_TONES_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1226095952"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -854,7 +928,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH2",
                     "type": "PNDI"
@@ -866,7 +941,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH2",
                     "type": "PNDI"
@@ -878,21 +954,10 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2092080816"
-                    },
-                    "_caption": "HAS_FIRMWARE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -902,7 +967,8 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH2",
                     "type": "PNDI"
@@ -914,21 +980,10 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "130003399"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -945,67 +1000,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1960771570"
+                        "_id": "78865280"
                     },
-                    "_caption": "DOING_FULL_LOOP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH2",
+                    "_source": "DF_RETUNE_THRESH_ROACH2",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1154991624"
+                        "_id": "19659047"
                     },
-                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH2",
+                    "_source": "NFLAG_THRESH_ROACH2",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1464581231"
+                        "_id": "1385211942"
                     },
-                    "_caption": "IS_FINDING_KIDS",
+                    "_caption": "N_KIDS_BAD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH2",
+                    "_source": "nkids_bad_roach2",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1647570562"
+                        "_id": "1309487109"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "N_KIDS_GOOD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_63",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "976119414"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
-                    "_format": "",
-                    "_source": "thermistor_71",
+                    "_source": "nkids_good_roach2",
                     "type": "PNDI"
                 }
             ],
@@ -1035,7 +1073,7 @@
                             "1": "Connected",
                             "2": "Programmed[style=No style (P634346397)]",
                             "3": "Configured[style=No style (P1211964964)]",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -1046,6 +1084,45 @@
                     "_defaultStyle": "(P155758072)",
                     "_source": "STATE_ROACH3",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1064174639"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2090638718"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1324024317"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH3",
+                    "type": "PNDI"
                 },
                 {
                     "PObject": {
@@ -1062,14 +1139,65 @@
                 },
                 {
                     "PObject": {
-                        "_id": "679066582"
+                        "_id": "690188884"
                     },
-                    "_caption": "RETUNE_FLAG",
+                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "139073408"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "54445023"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "849391585"
+                    },
+                    "_caption": "FOUND_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH3",
+                    "_source": "nkids_found_roach3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1660081751"
+                    },
+                    "_caption": "IS_COMPRESSING_DATA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_DATA_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1087,6 +1215,19 @@
                 },
                 {
                     "PObject": {
+                        "_id": "679066582"
+                    },
+                    "_caption": "RETUNE_FLAG",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1904226259"
                     },
                     "_caption": "STATE",
@@ -1095,42 +1236,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "STATE_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2130444491"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1994244048"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1991382581"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1183,38 +1288,28 @@
                 },
                 {
                     "PObject": {
-                        "_id": "164262680"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "43471682"
                     },
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "54445023"
+                        "_id": "164262680"
                     },
-                    "_caption": "CURRENT_N_TONES     ",
+                    "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH3",
+                    "_source": "HAS_TONES_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1308,7 +1403,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH3",
                     "type": "PNDI"
@@ -1344,7 +1440,8 @@
                     "_caption": "TONE_FINDING_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_FINDING_ERROR_ROACH3",
                     "type": "PNDI"
@@ -1356,7 +1453,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH3",
                     "type": "PNDI"
@@ -1368,7 +1466,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH3",
                     "type": "PNDI"
@@ -1380,7 +1479,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH3",
                     "type": "PNDI"
@@ -1392,21 +1492,10 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1064174639"
-                    },
-                    "_caption": "HAS_FIRMWARE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1416,21 +1505,10 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1660081751"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1447,67 +1525,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1324024317"
+                        "_id": "594152183"
                     },
-                    "_caption": "DOING_FULL_LOOP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH3",
+                    "_source": "DF_RETUNE_THRESH_ROACH3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "690188884"
+                        "_id": "166955813"
                     },
-                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH3",
+                    "_source": "NFLAG_THRESH_ROACH3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "139073408"
+                        "_id": "184733596"
                     },
-                    "_caption": "IS_FINDING_KIDS",
+                    "_caption": "N_KIDS_BAD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH3",
+                    "_source": "nkids_bad_roach3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1308017719"
+                        "_id": "1706685020"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "N_KIDS_GOOD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_67",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2111289441"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
-                    "_format": "",
-                    "_source": "thermistor_70",
+                    "_source": "nkids_bad_roach3",
                     "type": "PNDI"
                 }
             ],
@@ -1537,7 +1598,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -1548,6 +1609,45 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_ROACH4",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1611918194"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1726743147"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1417349623"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH4",
+                    "type": "PNDI"
                 },
                 {
                     "PObject": {
@@ -1564,14 +1664,65 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1430808302"
+                        "_id": "36013539"
                     },
-                    "_caption": "RETUNE_FLAG",
+                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1624018132"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1727334100"
+                    },
+                    "_caption": "CURRENT_N_TONES     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1999828577"
+                    },
+                    "_caption": "FOUND_KIDS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH4",
+                    "_source": "nkids_found_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1453603194"
+                    },
+                    "_caption": "IS_COMPRESSING_DATA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_DATA_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1589,6 +1740,19 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1430808302"
+                    },
+                    "_caption": "RETUNE_FLAG",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1141184773"
                     },
                     "_caption": "STATE",
@@ -1597,42 +1761,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "STATE_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1281392302"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1045403377"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1795651606"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1690,7 +1818,8 @@
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH4",
                     "type": "PNDI"
@@ -1702,21 +1831,10 @@
                     "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_TONES_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1727334100"
-                    },
-                    "_caption": "CURRENT_N_TONES     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1810,7 +1928,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH4",
                     "type": "PNDI"
@@ -1859,7 +1978,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1871,7 +1991,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1883,7 +2004,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH4",
                     "type": "PNDI"
@@ -1895,21 +2017,10 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1611918194"
-                    },
-                    "_caption": "HAS_FIRMWARE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1919,21 +2030,10 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1453603194"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -1950,67 +2050,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1417349623"
+                        "_id": "2057635744"
                     },
-                    "_caption": "DOING_FULL_LOOP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH4",
+                    "_source": "DF_RETUNE_THRESH_ROACH4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "36013539"
+                        "_id": "1896089527"
                     },
-                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH4",
+                    "_source": "NFLAG_THRESH_ROACH4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "1624018132"
+                        "_id": "1938363462"
                     },
-                    "_caption": "IS_FINDING_KIDS",
+                    "_caption": "N_KIDS_BAD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH4",
+                    "_source": "nkids_bad_roach4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "86749966"
+                        "_id": "1134264729"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "N_KIDS_GOOD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_65",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1696467153"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
-                    "_format": "",
-                    "_source": "thermistor_68",
+                    "_source": "nkids_good_roach4",
                     "type": "PNDI"
                 }
             ],
@@ -2040,7 +2123,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Streaming[style=Streaming (P1553648692)]"
+                            "4": "Idle[style=Streaming (P1553648692)]"
                         }
                     },
                     "PObject": {
@@ -2051,6 +2134,45 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_ROACH5",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1752323964"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1796931251"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1351598196"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH5",
+                    "type": "PNDI"
                 },
                 {
                     "PObject": {
@@ -2067,14 +2189,64 @@
                 },
                 {
                     "PObject": {
-                        "_id": "137395379"
+                        "_id": "928175005"
                     },
-                    "_caption": "RETUNE_FLAG",
+                    "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH5",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2028338504"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2144253437"
+                    },
+                    "_caption": "CURRENT_N_TONES    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "514518397"
+                    },
+                    "_caption": "FOUND_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_found_roach5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "478211681"
+                    },
+                    "_caption": "IS_COMPRESSING_DATA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_DATA_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2092,6 +2264,19 @@
                 },
                 {
                     "PObject": {
+                        "_id": "137395379"
+                    },
+                    "_caption": "RETUNE_FLAG",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "RETUNE_FLAG_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "682772494"
                     },
                     "_caption": "STATE",
@@ -2100,42 +2285,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "STATE_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2095624232"
-                    },
-                    "_caption": "STATE_PI",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_PI_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1448874481"
-                    },
-                    "_caption": "STATUS",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATUS_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2027888993"
-                    },
-                    "_caption": "STREAM_STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STREAM_STATE_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2193,7 +2342,8 @@
                     "_caption": "HAS_QDR_CAL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH5",
                     "type": "PNDI"
@@ -2205,21 +2355,10 @@
                     "_caption": "HAS_TONES",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_TONES_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2144253437"
-                    },
-                    "_caption": "CURRENT_N_TONES    ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2313,7 +2452,8 @@
                     "_caption": "HAS_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "HAS_ERROR_ROACH5",
                     "type": "PNDI"
@@ -2349,7 +2489,8 @@
                     "_caption": "TONE_FINDING_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_FINDING_ERROR_ROACH5",
                     "type": "PNDI"
@@ -2361,7 +2502,8 @@
                     "_caption": "SWEEP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "SWEEP_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2373,7 +2515,8 @@
                     "_caption": "TONE_WRITE_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "TONE_WRITE_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2385,7 +2528,8 @@
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH5",
                     "type": "PNDI"
@@ -2397,21 +2541,10 @@
                     "_caption": "LAMP_CHECK_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "LAMP_CHECK_ERROR_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1752323964"
-                    },
-                    "_caption": "HAS_FIRMWARE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2421,21 +2554,10 @@
                     "_caption": "KATCP_CONNECT_ERROR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "KATCP_CONNECT_ERROR_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "478211681"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2452,64 +2574,50 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1351598196"
+                        "_id": "1029316957"
                     },
-                    "_caption": "DOING_FULL_LOOP",
+                    "_caption": "DF_RETUNE_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH4",
+                    "_source": "DF_RETUNE_THRESH_ROACH5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "928175005"
+                        "_id": "344686132"
                     },
-                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_caption": "NFLAG_THRESH",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH5",
+                    "_source": "NFLAG_THRESH_ROACH5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "2028338504"
+                        "_id": "34242048"
                     },
-                    "_caption": "IS_FINDING_KIDS",
+                    "_caption": "N_KIDS_BAD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH5",
+                    "_source": "nkids_bad_roach5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "688376588"
+                        "_id": "1264518322"
                     },
-                    "_caption": "FPGA_TEMP",
+                    "_caption": "N_KIDS_GOOD",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
+                    "_extrema": false,
                     "_format": "",
-                    "_source": "thermistor_64",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1817998230"
-                    },
-                    "_caption": "PPC_TEMP",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1601442318)",
-                    "_format": "",
-                    "_source": "thermistor_72",
+                    "_source": "nkids_good_roach5",
                     "type": "PNDI"
                 }
             ],
@@ -2525,7 +2633,7 @@
             "_boxTitle": "TEMPERATURES",
             "_style": "(P2072147126)",
             "cellHeight": 11,
-            "cellWidth": 9,
+            "cellWidth": 11,
             "cellX": 1,
             "cellY": 1,
             "dataItems": [
@@ -2661,8 +2769,499 @@
                 }
             ],
             "geometryHeight": 187,
-            "geometryWidth": 153,
+            "geometryWidth": 188,
             "geometryX": 17,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "873898590"
+            },
+            "_boxTitle": "CRYO STATUS",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 19,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "70587161"
+                    },
+                    "_caption": "TR_HE3_FRIDGE      ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tr_he3_fridge",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2084155465"
+                    },
+                    "_caption": "350 ARRAY TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tr_350_fpa",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1147366623"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1988153368"
+                    },
+                    "_caption": "250 LNA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "status_250_LNA",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "301560346"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "451389859"
+                    },
+                    "_caption": "350 LNA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "status_350_LNA",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1475410991"
+                        },
+                        "_map": {
+                            "0": "OFF[style=xhigh (P1489452979)]",
+                            "1": "ON[style=low (P1016205289)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "552471752"
+                    },
+                    "_caption": "500 LNA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "status_500_LNA",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1126934256"
+                    },
+                    "_caption": "CAL LAMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CAL_LAMP_READ",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "995519347"
+                        },
+                        "_map": {
+                            "0": "0[style=Streaming (P1553648692)]",
+                            "1": "1[style=Streaming (P1553648692)]",
+                            "2": "2[style=xhigh (P1489452979)]",
+                            "3": "3[style=xhigh (P1489452979)]",
+                            "4": "4[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "230899016"
+                    },
+                    "_caption": "FRIDGE_CYCLE_STATE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "CYCLE_STATE",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 187,
+            "geometryWidth": 306,
+            "geometryX": 323,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1986218169"
+            },
+            "_boxTitle": "TIMING",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 38,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "276801062"
+                    },
+                    "_caption": "R1_PPS_COUNT           ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1421239874"
+                    },
+                    "_caption": "R2_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "329798756"
+                    },
+                    "_caption": "R3_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1372633295"
+                    },
+                    "_caption": "R4_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "195387184"
+                    },
+                    "_caption": "R5_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1137578606"
+                    },
+                    "_caption": "R1_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1951459583"
+                    },
+                    "_caption": "R2_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1682493009"
+                    },
+                    "_caption": "R3_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "399330170"
+                    },
+                    "_caption": "R4_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "163309497"
+                    },
+                    "_caption": "R5_CLOCK_CYCLE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CLOCK_COUNT_ROACH5",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 187,
+            "geometryWidth": 306,
+            "geometryX": 646,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1202071735"
+            },
+            "_boxTitle": "",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 19,
+            "cellX": 56,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1313789597"
+                    },
+                    "_caption": "R1_PACKET_COUNT    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1035809556"
+                    },
+                    "_caption": "R2_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "258721276"
+                    },
+                    "_caption": "R3_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "644250245"
+                    },
+                    "_caption": "R4_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1142712494"
+                    },
+                    "_caption": "R5_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "282853316"
+                    },
+                    "_caption": "R1_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "378022934"
+                    },
+                    "_caption": "R2_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "412135914"
+                    },
+                    "_caption": "R3_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "58589169"
+                    },
+                    "_caption": "R4_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1424082049"
+                    },
+                    "_caption": "R5_CTIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%f",
+                    "_source": "CTIME_PACKET_ROACH5",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 188,
+            "geometryWidth": 324,
+            "geometryX": 952,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
+                "_id": "1127546801"
+            },
+            "_boxTitle": "POINTING",
+            "_style": "(P2072147126)",
+            "cellHeight": 11,
+            "cellWidth": 18,
+            "cellX": 76,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "72053412"
+                    },
+                    "_caption": "ELEVATION       ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "EL",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "156300593"
+                    },
+                    "_caption": "AZIMUTH",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "AZ",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "661517964"
+                        },
+                        "_map": {
+                            "11": "OPEN[style=Streaming (P1553648692)]",
+                            "3": "Intermediate[style=xhigh (P1489452979)]",
+                            "7": "CLOSED[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "445995722"
+                    },
+                    "_caption": "SHUTTER",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LIMS_SHUTTER",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "302617301"
+                    },
+                    "_caption": "RA",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "RA",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "895102626"
+                    },
+                    "_caption": "DEC",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "DEC",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 188,
+            "geometryWidth": 307,
+            "geometryX": 1292,
             "geometryY": 17
         }
     ],
@@ -2736,6 +3335,20 @@
             "_sxlow": "(P1042125667)",
             "_xhigh": "1",
             "_xlow": "-1"
+        },
+        {
+            "PObject": {
+                "_id": "773337968"
+            },
+            "_high": "1",
+            "_low": "0",
+            "_name": "BOOLEAN_FALSE_BAD",
+            "_shigh": "(P1489452979)",
+            "_slow": "(P1489452979)",
+            "_sxhigh": "(P1016205289)",
+            "_sxlow": "(P1489452979)",
+            "_xhigh": "1",
+            "_xlow": "-1"
         }
     ],
     "linkNames": [
@@ -2754,11 +3367,11 @@
             "cellHeight": 7,
             "cellWidth": 5,
             "cellX": 13,
-            "cellY": 0,
+            "cellY": 3,
             "geometryHeight": 119,
             "geometryWidth": 85,
             "geometryX": 221,
-            "geometryY": 0
+            "geometryY": 51
         }
     ],
     "styles": [
@@ -2766,7 +3379,7 @@
             "PObject": {
                 "_id": "2072147126"
             },
-            "_bg": "#69699d",
+            "_bg": "#dad4c4",
             "_bold": true,
             "_fg": "#0000ff",
             "_italic": true,
@@ -2981,11 +3594,44 @@
             "_italic": false,
             "_linked": true,
             "_name": "CAUTION"
+        },
+        {
+            "PObject": {
+                "_id": "119413738"
+            },
+            "_bg": "#99bc8c",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "CRYO_STATUS"
+        },
+        {
+            "PObject": {
+                "_id": "1106886140"
+            },
+            "_bg": "#000000",
+            "_bold": false,
+            "_fg": "#ffffff",
+            "_italic": false,
+            "_linked": true,
+            "_name": "terminal"
+        },
+        {
+            "PObject": {
+                "_id": "1369470654"
+            },
+            "_bg": "#fffc8b",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "N_TONES"
         }
     ],
     "webPort": "0",
     "windowCellHeight": 60,
-    "windowCellWidth": 96,
-    "windowHeight": 1028,
-    "windowWidth": 1632
+    "windowCellWidth": 106,
+    "windowHeight": 1020,
+    "windowWidth": 1810
 }

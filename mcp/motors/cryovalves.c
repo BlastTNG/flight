@@ -186,34 +186,6 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	}
 }
 
-/* Was going to write a new function to replace much of the work in DoPotValve, but not anymore
- *
- * void ControlPotValve(struct ezbus* bus)
-{
-	static int firsttime = 1;
-	static int tight_flag;
-	int new_goal;
-
-	if (firsttime) {
-		tight_flag = 1;
-		new_goal = 0;
-		firsttime = 0;
-	}
-	// update prev_goal and goal, test to see if they are the same
-	potvalve_data.prev_goal = potvalve_data.goal;
-	potvalve_data.goal = CommandData.Cryo.potvalve_goal;
-	new_goal = !(potvalve_data.prev_goal == potvalve_data.goal);
-
-	GetPotValvePos(bus);
-	SetValveState(tight_flag);
-
-	if (potvalve_data.state != potvalve_data.goal) {
-		potvalve_data.do_move = 1;
-	} else {
-		potvalve_data.do_move = 0;
-	}
-} */
-
 void DoPotValve(struct ezbus* bus)
 {
 	static int firsttime = 1;
