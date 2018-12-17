@@ -840,7 +840,7 @@ struct mcom mcommands[plugh + 2] = {
     "set the overshoot in degrees on the hwp for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot (deg)", 0.0, , 'd', "OVERSHOOT_HWPR"},
+      {"overshoot (deg)", -5.0, 5.0, 'd', "OVERSHOOT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_backoff),
