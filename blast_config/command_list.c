@@ -349,6 +349,7 @@ struct scom scommands[xyzzy + 1] = {
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
   {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
   {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
+  {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1424,6 +1425,17 @@ struct mcom mcommands[plugh + 2] = {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
+  {COMMAND(set_n_outofrange_thresh), "Set N channels out of range thresh", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_n_outofrange_thresh_all), "(All Roaches) Set N channels out of range thresh", GR_ROACH, 1,
+  {
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
+  }
+  },
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1458,6 +1470,16 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
       {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
+    {
+      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
     }
   },
   /***************************************/

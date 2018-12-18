@@ -1442,6 +1442,25 @@ int read_LO(pi_state_t *m_pi)
     }
 }
 
+int roach_chop_lo(roach_state_t *m_roach)
+{
+    int status = -1;
+    double set_freq[3];
+    if (!CommandData.roach[m_roach->which - 1].enable_chop_lo) {
+        return status;
+    }
+    blast_info("ROACH%d: Chopping LO", m_roach->which);
+    set_freq[0] = m_roach->lo_centerfreq - (double)LO_STEP;
+    set_freq[1] = m_roach->lo_centerfreq + (double)LO_STEP;
+    set_freq[2] = m_roach->lo_centerfreq;
+    for (int i = 0; i < 3; i++) {
+        if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
+            return status;
+        }
+    }
+    return 0;
+}
+
 int read_atten(pi_state_t *m_pi)
 {
     int retval = -1;
@@ -3212,8 +3231,9 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
 int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
 {
     int retval = -1;
-    int nsec = (int)CommandData.roach_params[m_roach->which - 1].num_sec;
-    nsec -= 1;
+    // int nsec = (int)CommandData.roach_params[m_roach->which - 1].num_sec;
+    // int nsec -= 1;
+    int nsec = (int)(CommandData.roach_params[m_roach->which - 1].num_sec - 0.001);;
     int npoints = round(nsec * (double)DAC_FREQ_RES);
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     uint8_t i_udp_read;
@@ -4618,7 +4638,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
     // flash cal lamp
     CommandData.cal_lamp_roach_hold = 1;
     // pulse cal lamp, save df
-    CommandData.roach_params[i].num_sec = 2.0;
+    // CommandData.roach_params[i].num_sec = 2.0;
     CommandData.roach[i].do_check_retune = 2;
     if ((status = roach_check_lamp_retune(m_roach)) < 0) {
         CommandData.roach[i].do_check_retune = 0;
@@ -5743,6 +5763,14 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
             // Check for scan retune flag
+            if (CommandData.roach[i].enable_chop_lo) {
+                if (CommandData.roach[i].chop_lo) {
+                    if (roach_chop_lo(&roach_state_table[i]) < 0) {
+                        blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                    }
+                    CommandData.roach[i].chop_lo = 0;
+                }
+            }
             if (CommandData.roach[i].auto_scan_retune) {
                 if (CommandData.trigger_roach_tuning_check) {
                     // CommandData.roach[i].do_check_retune = 3;
@@ -6120,7 +6148,6 @@ int init_roach(uint16_t ind)
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
-        roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6130,7 +6157,6 @@ int init_roach(uint16_t ind)
     if ((ind == 1)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 827.0e6;
-        roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6140,7 +6166,6 @@ int init_roach(uint16_t ind)
     if ((ind == 2)) {
         roach_state_table[ind].array = 350;
         roach_state_table[ind].lo_centerfreq = 850.0e6;
-        roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6150,7 +6175,6 @@ int init_roach(uint16_t ind)
     if ((ind == 3)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 827.0e6;
-        roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6160,7 +6184,6 @@ int init_roach(uint16_t ind)
     if ((ind == 4)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 828.0e6;
-        roach_state_table[ind].nflag_thresh = 300;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6280,7 +6303,6 @@ void write_roach_channels_1hz(void)
     static channel_t *DfDiffRetuneThreshAddr[NUM_ROACHES];
     static channel_t *PiErrorCountAddr[NUM_ROACHES];
     static channel_t *RoachStateAddr[NUM_ROACHES];
-    static channel_t *RoachStreamStateAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSmoothAddr[NUM_ROACHES];
     static channel_t *CmdRoachParPeakThreshAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
@@ -6302,7 +6324,6 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachAdcIRmsAddr[NUM_ROACHES];
     static channel_t *RoachAdcQRmsAddr[NUM_ROACHES];
     static channel_t *RoachScanTrigger;
-    static channel_t *RoachScanAutotune[NUM_ROACHES];
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
@@ -6319,7 +6340,6 @@ void write_roach_channels_1hz(void)
     char channel_name_nkids_tlm[128] = { 0 };
     char channel_name_skids_tlm[128] = { 0 };
     char channel_name_roach_state[128] = { 0 };
-    char channel_name_roach_stream_state[128] = { 0 };
     char channel_name_pi_error_count[128] = { 0 };
     char channel_name_cmd_roach_par_smooth[128] = { 0 };
     char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
@@ -6330,7 +6350,6 @@ void write_roach_channels_1hz(void)
     char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
     char channel_name_roach_adcI_rms[128] = { 0 };
     char channel_name_roach_adcQ_rms[128] = { 0 };
-    char channel_name_roach_scan_autotune[128] = { 0 };
     char channel_name_roach_pow_per_tone[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
@@ -6369,8 +6388,6 @@ void write_roach_channels_1hz(void)
                     sizeof(channel_name_roach_state), "state_roach%d", i + 1);
             snprintf(channel_name_pi_error_count,
                     sizeof(channel_name_pi_error_count), "pi_error_count_roach%d", i + 1);
-            snprintf(channel_name_roach_stream_state, sizeof(channel_name_roach_stream_state),
-                    "stream_state_roach%d", i + 1);
             snprintf(channel_name_cmd_roach_par_smooth,
                     sizeof(channel_name_cmd_roach_par_smooth), "fk_smooth_scale_roach%d",
                     i + 1);
@@ -6398,15 +6415,11 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
-            snprintf(channel_name_roach_scan_autotune,
-                    sizeof(channel_name_roach_scan_autotune), "auto_scan_retune_roach%d",
-                    i + 1);
             PowPerToneAddr[i] = channels_find_by_name(channel_name_roach_pow_per_tone);
             DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
             DfDiffRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_diff_retune_thresh);
             PiErrorCountAddr[i] = channels_find_by_name(channel_name_pi_error_count);
             RoachStateAddr[i] = channels_find_by_name(channel_name_roach_state);
-            RoachStreamStateAddr[i] = channels_find_by_name(channel_name_roach_stream_state);
             CmdRoachParSmoothAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_smooth);
             CmdRoachParPeakThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_peak_thresh);
             CmdRoachParSpaceThreshAddr[i] = channels_find_by_name(channel_name_cmd_roach_par_space_thresh);
@@ -6425,7 +6438,6 @@ void write_roach_channels_1hz(void)
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
-            RoachScanAutotune[i] = channels_find_by_name(channel_name_roach_scan_autotune);
         }
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
         RoachTlmMode = channels_find_by_name("roach_tlm_mode");
@@ -6449,9 +6461,8 @@ void write_roach_channels_1hz(void)
         SET_UINT16(nKidsFoundAddr[i], roach_state_table[i].num_kids);
         SET_UINT16(nKidsGoodAddr[i], n_good_kids);
         SET_UINT16(nKidsBadAddr[i], (roach_state_table[i].num_kids - n_good_kids));
-        SET_UINT16(RoachStateAddr[i], roach_state_table[i].state);
-        SET_UINT16(PiErrorCountAddr[i], roach_state_table[i].pi_error_count);
-        SET_UINT16(RoachStreamStateAddr[i], roach_state_table[i].is_streaming);
+        SET_UINT8(RoachStateAddr[i], roach_state_table[i].state);
+        SET_UINT8(PiErrorCountAddr[i], roach_state_table[i].pi_error_count);
         SET_INT32(DfRetuneThreshAddr[i], CommandData.roach_params[i].df_retune_threshold);
         SET_INT32(DfDiffRetuneThreshAddr[i], CommandData.roach_params[i].df_diff_retune_threshold);
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
@@ -6491,13 +6502,14 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
         roach_status_field |= (((uint32_t)CommandData.roach[i].auto_scan_retune) << 25);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].chop_lo) << 27);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
         SET_UINT16(NFlagThreshFieldAddr[i], roach_state_table[i].nflag_thresh);
         SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);
         SET_UINT16(SKidsTlmRoach[i], CommandData.roach_tlm[i].kid);
-        SET_UINT8(RoachScanAutotune[i], CommandData.roach[i].auto_scan_retune);
     }
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
     SET_UINT8(RoachScanTrigger, CommandData.trigger_roach_tuning_check);

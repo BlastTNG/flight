@@ -1306,6 +1306,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].auto_scan_retune = 0;
           }
           break;
+        case chop_lo_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].chop_lo = 1;
+          }
+          break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
@@ -2646,6 +2651,27 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
             CommandData.roach_run_cycle_checker = ivalues[0];
         }
+      break;
+    case set_n_outofrange_thresh:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].n_outofrange_thresh = ivalues[1];
+      }
+      break;
+    case set_n_outofrange_thresh_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].n_outofrange_thresh = ivalues[0];
+      }
+      break;
+    case enable_chop_lo_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].enable_chop_lo = ivalues[0];
+      }
+      break;
+    case chop_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].chop_lo = 1;
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3337,6 +3363,9 @@ void InitCommandData()
         CommandData.roach[i].kill = 0;
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].do_turnaround_loop = 0;
+        CommandData.roach[i].n_outofrange_thresh = 300;
+        CommandData.roach[i].enable_chop_lo = 0;
+        CommandData.roach[i].chop_lo = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
