@@ -145,6 +145,7 @@ typedef struct roach_state {
     bool tone_write_fail;
     bool lamp_check_error;
     bool doing_full_loop;
+    bool doing_turnaround_loop;
     bool is_finding_kids;
     bool doing_find_kids_loop;
     bool is_compressing_data;
