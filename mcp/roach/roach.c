@@ -153,10 +153,10 @@ char path_to_iq_tarball[5][100];
 char path_to_df_tarball[5][100];
 char path_to_last_dfs[5][100];
 
-char path_to_all_vna[] = "all_vna_sweeps.tar.gz";
-char path_to_all_targ[] = "all_targ_sweeps.tar.gz";
-char path_to_all_iq[] = "all_iq_data.tar.gz";
-char path_to_all_df[] = "all_df_data.tar.gz";
+char path_to_all_vna[] = "/home/fc1user/roach_flight/all_vna_sweeps.tar.gz";
+char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
+char path_to_all_iq[] = "/home/fc1user/roach_flight/all_iq_data.tar.gz";
+char path_to_all_df[] = "/home/fc1user/roach_flight/all_df_data.tar.gz";
 
 // Roach source MAC addresses
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
@@ -2960,6 +2960,19 @@ int compress_data(roach_state_t *m_roach, int type)
     return 0;
 }
 
+char* truncate_path(char *old_path, int nparents)
+{
+    int count = 0;
+    char *new_path = old_path;
+    while (*new_path) {
+        if (*new_path == '/') count++;
+        if (count > nparents) break;
+        new_path++;
+    }
+    new_path = new_path + 1;
+    return new_path;
+}
+
 int compress_all_data(int type)
 {
     // int status = -1;
@@ -2969,44 +2982,48 @@ int compress_all_data(int type)
     blast_info("Building tarball");
     blast_tmp_sprintf(tar_cmd, "tar -czvf");
     if ((type == VNA)) {
-        blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
+           roach_root_path,
            path_to_all_vna,
-           path_to_vna_tarball[0],
-           path_to_vna_tarball[1],
-           path_to_vna_tarball[2],
-           path_to_vna_tarball[3],
-           path_to_vna_tarball[4]);
+           truncate_path(path_to_vna_tarball[0], 4),
+           truncate_path(path_to_vna_tarball[1], 4),
+           truncate_path(path_to_vna_tarball[2], 4),
+           truncate_path(path_to_vna_tarball[3], 4),
+           truncate_path(path_to_vna_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_VNA_SWEEPS");
         var_name = "ALL_VNA_SWEEPS";
         setenv(var_name, path_to_all_vna, 1);
     } else if (type == TARG) {
-        blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
+           roach_root_path,
            path_to_all_targ,
-           path_to_targ_tarball[0],
-           path_to_targ_tarball[1],
-           path_to_targ_tarball[2],
-           path_to_targ_tarball[3],
-           path_to_targ_tarball[4]);
+           truncate_path(path_to_targ_tarball[0], 4),
+           truncate_path(path_to_targ_tarball[1], 4),
+           truncate_path(path_to_targ_tarball[2], 4),
+           truncate_path(path_to_targ_tarball[3], 4),
+           truncate_path(path_to_targ_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_TARG_SWEEPS");
         setenv(var_name, path_to_all_targ, 1);
     } else if (type == IQ) {
-        blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
+           roach_root_path,
            path_to_all_iq,
-           path_to_iq_tarball[0],
-           path_to_iq_tarball[1],
-           path_to_iq_tarball[2],
-           path_to_iq_tarball[3],
-           path_to_iq_tarball[4]);
+           truncate_path(path_to_iq_tarball[0], 4),
+           truncate_path(path_to_iq_tarball[1], 4),
+           truncate_path(path_to_iq_tarball[2], 4),
+           truncate_path(path_to_iq_tarball[3], 4),
+           truncate_path(path_to_iq_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_IQ_DATA");
         setenv(var_name, path_to_all_iq, 1);
     } else if (type == DF) {
-        blast_tmp_sprintf(tar_cmd, "tar -czvf %s %s %s %s %s %s",
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
+           roach_root_path,
            path_to_all_df,
-           path_to_df_tarball[0],
-           path_to_df_tarball[1],
-           path_to_df_tarball[2],
-           path_to_df_tarball[3],
-           path_to_df_tarball[4]);
+           truncate_path(path_to_df_tarball[0], 4),
+           truncate_path(path_to_df_tarball[1], 4),
+           truncate_path(path_to_df_tarball[2], 4),
+           truncate_path(path_to_df_tarball[3], 4),
+           truncate_path(path_to_df_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_DF_DATA");
         setenv(var_name, path_to_all_df, 1);
     }
@@ -4581,6 +4598,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
 {
     int status = -1;
     int i = m_roach->which - 1;
+    m_roach->doing_turnaround_loop = 1;
     // flash cal lamp
     CommandData.cal_lamp_roach_hold = 1;
     // pulse cal lamp, save df
@@ -4590,6 +4608,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         CommandData.roach[i].do_check_retune = 0;
         blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
         CommandData.cal_lamp_roach_hold = 0;
+        m_roach->doing_turnaround_loop = 0;
         return status;
     }
     CommandData.roach[i].do_check_retune = 0;
@@ -4599,6 +4618,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
         CommandData.roach[i].refit_res_freqs = 0;
         CommandData.cal_lamp_roach_hold = 0;
+        m_roach->doing_turnaround_loop = 0;
         return status;
     }
     // pulse cal lamp, save df
@@ -4607,9 +4627,14 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         CommandData.roach[i].do_check_retune = 0;
         blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
         CommandData.cal_lamp_roach_hold = 0;
+        m_roach->doing_turnaround_loop = 0;
         return status;
     }
     CommandData.cal_lamp_roach_hold = 0;
+    CommandData.roach[i].recenter_df = 1;
+    center_df(m_roach);
+    CommandData.roach[i].recenter_df = 0;
+    m_roach->doing_turnaround_loop = 0;
     return 0;
 }
 
@@ -6057,15 +6082,15 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].random_phase_path, "%s/random_phases.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     snprintf(path_to_vna_tarball[ind], sizeof(path_to_vna_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_vna_sweep.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_vna_sweep.tar.gz");
     snprintf(path_to_targ_tarball[ind], sizeof(path_to_targ_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_targ_sweep.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_targ_sweep.tar.gz");
     snprintf(path_to_iq_tarball[ind], sizeof(path_to_iq_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_iq_ts.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_iq_ts.tar.gz");
     snprintf(path_to_df_tarball[ind], sizeof(path_to_df_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_df_ts.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_df_ts.tar.gz");
     snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
-               "roach%d_%s", ind + 1, "dfs");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "dfs");
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
@@ -6140,6 +6165,9 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_firmware = 0;
     roach_state_table[ind].firmware_upload_fail = 0;
     roach_state_table[ind].n_watchdog_fails = 0;
+    roach_state_table[ind].doing_full_loop = 0;
+    roach_state_table[ind].doing_find_kids_loop = 0;
+    roach_state_table[ind].doing_turnaround_loop = 0;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].go_flight_mode = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
@@ -6249,6 +6277,7 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachAdcQRmsAddr[NUM_ROACHES];
     static channel_t *RoachScanTrigger;
     static channel_t *RoachScanAutotune[NUM_ROACHES];
+    static channel_t *PowPerToneAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
     char channel_name_df_retune_thresh[128] = { 0 };
@@ -6276,6 +6305,7 @@ void write_roach_channels_1hz(void)
     char channel_name_roach_adcI_rms[128] = { 0 };
     char channel_name_roach_adcQ_rms[128] = { 0 };
     char channel_name_roach_scan_autotune[128] = { 0 };
+    char channel_name_roach_pow_per_tone[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -6285,6 +6315,8 @@ void write_roach_channels_1hz(void)
                         "flags_kids%04d_roach%d", j*16, i + 1);
                 FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+            snprintf(channel_name_roach_pow_per_tone, sizeof(channel_name_roach_pow_per_tone),
+                        "pow_per_tone_roach%d", i + 1);
             snprintf(channel_name_df_retune_thresh, sizeof(channel_name_df_retune_thresh),
                         "df_retune_thresh_roach%d", i + 1);
             snprintf(channel_name_df_diff_retune_thresh, sizeof(channel_name_df_diff_retune_thresh),
@@ -6343,6 +6375,7 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_scan_autotune,
                     sizeof(channel_name_roach_scan_autotune), "auto_scan_retune_roach%d",
                     i + 1);
+            PowPerToneAddr[i] = channels_find_by_name(channel_name_roach_pow_per_tone);
             DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
             DfDiffRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_diff_retune_thresh);
             PiErrorCountAddr[i] = channels_find_by_name(channel_name_pi_error_count);
@@ -6404,6 +6437,7 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
         SET_FLOAT(RoachAdcIRmsAddr[i], roach_state_table[i].adc_rms[0]);
         SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
+        SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
     // Make Roach status field
         roach_status_field |= (roach_state_table[i].has_error & 0x0001);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_qdr_cal) << 1);
@@ -6429,6 +6463,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
