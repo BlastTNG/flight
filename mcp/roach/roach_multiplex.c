@@ -107,8 +107,11 @@ void add_roach_tlm_488hz()
 			  kid_tlm[j] = (r_tlm->kid+kid_counter[j])%MAX_CHANNELS_PER_ROACH;
         r_tlm->index = get_roach_index(j+1, kid_tlm[j], i);
 			}
-		} else {
-      kid_tlm[j] = r_tlm->kid;
+		} else { // if zero, just set the kid to the one from CommandData
+      int tlm_ind = j*3;
+      if (tlm_ind >= NUM_ROACH_TLM) continue;
+      r_tlm = &(CommandData.roach_tlm[tlm_ind]);
+		  kid_tlm[j] = r_tlm->kid;
     }
   }
 
