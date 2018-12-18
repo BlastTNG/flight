@@ -4248,7 +4248,6 @@ float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, i
     int i;
     double df;
     static uint32_t i_ct = 0;
-    static int first_pass = 1;
     // Check to make sure i_roach and i_kid are within range
     /* if ((i_roach >= NUM_ROACHES) || (i_kid >= MAX_CHANNELS_PER_ROACH)
                                  || (i_roach < 0) || (i_kid < 0)) {
@@ -4274,10 +4273,6 @@ float roach_df_continuous(roach_df_calc_t* m_roach_df, float inew, float qnew, i
 //         i_ct++;
         return(retval);
     }
-    /* if (first_pass) {
-        i_ct = 0;
-        first_pass = 0;
-    }*/
     m_roach_df->i_sum = m_roach_df->i_sum - m_roach_df->ibuf[m_roach_df->ind_last] + inew;
     m_roach_df->q_sum = m_roach_df->q_sum - m_roach_df->qbuf[m_roach_df->ind_last] + qnew;
     m_roach_df->qbuf[m_roach_df->ind_last] = qnew;
