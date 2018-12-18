@@ -1271,7 +1271,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case debug_mode:
             for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].go_flight_mode = 0;
+               CommandData.roach[i].go_flight_mode = 0;
                 // CommandData.roach[i].auto_find = 0;
                 CommandData.roach[i].do_sweeps = 0;
             }
@@ -1294,6 +1294,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case set_attens_default_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].set_attens = 2;
+          }
+          break;
+        case roach_allow_scan_check_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].auto_scan_retune = 1;
+          }
+          break;
+        case roach_disallow_scan_check_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].auto_scan_retune = 0;
           }
           break;
         case xyzzy:
@@ -3321,7 +3331,7 @@ void InitCommandData()
         CommandData.roach[i].do_full_loop = 0;
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].auto_correct_freqs = 0;
-        CommandData.roach[i].auto_scan_retune = 0;
+        CommandData.roach[i].auto_scan_retune = 1;
         CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;

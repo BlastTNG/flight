@@ -347,6 +347,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
+  {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
+  {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
