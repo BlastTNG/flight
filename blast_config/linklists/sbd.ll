@@ -4,6 +4,10 @@ count_cmd_n             NONE 1
 count_cmd_s             NONE 1
 last_cmd_n              NONE 1
 last_cmd_s              NONE 1
+hdd_disk_space_n        NONE 1
+hdd_disk_space_s        NONE 1
+hdd_disk_index_n        NONE 1
+hdd_disk_index_s        NONE 1
 status_mcc              NONE 1
 
 # pointing
@@ -54,8 +58,3 @@ state_roach2            NONE 1
 state_roach3            NONE 1
 state_roach4            NONE 1
 state_roach5            NONE 1
-state_pi_roach1         NONE 1
-state_pi_roach2         NONE 1
-state_pi_roach3         NONE 1
-state_pi_roach4         NONE 1
-state_pi_roach5         NONE 1
