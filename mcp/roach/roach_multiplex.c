@@ -140,28 +140,28 @@ void add_roach_tlm_488hz()
     int mode = CommandData.roach_tlm_mode;
     if (tlm[i]) {
       double value = -3.14159;
-			if ((i_roach >= NUM_ROACHES) || (kid_tlm[j] >= MAX_CHANNELS_PER_ROACH)) {
+			if ((i_roach >= NUM_ROACHES) || (kid_tlm[i_roach] >= MAX_CHANNELS_PER_ROACH)) {
 					if (!have_warned) {
 						blast_err("Indexing error: roach_index %d, ind_rtype %d conflict with NUM_ROACHES %d, NUM_RTYPES %d",
-										i_roach, kid_tlm[j], NUM_ROACHES, MAX_CHANNELS_PER_ROACH);
+										i_roach, kid_tlm[i_roach], NUM_ROACHES, MAX_CHANNELS_PER_ROACH);
 					}
 					have_warned = 1;
 			} else { // valid indices, so proceed
 				if (strcmp(ROACH_TYPES[r_tlm->rtype], "i") == 0) { // I comes from the UDP packet directly
-					if (mode == ROACH_TLM_IQDF) value = m_packet->Ival[kid_tlm[j]];
-					else if (mode == ROACH_TLM_DELTA) value = roach_state_table[i_roach].I_diff[kid_tlm[j]];
+					if (mode == ROACH_TLM_IQDF) value = m_packet->Ival[kid_tlm[i_roach]];
+					else if (mode == ROACH_TLM_DELTA) value = roach_state_table[i_roach].I_diff[kid_tlm[i_roach]];
 
 				} else if (strcmp(ROACH_TYPES[r_tlm->rtype], "q") == 0) { // Q comes from the UDP packet directly
-					if (mode == ROACH_TLM_IQDF) value = m_packet->Qval[kid_tlm[j]];
-					else if (mode == ROACH_TLM_DELTA) value = roach_state_table[i_roach].Q_diff[kid_tlm[j]];
+					if (mode == ROACH_TLM_IQDF) value = m_packet->Qval[kid_tlm[i_roach]];
+					else if (mode == ROACH_TLM_DELTA) value = roach_state_table[i_roach].Q_diff[kid_tlm[i_roach]];
 
 				} else if (strcmp(ROACH_TYPES[r_tlm->rtype], "df") == 0) { // df comes from the frame
 					if (CommandData.roach_tlm_mode == ROACH_TLM_IQDF) {
-								value = roach_df_continuous(&(roach_df_telem[i_roach][kid_tlm[j]]),
-																	 m_packet->Ival[kid_tlm[j]], m_packet->Qval[kid_tlm[j]],
-																	 i_roach, kid_tlm[j]);
+								value = roach_df_continuous(&(roach_df_telem[i_roach][kid_tlm[i_roach]]),
+																	 m_packet->Ival[kid_tlm[i_roach]], m_packet->Qval[kid_tlm[i_roach]],
+																	 i_roach, kid_tlm[i_roach]);
 					} else if (mode == ROACH_TLM_DELTA) {
-						value = roach_state_table[i_roach].df_diff[kid_tlm[j]];
+						value = roach_state_table[i_roach].df_diff[kid_tlm[i_roach]];
 					}
 				}
         have_warned = 0;
