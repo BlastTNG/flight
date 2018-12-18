@@ -1262,6 +1262,7 @@ channel_t channel_list[] =
     { "state_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "state_roach4",      SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
     { "state_roach5",      SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_1HZ, U_NONE, 0 },
+    { "roach_trig_turn_retune",    SCALE(CONVERT_UNITY),  TYPE_UINT16,   RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach1",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach2",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach3",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },

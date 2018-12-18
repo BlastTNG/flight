@@ -2985,11 +2985,11 @@ int compress_all_data(int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_vna,
-           truncate_path(path_to_vna_tarball[0], 4),
-           truncate_path(path_to_vna_tarball[1], 4),
-           truncate_path(path_to_vna_tarball[2], 4),
-           truncate_path(path_to_vna_tarball[3], 4),
-           truncate_path(path_to_vna_tarball[4], 4));
+           truncate_path(path_to_vna_tarball[0], 3),
+           truncate_path(path_to_vna_tarball[1], 3),
+           truncate_path(path_to_vna_tarball[2], 3),
+           truncate_path(path_to_vna_tarball[3], 3),
+           truncate_path(path_to_vna_tarball[4], 3));
         blast_tmp_sprintf(var_name, "ALL_VNA_SWEEPS");
         var_name = "ALL_VNA_SWEEPS";
         setenv(var_name, path_to_all_vna, 1);
@@ -2997,33 +2997,33 @@ int compress_all_data(int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_targ,
-           truncate_path(path_to_targ_tarball[0], 4),
-           truncate_path(path_to_targ_tarball[1], 4),
-           truncate_path(path_to_targ_tarball[2], 4),
-           truncate_path(path_to_targ_tarball[3], 4),
-           truncate_path(path_to_targ_tarball[4], 4));
+           truncate_path(path_to_targ_tarball[0], 3),
+           truncate_path(path_to_targ_tarball[1], 3),
+           truncate_path(path_to_targ_tarball[2], 3),
+           truncate_path(path_to_targ_tarball[3], 3),
+           truncate_path(path_to_targ_tarball[4], 3));
         blast_tmp_sprintf(var_name, "ALL_TARG_SWEEPS");
         setenv(var_name, path_to_all_targ, 1);
     } else if (type == IQ) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_iq,
-           truncate_path(path_to_iq_tarball[0], 4),
-           truncate_path(path_to_iq_tarball[1], 4),
-           truncate_path(path_to_iq_tarball[2], 4),
-           truncate_path(path_to_iq_tarball[3], 4),
-           truncate_path(path_to_iq_tarball[4], 4));
+           truncate_path(path_to_iq_tarball[0], 3),
+           truncate_path(path_to_iq_tarball[1], 3),
+           truncate_path(path_to_iq_tarball[2], 3),
+           truncate_path(path_to_iq_tarball[3], 3),
+           truncate_path(path_to_iq_tarball[4], 3));
         blast_tmp_sprintf(var_name, "ALL_IQ_DATA");
         setenv(var_name, path_to_all_iq, 1);
     } else if (type == DF) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_df,
-           truncate_path(path_to_df_tarball[0], 4),
-           truncate_path(path_to_df_tarball[1], 4),
-           truncate_path(path_to_df_tarball[2], 4),
-           truncate_path(path_to_df_tarball[3], 4),
-           truncate_path(path_to_df_tarball[4], 4));
+           truncate_path(path_to_df_tarball[0], 3),
+           truncate_path(path_to_df_tarball[1], 3),
+           truncate_path(path_to_df_tarball[2], 3),
+           truncate_path(path_to_df_tarball[3], 3),
+           truncate_path(path_to_df_tarball[4], 3));
         blast_tmp_sprintf(var_name, "ALL_DF_DATA");
         setenv(var_name, path_to_all_df, 1);
     }
@@ -3649,10 +3649,10 @@ int roach_targ_sweep(roach_state_t *m_roach)
         // creates file for downlinking sweep path to local machine
         // pyblast_system("python /home/fc1user/sam_builds/sweep_list.py targ");
         // save params for delta f calculation
-        save_ref_params(m_roach);
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
         }
+        save_ref_params(m_roach);
         // check lamp response
         /* CommandData.roach_params[m_roach->which - 1].num_sec = 4;
         CommandData.roach[m_roach->which - 1].check_response = 1;
@@ -3666,21 +3666,36 @@ int roach_targ_sweep(roach_state_t *m_roach)
         // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
         setenv(var_name, path_to_targ_tarball[m_roach->which - 1], 1);
         compress_data(m_roach, TARG);
+        m_roach->is_sweeping = 0;
+        m_roach->sweep_fail = 0;
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        center_df(m_roach);
+        return status;
     /*} else if ((retval == SWEEP_INTERRUPT)) {
         m_roach->has_targ_sweep = 0;
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);*/
     } else if (status == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
         m_roach->sweep_fail = 1;
+        m_roach->is_sweeping = 0;
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        return status;
     } else if (status == SWEEP_FAIL) {
         blast_info("ROACH%d, TARG sweep failed", m_roach->which);
         m_roach->sweep_fail = 1;
+        m_roach->is_sweeping = 0;
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        return status;
     }
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-    if (recenter_lo(m_roach) < 0) {
-        blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
-    }
-    m_roach->is_sweeping = 0;
     return 0;
 }
 
@@ -3813,10 +3828,11 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
     if ((roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids) < 0)) {
         return retval;
     }
+    /*
     // if Roach has df ref params, recenter df
     if (m_roach->has_ref) {
         center_df(m_roach);
-    }
+    } */
     // Do another targ sweep, which becomes the new reference sweep
     CommandData.roach[m_roach->which - 1].do_sweeps = 2;
     if (roach_targ_sweep(m_roach) < 0) {
@@ -4626,9 +4642,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         return status;
     }
     CommandData.cal_lamp_roach_hold = 0;
-    CommandData.roach[i].recenter_df = 1;
     center_df(m_roach);
-    CommandData.roach[i].recenter_df = 0;
     m_roach->doing_turnaround_loop = 0;
     return 0;
 }
@@ -5250,18 +5264,30 @@ int roach_vna_sweep(roach_state_t *m_roach)
         // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
         setenv(var_name, path_to_vna_tarball[m_roach->which - 1], 1);
         compress_data(m_roach, VNA);
+        m_roach->sweep_fail = 0;
+        m_roach->is_sweeping = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        return status;
     } else if (status == SWEEP_INTERRUPT) {
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
         m_roach->sweep_fail = 1;
+        m_roach->is_sweeping = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        return status;
     } else if (status == SWEEP_FAIL) {
         blast_info("ROACH%d, VNA SWEEP FAILED", m_roach->which);
         m_roach->sweep_fail = 1;
+        m_roach->is_sweeping = 0;
+        if (recenter_lo(m_roach) < 0) {
+            blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
+        }
+        return status;
     }
-    m_roach->is_sweeping = 0;
-    if (recenter_lo(m_roach) < 0) {
-        blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
-    }
-    return status;
+    return 0;
 }
 
 int roach_full_loop(roach_state_t *m_roach)
@@ -6459,6 +6485,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].auto_scan_retune) << 25);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
