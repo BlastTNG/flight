@@ -1402,7 +1402,6 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
   {
-    {"ROACH no", 1, 5, 'i', "NONE"},
     {"Number of sec to stream", 0, 300, 'f', "NONE"},
   }
   },

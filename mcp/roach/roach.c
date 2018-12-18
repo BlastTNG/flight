@@ -153,10 +153,10 @@ char path_to_iq_tarball[5][100];
 char path_to_df_tarball[5][100];
 char path_to_last_dfs[5][100];
 
-char path_to_all_vna[] = "all_vna_sweeps.tar.gz";
-char path_to_all_targ[] = "all_targ_sweeps.tar.gz";
-char path_to_all_iq[] = "all_iq_data.tar.gz";
-char path_to_all_df[] = "all_df_data.tar.gz";
+char path_to_all_vna[] = "/home/fc1user/roach_flight/all_vna_sweeps.tar.gz";
+char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
+char path_to_all_iq[] = "/home/fc1user/roach_flight/all_iq_data.tar.gz";
+char path_to_all_df[] = "/home/fc1user/roach_flight/all_df_data.tar.gz";
 
 // Roach source MAC addresses
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
@@ -6057,15 +6057,15 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].random_phase_path, "%s/random_phases.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     snprintf(path_to_vna_tarball[ind], sizeof(path_to_vna_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_vna_sweep.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_vna_sweep.tar.gz");
     snprintf(path_to_targ_tarball[ind], sizeof(path_to_targ_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_targ_sweep.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_targ_sweep.tar.gz");
     snprintf(path_to_iq_tarball[ind], sizeof(path_to_iq_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_iq_ts.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_iq_ts.tar.gz");
     snprintf(path_to_df_tarball[ind], sizeof(path_to_df_tarball[ind]),
-               "roach%d_%s", ind + 1, "last_df_ts.tar.gz");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_df_ts.tar.gz");
     snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
-               "roach%d_%s", ind + 1, "dfs");
+               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "dfs");
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
