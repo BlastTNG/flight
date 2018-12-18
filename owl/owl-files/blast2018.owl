@@ -312,10 +312,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -329,10 +329,10 @@
             "cellY": 19,
             "dataItems": [
             ],
-            "geometryHeight": 119,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 323
+            "geometryHeight": 238,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 646
         },
         {
             "PObject": {
@@ -449,10 +449,10 @@
                     "type": "PTDI"
                 }
             ],
-            "geometryHeight": 187,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 51
+            "geometryHeight": 374,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -471,7 +471,19 @@
                             "_id": "189960814"
                         },
                         "_map": {
-                            "3": "Stop[style=Bold (P1059175281)]"
+                            "1": "Az El Goto[style=No style (P1829765767)]",
+                            "10": "Quad Scan",
+                            "11": "El Scan",
+                            "12": "El Box[style=No style (P1829765767)]",
+                            "13": "Current[style=No style (P1829765767)]",
+                            "2": "Az Scan[style=No style (P1829765767)]",
+                            "3": "Stop[style=Bold (P1059175281)]",
+                            "4": "Ra Dec Goto[style=No style (P1829765767)]",
+                            "5": "V Cap[style=No style (P1829765767)]",
+                            "6": "Cap Scan[style=No style (P1829765767)]",
+                            "7": "Box Scan",
+                            "8": "IF Locked",
+                            "9": "V Box"
                         }
                     },
                     "PObject": {
@@ -627,10 +639,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -857,10 +869,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 867,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1734,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -1020,10 +1032,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 442
+            "geometryHeight": 476,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 884
         }
     ],
     "extremas": [
@@ -1031,15 +1043,15 @@
             "PObject": {
                 "_id": "1555967448"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "closed",
             "_shigh": "(P1913941534)",
             "_slow": "(P2017040817)",
             "_sxhigh": "(P956360347)",
             "_sxlow": "(P949614266)",
-            "_xhigh": "2",
-            "_xlow": "-2"
+            "_xhigh": 2,
+            "_xlow": -2
         }
     ],
     "linkNames": [
@@ -1059,10 +1071,10 @@
             "cellWidth": 5,
             "cellX": 19,
             "cellY": 13,
-            "geometryHeight": 119,
-            "geometryWidth": 85,
-            "geometryX": 323,
-            "geometryY": 221
+            "geometryHeight": 238,
+            "geometryWidth": 170,
+            "geometryX": 646,
+            "geometryY": 442
         }
     ],
     "styles": [
@@ -1254,9 +1266,9 @@
             "_name": "shutter"
         }
     ],
-    "webPort": "0",
-    "windowCellHeight": 64,
-    "windowCellWidth": 90,
-    "windowHeight": 1104,
-    "windowWidth": 1528
+    "webPort": "\u0000",
+    "windowCellHeight": 60,
+    "windowCellWidth": 109,
+    "windowHeight": 2049,
+    "windowWidth": 3706
 }
