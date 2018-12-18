@@ -6301,6 +6301,8 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachTlmMode;
     static channel_t *RoachAdcIRmsAddr[NUM_ROACHES];
     static channel_t *RoachAdcQRmsAddr[NUM_ROACHES];
+    static channel_t *RoachScanTrigger;
+    static channel_t *RoachScanAutotune[NUM_ROACHES];
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
@@ -6328,6 +6330,7 @@ void write_roach_channels_1hz(void)
     char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
     char channel_name_roach_adcI_rms[128] = { 0 };
     char channel_name_roach_adcQ_rms[128] = { 0 };
+    char channel_name_roach_scan_autotune[128] = { 0 };
     char channel_name_roach_pow_per_tone[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
@@ -6395,6 +6398,9 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            snprintf(channel_name_roach_scan_autotune,
+                    sizeof(channel_name_roach_scan_autotune), "auto_scan_retune_roach%d",
+                    i + 1);
             PowPerToneAddr[i] = channels_find_by_name(channel_name_roach_pow_per_tone);
             DfRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_retune_thresh);
             DfDiffRetuneThreshAddr[i] = channels_find_by_name(channel_name_df_diff_retune_thresh);
@@ -6419,7 +6425,9 @@ void write_roach_channels_1hz(void)
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
+            RoachScanAutotune[i] = channels_find_by_name(channel_name_roach_scan_autotune);
         }
+        RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
         RoachTlmMode = channels_find_by_name("roach_tlm_mode");
     }
     for (i = 0; i < NUM_ROACHES; i++) {
@@ -6489,6 +6497,8 @@ void write_roach_channels_1hz(void)
         SET_UINT16(NFlagThreshFieldAddr[i], roach_state_table[i].nflag_thresh);
         SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);
         SET_UINT16(SKidsTlmRoach[i], CommandData.roach_tlm[i].kid);
+        SET_UINT8(RoachScanAutotune[i], CommandData.roach[i].auto_scan_retune);
     }
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
+    SET_UINT8(RoachScanTrigger, CommandData.trigger_roach_tuning_check);
 }
