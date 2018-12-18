@@ -2969,6 +2969,7 @@ char* truncate_path(char *old_path, int nparents)
         if (count > nparents) break;
         new_path++;
     }
+    new_path = new_path + 1;
     return new_path;
 }
 
@@ -2984,11 +2985,11 @@ int compress_all_data(int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_vna,
-           truncate_path(path_to_vna_tarball[0], 3),
-           truncate_path(path_to_vna_tarball[1], 3),
-           truncate_path(path_to_vna_tarball[2], 3),
-           truncate_path(path_to_vna_tarball[3], 3),
-           truncate_path(path_to_vna_tarball[4], 3));
+           truncate_path(path_to_vna_tarball[0], 4),
+           truncate_path(path_to_vna_tarball[1], 4),
+           truncate_path(path_to_vna_tarball[2], 4),
+           truncate_path(path_to_vna_tarball[3], 4),
+           truncate_path(path_to_vna_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_VNA_SWEEPS");
         var_name = "ALL_VNA_SWEEPS";
         setenv(var_name, path_to_all_vna, 1);
@@ -2996,33 +2997,33 @@ int compress_all_data(int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_targ,
-           truncate_path(path_to_targ_tarball[0], 3),
-           truncate_path(path_to_targ_tarball[1], 3),
-           truncate_path(path_to_targ_tarball[2], 3),
-           truncate_path(path_to_targ_tarball[3], 3),
-           truncate_path(path_to_targ_tarball[4], 3));
+           truncate_path(path_to_targ_tarball[0], 4),
+           truncate_path(path_to_targ_tarball[1], 4),
+           truncate_path(path_to_targ_tarball[2], 4),
+           truncate_path(path_to_targ_tarball[3], 4),
+           truncate_path(path_to_targ_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_TARG_SWEEPS");
         setenv(var_name, path_to_all_targ, 1);
     } else if (type == IQ) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_iq,
-           truncate_path(path_to_iq_tarball[0], 3),
-           truncate_path(path_to_iq_tarball[1], 3),
-           truncate_path(path_to_iq_tarball[2], 3),
-           truncate_path(path_to_iq_tarball[3], 3),
-           truncate_path(path_to_iq_tarball[4], 3));
+           truncate_path(path_to_iq_tarball[0], 4),
+           truncate_path(path_to_iq_tarball[1], 4),
+           truncate_path(path_to_iq_tarball[2], 4),
+           truncate_path(path_to_iq_tarball[3], 4),
+           truncate_path(path_to_iq_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_IQ_DATA");
         setenv(var_name, path_to_all_iq, 1);
     } else if (type == DF) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_df,
-           truncate_path(path_to_df_tarball[0], 3),
-           truncate_path(path_to_df_tarball[1], 3),
-           truncate_path(path_to_df_tarball[2], 3),
-           truncate_path(path_to_df_tarball[3], 3),
-           truncate_path(path_to_df_tarball[4], 3));
+           truncate_path(path_to_df_tarball[0], 4),
+           truncate_path(path_to_df_tarball[1], 4),
+           truncate_path(path_to_df_tarball[2], 4),
+           truncate_path(path_to_df_tarball[3], 4),
+           truncate_path(path_to_df_tarball[4], 4));
         blast_tmp_sprintf(var_name, "ALL_DF_DATA");
         setenv(var_name, path_to_all_df, 1);
     }
