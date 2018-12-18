@@ -16,16 +16,29 @@
             "cellY": 13,
             "dataItems": [
                 {
+                    "PObject": {
+                        "_id": "10146870"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH1",
+                    "type": "PNDI"
+                },
+                {
                     "PMDI": {
                         "PObject": {
                             "_id": "2050970796"
                         },
                         "_map": {
-                            "0": "Boot",
-                            "1": "Connected",
-                            "2": "Programmed",
-                            "3": "Configured",
-                            "4": "Idle[style=Streaming (P1553648692)]"
+                            "0": "Boot[style=No style (P577109550)]",
+                            "1": "Connected[style=No style (P577109550)]",
+                            "2": "Programmed[style=No style (P577109550)]",
+                            "3": "Configured[style=No style (P577109550)]",
+                            "4": "streaming[style=No style (P577109550)]"
                         }
                     },
                     "PObject": {
@@ -48,19 +61,6 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "10146870"
-                    },
-                    "_caption": "IS_STREAMING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "IS_STREAMING_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -469,7 +469,8 @@
                     "_caption": "PI_ERROR_COUNT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
                     "_format": "",
                     "_source": "PI_ERROR_COUNT_ROACH1",
                     "type": "PNDI"
@@ -540,6 +541,19 @@
             "cellY": 13,
             "dataItems": [
                 {
+                    "PObject": {
+                        "_id": "1891021159"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH2",
+                    "type": "PNDI"
+                },
+                {
                     "PMDI": {
                         "PObject": {
                             "_id": "1170416338"
@@ -549,7 +563,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Idle[style=Streaming (P1553648692)]"
+                            "4": "Streaming"
                         }
                     },
                     "PObject": {
@@ -572,19 +586,6 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1891021159"
-                    },
-                    "_caption": "IS_STREAMING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "IS_STREAMING_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -993,7 +994,8 @@
                     "_caption": "PI_ERROR_COUNT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
                     "_format": "",
                     "_source": "PI_ERROR_COUNT_ROACH2",
                     "type": "PNDI"
@@ -1064,16 +1066,29 @@
             "cellY": 13,
             "dataItems": [
                 {
+                    "PObject": {
+                        "_id": "2090638718"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH3",
+                    "type": "PNDI"
+                },
+                {
                     "PMDI": {
                         "PObject": {
                             "_id": "1527755711"
                         },
                         "_map": {
-                            "0": "Boot[style=No style (P1211964964)]",
+                            "0": "Boot[style=No style (P577109550)]",
                             "1": "Connected",
                             "2": "Programmed[style=No style (P634346397)]",
                             "3": "Configured[style=No style (P1211964964)]",
-                            "4": "Idle[style=Streaming (P1553648692)]"
+                            "4": "Streaming"
                         }
                     },
                     "PObject": {
@@ -1096,19 +1111,6 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2090638718"
-                    },
-                    "_caption": "IS_STREAMING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "IS_STREAMING_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1518,7 +1520,8 @@
                     "_caption": "PI_ERROR_COUNT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
                     "_format": "",
                     "_source": "PI_ERROR_COUNT_ROACH3",
                     "type": "PNDI"
@@ -1589,6 +1592,19 @@
             "cellY": 13,
             "dataItems": [
                 {
+                    "PObject": {
+                        "_id": "1726743147"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
                     "PMDI": {
                         "PObject": {
                             "_id": "1141758336"
@@ -1598,7 +1614,7 @@
                             "1": "Connected",
                             "2": "Programmed",
                             "3": "Configured",
-                            "4": "Idle[style=Streaming (P1553648692)]"
+                            "4": "Streaming"
                         }
                     },
                     "PObject": {
@@ -1621,19 +1637,6 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1726743147"
-                    },
-                    "_caption": "IS_STREAMING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "IS_STREAMING_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -2043,7 +2046,8 @@
                     "_caption": "PI_ERROR_COUNT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
                     "_format": "",
                     "_source": "PI_ERROR_COUNT_ROACH4",
                     "type": "PNDI"
@@ -2114,6 +2118,19 @@
             "cellY": 13,
             "dataItems": [
                 {
+                    "PObject": {
+                        "_id": "1796931251"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH5",
+                    "type": "PNDI"
+                },
+                {
                     "PMDI": {
                         "PObject": {
                             "_id": "65712887"
@@ -2122,8 +2139,8 @@
                             "0": "Boot",
                             "1": "Connected",
                             "2": "Programmed",
-                            "3": "Configured",
-                            "4": "Idle[style=Streaming (P1553648692)]"
+                            "3": "Configured[style=No style (P577109550)]",
+                            "4": "Streaming[style=No style (P577109550)]"
                         }
                     },
                     "PObject": {
@@ -2146,19 +2163,6 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_FIRMWARE_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1796931251"
-                    },
-                    "_caption": "IS_STREAMING",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "IS_STREAMING_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2567,7 +2571,8 @@
                     "_caption": "PI_ERROR_COUNT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
                     "_format": "",
                     "_source": "PI_ERROR_COUNT_ROACH5",
                     "type": "PNDI"
@@ -2769,7 +2774,7 @@
                 }
             ],
             "geometryHeight": 187,
-            "geometryWidth": 188,
+            "geometryWidth": 187,
             "geometryX": 17,
             "geometryY": 17
         },
@@ -2791,7 +2796,8 @@
                     "_caption": "TR_HE3_FRIDGE      ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P2103860321)",
                     "_format": "",
                     "_source": "Tr_he3_fridge",
                     "type": "PNDI"
@@ -2803,7 +2809,8 @@
                     "_caption": "350 ARRAY TEMP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P2103860321)",
                     "_format": "",
                     "_source": "Tr_350_fpa",
                     "type": "PNDI"
@@ -2893,11 +2900,45 @@
                     "PObject": {
                         "_id": "230899016"
                     },
-                    "_caption": "FRIDGE_CYCLE_STATE",
+                    "_caption": "FRIDGE_CYCLE_STATE       ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "CYCLE_STATE",
                     "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "918666154"
+                        },
+                        "_map": {
+                            "0": "Intermediate[style=xhigh (P1489452979)]",
+                            "1": "OPEN[style=xhigh (P1489452979)]",
+                            "2": "CLOSED[style=Streaming (P1553648692)]",
+                            "3": "LOOSE CLOSED[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1414609630"
+                    },
+                    "_caption": "POT VALVE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_POTVALVE",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1078273291"
+                    },
+                    "_caption": "FRIDGE_CYCLE_WARNING ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 187,
@@ -3174,8 +3215,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 188,
-            "geometryWidth": 324,
+            "geometryHeight": 187,
+            "geometryWidth": 323,
             "geometryX": 952,
             "geometryY": 17
         },
@@ -3259,8 +3300,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 188,
-            "geometryWidth": 307,
+            "geometryHeight": 187,
+            "geometryWidth": 306,
             "geometryX": 1292,
             "geometryY": 17
         }
@@ -3349,6 +3390,48 @@
             "_sxlow": "(P1489452979)",
             "_xhigh": "1",
             "_xlow": "-1"
+        },
+        {
+            "PObject": {
+                "_id": "2103860321"
+            },
+            "_high": "0.29",
+            "_low": "0",
+            "_name": "TEMPS",
+            "_shigh": "(P2012763546)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1489452979)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "0.29",
+            "_xlow": "0"
+        },
+        {
+            "PObject": {
+                "_id": "1547091814"
+            },
+            "_high": "1",
+            "_low": "-1",
+            "_name": "PI_ERROR",
+            "_shigh": "(P2012763546)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1489452979)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "1",
+            "_xlow": "-2"
+        },
+        {
+            "PObject": {
+                "_id": "1837166662"
+            },
+            "_high": "1",
+            "_low": "0",
+            "_name": "IS_STREAMING",
+            "_shigh": "(P1489452979)",
+            "_slow": "(P1489452979)",
+            "_sxhigh": "(P1553648692)",
+            "_sxlow": "(P1489452979)",
+            "_xhigh": "1",
+            "_xlow": "0"
         }
     ],
     "linkNames": [
@@ -3633,5 +3716,5 @@
     "windowCellHeight": 60,
     "windowCellWidth": 106,
     "windowHeight": 1020,
-    "windowWidth": 1810
+    "windowWidth": 1802
 }
