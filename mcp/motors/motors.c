@@ -1024,6 +1024,8 @@ static void do_mode_new_cap(void)
             blast_info("Approaching the top: next targ_el = %f, r = %f,"
                         "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                        targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         } else if (targ_el <= -r) {
             targ_el = -r;
             el_next_dir = 1;
