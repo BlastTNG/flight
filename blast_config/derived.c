@@ -651,6 +651,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DOING_FIND_KIDS_LOOP_ROACH1", "status_roach1", 21, 1),
     BITWORD("IS_FINDING_KIDS_ROACH1", "status_roach1", 22, 1),
     BITWORD("IS_COMPRESSING_DATA_ROACH1", "status_roach1", 23, 1),
+    BITWORD("DOING_TURNAROUND_LOOP_ROACH1", "status_roach1", 24, 1),
 
     BITWORD("HAS_ERROR_ROACH2", "status_roach2", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH2", "status_roach2", 1, 1),
@@ -676,6 +677,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DOING_FIND_KIDS_LOOP_ROACH2", "status_roach2", 21, 1),
     BITWORD("IS_FINDING_KIDS_ROACH2", "status_roach2", 22, 1),
     BITWORD("IS_COMPRESSING_DATA_ROACH2", "status_roach2", 23, 1),
+    BITWORD("DOING_TURNAROUND_LOOP_ROACH2", "status_roach2", 24, 1),
 
     BITWORD("HAS_ERROR_ROACH3", "status_roach3", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH3", "status_roach3", 1, 1),
@@ -701,6 +703,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DOING_FIND_KIDS_LOOP_ROACH3", "status_roach3", 21, 1),
     BITWORD("IS_FINDING_KIDS_ROACH3", "status_roach3", 22, 1),
     BITWORD("IS_COMPRESSING_DATA_ROACH3", "status_roach3", 23, 1),
+    BITWORD("DOING_TURNAROUND_LOOP_ROACH3", "status_roach3", 24, 1),
 
     BITWORD("HAS_ERROR_ROACH4", "status_roach4", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH4", "status_roach4", 1, 1),
@@ -726,6 +729,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DOING_FIND_KIDS_LOOP_ROACH4", "status_roach4", 21, 1),
     BITWORD("IS_FINDING_KIDS_ROACH4", "status_roach4", 22, 1),
     BITWORD("IS_COMPRESSING_DATA_ROACH4", "status_roach4", 23, 1),
+    BITWORD("DOING_TURNAROUND_LOOP_ROACH4", "status_roach4", 24, 1),
 
     BITWORD("HAS_ERROR_ROACH5", "status_roach5", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH5", "status_roach5", 1, 1),
@@ -751,6 +755,7 @@ derived_tng_t derived_list[] = {
     BITWORD("DOING_FIND_KIDS_LOOP_ROACH5", "status_roach5", 21, 1),
     BITWORD("IS_FINDING_KIDS_ROACH5", "status_roach5", 22, 1),
     BITWORD("IS_COMPRESSING_DATA_ROACH5", "status_roach5", 23, 1),
+    BITWORD("DOING_TURNAROUND_LOOP_ROACH5", "status_roach5", 24, 1),
 
     // clinometer channels
     LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
