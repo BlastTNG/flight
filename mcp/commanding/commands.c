@@ -1296,11 +1296,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].set_attens = 2;
           }
           break;
-        case turnaround_loop_all:
-          for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].do_turnaround_loop = 1;
-          }
-          break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
@@ -2579,6 +2574,13 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case turnaround_loop:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_turnaround_loop = 1;
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+      }
+      break;
+    case turnaround_loop_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_turnaround_loop = 1;
+          CommandData.roach_params[i].num_sec = rvalues[0];
       }
       break;
     case kill_roach:

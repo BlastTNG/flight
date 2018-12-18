@@ -4584,6 +4584,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
     // flash cal lamp
     CommandData.cal_lamp_roach_hold = 1;
     // pulse cal lamp, save df
+    CommandData.roach_params[i].num_sec = 2.0;
     CommandData.roach[i].do_check_retune = 2;
     if ((status = roach_check_lamp_retune(m_roach)) < 0) {
         CommandData.roach[i].do_check_retune = 0;

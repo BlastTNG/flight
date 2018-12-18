@@ -347,7 +347,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -1395,9 +1394,16 @@ struct mcom mcommands[plugh + 2] = {
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
   }
   },
-  {COMMAND(turnaround_loop), "Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
+  {COMMAND(turnaround_loop), "Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Number of sec to stream", 0, 300, 'f', "NONE"},
+  }
+  },
+  {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Number of sec to stream", 0, 300, 'f', "NONE"},
   }
   },
   {COMMAND(kill_roach),
