@@ -422,7 +422,7 @@ static void DoActuators(void)
   }
   switch (CommandData.actbus.focus_mode) {
     case ACTBUS_FM_PANIC:
-      bputs(warning, "Actuator Panic");
+      blast_info("M2 Actuators in Panic");
       for (i = 0; i < 3; ++i) {
           EZBus_Stop(&bus, id[i]); /* terminate all strings */
           EZBus_Comm(&bus, id[i], "n0R");	/* also stop fine correction */
