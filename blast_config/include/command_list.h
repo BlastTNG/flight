@@ -164,7 +164,8 @@ enum singleCommand {
   auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
   change_freqs_all, df_targ_all, check_df_retune_all, check_dfsweep_retune_all, debug_mode, allow_watchdog,
     disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check, full_loop_all_default,
-  set_attens_default_all, turnaround_loop_all, xyzzy
+  set_attens_default_all, roach_allow_scan_check_all, roach_disallow_scan_check_all,
+  chop_lo_all, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -343,6 +344,11 @@ enum multiCommand {
   compress_roach_data,
   enable_cycle_checker,
   turnaround_loop,
+  turnaround_loop_all,
+  set_n_outofrange_thresh_all,
+  set_n_outofrange_thresh,
+  enable_chop_lo_all,
+  chop_lo,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };
