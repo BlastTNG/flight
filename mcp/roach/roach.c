@@ -1663,76 +1663,6 @@ int set_attens_targ_output(roach_state_t *m_roach)
     return 0;
 }
 
-// TODO(Sam) Finish and test this function
-/* Function: cal_adc_rms
- * ----------------------------
- * Attempts to adjust Roach input and output attenuators until full scale of ADC is utilized
- * Attenuators are set to maximize Vrms
- *
- * @param m_roach roach state table
- *
-*/
-
-int cal_adc_rms(roach_state_t *m_roach, float targ_rms, double output_atten, int ntries)
-{
-    int retval = -1;
-    blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which - 1);
-    if (CommandData.roach_params[m_roach->which - 1].set_in_atten <= 1.0) {
-        CommandData.roach_params[m_roach->which - 1].set_in_atten += 2.0;
-    }
-    if (CommandData.roach_params[m_roach->which - 1].set_in_atten >= 30.0) {
-        CommandData.roach_params[m_roach->which - 1].set_in_atten -= 2.0;
-    }
-    float *rms;
-    // For now, keep output atten at 10 dB
-    CommandData.roach_params[m_roach->which - 1].set_out_atten = output_atten;
-    int count = 0;
-    float high_range = targ_rms + (float)ADC_RMS_RANGE;
-    float low_range = targ_rms - (float)ADC_RMS_RANGE;
-    while (count < ADC_CAL_NTRIES) {
-        rms = roach_read_adc(m_roach);
-        blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
-        blast_info("count = %d", count);
-        if ((CommandData.roach_params[m_roach->which - 1].set_in_atten <= 1.0) ||
-                     (CommandData.roach_params[m_roach->which - 1].set_in_atten >= 30.5)) {
-            blast_info("ROACH%d, Input atten limit, aborting cal", m_roach->which);
-            break;
-        } else {
-            // if rms is too low
-            blast_info("High range, low_range = %g, %g", high_range, low_range);
-            if ((rms[0] < high_range) ||
-                      (rms[1] < high_range)) {
-                blast_info("ROACH%d, Warning: ADC RMS < %g mV", m_roach->which, high_range);
-                CommandData.roach_params[m_roach->which - 1].set_in_atten -= (double)ATTEN_STEP;
-                blast_info("ROACH%d, Adjusting input atten...", m_roach->which);
-                set_atten(&pi_state_table[m_roach->which - 1]);
-                if ((rms[0] <= high_range) &&
-                      (rms[0] >= low_range)) {
-                    blast_info("ROACH%d, ADC cal set", m_roach->which);
-                    break;
-                }
-            }
-            // if rms is too high
-            if ((rms[0] > high_range) ||
-                              (rms[1] > high_range)) {
-                blast_info("ROACH%d, Warning: ADC RMS > %g mV", m_roach->which, high_range);
-                CommandData.roach_params[m_roach->which - 1].set_in_atten += (double)ATTEN_STEP;
-                blast_info("ROACH%d, Adjusting input atten...", m_roach->which);
-                set_atten(&pi_state_table[m_roach->which - 1]);
-                if ((rms[0] <= high_range) &&
-                      (rms[0] >= low_range)) {
-                    blast_info("ROACH%d, ADC cal set", m_roach->which);
-                    break;
-                }
-            }
-        }
-        count += 1;
-    }
-    retval = 0;
-    m_roach->has_adc_cal = 1;
-    return retval;
-}
-
 int set_output_atten(roach_state_t *m_roach, double new_out_atten)
 {
     int retval = -1;
@@ -2470,8 +2400,6 @@ int roach_write_saved(roach_state_t *m_roach)
         return retval;
     }
     blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
-    // blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which);
-    // cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
     save_ref_params(m_roach);
     m_roach->has_targ_tones = 1;
     m_roach->has_vna_tones = 0;
@@ -2654,7 +2582,7 @@ int setLO_oneshot(int which_pi, double loFreq)
 int pi_reboot_now(pi_state_t *m_pi)
 {
     blast_info("ROACH%d, REBOOTING PI%d NOW", m_pi->which, m_pi->which);
-    roach_state_table[m_pi->which - 1].pi_error_count = 0;
+    roach_state_table[m_pi->which - 1].pi_reboot_warning = 1;
     int s;
     int status = -1;
     struct sockaddr_in sin;
@@ -2684,6 +2612,7 @@ int pi_reboot_now(pi_state_t *m_pi)
         return status;
     }
     roach_state_table[m_pi->which - 1].pi_reboot_warning = 0;
+    roach_state_table[m_pi->which - 1].pi_error_count = 0;
     return 0;
 }
 
@@ -4147,8 +4076,6 @@ int calc_grad_freqs(roach_state_t *m_roach, char *m_targ_path)
     blast_info("Uploading TARGET comb...");
     roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids);
     blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
-    blast_info("ROACH%d, Calibrating ADC rms voltages...", m_roach->which);
-    cal_adc_rms(m_roach, ADC_TARG_RMS_250, OUTPUT_ATTEN_TARG, ADC_CAL_NTRIES);
     retval = 0;
     return retval;
 }
@@ -4944,60 +4871,12 @@ void reset_roach_flags(roach_state_t *m_roach)
     m_roach->lamp_check_error = 0;
     m_roach->katcp_connect_error = 0;
     m_roach->pi_error_count = 0;
+    m_roach->pi_reboot_warning = 0;
+    m_roach->data_stream_error = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
     // CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-}
-
-void start_debug_mode(roach_state_t *m_roach)
-{
-    // if you are not in flight mode, you are in debug mode
-    if (!m_roach->in_flight_mode) {
-        return;
-    } else {
-        blast_info("ROACH%d: STARTING DEBUG MODE!", m_roach->which);
-        m_roach->in_flight_mode = 0;
-    }
-    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-    m_roach->in_flight_mode = 0;
-    m_roach->is_sweeping = 0;
-    CommandData.roach[m_roach->which - 1].go_flight_mode = 0;
-    if (m_roach->is_streaming) {
-        if (m_roach->has_vna_tones) {
-            m_roach->state = ROACH_STATE_STREAMING;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
-        } else {
-            m_roach->state = ROACH_STATE_CONFIGURED;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
-        }
-    }
-}
-
-void start_flight_mode(roach_state_t *m_roach)
-{
-    // if blastcmd set debug mode
-    if (CommandData.roach[m_roach->which - 1].go_flight_mode == 0) {
-        m_roach->in_flight_mode = 0;
-        return;
-    }
-    if (m_roach->in_flight_mode) {
-        return;
-    } else if (CommandData.roach[m_roach->which - 1].go_flight_mode == 1) {
-        blast_info("ROACH%d: STARTING FLIGHT MODE!", m_roach->which);
-        m_roach->in_flight_mode = 1;
-    }
-    CommandData.roach[m_roach->which - 1].do_sweeps = 1;
-    // m_roach->is_sweeping = 1;
-    if (m_roach->is_streaming) {
-        if (m_roach->has_vna_tones) {
-            m_roach->state = ROACH_STATE_STREAMING;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
-        } else {
-            m_roach->state = ROACH_STATE_CONFIGURED;
-            m_roach->desired_state = ROACH_STATE_STREAMING;
-        }
-    }
 }
 
 void pi_state_manager(pi_state_t *m_pi, int result)
@@ -5530,69 +5409,6 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             }
             break;
         case ROACH_STATE_STREAMING:
-            /* 
-            // vna sweep
-            if (m_roach->is_sweeping == 1) {
-                if (result == 0) {
-                    // success
-                    m_roach->is_sweeping = 0;
-                    m_roach->has_vna_sweep = 1;
-                    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-                    // if in flight mode, find kids automatically
-                    if (m_roach->in_flight_mode) {
-                        if ((get_targ_freqs(m_roach, 1)) < 0) {
-                            m_roach->tone_finding_error = 1;
-                            start_debug_mode(m_roach);
-                        } else {
-                            if ((roach_write_targ_tones(m_roach)) < 0) {
-                                start_debug_mode(m_roach);
-                            } else {
-                                m_roach->has_targ_tones = 1;
-                                CommandData.roach[m_roach->which - 1].do_sweeps = 1;
-                            }
-                            result = roach_targ_sweep(m_roach);
-                            break;
-                        }
-                    }
-                } else if (result == -1) {
-                    // sweep interrupted by command, go to debug mode
-                    start_debug_mode(m_roach);
-                } else if (result == -2) {
-                    // sweep failed, retry
-                    m_roach->is_sweeping = 0;
-                    blast_err("ROACH%d: SWEEP FAILED", m_roach->which - 1);
-                    m_roach->sweep_fail = 1;
-                    CommandData.roach[m_roach->which - 1].do_sweeps = 1;
-                }
-            }
-            // targ sweep
-            if (m_roach->is_sweeping == 2) {
-                if (result == 0) {
-                    // success
-                    m_roach->is_sweeping = 0;
-                    blast_err("ROACH%d: SWEEP FAILED", m_roach->which - 1);
-                    m_roach->has_targ_sweep = 1;
-                    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
-                }
-                if (result == -1) {
-                    // sweep interrupted by command, go to debug mode
-                    m_roach->is_sweeping = 0;
-                    start_debug_mode(m_roach);
-                }
-                if (result == -2) {
-                    // sweep failed, retry
-                    m_roach->is_sweeping = 0;
-                    m_roach->sweep_fail = 1;
-                    CommandData.roach[m_roach->which - 1].do_sweeps = 2;
-                }
-            }
-            if ((AUTO_CAL_ADC) && (!m_roach->has_adc_cal)) {
-            // Calibrate input/output attenuators so that ADC V rms
-            // is close to 100 mV in I and in Q
-                if (result == -1) {
-                    m_roach->state = ROACH_STATE_STREAMING;
-                }
-            } */
             break;
     }
 }
@@ -5635,13 +5451,11 @@ void *roach_cmd_loop(void* ind)
     // set_attens_to_default(&pi_state_table[i]);
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
-        // start_flight_mode(&roach_state_table[i]);
         if (CommandData.roach[i].kill) {
             roach_halt_ppc(&roach_state_table[i]);
             CommandData.roach[i].kill = 0;
         }
         if (roach_state_table[i].pi_error_count >= MAX_PI_ERRORS_REBOOT) {
-            roach_state_table[i].pi_reboot_warning = 1;
             CommandData.roach[i].reboot_pi_now = 1;
             roach_state_table[i].pi_error_count = 0;
         }
@@ -5748,10 +5562,6 @@ void *roach_cmd_loop(void* ind)
            if (CommandData.roach[i].adc_rms) {
                get_adc_rms(&roach_state_table[i]);
                CommandData.roach[i].adc_rms = 0;
-           }
-           if (CommandData.roach[i].calibrate_adc) {
-               cal_adc_rms(&roach_state_table[i], ADC_TARG_RMS_VNA, OUTPUT_ATTEN_VNA, ADC_CAL_NTRIES);
-               CommandData.roach[i].calibrate_adc = 0;
            }
         }
         // These commmands require roach state to be streaming
@@ -6205,7 +6015,6 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].sweep_fail = 0;
     roach_state_table[ind].has_vna_sweep = 0;
     roach_state_table[ind].has_targ_sweep = 0;
-    roach_state_table[ind].in_flight_mode = 0;
     roach_state_table[ind].has_firmware = 0;
     roach_state_table[ind].firmware_upload_fail = 0;
     roach_state_table[ind].n_watchdog_fails = 0;
@@ -6214,7 +6023,6 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].doing_turnaround_loop = 0;
     roach_state_table[ind].data_stream_error = 0;
     CommandData.roach[ind].do_check_retune = 0;
-    CommandData.roach[ind].go_flight_mode = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
     // blast_info("Spawning command thread for roach%i...", ind + 1);
     ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);

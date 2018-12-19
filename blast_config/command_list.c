@@ -330,16 +330,14 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(calc_dfs), "(All Roaches) Calculate df for all channels", GR_ROACH},
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
   {COMMAND(load_freqs_all), "(All Roaches) Write all saved targ freqs", GR_ROACH},
-  {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
+  {COMMAND(reload_vna_all), "(All Roaches) Reload VNA freqs and VNA trf", GR_ROACH},
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
   {COMMAND(set_attens_default_all), "(All Roaches) Set all attens to default values", GR_ROACH},
   {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
-  {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
-  {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
-  {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
+  {COMMAND(roach_reset_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
@@ -1035,11 +1033,6 @@ struct mcom mcommands[plugh + 2] = {
       {"APPLY TRF FILE[1 = default, 2 = apply trf, 3 = apply last]", 1, 3, 'i', "NONE"},
     }
   },
-  {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"}
-    }
-  },
   {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
@@ -1063,7 +1056,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+  {COMMAND(roach_reset), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
@@ -1217,14 +1210,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 3,
+  {COMMAND(full_loop), "Performs full loop for single Roach (MUST HAVE VNA COMB LOADED)", CONFIRM | GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
       {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
     }
   },
-  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 2,
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches", CONFIRM | GR_ROACH, 2,
     {
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
       {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
@@ -1384,14 +1377,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
+  {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", CONFIRM | GR_ROACH, 3,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
   }
   },
-  {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
+  {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", CONFIRM | GR_ROACH, 2,
   {
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},

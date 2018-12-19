@@ -1257,25 +1257,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].recenter_df = 1;
             }
             break;
-        case reset_roach_all:
+        case roach_reset_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].roach_new_state = ROACH_STATE_BOOT;
               CommandData.roach[i].roach_desired_state = ROACH_STATE_STREAMING;
               CommandData.roach[i].change_roach_state = 1;
             }
           break;
-        case flight_mode:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].go_flight_mode = 1;
-            }
-            break;
-        case debug_mode:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-               CommandData.roach[i].go_flight_mode = 0;
-                // CommandData.roach[i].auto_find = 0;
-                CommandData.roach[i].do_sweeps = 0;
-            }
-            break;
         case change_freqs_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
@@ -2197,11 +2185,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].load_new_freqs = 1;
       }
       break;
-    case cal_adc:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].calibrate_adc = 1;
-      }
-      break;
     case end_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_sweeps = 0;
@@ -2230,7 +2213,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].do_sweeps = 2;
       }
       break;
-    case reset_roach:
+    case roach_reset:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
           CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
@@ -3324,7 +3307,6 @@ void InitCommandData()
     CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
-        CommandData.roach[i].calibrate_adc = 0;
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;
@@ -3359,7 +3341,6 @@ void InitCommandData()
         CommandData.roach[i].auto_find = 0;
         CommandData.roach_params[i].set_in_atten = 19;
         CommandData.roach[i].recenter_df = 0;
-        CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach[i].do_df_targ = 0;
