@@ -741,16 +741,16 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "ENC_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "ENC_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "ENC_2_ACT"}
     }
   },
   {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Dr_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Dr_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Dr_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "DR_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "DR_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "DR_2_ACT"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
