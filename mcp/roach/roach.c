@@ -3504,18 +3504,8 @@ int get_lamp_response(roach_state_t *m_roach)
     char *file_out;
     // chop the lamp
     float lamp_sec = CommandData.roach_params[m_roach->which - 1].num_sec;
-    // blast_info("LAMP SEC ================ %d", lamp_sec);
     cal_pulses(lamp_sec, 1);
-    // center_df(m_roach);
-    // char *path_to_I_diffs;
-    /*
-    blast_tmp_sprintf(path_to_I_diffs, "%s/I_diffs.dat", m_roach->sweep_root_path);
-    // Q diffs file
-    char *path_to_Q_diffs;
-    blast_tmp_sprintf(path_to_Q_diffs, "%s/Q_diffs.dat", m_roach->sweep_root_path);
-    char *path_to_df_diffs;
-    blast_tmp_sprintf(path_to_df_diffs, "%s/df_lamp.dat", m_roach->sweep_root_path);
-    */
+    // get 'on' timestream (save in buffer)
     if ((avg_chan_vals(m_roach, 1) < 0)) {
         return retval;
     }
@@ -3537,7 +3527,7 @@ int get_lamp_response(roach_state_t *m_roach)
         m_roach->I_diff[chan] = m_roach->I_on[chan] - m_roach->I_off[chan];
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
-        blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
+        // blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
         fwrite(&m_roach->I_diff[chan], 4, 1, fd);
         fwrite(&m_roach->Q_diff[chan], 4, 1, fd);
         fwrite(&m_roach->df_diff[chan], 4, 1, fd);
@@ -3555,19 +3545,6 @@ int get_lamp_response(roach_state_t *m_roach)
         // blast_info("ROACH%d chan %d: lamp df = %g", m_roach->which, chan, df_diff[chan]);
     }
     fclose(fd);
-    /*
-    // save I diffs to file
-    if ((roach_save_1D_file(m_roach, path_to_I_diffs, m_roach->I_diff, m_roach->current_ntones) < 0)) {
-        return retval;
-    }
-    // save Q diffs to file
-    if ((roach_save_1D_file(m_roach, path_to_Q_diffs, m_roach->Q_diff, m_roach->current_ntones) < 0)) {
-        return retval;
-    }
-    // save Mags diffs to file
-    if ((roach_save_1D_file(m_roach, path_to_df_diffs, m_roach->df_diff, m_roach->current_ntones) < 0)) {
-        return retval;
-    }*/
     return 0;
 }
 
@@ -4504,7 +4481,7 @@ static int roach_check_df_retune(roach_state_t *m_roach)
             return status;
         } else {
             for (int chan = 0; chan < m_roach->num_kids; ++chan) {
-                if ((m_roach->df[chan] >
+                if ((m_roach->df[chan] <
                     CommandData.roach_params[m_roach->which - 1].df_retune_threshold)) {
                     nflags++;
                     m_roach->out_of_range[chan] = 1;
@@ -4515,7 +4492,7 @@ static int roach_check_df_retune(roach_state_t *m_roach)
         blast_info("ROACH%d: %d KIDs have drifted", m_roach->which, nflags);
         }
     }
-    if (nflags > m_roach->nflag_thresh) {
+    if (nflags > CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
         m_roach->retune_flag = 1;
         blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
         if (CommandData.roach[m_roach->which - 1].auto_correct_freqs == 1) {
@@ -4557,7 +4534,7 @@ static int roach_check_df_sweep_retune(roach_state_t *m_roach)
             }
         }
         blast_info("ROACH%d: %d KIDs have drifted", m_roach->which, nflags);
-        if (nflags > m_roach->nflag_thresh) {
+        if (nflags < CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
             m_roach->retune_flag = 1;
             blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
         }
@@ -4572,8 +4549,19 @@ static int roach_check_df_sweep_retune(roach_state_t *m_roach)
     CommandData.roach[m_roach->which - 1].do_check_retune = 0;
     return 0;
 }
+
 static int roach_check_lamp_retune(roach_state_t *m_roach)
 {
+    int sweep_check = 1;
+    for (int t = 0; (t < 30000) && (sweep_check); t++) {
+        sweep_check = 0;
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            if (roach_state_table[i].is_sweeping) {
+                sweep_check = 1;
+                break;
+            }
+        }
+    }
     CommandData.cal_lamp_roach_hold = 1;
     int status;
     // check for ref params
@@ -4605,7 +4593,7 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
         blast_info("ROACH%d: %d channels have drifted", m_roach->which, nflags);
         }
     }
-    if (nflags > m_roach->nflag_thresh) {
+    if (nflags > CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
         m_roach->retune_flag = 1;
         blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
     }
@@ -4669,6 +4657,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         m_roach->doing_turnaround_loop = 0;
         return status;
     }
+    CommandData.roach[i].do_check_retune = 0;
     CommandData.cal_lamp_roach_hold = 0;
     center_df(m_roach);
     m_roach->doing_turnaround_loop = 0;
