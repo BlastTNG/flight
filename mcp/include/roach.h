@@ -120,8 +120,6 @@ typedef struct roach_state {
     e_roach_state state;
     e_roach_state desired_state;
 
-    int has_error;
-    const char *last_err;
     bool katcp_is_busy;
     char *address;
     uint16_t port;
@@ -150,6 +148,8 @@ typedef struct roach_state {
     bool doing_find_kids_loop;
     bool is_compressing_data;
     int pi_error_count;
+    bool pi_reboot_warning;
+    bool data_stream_error;
 
     float adc_rms[2];
     double *freq_residuals;
