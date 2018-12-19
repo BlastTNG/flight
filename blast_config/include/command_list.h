@@ -349,6 +349,7 @@ enum multiCommand {
   set_n_outofrange_thresh,
   enable_chop_lo_all,
   chop_lo,
+  roach_has_lamp_control,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

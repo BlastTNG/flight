@@ -1405,7 +1405,6 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
   {
-    {"ROACH no", 1, 5, 'i', "NONE"},
     {"Number of sec to stream", 0, 300, 'f', "NONE"},
   }
   },
@@ -1481,6 +1480,11 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
     {
       {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
   /***************************************/

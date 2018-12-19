@@ -394,6 +394,7 @@ typedef struct roach
     unsigned int n_outofrange_thresh;
     unsigned int enable_chop_lo;
     unsigned int chop_lo;
+    unsigned int has_lamp_control;
 } roach_status_t;
 
 typedef struct roach_params
