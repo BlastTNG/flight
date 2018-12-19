@@ -161,11 +161,10 @@ enum singleCommand {
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all, force_pot_refill,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, new_ref_params_all,
-  auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, df_targ_all, check_df_retune_all, check_dfsweep_retune_all, debug_mode, allow_watchdog,
-    disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check, full_loop_all_default,
-  set_attens_default_all, roach_allow_scan_check_all, roach_disallow_scan_check_all,
-  chop_lo_all, xyzzy
+  auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
+  check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
+  trigger_retune_check, full_loop_all_default, set_attens_default_all, roach_allow_scan_check_all,
+  roach_disallow_scan_check_all, chop_lo_all, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -263,7 +262,7 @@ enum multiCommand {
   xsc_filter_matching,
   vna_sweep,
   targ_sweep,
-  reset_roach,
+  roach_reset,
   calc_df,
   opt_tones,
   auto_retune,
@@ -271,7 +270,6 @@ enum multiCommand {
   show_adc_rms,
   load_new_vna_amps,
   load_new_targ_amps,
-  cal_adc,
   change_state,
   get_state,
   set_attens,
@@ -349,6 +347,7 @@ enum multiCommand {
   set_n_outofrange_thresh,
   enable_chop_lo_all,
   chop_lo,
+  roach_has_lamp_control,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

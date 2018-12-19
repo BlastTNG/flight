@@ -380,11 +380,11 @@ typedef struct roach
     unsigned int on_res;
     unsigned int auto_find;
     unsigned int recenter_df;
-    unsigned int go_flight_mode;
     unsigned int check_response;
     unsigned int reboot_pi_now;
     unsigned int do_df_targ;
-    unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
+    unsigned int auto_scan_retune;
+    // Set whether we want to check the roach tuning after every scan.
     unsigned int do_full_loop;
     unsigned int auto_correct_freqs;
     unsigned int do_noise_comp;
@@ -394,6 +394,7 @@ typedef struct roach
     unsigned int n_outofrange_thresh;
     unsigned int enable_chop_lo;
     unsigned int chop_lo;
+    unsigned int has_lamp_control;
 } roach_status_t;
 
 typedef struct roach_params

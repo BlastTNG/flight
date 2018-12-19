@@ -349,7 +349,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     double  new_val;
 
     static double i_pss[NUM_PSS][NUM_PSS_V];
-    static double itot[NUM_PSS];
+    static double itot[NUM_PSS], itotabs[NUM_PSS];
     double        x[NUM_PSS], y[NUM_PSS];
     double        usun[NUM_PSS][3], u2[NUM_PSS][3];
     gsl_matrix    *rot[NUM_PSS];
@@ -411,20 +411,23 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     for (j = 0; j < NUM_PSS; j++) {
 		itot[j] = 0;
 		for (k = 0; k < NUM_PSS_V; k++) {
+			// calculate total current for x,y calculation
     		itot[j] += i_pss[j][k];
+			// and the sum of absolute valued currents for SNR
+			itotabs[j] += fabs(i_pss[j][k]);
 		}
     }
 
     pss_imin = CommandData.cal_imin_pss;
 	// blast_info("PSS1 values: v1_1_pss:%f v2_1_pss:%f v3_1_pss:%f v4_1_pss:%f", i_pss[0][0],
-	// i_pss[0][1], i_pss[0][2], i_pss[0][3]);
+	// 				i_pss[0][1], i_pss[0][2], i_pss[0][3]);
 	// blast_info("PSS itot[0]=%f, pss_imin=%f, fabs(itot[0])=%f", itot[0], pss_imin, fabs(itot[0]));
 
     i_point = GETREADINDEX(point_index);
 
 	for (j = 0; j < NUM_PSS; j++) {
-		if (fabs(itot[j]) > pss_imin) {
-			PointingData[point_index].pss_snr[j] = itot[j]/PSS_IMAX; // 10.
+		if (itotabs[j] > pss_imin) {
+			PointingData[point_index].pss_snr[j] = itotabs[j]/PSS_NOISE; // 10.
     		weight[j]= PointingData[point_index].pss_snr[j];
 		} else {
       		PointingData[point_index].pss_snr[j] = 1.;  // 1.

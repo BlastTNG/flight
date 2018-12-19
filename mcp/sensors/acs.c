@@ -1352,12 +1352,12 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
     SET_SCALED_VALUE(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
     SET_SCALED_VALUE(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
-    SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss_snr[0]);
-    SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss_snr[1]);
-    SET_SCALED_VALUE(snrPss3Addr, PointingData[i_point].pss_snr[2]);
-    SET_SCALED_VALUE(snrPss4Addr, PointingData[i_point].pss_snr[3]);
-    SET_SCALED_VALUE(snrPss5Addr, PointingData[i_point].pss_snr[4]);
-    SET_SCALED_VALUE(snrPss6Addr, PointingData[i_point].pss_snr[5]);
+    SET_FLOAT(snrPss1Addr, PointingData[i_point].pss_snr[0]);
+    SET_FLOAT(snrPss2Addr, PointingData[i_point].pss_snr[1]);
+    SET_FLOAT(snrPss3Addr, PointingData[i_point].pss_snr[2]);
+    SET_FLOAT(snrPss4Addr, PointingData[i_point].pss_snr[3]);
+    SET_FLOAT(snrPss5Addr, PointingData[i_point].pss_snr[4]);
+    SET_FLOAT(snrPss6Addr, PointingData[i_point].pss_snr[5]);
     // TODO(seth): Why are we manually adding the trim here?
     SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
     SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
