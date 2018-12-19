@@ -540,7 +540,6 @@ void store_200hz_acs(void)
                 gyfault &= ~(1 << (gyro * 2 + box));
         }
     }
-
     SET_UINT16(fault_gy_addr, gyfault);
 }
 
