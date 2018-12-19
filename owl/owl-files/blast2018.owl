@@ -10,7 +10,7 @@
             },
             "_boxTitle": "Cryo Status",
             "_style": "(P2072147126)",
-            "cellHeight": 23,
+            "cellHeight": 25,
             "cellWidth": 16,
             "cellX": 3,
             "cellY": 3,
@@ -312,27 +312,159 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 544,
-            "geometryX": 102,
-            "geometryY": 102
+            "geometryHeight": 426,
+            "geometryWidth": 273,
+            "geometryX": 51,
+            "geometryY": 51
         },
         {
             "PObject": {
                 "_id": "739666076"
             },
-            "_boxTitle": "Temperatures",
+            "_boxTitle": "Power",
             "_style": "(P2146903282)",
-            "cellHeight": 7,
+            "cellHeight": 12,
             "cellWidth": 15,
             "cellX": 19,
-            "cellY": 19,
+            "cellY": 16,
             "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "250859722"
+                    },
+                    "_caption": "I FC1 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_FC1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1706644949"
+                    },
+                    "_caption": "I FC2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_FC2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1006937830"
+                    },
+                    "_caption": "I XSC0",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_XSC0",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "489368576"
+                    },
+                    "_caption": "I XSC1  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_XSC1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1752806802"
+                    },
+                    "_caption": "I Gyros  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_GYROS",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "776096044"
+                    },
+                    "_caption": "I HDD ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_HD_PV",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "249406358"
+                    },
+                    "_caption": "I  Pivot",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_PIVOT",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1765593898"
+                    },
+                    "_caption": "I RW",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_RW_MOT",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1416732601"
+                    },
+                    "_caption": "I El",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_ELE_MOT",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "415500449"
+                    },
+                    "_caption": "I Eth. ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_ETH_SWITCH",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "61376274"
+                    },
+                    "_caption": "I Data Trans.  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_DATA_TRANSMIT",
+                    "type": "PNDI"
+                }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 510,
-            "geometryX": 646,
-            "geometryY": 646
+            "geometryHeight": 204,
+            "geometryWidth": 255,
+            "geometryX": 323,
+            "geometryY": 272
         },
         {
             "PObject": {
@@ -340,7 +472,7 @@
             },
             "_boxTitle": "Flight Computers",
             "_style": "(P695404123)",
-            "cellHeight": 11,
+            "cellHeight": 13,
             "cellWidth": 15,
             "cellX": 19,
             "cellY": 3,
@@ -426,6 +558,54 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1256421532"
+                    },
+                    "_caption": "HDD Space FC1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_SPACE_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "373209410"
+                    },
+                    "_caption": "HDD Space FC2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_SPACE_S",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1590304260"
+                    },
+                    "_caption": "HDD Index FC1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_INDEX_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1524787269"
+                    },
+                    "_caption": "HDD Index FC2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_INDEX_S",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1654977475"
                     },
                     "_caption": "Date",
@@ -449,10 +629,10 @@
                     "type": "PTDI"
                 }
             ],
-            "geometryHeight": 374,
-            "geometryWidth": 510,
-            "geometryX": 646,
-            "geometryY": 102
+            "geometryHeight": 222,
+            "geometryWidth": 256,
+            "geometryX": 323,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -658,10 +838,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 578,
-            "geometryX": 1156,
-            "geometryY": 102
+            "geometryHeight": 391,
+            "geometryWidth": 289,
+            "geometryX": 578,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -888,10 +1068,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 578,
-            "geometryX": 1734,
-            "geometryY": 102
+            "geometryHeight": 391,
+            "geometryWidth": 289,
+            "geometryX": 867,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -1051,10 +1231,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 476,
-            "geometryWidth": 578,
-            "geometryX": 1156,
-            "geometryY": 884
+            "geometryHeight": 238,
+            "geometryWidth": 289,
+            "geometryX": 578,
+            "geometryY": 442
         }
     ],
     "extremas": [
@@ -1088,11 +1268,11 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 19,
-            "cellY": 13,
-            "geometryHeight": 238,
-            "geometryWidth": 170,
-            "geometryX": 646,
+            "cellX": 2,
+            "cellY": 26,
+            "geometryHeight": 119,
+            "geometryWidth": 85,
+            "geometryX": 34,
             "geometryY": 442
         }
     ],
@@ -1288,6 +1468,6 @@
     "webPort": "\u0000",
     "windowCellHeight": 60,
     "windowCellWidth": 109,
-    "windowHeight": 2049,
-    "windowWidth": 3706
+    "windowHeight": 1020,
+    "windowWidth": 1853
 }
