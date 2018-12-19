@@ -387,6 +387,7 @@ static void dsp1760_connect_gyro(ph_job_t *m_job, ph_iomask_t m_why, void *m_dat
  */
 void dsp1760_reset_gyro(int m_which)
 {
+    blast_info("Setting want_reset = true for gyro %d", m_which);
     gyro_data[m_which].want_reset = true;
 }
 

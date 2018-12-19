@@ -987,7 +987,7 @@ channel_t channel_list[] =
     { "v_pump_bal",           3.91 / 13107.0,   -9.775, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "dac2_ampl",            SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
-    { "mask_gy",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "mask_gy",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     { "bits_vtx",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "bits_bal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
@@ -1148,7 +1148,7 @@ channel_t channel_list[] =
     { "g_iv_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "set_rw",               SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_DPS, 0 },
 
-    { "fault_gy",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "fault_gy",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     { "vel_el_p",             I2VEL,            0.0, TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
     { "frict_off_piv",        SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "frict_term_piv",       SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },

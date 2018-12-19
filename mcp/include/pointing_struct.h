@@ -122,6 +122,7 @@ struct PointingDataStruct {
   double offset_ifyawmag_gy[NUM_MAGS];
   double offset_ifrolldgps_gy;
   double offset_ifyawdgps_gy;
+  double offset_ifelmotenc_gy;
   double dgps_az_raw;   // degrees
   double dgps_az;   // degrees
   double dgps_sigma;   // degrees
