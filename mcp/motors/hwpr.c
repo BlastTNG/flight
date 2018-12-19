@@ -203,7 +203,7 @@ void StoreHWPRBus(void)
   SET_VALUE(iposHwprAddr, hwpr_control.i_next_step);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
   SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
-  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move); // ???
+  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move);
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);

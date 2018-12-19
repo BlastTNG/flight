@@ -637,6 +637,25 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_PIV",
                     "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1676068526"
+                        },
+                        "_map": {
+                            "0": "Unlocked[style=No style (P2114320605)]",
+                            "1": "Locked[style=No style (P2114320605)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "385834592"
+                    },
+                    "_caption": "Lockpin",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "PIN_IN_LOCK",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 782,

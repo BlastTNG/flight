@@ -186,7 +186,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(charge_on), "turn on the charge controller", GR_POWER},
   {COMMAND(charge_cycle), "power cycle the charge controller", GR_POWER | CONFIRM},
 
-  {COMMAND(mag_reset), "command a reset of the magnetometer", GRPOS_VETO | GRPOS_TRIM},
+  {COMMAND(mag_reset), "command a reset of the magnetometer", GR_VETO | GR_TRIM},
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_MOTOR},
@@ -347,6 +347,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
+  {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
+  {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
+  {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -741,16 +744,16 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "ENC_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "ENC_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "ENC_2_ACT"}
     }
   },
   {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Dr_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Dr_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Dr_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "DR_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "DR_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "DR_2_ACT"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
@@ -1402,6 +1405,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
   {
+    {"ROACH no", 1, 5, 'i', "NONE"},
     {"Number of sec to stream", 0, 300, 'f', "NONE"},
   }
   },
@@ -1420,6 +1424,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
+  }
+  },
+  {COMMAND(set_n_outofrange_thresh), "Set N channels out of range thresh", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_n_outofrange_thresh_all), "(All Roaches) Set N channels out of range thresh", GR_ROACH, 1,
+  {
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
   }
   },
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
@@ -1456,6 +1471,16 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
       {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
+    {
+      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
     }
   },
   /***************************************/

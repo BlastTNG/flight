@@ -103,7 +103,7 @@ while True:
   # time to leave
   Leave.update()
   date = datetime.utcfromtimestamp(Leave.lastval)
-  if ((date.hour+13)%24 == 17) and (15 <= date.minute <= 30):
+  if ((date.hour+13)%24 == 17) and (15 <= date.minute <= 25):
     print("Time to leave!")
     if not song_requested: 
       Leave.trigger(volume=65)
@@ -112,7 +112,7 @@ while True:
   # lunch
   Lunch.update()
   date = datetime.utcfromtimestamp(Lunch.lastval)
-  if ((date.hour+13)%24 == 11) and (date.minute >= 55) and (datetime.today().isoweekday() != 7):
+  if ((date.hour+13)%24 == 11) and (date.minute >= 56) and (date.second >= 17) and (datetime.today().isoweekday() != 7):
     print("Lunchtime!")
     if not song_requested: 
       Lunch.trigger(volume=50)
