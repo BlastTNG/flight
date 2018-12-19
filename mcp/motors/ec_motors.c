@@ -151,12 +151,20 @@ static uint32_t *hwp_position[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &du
 
 uint32_t hwp_get_position(void)
 {
-    return *hwp_position[hwp_index];
+    if (hwp_index) {
+        return *hwp_position[hwp_index];
+    } else {
+        return 0;
+    }
 }
 
 uint16_t hwp_get_state(void)
 {
-    return ec_slave[hwp_index].state;
+    if (hwp_index) {
+        return ec_slave[hwp_index].state;
+    } else {
+        return 0;
+    }
 }
 /**
  * This set of functions return the latched faults of each motor controller
@@ -164,15 +172,27 @@ uint16_t hwp_get_state(void)
  */
 uint32_t rw_get_latched(void)
 {
-    return *latched_register[rw_index];
+    if (rw_index) {
+        return *latched_register[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t el_get_latched(void)
 {
-    return *latched_register[el_index];
+    if (el_index) {
+        return *latched_register[el_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t piv_get_latched(void)
 {
-    return *latched_register[piv_index];
+    if (piv_index) {
+        return *latched_register[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -181,15 +201,27 @@ uint32_t piv_get_latched(void)
  */
 uint16_t rw_get_ctl_word(void)
 {
-    return *control_word_read[rw_index];
+    if (rw_index) {
+        return *control_word_read[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_ctl_word(void)
 {
-    return *control_word_read[el_index];
+    if (el_index) {
+        return *control_word_read[el_index];
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_ctl_word(void)
 {
-    return *control_word_read[piv_index];
+    if (piv_index) {
+        return *control_word_read[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -198,15 +230,27 @@ int16_t piv_get_ctl_word(void)
  */
 uint16_t rw_get_network_status_word(void)
 {
-    return *network_status_word[rw_index];
+    if (rw_index) {
+        return *network_status_word[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t el_get_network_status_word(void)
 {
-    return *network_status_word[el_index];
+    if (el_index) {
+        return *network_status_word[el_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t piv_get_network_status_word(void)
 {
-    return *network_status_word[piv_index];
+    if (piv_index) {
+        return *network_status_word[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -215,19 +259,35 @@ uint16_t piv_get_network_status_word(void)
  */
 int32_t rw_get_position(void)
 {
-    return *actual_position[rw_index];
+    if (rw_index) {
+        return *actual_position[rw_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_position(void)
 {
-    return *actual_position[el_index];
+    if (el_index) {
+        return *actual_position[el_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_motor_position(void) // Offsetting motor units to correspond with elevation
 {
-    return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
+    if (el_index) {
+        return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 int32_t piv_get_position(void)
 {
-    return *actual_position[piv_index];
+    if (piv_index) {
+        return *actual_position[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -236,19 +296,35 @@ int32_t piv_get_position(void)
  */
 double rw_get_position_degrees(void)
 {
-    return rw_get_position() * RW_ENCODER_SCALING;
+    if (rw_index) {
+        return rw_get_position() * RW_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_position_degrees(void)
 {
-    return el_get_position() * EL_LOAD_ENCODER_SCALING;
+    if (el_index) {
+        return el_get_position() * EL_LOAD_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_motor_position_degrees(void)
 {
-    return el_get_motor_position() * EL_MOTOR_ENCODER_SCALING;
+    if (el_index) {
+        return el_get_motor_position() * EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double piv_get_position_degrees(void)
 {
-    return piv_get_position() * PIV_RESOLVER_SCALING;
+    if (piv_index) {
+        return piv_get_position() * PIV_RESOLVER_SCALING;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -258,15 +334,27 @@ double piv_get_position_degrees(void)
  */
 double rw_get_velocity_dps(void)
 {
-    return *motor_velocity[rw_index] * 0.1 * RW_ENCODER_SCALING;
+    if (rw_index) {
+        return *motor_velocity[rw_index] * 0.1 * RW_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_velocity_dps(void)
 {
-    return *motor_velocity[el_index] * 0.1 * EL_MOTOR_ENCODER_SCALING;
+    if (el_index) {
+        return *motor_velocity[el_index] * 0.1 * EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double piv_get_velocity_dps(void)
 {
-    return *motor_velocity[piv_index] * 0.1 * PIV_RESOLVER_SCALING;
+    if (piv_index) {
+        return *motor_velocity[piv_index] * 0.1 * PIV_RESOLVER_SCALING;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -276,15 +364,27 @@ double piv_get_velocity_dps(void)
  */
 int32_t rw_get_velocity(void)
 {
-    return *motor_velocity[rw_index];
+    if (rw_index) {
+        return *motor_velocity[rw_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_velocity(void)
 {
-    return *motor_velocity[el_index];
+    if (el_index) {
+        return *motor_velocity[el_index];
+    } else {
+        return 0;
+    }
 }
 int32_t piv_get_velocity(void)
 {
-    return *motor_velocity[piv_index];
+    if (piv_index) {
+        return *motor_velocity[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -293,15 +393,27 @@ int32_t piv_get_velocity(void)
  */
 int16_t rw_get_current(void)
 {
-    return *motor_current[rw_index];
+    if (rw_index) {
+        return *motor_current[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_current(void)
 {
-    return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
+    if (el_index) {
+        return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_current(void)
 {
-    return *motor_current[piv_index];
+    if (piv_index) {
+        return *motor_current[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -310,15 +422,27 @@ int16_t piv_get_current(void)
  */
 uint16_t rw_get_status_word(void)
 {
-    return *status_word[rw_index];
+    if (rw_index) {
+        return *status_word[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t el_get_status_word(void)
 {
-    return *status_word[el_index];
+    if (el_index) {
+        return *status_word[el_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t piv_get_status_word(void)
 {
-    return *status_word[piv_index];
+    if (piv_index) {
+        return *status_word[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -327,15 +451,27 @@ uint16_t piv_get_status_word(void)
  */
 uint32_t rw_get_status_register(void)
 {
-    return *status_register[rw_index];
+    if (rw_index) {
+        return *status_register[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t el_get_status_register(void)
 {
-    return *status_register[el_index];
+    if (el_index) {
+        return *status_register[el_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t piv_get_status_register(void)
 {
-    return *status_register[piv_index];
+    if (piv_index) {
+        return *status_register[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -344,15 +480,27 @@ uint32_t piv_get_status_register(void)
  */
 int16_t rw_get_amp_temp(void)
 {
-    return *amp_temp[rw_index];
+    if (rw_index) {
+        return *amp_temp[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_amp_temp(void)
 {
-    return *amp_temp[el_index];
+    if (el_index) {
+        return *amp_temp[el_index];
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_amp_temp(void)
 {
-    return *amp_temp[piv_index];
+    if (piv_index) {
+        return *amp_temp[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -361,19 +509,19 @@ int16_t piv_get_amp_temp(void)
  */
 void rw_set_current(int16_t m_cur)
 {
-    if (!controller_state[rw_index].slave_error) {
+    if (rw_index && !(controller_state[rw_index].slave_error)) {
         *target_current[rw_index] = m_cur;
     }
 }
 void el_set_current(int16_t m_cur)
 {
-    if (!controller_state[el_index].slave_error) {
+    if (el_index && !(controller_state[el_index].slave_error)) {
         *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
     }
 }
 void piv_set_current(int16_t m_cur)
 {
-    if (!controller_state[piv_index].slave_error) {
+    if (piv_index && !(controller_state[piv_index].slave_error)) {
         *target_current[piv_index] = m_cur;
     }
 }
@@ -384,19 +532,19 @@ void piv_set_current(int16_t m_cur)
  */
 void rw_enable(void)
 {
-    if (!controller_state[rw_index].slave_error) {
+    if (rw_index && !(controller_state[rw_index].slave_error)) {
         *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
 }
 void el_enable(void)
 {
-    if (!controller_state[el_index].slave_error) {
+    if (el_index && !(controller_state[el_index].slave_error)) {
         *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
 }
 void piv_enable(void)
 {
-    if (!controller_state[piv_index].slave_error) {
+    if (piv_index && !(controller_state[piv_index].slave_error)) {
         *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
     }
 }
@@ -407,19 +555,19 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
-    if (!controller_state[rw_index].slave_error) {
+    if (rw_index && !(controller_state[rw_index].slave_error)) {
         *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
     }
 }
 void el_disable(void)
 {
-    if (!controller_state[el_index].slave_error) {
+    if (el_index && !(controller_state[el_index].slave_error)) {
         *control_word[el_index] &= (~ECAT_CTL_ENABLE);
     }
 }
 void piv_disable(void)
 {
-    if (!controller_state[piv_index].slave_error) {
+    if (piv_index && !(controller_state[piv_index].slave_error)) {
         *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
     }
 }
@@ -429,19 +577,19 @@ void piv_disable(void)
  */
 void rw_quick_stop(void)
 {
-    if (!controller_state[rw_index].slave_error) {
+    if (rw_index && !(controller_state[rw_index].slave_error)) {
         *control_word[rw_index] &= (~ECAT_CTL_QUICK_STOP);
     }
 }
 void el_quick_stop(void)
 {
-    if (!controller_state[el_index].slave_error) {
+    if (el_index && !(controller_state[el_index].slave_error)) {
         *control_word[el_index] &= (~ECAT_CTL_QUICK_STOP);
     }
 }
 void piv_quick_stop(void)
 {
-    if (!controller_state[piv_index].slave_error) {
+    if (piv_index && !(controller_state[piv_index].slave_error)) {
         *control_word[piv_index] &= (~ECAT_CTL_QUICK_STOP);
     }
 }
@@ -451,19 +599,19 @@ void piv_quick_stop(void)
  */
 void rw_reset_fault(void)
 {
-    if (!controller_state[rw_index].slave_error) {
+    if (rw_index && !(controller_state[rw_index].slave_error)) {
         *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
     }
 }
 void el_reset_fault(void)
 {
-    if (!controller_state[el_index].slave_error) {
+    if (el_index && !(controller_state[el_index].slave_error)) {
         *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
     }
 }
 void piv_reset_fault(void)
 {
-    if (!controller_state[piv_index].slave_error) {
+    if (piv_index && !(controller_state[piv_index].slave_error)) {
         *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
     }
 }
@@ -1267,6 +1415,19 @@ int configure_ec_motors()
 
 int reset_ec_motors()
 {
+    int i = 0;
+    rw_index = 0;
+    el_index = 0;
+    piv_index = 0;
+    hwp_index = 0;
+    for (i = 0; i < N_MCs; i++) {
+        controller_state[i].index = 0;
+        controller_state[i].is_hwp = 0;
+        controller_state[i].ec_unknown = 0;
+        controller_state[i].is_mc = 0;
+        controller_state[i].comms_ok = 0;
+        controller_state[i].slave_error = 0;
+    }
     configure_ec_motors();
     return(1);
 }
