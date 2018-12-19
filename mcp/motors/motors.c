@@ -285,6 +285,7 @@ void write_motor_channels_5hz(void)
     static channel_t* gPEPivAddr;
     static channel_t* setRWAddr;
     static channel_t* frictOffPivAddr;
+    static channel_t* frictOffElAddr;
     static channel_t* accelAzAddr;
 
     /* Motor data read out over motor thread in ec_motors.c */
@@ -339,6 +340,7 @@ void write_motor_channels_5hz(void)
 
         setRWAddr = channels_find_by_name("set_rw");
         frictOffPivAddr = channels_find_by_name("frict_off_piv");
+        frictOffElAddr = channels_find_by_name("frict_off_el");
         accelAzAddr = channels_find_by_name("accel_az");
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
@@ -382,7 +384,7 @@ void write_motor_channels_5hz(void)
     /* deadband for the el_motor integral term*/
     SET_FLOAT(gDBElAddr, CommandData.ele_gain.DB);
     /* Elevation current offset to compensate for static friction. */
-    SET_FLOAT(frictOffPivAddr, CommandData.ele_gain.F);
+    SET_FLOAT(frictOffElAddr, CommandData.ele_gain.F);
 
     /***************************************************/
     /**            Azimuth Drive Motors              **/
