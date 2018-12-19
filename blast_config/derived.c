@@ -653,6 +653,8 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_COMPRESSING_DATA_ROACH1", "status_roach1", 23, 1),
     BITWORD("DOING_TURNAROUND_LOOP_ROACH1", "status_roach1", 24, 1),
     BITWORD("AUTO_ALLOW_TURNAROUND_RETUNE_ROACH1", "status_roach1", 25, 1),
+    BITWORD("ENABLE_CHOP_LO_ROACH1", "status_roach1", 26, 1),
+    BITWORD("CHOP_LO_ROACH1", "status_roach1", 27, 1),
 
     BITWORD("HAS_ERROR_ROACH2", "status_roach2", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH2", "status_roach2", 1, 1),
@@ -680,6 +682,8 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_COMPRESSING_DATA_ROACH2", "status_roach2", 23, 1),
     BITWORD("DOING_TURNAROUND_LOOP_ROACH2", "status_roach2", 24, 1),
     BITWORD("AUTO_ALLOW_TURNAROUND_RETUNE_ROACH2", "status_roach2", 25, 1),
+    BITWORD("ENABLE_CHOP_LO_ROACH2", "status_roach2", 26, 1),
+    BITWORD("CHOP_LO_ROACH2", "status_roach2", 27, 1),
 
     BITWORD("HAS_ERROR_ROACH3", "status_roach3", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH3", "status_roach3", 1, 1),
@@ -707,6 +711,8 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_COMPRESSING_DATA_ROACH3", "status_roach3", 23, 1),
     BITWORD("DOING_TURNAROUND_LOOP_ROACH3", "status_roach3", 24, 1),
     BITWORD("AUTO_ALLOW_TURNAROUND_RETUNE_ROACH3", "status_roach3", 25, 1),
+    BITWORD("ENABLE_CHOP_LO_ROACH3", "status_roach3", 26, 1),
+    BITWORD("CHOP_LO_ROACH3", "status_roach3", 27, 1),
 
     BITWORD("HAS_ERROR_ROACH4", "status_roach4", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH4", "status_roach4", 1, 1),
@@ -734,6 +740,8 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_COMPRESSING_DATA_ROACH4", "status_roach4", 23, 1),
     BITWORD("DOING_TURNAROUND_LOOP_ROACH4", "status_roach4", 24, 1),
     BITWORD("AUTO_ALLOW_TURNAROUND_RETUNE_ROACH4", "status_roach4", 25, 1),
+    BITWORD("ENABLE_CHOP_LO_ROACH4", "status_roach4", 26, 1),
+    BITWORD("CHOP_LO_ROACH4", "status_roach4", 27, 1),
 
     BITWORD("HAS_ERROR_ROACH5", "status_roach5", 0, 1),
     BITWORD("HAS_QDR_CAL_ROACH5", "status_roach5", 1, 1),
@@ -761,6 +769,8 @@ derived_tng_t derived_list[] = {
     BITWORD("IS_COMPRESSING_DATA_ROACH5", "status_roach5", 23, 1),
     BITWORD("DOING_TURNAROUND_LOOP_ROACH5", "status_roach5", 24, 1),
     BITWORD("AUTO_ALLOW_TURNAROUND_RETUNE_ROACH5", "status_roach5", 25, 1),
+    BITWORD("ENABLE_CHOP_LO_ROACH5", "status_roach1", 26, 1),
+    BITWORD("CHOP_LO_ROACH5", "status_roach1", 27, 1),
 
     // clinometer channels
     LINCOM("Clin_of_x", "CLIN_OF_X", 10, 0),
