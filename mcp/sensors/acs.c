@@ -1057,6 +1057,7 @@ void store_5hz_acs(void)
     static channel_t* OffsetIFyawMagSGYAddr;
     static channel_t* OffsetIFrollPSSGYAddr;
     static channel_t* OffsetIFyawPSSGYAddr;
+    static channel_t* OffsetIFElMotorEncGYAddr;
     static channel_t* IFyawEarthGyAddr;
     static channel_t* IFrollEarthGyAddr;
     static channel_t* IFelEarthGyAddr;
@@ -1194,7 +1195,7 @@ void store_5hz_acs(void)
 
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");
-
+        OffsetIFElMotorEncGYAddr = channels_find_by_name("offset_ifelmotorenc_gy");
         IFyawEarthGyAddr = channels_find_by_name("ifyaw_earth_gy");
         IFrollEarthGyAddr = channels_find_by_name("ifroll_earth_gy");
         IFelEarthGyAddr = channels_find_by_name("ifel_earth_gy");
@@ -1384,7 +1385,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(OffsetIFyawGYoscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[1]);
     SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
     SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
-
+    SET_SCALED_VALUE(OffsetIFElMotorEncGYAddr, PointingData[point_index].offset_ifelmotenc_gy);
     SET_SCALED_VALUE(OffsetIFrollMagNGYAddr, PointingData[i_point].offset_ifrollmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFyawMagNGYAddr, PointingData[i_point].offset_ifyawmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFrollMagSGYAddr, PointingData[i_point].offset_ifrollmag_gy[1]);

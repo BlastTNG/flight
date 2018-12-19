@@ -1603,7 +1603,7 @@ void Pointing(void)
 
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
-
+    PointingData[point_index].offset_ifelmotenc_gy = EncMotEl.offset_gy;
     PointingData[point_index].az = AzAtt.az;
     PointingData[point_index].weight_az = AzAtt.weight;
     if (CommandData.az_autogyro) {
