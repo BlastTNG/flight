@@ -631,12 +631,6 @@ static void record_gyro_history(int m_index, gyro_history_t *m_gyhist, gyro_read
 //
 //   mag_az = PointingData[i_point].mag_az;
 //
-//   if (CommandData.use_elenc) {
-//     enc_el = ACSData.enc_elev;
-//     if (el - enc_el > 5.0) return (0);
-//     if (enc_el - el > 5.0) return (0);
-//   }
-//
 //   if (CommandData.use_mag) {
 //     d_az = az - mag_az;
 //
@@ -859,6 +853,9 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   s->gy_int += gyro / SR; // in degrees
   s->int_ifel = s->gy_int;
 
+  if ((i % 5000) < 4) {
+    blast_info("s->gy_int = %f, gyro/SR = %f", s->gy_int, gyro / SR);
+  }
   if (new_reading) {
     w1 = 1.0 / (s->variance);
     w2 = s->samp_weight;
@@ -868,8 +865,14 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     s->variance = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
 
+    if ((i % 5000) < 4) {
+      blast_info("w1= %f, w2 = %f", w1, w2);
+    }
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       /** calculate offset **/
+      if ((i % 5000) < 4) {
+        blast_info("CommandData.pointing_mode.nw ==0, n_solutions = %d", s->n_solutions);
+      }
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
         new_offset = ((new_angle - s->last_input) - s->gy_int) /
           ((1.0/SR) * (double)s->since_last);
@@ -878,6 +881,9 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
           new_offset = 0; // 5 deg step is bunk!
         s->new_offset_ifel_gy = new_offset;
         s->offset_gy = fir_filter(new_offset, s->fs);
+        if ((i % 5000) < 4) {
+          blast_info("new_offset = %f, s->offset_gy = %f", new_offset, s->offset_gy);
+        }
       }
       s->since_last = 0;
       if (s->n_solutions < 10000) {
@@ -1161,13 +1167,6 @@ void Pointing(void)
     struct ElAttStruct ElAtt = { 0.0, 0.0, 0.0 };
     struct AzAttStruct AzAtt = { 0.0, 0.0, 0.0, 0.0 };
 
-    static struct ElSolutionStruct EncEl = {
-        .variance = 360.0 * 360.0,
-        .samp_weight = 1.0 / M2DV(60),
-        .sys_var = M2DV(20), // systematic variance
-        .offset_gy = OFFSET_GY_IFEL, // gy offset
-        .FC = 0.0001, // filter constant
-    };
     static struct ElSolutionStruct EncMotEl = {
         .variance = 360.0 * 360.0,
         .samp_weight = 1.0 / M2DV(60),
@@ -1307,7 +1306,6 @@ void Pointing(void)
     if (firsttime) {
         firsttime = 0;
         ClinEl.trim = CommandData.clin_el_trim;
-        EncEl.trim = CommandData.enc_el_trim;
         EncMotEl.trim = CommandData.enc_motor_el_trim;
         NullAz.trim = CommandData.null_az_trim;
         MagAzN.trim = CommandData.mag_az_trim[0];
@@ -1317,8 +1315,6 @@ void Pointing(void)
 
         ClinEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(ClinEl.fs, FIR_LENGTH, 0, 0);
-        EncEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
-        init_fir(EncEl.fs, FIR_LENGTH, 0, 0);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(EncMotEl.fs, FIR_LENGTH, 0, 0);
         MagElN.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1486,9 +1482,6 @@ void Pointing(void)
     EvolveElSolution(&ClinEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             clin_elev, 1);
-    EvolveElSolution(&EncEl, RG.ifel_gy,
-            PointingData[i_point_read].offset_ifel_gy,
-            ACSData.enc_elev, 1);
     EvolveElSolution(&EncMotEl, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             ACSData.enc_motor_elev, enc_motor_ok);
@@ -1498,9 +1491,6 @@ void Pointing(void)
     EvolveElSolution(&MagElS, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_s, mag_ok_s);
-    if (CommandData.use_elenc) {
-        AddElSolution(&ElAtt, &EncEl, 1);
-    }
     if (CommandData.use_elmotenc) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
@@ -1574,8 +1564,6 @@ void Pointing(void)
         CommandData.fast_offset_gy--;
     }
 
-//    blast_info("off: %g %g %g %g\n", EncEl.angle, ClinEl.angle, EncEl.offset_gy, ClinEl.offset_gy);
-
     AddAzSolution(&AzAtt, &NullAz, 1);
     /** add az solutions **/
     if (CommandData.use_mag1) {
@@ -1607,6 +1595,7 @@ void Pointing(void)
     PointingData[point_index].offset_ifrollpss_gy = PSSAz.offset_ifroll_gy;
     PointingData[point_index].offset_ifyawpss_gy = PSSAz.offset_ifyaw_gy;
     PointingData[point_index].offset_ifelmotenc_gy = EncMotEl.offset_gy;
+    PointingData[point_index].offset_ifelclin_gy = ClinEl.offset_gy;
     PointingData[point_index].az = AzAtt.az;
     PointingData[point_index].weight_az = AzAtt.weight;
     if (CommandData.az_autogyro) {
@@ -1626,8 +1615,6 @@ void Pointing(void)
     PointingData[point_index].dec = dec;
     /** record solutions in pointing data **/
     //  if (j%500==0) blast_info("Pointing: PointingData.enc_el = %f", PointingData[point_index].enc_el);
-    PointingData[point_index].enc_el = EncEl.angle;
-    PointingData[point_index].enc_sigma = sqrt(EncEl.variance + EncEl.sys_var);
     PointingData[point_index].enc_motor_ok = enc_motor_ok;
     PointingData[point_index].enc_motor_el = EncMotEl.angle;
     PointingData[point_index].enc_motor_sigma = sqrt(EncMotEl.variance + EncMotEl.sys_var);
@@ -1712,7 +1699,6 @@ void Pointing(void)
 
     if (NewAzEl.fresh == -1) {
         ClinEl.trim = 0.0;
-        EncEl.trim = 0.0;
         EncMotEl.trim = 0.0;
         NullAz.trim = 0.0;
         MagAzN.trim = 0.0;
@@ -1729,13 +1715,6 @@ void Pointing(void)
         else if (trim_change < -NewAzEl.rate)
             trim_change = -NewAzEl.rate;
         ClinEl.trim += trim_change;
-
-        trim_change = (NewAzEl.el - EncEl.angle) - EncEl.trim;
-        if (trim_change > NewAzEl.rate)
-            trim_change = NewAzEl.rate;
-        else if (trim_change < -NewAzEl.rate)
-            trim_change = -NewAzEl.rate;
-        EncEl.trim += trim_change;
 
         trim_change = (NewAzEl.el - EncMotEl.angle) - EncMotEl.trim;
         if (trim_change > NewAzEl.rate)
@@ -1784,7 +1763,6 @@ void Pointing(void)
         NewAzEl.fresh = 0;
     } else {
         ClinEl.trim = CommandData.clin_el_trim;
-        EncEl.trim = CommandData.enc_el_trim;
         EncMotEl.trim = CommandData.enc_motor_el_trim;
         NullAz.trim = CommandData.null_az_trim;
         MagAzN.trim = CommandData.mag_az_trim[0];
@@ -1796,7 +1774,6 @@ void Pointing(void)
     point_index = INC_INDEX(point_index);
 
     CommandData.clin_el_trim = ClinEl.trim;
-    CommandData.enc_el_trim = EncEl.trim;
     CommandData.enc_motor_el_trim = EncMotEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim[0] = MagAzN.trim;

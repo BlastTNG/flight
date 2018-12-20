@@ -427,8 +427,7 @@ void read_5hz_acs(void)
  */
 void read_100hz_acs(void)
 {
-    ACSData.enc_elev = el_get_position_degrees();
-	ACSData.enc_motor_elev = el_get_motor_position_degrees();
+    ACSData.enc_motor_elev = el_get_motor_position_degrees();
 }
 
 /**
@@ -550,8 +549,6 @@ void store_100hz_acs(void)
 {
     static channel_t *azAddr;
     static channel_t *elAddr;
-    static channel_t *elEncAddr;
-    static channel_t *sigmaEncAddr;
     static channel_t *elMotEncAddr;
     static channel_t *sigmaMotEncAddr;
 
@@ -604,8 +601,6 @@ void store_100hz_acs(void)
         azAddr = channels_find_by_name("az");
         elAddr = channels_find_by_name("el");
 
-        elEncAddr = channels_find_by_name("el_enc");
-        sigmaEncAddr = channels_find_by_name("sigma_enc");
         elMotEncAddr = channels_find_by_name("el_motor_enc");
         sigmaMotEncAddr = channels_find_by_name("sigma_motor_enc");
 
@@ -656,8 +651,6 @@ void store_100hz_acs(void)
     SET_SCALED_VALUE(azAddr, PointingData[i_point].az);
     SET_SCALED_VALUE(elAddr, PointingData[i_point].el);
 
-    SET_SCALED_VALUE(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
-    SET_SCALED_VALUE(sigmaEncAddr, PointingData[i_point].enc_sigma);
     SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_motor_el_trim));
     SET_SCALED_VALUE(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
@@ -1057,6 +1050,7 @@ void store_5hz_acs(void)
     static channel_t* OffsetIFrollPSSGYAddr;
     static channel_t* OffsetIFyawPSSGYAddr;
     static channel_t* OffsetIFElMotorEncGYAddr;
+    static channel_t* OffsetIFElClinGYAddr;
     static channel_t* IFyawEarthGyAddr;
     static channel_t* IFrollEarthGyAddr;
     static channel_t* IFelEarthGyAddr;
@@ -1138,7 +1132,6 @@ void store_5hz_acs(void)
 
     /* trim fields */
     static channel_t *trimClinAddr;
-    static channel_t *trimEncAddr;
     static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagNAddr;
@@ -1195,6 +1188,7 @@ void store_5hz_acs(void)
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");
         OffsetIFElMotorEncGYAddr = channels_find_by_name("offset_ifelmotorenc_gy");
+        OffsetIFElClinGYAddr = channels_find_by_name("offset_ifelclin_gy");
         IFyawEarthGyAddr = channels_find_by_name("ifyaw_earth_gy");
         IFrollEarthGyAddr = channels_find_by_name("ifroll_earth_gy");
         IFelEarthGyAddr = channels_find_by_name("ifel_earth_gy");
@@ -1314,7 +1308,6 @@ void store_5hz_acs(void)
         lstSchedAddr = channels_find_by_name("lst_sched");
 
         trimClinAddr = channels_find_by_name("trim_clin");
-        trimEncAddr = channels_find_by_name("trim_enc");
         trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagNAddr = channels_find_by_name("trim_mag1");
@@ -1385,6 +1378,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
     SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
     SET_SCALED_VALUE(OffsetIFElMotorEncGYAddr, PointingData[point_index].offset_ifelmotenc_gy);
+    SET_SCALED_VALUE(OffsetIFElClinGYAddr, PointingData[point_index].offset_ifelclin_gy);
     SET_SCALED_VALUE(OffsetIFrollMagNGYAddr, PointingData[i_point].offset_ifrollmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFyawMagNGYAddr, PointingData[i_point].offset_ifyawmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFrollMagSGYAddr, PointingData[i_point].offset_ifrollmag_gy[1]);
@@ -1460,7 +1454,6 @@ void store_5hz_acs(void)
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
 
-    SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
     SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
@@ -1516,7 +1509,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(ra4PAddr, CommandData.pointing_mode.ra[3]);
     SET_SCALED_VALUE(dec4PAddr, CommandData.pointing_mode.dec[3]);
     sensor_veto = ((!CommandData.use_elmotenc))
-    		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
+    		| ((!CommandData.use_xsc0) << 1)
 			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
 			| ((!CommandData.use_elclin) << 5)
 			| ((!CommandData.use_xsc1) << 6) | ((CommandData.uplink_sched) << 7)
