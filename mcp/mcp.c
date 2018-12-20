@@ -233,7 +233,7 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    outer_frame_200hz(0);
+    outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
     command_motors();
@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
   init_roach(0);
   init_roach(1);
   init_roach(2);
-  // init_roach(3);
+  init_roach(3);
   init_roach(4);
   start_cycle_checker();
   blast_info("Finished initializing ROACHes...");

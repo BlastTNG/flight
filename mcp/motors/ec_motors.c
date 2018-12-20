@@ -909,7 +909,7 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_NET_STATUS, 32); // Network Status (including heartbeat monitor)
+    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
     retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
     if (!retval) {
         blast_err("Failed mapping!");

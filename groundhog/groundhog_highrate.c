@@ -235,6 +235,7 @@ void highrate_receive(void *arg) {
 
   int retval = 0;
   uint32_t recv_size = 0;
+  int af = 0;
 
   char * source_str = NULL;
 
@@ -318,7 +319,7 @@ void highrate_receive(void *arg) {
                               
                           } else { // write the linklist data to disk
                               // decompress the linklist
-                              if (read_allframe(local_superframe, superframe, compbuffer)) {
+                              if ((af = read_allframe(local_superframe, superframe, compbuffer))) {
                                   if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
                                   memcpy(local_allframe, compbuffer, superframe->allframe_size);
                               } else {
@@ -341,6 +342,10 @@ void highrate_receive(void *arg) {
                                   }
                                   // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               }
+															// fill out the telemetry report
+															highrate_report.ll = ll;
+															if (ll_rawfile) highrate_report.framenum = tell_linklist_rawfile(ll_rawfile); 
+															highrate_report.allframe = af; 
                           }
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;

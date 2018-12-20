@@ -58,3 +58,8 @@ state_roach2            NONE 1
 state_roach3            NONE 1
 state_roach4            NONE 1
 state_roach5            NONE 1
+status_roach1           NONE 1
+status_roach2           NONE 1
+status_roach3           NONE 1
+status_roach4           NONE 1
+status_roach5           NONE 1

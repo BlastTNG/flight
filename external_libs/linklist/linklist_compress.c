@@ -606,6 +606,11 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
+  // report missing block
+  while (block->i < i) {
+    linklist_info("Missing block %d/%d\n", block->i+1, block->n);
+    block->i++;
+  }
  
   unsigned int loc = i*(block->le->blk_size-fsize);
 

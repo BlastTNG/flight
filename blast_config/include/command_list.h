@@ -85,7 +85,7 @@ enum singleCommand {
   balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
-  elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
+  elclin_allow,     elclin_veto,
   fixed,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,

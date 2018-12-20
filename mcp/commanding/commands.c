@@ -830,9 +830,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case mag_veto_fc2:
             CommandData.use_mag2 = 0;
             break;
-        case elenc_veto:
-            CommandData.use_elenc = 0;
-            break;
         case elclin_veto:
             CommandData.use_elclin = 0;
             break;
@@ -857,9 +854,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case mag_allow_fc2:
             CommandData.use_mag2 = 1;
-            break;
-        case elenc_allow:
-            CommandData.use_elenc = 1;
             break;
         case elmotenc_allow:
             CommandData.use_elmotenc = 1;
@@ -1099,9 +1093,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
 	case shutter_keepopen:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPOPEN;
+	    break;
 	case shutter_keepclosed:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED;
-
+	    break;
             // Actuators
         case actuator_stop:
             CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
@@ -1745,10 +1740,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_i:
       CommandData.actbus.shutter_move_i = ivalues[0];
       CommandData.actbus.shutter_hold_i = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case shutter_vel:
       CommandData.actbus.shutter_vel = ivalues[0];
-      CommandData.actbus.shutter_acc = ivalues[0];
+      CommandData.actbus.shutter_acc = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
@@ -2624,7 +2621,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case compress_roach_data:
-      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 6)) {
           CommandData.tar_all_data = 1;
           compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 0;
@@ -3663,7 +3660,6 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 0;
     CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
@@ -3677,7 +3673,6 @@ void InitCommandData()
     CommandData.uplink_sched = 0;
 
     CommandData.clin_el_trim = 0;
-    CommandData.enc_el_trim = 0;
     CommandData.enc_motor_el_trim = 25.16;
     CommandData.null_az_trim = 0;
     CommandData.mag_az_trim[0] = 0;
