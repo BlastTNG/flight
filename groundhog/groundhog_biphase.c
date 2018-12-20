@@ -199,7 +199,7 @@ void biphase_receive(void *args)
 
 									// fill out the telemetry report
 									bi0_report.ll = ll;
-									if (ll_rawfile) bi0_report.framenum = ll_rawfile->framenum; 
+                  if (ll_rawfile) bi0_report.framenum = tell_linklist_rawfile(ll_rawfile); 
 									bi0_report.allframe = af; 
 
                   memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);

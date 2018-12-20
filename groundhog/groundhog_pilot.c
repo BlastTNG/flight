@@ -124,7 +124,7 @@ void udp_receive(void *arg) {
 
     // fill out the telemetry report
     pilot_report.ll = ll;
-    if (ll_rawfile) pilot_report.framenum = ll_rawfile->framenum; 
+    if (ll_rawfile) pilot_report.framenum = tell_linklist_rawfile(ll_rawfile); 
     pilot_report.allframe = af; 
  
   }

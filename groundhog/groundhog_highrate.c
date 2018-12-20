@@ -344,7 +344,7 @@ void highrate_receive(void *arg) {
                               }
 															// fill out the telemetry report
 															highrate_report.ll = ll;
-															if (ll_rawfile) highrate_report.framenum = ll_rawfile->framenum; 
+															if (ll_rawfile) highrate_report.framenum = tell_linklist_rawfile(ll_rawfile); 
 															highrate_report.allframe = af; 
                           }
                           memset(compbuffer, 0, buffer_size);
