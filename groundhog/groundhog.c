@@ -30,6 +30,16 @@
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
+#define NOR "\x1B[0m"
+#define RED "\x1B[31;1m"
+#define GRN "\x1B[32;1m"
+#define YLW "\x1B[33;1m"
+#define BLU "\x1B[34;1m"
+#define MAG "\x1B[35;1m"
+#define CYN "\x1B[36;1m"
+#define NOC "\x1B[?25l"
+#define CUR "\x1B[?25h"
+
 struct TlmReport pilot_report = {0};
 struct TlmReport bi0_report = {0};
 struct TlmReport highrate_report = {0};
@@ -180,7 +190,7 @@ int main(int argc, char * argv[]) {
   // print out the reports
   while (true) {
 
-    sprintf(fn_str, "   Pilot: %s %s [%d];   BI0: %s %s [%d];  Highrate: %s %s [%d];  SBD: %s %s [%d];    ", 
+    sprintf(fn_str, BLU "    Pilot: %s %s [%d];" GRN "   BI0: %s %s [%d];" YLW "  Highrate: %s %s [%d];" RED "  SBD: %s %s [%d];" NOR "    ", 
             (pilot_report.ll) ? pilot_report.ll->name : "(NULL)", 
             (pilot_report.allframe) ? "AF" : "",
             pilot_report.framenum,
