@@ -971,7 +971,7 @@ void cryo_1hz(int setting_1hz) {
         heater_control();
         heater_read();
         cryo_status_update();
-        // load_curve_300mk();
+        load_curve_300mk();
         set_dac();
         pot_watchdog();
         cal_pulse_monitor();
