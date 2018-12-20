@@ -1455,7 +1455,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
     {
-      {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3, LAMP = 4, NOISECOMP = 5, BB_FREQS = 6)", 0, 6, 'i', "NONE"}
+      {"VNA=0, TARG=1, IQ=2, DF=3, LAMP=4, NOISECOMP=5, BB_FREQS=6", 0, 6, 'i', "NONE"}
     }
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,

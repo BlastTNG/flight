@@ -2621,7 +2621,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case compress_roach_data:
-      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 6)) {
           CommandData.tar_all_data = 1;
           compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 0;
