@@ -891,7 +891,7 @@ channel_t channel_list[] =
     { "daz_p",                I2VEL,            0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "steps_shutter",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "steps_slow_shutter",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "pos_shutter",          SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "pos_shutter",          SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0 },
     { "lims_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_hold_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "i_move_shutter",	      SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
