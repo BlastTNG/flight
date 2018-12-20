@@ -170,8 +170,14 @@ void heater_control(void) {
 void load_curve_300mk(void) {
     static int i = 0;
     static int counter = 0;
+    static int first_time = 1;
+    static channel_t* load_curve_val_Addr;
+    if (first_time == 1) {
+        load_curve_val_Addr = channels_find_by_name("load_curve");
+    }
     if (CommandData.Cryo.load_curve == 1) {
         labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
+        SET_SCALED_VALUE(load_curve_val_Addr, voltage_array[i]);
         counter++;
         if (counter == 600) {
             i++;
@@ -892,7 +898,7 @@ static void cryo_status_update() {
         wd_allowed_Addr = channels_find_by_name("wd_allowed");
     }
     SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.cycle_allowed);
-    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.wd_allowed);
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.watchdog_allowed);
 }
 
 static void pot_watchdog() {
