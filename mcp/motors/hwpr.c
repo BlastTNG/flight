@@ -191,18 +191,18 @@ void StoreHWPRBus(void)
 
   hwpr_wait_cnt--;
 
-  SET_VALUE(velHwprAddr, CommandData.hwpr.vel);
-  SET_VALUE(accHwprAddr, CommandData.hwpr.acc);
-  SET_VALUE(iMoveHwprAddr, CommandData.hwpr.move_i);
-  SET_VALUE(iHoldHwprAddr, CommandData.hwpr.hold_i);
+  SET_UINT32(velHwprAddr, CommandData.hwpr.vel);
+  SET_UINT16(accHwprAddr, CommandData.hwpr.acc);
+  SET_UINT8(iMoveHwprAddr, CommandData.hwpr.move_i);
+  SET_UINT8(iHoldHwprAddr, CommandData.hwpr.hold_i);
   SET_INT32(posHwprAddr, hwpr_data.pos);
   SET_FLOAT(encHwprAddr, hwpr_data.enc);
   SET_FLOAT(overshootHwprAddr, CommandData.hwpr.overshoot);
   SET_FLOAT(pos0HwprAddr, CommandData.hwpr.pos[0]);
   SET_FLOAT(pos1HwprAddr, CommandData.hwpr.pos[1]);
-  SET_VALUE(iposRqHwprAddr, hwpr_control.i_next_step);
+  SET_INT8(iposRqHwprAddr, hwpr_control.i_next_step);
   // SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
-  SET_VALUE(iposHwprAddr, hwpr_control.index);
+  SET_INT8(iposHwprAddr, hwpr_control.index);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
   SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
   SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move);

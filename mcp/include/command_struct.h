@@ -661,7 +661,9 @@ struct CommandDataStruct {
   } actbus;
 
   struct {
-    int vel, acc, hold_i, move_i;
+    int vel;
+	uint acc;
+	int hold_i, move_i;
     int force_repoll;
     int mode, is_new;
 	float target;
