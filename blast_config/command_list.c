@@ -1787,8 +1787,8 @@ struct mcom mcommands[plugh + 2] = {
     },
     {COMMAND(shutter_i), "set shutter move and hold currents", GR_MISC, 2,
         {
-	  {"Shutter move current", 0, 40, 'i', "I_MOVE_SHUTTER"},
-	  {"Shutter hold current", 0, 40, 'i', "I_HOLD_SHUTTER"},
+	  {"Shutter move current", 0, 42, 'i', "I_MOVE_SHUTTER"},
+	  {"Shutter hold current", 0, 42, 'i', "I_HOLD_SHUTTER"},
         }
     },
     {COMMAND(shutter_vel), "set shutter velocity and acceleration", GR_MISC, 2,
