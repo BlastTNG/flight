@@ -861,7 +861,7 @@ channel_t channel_list[] =
     { "stop_cnt_hwpr",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "rel_move_hwpr",        SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0 },
     { "stat_control_hwpr",    SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "margin_hwpr",          SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "margin_hwpr",          SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "pot_targ_hwpr",        1.0 / 65535.0,    0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "mode_act",             SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "enc_targ_hwpr",        SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
