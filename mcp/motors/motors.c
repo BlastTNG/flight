@@ -168,8 +168,8 @@ static double get_elev_vel(void)
     /* correct offset and convert to Gyro Units */
     vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
-    if (CommandData.use_elenc) {
-        el_for_limit = wrap_to(el_get_position_degrees() + CommandData.enc_el_trim, 360.0);
+    if (CommandData.use_elmotenc) {
+        el_for_limit = wrap_to(el_get_motor_position_degrees() + CommandData.enc_motor_el_trim, 360.0);
     } else {
         el_for_limit = PointingData[i_point].el;
     }

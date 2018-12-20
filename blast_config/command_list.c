@@ -200,8 +200,6 @@ struct scom scommands[xyzzy + 1] = {
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
-  {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
-  {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
   {COMMAND(elmotenc_veto), "veto elevation motor encoder", GR_VETO},
   {COMMAND(elmotenc_allow), "un-veto elevation motor encoder", GR_VETO},
   {COMMAND(xsc0_veto), "veto star camera 0", GR_VETO},
