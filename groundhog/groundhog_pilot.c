@@ -41,6 +41,7 @@ void udp_receive(void *arg) {
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint32_t transmit_size = 0;
+  int af = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -55,7 +56,6 @@ void udp_receive(void *arg) {
   initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
 
   int bad_serial_count = 0;
-  int good_serial_count = 0;
 
   while (true) {
     do {
@@ -96,7 +96,7 @@ void udp_receive(void *arg) {
 
     } else { // write the linklist data to disk
         // decompress the linklist
-        if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
+        if ((af = read_allframe(local_superframe, superframe, compbuffer))) { // just a regular frame
             if (verbose) blast_info("[%s] Received an allframe :)\n", udpsetup->name);
             memcpy(local_allframe, compbuffer, superframe->allframe_size);
         } else {
@@ -121,6 +121,11 @@ void udp_receive(void *arg) {
             }
         }
     }
+
+    // fill out the telemetry report
+    pilot_report.ll = ll;
+    if (ll_rawfile) pilot_report.framenum = ll_rawfile->framenum; 
+    pilot_report.allframe = af; 
  
   }
 }
