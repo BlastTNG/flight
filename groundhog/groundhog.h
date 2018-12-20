@@ -22,7 +22,7 @@ struct UDPSetup {
 
 struct TlmReport {
   linklist_t * ll;
-  int framenum;
+  uint64_t framenum;
   int allframe;
 };
 

@@ -190,7 +190,7 @@ int main(int argc, char * argv[]) {
   // print out the reports
   while (true) {
 
-    sprintf(fn_str, BLU "    Pilot: %s %s [%d];" GRN "   BI0: %s %s [%d];" YLW "  Highrate: %s %s [%d];" RED "  SBD: %s %s [%d];" NOR "    ", 
+    sprintf(fn_str, BLU "    Pilot: %s %s [%" PRIu64 "];" GRN "   BI0: %s %s [%" PRIu64 "];" YLW "  Highrate: %s %s [%" PRIu64 "];" RED "  SBD: %s %s [%" PRIu64 "];" NOR "    ", 
             (pilot_report.ll) ? pilot_report.ll->name : "(NULL)", 
             (pilot_report.allframe) ? "AF" : "",
             pilot_report.framenum,
