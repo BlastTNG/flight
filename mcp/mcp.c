@@ -233,7 +233,7 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    outer_frame_200hz(0);
+    outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
     command_motors();
