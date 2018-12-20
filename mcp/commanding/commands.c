@@ -1099,9 +1099,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
 	case shutter_keepopen:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPOPEN;
+	    break;
 	case shutter_keepclosed:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED;
-
+	    break;
             // Actuators
         case actuator_stop:
             CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
@@ -1745,10 +1746,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_i:
       CommandData.actbus.shutter_move_i = ivalues[0];
       CommandData.actbus.shutter_hold_i = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case shutter_vel:
       CommandData.actbus.shutter_vel = ivalues[0];
-      CommandData.actbus.shutter_acc = ivalues[0];
+      CommandData.actbus.shutter_acc = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;

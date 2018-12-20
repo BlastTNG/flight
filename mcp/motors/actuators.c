@@ -115,6 +115,7 @@ static struct shutter_struct {
                          // shutter in = 1 (opto-switch blocked)
                          // shutter not in = 0 (opto-switch not blocked)
   unsigned int  state;
+  int move_commanded;
 } shutter_data = { .state = SHUTTER_UNK };
 
 /* Secondary actuator data and parameters */
@@ -509,17 +510,20 @@ static int InitializeActuator(struct ezbus* thebus, char who)
 static void TurnOffShutter()
 {
   // Set hold current to zero
-  bputs(info, "TurnOffShutter...");
+  blast_info("TurnOffShutter... Setting hold current to 0");
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0R") != EZ_ERR_OK)
-  if (EZBus_SetIHold(&bus, id[SHUTTERNUM], 0) != EZ_ERR_OK)
+  if (EZBus_SetIHold(&bus, id[SHUTTERNUM], 0) != EZ_ERR_OK) {
 	bputs(warning, "TurnOffShutter: Error turning off shutter");
+     } else {
+	CommandData.actbus.shutter_hold_i = 0;
+     }
 }
 
 
 static void InitializeShutter()
 {
   // Set move current and speed
-  bputs(info, "InitializeShutter:...");
+  blast_info("InitializeShutter:...");
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK) // removing because has old settings
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK) // removing because has old settings
   // bputs(info, "InitializeShutter: Error initializing shutter");
@@ -535,7 +539,6 @@ static void InitializeShutter()
   // Set position to 5000 z5000
   // Move to activate limit switch D424
   // Set position to 0 z0
-  EZBus_Comm(&bus, id[SHUTTERNUM], "j256");
   EZBus_SetIMove(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_move_i);
   EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
   EZBus_SetVel(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_vel);
@@ -552,8 +555,9 @@ static void ResetShutter()
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "h0M2000h50z5000P424z0R") != EZ_ERR_OK)
   //   bputs(info, "ResetShutter: Error resetting shutter");
 
+  blast_info("Resetting shutter -- set hold current to zero, wait, and re-close");
   EZBus_SetIHold(&bus, id[SHUTTERNUM], 0);
-  usleep(1000000);
+  usleep(1000000); // wait for shutter to fall open
   EZBus_SetIHold(&bus, id[SHUTTERNUM], CommandData.actbus.shutter_hold_i);
   if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "D0") != EZ_ERR_OK)
 	bputs(info, "ResetShutter: Error moving after reset");
@@ -561,23 +565,24 @@ static void ResetShutter()
 
 static void KeepClosedShutter(int* cancel)
 {
-  bputs(info, "Enter KeepClosedShutter mode");
-
-  while (*cancel == 0) {
-    	if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-		bputs(info, "KeepClosedShutter: Error polling limit switches");
-
-    	if ((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
+  if (*cancel == 0) {
+    	// if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
+	// bputs(info, "KeepClosedShutter: Error polling limit switches");
+    	if (((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) && (shutter_data.move_commanded == 0)) {
 		bputs(warning, "KeepClosed mode sees shutter not closed! Commanding close...");
+		EZBus_Take(&bus, id[SHUTTERNUM]);
 		EZBus_Stop(&bus, id[SHUTTERNUM]); // stop current action
 
 		if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "D0") != EZ_ERR_OK)
 			bputs(info, "KeepClosedShutter: error commanding close move");
+		EZBus_Release(&bus, id[SHUTTERNUM]);
+		shutter_data.move_commanded = 1;
     	} else {
-		usleep(SHUTTER_SLEEP);
+		blast_info("KeepClosedShutter: no move commanded");
+		if ((shutter_data.lims & SHUTTER_CLOSED_BIT) == SHUTTER_CLOSED_BIT)
+			shutter_data.move_commanded = 0;
 	}
-  } // end while
-  *cancel = 1;
+  } // end if
 }
 
 
@@ -586,20 +591,23 @@ static void KeepOpenShutter(int* cancel)
 	bputs(info, "Enter KeepOpenShutter mode");
 
 	while (*cancel == 0) {
-		if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-			bputs(info, "KeepOpenShutter: Error polling limit switches");
+		// if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
+	// bputs(info, "KeepOpenShutter: Error polling limit switches");
+		blast_info("DEBUG: shutter lims = %d, %d, move_commanded = %d", shutter_data.lims,
+			(shutter_data.lims & SHUTTER_CLOSED_BIT), shutter_data.move_commanded);
 
-		if ((shutter_data.lims & SHUTTER_OPEN_BIT) != SHUTTER_OPEN_BIT) {
+		if (((shutter_data.lims & SHUTTER_OPEN_BIT) != SHUTTER_OPEN_BIT) && (shutter_data.move_commanded == 0)) {
 			bputs(warning, "KeepOpen mode sees shutter not open! Commanding open...");
 			EZBus_Stop(&bus, id[SHUTTERNUM]);
 
 			if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "P0") != EZ_ERR_OK)
 				bputs(info, "KeepOpenShutter: error commanding open move");
 		} else {
-			usleep(SHUTTER_SLEEP);
+			blast_info("KeepOpenShutter: No move commanded");
+			if ((shutter_data.lims & SHUTTER_OPEN_BIT) == SHUTTER_OPEN_BIT)
+				shutter_data.move_commanded = 0;
 		}
 	} // end while
-	*cancel = 1;
 }
 
 static void OpenCloseShutter()
@@ -608,9 +616,9 @@ static void OpenCloseShutter()
 
   bputs(info, "OpenCloseShutter...");
 
-  if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
+ /* if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
     bputs(info, "OpenCloseShutter: Error polling opto switch");
-  usleep(SHUTTER_SLEEP);
+  usleep(SHUTTER_SLEEP); */
   EZBus_Stop(&bus, id[SHUTTERNUM]);
 
   if ((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
@@ -632,36 +640,14 @@ static void OpenCloseShutter()
 
 static void CloseShutter()
 {
-  char cmd[80];
-
-  int shutter_timeout = 0;
-
-  if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-    bputs(info, "CloseShutter: 1. Error polling opto switch");
-
-  // This code does new style closing of the shutter
-  // If the shutter is not closed, then turn off the shutter (it will fall
-  // open), drive against limit switch then close quickly.
   if ((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
-    bputs(info, "CloseShutter: closing shutter...");
-    usleep(SHUTTER_SLEEP);
-    // snprintf(cmd, sizeof(cmd), "z0V10000h0M2000h50P424z5000D%dR", CommandData.actbus.shutter_step);
+    blast_info("CloseShutter: closing shutter...");
     if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "D0") != EZ_ERR_OK)
-      bputs(warning, "CloseShutter: EZ Bus error");
-    // usleep(SHUTTER_SLEEP);
-    // bputs(info, "start wait..");
-    // usleep(5000000);   // Wait 5 seconds
-    // EZBus_Stop(&bus, id[SHUTTERNUM]);
-    // bputs(info, "end wait");
+    	blast_info("CloseShutter: EZ Bus error");
   } else {  // Shutter is closed according to opto switch
-    shutter_data.state = SHUTTER_CLOSED;
-    // bputs(info, "CloseShutter: shutter is closed");
+    	shutter_data.state = SHUTTER_CLOSED;
   }
-
-  if (shutter_timeout >= SHUTTER_CLOSE_TIMEOUT)
-    bputs(warning, "CloseShutter: Closing shutter timed out");
 }
-
 
 #define SHUTTER_CLOSE_SLOW_TIMEOUT 50000000
 
@@ -670,12 +656,12 @@ static void CloseSlowShutter()
   int  shutter_timeout = 0;
 
   char  cmd[80];
-
+/*
   if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
     bputs(info, "CloseShutter: 1. Error polling opto switch");
   else
     ;
-
+*/
   // blast_info("%d %d %d", shutter_data.lims, shutter_data.lims & SHUTTER_CLOSED_BIT,
   //        SHUTTER_CLOSED_BIT);
 
@@ -688,8 +674,8 @@ static void CloseSlowShutter()
     while (((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) &
             (shutter_timeout < SHUTTER_CLOSE_TIMEOUT)) {
       if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
-        if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-          bputs(warning, "CloseShutter: 2. Error polling opto switch");
+        // if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
+        //  bputs(warning, "CloseShutter: 2. Error polling opto switch");
         usleep(SHUTTER_SLEEP);
         if ((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) {
           // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64z0h50V1000P300R") != EZ_ERR_OK)
@@ -712,34 +698,38 @@ static void CloseSlowShutter()
 
 static void OpenShutter()
 {
-  // char  cmd[80];
-  // EZBus_Comm(&bus, id[SHUTTERNUM], "z5000V10000D4224R");
-  // snprintf(cmd, sizeof(cmd), "z0V10000P%dR", CommandData.actbus.shutter_step);
-  EZBus_MoveComm(&bus, id[SHUTTERNUM], "P0");
+  if ((shutter_data.lims & SHUTTER_OPEN_BIT) != SHUTTER_OPEN_BIT) {
+  	blast_info("OpenShutter: opening shutter...");
+	if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "P0") != EZ_ERR_OK)
+		blast_info("OpenShutter: EZ Bus error");
+	} else {  // Shutter is open according to opto switch
+		shutter_data.state = SHUTTER_OPEN;
+	}
 }
 
 
 static void GetShutterData(int *position)
 {
   *position = SHUTTER_IS_UNK;
+  int retval;
 
   // This position is only where the step controller thinks the shutter
   // is.  There is no direct feedback from the shutter other than the
   // limit switch.
-  if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
-    if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK) {
-      bputs(warning, "GetShutterData: EZBus_ReadInt error -- lims");
+  // if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
+    if (retval = EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK) {
+      // bputs(warning, "GetShutterData: EZBus_ReadInt error -- lims");
     }// else {
     // if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT)
     //    *position = SHUTTER_IS_CLOSED;
     // }
 
-    if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?0", &shutter_data.pos) != EZ_ERR_OK) {
-	bputs(warning, "GetShutterData: EZBus_ReadInt error -- pos");
-    }
-  } else {
-	bputs(warning, "GetShutterData: EZBus is busy");
-  }
+     if (retval = EZBus_ReadInt(&bus, id[SHUTTERNUM], "?0", &shutter_data.pos) != EZ_ERR_OK) {
+	blast_info("GetShutterData: EZBus_ReadInt error -- pos, retval = %d", retval);
+     }
+// } else {
+// bputs(warning, "GetShutterData: EZBus is busy");
+//  }
 }
 
 
@@ -759,7 +749,7 @@ static void DoShutter(void)
 {
   int action = SHUTTER_EXIT;
   static int32_t  shutter_pos;
-  int cancel = 0;
+  int cancel;
 
   if (shutter_data.state == SHUTTER_UNK) {
     // bputs(info, "Initializing shutter...");
@@ -826,7 +816,9 @@ static void DoShutter(void)
   /* Figure out what to do... */
   if (action != SHUTTER_DO_KEEPCLOSED && action != SHUTTER_DO_KEEPOPEN) {
 		cancel = 1;
-		// bputs(warning, "debug: cancel = 1");
+		shutter_data.move_commanded = 0;
+	} else {
+		cancel = 0;
 	}
   switch (action) {
     case SHUTTER_DO_OFF:
@@ -889,15 +881,13 @@ static void DoShutter(void)
       EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_KEEPCLOSED:
-      EZBus_Take(&bus, id[SHUTTERNUM]);
-      EZBus_Stop(&bus, id[SHUTTERNUM]);
+      // EZBus_Take(&bus, id[SHUTTERNUM]);
       cancel = 0;
       KeepClosedShutter(&cancel);
-      EZBus_Release(&bus, id[SHUTTERNUM]);
+      // EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_KEEPOPEN:
       EZBus_Take(&bus, id[SHUTTERNUM]);
-      EZBus_Stop(&bus, id[SHUTTERNUM]);
       cancel = 0;
       KeepOpenShutter(&cancel);
       EZBus_Release(&bus, id[SHUTTERNUM]);
