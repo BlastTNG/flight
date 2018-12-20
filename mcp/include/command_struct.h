@@ -542,7 +542,6 @@ struct CommandDataStruct {
   double offset_ifyaw_gy;
   uint32_t gymask;
 
-  unsigned char use_elenc;
   unsigned char use_elmotenc;
   unsigned char use_elclin;
   unsigned char use_pss;
@@ -558,7 +557,6 @@ struct CommandDataStruct {
   double az_accel;
 
   double clin_el_trim;
-  double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
   double mag_az_trim[2];
