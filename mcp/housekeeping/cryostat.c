@@ -798,8 +798,7 @@ static void cooling_cycle(void) {
         cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
         cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
 
-        if (/*cycle_state.t250 < cycle_state.tcrit_fpa &&*/
-            cycle_state.the3 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
+        if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
             // moves the standby mode once we reach the minimum temperature.
@@ -883,6 +882,19 @@ void force_incharge(void) {
     // used for the test cryostat without watchdog board
 }
 
+static void cryo_status_update() {
+    static channel_t* cycle_allowed_Addr;
+    static channel_t* wd_allowed_Addr;
+    static int first_time = 1;
+    if (first_time == 1) {
+        first_time = 0;
+        cycle_allowed_Addr = channels_find_by_name("cycle_allowed");
+        wd_allowed_Addr = channels_find_by_name("wd_allowed");
+    }
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.cycle_allowed);
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.wd_allowed);
+}
+
 static void pot_watchdog() {
     static int first_time = 1;
     static channel_t* pot_addr;
@@ -952,6 +964,7 @@ void cryo_1hz(int setting_1hz) {
     if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
+        cryo_status_update();
         // load_curve_300mk();
         set_dac();
         pot_watchdog();
