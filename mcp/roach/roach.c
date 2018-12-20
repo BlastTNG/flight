@@ -220,6 +220,7 @@ void nameThread(const char*);
 
 // Roach with lamp control sets this high to alert other Roaches that it's ready to flash cal lamp
 static int lead_roach_ready;
+static int roach_lamp_now; // indicates Roach is turning on lamp with periodic_cal()
 
 // Generic function to handle system calls for python scripts with additional niceness.
 void pyblast_system(char* cmd)
@@ -1138,176 +1139,6 @@ int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
     return 0;
 }
 
-/* Function: pi_read_string
- * ----------------------------
- * Parses the Pi response via netcat connection, used after setting LO or attenuator
- *
- * @param m_pi Pi state structure
- * @param ntries number of tries before error
- * @param us_timeout microsecond timeout
-*/
-int pi_read_string(pi_state_t *m_pi, int ntries, int us_timeout)
-{
-    int retval = -1;
-    unsigned char m_read_buffer[READ_BUFFER];
-    int bytes_read;
-    int count = 0;
-    // blast_info("WHICH PI ============= %d", m_pi->which);
-    while ((count < ntries)) {
-        if (!ph_bufq_len(m_pi->pi_comm->input_buffer)) {
-            usleep(us_timeout);
-            blast_info("Pi%d timeout", m_pi->which);
-        } else {
-            while (ph_bufq_len(m_pi->pi_comm->input_buffer)) {
-                size_t m_size = (size_t)ph_bufq_len(m_pi->pi_comm->input_buffer);
-                bytes_read = remote_serial_read_data(m_pi->pi_comm, m_read_buffer, m_size);
-                m_read_buffer[bytes_read++] = '\0';
-                usleep(1);
-                blast_info("Pi%d: %s", m_pi->which, m_read_buffer);
-            }
-            retval = 0;
-            break;
-        }
-        count += 1;
-    }
-    return retval;
-}
-
-/* Function: pi_write_string
- * ----------------------------
- * Writes a string to the Pi socket; used for Python calls
- *
- * @param m_pi Pi state structure
- * @param m_data buffer containing message to write
- * @param m_len length of m_data
- *
- * returns: number of bytes succesfully written
-*/
-int pi_write_string(pi_state_t *m_pi, uint8_t *m_data, size_t m_len)
-{
-    int bytes_wrote;
-    int retval = -1;
-    m_data[m_len++] = '\n';
-    // m_data[m_len] = 0;
-    // blast_info("PI_COM_PORT ************************** %u", m_pi->pi_comm->port);
-    bytes_wrote = remote_serial_write_data(m_pi->pi_comm, m_data, m_len);
-    if (bytes_wrote) {
-        retval = bytes_wrote;
-    }
-    return retval;
-}
-
-/* Function: roach_read_adc
- * ----------------------------
- * Reads back values from ADC snap buffer (in FW) to calculate Vrms of digitized freq comb
- * Attenuators are set to maximize Vrms
- *
- * @param m_roach roach state table
- *
- * returns: RMS voltage of digitized freq comb
-*/
-float *roach_read_adc(roach_state_t *m_roach)
-{
-    size_t buffer_len = (1<<12);
-    uint16_t *temp_data;
-    // char* filename;
-    float *rms = calloc(2, sizeof(float));
-    float irms, qrms, ival, qval, isum, qsum;
-    temp_data = calloc((uint16_t)buffer_len, sizeof(uint16_t));
-    roach_write_int(m_roach, "adc_snap_adc_snap_ctrl", 0, 0);
-    usleep(1000);
-    roach_write_int(m_roach, "adc_snap_adc_snap_ctrl", 1, 0);
-    usleep(1000);
-    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 0, 0);
-    usleep(1000);
-    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 1, 0);
-    usleep(1000);
-    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 0, 0);
-    usleep(1000);
-    roach_read_data(m_roach, (uint8_t*)temp_data,
-           "adc_snap_adc_snap_bram", 0, buffer_len * sizeof(uint16_t), READ_DATA_MS_TIMEOUT);
-    // blast_tmp_sprintf(filename, "%s/adc_vals.dat", m_roach->sweep_root_path);
-    // FILE *fd = fopen(filename, "w");
-    roach_buffer_htons((uint16_t*)temp_data, buffer_len);
-    isum = 0;
-    qsum = 0;
-    for (size_t i = 0; i < buffer_len; i++) {
-        if (i % 2 == 0) {
-            ival = (float)((int16_t)temp_data[i]);
-            ival *= 550.;
-            ival /= pow(2, 15);
-            // fprintf(fd, "%f\n", ival);
-            isum += pow(ival, 2);
-        } else {
-            qval = (float)((int16_t)temp_data[i]);
-            qval *= 550.;
-            qval /= pow(2, 15);
-            // fprintf(fd, "%f\n", qval);
-            qsum += pow(qval, 2);
-        }
-    }
-    // fclose(fd);
-    irms = sqrt(isum / ((float)buffer_len / 2.));
-    qrms = sqrt(qsum / ((float)buffer_len / 2.));
-    rms[0] = irms;
-    rms[1] = qrms;
-    free(temp_data);
-    // blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[0]);
-    return rms;
-}
-
-void get_adc_rms(roach_state_t *m_roach)
-{
-    float *rms;
-    rms = roach_read_adc(m_roach);
-    m_roach->adc_rms[0] = rms[0];
-    m_roach->adc_rms[1] = rms[1];
-    blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
-}
-
-int read_accum_snap(roach_state_t *m_roach)
-{
-    int retval = -1;
-    size_t buffer_len = (1<<16);
-    uint32_t *temp_data;
-    temp_data = calloc((uint32_t)buffer_len, sizeof(uint32_t));
-    char *filename;
-    float Is[MAX_CHANNELS_PER_ROACH];
-    float Qs[MAX_CHANNELS_PER_ROACH];
-    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 0, 0) < 0)) {
-        return retval;
-    }
-    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 1, 0) < 0)) {
-        return retval;
-    }
-    if ((roach_read_data(m_roach, (uint8_t*)temp_data,
-           "accum_snap_accum_snap_bram", 0, buffer_len * sizeof(uint32_t), READ_DATA_MS_TIMEOUT) != 0)) {
-        return retval;
-    }
-    roach_buffer_htonl(temp_data, buffer_len);
-    int count = 0;
-    for (size_t i = 0; i < buffer_len; i++) {
-        if (i % 2 == 0) {
-            Is[count] = (float)temp_data[i];
-        } else {
-            Qs[count] = (float)temp_data[i];
-        }
-        count++;
-    }
-    blast_tmp_sprintf(filename, "%s/accumulator.dat", m_roach->sweep_root_path);
-    FILE *fd = fopen(filename, "w");
-    if (!fd) {
-        blast_strerror("Could not open %s for writing", filename);
-        return retval;
-    }
-    for (size_t i = 0; i < MAX_CHANNELS_PER_ROACH; i++) {
-        fprintf(fd, "%f\t%f\n", Is[i], Qs[i]);
-    }
-    fclose(fd);
-    retval = 0;
-    return retval;
-}
-
 int atten_client(pi_state_t *m_pi, char *command)
 {
     int status = -1;
@@ -1683,62 +1514,6 @@ int set_output_atten(roach_state_t *m_roach, double new_out_atten)
         blast_info("ROACH%d, Output atten limit, aborting cal", m_roach->which);
     } else {
         retval = set_atten(&pi_state_table[m_roach->which - 1]);
-    }
-    return retval;
-}
-
-/* Function: init_valon
- * ----------------------------
- * Sets Valon Synthesizers to their clock and center LO frequencies
- *
- * @param m_roach roach state table
- *
-*/
-int init_valon(pi_state_t *m_pi)
-{
-    int retval = -1;
-    char *init_command;
-    if (EXT_REF) {
-        blast_tmp_sprintf(init_command, valon_init_pi_extref);
-    } else {
-        blast_tmp_sprintf(init_command, valon_init_pi);
-    }
-    // char *lo_command2;
-    // blast_tmp_sprintf(lo_command2, "cat hello_world.log");
-    blast_info("Initializing Valon%d...", m_pi->which);
-    /* if (pi_write_string(&pi_state_table[ind], (unsigned char*)valon_init_pi, strlen(valon_init_pi)) >= 0) {
-        usleep(3000);
-    } else {
-        return retval;
-    }*/
-    if (pi_write_string(m_pi, (unsigned char*)init_command, strlen(init_command)) >= 0) {
-        if (pi_read_string(m_pi, PI_READ_NTRIES, INIT_VALON_TIMEOUT) < 0) {
-            blast_info("Error setting Valon... reboot Pi%d?", m_pi->which);
-            return PI_READ_ERROR;
-        } else {
-            retval = 0;
-        }
-    } else {
-       return retval;
-    }
-    return retval;
-}
-
-/* Function: read_valon
- * ----------------------------
- * Reads Valon Synthesizers after initialization
- *
- * @param m_roach roach state table
- * @param ntries number of attempts before error
-*/
-int read_valon(pi_state_t *m_pi, int ntries)
-{
-    int retval = -1;
-    pi_write_string(m_pi, (unsigned char*)read_valon_pi, strlen(read_valon_pi));
-    if (pi_read_string(m_pi, ntries, PI_READ_TIMEOUT) < 0) {
-        blast_info("Error reading Valon... reboot Pi%d?", m_pi->which);
-    } else {
-        retval = 0;
     }
     return retval;
 }
@@ -3489,7 +3264,9 @@ void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = (int)(200 * nsec);
     CommandData.Cryo.length = (int)(200 * nsec);
+    roach_lamp_now = 1;
     periodic_cal_control();
+    roach_lamp_now = 0;
     usleep(50000);
     if (CommandData.roach[m_roach->which - 1].has_lamp_control) {
         lead_roach_ready = 0;
@@ -3512,7 +3289,7 @@ int get_lamp_response(roach_state_t *m_roach)
     // get 'on' timestream (save in buffer)
     avg_chan_vals(m_roach, 1);
     // stop the lamp
-    cal_lamp_off(m_roach);
+    // cal_lamp_off(m_roach);
     // get diff between two channel arrays
     blast_tmp_sprintf(file_out, "%s/lamp_response.dat", m_roach->sweep_root_path);
     FILE *fd = fopen(file_out, "wb");
@@ -3618,6 +3395,117 @@ int cal_sweep(roach_state_t *m_roach, char *subdir)
     CommandData.roach[m_roach->which - 1].do_cal_sweeps = 0;
     return SWEEP_SUCCESS;
 }*/
+
+/* Function: roach_read_adc
+ * ----------------------------
+ * Reads back values from ADC snap buffer (in FW) to calculate Vrms of digitized freq comb
+ * Attenuators are set to maximize Vrms
+ *
+ * @param m_roach roach state table
+ *
+ * returns: RMS voltage of digitized freq comb
+*/
+float *roach_read_adc(roach_state_t *m_roach)
+{
+    size_t buffer_len = (1<<12);
+    uint16_t *temp_data;
+    // char* filename;
+    float *rms = calloc(2, sizeof(float));
+    float irms, qrms, ival, qval, isum, qsum;
+    temp_data = calloc((uint16_t)buffer_len, sizeof(uint16_t));
+    roach_write_int(m_roach, "adc_snap_adc_snap_ctrl", 0, 0);
+    usleep(1000);
+    roach_write_int(m_roach, "adc_snap_adc_snap_ctrl", 1, 0);
+    usleep(1000);
+    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 0, 0);
+    usleep(1000);
+    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 1, 0);
+    usleep(1000);
+    roach_write_int(m_roach, "adc_snap_adc_snap_trig", 0, 0);
+    usleep(1000);
+    roach_read_data(m_roach, (uint8_t*)temp_data,
+           "adc_snap_adc_snap_bram", 0, buffer_len * sizeof(uint16_t), READ_DATA_MS_TIMEOUT);
+    // blast_tmp_sprintf(filename, "%s/adc_vals.dat", m_roach->sweep_root_path);
+    // FILE *fd = fopen(filename, "w");
+    roach_buffer_htons((uint16_t*)temp_data, buffer_len);
+    isum = 0;
+    qsum = 0;
+    for (size_t i = 0; i < buffer_len; i++) {
+        if (i % 2 == 0) {
+            ival = (float)((int16_t)temp_data[i]);
+            ival *= 550.;
+            ival /= pow(2, 15);
+            // fprintf(fd, "%f\n", ival);
+            isum += pow(ival, 2);
+        } else {
+            qval = (float)((int16_t)temp_data[i]);
+            qval *= 550.;
+            qval /= pow(2, 15);
+            // fprintf(fd, "%f\n", qval);
+            qsum += pow(qval, 2);
+        }
+    }
+    // fclose(fd);
+    irms = sqrt(isum / ((float)buffer_len / 2.));
+    qrms = sqrt(qsum / ((float)buffer_len / 2.));
+    rms[0] = irms;
+    rms[1] = qrms;
+    free(temp_data);
+    // blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[0]);
+    return rms;
+}
+
+void get_adc_rms(roach_state_t *m_roach)
+{
+    float *rms;
+    rms = roach_read_adc(m_roach);
+    m_roach->adc_rms[0] = rms[0];
+    m_roach->adc_rms[1] = rms[1];
+    blast_info("ROACH%d, ADC V_rms (I,Q) = %f %f\n", m_roach->which, rms[0], rms[1]);
+}
+
+int read_accum_snap(roach_state_t *m_roach)
+{
+    int retval = -1;
+    size_t buffer_len = (1<<16);
+    uint32_t *temp_data;
+    temp_data = calloc((uint32_t)buffer_len, sizeof(uint32_t));
+    char *filename;
+    float Is[MAX_CHANNELS_PER_ROACH];
+    float Qs[MAX_CHANNELS_PER_ROACH];
+    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 0, 0) < 0)) {
+        return retval;
+    }
+    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 1, 0) < 0)) {
+        return retval;
+    }
+    if ((roach_read_data(m_roach, (uint8_t*)temp_data,
+           "accum_snap_accum_snap_bram", 0, buffer_len * sizeof(uint32_t), READ_DATA_MS_TIMEOUT) != 0)) {
+        return retval;
+    }
+    roach_buffer_htonl(temp_data, buffer_len);
+    int count = 0;
+    for (size_t i = 0; i < buffer_len; i++) {
+        if (i % 2 == 0) {
+            Is[count] = (float)temp_data[i];
+        } else {
+            Qs[count] = (float)temp_data[i];
+        }
+        count++;
+    }
+    blast_tmp_sprintf(filename, "%s/accumulator.dat", m_roach->sweep_root_path);
+    FILE *fd = fopen(filename, "w");
+    if (!fd) {
+        blast_strerror("Could not open %s for writing", filename);
+        return retval;
+    }
+    for (size_t i = 0; i < MAX_CHANNELS_PER_ROACH; i++) {
+        fprintf(fd, "%f\t%f\n", Is[i], Qs[i]);
+    }
+    fclose(fd);
+    retval = 0;
+    return retval;
+}
 
 int roach_targ_sweep(roach_state_t *m_roach)
 {
@@ -5630,7 +5518,7 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].chop_lo = 0;
                 }
             }
-            if (CommandData.roach[i].auto_scan_retune) {
+            if (CommandData.roach[i].auto_el_retune) {
                 if (CommandData.trigger_roach_tuning_check) {
                     // CommandData.roach[i].do_check_retune = 3;
                     // CommandData.roach[i].do_full_loop = 1;
@@ -6011,7 +5899,7 @@ int init_roach(uint16_t ind)
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_lamp_response.tar.gz");
     snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
                "%s/roach%d_%s", roach_root_path, ind + 1, "dfs");
-    if ((ind == 0)) {
+    if ((ind == 3)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
@@ -6038,7 +5926,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
-    if ((ind == 3)) {
+    if ((ind == 0)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 827.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
@@ -6107,16 +5995,20 @@ void write_roach_channels_5hz(void)
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
     static channel_t *LoFreqReadAddr[NUM_ROACHES];
-    static channel_t *RoachIsAveragingAddr[NUM_ROACHES];
+    // static channel_t *RoachIsAveragingAddr[NUM_ROACHES];
+    static channel_t *RoachLampNow;
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
     char channel_name_lo_freq_req[128] = { 0 };
     char channel_name_lo_freq_read[128] = { 0 };
-    char channel_name_roach_is_averaging[128] = { 0 };
+    // char channel_name_roach_is_averaging[128] = { 0 };
+    char channel_name_roach_lamp_now[128] = { 0 };
 
     if (firsttime) {
         firsttime = 0;
+        snprintf(channel_name_roach_lamp_now, sizeof(channel_name_roach_lamp_now),
+                "roach_lamp_now");
         for (i = 0; i < NUM_ROACHES; i++) {
             snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
                     "packet_count_mcp_roach%d", i + 1);
@@ -6130,9 +6022,8 @@ void write_roach_channels_5hz(void)
                         "lo_freq_req_roach%d", i + 1);
             snprintf(channel_name_lo_freq_read, sizeof(channel_name_lo_freq_read),
                         "lo_freq_read_roach%d", i + 1);
-            snprintf(channel_name_roach_is_averaging,
-                    sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d",
-                    i + 1);
+            // snprintf(channel_name_roach_is_averaging,
+            // sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d", i + 1);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
                     channel_name_valid_pkt_ct);
@@ -6140,8 +6031,9 @@ void write_roach_channels_5hz(void)
                     channel_name_invalid_pkt_ct);
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
             LoFreqReadAddr[i] = channels_find_by_name(channel_name_lo_freq_read);
-            RoachIsAveragingAddr[i] = channels_find_by_name(channel_name_roach_is_averaging);
+            // RoachIsAveragingAddr[i] = channels_find_by_name(channel_name_roach_is_averaging);
         }
+        RoachLampNow = channels_find_by_name(channel_name_roach_lamp_now);
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
@@ -6152,8 +6044,9 @@ void write_roach_channels_5hz(void)
         SET_FLOAT(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
         // blast_info("LO FREQ READ = %g", roach_state_table[i].lo_freq_read);
         SET_FLOAT(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
-        SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
+        // SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
     }
+    SET_UINT8(RoachLampNow, roach_lamp_now);
 }
 
 
@@ -6343,7 +6236,7 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
     // Make Roach status field
         roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_tones) << 1);
+        // roach_status_field |= (((uint32_t)roach_state_table[i].has_tones) << 1);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
         // is_sweeping is 2 bits
@@ -6365,9 +6258,9 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
+        // roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 23);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].auto_scan_retune) << 25);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].auto_el_retune) << 25);
         roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
         roach_status_field |= (((uint32_t)CommandData.roach[i].chop_lo) << 27);
         roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
