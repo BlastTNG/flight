@@ -26,6 +26,7 @@ class AutoSonos:
     self.lastval = 0
     self.framenum = 0
     self.changed = False
+    self.timesteady = 0
 
     self.update()
     self.track = sonos.music_library.get_tracks(search_term=self.trackname)[0]
