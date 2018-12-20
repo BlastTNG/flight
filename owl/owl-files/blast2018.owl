@@ -312,27 +312,147 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 544,
-            "geometryX": 102,
-            "geometryY": 102
+            "geometryHeight": 391,
+            "geometryWidth": 272,
+            "geometryX": 51,
+            "geometryY": 51
         },
         {
             "PObject": {
                 "_id": "739666076"
             },
-            "_boxTitle": "Temperatures",
+            "_boxTitle": "IF Temperatures",
             "_style": "(P2146903282)",
-            "cellHeight": 7,
-            "cellWidth": 15,
-            "cellX": 19,
-            "cellY": 19,
+            "cellHeight": 11,
+            "cellWidth": 16,
+            "cellX": 3,
+            "cellY": 26,
             "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1514919730"
+                    },
+                    "_caption": "IF Front",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_front",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1375179599"
+                    },
+                    "_caption": "IF Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1711632095"
+                    },
+                    "_caption": "IF Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_starboard",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "170104511"
+                    },
+                    "_caption": "IF Back",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_back",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "976215137"
+                    },
+                    "_caption": "IF Plate",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1537755402"
+                    },
+                    "_caption": "Cryostat Lid",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_cryostat_lid",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1566575328"
+                    },
+                    "_caption": "Cryostat Front ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_cryostat_front",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "674897052"
+                    },
+                    "_caption": "ROACH Top",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_roach_top",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1890127909"
+                    },
+                    "_caption": "ROACH Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_roach_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1416002185"
+                    },
+                    "_caption": "ROACH Strbd (L-bracket) ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_roach_starboard",
+                    "type": "PNDI"
+                }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 510,
-            "geometryX": 646,
-            "geometryY": 646
+            "geometryHeight": 188,
+            "geometryWidth": 273,
+            "geometryX": 51,
+            "geometryY": 442
         },
         {
             "PObject": {
@@ -449,10 +569,10 @@
                     "type": "PTDI"
                 }
             ],
-            "geometryHeight": 374,
-            "geometryWidth": 510,
-            "geometryX": 646,
-            "geometryY": 102
+            "geometryHeight": 187,
+            "geometryWidth": 255,
+            "geometryX": 323,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -471,19 +591,7 @@
                             "_id": "189960814"
                         },
                         "_map": {
-                            "1": "Az El Goto[style=No style (P1829765767)]",
-                            "10": "Quad Scan",
-                            "11": "El Scan",
-                            "12": "El Box[style=No style (P1829765767)]",
-                            "13": "Current[style=No style (P1829765767)]",
-                            "2": "Az Scan[style=No style (P1829765767)]",
-                            "3": "Stop[style=Bold (P1059175281)]",
-                            "4": "Ra Dec Goto[style=No style (P1829765767)]",
-                            "5": "V Cap[style=No style (P1829765767)]",
-                            "6": "Cap Scan[style=No style (P1829765767)]",
-                            "7": "Box Scan",
-                            "8": "IF Locked",
-                            "9": "V Box"
+                            "3": "Stop[style=Bold (P1059175281)]"
                         }
                     },
                     "PObject": {
@@ -637,31 +745,12 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_PIV",
                     "type": "PMDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "1676068526"
-                        },
-                        "_map": {
-                            "0": "Unlocked[style=No style (P2114320605)]",
-                            "1": "Locked[style=No style (P2114320605)]"
-                        }
-                    },
-                    "PObject": {
-                        "_id": "385834592"
-                    },
-                    "_caption": "Lockpin",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "PIN_IN_LOCK",
-                    "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 578,
-            "geometryX": 1156,
-            "geometryY": 102
+            "geometryHeight": 391,
+            "geometryWidth": 289,
+            "geometryX": 578,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -888,10 +977,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 782,
-            "geometryWidth": 578,
-            "geometryX": 1734,
-            "geometryY": 102
+            "geometryHeight": 391,
+            "geometryWidth": 289,
+            "geometryX": 867,
+            "geometryY": 51
         },
         {
             "PObject": {
@@ -1051,10 +1140,695 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 476,
-            "geometryWidth": 578,
-            "geometryX": 1156,
-            "geometryY": 884
+            "geometryHeight": 238,
+            "geometryWidth": 289,
+            "geometryX": 578,
+            "geometryY": 442
+        },
+        {
+            "PObject": {
+                "_id": "1677303848"
+            },
+            "_boxTitle": "Pointing Temperatures",
+            "_style": "(P2072147126)",
+            "cellHeight": 10,
+            "cellWidth": 16,
+            "cellX": 3,
+            "cellY": 37,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1590974792"
+                    },
+                    "_caption": "El Motor",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_el_motor",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1542549337"
+                    },
+                    "_caption": "Pivot",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_pivot",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2056199985"
+                    },
+                    "_caption": "RW Motor",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_rw_motor",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2006547370"
+                    },
+                    "_caption": "Star Camera 1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_sc1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "837147172"
+                    },
+                    "_caption": "Star Camera 2 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_sc2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1689264184"
+                    },
+                    "_caption": "Gyro Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_gyro_1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1639133580"
+                    },
+                    "_caption": "Gyro Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_gyro_2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "118934149"
+                    },
+                    "_caption": "Lock Motor",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_lock_motor",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "63119254"
+                    },
+                    "_caption": "Balance System",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_bal_sys",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 171,
+            "geometryWidth": 273,
+            "geometryX": 51,
+            "geometryY": 629
+        },
+        {
+            "PObject": {
+                "_id": "1798320726"
+            },
+            "_boxTitle": "Telescope Temperatures",
+            "_style": "(P2072147126)",
+            "cellHeight": 17,
+            "cellWidth": 15,
+            "cellX": 19,
+            "cellY": 19,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "797915483"
+                    },
+                    "_caption": "M1 Back Top",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m1_back_top",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1431283190"
+                    },
+                    "_caption": "M1 Back Bottom",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m1_back_bottom",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1364083985"
+                    },
+                    "_caption": "M1 Back Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m1_back_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "281025737"
+                    },
+                    "_caption": "M1 Back Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m1_back_starboard",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "300222617"
+                    },
+                    "_caption": "M1 Front Bottom",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m1_front_bottom",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1414347856"
+                    },
+                    "_caption": "M2 Back",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m2_back",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1638418591"
+                    },
+                    "_caption": "M2 Push Plate",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m2_push_plate",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "504477660"
+                    },
+                    "_caption": "M2 Actuator",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_m2_act",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1939699803"
+                    },
+                    "_caption": "Strut 2 Middle",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_strut_2_mid",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1590918037"
+                    },
+                    "_caption": "Strut 3 Near End",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_strut_3_near",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1502715400"
+                    },
+                    "_caption": "Strut 3 Far End",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_strut_3_far",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1343158974"
+                    },
+                    "_caption": "OB Front Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_ob_front_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1808501802"
+                    },
+                    "_caption": "OB Front Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_ob_front_starboard",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1577171195"
+                    },
+                    "_caption": "OB Back Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_ob_back_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "367339311"
+                    },
+                    "_caption": "OB Back Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_ob_back_starboard",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 290,
+            "geometryWidth": 256,
+            "geometryX": 323,
+            "geometryY": 323
+        },
+        {
+            "PObject": {
+                "_id": "1108034412"
+            },
+            "_boxTitle": "Electronics Temperatures",
+            "_style": "(P2072147126)",
+            "cellHeight": 12,
+            "cellWidth": 15,
+            "cellX": 19,
+            "cellY": 36,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1023054327"
+                    },
+                    "_caption": "FC2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_fc2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1566738363"
+                    },
+                    "_caption": "Hard Drive 1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_hdd_1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1239505185"
+                    },
+                    "_caption": "Hard Drive 2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_hdd_2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "356132694"
+                    },
+                    "_caption": "OF Labjack Box 1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_lj_1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "685799961"
+                    },
+                    "_caption": "OF Labjack Box 2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_lj_2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1382144171"
+                    },
+                    "_caption": "OF GPS Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_gps",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "718016898"
+                    },
+                    "_caption": "IF Ethernet Switch  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_eth_switch",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1993540358"
+                    },
+                    "_caption": "IF Labjack Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_lj_bob",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1417760553"
+                    },
+                    "_caption": "REC Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_rec",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "536633434"
+                    },
+                    "_caption": "REC Power Supply",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_rec_power",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1580544788"
+                    },
+                    "_caption": "Timing Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_timing_box",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 205,
+            "geometryWidth": 256,
+            "geometryX": 323,
+            "geometryY": 612
+        },
+        {
+            "PObject": {
+                "_id": "1572686749"
+            },
+            "_boxTitle": "Power Temperatures",
+            "_style": "(P2072147126)",
+            "cellHeight": 10,
+            "cellWidth": 16,
+            "cellX": 3,
+            "cellY": 47,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "1895319663"
+                    },
+                    "_caption": "OF Batteries (Port)",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_batt_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1751814520"
+                    },
+                    "_caption": "IF Batteries (Stbd)",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_batt_starboard",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1454133933"
+                    },
+                    "_caption": "OF Power Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_power_box",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1139043976"
+                    },
+                    "_caption": "IF Power Box",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_if_power_bob",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1554357778"
+                    },
+                    "_caption": "Solar Panel 1 BR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_solar_1_br",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1877692559"
+                    },
+                    "_caption": "Solar Panel 1 TL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_solar_1_tl",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2129959550"
+                    },
+                    "_caption": "Solar Panel 2 BR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_solar_2_br",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1670849136"
+                    },
+                    "_caption": "Solar Panel 2 TL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_solar_2_tl",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 171,
+            "geometryWidth": 273,
+            "geometryX": 51,
+            "geometryY": 799
+        },
+        {
+            "PObject": {
+                "_id": "485456626"
+            },
+            "_boxTitle": "OF Temperatures",
+            "_style": "(P2072147126)",
+            "cellHeight": 9,
+            "cellWidth": 15,
+            "cellX": 19,
+            "cellY": 48,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "252633928"
+                    },
+                    "_caption": "OF Port",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_port",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1165984681"
+                    },
+                    "_caption": "OF Starboard",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_starboard",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1027307478"
+                    },
+                    "_caption": "OF Front",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_front",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "795610627"
+                    },
+                    "_caption": "OF Port Deck",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_port_deck",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "994070045"
+                    },
+                    "_caption": "OF Port A-Frame",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_of_port_aframe",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "604944695"
+                    },
+                    "_caption": "Sunshield Rear",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_sunshield_rear",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1119880842"
+                    },
+                    "_caption": "Sunshield Chin",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "Tt_sunshield_chin",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 154,
+            "geometryWidth": 256,
+            "geometryX": 323,
+            "geometryY": 816
         }
     ],
     "extremas": [
@@ -1062,15 +1836,15 @@
             "PObject": {
                 "_id": "1555967448"
             },
-            "_high": 1,
-            "_low": -1,
+            "_high": "1",
+            "_low": "-1",
             "_name": "closed",
             "_shigh": "(P1913941534)",
             "_slow": "(P2017040817)",
             "_sxhigh": "(P956360347)",
             "_sxlow": "(P949614266)",
-            "_xhigh": 2,
-            "_xlow": -2
+            "_xhigh": "2",
+            "_xlow": "-2"
         }
     ],
     "linkNames": [
@@ -1090,10 +1864,10 @@
             "cellWidth": 5,
             "cellX": 19,
             "cellY": 13,
-            "geometryHeight": 238,
-            "geometryWidth": 170,
-            "geometryX": 646,
-            "geometryY": 442
+            "geometryHeight": 119,
+            "geometryWidth": 85,
+            "geometryX": 323,
+            "geometryY": 221
         }
     ],
     "styles": [
@@ -1285,9 +2059,9 @@
             "_name": "shutter"
         }
     ],
-    "webPort": "\u0000",
-    "windowCellHeight": 60,
-    "windowCellWidth": 109,
-    "windowHeight": 2049,
-    "windowWidth": 3706
+    "webPort": "0",
+    "windowCellHeight": 64,
+    "windowCellWidth": 90,
+    "windowHeight": 1104,
+    "windowWidth": 1528
 }
