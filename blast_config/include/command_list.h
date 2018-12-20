@@ -32,7 +32,7 @@
 #define GRPOS_BAL   1
 #define GRPOS_HWPR  2
 #define GRPOS_TRIM  3
-#define GRPOS_ELECT 4
+#define GRPOS_ELECT 4 // empty, remove after 2018 flight? -PAW
 #define GRPOS_BIAS  5
 #define GRPOS_VETO  6
 #define GRPOS_ACT   7

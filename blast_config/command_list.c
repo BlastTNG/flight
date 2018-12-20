@@ -315,9 +315,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
   {COMMAND(shutter_open), "Open shutter", GR_MISC},
-  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
+  {COMMAND(shutter_open_close), "DEPRECATED: If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
-  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(shutter_close_slow), "DEPRECATED, use shutter_keepclosed instead: Close shutter using opto feedback and keep it closed", GR_MISC},
   {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
   {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
 
@@ -1775,12 +1775,12 @@ struct mcom mcommands[plugh + 2] = {
             {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
         }
     },
-    {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", GR_MISC, 1,
+    {COMMAND(shutter_step), "DEPRECATED: set number of shutter steps to close (default 4224)", GR_MISC, 1,
         {
           {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
         }
     },
-    {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
+    {COMMAND(shutter_step_slow), "DEPRECATED: set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
         {
           {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
         }
