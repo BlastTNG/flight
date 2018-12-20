@@ -255,7 +255,7 @@ int GetHWPRi(double pot_val)
   return i_min;
 }
 
-int GetHWPRIndex(float enc_val)
+int GetHWPRIndex(double enc_val)
 // From the current encoder reading, and a specified margin, return the position of the HWP
 {
 	int index;
