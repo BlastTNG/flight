@@ -597,7 +597,8 @@ void ControlHWPR(struct ezbus *bus)
 
             /*** We are moving.  Wait until we are done. ***/
             } else if (hwpr_control.move_cur == moving) {
-            	if (hwpr_data.enc == last_enc) {
+				// tolerance on "stopped moving" is 0.01 deg
+            	if (fabs(hwpr_data.enc-last_enc) <= 0.01) {
                 	hwpr_control.stop_cnt++;
                 } else {
                 	hwpr_control.stop_cnt = 0;
@@ -616,7 +617,7 @@ void ControlHWPR(struct ezbus *bus)
                         hwpr_control.move_cur = at_overshoot;
 					} else if (hwpr_control.do_main_move) {
 						hwpr_control.engaged = 1;
-						hwpr_control.move_cur = ready;
+						hwpr_control.move_cur = ready; // go to main move part
 					} else if (hwpr_control.do_disengage) {
 						hwpr_control.move_cur = needs_backoff;
                     } else { // we're done moving
