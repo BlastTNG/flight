@@ -44,7 +44,7 @@
 static struct hwpr_struct {
   int addr;
   int32_t pos;
-  float enc;
+  double enc;
   double pot;
   float enc_real_hwpr;
 } hwpr_data = {0};
@@ -92,6 +92,7 @@ static struct hwpr_control_struct
 	int32_t engage_move;
 	int32_t disengage_move;
 	float overshoot;
+	int index;
 } hwpr_control;
 
 int hwpr_calpulse_flag = 0;
@@ -99,6 +100,7 @@ int hwpr_calpulse_flag = 0;
 void MonitorHWPR(struct ezbus *bus)
 {
   EZBus_ReadInt(bus, hwpr_data.addr, "?0", &hwpr_data.pos);
+  hwpr_control.index = GetHWPRIndex(hwpr_data.enc);
 }
 
 /* Clear out the hwpr_control structure*/
@@ -198,9 +200,9 @@ void StoreHWPRBus(void)
   SET_FLOAT(overshootHwprAddr, CommandData.hwpr.overshoot);
   SET_FLOAT(pos0HwprAddr, CommandData.hwpr.pos[0]);
   SET_FLOAT(pos1HwprAddr, CommandData.hwpr.pos[1]);
-  SET_VALUE(iposRqHwprAddr, CommandData.hwpr.i_pos);
+  SET_VALUE(iposRqHwprAddr, hwpr_control.i_next_step);
   // SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
-  SET_VALUE(iposHwprAddr, hwpr_control.i_next_step);
+  SET_VALUE(iposHwprAddr, hwpr_control.index);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
   SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
   SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move);
@@ -253,7 +255,7 @@ int GetHWPRi(double pot_val)
   return i_min;
 }
 
-int GetHWPRIndex(int enc_val)
+int GetHWPRIndex(double enc_val)
 // From the current encoder reading, and a specified margin, return the position of the HWP
 {
 	int index;
@@ -287,7 +289,7 @@ void ControlHWPR(struct ezbus *bus)
     static int first_time = 1;
     static float last_enc = 0;
 
-    float hwpr_enc_cur = 0.0;
+    double hwpr_enc_cur = 0.0;
     // float hwpr_enc_dest = 0.0;
     int i_step;  // index of the current step
     int i_next_step = 0;
@@ -418,7 +420,7 @@ void ControlHWPR(struct ezbus *bus)
 						// engage fork before main move
                     	hwpr_control.move_cur = engage;
 #ifdef DEBUG_HWPR
-                        blast_info("Destination is index %i, pot value = %f, required rel encoder move is %ld:",
+                        blast_info("Destination is index %i, pot value = %f, required rel motor step move is %ld:",
                                        CommandData.hwpr.i_pos, CommandData.hwpr.pos[i_next_step],
                                        hwpr_control.rel_move);
                         blast_info("target: %f, current: %f", hwpr_control.enc_targ, hwpr_enc_cur); // DEBUG
@@ -777,5 +779,5 @@ void DoHWPR(struct ezbus* bus)
 // ReadHWPREnc called from the mcp 5Hz loop.  Reads from the EtherCat data structure.
 void ReadHWPREnc(void)
 {
-    hwpr_data.enc = hwp_get_position() * ENC_TO_DEG;
+    hwpr_data.enc = (double)(hwp_get_position() * ENC_TO_DEG);
 }
