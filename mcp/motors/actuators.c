@@ -566,19 +566,16 @@ static void ResetShutter()
 static void KeepClosedShutter(int* cancel)
 {
   if (*cancel == 0) {
-    	// if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-	// bputs(info, "KeepClosedShutter: Error polling limit switches");
     	if (((shutter_data.lims & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT) && (shutter_data.move_commanded == 0)) {
-		bputs(warning, "KeepClosed mode sees shutter not closed! Commanding close...");
+		blast_info("KeepClosed mode sees shutter not closed! Commanding close...");
 		EZBus_Take(&bus, id[SHUTTERNUM]);
 		EZBus_Stop(&bus, id[SHUTTERNUM]); // stop current action
 
 		if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "D0") != EZ_ERR_OK)
-			bputs(info, "KeepClosedShutter: error commanding close move");
+			blast_info("KeepClosedShutter: error commanding close move");
 		EZBus_Release(&bus, id[SHUTTERNUM]);
 		shutter_data.move_commanded = 1;
     	} else {
-		blast_info("KeepClosedShutter: no move commanded");
 		if ((shutter_data.lims & SHUTTER_CLOSED_BIT) == SHUTTER_CLOSED_BIT)
 			shutter_data.move_commanded = 0;
 	}
@@ -588,24 +585,21 @@ static void KeepClosedShutter(int* cancel)
 
 static void KeepOpenShutter(int* cancel)
 {
-	bputs(info, "Enter KeepOpenShutter mode");
-
-	while (*cancel == 0) {
-		// if (EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK)
-	// bputs(info, "KeepOpenShutter: Error polling limit switches");
-// (shutter_data.lims & SHUTTER_CLOSED_BIT), shutter_data.move_commanded);
-
+	if (*cancel == 0) {
 		if (((shutter_data.lims & SHUTTER_OPEN_BIT) != SHUTTER_OPEN_BIT) && (shutter_data.move_commanded == 0)) {
-			bputs(warning, "KeepOpen mode sees shutter not open! Commanding open...");
+			blast_info("KeepOpen mode sees shutter not open! Commanding open...");
+			EZBus_Take(&bus, id[SHUTTERNUM]);
 			EZBus_Stop(&bus, id[SHUTTERNUM]);
 
 			if (EZBus_MoveComm(&bus, id[SHUTTERNUM], "P0") != EZ_ERR_OK)
-				bputs(info, "KeepOpenShutter: error commanding open move");
+				blast_info("KeepOpenShutter: error commanding open move");
+			EZBus_Release(&bus, id[SHUTTERNUM]);
+			shutter_data.move_commanded = 1;
 		} else {
 			if ((shutter_data.lims & SHUTTER_OPEN_BIT) == SHUTTER_OPEN_BIT)
 				shutter_data.move_commanded = 0;
 		}
-	} // end while
+	} // end if
 }
 
 static void OpenCloseShutter()
@@ -716,7 +710,7 @@ static void GetShutterData(int *position)
   // limit switch.
   // if (!EZBus_IsBusy(&bus, id[SHUTTERNUM])) {
     if (retval = EZBus_ReadInt(&bus, id[SHUTTERNUM], "?4", &shutter_data.lims) != EZ_ERR_OK) {
-      // bputs(warning, "GetShutterData: EZBus_ReadInt error -- lims");
+       blast_info("GetShutterData: EZBus_ReadInt error -- lims");
     }// else {
     // if ((shutter_data.in & SHUTTER_CLOSED_BIT) != SHUTTER_CLOSED_BIT)
     //    *position = SHUTTER_IS_CLOSED;
@@ -885,10 +879,10 @@ static void DoShutter(void)
       // EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_KEEPOPEN:
-      EZBus_Take(&bus, id[SHUTTERNUM]);
+      // EZBus_Take(&bus, id[SHUTTERNUM]);
       cancel = 0;
       KeepOpenShutter(&cancel);
-      EZBus_Release(&bus, id[SHUTTERNUM]);
+      // EZBus_Release(&bus, id[SHUTTERNUM]);
       break;
     case SHUTTER_DO_NOP:
       break;
