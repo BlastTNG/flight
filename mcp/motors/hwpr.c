@@ -204,8 +204,8 @@ void StoreHWPRBus(void)
   // SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
   SET_INT8(iposHwprAddr, hwpr_control.index);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
-  SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
-  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move);
+  SET_UINT16(stopCntHwprAddr, hwpr_control.stop_cnt);
+  SET_INT32(relMoveHwprAddr, hwpr_control.rel_move);
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
@@ -225,7 +225,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.do_disengage) & 0x0001) << 10;
   hwpr_stat_field |= ((hwpr_control.do_main_move) & 0x0001) << 11;
 
-  SET_VALUE(statControlHwprAddr, hwpr_stat_field);
+  SET_INT16(statControlHwprAddr, hwpr_stat_field);
 }
 
 // DEPRECATED, use GetHWPRIndex for two position HWPR - PAW 2018/11/25
