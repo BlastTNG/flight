@@ -5899,7 +5899,7 @@ int init_roach(uint16_t ind)
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_lamp_response.tar.gz");
     snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
                "%s/roach%d_%s", roach_root_path, ind + 1, "dfs");
-    if ((ind == 3)) {
+    if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
@@ -5926,7 +5926,7 @@ int init_roach(uint16_t ind)
         roach_state_table[ind].n_max_freq = -1.02342e6 + 5.0e4;
         roach_state_table[ind].n_min_freq = -246.001234e6 + 5.0e4;
     }
-    if ((ind == 0)) {
+    if ((ind == 3)) {
         roach_state_table[ind].array = 250;
         roach_state_table[ind].lo_centerfreq = 827.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
