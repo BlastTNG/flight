@@ -41,6 +41,7 @@ void udp_receive(void *arg) {
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint32_t transmit_size = 0;
+  uint64_t framenum = 0;
   int af = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
@@ -93,6 +94,7 @@ void udp_receive(void *arg) {
             bytes_unpacked += ll->blk_size;
             usleep(1000);
         }
+        framenum = ll->blocks[0].i*100/ll->blocks[0].n;
 
     } else { // write the linklist data to disk
         // decompress the linklist
@@ -118,13 +120,14 @@ void udp_receive(void *arg) {
                 memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                 write_linklist_rawfile(ll_rawfile, compbuffer);
                 flush_linklist_rawfile(ll_rawfile);
+                framenum = tell_linklist_rawfile(ll_rawfile);
             }
         }
     }
 
     // fill out the telemetry report
     pilot_report.ll = ll;
-    if (ll_rawfile) pilot_report.framenum = tell_linklist_rawfile(ll_rawfile); 
+    pilot_report.framenum = framenum; 
     pilot_report.allframe = af; 
  
   }

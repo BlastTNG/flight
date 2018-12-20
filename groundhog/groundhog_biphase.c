@@ -130,6 +130,7 @@ void biphase_receive(void *args)
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
   uint8_t * dummy_buffer = calloc(1, superframe->size);
+  uint64_t framenum = 0;
   int af = 0;
 
   while(true) {
@@ -171,6 +172,7 @@ void biphase_receive(void *args)
                           bytes_unpacked += ll->blk_size;
                           usleep(1000);
                       }
+                      framenum = ll->blocks[0].i*100/ll->blocks[0].n;
 
                   } else { // write the linklist data to disk
                       if ((af = read_allframe(local_superframe, superframe, compbuffer))) {
@@ -193,13 +195,14 @@ void biphase_receive(void *args)
                             memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                             write_linklist_rawfile(ll_rawfile, compbuffer);
                             flush_linklist_rawfile(ll_rawfile);
+                            framenum = tell_linklist_rawfile(ll_rawfile); 
                           }
                       }
                   }
 
 									// fill out the telemetry report
 									bi0_report.ll = ll;
-                  if (ll_rawfile) bi0_report.framenum = tell_linklist_rawfile(ll_rawfile); 
+                  bi0_report.framenum = framenum; 
 									bi0_report.allframe = af; 
 
                   memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
