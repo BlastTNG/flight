@@ -44,7 +44,7 @@
 static struct hwpr_struct {
   int addr;
   int32_t pos;
-  float enc;
+  double enc;
   double pot;
   float enc_real_hwpr;
 } hwpr_data = {0};
@@ -289,7 +289,7 @@ void ControlHWPR(struct ezbus *bus)
     static int first_time = 1;
     static float last_enc = 0;
 
-    float hwpr_enc_cur = 0.0;
+    double hwpr_enc_cur = 0.0;
     // float hwpr_enc_dest = 0.0;
     int i_step;  // index of the current step
     int i_next_step = 0;
@@ -779,5 +779,5 @@ void DoHWPR(struct ezbus* bus)
 // ReadHWPREnc called from the mcp 5Hz loop.  Reads from the EtherCat data structure.
 void ReadHWPREnc(void)
 {
-    hwpr_data.enc = hwp_get_position() * ENC_TO_DEG;
+    hwpr_data.enc = (double)(hwp_get_position() * ENC_TO_DEG);
 }
