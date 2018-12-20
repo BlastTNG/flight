@@ -109,7 +109,7 @@ static struct lock_struct {
 int shutter_timeout = -1;
 
 static struct shutter_struct {
-  int pos;
+  int32_t pos;
   int lims;              // shutter not out (presumed in) = 0
                          // shutter out (limit switch depressed) = 1
                          // shutter in = 1 (opto-switch blocked)
@@ -758,7 +758,7 @@ static void GetShutterData(int *position)
 static void DoShutter(void)
 {
   int action = SHUTTER_EXIT;
-  static int  shutter_pos;
+  static int32_t  shutter_pos;
   int cancel = 0;
 
   if (shutter_data.state == SHUTTER_UNK) {
@@ -1473,7 +1473,7 @@ void StoreActBus(void)
     // Shutter data
     SET_UINT16(stepShutterAddr, CommandData.actbus.shutter_step);
     SET_UINT16(stepSlowShutterAddr, CommandData.actbus.shutter_step_slow);
-    SET_UINT16(posShutterAddr, shutter_data.pos);
+    SET_INT32(posShutterAddr, shutter_data.pos);
     SET_UINT16(limsShutterAddr, shutter_data.lims);
     SET_UINT16(iMoveShutterAddr, CommandData.actbus.shutter_move_i);
     SET_UINT16(iHoldShutterAddr, CommandData.actbus.shutter_hold_i);
