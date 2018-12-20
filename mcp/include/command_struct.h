@@ -662,7 +662,7 @@ struct CommandDataStruct {
 
   struct {
     int vel;
-	uint acc;
+	int acc;
 	int hold_i, move_i;
     int force_repoll;
     int mode, is_new;
