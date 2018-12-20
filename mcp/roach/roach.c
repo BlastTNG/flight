@@ -2860,6 +2860,19 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     return 0;
 }
 
+char* truncate_path(char *old_path, int nparents)
+{
+    int count = 0;
+    char *new_path = old_path;
+    while (*new_path) {
+        if (*new_path == '/') count++;
+        if (count > nparents) break;
+        new_path++;
+    }
+    new_path = new_path + 1;
+    return new_path;
+}
+
 int compress_data(roach_state_t *m_roach, int type)
 {
 // type can be: VNA, TARG, IQ or DF
@@ -2867,47 +2880,19 @@ int compress_data(roach_state_t *m_roach, int type)
     char *tar_cmd;
     char *tarball;
     char *path;
-    char *result;
-    int count = 0;
     if ((type == VNA)) {
-        result = m_roach->last_vna_path;
-        while (*result) {
-            if (*result == '/') count++;
-            if (count > 3) break;
-            result++;
-        }
-        path = result + 1;
+        path = truncate_path(m_roach->last_vna_path, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_vna_tarball[m_roach->which - 1];
     } else if ((type == TARG)) {
-        result = m_roach->last_targ_path;
-        while (*result) {
-            if (*result == '/') count++;
-            if (count > 3) break;
-            result++;
-        }
-        path = result + 1;
+        path = truncate_path(m_roach->last_targ_path, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_targ_tarball[m_roach->which - 1];
     } else if ((type == IQ)) {
-        result = m_roach->last_iq_path;
-        while (*result) {
-            if (*result == '/') count++;
-            if (count > 3) break;
-            result++;
-        }
-        path = result + 1;
+        path = truncate_path(m_roach->last_iq_path, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_iq_tarball[m_roach->which - 1];
     } else if ((type == DF)) {
-        /* result = path_to_last_dfs[m_roach->which - 1];
-        blast_info("PATH ============ %s", result);
-        while (*result) {
-            if (*result == '/') count++;
-            if (count > 3) break;
-            result++;
-        }
-        path = result + 1;*/
         path = path_to_last_dfs[m_roach->which - 1];
         blast_info("PATH: %s", path);
         tarball = path_to_df_tarball[m_roach->which - 1];
@@ -2922,19 +2907,6 @@ int compress_data(roach_state_t *m_roach, int type)
     pyblast_system(tar_cmd);
     m_roach->is_compressing_data = 0;
     return 0;
-}
-
-char* truncate_path(char *old_path, int nparents)
-{
-    int count = 0;
-    char *new_path = old_path;
-    while (*new_path) {
-        if (*new_path == '/') count++;
-        if (count > nparents) break;
-        new_path++;
-    }
-    new_path = new_path + 1;
-    return new_path;
 }
 
 int compress_all_data(int type)
@@ -3427,8 +3399,11 @@ int optimize_amps(roach_state_t *m_roach)
 }
 */
 
-void cal_lamp_off()
+void cal_lamp_off(roach_state_t *m_roach)
 {
+    if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
+        return;
+    }
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = 2;
     CommandData.Cryo.length = 2;
@@ -3437,8 +3412,11 @@ void cal_lamp_off()
 }
 
 // flash cal lamp, separation = length
-void cal_pulses(float nsec, int num_pulse)
+void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
 {
+    if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
+        return;
+    }
     CommandData.Cryo.periodic_pulse = 1;
     CommandData.Cryo.num_pulse = 1;
     CommandData.Cryo.separation = (int)(200 * nsec);
@@ -3456,13 +3434,13 @@ int get_lamp_response(roach_state_t *m_roach)
     char *file_out;
     // chop the lamp
     float lamp_sec = CommandData.roach_params[m_roach->which - 1].num_sec;
-    cal_pulses(lamp_sec, 1);
+    cal_pulses(m_roach, lamp_sec, 1);
     // get 'on' timestream (save in buffer)
     if ((avg_chan_vals(m_roach, 1) < 0)) {
         return retval;
     }
     // stop the lamp
-    cal_lamp_off();
+    cal_lamp_off(m_roach);
     sleep(2);
     // get 'off' timestream (save in buffer)
     if ((avg_chan_vals(m_roach, 0) < 0)) {
@@ -4622,13 +4600,10 @@ int roach_turnaround_loop(roach_state_t *m_roach)
  * @param m_why Flag indicating why the routine was called
  * @param m_data Pointer to our state data
  */
+/*
 static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why, void *m_data)
 {
     firmware_state_t *state = (firmware_state_t*) m_data;
-    /**
-     * If we have an error, or do not receive data from the Roach in the expected
-     * amount of time, we tear down the socket and schedule a reconnection attempt.
-     */
     if (m_why & (PH_IOMASK_ERR)) {
         blast_err("disconnecting from firmware upload at %s due to connection issue", state->roach->address);
         state->result = ROACH_UPLOAD_RESULT_ERROR;
@@ -4645,7 +4620,7 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
     }
     ph_sock_enable(m_sock, 0);
     ph_sock_free(m_sock);
-}
+}*/
 
 /* Function: firmware_upload_connected
  * -----------------------------------
@@ -4659,7 +4634,8 @@ static void firmware_upload_process_return(ph_sock_t *m_sock, ph_iomask_t m_why,
  * @param m_elapsed Unused
  * @param m_data Pointer to our ROACH firmware upload state variable
 */
-static void firmware_upload_connected(ph_sock_t *m_sock, int m_status,
+
+/* static void firmware_upload_connected(ph_sock_t *m_sock, int m_status,
         int m_errcode, const ph_sockaddr_t *m_addr, struct timeval *m_elapsed,
         void *m_data)
 {
@@ -4689,10 +4665,6 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status,
     m_sock->callback = firmware_upload_process_return;
     m_sock->timeout_duration.tv_sec = 10;
     m_sock->job.data = state;
-    /**
-     * We have enabled the socket and now we buffer the firmware file into the network
-     */
-
     if ((firmware_stm = ph_stm_file_open(state->firmware_file, O_RDONLY, 0))) {
         state->result = ROACH_UPLOAD_RESULT_WORKING;
         if (!ph_stm_copy(firmware_stm, m_sock->stream, PH_STREAM_READ_ALL,
@@ -4714,7 +4686,7 @@ static void firmware_upload_connected(ph_sock_t *m_sock, int m_status,
         ph_sock_free(state->sock);
         state->result = ROACH_UPLOAD_RESULT_ERROR;
     }
-}
+}*/
 
 /*
  * Function: roach_upload_status
@@ -4899,7 +4871,7 @@ void reset_roach_flags(roach_state_t *m_roach)
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
-    // CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
 }
 
 void pi_state_manager(pi_state_t *m_pi, int result)
@@ -5964,15 +5936,15 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].random_phase_path, "%s/random_phases.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     snprintf(path_to_vna_tarball[ind], sizeof(path_to_vna_tarball[ind]),
-               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_vna_sweep.tar.gz");
+               "%s/roach%d_%s", roach_root_path, ind + 1, "last_vna_sweep.tar.gz");
     snprintf(path_to_targ_tarball[ind], sizeof(path_to_targ_tarball[ind]),
-               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_targ_sweep.tar.gz");
+               "%s/roach%d_%s", roach_root_path, ind + 1, "last_targ_sweep.tar.gz");
     snprintf(path_to_iq_tarball[ind], sizeof(path_to_iq_tarball[ind]),
-               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_iq_ts.tar.gz");
+               "%s/roach%d_%s", roach_root_path, ind + 1, "last_iq_ts.tar.gz");
     snprintf(path_to_df_tarball[ind], sizeof(path_to_df_tarball[ind]),
-               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "last_df_ts.tar.gz");
+               "%s/roach%d_%s", roach_root_path, ind + 1, "last_df_ts.tar.gz");
     snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
-               "%s/roach%d_%s", roach_state_table[ind].sweep_root_path, ind + 1, "dfs");
+               "%s/roach%d_%s", roach_root_path, ind + 1, "dfs");
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
