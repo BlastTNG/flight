@@ -74,6 +74,9 @@ channel_t channel_list[] =
     { "cycle_state",            1,      0, TYPE_UINT8, RATE_1HZ, U_NONE, 0},
     { "pulse_timer",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "time_to_pulse",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "cycle_allowed",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "wd_allowed",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
+    { "load_curve",            1,      0, TYPE_FLOAT, RATE_1HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
 
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
@@ -1274,11 +1277,14 @@ channel_t channel_list[] =
     { "df_diff_retune_thresh_roach3",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_diff_retune_thresh_roach4",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_diff_retune_thresh_roach5",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
+    /*
     { "is_averaging_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "is_averaging_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "is_averaging_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "is_averaging_roach4",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "is_averaging_roach5",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
+    */
+    { "roach_lamp_now",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "fk_smooth_scale_roach1",    M_32RFREQ,          B_32RFREQ,  TYPE_UINT32,    RATE_1HZ, U_NONE, 0 },
     { "fk_smooth_scale_roach2",    M_32RFREQ,          B_32RFREQ,  TYPE_UINT32,    RATE_1HZ, U_NONE, 0 },
     { "fk_smooth_scale_roach3",    M_32RFREQ,          B_32RFREQ,  TYPE_UINT32,    RATE_1HZ, U_NONE, 0 },
