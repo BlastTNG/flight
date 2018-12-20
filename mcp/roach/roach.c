@@ -163,7 +163,7 @@ char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
 char path_to_all_iq[] = "/home/fc1user/roach_flight/all_iq_data.tar.gz";
 char path_to_all_df[] = "/home/fc1user/roach_flight/all_df_data.tar.gz";
 char path_to_all_lamp[] = "/home/fc1user/roach_flight/all_lamp_data.tar.gz";
-char path_to_all_noisecomp[] = "/home/fc1user/roach_flight/all_noise_comp.tar.gz";
+char path_to_all_noise_comp[] = "/home/fc1user/roach_flight/all_noise_comp.tar.gz";
 char path_to_all_bb_freqs[] = "/home/fc1user/roach_flight/all_bb_freqs.tar.gz";
 
 // Roach source MAC addresses
@@ -2969,14 +2969,14 @@ int compress_all_data(int type)
     } else if (type == NOISECOMP) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
-           path_to_all_noisecomp,
+           path_to_all_noise_comp,
            truncate_path(roach_state_table[0].path_to_noise_comp, 3),
            truncate_path(roach_state_table[1].path_to_noise_comp, 3),
            truncate_path(roach_state_table[2].path_to_noise_comp, 3),
            truncate_path(roach_state_table[3].path_to_noise_comp, 3),
            truncate_path(roach_state_table[4].path_to_noise_comp, 3));
         blast_tmp_sprintf(var_name, "ALL_NOISE_COMP");
-        setenv(var_name, path_to_all_noisecomp, 1);
+        setenv(var_name, path_to_all_noise_comp, 1);
     } else if (type == BB_FREQS) {
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
@@ -5996,9 +5996,9 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].random_phase_path, "%s/random_phases.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_lamp_response,
-         "%s/lamp_response.dat", roach_state_table[ind].sweep_root_path);
+        "%s/lamp_response.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_noise_comp,
-         "%s/noise_comp.npy", roach_state_table[ind].sweep_root_path);
+        "%s/noise_comp.npy", roach_state_table[ind].sweep_root_path);
     snprintf(path_to_vna_tarball[ind], sizeof(path_to_vna_tarball[ind]),
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_vna_sweep.tar.gz");
     snprintf(path_to_targ_tarball[ind], sizeof(path_to_targ_tarball[ind]),

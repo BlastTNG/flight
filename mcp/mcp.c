@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
   init_roach(0);
   init_roach(1);
   init_roach(2);
-  // init_roach(3);
+  init_roach(3);
   init_roach(4);
   start_cycle_checker();
   blast_info("Finished initializing ROACHes...");
