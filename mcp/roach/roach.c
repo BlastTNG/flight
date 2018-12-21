@@ -1129,13 +1129,11 @@ int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
             count += 1;
         }
         blast_err("Data stream error on ROACH%d", m_roach->which);
-        // sleep(5);
+        m_roach->is_streaming = 0;
         return retval;
     }
     // set streaming flag
     m_roach->is_streaming = 1;
-    // blast_info("*************DO SWEEPS = %d",
-        // CommandData.roach[m_roach->which - 1].do_sweeps);
     return 0;
 }
 
@@ -3541,6 +3539,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
         compress_data(m_roach, TARG);
         m_roach->is_sweeping = 0;
         m_roach->sweep_fail = 0;
+        m_roach->has_targ_sweep = 1;
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
@@ -3554,6 +3553,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, TARG sweep interrupted by blastcmd", m_roach->which);
         m_roach->sweep_fail = 1;
         m_roach->is_sweeping = 0;
+        m_roach->has_targ_sweep = 0;
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
@@ -3563,6 +3563,7 @@ int roach_targ_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, TARG sweep failed", m_roach->which);
         m_roach->sweep_fail = 1;
         m_roach->is_sweeping = 0;
+        m_roach->has_targ_sweep = 0;
         CommandData.roach[m_roach->which - 1].do_sweeps = 0;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
@@ -5104,6 +5105,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
         compress_data(m_roach, VNA);
         m_roach->sweep_fail = 0;
         m_roach->is_sweeping = 0;
+        m_roach->has_vna_sweep = 1;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
         }
@@ -5112,6 +5114,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, VNA sweep interrupted by blastcmd", m_roach->which);
         m_roach->sweep_fail = 1;
         m_roach->is_sweeping = 0;
+        m_roach->has_vna_sweep = 0;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
         }
@@ -5120,6 +5123,7 @@ int roach_vna_sweep(roach_state_t *m_roach)
         blast_info("ROACH%d, VNA SWEEP FAILED", m_roach->which);
         m_roach->sweep_fail = 1;
         m_roach->is_sweeping = 0;
+        m_roach->has_vna_sweep = 0;
         if (recenter_lo(m_roach) < 0) {
             blast_err("ROACH%d: Failed to recenter LO", m_roach->which);
         }
@@ -5132,6 +5136,10 @@ int roach_full_loop(roach_state_t *m_roach)
 {
     if (CommandData.trigger_roach_tuning_check) {
         CommandData.trigger_roach_tuning_check = 0;
+    }
+    if ((!m_roach->has_vna_tones) && (m_roach->has_targ_tones)) {
+        roach_write_vna(m_roach);
+        m_roach->has_targ_tones = 0;
     }
     int status;
     int i = m_roach->which - 1;
@@ -5248,7 +5256,7 @@ void check_cycle_status(void)
         // Check cycle_state channel
         // If == 2, 3, or 4, put Roaches into cycle_mode (streaming state)
         GET_VALUE(stateCycleAddr, cycle_state);
-        blast_info("CYCLE STATE =============== %d", cycle_state);
+        // blast_info("CYCLE STATE =============== %d", cycle_state);
         if ((cycle_state == 2) | (cycle_state == 3) | (cycle_state == 4)) {
             for (int i = 0; i < NUM_ROACHES; i++) {
                 fridge_cycle_warning = 1;
@@ -5308,6 +5316,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             }
             if (result == 0) {
                 m_roach->has_firmware = 1;
+                m_roach->firmware_upload_fail = 0;
                 m_roach->state = ROACH_STATE_PROGRAMMED;
             }
             break;
@@ -5386,11 +5395,14 @@ void *roach_cmd_loop(void* ind)
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
     // center LO
-    // TODO(Sam) Error handling
+    // TODO(Sam) Error handling?
     if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
     // set_attens_to_default(&pi_state_table[i]);
+    int check_packet_count = 0;
+    int current_packet_count = 0;
+    int last_packet_count = 0;
     while (!shutdown_mcp) {
         // These commands can be executed in any Roach state
         if (CommandData.roach[i].kill) {
@@ -5835,6 +5847,18 @@ void *roach_cmd_loop(void* ind)
         // STREAMING is the final state. Further actions depend on the presence
         // on status flags, e.g.. has_tones, is_sweeping, or AUTO_VNA_SWEEP
         usleep(1000); // prevents mcp from eating up all the CPU.
+        // check data stream
+        current_packet_count = roach_udp[i].roach_packet_count;
+        if (current_packet_count == last_packet_count) {
+            check_packet_count++;
+        } else {
+            roach_state_table[i].data_stream_error = 0;
+            check_packet_count = 0;
+        }
+        last_packet_count = current_packet_count;
+        if (check_packet_count > 10000) {
+            roach_state_table[i].data_stream_error = 1;
+        }
     }
     return NULL;
 }

@@ -177,9 +177,9 @@ void load_curve_300mk(void) {
     }
     if (CommandData.Cryo.load_curve == 1) {
         labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
-        SET_SCALED_VALUE(load_curve_val_Addr, voltage_array[i]);
+        SET_FLOAT(load_curve_val_Addr, voltage_array[i]);
         counter++;
-        if (counter == 600) {
+        if (counter == 900) {
             i++;
             blast_info("voltage set to %f", voltage_array[i]);
             blast_info("voltage set to %f", voltage_array[i]);
