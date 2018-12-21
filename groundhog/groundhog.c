@@ -192,19 +192,19 @@ int main(int argc, char * argv[]) {
 
     sprintf(fn_str, BLU "    Pilot: %s %s [%" PRIu64 "];" GRN "   BI0: %s %s [%" PRIu64 "];" YLW "  Highrate: %s %s [%" PRIu64 "];" RED "  SBD: %s %s [%" PRIu64 "];" NOR "    ", 
             (pilot_report.ll) ? pilot_report.ll->name : "(NULL)", 
-            (pilot_report.allframe) ? "AF" : "",
+            (pilot_report.allframe) ? "AF" : "  ",
             pilot_report.framenum,
 
             (bi0_report.ll) ? bi0_report.ll->name : "(NULL)", 
-            (bi0_report.allframe) ? "AF" : "",
+            (bi0_report.allframe) ? "AF" : "  ",
             bi0_report.framenum,
 
             (highrate_report.ll) ? highrate_report.ll->name : "(NULL)", 
-            (highrate_report.allframe) ? "AF" : "",
+            (highrate_report.allframe) ? "AF" : "  ",
             highrate_report.framenum,
 
             (sbd_report.ll) ? sbd_report.ll->name : "(NULL)", 
-            (sbd_report.allframe) ? "AF" : "",
+            (sbd_report.allframe) ? "AF" : "  ",
             sbd_report.framenum
     );
 

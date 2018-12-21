@@ -2066,7 +2066,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
-      } else {
+      } else { // set the indices to 0 so that file transfers are stopped
+				set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+																					"file_block", 0, 0);
         blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
