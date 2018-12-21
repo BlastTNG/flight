@@ -4370,12 +4370,14 @@ static int roach_check_df_retune(roach_state_t *m_roach)
         blast_info("ROACH%d: %d KIDs have drifted", m_roach->which, nflags);
         if (nflags > CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
             m_roach->retune_flag = 1;
-            blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
-            if (CommandData.roach[m_roach->which - 1].auto_correct_freqs == 1) {
-                if ((status = apply_freq_correction(m_roach)) < 0) {
-                    blast_err("ROACH%d: FAILED TO APPLY FREQ CORRECTION", m_roach->which);
-                    return status;
-                }
+            // blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
+        } else {
+            m_roach->retune_flag = 0;
+        }
+        if (CommandData.roach[m_roach->which - 1].auto_correct_freqs == 1) {
+            if ((status = apply_freq_correction(m_roach)) < 0) {
+                blast_err("ROACH%d: FAILED TO APPLY FREQ CORRECTION", m_roach->which);
+                return status;
             }
         }
     }
@@ -4414,7 +4416,9 @@ static int roach_check_df_sweep_retune(roach_state_t *m_roach)
         blast_info("ROACH%d: %d KIDs have drifted", m_roach->which, nflags);
         if (nflags < CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
             m_roach->retune_flag = 1;
-            blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
+            // blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
+        } else {
+            m_roach->retune_flag = 0;
         }
         if (CommandData.roach[m_roach->which - 1].auto_correct_freqs == 1) {
             if ((status = apply_freq_correction(m_roach)) < 0) {
@@ -4470,9 +4474,11 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
         }
         m_roach->n_outofrange = nflags;
         blast_info("ROACH%d: %d channels have drifted", m_roach->which, nflags);
-        if (nflags > CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
+        if (nflags < CommandData.roach[m_roach->which - 1].n_outofrange_thresh) {
             m_roach->retune_flag = 1;
-            blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
+            // blast_info("ROACH%d: RETUNE RECOMMENDED", m_roach->which);
+        } else {
+            m_roach->retune_flag = 0;
         }
     }
     CommandData.roach[m_roach->which - 1].check_response = 0;
