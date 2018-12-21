@@ -632,7 +632,7 @@ derived_tng_t derived_list[] = {
     BITWORD("FULL_LOOP_FAIL_ROACH1", "status_roach1", 1, 1),
     BITWORD("HAS_TARG_TONES_ROACH1", "status_roach1", 2, 1),
     BITWORD("IS_STREAMING_ROACH1", "status_roach1", 3, 1),
-    BITWORD("IS_SWEEPING_ROACH1", "status_roach1", 5, 2),
+    BITWORD("IS_SWEEPING_ROACH1", "status_roach1", 4, 2),
     BITWORD("HAS_VNA_SWEEP_ROACH1", "status_roach1", 6, 1),
     BITWORD("HAS_TARG_SWEEP_ROACH1", "status_roach1", 7, 1),
     BITWORD("WRITE_FLAG_ROACH1", "status_roach1", 8, 1),

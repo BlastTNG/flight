@@ -151,6 +151,9 @@ typedef struct roach_state {
     bool pi_reboot_warning;
     bool data_stream_error;
     bool waiting_for_lamp;
+    int n_outofrange;
+    int trnaround_loop_fail;
+    int full_loop_fail;
 
     float adc_rms[2];
     double *freq_residuals;
