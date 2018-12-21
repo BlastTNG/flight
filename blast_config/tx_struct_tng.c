@@ -661,11 +661,8 @@ channel_t channel_list[] =
     { "hwpr_cal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "mode_cal",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "overshoot_hwpr",       SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
-    { "drive_info_rw",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "drive_err_cts_rw",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "drive_info_el",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "drive_err_cts_el",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "drive_info_piv",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "drive_err_cts_piv",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "vel_hwpr",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },

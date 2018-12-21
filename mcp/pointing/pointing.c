@@ -853,9 +853,6 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
   s->gy_int += gyro / SR; // in degrees
   s->int_ifel = s->gy_int;
 
-  if ((i % 5000) < 4) {
-    blast_info("s->gy_int = %f, gyro/SR = %f", s->gy_int, gyro / SR);
-  }
   if (new_reading) {
     w1 = 1.0 / (s->variance);
     w2 = s->samp_weight;
@@ -865,14 +862,8 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
     s->variance = 1.0 / (w1 + w2);
     NormalizeAngle(&(s->angle));
 
-    if ((i % 5000) < 4) {
-      blast_info("w1= %f, w2 = %f", w1, w2);
-    }
     if (CommandData.pointing_mode.nw == 0) { /* not in slew veto */
       /** calculate offset **/
-      if ((i % 5000) < 4) {
-        blast_info("CommandData.pointing_mode.nw ==0, n_solutions = %d", s->n_solutions);
-      }
       if (s->n_solutions > 10) { // only calculate if we have had at least 10
         new_offset = ((new_angle - s->last_input) - s->gy_int) /
           ((1.0/SR) * (double)s->since_last);
@@ -881,9 +872,6 @@ static void EvolveElSolution(struct ElSolutionStruct *s,
           new_offset = 0; // 5 deg step is bunk!
         s->new_offset_ifel_gy = new_offset;
         s->offset_gy = fir_filter(new_offset, s->fs);
-        if ((i % 5000) < 4) {
-          blast_info("new_offset = %f, s->offset_gy = %f", new_offset, s->offset_gy);
-        }
       }
       s->since_last = 0;
       if (s->n_solutions < 10000) {

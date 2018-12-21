@@ -507,6 +507,7 @@ struct CommandDataStruct {
   // motors.c sets this flag when a scan is nearly complete
   // to (optionally) trigger a retune
   unsigned int trigger_roach_tuning_check;
+  unsigned int trigger_lo_offset_check;
   unsigned int cal_lamp_roach_hold;
   uei_commands_t uei_command;
 
