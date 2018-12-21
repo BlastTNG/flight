@@ -1547,7 +1547,7 @@ int roach_save_sweep_packet(roach_state_t *m_roach, uint32_t m_sweep_freq,
     double *Q_sum = calloc(m_freqlen, sizeof(double)); // Array to store Q values to be summed
     double *I_avg = calloc(m_freqlen, sizeof(double)); // Array to store averaged I values
     double *Q_avg = calloc(m_freqlen, sizeof(double)); // Array to store averaged Q values
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     int count = 0;
     while (m_num_received < N_AVG) {
         usleep(1000);
@@ -1563,7 +1563,7 @@ int roach_save_sweep_packet(roach_state_t *m_roach, uint32_t m_sweep_freq,
         }
         m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     }
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     if (!count) count = 1;
     for (size_t chan = 0; chan < m_freqlen; chan++) {
         I_avg[chan] = (I_sum[chan] / count);
@@ -1602,7 +1602,7 @@ int roach_save_sweep_packet_binary(roach_state_t *m_roach, uint32_t m_sweep_freq
     float *Q_sum = calloc(m_freqlen, sizeof(float)); // Array to store Q values to be summed
     // float *I_avg = calloc(m_freqlen, sizeof(float)); // Array to store averaged I values
     // float *Q_avg = calloc(m_freqlen, sizeof(float)); // Array to store averaged Q values
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     int count = 0;
     while (m_num_received < N_AVG) {
         usleep(1000);
@@ -1618,7 +1618,7 @@ int roach_save_sweep_packet_binary(roach_state_t *m_roach, uint32_t m_sweep_freq
         }
         m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     }
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     if (!count) count = 1;
     float I_avg = 0.0;
     float Q_avg = 0.0;
@@ -2037,7 +2037,7 @@ int roach_dfs(roach_state_t* m_roach)
     double *I_sum = calloc(m_roach->num_kids, sizeof(double));
     double *Q_sum = calloc(m_roach->num_kids, sizeof(double));
     int count = 0;
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     while (m_num_received < N_AVG_DF) {
         usleep(1000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
@@ -2090,7 +2090,7 @@ int roach_dfs(roach_state_t* m_roach)
     blast_tmp_sprintf(var_name, "R%d_DF_LIST", m_roach->which);
     // blast_tmp_sprintf(echo_command, "echo $%s", var_name);
     setenv(var_name, path_to_ts_dfs, 1);
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     retval = 0;
     return retval;
 }
@@ -2822,7 +2822,7 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
     int m_num_received = 0;
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
     uint8_t i_udp_read;
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     double *I_sum = calloc(m_roach->num_kids, sizeof(double));
     double *Q_sum = calloc(m_roach->num_kids, sizeof(double));
 
@@ -2888,7 +2888,7 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
     for (int k = 0; k < rows; k++) {
         free(dfs[k]);
     }
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     blast_tmp_sprintf(var_name, "R%d_LAST_DF_PATH", m_roach->which);
     setenv(var_name, path_to_df_tarball[m_roach->which - 1], 1);
     compress_data(m_roach, DF);
@@ -2998,7 +2998,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
     // Array to store Q values to be summed
     double *Q_sum = calloc(m_roach->current_ntones, sizeof(double));
     blast_info("ROACH%d, getting %u points %f sec", m_roach->which, npoints, nsec);
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     int count = 0;
     for (int i = 0; i < npoints; i++) {
         usleep(1000);
@@ -3016,7 +3016,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
             count++;
         }
     }
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     if (!count) count = 1;
     if (lamp_on) {
         for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
@@ -3251,7 +3251,7 @@ void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
         for (int t = 0; (t < SWEEP_READY_TIMEOUT) && (wait_to_pulse); t++) {
             wait_to_pulse = 0;
             for (int i = 0; i < NUM_ROACHES; i++) {
-                if (!m_roach->waiting_for_lamp) {
+                if (!roach_state_table[i].waiting_for_lamp) {
                     wait_to_pulse = 1;
                     break;
                 }
@@ -4102,7 +4102,7 @@ int roach_df(roach_state_t* m_roach)
     double I_sum = 0;
     double Q_sum = 0;
     int count = 0;
-    m_roach->is_averaging = 1;
+    // m_roach->is_averaging = 1;
     while (m_num_received < n_avg) {
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
@@ -4135,7 +4135,7 @@ int roach_df(roach_state_t* m_roach)
           deltaI,
           m_roach->ref_vals[chan][0],
           m_roach->df_offset[chan]);*/
-    m_roach->is_averaging = 0;
+    // m_roach->is_averaging = 0;
     retval = 0;
     return retval;
 }
@@ -5404,7 +5404,9 @@ void *roach_cmd_loop(void* ind)
     if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
-    // set_attens_to_default(&pi_state_table[i]);
+    if ((set_attens_targ_output(&roach_state_table[i])) < 0) {
+        blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
+    }
     int check_packet_count = 0;
     int current_packet_count = 0;
     int last_packet_count = 0;
@@ -5993,7 +5995,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].has_ref = 0;
     roach_state_table[ind].is_streaming = 0;
     roach_state_table[ind].is_sweeping = 0;
-    roach_state_table[ind].is_averaging = 0;
+    // roach_state_table[ind].is_averaging = 0;
     roach_state_table[ind].tone_finding_error = 0;
     roach_state_table[ind].sweep_fail = 0;
     roach_state_table[ind].has_vna_sweep = 0;
