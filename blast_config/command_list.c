@@ -315,13 +315,14 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
   {COMMAND(shutter_open), "Open shutter", GR_MISC},
-  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
+  {COMMAND(shutter_open_close), "DEPRECATED: If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
-  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(shutter_close_slow), "DEPRECATED, use shutter_keepclosed instead: Close shutter using opto feedback",
+	  GR_MISC},
   {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
   {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
 
-  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
+  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
   {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
   {COMMAND(center_lo_all), "(All Roaches) recenter LOs", GR_ROACH},
@@ -1036,7 +1037,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", CONFIRM | GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
@@ -1208,14 +1209,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(full_loop), "Performs full loop for single Roach (MUST HAVE VNA COMB LOADED)", CONFIRM | GR_ROACH, 3,
+  {COMMAND(full_loop), "Performs full loop for single Roach (MUST HAVE VNA COMB LOADED)", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
       {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
     }
   },
-  {COMMAND(full_loop_all), "Performs full loop for all Roaches", CONFIRM | GR_ROACH, 2,
+  {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 2,
     {
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
       {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
@@ -1375,14 +1376,14 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'f', "NONE"},
     }
   },
-  {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", CONFIRM | GR_ROACH, 3,
+  {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
   }
   },
-  {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", CONFIRM | GR_ROACH, 2,
+  {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
   {
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
@@ -1455,7 +1456,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
     {
-      {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3)", 0, 3, 'i', "NONE"}
+      {"VNA=0, TARG=1, IQ=2, DF=3, LAMP=4, NOISECOMP=5, BB_FREQS=6", 0, 6, 'i', "NONE"}
     }
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
@@ -1775,20 +1776,21 @@ struct mcom mcommands[plugh + 2] = {
             {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
         }
     },
-    {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", GR_MISC, 1,
+    {COMMAND(shutter_step), "DEPRECATED: set number of shutter steps to close (default 4224)", GR_MISC, 1,
         {
           {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
         }
     },
-    {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
+    {COMMAND(shutter_step_slow), "DEPRECATED: set number of incremental shutter steps to close (default 300)",
+		GR_MISC, 1,
         {
           {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
         }
     },
     {COMMAND(shutter_i), "set shutter move and hold currents", GR_MISC, 2,
         {
-	  {"Shutter move current", 0, 40, 'i', "I_MOVE_SHUTTER"},
-	  {"Shutter hold current", 0, 40, 'i', "I_HOLD_SHUTTER"},
+	  {"Shutter move current", 0, 42, 'i', "I_MOVE_SHUTTER"},
+	  {"Shutter hold current", 0, 42, 'i', "I_HOLD_SHUTTER"},
         }
     },
     {COMMAND(shutter_vel), "set shutter velocity and acceleration", GR_MISC, 2,

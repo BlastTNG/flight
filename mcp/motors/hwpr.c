@@ -191,21 +191,21 @@ void StoreHWPRBus(void)
 
   hwpr_wait_cnt--;
 
-  SET_VALUE(velHwprAddr, CommandData.hwpr.vel);
-  SET_VALUE(accHwprAddr, CommandData.hwpr.acc);
-  SET_VALUE(iMoveHwprAddr, CommandData.hwpr.move_i);
-  SET_VALUE(iHoldHwprAddr, CommandData.hwpr.hold_i);
+  SET_UINT32(velHwprAddr, CommandData.hwpr.vel);
+  SET_UINT16(accHwprAddr, CommandData.hwpr.acc);
+  SET_UINT8(iMoveHwprAddr, CommandData.hwpr.move_i);
+  SET_UINT8(iHoldHwprAddr, CommandData.hwpr.hold_i);
   SET_INT32(posHwprAddr, hwpr_data.pos);
   SET_FLOAT(encHwprAddr, hwpr_data.enc);
   SET_FLOAT(overshootHwprAddr, CommandData.hwpr.overshoot);
   SET_FLOAT(pos0HwprAddr, CommandData.hwpr.pos[0]);
   SET_FLOAT(pos1HwprAddr, CommandData.hwpr.pos[1]);
-  SET_VALUE(iposRqHwprAddr, hwpr_control.i_next_step);
+  SET_INT8(iposRqHwprAddr, hwpr_control.i_next_step);
   // SET_VALUE(potTargHwprAddr, hwpr_control.pot_targ*65535);
-  SET_VALUE(iposHwprAddr, hwpr_control.index);
+  SET_INT8(iposHwprAddr, hwpr_control.index);
   // SET_VALUE(readWaitHwprAddr, hwpr_control.read_wait_cnt);
-  SET_VALUE(stopCntHwprAddr, hwpr_control.stop_cnt);
-  SET_VALUE(relMoveHwprAddr, hwpr_control.rel_move);
+  SET_UINT16(stopCntHwprAddr, hwpr_control.stop_cnt);
+  SET_INT32(relMoveHwprAddr, hwpr_control.rel_move);
   SET_FLOAT(encTargHwprAddr, hwpr_control.enc_targ);
   SET_FLOAT(encErrHwprAddr, hwpr_control.enc_err);
   // SET_VALUE(potErrHwprAddr, hwpr_control.pot_err*32767);
@@ -225,7 +225,7 @@ void StoreHWPRBus(void)
   hwpr_stat_field |= ((hwpr_control.do_disengage) & 0x0001) << 10;
   hwpr_stat_field |= ((hwpr_control.do_main_move) & 0x0001) << 11;
 
-  SET_VALUE(statControlHwprAddr, hwpr_stat_field);
+  SET_INT16(statControlHwprAddr, hwpr_stat_field);
 }
 
 // DEPRECATED, use GetHWPRIndex for two position HWPR - PAW 2018/11/25
@@ -597,7 +597,8 @@ void ControlHWPR(struct ezbus *bus)
 
             /*** We are moving.  Wait until we are done. ***/
             } else if (hwpr_control.move_cur == moving) {
-            	if (hwpr_data.enc == last_enc) {
+				// tolerance on "stopped moving" is 0.01 deg
+            	if (fabs(hwpr_data.enc-last_enc) <= 0.01) {
                 	hwpr_control.stop_cnt++;
                 } else {
                 	hwpr_control.stop_cnt = 0;
@@ -616,7 +617,7 @@ void ControlHWPR(struct ezbus *bus)
                         hwpr_control.move_cur = at_overshoot;
 					} else if (hwpr_control.do_main_move) {
 						hwpr_control.engaged = 1;
-						hwpr_control.move_cur = ready;
+						hwpr_control.move_cur = ready; // go to main move part
 					} else if (hwpr_control.do_disengage) {
 						hwpr_control.move_cur = needs_backoff;
                     } else { // we're done moving

@@ -130,7 +130,7 @@ typedef struct roach_state {
     bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
-    bool is_sweeping;
+    int is_sweeping;
     bool in_flight_mode;
     bool has_vna_sweep;
     bool has_targ_sweep;
@@ -150,6 +150,10 @@ typedef struct roach_state {
     int pi_error_count;
     bool pi_reboot_warning;
     bool data_stream_error;
+    bool waiting_for_lamp;
+    int n_outofrange;
+    int trnaround_loop_fail;
+    int full_loop_fail;
 
     float adc_rms[2];
     double *freq_residuals;
@@ -185,6 +189,8 @@ typedef struct roach_state {
     char *last_vna_path;
     char *last_targ_path;
     char *last_iq_path;
+    char *path_to_lamp_response;
+    char *path_to_noise_comp;
     char *channels_path;
 
     // For detector retune decision

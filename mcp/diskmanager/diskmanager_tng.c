@@ -195,6 +195,7 @@ static int diskpool_add_init_usb_info(const char *m_uuid, int m_pos) {
     disk.initialized = 0;
     disk.isUSB = true;
     disk.last_accessed = time(NULL);
+    disk.index = m_pos;
     if (diskpool_add_to_pool(&disk) == -1) {
         blast_err("Could not add disk index %i (%s) to the diskpool.", m_pos,
                 disk.dev);
@@ -1606,6 +1607,14 @@ void initialize_diskmanager(void) {
     drivepool_init_usb_info();
     diskpool_mount_primary();
     initialize_total_bytes();
+
+    // wait until a non full disk is found
+    diskpool_update_mounted_free_space(s_diskpool.current_disk);
+    while (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
+				filepool_handle_disk_error(s_diskpool.current_disk);
+        diskpool_update_mounted_free_space(s_diskpool.current_disk);
+        usleep(10000);
+		}
 
     s_ready = true;
     blast_info("Set s_ready to true.");

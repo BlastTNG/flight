@@ -1281,12 +1281,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
           break;
         case roach_allow_scan_check_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].auto_scan_retune = 1;
+              CommandData.roach[i].auto_el_retune = 1;
           }
           break;
         case roach_disallow_scan_check_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].auto_scan_retune = 0;
+              CommandData.roach[i].auto_el_retune = 0;
           }
           break;
         case chop_lo_all:
@@ -2066,7 +2066,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
-      } else {
+      } else { // set the indices to 0 so that file transfers are stopped
+				set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+																					"file_block", 0, 0);
         blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
@@ -2520,12 +2522,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case roach_allow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+          CommandData.roach[ivalues[0]-1].auto_el_retune = 1;
       }
       break;
     case roach_disallow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_scan_retune = 0;
+          CommandData.roach[ivalues[0]-1].auto_el_retune = 0;
       }
       break;
     case set_retune_type:
@@ -2621,7 +2623,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case compress_roach_data:
-      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 6)) {
           CommandData.tar_all_data = 1;
           compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 0;
@@ -3344,7 +3346,7 @@ void InitCommandData()
         CommandData.roach[i].do_full_loop = 0;
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].auto_correct_freqs = 0;
-        CommandData.roach[i].auto_scan_retune = 1;
+        CommandData.roach[i].auto_el_retune = 1;
         CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;

@@ -449,8 +449,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 188,
-            "geometryWidth": 273,
+            "geometryHeight": 187,
+            "geometryWidth": 272,
             "geometryX": 51,
             "geometryY": 442
         },
@@ -460,7 +460,7 @@
             },
             "_boxTitle": "Flight Computers",
             "_style": "(P695404123)",
-            "cellHeight": 11,
+            "cellHeight": 13,
             "cellWidth": 15,
             "cellX": 19,
             "cellY": 3,
@@ -567,9 +567,57 @@
                     "_format": "%H:%M:%S",
                     "_source": "TIME",
                     "type": "PTDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "22588231"
+                    },
+                    "_caption": "FC1 HDD Space",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%d",
+                    "_source": "HDD_DISK_SPACE_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "718646907"
+                    },
+                    "_caption": "FC2 HDD Space",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%d",
+                    "_source": "HDD_DISK_SPACE_S",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1599063661"
+                    },
+                    "_caption": "FC1 HDD Index",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_INDEX_N",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "737453770"
+                    },
+                    "_caption": "FC2 HDD Index",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HDD_DISK_SPACE_S",
+                    "type": "PNDI"
                 }
             ],
-            "geometryHeight": 187,
+            "geometryHeight": 221,
             "geometryWidth": 255,
             "geometryX": 323,
             "geometryY": 51
@@ -610,7 +658,7 @@
                         },
                         "_map": {
                             "11": "OPEN[style=Important Green (P1055304642)]",
-                            "3": "Intermediate[style=No style (P1911761389)]",
+                            "3": "Intermediate[style=No style (P126261239)]",
                             "7": "CLOSED[style=Important (P564751211)]"
                         }
                     },
@@ -1265,8 +1313,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 171,
-            "geometryWidth": 273,
+            "geometryHeight": 170,
+            "geometryWidth": 272,
             "geometryX": 51,
             "geometryY": 629
         },
@@ -1276,10 +1324,10 @@
             },
             "_boxTitle": "Telescope Temperatures",
             "_style": "(P2072147126)",
-            "cellHeight": 17,
+            "cellHeight": 16,
             "cellWidth": 15,
             "cellX": 19,
-            "cellY": 19,
+            "cellY": 21,
             "dataItems": [
                 {
                     "PObject": {
@@ -1462,10 +1510,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 290,
-            "geometryWidth": 256,
+            "geometryHeight": 272,
+            "geometryWidth": 255,
             "geometryX": 323,
-            "geometryY": 323
+            "geometryY": 357
         },
         {
             "PObject": {
@@ -1476,7 +1524,7 @@
             "cellHeight": 12,
             "cellWidth": 15,
             "cellX": 19,
-            "cellY": 36,
+            "cellY": 37,
             "dataItems": [
                 {
                     "PObject": {
@@ -1611,10 +1659,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 205,
-            "geometryWidth": 256,
+            "geometryHeight": 204,
+            "geometryWidth": 255,
             "geometryX": 323,
-            "geometryY": 612
+            "geometryY": 629
         },
         {
             "PObject": {
@@ -1703,29 +1751,29 @@
                     "PObject": {
                         "_id": "2129959550"
                     },
-                    "_caption": "Solar Panel 2 BR",
+                    "_caption": "Solar Panel 2 BL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "Tt_solar_2_br",
+                    "_source": "Tt_solar_2_bl",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1670849136"
                     },
-                    "_caption": "Solar Panel 2 TL",
+                    "_caption": "Solar Panel 2 TR",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "Tt_solar_2_tl",
+                    "_source": "Tt_solar_2_tr",
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 171,
-            "geometryWidth": 273,
+            "geometryHeight": 170,
+            "geometryWidth": 272,
             "geometryX": 51,
             "geometryY": 799
         },
@@ -1735,10 +1783,10 @@
             },
             "_boxTitle": "OF Temperatures",
             "_style": "(P2072147126)",
-            "cellHeight": 9,
+            "cellHeight": 8,
             "cellWidth": 15,
             "cellX": 19,
-            "cellY": 48,
+            "cellY": 49,
             "dataItems": [
                 {
                     "PObject": {
@@ -1825,10 +1873,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 154,
-            "geometryWidth": 256,
+            "geometryHeight": 136,
+            "geometryWidth": 255,
             "geometryX": 323,
-            "geometryY": 816
+            "geometryY": 833
         }
     ],
     "extremas": [
@@ -1863,11 +1911,11 @@
             "cellHeight": 7,
             "cellWidth": 5,
             "cellX": 19,
-            "cellY": 13,
+            "cellY": 15,
             "geometryHeight": 119,
             "geometryWidth": 85,
             "geometryX": 323,
-            "geometryY": 221
+            "geometryY": 255
         }
     ],
     "styles": [
@@ -2062,6 +2110,6 @@
     "webPort": "0",
     "windowCellHeight": 64,
     "windowCellWidth": 90,
-    "windowHeight": 1104,
-    "windowWidth": 1528
+    "windowHeight": 1088,
+    "windowWidth": 1530
 }

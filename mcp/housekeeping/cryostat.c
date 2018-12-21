@@ -170,10 +170,16 @@ void heater_control(void) {
 void load_curve_300mk(void) {
     static int i = 0;
     static int counter = 0;
+    static int first_time = 1;
+    static channel_t* load_curve_val_Addr;
+    if (first_time == 1) {
+        load_curve_val_Addr = channels_find_by_name("load_curve");
+    }
     if (CommandData.Cryo.load_curve == 1) {
         labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
+        SET_FLOAT(load_curve_val_Addr, voltage_array[i]);
         counter++;
-        if (counter == 600) {
+        if (counter == 900) {
             i++;
             blast_info("voltage set to %f", voltage_array[i]);
             blast_info("voltage set to %f", voltage_array[i]);
@@ -193,13 +199,10 @@ void set_dac(void) {
     float value;
     if (CommandData.Labjack_Queue.lj_q_on == 1) {
         if (CommandData.Cryo.send_dac == 1) {
-            labjack = CommandData.Cryo.labjack;
             value = CommandData.Cryo.dac_value;
             blast_info("voltage = %f, labjack = %d", value, labjack);
             CommandData.Cryo.send_dac = 0;
-            if (state[labjack].connected == 1) {
-                labjack_queue_command(labjack, 1000, value);
-            }
+            labjack_queue_command(LABJACK_CRYO_1, 1000, value);
         }
     }
 }
@@ -798,8 +801,7 @@ static void cooling_cycle(void) {
         cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
         cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
 
-        if (/*cycle_state.t250 < cycle_state.tcrit_fpa &&*/
-            cycle_state.the3 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
+        if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
             // moves the standby mode once we reach the minimum temperature.
@@ -883,6 +885,19 @@ void force_incharge(void) {
     // used for the test cryostat without watchdog board
 }
 
+static void cryo_status_update() {
+    static channel_t* cycle_allowed_Addr;
+    static channel_t* wd_allowed_Addr;
+    static int first_time = 1;
+    if (first_time == 1) {
+        first_time = 0;
+        cycle_allowed_Addr = channels_find_by_name("cycle_allowed");
+        wd_allowed_Addr = channels_find_by_name("wd_allowed");
+    }
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.cycle_allowed);
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.watchdog_allowed);
+}
+
 static void pot_watchdog() {
     static int first_time = 1;
     static channel_t* pot_addr;
@@ -952,7 +967,8 @@ void cryo_1hz(int setting_1hz) {
     if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
-        // load_curve_300mk();
+        cryo_status_update();
+        load_curve_300mk();
         set_dac();
         pot_watchdog();
         cal_pulse_monitor();
