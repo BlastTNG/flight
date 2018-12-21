@@ -5530,11 +5530,13 @@ void *roach_cmd_loop(void* ind)
             // FLIGHT MODE LOOPS
             // Check for scan retune flag
             if (CommandData.roach[i].enable_chop_lo) {
-                if (CommandData.roach[i].chop_lo) {
+                if ((CommandData.trigger_lo_offset_check) |
+                       (CommandData.roach[i].chop_lo)) {
                     if (roach_chop_lo(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: Failed to Chop LO", i + 1);
                     }
-                    CommandData.roach[i].chop_lo = 0;
+                CommandData.trigger_lo_offset_check = 0;
+                CommandData.roach[i].chop_lo = 0;
                 }
             }
             if (CommandData.roach[i].auto_el_retune) {
