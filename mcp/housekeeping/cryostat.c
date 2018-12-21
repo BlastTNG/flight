@@ -177,9 +177,9 @@ void load_curve_300mk(void) {
     }
     if (CommandData.Cryo.load_curve == 1) {
         labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
-        SET_SCALED_VALUE(load_curve_val_Addr, voltage_array[i]);
+        SET_FLOAT(load_curve_val_Addr, voltage_array[i]);
         counter++;
-        if (counter == 600) {
+        if (counter == 900) {
             i++;
             blast_info("voltage set to %f", voltage_array[i]);
             blast_info("voltage set to %f", voltage_array[i]);
@@ -199,13 +199,10 @@ void set_dac(void) {
     float value;
     if (CommandData.Labjack_Queue.lj_q_on == 1) {
         if (CommandData.Cryo.send_dac == 1) {
-            labjack = CommandData.Cryo.labjack;
             value = CommandData.Cryo.dac_value;
             blast_info("voltage = %f, labjack = %d", value, labjack);
             CommandData.Cryo.send_dac = 0;
-            if (state[labjack].connected == 1) {
-                labjack_queue_command(labjack, 1000, value);
-            }
+            labjack_queue_command(LABJACK_CRYO_1, 1000, value);
         }
     }
 }
