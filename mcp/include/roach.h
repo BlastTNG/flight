@@ -130,7 +130,7 @@ typedef struct roach_state {
     bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
-    bool is_sweeping;
+    int is_sweeping;
     bool in_flight_mode;
     bool has_vna_sweep;
     bool has_targ_sweep;
