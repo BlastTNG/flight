@@ -1347,7 +1347,10 @@ int32_t get_current_disk_free_space() {
 }
 int16_t get_current_disk_index() {
     if (!s_diskpool.current_disk) return 0;
-    return s_diskpool.current_disk->index;
+    const char * mntpt = get_current_disk_mnt_point();
+    int len = strlen(mntpt);
+    if (len < 2) return 0;
+    return atoi(mntpt+len-2);
 }
 
 /**
@@ -1606,6 +1609,14 @@ void initialize_diskmanager(void) {
     drivepool_init_usb_info();
     diskpool_mount_primary();
     initialize_total_bytes();
+
+    // wait until a non full disk is found
+    diskpool_update_mounted_free_space(s_diskpool.current_disk);
+    while (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
+				filepool_handle_disk_error(s_diskpool.current_disk);
+        diskpool_update_mounted_free_space(s_diskpool.current_disk);
+        usleep(10000);
+		}
 
     s_ready = true;
     blast_info("Set s_ready to true.");
