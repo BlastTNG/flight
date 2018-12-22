@@ -349,7 +349,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     double  new_val;
 
     static double i_pss[NUM_PSS][NUM_PSS_V];
-    static double itot[NUM_PSS], itotabs[NUM_PSS];
+    double itot[NUM_PSS], itotabs[NUM_PSS];
     double        x[NUM_PSS], y[NUM_PSS];
     double        usun[NUM_PSS][3], u2[NUM_PSS][3];
     gsl_matrix    *rot[NUM_PSS];
@@ -427,8 +427,8 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
     i_point = GETREADINDEX(point_index);
 
 	for (j = 0; j < NUM_PSS; j++) {
-		if (itotabs[j] > pss_imin) {
-			PointingData[point_index].pss_snr[j] = itotabs[j]/PSS_NOISE; // 10.
+		if (fabs(itot[j]) > pss_imin) {
+			PointingData[point_index].pss_snr[j] = fabs(itot[j])/PSS_NOISE; // 10.
     		weight[j]= PointingData[point_index].pss_snr[j];
 		} else {
       		PointingData[point_index].pss_snr[j] = 1.;  // 1.
