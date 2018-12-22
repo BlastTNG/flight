@@ -172,7 +172,6 @@ static void process_gnhdt(const char *m_data)
     // Sometimes we don't get heading information.  mcp needs to be able to handle both cases.
     static int first_time = 1;
     static int have_warned = 0;
-    have_warned = 0;
     size_t bytes_read = strnlen(m_data, 20);
     if (bytes_read < 14) {
         if (!have_warned) {
@@ -181,12 +180,12 @@ static void process_gnhdt(const char *m_data)
             have_warned = 1;
         }
     } else {
-        sscanf(m_data, "$GNZDA,"
+        sscanf(m_data, "$GNHDT,"
             "%lf," // Heading (deg) x.x
             "%*c,", // True
             &CSBFGPSAz.az);
         if (first_time) {
-            blast_info("Read GNZDA heading = %lf", CSBFGPSAz.az);
+            blast_info("Read GNHDT heading = %lf", CSBFGPSAz.az);
             first_time = 0;
         }
     }
