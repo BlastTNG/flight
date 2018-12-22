@@ -1443,7 +1443,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(sigmaMagSAddr, PointingData[i_point].mag_sigma[1]);
     SET_SCALED_VALUE(trimMagSAddr, CommandData.mag_az_trim[1]);
 
-    SET_FLOAT(sigmaPssAddr,(float) PointingData[i_point].pss_sigma);
+    SET_FLOAT(sigmaPssAddr, (float) PointingData[i_point].pss_sigma);
     SET_FLOAT(trimPssAddr, (float) CommandData.pss_az_trim);
     SET_SCALED_VALUE(trimDGPSAddr, CommandData.dgps_az_trim);
 
