@@ -2030,6 +2030,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     }
     save_output_trf(m_roach);
     m_roach->is_finding_kids = 0;
+    m_roach->tone_finding_error = 0;
     return 0;
 }
 
@@ -2228,6 +2229,7 @@ int roach_write_targ_tones(roach_state_t *m_roach)
     }
     m_roach->has_vna_tones = 0;
     m_roach->has_targ_tones = 1;
+    m_roach->tone_write_fail = 0;
     return 0;
 }
 
