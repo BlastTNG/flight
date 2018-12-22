@@ -2217,7 +2217,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
           CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
           CommandData.roach[ivalues[0]-1].change_roach_state = 1;
-          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
     case calc_df:
