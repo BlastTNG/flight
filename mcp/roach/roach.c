@@ -1290,6 +1290,9 @@ int read_LO(pi_state_t *m_pi)
 int roach_chop_lo(roach_state_t *m_roach)
 {
     int status = -1;
+    if ((CommandData.roach[m_roach->which - 1].auto_el_retune) | (m_roach->is_sweeping)) {
+        return status;
+    }
     double set_freq[3];
     double step_hz;
     if (m_roach->array == 500) {
@@ -5543,8 +5546,11 @@ void *roach_cmd_loop(void* ind)
            }
         }
         if (CommandData.roach[i].chop_lo) {
-            if (roach_chop_lo(&roach_state_table[i]) < 0) {
-                blast_err("ROACH%d: Failed to Chop LO", i + 1);
+            if ((CommandData.roach[i].enable_chop_lo) &&
+                 (!CommandData.roach[i].auto_el_retune)) {
+                if (roach_chop_lo(&roach_state_table[i]) < 0) {
+                    blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                }
             }
             CommandData.roach[i].chop_lo = 0;
         }
@@ -5568,6 +5574,9 @@ void *roach_cmd_loop(void* ind)
                     }
                     if (roach_turnaround_loop(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: FAILED TO EXECUTE TURNAROUND LOOP", i + 1);
+                        roach_state_table[i].trnaround_loop_fail = 1;
+                    } else {
+                        roach_state_table[i].trnaround_loop_fail = 0;
                     }
                     CommandData.roach[i].refit_res_freqs = 0;
                     CommandData.roach[i].do_sweeps = 0;
