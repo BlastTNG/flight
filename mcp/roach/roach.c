@@ -2030,6 +2030,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     }
     save_output_trf(m_roach);
     m_roach->is_finding_kids = 0;
+    m_roach->tone_finding_error = 0;
     return 0;
 }
 
@@ -2228,6 +2229,7 @@ int roach_write_targ_tones(roach_state_t *m_roach)
     }
     m_roach->has_vna_tones = 0;
     m_roach->has_targ_tones = 1;
+    m_roach->tone_write_fail = 0;
     return 0;
 }
 
@@ -4974,7 +4976,7 @@ int roach_boot_sequence(roach_state_t *m_roach)
             blast_err("ROACH%d, KATCP connection error", m_roach->which);
             m_roach->katcp_connect_error = 1;
         }
-        sleep(3);
+        // sleep(3);
     }
     return retval;
 }
@@ -6062,9 +6064,12 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].waiting_for_lamp = 0;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
-    // blast_info("Spawning command thread for roach%i...", ind + 1);
-    ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
-    // blast_info("Spawned command thread for roach%i", ind + 1);
+    // Don't create thread for Roach 4
+    if (ind != 3) {
+        // blast_info("Spawning command thread for roach%i...", ind + 1);
+        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
+        // blast_info("Spawned command thread for roach%i", ind + 1);
+    }
     return 0;
 }
 
