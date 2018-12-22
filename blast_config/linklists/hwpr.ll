@@ -1,7 +1,10 @@
 enc_hwpr
 enc_real_hwpr
+enc_real_targ_hwpr
 enc_targ_hwpr
 i_pos_hwpr
+enc_err_hwpr
+enc_real_err_hwpr
 
 pos_hwpr
 pos0_hwpr
