@@ -170,7 +170,7 @@ uint32_t hwp_get_position(void)
 uint16_t hwp_get_state(void)
 {
     if (check_slave_comm_ready(hwp_index)) {
-        return ec_slave[hwp_index].state;
+        return 1;
     } else {
         return 0;
     }
@@ -1182,6 +1182,23 @@ static int motor_set_operational()
     return -1;
 }
 
+static uint8_t check_ec_ready(int index)
+{
+    uint16_t m_state = 0;
+    if ((index <= 0) || (index >= N_MCs)) {
+        return(0);
+    }
+    if (!controller_state[index].comms_ok) {
+        return(0);
+    }
+    if (controller_state[index].is_mc) {
+        m_state = *status_word[index];
+        if (!(m_state & ECAT_CTL_STATUS_READY)) {
+            return(0);
+        }
+    }
+    return(1);
+}
 static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 {
     if (firsttime) {
@@ -1215,15 +1232,18 @@ static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 // Checks to see whether we have we have communicated with the El Motor and it is returning
 // a reasonable network status.
 uint8_t is_el_motor_ready() {
-    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
+    return(check_ec_ready(el_index));
+//    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
 }
 
 uint8_t is_rw_motor_ready() {
-    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
+    return(check_ec_ready(rw_index));
+//    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
 }
 
 uint8_t is_pivot_motor_ready() {
-    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
+    return(check_ec_ready(piv_index));
+//    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
 }
 
 static void read_motor_data()
