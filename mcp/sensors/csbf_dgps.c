@@ -172,10 +172,12 @@ static void process_gnhdt(const char *m_data)
     // Sometimes we don't get heading information.  mcp needs to be able to handle both cases.
     static int first_time = 1;
     static int have_warned = 0;
+    have_warned = 0;
     size_t bytes_read = strnlen(m_data, 20);
     if (bytes_read < 14) {
         if (!have_warned) {
             blast_info("Not enough characters for GNHDT.  We didn't get heading info.");
+            blast_info("Read: %s\0;");
             have_warned = 1;
         }
     } else {
