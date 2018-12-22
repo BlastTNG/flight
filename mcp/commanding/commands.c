@@ -3369,7 +3369,7 @@ void InitCommandData()
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].do_turnaround_loop = 0;
         CommandData.roach[i].n_outofrange_thresh = 300;
-        CommandData.roach[i].enable_chop_lo = 0;
+        CommandData.roach[i].enable_chop_lo = 1;
         CommandData.roach[i].chop_lo = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
