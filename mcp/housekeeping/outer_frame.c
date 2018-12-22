@@ -265,16 +265,16 @@ void update_thermistors(void) {
     SET_SCALED_VALUE(thermistor_60_Addr, labjack_get_value(LABJACK_MULT_OF, 35));
     SET_SCALED_VALUE(thermistor_61_Addr, labjack_get_value(LABJACK_MULT_OF, 36));
     SET_SCALED_VALUE(thermistor_62_Addr, labjack_get_value(LABJACK_MULT_OF, 37));
-    SET_VALUE(thermistor_63_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 38)));
-    SET_VALUE(thermistor_64_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 39)));
-    SET_VALUE(thermistor_65_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 40)));
-    SET_VALUE(thermistor_66_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 41)));
-    SET_VALUE(thermistor_67_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 42)));
-    SET_VALUE(thermistor_68_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 43)));
-    SET_VALUE(thermistor_69_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 44)));
-    SET_VALUE(thermistor_70_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 45)));
-    SET_VALUE(thermistor_71_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 46)));
-    SET_VALUE(thermistor_72_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 47)));
+    SET_FLOAT(thermistor_63_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 38)));
+    SET_FLOAT(thermistor_64_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 39)));
+    SET_FLOAT(thermistor_65_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 40)));
+    SET_FLOAT(thermistor_66_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 41)));
+    SET_FLOAT(thermistor_67_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 42)));
+    SET_FLOAT(thermistor_68_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 43)));
+    SET_FLOAT(thermistor_69_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 44)));
+    SET_FLOAT(thermistor_70_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 45)));
+    SET_FLOAT(thermistor_71_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 46)));
+    SET_FLOAT(thermistor_72_Addr, temp(labjack_get_value(LABJACK_MULT_OF, 47)));
     /*
     blast_info("ROACH THERMISTOR 63 LJ voltage = %f", labjack_get_value(LABJACK_MULT_OF, 38));
     blast_info("ROACH THERMISTOR 63 = %f", temp(labjack_get_value(LABJACK_MULT_OF, 38)));
