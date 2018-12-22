@@ -1479,6 +1479,18 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
+  {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
+                     CONFIRM | GR_ROACH, 1,
+    {
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+    }
+  },
   /***************************************/
   /***************************************/
   /*************** ROX Bias  *************/
