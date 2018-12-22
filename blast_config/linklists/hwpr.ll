@@ -13,3 +13,6 @@ vel_hwpr
 acc_hwpr
 i_move_hwpr
 i_hold_hwpr
+
+stat_control_hwpr
+td_m4
