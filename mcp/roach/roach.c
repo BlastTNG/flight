@@ -2426,6 +2426,45 @@ int pi_reboot_now(pi_state_t *m_pi)
     return 0;
 }
 
+int valon_set_ref(pi_state_t *m_pi)
+{
+    if (CommandData.roach[m_pi->which - 1].change_extref) {
+        blast_info("ROACH%d, Changing Valon reference", m_pi->which);
+        int ext_ref = CommandData.roach[m_pi->which - 1].ext_ref;
+        int s;
+        int status = -1;
+        struct sockaddr_in sin;
+        struct hostent *hp;
+        char *write_this;
+        blast_tmp_sprintf(write_this, "sudo echo %d > EXTREF", ext_ref);
+        if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+            blast_err("Pi%d: Socket failed", m_pi->which);
+            return status;
+        }
+        /* Gets, validates host; stores address in hostent structure. */
+        if ((hp = gethostbyname(m_pi->address)) == NULL) {
+            blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+            return status;
+        }
+        /* Assigns port number. */
+        sin.sin_family = AF_INET;
+        sin.sin_port = htons(NC2_PORT);
+        /* Copies host address to socket with aide of structures.*/
+        bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+        /* Requests link with server and verifies connection. */
+        if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+            blast_err("Pi%d: Connection Error", m_pi->which);
+            return status;
+        }
+        if ((status = write(s, write_this, strlen(write_this))) < 0) {
+            blast_err("Pi%d: Couldn't write to socket", m_pi->which);
+            return status;
+        }
+        roach_state_table[m_pi->which - 1].pi_error_count = 0;
+    }
+    return 0;
+}
+
 int recenter_lo(roach_state_t *m_roach)
 {
     if (set_LO(&pi_state_table[m_roach->which - 1], m_roach->lo_centerfreq/1.0e6) < 0) {
@@ -5434,6 +5473,10 @@ void *roach_cmd_loop(void* ind)
             }
             roach_state_manager(&roach_state_table[i], result);
         }
+        if (CommandData.roach[i].change_extref) {
+            valon_set_ref(&pi_state_table[i]);
+            CommandData.roach[i].change_extref = 0;
+        }
         if (CommandData.roach[i].kill) {
             roach_halt_ppc(&roach_state_table[i]);
             CommandData.roach[i].kill = 0;
@@ -6103,6 +6146,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *RoachAutoCheckCycle;
     static channel_t *DfRetuneThreshAddr[NUM_ROACHES];
     static channel_t *DfDiffRetuneThreshAddr[NUM_ROACHES];
     static channel_t *PiErrorCountAddr[NUM_ROACHES];
@@ -6131,6 +6175,7 @@ void write_roach_channels_1hz(void)
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
+    char channel_name_roach_auto_check_cycle[128] = { 0 };
     char channel_name_df_retune_thresh[128] = { 0 };
     char channel_name_df_diff_retune_thresh[128] = { 0 };
     char channel_name_flags_kids[128] = { 0 };
@@ -6158,6 +6203,8 @@ void write_roach_channels_1hz(void)
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
+        snprintf(channel_name_roach_auto_check_cycle, sizeof(channel_name_roach_auto_check_cycle),
+               "roach_auto_check_cycle");
         for (i = 0; i < NUM_ROACHES; i++) {
             for (j = 0; j < NUM_FLAG_CHANNELS_PER_ROACH; j++) {
                 snprintf(channel_name_flags_kids, sizeof(channel_name_flags_kids),
@@ -6245,6 +6292,7 @@ void write_roach_channels_1hz(void)
         }
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
         RoachTlmMode = channels_find_by_name("roach_tlm_mode");
+        RoachAutoCheckCycle = channels_find_by_name("roach_auto_check_cycle");
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         n_good_kids = 0;
@@ -6290,7 +6338,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
         roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_ref) << 9);
-        roach_status_field |= (((uint32_t)CommandData.roach_run_cycle_checker) << 10);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
         roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 12);
         roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 13);
@@ -6319,6 +6367,7 @@ void write_roach_channels_1hz(void)
         SET_UINT16(NKidsTlmRoach[i], CommandData.num_channels_all_roaches[i]);
         SET_UINT16(SKidsTlmRoach[i], CommandData.roach_tlm[i].kid);
     }
+    SET_UINT8(RoachAutoCheckCycle, CommandData.roach_run_cycle_checker);
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
     SET_UINT8(RoachScanTrigger, CommandData.trigger_roach_tuning_check);
 }
