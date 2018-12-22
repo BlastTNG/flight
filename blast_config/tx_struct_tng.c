@@ -798,7 +798,7 @@ channel_t channel_list[] =
     { "v3_6_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v4_6_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v5_6_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
-    { "v1_7_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
+    /* { "v1_7_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v2_7_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v3_7_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v4_7_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
@@ -807,7 +807,7 @@ channel_t channel_list[] =
     { "v2_8_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v3_8_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
     { "v4_8_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
-    { "v5_8_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 },
+    { "v5_8_pss",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_V, 0 }, */
 
     { "accel_az",             2.0 / 65536,      0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "led_cc1",              SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
