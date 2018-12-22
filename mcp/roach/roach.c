@@ -5483,7 +5483,7 @@ void *roach_cmd_loop(void* ind)
             blast_info("CHANGE STATE: %d, %d",
                     CommandData.roach[i].roach_new_state,
                     CommandData.roach[i].roach_desired_state);
-            if (CommandData.roach[i].roach_desired_state == ROACH_STATE_BOOT) {
+            if (roach_state_table[i].desired_state == ROACH_STATE_STREAMING) {
                 reset_flags(&roach_state_table[i]);
             }
             CommandData.roach[i].change_roach_state = 0;
