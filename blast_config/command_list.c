@@ -403,7 +403,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 6,
+{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 5,
     {
       {"PSS number (1-6)",  1, 6, 'i', "NONE"},
       {"Distance offset",  -2.0, 2.0, 'f', "NONE"},
