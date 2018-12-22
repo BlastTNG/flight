@@ -38,6 +38,10 @@ time_flc_n
 time_flc_s
 timeout_n
 timeout_s
+hdd_disk_space_n
+hdd_disk_space_s
+hdd_disk_index_n
+hdd_disk_index_s
 
 test_values
 heater_status_write

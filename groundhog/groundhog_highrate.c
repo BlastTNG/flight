@@ -341,14 +341,14 @@ void highrate_receive(void *arg) {
                                       memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                                       write_linklist_rawfile(ll_rawfile, compbuffer);
                                       flush_linklist_rawfile(ll_rawfile);
-															        framenum = tell_linklist_rawfile(ll_rawfile); 
+                                      framenum = tell_linklist_rawfile(ll_rawfile); 
                                   }
                                   // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               }
-															// fill out the telemetry report
-															highrate_report.ll = ll;
+                              // fill out the telemetry report
+                              highrate_report.ll = ll;
                               highrate_report.framenum = framenum;
-															highrate_report.allframe = af; 
+                              highrate_report.allframe = af; 
                           }
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
@@ -399,7 +399,11 @@ void highrate_receive(void *arg) {
               if (sbd_ll_rawfile) {
                   write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
                   flush_linklist_rawfile(sbd_ll_rawfile);
+                  sbd_report.framenum = tell_linklist_rawfile(sbd_ll_rawfile);
               }
+              // fill out the telemetry report
+              sbd_report.ll = sbd_ll;
+              sbd_report.allframe = 0; 
               /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
               

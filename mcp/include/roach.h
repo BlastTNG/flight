@@ -63,7 +63,6 @@ static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "
 static const char udp_dest[32] = "239.1.1.234";
 static const char udp_dest_name[32] = "roach-udp-dest";
 int roach_sock_fd;
-int fridge_cycle_warning;
 
 typedef struct {
     int32_t Ival;

@@ -2217,7 +2217,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
           CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
           CommandData.roach[ivalues[0]-1].change_roach_state = 1;
-          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
     case calc_df:
@@ -2660,6 +2659,21 @@ void MultiCommand(enum multiCommand command, double *rvalues,
               CommandData.roach[i].has_lamp_control = 1;
           } else {
               CommandData.roach[i].has_lamp_control = 0;
+          }
+      }
+      break;
+    case roach_set_extref:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+           (ivalues[1] >= 0) && (ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].ext_ref = ivalues[1];
+          CommandData.roach[ivalues[0]-1].change_extref = 1;
+      }
+      break;
+    case roach_set_extref_all:
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].ext_ref = ivalues[0];
+              CommandData.roach[i].change_extref = 1;
           }
       }
       break;
@@ -3306,6 +3320,8 @@ void InitCommandData()
     CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].ext_ref = 1;
+        CommandData.roach[i].change_extref = 0;
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;

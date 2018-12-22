@@ -45,7 +45,7 @@ struct TlmReport bi0_report = {0};
 struct TlmReport highrate_report = {0};
 struct TlmReport sbd_report = {0};
 
-int verbose = 0;
+int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
 
@@ -130,6 +130,7 @@ int main(int argc, char * argv[]) {
     else if (strcmp(argv[i], "-highrate_only") == 0) pilot_on = bi0_on = 0;
     else if (strcmp(argv[i], "-d") == 0) daemon = 1;
     else if (strcmp(argv[i], "-quiet") == 0) verbose = 0;
+    else if (strcmp(argv[i], "-verbose") == 0) verbose = 1;
     else {
       blast_err("Unrecognized option \"%s\"", argv[i]);
       exit(1);
