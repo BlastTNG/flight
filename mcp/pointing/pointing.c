@@ -410,6 +410,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	}
     for (j = 0; j < NUM_PSS; j++) {
 		itot[j] = 0;
+		itotabs[j] = 0;
 		for (k = 0; k < NUM_PSS_V; k++) {
 			// calculate total current for x,y calculation
     		itot[j] += i_pss[j][k];
