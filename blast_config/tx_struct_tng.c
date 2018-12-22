@@ -722,7 +722,7 @@ channel_t channel_list[] =
     { "az_raw_pss",           SCALE(CONVERT_UNITY),  TYPE_UINT16, RATE_5HZ, U_P_DEG, 0 },
     { "el_raw_pss",           SCALE(CONVERT_UNITY),  TYPE_UINT16, RATE_5HZ, U_P_DEG, 0 },
     { "az_pss",               SCALE(CONVERT_UNITY),  TYPE_UINT16, RATE_5HZ, U_P_DEG, 0 },
-    { "trim_pss",             SCALE(CONVERT_UNITY),  TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_pss",             SCALE(CONVERT_UNITY),  TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "trim_dgps",            SCALE(CONVERT_UNITY),  TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "cal_el_pss1",          SCALE(CONVERT_UNITY),  TYPE_FLOAT, RATE_5HZ, U_TRIM_DEG, 0 },
     { "cal_el_pss2",          SCALE(CONVERT_UNITY),  TYPE_FLOAT, RATE_5HZ, U_TRIM_DEG, 0 },
