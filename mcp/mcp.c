@@ -608,6 +608,8 @@ blast_info("Finished initializing Beaglebones..."); */
   if (use_starcams) {
        xsc_networking_init(0);
        xsc_networking_init(1);
+       xsc_trigger(0, 0);
+       xsc_trigger(1, 0);
   }
 
   initialize_magnetometer();
