@@ -363,7 +363,7 @@ void ControlHWPR(struct ezbus *bus)
             if (hwpr_control.move_cur == not_yet) {
 				if (hwpr_control.go == step) {
                     enc_state = hwp_get_state();
-					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+					if (enc_state > 0) {
 						hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                 		blast_info("Current enc value: hwpr_enc_cur = %f", hwpr_enc_cur);
@@ -404,7 +404,7 @@ void ControlHWPR(struct ezbus *bus)
 				} else if (hwpr_control.go == ind) {
                 	// Not changing for flight.  Fix if we fly again. -lmf
                     enc_state = hwp_get_state();
-					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+					if (enc_state > 0) {
 					    hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                         blast_info("This is where I calculate the relative step from the pot value.");
@@ -437,7 +437,7 @@ void ControlHWPR(struct ezbus *bus)
                     }
                 } else if (hwpr_control.go == pot) {
                     enc_state = hwp_get_state();
-					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+					if (enc_state > 0) {
     				    hwpr_enc_cur = hwpr_data.enc;
 #ifdef DEBUG_HWPR
                         blast_info("This is where I calculate the relative step from the pot value.");
@@ -467,7 +467,7 @@ void ControlHWPR(struct ezbus *bus)
                     }
                 } else if (hwpr_control.go == goto_abs) {
 					enc_state = hwp_get_state();
-					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+					if (enc_state > 0) {
     				    hwpr_enc_cur = hwpr_data.enc; // hwpr_enc_cur is in degrees
 
 						/* enc_targ is the goal for the first part of the move, 
@@ -492,7 +492,7 @@ void ControlHWPR(struct ezbus *bus)
 
                 } else if (hwpr_control.go == goto_rel) {
 					enc_state = hwp_get_state();
-					if ((enc_state == EC_STATE_OPERATIONAL) || (enc_state == EC_STATE_SAFE_OP)) {
+					if (enc_state > 0) {
     				 	hwpr_enc_cur = hwpr_data.enc; // hwpr_enc_cur is in degrees
 
 						/* enc_targ is the goal for the first part of the move, 
