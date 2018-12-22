@@ -8,11 +8,11 @@
             "PObject": {
                 "_id": "646961831"
             },
-            "_boxTitle": "ROACH1 (SNOOKS)",
+            "_boxTitle": "ROACH4 (SNOOKS)",
             "_style": "(P2072147126)",
             "cellHeight": 46,
-            "cellWidth": 16,
-            "cellX": 1,
+            "cellWidth": 17,
+            "cellX": 36,
             "cellY": 1,
             "dataItems": [
                 {
@@ -25,7 +25,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1837166662)",
                     "_format": "",
-                    "_source": "IS_STREAMING_ROACH1",
+                    "_source": "IS_STREAMING_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -47,7 +47,7 @@
                     "_caption": "STATE",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_source": "STATE_ROACH1",
+                    "_source": "STATE_ROACH4",
                     "type": "PMDI"
                 },
                 {
@@ -60,7 +60,7 @@
                     "_extrema": true,
                     "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "HAS_FIRMWARE_ROACH1",
+                    "_source": "HAS_FIRMWARE_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -73,7 +73,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "DOING_FULL_LOOP_ROACH1",
+                    "_source": "DOING_FULL_LOOP_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -86,7 +86,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "DOING_FIND_KIDS_LOOP_ROACH1",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -97,23 +97,30 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P674313813)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "DOING_TURNAROUND_LOOP_ROACH1",
+                    "_source": "DOING_TURNAROUND_LOOP_ROACH4",
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1905245811"
+                        },
+                        "_map": {
+                            "0": "0[style=low (P1016205289)]",
+                            "1": "VNA[style=SWEEPS (P1161173888)]",
+                            "2": "TARG[style=SWEEPS (P1161173888)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "19803144"
+                        "_id": "1846055718"
                     },
                     "_caption": "IS_SWEEPING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P674313813)",
-                    "_format": "",
-                    "_source": "IS_SWEEPING_ROACH1",
-                    "type": "PNDI"
+                    "_source": "IS_SWEEPING_ROACH4",
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -125,7 +132,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "IS_FINDING_KIDS_ROACH1",
+                    "_source": "IS_FINDING_KIDS_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -137,7 +144,7 @@
                     "_defaultStyle": "(P1369470654)",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "CURRENT_NTONES_ROACH1",
+                    "_source": "CURRENT_NTONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -149,20 +156,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "nkids_found_roach1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "565185256"
-                    },
-                    "_caption": "IS_COMPRESSING_DATA",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
-                    "_format": "",
-                    "_source": "IS_COMPRESSING_DATA_ROACH1",
+                    "_source": "nkids_found_roach4",
                     "type": "PNDI"
                 },
                 {
@@ -175,7 +169,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "WRITE_FLAG_ROACH1",
+                    "_source": "WRITE_FLAG_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -188,19 +182,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "RETUNE_FLAG_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1613957099"
-                    },
-                    "_caption": "STATE   ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH1",
+                    "_source": "RETUNE_FLAG_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -213,7 +195,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1739180927)",
                     "_format": "",
-                    "_source": "POW_PER_TONE_ROACH1",
+                    "_source": "POW_PER_TONE_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -225,7 +207,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "SET_ATTEN_OUT_ROACH1",
+                    "_source": "SET_ATTEN_OUT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -237,7 +219,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "SET_ATTEN_IN_ROACH1",
+                    "_source": "SET_ATTEN_IN_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -249,7 +231,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "READ_ATTEN_OUT_ROACH1",
+                    "_source": "READ_ATTEN_OUT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -261,7 +243,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "READ_ATTEN_IN_ROACH1",
+                    "_source": "READ_ATTEN_IN_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -274,20 +256,7 @@
                     "_extrema": true,
                     "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "HAS_QDR_CAL_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1602809510"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH1",
+                    "_source": "HAS_QDR_CAL_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -299,7 +268,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_VNA_TONES_ROACH1",
+                    "_source": "HAS_VNA_TONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -311,7 +280,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_TARG_TONES_ROACH1",
+                    "_source": "HAS_TARG_TONES_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -323,7 +292,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_VNA_SWEEP_ROACH1",
+                    "_source": "HAS_VNA_SWEEP_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -335,7 +304,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_TARG_SWEEP_ROACH1",
+                    "_source": "HAS_TARG_SWEEP_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -345,9 +314,10 @@
                     "_caption": "ADC_RMS_I",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
-                    "_source": "ADCI_RMS_ROACH1",
+                    "_source": "ADCI_RMS_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -357,9 +327,10 @@
                     "_caption": "ADC_RMS_Q",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
-                    "_source": "ADCQ_RMS_ROACH1",
+                    "_source": "ADCQ_RMS_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -371,20 +342,20 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_REF_ROACH1",
+                    "_source": "HAS_REF_ROACH4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1966224558"
                     },
-                    "_caption": "HAS_ERROR",
+                    "_caption": "PI_REBOOT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "HAS_ERROR_ROACH1",
+                    "_source": "PI_REBOOT_WARNING_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -396,7 +367,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "%f",
-                    "_source": "LO_CENTER_FREQ_ROACH1",
+                    "_source": "LO_CENTER_FREQ_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -408,7 +379,20 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "%f",
-                    "_source": "LO_FREQ_READ_ROACH1",
+                    "_source": "LO_FREQ_READ_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1824872773"
+                    },
+                    "_caption": "DATA_STREAM_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "DATA_STREAM_ERROR_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -421,7 +405,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "TONE_FINDING_ERROR_ROACH1",
+                    "_source": "TONE_FINDING_ERROR_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -434,7 +418,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "SWEEP_FAIL_ROACH1",
+                    "_source": "SWEEP_FAIL_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -447,7 +431,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "TONE_WRITE_FAIL_ROACH1",
+                    "_source": "TONE_WRITE_FAIL_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -460,7 +444,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "FIRMWARE_UPLOAD_FAIL_ROACH1",
+                    "_source": "FIRMWARE_UPLOAD_FAIL_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -473,7 +457,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "LAMP_CHECK_ERROR_ROACH1",
+                    "_source": "LAMP_CHECK_ERROR_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -485,7 +469,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "KATCP_CONNECT_ERROR_ROACH1",
+                    "_source": "KATCP_CONNECT_ERROR_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -498,7 +482,7 @@
                     "_extrema": true,
                     "_extremaID": "(P1547091814)",
                     "_format": "",
-                    "_source": "PI_ERROR_COUNT_ROACH1",
+                    "_source": "PI_ERROR_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -510,7 +494,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DF_RETUNE_THRESH_ROACH1",
+                    "_source": "DF_RETUNE_THRESH_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -522,7 +506,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "NFLAG_THRESH_ROACH1",
+                    "_source": "NFLAG_THRESH_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -534,7 +518,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "nkids_bad_roach1",
+                    "_source": "nkids_bad_roach4",
                     "type": "PNDI"
                 },
                 {
@@ -546,32 +530,33 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "nkids_good_roach1",
+                    "_source": "nkids_good_roach4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1290417692"
                     },
-                    "_caption": "ALLOW_AUTO_TARG_RETUNE",
+                    "_caption": "ALLOW_AUTO_TRNAROUND",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "AUTO_ALLOW_TURNAROUND_RETUNE_ROAstatus_roach1",
+                    "_source": "AUTO_ALLOW_TRNAROUND_LOOP_ROACH4status_roach4",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1519390973"
                     },
-                    "_caption": "ENABLE_CHOP_LO",
+                    "_caption": "ALLOW_CHOP_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P773337968)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "ENABLE_CHOP_LO_ROACH1",
+                    "_source": "ALLOW_CHOP_LO_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -582,15 +567,27 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P274232905)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "CHOP_LO_ROACH1",
+                    "_source": "CHOP_LO_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1703902126"
+                    },
+                    "_caption": "HAS_LAMP_CONTROL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_LAMP_CONTROL_ROACH4",
                     "type": "PNDI"
                 }
             ],
             "geometryHeight": 782,
-            "geometryWidth": 272,
-            "geometryX": 17,
+            "geometryWidth": 289,
+            "geometryX": 612,
             "geometryY": 17
         },
         {
@@ -601,7 +598,7 @@
             "_style": "(P2072147126)",
             "cellHeight": 46,
             "cellWidth": 17,
-            "cellX": 18,
+            "cellX": 0,
             "cellY": 1,
             "dataItems": [
                 {
@@ -686,23 +683,30 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P674313813)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_TURNAROUND_LOOP_ROACH2",
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "862270450"
+                        },
+                        "_map": {
+                            "0": "0[style=low (P1016205289)]",
+                            "1": "VNA[style=SWEEPS (P1161173888)]",
+                            "2": "TARG[style=SWEEPS (P1161173888)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "1866773680"
+                        "_id": "2077096518"
                     },
                     "_caption": "IS_SWEEPING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P674313813)",
-                    "_format": "",
                     "_source": "IS_SWEEPING_ROACH2",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -743,19 +747,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "130003399"
-                    },
-                    "_caption": "IS_COMPRESSING_DATA",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
-                    "_format": "",
-                    "_source": "IS_COMPRESSING_DATA_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "931521898"
                     },
                     "_caption": "IS_WRITING",
@@ -778,18 +769,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1164987922"
-                    },
-                    "_caption": "STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -868,19 +847,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1225673534"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "588932472"
                     },
                     "_caption": "HAS_VNA_TONES",
@@ -934,7 +900,8 @@
                     "_caption": "ADC_RMS_I",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCI_RMS_ROACH2",
                     "type": "PNDI"
@@ -946,7 +913,8 @@
                     "_caption": "ADC_RMS_Q",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH2",
                     "type": "PNDI"
@@ -967,12 +935,12 @@
                     "PObject": {
                         "_id": "792210089"
                     },
-                    "_caption": "HAS_ERROR",
+                    "_caption": "PI_REBOOT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HAS_ERROR_ROACH2",
+                    "_source": "PI_REBOOT_WARNING_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -997,6 +965,19 @@
                     "_extrema": false,
                     "_format": "%f",
                     "_source": "LO_FREQ_READ_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "283044841"
+                    },
+                    "_caption": "DATA_STREAM_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "DATA_STREAM_ERROR_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1142,25 +1123,26 @@
                     "PObject": {
                         "_id": "743877120"
                     },
-                    "_caption": "ALLOW_AUTO_TARG_RETUNE",
+                    "_caption": "ALLOW_AUTO_TRNAROUND",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "AUTO_ALLOW_TURNAROUND_RETUNE_ROAstatus_roach2",
+                    "_source": "AUTO_ALLOW_TRNAROUND_LOOP_ROACH2status_roach2",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1551791242"
                     },
-                    "_caption": "ENABLE_CHOP_LO",
+                    "_caption": "ALLOW_CHOP_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P773337968)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "ENABLE_CHOP_LO_ROACH2",
+                    "_source": "ALLOW_CHOP_LO_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1171,15 +1153,27 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P274232905)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "CHOP_LO_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "372607396"
+                    },
+                    "_caption": "HAS_LAMP_CONTROL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_LAMP_CONTROL_ROACH2",
                     "type": "PNDI"
                 }
             ],
             "geometryHeight": 782,
             "geometryWidth": 289,
-            "geometryX": 306,
+            "geometryX": 0,
             "geometryY": 17
         },
         {
@@ -1189,8 +1183,8 @@
             "_boxTitle": "ROACH3 (MERLIN)",
             "_style": "(P2072147126)",
             "cellHeight": 46,
-            "cellWidth": 16,
-            "cellX": 37,
+            "cellWidth": 17,
+            "cellX": 18,
             "cellY": 1,
             "dataItems": [
                 {
@@ -1274,23 +1268,31 @@
                     "_caption": "DOING_TURNAROUND_LOOP  ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_TURNAROUND_LOOP_ROACH3",
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "622955108"
+                        },
+                        "_map": {
+                            "0": "0[style=low (P1016205289)]",
+                            "1": "VNA[style=SWEEPS (P1161173888)]",
+                            "2": "TARG[style=SWEEPS (P1161173888)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "845930851"
+                        "_id": "597549538"
                     },
                     "_caption": "IS_SWEEPING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P674313813)",
-                    "_format": "",
                     "_source": "IS_SWEEPING_ROACH3",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -1331,19 +1333,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1660081751"
-                    },
-                    "_caption": "IS_COMPRESSING_DATA",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
-                    "_format": "",
-                    "_source": "IS_COMPRESSING_DATA_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1780276714"
                     },
                     "_caption": "IS_WRITING",
@@ -1366,18 +1355,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1904226259"
-                    },
-                    "_caption": "STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1456,19 +1433,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "164262680"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "814155755"
                     },
                     "_caption": "HAS_VNA_TONES",
@@ -1522,7 +1486,8 @@
                     "_caption": "ADC_RMS_I",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCI_RMS_ROACH3",
                     "type": "PNDI"
@@ -1534,7 +1499,8 @@
                     "_caption": "ADC_RMS_Q",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH3",
                     "type": "PNDI"
@@ -1555,13 +1521,13 @@
                     "PObject": {
                         "_id": "1217936568"
                     },
-                    "_caption": "HAS_ERROR",
+                    "_caption": "PI_REBOOT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "HAS_ERROR_ROACH3",
+                    "_source": "PI_REBOOT_WARNING_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1586,6 +1552,19 @@
                     "_extrema": false,
                     "_format": "%f",
                     "_source": "LO_FREQ_READ_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "597399989"
+                    },
+                    "_caption": "DATA_STREAM_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "DATA_STREAM_ERROR_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1731,25 +1710,26 @@
                     "PObject": {
                         "_id": "980925405"
                     },
-                    "_caption": "ALLOW_AUTO_TARG_RETUNE",
+                    "_caption": "ALLOW_AUTO_TRNAROUND",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "AUTO_ALLOW_TURNAROUND_RETUNE_ROAstatus_roach3",
+                    "_source": "AUTO_ALLOW_TRNAROUND_LOOP_ROACH3status_roach3",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1872271158"
                     },
-                    "_caption": "ENABLE_CHOP_LO",
+                    "_caption": "ALLOW_CHOP_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P773337968)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "ENABLE_CHOP_LO_ROACH3",
+                    "_source": "ALLOW_CHOP_LO_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1760,15 +1740,27 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P274232905)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "CHOP_LO_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "878887161"
+                    },
+                    "_caption": "HAS_LAMP_CONTROL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_LAMP_CONTROL_ROACH3",
                     "type": "PNDI"
                 }
             ],
             "geometryHeight": 782,
-            "geometryWidth": 272,
-            "geometryX": 629,
+            "geometryWidth": 289,
+            "geometryX": 306,
             "geometryY": 17
         },
         {
@@ -1778,8 +1770,8 @@
             "_boxTitle": "ROACH5 (RUBBLE)",
             "_style": "(P2072147126)",
             "cellHeight": 46,
-            "cellWidth": 16,
-            "cellX": 55,
+            "cellWidth": 17,
+            "cellX": 54,
             "cellY": 1,
             "dataItems": [
                 {
@@ -1862,23 +1854,31 @@
                     "_caption": "DOING_TURNAROUND_LOOP  ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_TURNAROUND_LOOP_ROACH5",
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1886464707"
+                        },
+                        "_map": {
+                            "0": "0[style=low (P1016205289)]",
+                            "1": "VNA[style=SWEEPS (P1161173888)]",
+                            "2": "TARG[style=SWEEPS (P1161173888)]"
+                        }
+                    },
                     "PObject": {
-                        "_id": "1278560986"
+                        "_id": "1546105603"
                     },
                     "_caption": "IS_SWEEPING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P674313813)",
-                    "_format": "",
                     "_source": "IS_SWEEPING_ROACH5",
-                    "type": "PNDI"
+                    "type": "PMDI"
                 },
                 {
                     "PObject": {
@@ -1919,19 +1919,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "478211681"
-                    },
-                    "_caption": "IS_COMPRESSING_DATA",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P1407645461)",
-                    "_format": "",
-                    "_source": "IS_COMPRESSING_DATA_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1708354559"
                     },
                     "_caption": "IS_WRITING",
@@ -1954,18 +1941,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "RETUNE_FLAG_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "682772494"
-                    },
-                    "_caption": "STATE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "STATE_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2044,19 +2019,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "146644993"
-                    },
-                    "_caption": "HAS_TONES",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P773337968)",
-                    "_format": "",
-                    "_source": "HAS_TONES_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1588604645"
                     },
                     "_caption": "HAS_VNA_TONES",
@@ -2110,7 +2072,8 @@
                     "_caption": "ADC_RMS_I",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCI_RMS_ROACH5",
                     "type": "PNDI"
@@ -2122,7 +2085,8 @@
                     "_caption": "ADC_RMS_Q",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
                     "_format": "%f",
                     "_source": "ADCQ_RMS_ROACH5",
                     "type": "PNDI"
@@ -2143,13 +2107,13 @@
                     "PObject": {
                         "_id": "1557844558"
                     },
-                    "_caption": "HAS_ERROR",
+                    "_caption": "PI_REBOOT",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "HAS_ERROR_ROACH5",
+                    "_source": "PI_REBOOT_WARNING_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2174,6 +2138,19 @@
                     "_extrema": false,
                     "_format": "%f",
                     "_source": "LO_FREQ_READ_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "160782945"
+                    },
+                    "_caption": "DATA_STREAM_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "DATA_STREAM_ERROR_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2319,44 +2296,56 @@
                     "PObject": {
                         "_id": "92920008"
                     },
-                    "_caption": "ALLOW_AUTO_TARG_RETUNE",
+                    "_caption": "ALLOW_AUTO_TRNAROUND",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
                     "_format": "",
-                    "_source": "AUTO_ALLOW_TURNAROUND_RETUNE_ROAstatus_roach5",
+                    "_source": "AUTO_ALLOW_TRNAROUND_LOOP_ROACH5status_roach5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1778899910"
                     },
-                    "_caption": "ENABLE_CHOP_LO",
+                    "_caption": "ALLOW_CHOP_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
-                    "_extremaID": "(P773337968)",
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "ENABLE_CHOP_LO_ROACH5",
+                    "_source": "ALLOW_CHOP_LO_ROACH5",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
-                        "_id": "927438902"
+                        "_id": "1420729760"
                     },
                     "_caption": "CHOP_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
+                    "_extrema": false,
                     "_format": "",
                     "_source": "CHOP_LO_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1252337200"
+                    },
+                    "_caption": "HAS_LAMP_CONTROL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_LAMP_CONTROL_ROACH5",
                     "type": "PNDI"
                 }
             ],
             "geometryHeight": 782,
-            "geometryWidth": 272,
-            "geometryX": 935,
+            "geometryWidth": 289,
+            "geometryX": 918,
             "geometryY": 17
         },
         {
@@ -2366,8 +2355,8 @@
             "_boxTitle": "TEMPERATURES",
             "_style": "(P2072147126)",
             "cellHeight": 11,
-            "cellWidth": 16,
-            "cellX": 73,
+            "cellWidth": 17,
+            "cellX": 72,
             "cellY": 1,
             "dataItems": [
                 {
@@ -2502,8 +2491,8 @@
                 }
             ],
             "geometryHeight": 187,
-            "geometryWidth": 272,
-            "geometryX": 1241,
+            "geometryWidth": 289,
+            "geometryX": 1224,
             "geometryY": 17
         },
         {
@@ -2513,8 +2502,8 @@
             "_boxTitle": "CRYO STATUS",
             "_style": "(P2072147126)",
             "cellHeight": 10,
-            "cellWidth": 16,
-            "cellX": 73,
+            "cellWidth": 17,
+            "cellX": 72,
             "cellY": 13,
             "dataItems": [
                 {
@@ -2665,13 +2654,26 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
+                    "_source": "FRIDGE_CYCLE_WARNING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "685343768"
+                    },
+                    "_caption": "ROACH_LAMP_NOW",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P933645065)",
+                    "_format": "",
+                    "_source": "ROACH_LAMP_NOW",
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 272,
-            "geometryX": 1241,
+            "geometryHeight": 171,
+            "geometryWidth": 290,
+            "geometryX": 1224,
             "geometryY": 221
         },
         {
@@ -2681,8 +2683,8 @@
             "_boxTitle": "TIMING",
             "_style": "(P2072147126)",
             "cellHeight": 16,
-            "cellWidth": 16,
-            "cellX": 73,
+            "cellWidth": 17,
+            "cellX": 72,
             "cellY": 31,
             "dataItems": [
                 {
@@ -2694,7 +2696,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "PPS_COUNT_ROACH1",
+                    "_source": "PPS_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -2754,7 +2756,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "%f",
-                    "_source": "CLOCK_COUNT_ROACH1",
+                    "_source": "CLOCK_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -2813,8 +2815,8 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
-                    "_source": "PACKET_COUNT_ROACH1",
+                    "_format": "%f",
+                    "_source": "PACKET_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -2855,8 +2857,8 @@
                 }
             ],
             "geometryHeight": 272,
-            "geometryWidth": 272,
-            "geometryX": 1241,
+            "geometryWidth": 289,
+            "geometryX": 1224,
             "geometryY": 527
         },
         {
@@ -2866,8 +2868,8 @@
             "_boxTitle": "POINTING",
             "_style": "(P2072147126)",
             "cellHeight": 6,
-            "cellWidth": 16,
-            "cellX": 73,
+            "cellWidth": 17,
+            "cellX": 72,
             "cellY": 24,
             "dataItems": [
                 {
@@ -2940,8 +2942,8 @@
                 }
             ],
             "geometryHeight": 102,
-            "geometryWidth": 272,
-            "geometryX": 1241,
+            "geometryWidth": 289,
+            "geometryX": 1224,
             "geometryY": 408
         }
     ],
@@ -3085,6 +3087,34 @@
             "_sxlow": "(P1489452979)",
             "_xhigh": "-30",
             "_xlow": "-70"
+        },
+        {
+            "PObject": {
+                "_id": "1012535193"
+            },
+            "_high": "200",
+            "_low": "-1",
+            "_name": "ADC_RMS",
+            "_shigh": "(P1489452979)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1489452979)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "200",
+            "_xlow": "-2"
+        },
+        {
+            "PObject": {
+                "_id": "933645065"
+            },
+            "_high": "1",
+            "_low": "-1",
+            "_name": "ROACH_LAMP_NOW",
+            "_shigh": "(P2012763546)",
+            "_slow": "(P1016205289)",
+            "_sxhigh": "(P1489452979)",
+            "_sxlow": "(P1042125667)",
+            "_xhigh": "1",
+            "_xlow": "-2"
         }
     ],
     "linkNames": [
@@ -3102,12 +3132,12 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 1,
-            "cellY": 49,
+            "cellX": 0,
+            "cellY": 48,
             "geometryHeight": 119,
             "geometryWidth": 85,
-            "geometryX": 17,
-            "geometryY": 833
+            "geometryX": 0,
+            "geometryY": 816
         }
     ],
     "styles": [
@@ -3363,11 +3393,22 @@
             "_italic": false,
             "_linked": true,
             "_name": "N_TONES"
+        },
+        {
+            "PObject": {
+                "_id": "1161173888"
+            },
+            "_bg": "#0055ff",
+            "_bold": false,
+            "_fg": "#000000",
+            "_italic": false,
+            "_linked": true,
+            "_name": "SWEEPS"
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 60,
-    "windowCellWidth": 109,
-    "windowHeight": 1020,
-    "windowWidth": 1855
+    "windowCellHeight": 62,
+    "windowCellWidth": 113,
+    "windowHeight": 1056,
+    "windowWidth": 1920
 }

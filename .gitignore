@@ -59,3 +59,5 @@ test_programs/synclink/support/test_biphase
 linklistcheck/linklistcheck
 linklistcheck/*.ll
 linklistcheck/superframe.txt
+
+scripts_gse/sonos.log
