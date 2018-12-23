@@ -177,7 +177,6 @@ static void process_gnhdt(const char *m_data)
     if (bytes_read < 14) {
         if (!have_warned) {
             blast_info("Not enough characters for GNHDT.  We didn't get heading info.");
-            blast_info("Read: %s\0;");
             have_warned = 1;
             CSBFGPSAz.att_ok = 0;
         }
