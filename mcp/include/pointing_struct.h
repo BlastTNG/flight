@@ -134,7 +134,7 @@ struct PointingDataStruct {
   int pss_ok;
   int dgps_ok;
   double pss_az;
-  double pss_el;
+  double pss_el; // not used, as far as I can tell -PAW 2018/12/23
 
   // solutions for individual sensors, from PSSConvert
   double pss_azraw[NUM_PSS]; // degrees
