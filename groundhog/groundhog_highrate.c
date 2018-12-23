@@ -321,10 +321,11 @@ void highrate_receive(void *arg) {
                               
                           } else { // write the linklist data to disk
                               // decompress the linklist
-                              if ((af = read_allframe(local_superframe, superframe, compbuffer))) {
+                              af = read_allframe(local_superframe, superframe, compbuffer);
+                              if (af > 0) { // an allframe was received
                                   if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
                                   memcpy(local_allframe, compbuffer, superframe->allframe_size);
-                              } else {
+                              } else if (af == 0) { // just a regular rame (< 0 indicates problem reading allframe)
                                   if (ser != prev_ser) {
                                     ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, linkname);
                                   }
@@ -345,11 +346,12 @@ void highrate_receive(void *arg) {
                                   }
                                   // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               }
-                              // fill out the telemetry report
-                              highrate_report.ll = ll;
-                              highrate_report.framenum = framenum;
-                              highrate_report.allframe = af; 
                           }
+                          // fill out the telemetry report
+                          highrate_report.ll = ll;
+                          highrate_report.framenum = framenum;
+                          highrate_report.allframe = af; 
+
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
                       }
