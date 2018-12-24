@@ -131,6 +131,8 @@ void udp_receive(void *arg) {
     pilot_report.ll = ll;
     pilot_report.framenum = framenum; 
     pilot_report.allframe = af; 
+
+    memset(compbuffer, 0, udpsetup->maxsize);
  
   }
 }

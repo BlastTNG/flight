@@ -560,7 +560,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case gps_sw_reset:
             system("/usr/local/bin/gps_sw_reset");
-            // berror(fatal, "Commands: failed to reboot gps software\n");
+            berror(fatal, "Commands: failed to reboot gps software\n");
+            break;
+        case gps_stats:
+            system("/usr/local/bin/gps_stats");
+            berror(fatal, "Commands: failed to check gps stats\n");
             break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;

@@ -205,7 +205,7 @@ uint32_t piv_get_latched(void)
 }
 
 /**
- * This set of functions returns the control word of each motor controller (after being set)
+ * This set of functions returns the control word of each motor controller (read back from the controller)
  * @return uint16 control word bitmap
  */
 uint16_t rw_get_ctl_word(void)
@@ -228,6 +228,35 @@ int16_t piv_get_ctl_word(void)
 {
     if (check_slave_comm_ready(piv_index)) {
         return *control_word_read[piv_index];
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * This set of functions returns the control word of each motor controller (sent to the controller)
+ * @return uint16 control word bitmap
+ */
+uint16_t rw_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(rw_index)) {
+        return *control_word[rw_index];
+    } else {
+        return 0;
+    }
+}
+int16_t el_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(el_index)) {
+        return *control_word[el_index];
+    } else {
+        return 0;
+    }
+}
+int16_t piv_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(piv_index)) {
+        return *control_word[piv_index];
     } else {
         return 0;
     }
@@ -915,8 +944,14 @@ static int motor_pdo_init(int m_slave)
         blast_err("Failed mapping!");
     }
     blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
+    map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word
+    retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
+    if (!retval) {
+        blast_err("Failed mapping!");
+    }
+    blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 2)) /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -1036,6 +1071,7 @@ static void map_index_vars(int m_index)
         PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
         PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
         PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+        PDO_SEARCH_LIST(ECAT_CTL_WORD, control_word_read);
         while (ec_iserror()) {
             blast_err("%s", ec_elist2string());
         }
@@ -1259,7 +1295,8 @@ static void read_motor_data()
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
-    RWMotorData[motor_i].state = rw_get_ctl_word();
+    RWMotorData[motor_i].control_word_read = rw_get_ctl_word();
+    RWMotorData[motor_i].control_word_write = rw_get_ctl_word_write();
     RWMotorData[motor_i].network_problem = check_for_network_problem(RWMotorData[motor_i].network_status, firsttime);
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
@@ -1271,7 +1308,8 @@ static void read_motor_data()
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
-    ElevMotorData[motor_i].state = el_get_ctl_word();
+    ElevMotorData[motor_i].control_word_read = el_get_ctl_word();
+    ElevMotorData[motor_i].control_word_write = el_get_ctl_word_write();
     ElevMotorData[motor_i].network_problem  =
                           check_for_network_problem(ElevMotorData[motor_i].network_status, firsttime);
 
@@ -1283,7 +1321,9 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
-    PivotMotorData[motor_i].state = piv_get_ctl_word();
+    PivotMotorData[motor_i].control_word_read
+     = piv_get_ctl_word();
+    PivotMotorData[motor_i].control_word_write = piv_get_ctl_word_write();
     PivotMotorData[motor_i].network_problem  =
                             check_for_network_problem(PivotMotorData[motor_i].network_status, firsttime);
 
