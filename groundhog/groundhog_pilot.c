@@ -98,10 +98,12 @@ void udp_receive(void *arg) {
 
     } else { // write the linklist data to disk
         // decompress the linklist
-        if ((af = read_allframe(local_superframe, superframe, compbuffer))) { // just a regular frame
+
+        af = read_allframe(local_superframe, superframe, compbuffer);
+        if (af > 0) { // an allframe was received
             if (verbose) blast_info("[%s] Received an allframe :)\n", udpsetup->name);
             memcpy(local_allframe, compbuffer, superframe->allframe_size);
-        } else {
+        } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
             if (serial != prev_serial) {
                 ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
             }

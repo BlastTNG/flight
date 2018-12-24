@@ -1332,18 +1332,18 @@ void store_5hz_acs(void)
     i_point = GETREADINDEX(point_index);
 
     /********* PSS data *************/
-    SET_SCALED_VALUE(azrawPss1Addr, PointingData[i_point].pss_azraw[0]);
-    SET_SCALED_VALUE(azrawPss2Addr, PointingData[i_point].pss_azraw[1]);
-    SET_SCALED_VALUE(azrawPss3Addr, PointingData[i_point].pss_azraw[2]);
-    SET_SCALED_VALUE(azrawPss4Addr, PointingData[i_point].pss_azraw[3]);
-    SET_SCALED_VALUE(azrawPss5Addr, PointingData[i_point].pss_azraw[4]);
-    SET_SCALED_VALUE(azrawPss6Addr, PointingData[i_point].pss_azraw[5]);
-    SET_SCALED_VALUE(elrawPss1Addr, PointingData[i_point].pss_elraw[0]);
-    SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss_elraw[1]);
-    SET_SCALED_VALUE(elrawPss3Addr, PointingData[i_point].pss_elraw[2]);
-    SET_SCALED_VALUE(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
-    SET_SCALED_VALUE(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
-    SET_SCALED_VALUE(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
+    SET_FLOAT(azrawPss1Addr, PointingData[i_point].pss_azraw[0]);
+    SET_FLOAT(azrawPss2Addr, PointingData[i_point].pss_azraw[1]);
+    SET_FLOAT(azrawPss3Addr, PointingData[i_point].pss_azraw[2]);
+    SET_FLOAT(azrawPss4Addr, PointingData[i_point].pss_azraw[3]);
+    SET_FLOAT(azrawPss5Addr, PointingData[i_point].pss_azraw[4]);
+    SET_FLOAT(azrawPss6Addr, PointingData[i_point].pss_azraw[5]);
+    SET_FLOAT(elrawPss1Addr, PointingData[i_point].pss_elraw[0]);
+    SET_FLOAT(elrawPss2Addr, PointingData[i_point].pss_elraw[1]);
+    SET_FLOAT(elrawPss3Addr, PointingData[i_point].pss_elraw[2]);
+    SET_FLOAT(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
+    SET_FLOAT(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
+    SET_FLOAT(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
     SET_FLOAT(snrPss1Addr, PointingData[i_point].pss_snr[0]);
     SET_FLOAT(snrPss2Addr, PointingData[i_point].pss_snr[1]);
     SET_FLOAT(snrPss3Addr, PointingData[i_point].pss_snr[2]);
@@ -1351,8 +1351,8 @@ void store_5hz_acs(void)
     SET_FLOAT(snrPss5Addr, PointingData[i_point].pss_snr[4]);
     SET_FLOAT(snrPss6Addr, PointingData[i_point].pss_snr[5]);
     // TODO(seth): Why are we manually adding the trim here?
-    SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
-    SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
+    SET_FLOAT(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
+    SET_FLOAT(PssOkAddr, PointingData[i_point].pss_ok);
     /********** SIP GPS Data **********/
     SET_SCALED_VALUE(latSipAddr, SIPData.GPSpos.lat);
     SET_SCALED_VALUE(lonSipAddr, SIPData.GPSpos.lon);
@@ -1423,28 +1423,28 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calYMaxMagSAddr, CommandData.cal_ymax_mag[1]);
     SET_SCALED_VALUE(calYMinMagSAddr, CommandData.cal_ymin_mag[1]);
 
-	SET_SCALED_VALUE(calAzPssArrayAddr, CommandData.cal_az_pss_array);
-    SET_SCALED_VALUE(calAzPss1Addr, CommandData.cal_az_pss[0]);
-    SET_SCALED_VALUE(calAzPss2Addr, CommandData.cal_az_pss[1]);
-    SET_SCALED_VALUE(calAzPss3Addr, CommandData.cal_az_pss[2]);
-    SET_SCALED_VALUE(calAzPss4Addr, CommandData.cal_az_pss[3]);
-    SET_SCALED_VALUE(calAzPss5Addr, CommandData.cal_az_pss[4]);
-    SET_SCALED_VALUE(calAzPss6Addr, CommandData.cal_az_pss[5]);
-    SET_SCALED_VALUE(calDPss1Addr, CommandData.cal_d_pss[0]);
-    SET_SCALED_VALUE(calDPss2Addr, CommandData.cal_d_pss[1]);
-    SET_SCALED_VALUE(calDPss3Addr, CommandData.cal_d_pss[2]);
-    SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss[3]);
-    SET_SCALED_VALUE(calDPss5Addr, CommandData.cal_d_pss[4]);
-    SET_SCALED_VALUE(calDPss6Addr, CommandData.cal_d_pss[5]);
-    SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
+	SET_FLOAT(calAzPssArrayAddr, CommandData.cal_az_pss_array);
+    SET_FLOAT(calAzPss1Addr, CommandData.cal_az_pss[0]);
+    SET_FLOAT(calAzPss2Addr, CommandData.cal_az_pss[1]);
+    SET_FLOAT(calAzPss3Addr, CommandData.cal_az_pss[2]);
+    SET_FLOAT(calAzPss4Addr, CommandData.cal_az_pss[3]);
+    SET_FLOAT(calAzPss5Addr, CommandData.cal_az_pss[4]);
+    SET_FLOAT(calAzPss6Addr, CommandData.cal_az_pss[5]);
+    SET_FLOAT(calDPss1Addr, CommandData.cal_d_pss[0]);
+    SET_FLOAT(calDPss2Addr, CommandData.cal_d_pss[1]);
+    SET_FLOAT(calDPss3Addr, CommandData.cal_d_pss[2]);
+    SET_FLOAT(calDPss4Addr, CommandData.cal_d_pss[3]);
+    SET_FLOAT(calDPss5Addr, CommandData.cal_d_pss[4]);
+    SET_FLOAT(calDPss6Addr, CommandData.cal_d_pss[5]);
+    SET_FLOAT(calIMinPssAddr, CommandData.cal_imin_pss);
 
     SET_SCALED_VALUE(sigmaMagNAddr, PointingData[i_point].mag_sigma[0]);
     SET_SCALED_VALUE(trimMagNAddr, CommandData.mag_az_trim[0]);
     SET_SCALED_VALUE(sigmaMagSAddr, PointingData[i_point].mag_sigma[1]);
     SET_SCALED_VALUE(trimMagSAddr, CommandData.mag_az_trim[1]);
 
-    SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
-    SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim);
+    SET_FLOAT(sigmaPssAddr, (float) PointingData[i_point].pss_sigma);
+    SET_FLOAT(trimPssAddr, (float) CommandData.pss_az_trim);
     SET_SCALED_VALUE(trimDGPSAddr, CommandData.dgps_az_trim);
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);

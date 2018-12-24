@@ -2662,6 +2662,21 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
+    case roach_set_extref:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+           (ivalues[1] >= 0) && (ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].ext_ref = ivalues[1];
+          CommandData.roach[ivalues[0]-1].change_extref = 1;
+      }
+      break;
+    case roach_set_extref_all:
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].ext_ref = ivalues[0];
+              CommandData.roach[i].change_extref = 1;
+          }
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3305,6 +3320,8 @@ void InitCommandData()
     CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].ext_ref = 1;
+        CommandData.roach[i].change_extref = 0;
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;
@@ -3352,7 +3369,7 @@ void InitCommandData()
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].do_turnaround_loop = 0;
         CommandData.roach[i].n_outofrange_thresh = 300;
-        CommandData.roach[i].enable_chop_lo = 0;
+        CommandData.roach[i].enable_chop_lo = 1;
         CommandData.roach[i].chop_lo = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
@@ -3688,16 +3705,16 @@ void InitCommandData()
     CommandData.autotrim_rate = 1.0;
     CommandData.autotrim_time = 60;
 
-    CommandData.cal_xmax_mag[0] = 0.0115;
-    CommandData.cal_ymax_mag[0] = -0.3527;
-    CommandData.cal_xmin_mag[0] = 0.3835;
-    CommandData.cal_ymin_mag[0] = 0.2059;
+    CommandData.cal_xmax_mag[0] = 0.1;
+    CommandData.cal_ymax_mag[0] = 0.095;
+    CommandData.cal_xmin_mag[0] = -0.105;
+    CommandData.cal_ymin_mag[0] = -0.1076;
     CommandData.cal_mag_align[0] = 0.0;
 
-    CommandData.cal_xmax_mag[1] = 0.0050;
-    CommandData.cal_ymax_mag[1] = -0.337;
-    CommandData.cal_xmin_mag[1] = 0.362;
-    CommandData.cal_ymin_mag[1] = 0.1898;
+    CommandData.cal_xmax_mag[1] = 0.103;
+    CommandData.cal_ymax_mag[1] = 0.098;
+    CommandData.cal_xmin_mag[1] = -0.108;
+    CommandData.cal_ymin_mag[1] = -0.111;
     CommandData.cal_mag_align[1] = 0.0;
 
     CommandData.cal_az_pss[0] = 0.0;

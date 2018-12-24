@@ -403,7 +403,7 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 6,
+{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 5,
     {
       {"PSS number (1-6)",  1, 6, 'i', "NONE"},
       {"Distance offset",  -2.0, 2.0, 'f', "NONE"},
@@ -1477,6 +1477,18 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
+                     CONFIRM | GR_ROACH, 1,
+    {
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
     }
   },
   /***************************************/

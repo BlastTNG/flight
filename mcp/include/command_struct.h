@@ -395,6 +395,8 @@ typedef struct roach
     unsigned int enable_chop_lo;
     unsigned int chop_lo;
     unsigned int has_lamp_control;
+    unsigned int ext_ref;
+    unsigned int change_extref;
 } roach_status_t;
 
 typedef struct roach_params

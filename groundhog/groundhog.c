@@ -45,7 +45,7 @@ struct TlmReport bi0_report = {0};
 struct TlmReport highrate_report = {0};
 struct TlmReport sbd_report = {0};
 
-int verbose = 0;
+int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
 
