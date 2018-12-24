@@ -295,6 +295,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemRWAddr;
     static channel_t *stateRWAddr;
     static channel_t *ctl_word_read_rw_addr;
+    static channel_t *ctl_word_write_rw_addr;
     static channel_t *latched_fault_rw_addr;
 
     static channel_t *tMCElAddr;
@@ -303,6 +304,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemElAddr;
     static channel_t *stateElAddr;
     static channel_t *ctl_word_read_el_addr;
+    static channel_t *ctl_word_write_el_addr;
     static channel_t *latched_fault_el_addr;
 
     static channel_t *tMCPivAddr;
@@ -311,6 +313,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemPivAddr;
     static channel_t *statePivAddr;
     static channel_t *ctl_word_read_piv_addr;
+    static channel_t *ctl_word_write_piv_addr;
     static channel_t *latched_fault_piv_addr;
 
     int i_motors;
@@ -349,6 +352,7 @@ void write_motor_channels_5hz(void)
         networkProblemRWAddr = channels_find_by_name("network_problem_rw");
         stateRWAddr = channels_find_by_name("state_rw");
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
+        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
@@ -357,6 +361,7 @@ void write_motor_channels_5hz(void)
         networkProblemElAddr = channels_find_by_name("network_problem_el");
         stateElAddr = channels_find_by_name("state_el");
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
+        ctl_word_write_el_addr = channels_find_by_name("control_word_write_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
@@ -365,6 +370,7 @@ void write_motor_channels_5hz(void)
         networkProblemPivAddr = channels_find_by_name("network_problem_piv");
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
+        ctl_word_write_piv_addr = channels_find_by_name("control_word_write_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
 
         ethercat_cmds_addr = channels_find_by_name("mc_cmd_status");
@@ -421,7 +427,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
     SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
     SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
@@ -429,7 +436,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusElAddr, ElevMotorData[i_motors].network_status);
     SET_UINT16(networkProblemElAddr, ElevMotorData[i_motors].network_problem);
     SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_el_addr, ElevMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
@@ -437,7 +445,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusPivAddr, PivotMotorData[i_motors].network_status);
     SET_UINT16(networkProblemPivAddr, PivotMotorData[i_motors].network_problem);
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_piv_addr, PivotMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
 
     ec_cmd_status_field = ((uint8_t)CommandData.ec_devices.reset) +
