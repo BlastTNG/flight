@@ -183,6 +183,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	       }
 	} else if (valve_data[index].limit == 7 || valve_data[index].limit == 11) {
 		valve_data[index].goal = 0;
+		CommandData.Cryo.valve_goals[index] = 0;
 	}
 }
 
