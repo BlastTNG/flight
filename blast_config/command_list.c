@@ -132,6 +132,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(of_lj_on), "turning on OF labjack", GR_POWER},
   {COMMAND(gps_timing_on), "turning on gps timing", GR_POWER},
   {COMMAND(gps_sw_reset), "reset gps software", GR_TELEM},
+  {COMMAND(gps_stats), "save gps nema + chrony stats to file at /data/etc/blast/gps/stats.txt", GR_TELEM},
   {COMMAND(hd_pv_off), "turning off HD PV", GR_POWER},
   {COMMAND(eth_switch_off), "turning off Eth Switch", GR_POWER},
   {COMMAND(fc1_off), "turning off FC1", GR_POWER},
