@@ -83,9 +83,11 @@ class AutoSonos:
 # Looks at field "STATE_POTVALVE" and .truestate() == True when STATE_POTVALVE == 1
 # When the .trigger() function is called, will play the requested song on the SONOS
 PotvalveOpen = AutoSonos("Flagpole Sitta", "STATE_POTVALVE", 1)
-PotvalveOpen2 = AutoSonos("Ooh Potvalve Open", "STATE_POTVALVE", 1)
+PotvalveOpen2 = AutoSonos("Ooh Pot Valve Open", "STATE_POTVALVE", 1)
 PotvalveYell = True
 PotvavleSong = False
+
+HWPMove = AutoSonos("You Spin Me Round", "MOVE_STAT_HWPR", 1)
 
 Lunch = AutoSonos("Sandstorm", "TIME")
 Leave = AutoSonos("End of the World as", "TIME")
@@ -98,7 +100,7 @@ while True:
   PotvalveOpen.update() # must always be called in the loop
   
   # If the truestate is reached and has been true for 20 second, then trigger the song
-  if (PotvalveOpen2.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveYell = True)):
+  if (PotvalveOpen2.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveYell == True)):
     print("Potvalve is OPEN!")
     if not song_requested: 
       PotvalveOpen.trigger()
@@ -107,13 +109,20 @@ while True:
     PotvavleSong = True
 
   # If the truestate is reached and has been true for 20 second, then trigger the song
-  if (PotvalveOpen.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveSong = True)):
+  if (PotvalveOpen.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveSong == True)):
     print("Potvalve is OPEN!")
     if not song_requested: 
       PotvalveOpen.trigger()
     song_requested = True
     PotvalveYell = True
     PotvavleSong = False
+
+  # If the HWP move state is 1 we are in state "ready" so we are sending a move command
+  if (HWPMove.truestate()):
+    print("Half-wave plate is moving!")
+    if not song_requested:
+      HWPMove.trigger()
+    song_requested = True
 
   # time to leave
   Leave.update()
