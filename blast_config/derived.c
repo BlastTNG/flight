@@ -109,9 +109,6 @@ derived_tng_t derived_list[] = {
     BITWORD("VETO_PSS", "veto_sensor", 13, 1),
     BITWORD("VETO_DGPS", "veto_sensor", 14, 1),
 
-    BITWORD("PULSE_XSC0", "pulse_sc", 0, 1),
-    BITWORD("PULSE_XSC1", "pulse_sc", 1, 1),
-
     COMMENT("ACS Digital Signals"),
 
     /* charge controller (CC) faults and alarms */
