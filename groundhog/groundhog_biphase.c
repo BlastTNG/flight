@@ -201,10 +201,10 @@ void biphase_receive(void *args)
                       }
                   }
 
-									// fill out the telemetry report
-									bi0_report.ll = ll;
+                  // fill out the telemetry report
+                  bi0_report.ll = ll;
                   bi0_report.framenum = framenum; 
-									bi0_report.allframe = af; 
+                  bi0_report.allframe = af; 
 
                   memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
                   compbuffer_size = 0;
