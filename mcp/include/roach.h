@@ -155,12 +155,15 @@ typedef struct roach_state {
     int full_loop_fail;
 
     float adc_rms[2];
+    double fpga_clock_freq;
     double *freq_residuals;
-    double *targ_tones; // kid frequencies found with get_targ_freqs()
+    // double targ_tones[MAX_CHANNELS_PER_ROACH];
+    double *targ_tones;
     double lo_freq_req;
     double lo_freq_read;
     size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
+    size_t prev_num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
     // First two LUTs are for building
@@ -190,11 +193,12 @@ typedef struct roach_state {
     char *last_iq_path;
     char *path_to_lamp_response;
     char *path_to_noise_comp;
+    char *path_to_df_comp;
     char *channels_path;
 
     // For detector retune decision
     int nflag_thresh; // num channels which need to be out of range for retune
-    int has_ref; /* If 1, ref grads exist */
+    int has_ref_params; /* If 1, ref grads exist */
     bool first_calc;
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range

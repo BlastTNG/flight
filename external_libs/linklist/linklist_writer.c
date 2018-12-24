@@ -237,6 +237,7 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
 }
 
 void close_and_free_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
+  if (!ll_rawfile) return;
   if (ll_rawfile->fp) fclose(ll_rawfile->fp);
   free(ll_rawfile); 
 }
