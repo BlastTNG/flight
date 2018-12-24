@@ -669,16 +669,28 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 // takes superframe at buffer in and creates an all frame in buffer out
 // all frame is 1 sample per field uncompressed
 int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) {
-  int i;
+  int i, j;
   int tlm_out_start = 4; // the first 4 bytes are the serial for allframes
   int tlm_in_start = 0; 
   unsigned int tlm_size = 0; 
   uint32_t test = ALLFRAME_SERIAL;
+  uint16_t crc = 0;
 
   int wd = 1;
   if ((allframe == NULL) || (sf == NULL)) wd = 0;
 
   superframe_entry_t * ll_superframe_list = superframe->entries;
+
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if ((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+      ll_crctable = NULL;
+      return -2;
+    }
+  } 
 
   if (wd) memcpy(allframe, &test, 4);
 
@@ -686,9 +698,19 @@ int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) 
     tlm_in_start = ll_superframe_list[i].start;
     tlm_size = get_superframe_entry_size(&ll_superframe_list[i]);
 
-    if (wd) memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
+    if (wd) {
+      memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
+			for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_out_start+j],&crc,ll_crctable);
+    }
     tlm_out_start += tlm_size;
   }
+
+  if (wd) {
+    // write the crc 
+    memcpy(allframe+2,((uint8_t*)&crc)+1,1);
+    memcpy(allframe+3,((uint8_t*)&crc)+0,1);
+  }
+
   return tlm_out_start;
 
 }
@@ -702,13 +724,30 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
   int tlm_num = 0;
   int tlm_skip = 0;
   unsigned int tlm_size = 0;
+  int check_crc = 1;
   
   superframe_entry_t * ll_superframe_list = superframe->entries;
 
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if ((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+      ll_crctable = NULL;
+      return -2;
+    }
+  } 
+
   // check to see if this is actually an allframe
-  if (*((uint32_t *) allframe) != ALLFRAME_SERIAL) { 
+  if (*((uint16_t *) allframe) != (uint16_t) ALLFRAME_SERIAL) { 
     return 0;
   }
+  if (*((uint32_t *) allframe) == (uint32_t) ALLFRAME_SERIAL) {
+    check_crc = 0;
+  }
+
+  uint16_t crc = 0;
   
   for (i = 0; i < superframe->n_entries; i++) { 
     tlm_out_start = ll_superframe_list[i].start;
@@ -716,12 +755,24 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
     tlm_num = ll_superframe_list[i].spf;
     tlm_skip = ll_superframe_list[i].skip;
 
+    for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_in_start+j],&crc,ll_crctable);
     for (j = 0; j < tlm_num; j++) {
       memcpy(sf+tlm_out_start, allframe+tlm_in_start, tlm_size);
       tlm_out_start += tlm_skip;
     }
     tlm_in_start += tlm_size;
   } 
+
+  // check the crc
+  ll_crccheck(allframe[2], &crc, ll_crctable);
+  ll_crccheck(allframe[3], &crc, ll_crctable);
+
+  if (check_crc && crc)
+  {
+    printf("Bad all_frame checksum\n");
+    if (buffer_save) memcpy(sf, buffer_save,superframe->size);
+    return 0;
+  }
   return tlm_in_start;
 
 }
