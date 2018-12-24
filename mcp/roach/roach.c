@@ -2757,9 +2757,13 @@ int compress_data(roach_state_t *m_roach, int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
-    m_roach->is_compressing_data = 1;
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_state_table[i].is_compressing_data = 1;
+    }
     pyblast_system(tar_cmd);
-    m_roach->is_compressing_data = 0;
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_state_table[i].is_compressing_data = 1;
+    }
     return 0;
 }
 
@@ -2851,11 +2855,15 @@ int compress_all_data(int type)
         setenv(var_name, path_to_all_lamp, 1);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
-    // is_compressing_data = 1;
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_state_table[i].is_compressing_data = 1;
+    }
     pyblast_system(tar_cmd);
     blast_tmp_sprintf(echo_cmd, "echo $%s", var_name);
     pyblast_system(echo_cmd);
-    // is_compressing_data = 0;
+    for (int i = 0; i < NUM_ROACHES; i++) {
+        roach_state_table[i].is_compressing_data = 1;
+    }
     return 0;
 }
 
@@ -6423,7 +6431,7 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 16);
         roach_status_field |= (((uint32_t)roach_state_table[i].lamp_check_error) << 17);
         roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-        roach_status_field |= (((uint32_t)is_cycling) << 19);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
