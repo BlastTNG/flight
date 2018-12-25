@@ -67,15 +67,20 @@
 #define PSS5_PSI 180.0
 
 // distance from pinhole to sensor in mm
-#define PSS0_D 10.12
-#define PSS1_D 10.12
-#define PSS2_D 10.12
-#define PSS3_D 10.12
-#define PSS4_D 10.12
-#define PSS5_D 10.12
+// before dance floor tests changed this from 10.12 mm to 8.10 mm
+// because previous outside tests gave 8 deg for a 10 deg az change
+#define PSS0_D 8.10
+#define PSS1_D 8.10
+#define PSS2_D 8.10
+#define PSS3_D 8.10
+#define PSS4_D 8.10
+#define PSS5_D 8.10
 
 #define PSS_L  10.0     // 10 mm = effective length of active area
 #define PSS_IMAX  8192.  // Maximum current (place holder for now)
+// TODO(Paul): PSS_NOISE based on outside tests with Giles at LDB,
+// should change before flight based on desk/dance floor tests
+#define PSS_NOISE     0.2
 #define PSS_XSTRETCH  1.  // 0.995
 #define PSS_YSTRETCH  1.  // 1.008
 

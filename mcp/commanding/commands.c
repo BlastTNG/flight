@@ -560,7 +560,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case gps_sw_reset:
             system("/usr/local/bin/gps_sw_reset");
-            // berror(fatal, "Commands: failed to reboot gps software\n");
+            berror(fatal, "Commands: failed to reboot gps software\n");
+            break;
+        case gps_stats:
+            system("/usr/local/bin/gps_stats");
+            berror(fatal, "Commands: failed to check gps stats\n");
             break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;
@@ -830,9 +834,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case mag_veto_fc2:
             CommandData.use_mag2 = 0;
             break;
-        case elenc_veto:
-            CommandData.use_elenc = 0;
-            break;
         case elclin_veto:
             CommandData.use_elclin = 0;
             break;
@@ -857,9 +858,6 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case mag_allow_fc2:
             CommandData.use_mag2 = 1;
-            break;
-        case elenc_allow:
-            CommandData.use_elenc = 1;
             break;
         case elmotenc_allow:
             CommandData.use_elmotenc = 1;
@@ -1099,9 +1097,10 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
 	case shutter_keepopen:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPOPEN;
+	    break;
 	case shutter_keepclosed:
 	    CommandData.actbus.shutter_goal = SHUTTER_KEEPCLOSED;
-
+	    break;
             // Actuators
         case actuator_stop:
             CommandData.actbus.focus_mode = ACTBUS_FM_PANIC;
@@ -1257,25 +1256,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 CommandData.roach[i].recenter_df = 1;
             }
             break;
-        case reset_roach_all:
+        case roach_reset_all:
             for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].roach_new_state = ROACH_STATE_BOOT;
               CommandData.roach[i].roach_desired_state = ROACH_STATE_STREAMING;
               CommandData.roach[i].change_roach_state = 1;
             }
           break;
-        case flight_mode:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].go_flight_mode = 1;
-            }
-            break;
-        case debug_mode:
-            for (int i = 0; i < NUM_ROACHES; i++) {
-                CommandData.roach[i].go_flight_mode = 0;
-                // CommandData.roach[i].auto_find = 0;
-                CommandData.roach[i].do_sweeps = 0;
-            }
-            break;
         case change_freqs_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].change_targ_freq = 2;
@@ -1294,6 +1281,21 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case set_attens_default_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].set_attens = 2;
+          }
+          break;
+        case roach_allow_scan_check_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].auto_el_retune = 1;
+          }
+          break;
+        case roach_disallow_scan_check_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].auto_el_retune = 0;
+          }
+          break;
+        case chop_lo_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].chop_lo = 1;
           }
           break;
         case xyzzy:
@@ -1656,6 +1658,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 		  CommandData.cal_roll_pss[i] = rvalues[i];
 	  }
 	  break;
+	case pss_set_noise:
+	  CommandData.pss_noise = rvalues[0];
+	  break;
 
     /*************************************
      ********* Pointing Motor Gains ******/
@@ -1742,10 +1747,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_i:
       CommandData.actbus.shutter_move_i = ivalues[0];
       CommandData.actbus.shutter_hold_i = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case shutter_vel:
       CommandData.actbus.shutter_vel = ivalues[0];
-      CommandData.actbus.shutter_acc = ivalues[0];
+      CommandData.actbus.shutter_acc = ivalues[1];
+      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
@@ -1833,12 +1840,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.hwpr.hold_i = ivalues[1];
       break;
     case hwpr_goto:
-      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.target = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_goto_rel:
-      CommandData.hwpr.target = ivalues[0];
+      CommandData.hwpr.target = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_REL;
       CommandData.hwpr.is_new = 1;
       break;
@@ -1853,24 +1860,27 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case hwpr_define_pos:
       CommandData.hwpr.pos[0] = rvalues[0];
       CommandData.hwpr.pos[1] = rvalues[1];
-      CommandData.hwpr.pos[2] = rvalues[2];
-      CommandData.hwpr.pos[3] = rvalues[3];
       break;
     case hwpr_goto_pot:
+	  // deprecated, no pot in TNG - PAW
       CommandData.hwpr.pot_targ = rvalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_POT;
       CommandData.hwpr.is_new = 1;
       break;
     case hwpr_set_overshoot:
-      CommandData.hwpr.overshoot = ivalues[0];
+	  // overshoot can be positive or negative, changes direction in which it is applied
+      CommandData.hwpr.overshoot = rvalues[0];
       break;
+	case hwpr_set_backoff:
+	  CommandData.hwpr.backoff = rvalues[0];
+	  break;
     case hwpr_goto_i:
       CommandData.hwpr.i_pos = ivalues[0];
       CommandData.hwpr.mode = HWPR_GOTO_I;
       CommandData.hwpr.is_new = 1;
       break;
 	case hwpr_set_margin:
-	  CommandData.hwpr.margin = ivalues[0];
+	  CommandData.hwpr.margin = rvalues[0];
 	  break;
     case potvalve_set_vel:
       CommandData.Cryo.potvalve_vel = ivalues[0];
@@ -1886,6 +1896,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
       CommandData.Cryo.potvalve_open_threshold = ivalues[2];
+	  // also clear the goal so it doesn't move until a command
+	  CommandData.Cryo.potvalve_goal = 0;
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
@@ -2063,7 +2075,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           blast_err("Cannot send files over link index %d", ivalues[0]);
           break;
         }
-      } else {
+      } else { // set the indices to 0 so that file transfers are stopped
+				set_block_indices_linklist(linklist_find_by_name(FILE_LINKLIST, linklist_array),
+																					"file_block", 0, 0);
         blast_err("Could not resolve filename \"%s\"", svalues[3]);
       }
       break;
@@ -2179,11 +2193,6 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].load_new_freqs = 1;
       }
       break;
-    case cal_adc:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].calibrate_adc = 1;
-      }
-      break;
     case end_sweep:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_sweeps = 0;
@@ -2212,12 +2221,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].do_sweeps = 2;
       }
       break;
-    case reset_roach:
+    case roach_reset:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].roach_new_state = ROACH_STATE_BOOT;
           CommandData.roach[ivalues[0]-1].roach_desired_state = ROACH_STATE_STREAMING;
           CommandData.roach[ivalues[0]-1].change_roach_state = 1;
-          CommandData.roach[ivalues[0]-1].do_sweeps = 1;
       }
       break;
     case calc_df:
@@ -2522,12 +2530,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case roach_allow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_scan_retune = 1;
+          CommandData.roach[ivalues[0]-1].auto_el_retune = 1;
       }
       break;
     case roach_disallow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_scan_retune = 0;
+          CommandData.roach[ivalues[0]-1].auto_el_retune = 0;
       }
       break;
     case set_retune_type:
@@ -2566,6 +2574,18 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[i].do_fk_loop = 1;
           CommandData.roach[i].find_kids = ivalues[0];
           CommandData.roach_params[i].dBm_per_tone = rvalues[1];
+      }
+      break;
+    case turnaround_loop:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_turnaround_loop = 1;
+          CommandData.roach_params[ivalues[0]-1].num_sec = rvalues[1];
+      }
+      break;
+    case turnaround_loop_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].do_turnaround_loop = 1;
+          CommandData.roach_params[i].num_sec = rvalues[0];
       }
       break;
     case kill_roach:
@@ -2611,7 +2631,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case compress_roach_data:
-      if ((ivalues[0] >= 0) && (ivalues[0] <= 4)) {
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 6)) {
           CommandData.tar_all_data = 1;
           compress_all_data(ivalues[0]);
           CommandData.tar_all_data = 0;
@@ -2621,6 +2641,51 @@ void MultiCommand(enum multiCommand command, double *rvalues,
         if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
             CommandData.roach_run_cycle_checker = ivalues[0];
         }
+      break;
+    case set_n_outofrange_thresh:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].n_outofrange_thresh = ivalues[1];
+      }
+      break;
+    case set_n_outofrange_thresh_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].n_outofrange_thresh = ivalues[0];
+      }
+      break;
+    case enable_chop_lo_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].enable_chop_lo = ivalues[0];
+      }
+      break;
+    case chop_lo:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].chop_lo = 1;
+      }
+      break;
+    case roach_has_lamp_control:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          if (i == ivalues[0]-1) {
+              CommandData.roach[i].has_lamp_control = 1;
+          } else {
+              CommandData.roach[i].has_lamp_control = 0;
+          }
+      }
+      break;
+    case roach_set_extref:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) &&
+           (ivalues[1] >= 0) && (ivalues[1] <= 1)) {
+          CommandData.roach[ivalues[0]-1].ext_ref = ivalues[1];
+          CommandData.roach[ivalues[0]-1].change_extref = 1;
+      }
+      break;
+    case roach_set_extref_all:
+      if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].ext_ref = ivalues[0];
+              CommandData.roach[i].change_extref = 1;
+          }
+      }
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3242,6 +3307,8 @@ void InitCommandData()
     CommandData.tar_all_data = 0;
     // Run Roach cycle checker thread
     CommandData.roach_run_cycle_checker = 1;
+    // Pause automatic cal lamp pulses
+    CommandData.cal_lamp_roach_hold = 0;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
@@ -3255,13 +3322,15 @@ void InitCommandData()
     CommandData.actbus.caddr[1] = 0;
     CommandData.actbus.caddr[2] = 0;
 
+	CommandData.hwpr.mode = HWPR_PANIC; // So the hwp doesn't move on startup
     CommandData.hwpr.is_new = 0;
     CommandData.hwpr.force_repoll = 0;
     CommandData.hwpr.repeats = 0;
     CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
-        CommandData.roach[i].calibrate_adc = 0;
+        CommandData.roach[i].ext_ref = 1;
+        CommandData.roach[i].change_extref = 0;
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].read_attens = 0;
         CommandData.roach[i].do_df_calc = 0;
@@ -3296,22 +3365,32 @@ void InitCommandData()
         CommandData.roach[i].auto_find = 0;
         CommandData.roach_params[i].set_in_atten = 19;
         CommandData.roach[i].recenter_df = 0;
-        CommandData.roach[i].go_flight_mode = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
         CommandData.roach[i].do_df_targ = 0;
         CommandData.roach[i].do_full_loop = 0;
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].auto_correct_freqs = 0;
-        CommandData.roach[i].auto_scan_retune = 0;
+        CommandData.roach[i].auto_el_retune = 1;
         CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;
         CommandData.roach[i].do_check_retune = 0;
+        CommandData.roach[i].do_turnaround_loop = 0;
+        CommandData.roach[i].n_outofrange_thresh = 300;
+        CommandData.roach[i].enable_chop_lo = 1;
+        CommandData.roach[i].chop_lo = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
     }
+    CommandData.trigger_roach_tuning_check = 0;
+    CommandData.trigger_lo_offset_check = 0;
+    CommandData.roach[0].has_lamp_control = 1;
+    CommandData.roach[1].has_lamp_control = 0;
+    CommandData.roach[2].has_lamp_control = 0;
+    CommandData.roach[3].has_lamp_control = 0;
+    CommandData.roach[4].has_lamp_control = 0;
     CommandData.roach_params[0].set_out_atten = 4;
     CommandData.roach_params[1].set_out_atten = 4;
     CommandData.roach_params[2].set_out_atten = 4;
@@ -3610,7 +3689,6 @@ void InitCommandData()
     CommandData.verbose_el = 0;
     CommandData.verbose_piv = 0;
 
-    CommandData.use_elenc = 0;
     CommandData.use_elmotenc = 1;
     CommandData.use_elclin = 1;
     CommandData.use_pss = 1;
@@ -3624,8 +3702,7 @@ void InitCommandData()
     CommandData.uplink_sched = 0;
 
     CommandData.clin_el_trim = 0;
-    CommandData.enc_el_trim = 0;
-    CommandData.enc_motor_el_trim = 0;
+    CommandData.enc_motor_el_trim = 25.16;
     CommandData.null_az_trim = 0;
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
@@ -3637,16 +3714,16 @@ void InitCommandData()
     CommandData.autotrim_rate = 1.0;
     CommandData.autotrim_time = 60;
 
-    CommandData.cal_xmax_mag[0] = 0.0115;
-    CommandData.cal_ymax_mag[0] = -0.3527;
-    CommandData.cal_xmin_mag[0] = 0.3835;
-    CommandData.cal_ymin_mag[0] = 0.2059;
+    CommandData.cal_xmax_mag[0] = 0.1;
+    CommandData.cal_ymax_mag[0] = 0.095;
+    CommandData.cal_xmin_mag[0] = -0.105;
+    CommandData.cal_ymin_mag[0] = -0.1076;
     CommandData.cal_mag_align[0] = 0.0;
 
-    CommandData.cal_xmax_mag[1] = 0.0050;
-    CommandData.cal_ymax_mag[1] = -0.337;
-    CommandData.cal_xmin_mag[1] = 0.362;
-    CommandData.cal_ymin_mag[1] = 0.1898;
+    CommandData.cal_xmax_mag[1] = 0.103;
+    CommandData.cal_ymax_mag[1] = 0.098;
+    CommandData.cal_xmin_mag[1] = -0.108;
+    CommandData.cal_ymin_mag[1] = -0.111;
     CommandData.cal_mag_align[1] = 0.0;
 
     CommandData.cal_az_pss[0] = 0.0;
@@ -3664,6 +3741,7 @@ void InitCommandData()
     CommandData.cal_d_pss[5] = 0.0;
 
     CommandData.cal_imin_pss = 4.5;
+	CommandData.pss_noise = 0.2;
 
     SIPData.MKScal.m_hi = 0.01;
     SIPData.MKScal.m_med = 0.1;
@@ -3805,13 +3883,23 @@ void InitCommandData()
 
     /* hwpr positions separated by 22.5 degs.
      entered by Barth on December 25, 2012 */
-    CommandData.hwpr.pos[3] = 0.3418;
-    CommandData.hwpr.pos[2] = 0.2168;
-    CommandData.hwpr.pos[1] = 0.2779;
-    CommandData.hwpr.pos[0] = 0.4047;
+    // CommandData.hwpr.pos[1] = 0.2779;
+    // CommandData.hwpr.pos[0] = 0.4047;
 
-    CommandData.hwpr.overshoot = 300;
-	CommandData.hwpr.backoff = 90;
+	/* hwpr positions for ethercat encoder 
+	 * entered by Paul Dec 18, 2018
+	 */
+	CommandData.hwpr.pos[0] = 14547.0;
+	CommandData.hwpr.pos[1] = 14592.0;
+
+	/* default overshoot is 
+	 * 0.9 for teeth chatter
+	 * 0.9 for shaft windup
+	 * 1.8 for fork
+	 * plus some extra
+	 */
+    CommandData.hwpr.overshoot = -6.0;
+	CommandData.hwpr.backoff = 90.0;
     CommandData.hwpr.i_pos = 0;
     CommandData.hwpr.no_step = 0;
     CommandData.hwpr.use_pot = 1;

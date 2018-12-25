@@ -103,7 +103,7 @@ static inline int xsc_initialize_gpio(void)
  * @param m_which Which GPIO pin
  * @param m_value Value (0 or 1) for the pin
  */
-static void xsc_trigger(int m_which, int m_value)
+void xsc_trigger(int m_which, int m_value)
 {
     const char val[2] = {'0', '1'};
     static int fd[2] = {-1, -1};

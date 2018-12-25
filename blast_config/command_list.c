@@ -78,7 +78,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(allow_watchdog), "pump pot watchdog on", GR_CRYO},
   {COMMAND(disallow_watchdog), "pump pot watchdog off", GR_CRYO},
   {COMMAND(force_cycle), "forcing a cycle", GR_CRYO},
-  {COMMAND(force_pot_refill), "forcing a pumped pot refill", GR_CRYO},
   // {COMMAND(level_sensor_on), "turning on level sensor", GR_CRYO},
   // {COMMAND(level_sensor_off), "turning off level sensor", GR_CRYO},
   {COMMAND(level_sensor_pulse), "pulsing the level sensor", GR_CRYO},
@@ -133,6 +132,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(of_lj_on), "turning on OF labjack", GR_POWER},
   {COMMAND(gps_timing_on), "turning on gps timing", GR_POWER},
   {COMMAND(gps_sw_reset), "reset gps software", GR_TELEM},
+  {COMMAND(gps_stats), "save gps nema + chrony stats to file at /data/etc/blast/gps/stats.txt", GR_TELEM},
   {COMMAND(hd_pv_off), "turning off HD PV", GR_POWER},
   {COMMAND(eth_switch_off), "turning off Eth Switch", GR_POWER},
   {COMMAND(fc1_off), "turning off FC1", GR_POWER},
@@ -187,7 +187,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(charge_on), "turn on the charge controller", GR_POWER},
   {COMMAND(charge_cycle), "power cycle the charge controller", GR_POWER | CONFIRM},
 
-  {COMMAND(mag_reset), "command a reset of the magnetometer", GRPOS_VETO | GRPOS_TRIM},
+  {COMMAND(mag_reset), "command a reset of the magnetometer", GR_VETO | GR_TRIM},
   {COMMAND(reset_rw), "reset the serial connection to the RW controller", GR_MOTOR},
   {COMMAND(reset_piv), "reset the serial connection to the pivot controller", GR_MOTOR},
   {COMMAND(reset_elev), "reset the serial connection to the elev controller", GR_MOTOR},
@@ -201,8 +201,6 @@ struct scom scommands[xyzzy + 1] = {
 
   {COMMAND(elclin_veto), "veto elevation clinometer", GR_VETO},
   {COMMAND(elclin_allow), "un-veto elevation clinometer", GR_VETO},
-  {COMMAND(elenc_veto), "veto elevation encoder", GR_VETO},
-  {COMMAND(elenc_allow), "un-veto elevation encoder", GR_VETO},
   {COMMAND(elmotenc_veto), "veto elevation motor encoder", GR_VETO},
   {COMMAND(elmotenc_allow), "un-veto elevation motor encoder", GR_VETO},
   {COMMAND(xsc0_veto), "veto star camera 0", GR_VETO},
@@ -318,29 +316,28 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
   {COMMAND(shutter_open), "Open shutter", GR_MISC},
-  {COMMAND(shutter_open_close), "If shutter is open, then open completely and then close", GR_MISC},
+  {COMMAND(shutter_open_close), "DEPRECATED: If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
-  {COMMAND(shutter_close_slow), "Close shutter using opto feedback and keep it closed", GR_MISC},
+  {COMMAND(shutter_close_slow), "DEPRECATED, use shutter_keepclosed instead: Close shutter using opto feedback",
+	  GR_MISC},
   {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
   {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
 
-  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", CONFIRM | GR_ROACH},
+  {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
   {COMMAND(find_kids_default_all), "(All Roaches) Find frequencies using VNA sweeps", GR_ROACH},
   {COMMAND(center_lo_all), "(All Roaches) recenter LOs", GR_ROACH},
   {COMMAND(calc_dfs), "(All Roaches) Calculate df for all channels", GR_ROACH},
   {COMMAND(change_amps), "Writes the tone amplitudes contained in roach->last_amps", GR_ROACH},
   {COMMAND(load_freqs_all), "(All Roaches) Write all saved targ freqs", GR_ROACH},
-  {COMMAND(reload_vna_all), "(All Roaches) Reload vna freqs and vna trf", GR_ROACH},
+  {COMMAND(reload_vna_all), "(All Roaches) Reload VNA freqs and VNA trf", GR_ROACH},
   {COMMAND(end_sweeps_all), "(All Roaches) End all sweeps", GR_ROACH},
   {COMMAND(new_ref_params_all), "(All Roaches) Calculates and saves ref params from last target sweep", GR_ROACH},
   {COMMAND(set_attens_default_all), "(All Roaches) Set all attens to default values", GR_ROACH},
   {COMMAND(set_attens_min_output), "(All Roaches) Set all output attens to 30 dB", GR_ROACH},
   {COMMAND(auto_find_kids_all), "(All Roaches) on startup, do VNA sweep, find kids and write tones", GR_ROACH},
   {COMMAND(zero_df_all), "(All Roaches) zero the delta fs", GR_ROACH},
-  {COMMAND(reset_roach_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
-  {COMMAND(flight_mode), "(All Roaches) resets all state/status fields, goes full auto", GR_ROACH},
-  {COMMAND(debug_mode), "(All Roaches) Undoes flight mode, put in manual mode", GR_ROACH},
+  {COMMAND(roach_reset_all), "(All Roaches) reinitialize all Roaches from BOOT state", GR_ROACH},
   {COMMAND(change_freqs_all), "(All Roaches) Apply delta f to targ tones, rewrite comb", GR_ROACH},
   {COMMAND(set_attens_last_all),
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
@@ -348,6 +345,9 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
+  {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
+  {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
+  {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -404,24 +404,24 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 6,
+{COMMAND(pss_cal_n), "set calibration for PSS N", GR_TRIM | GR_PSS, 5,
     {
       {"PSS number (1-6)",  1, 6, 'i', "NONE"},
-      {"Distance offset",  -2.0, 2.0, 'f', "NONE"},
-      {"Azimuth offset",   -2.0, 2.0, 'f', "NONE"},
-      {"Elevation offset", -2.0, 2.0, 'f', "NONE"},
-      {"Roll offset",      -2.0, 2.0, 'f', "NONE"},
+      {"Distance offset",  -10.0, 10.0, 'f', "NONE"},
+      {"Azimuth offset",   -10.0, 10.0, 'f', "NONE"},
+      {"Elevation offset", -10.0, 10.0, 'f', "NONE"},
+      {"Roll offset",      -10.0, 10.0, 'f', "NONE"},
     }
   },
 
   {COMMAND(pss_cal_d), "set pss distance calibration (mm)", GR_TRIM | GR_PSS, 6,
     {
-      {"Distance offset 1", -2.0, 2.0, 'f', "CAL_D_PSS1"},
-      {"Distance offset 2", -2.0, 2.0, 'f', "CAL_D_PSS2"},
-      {"Distance offset 3", -2.0, 2.0, 'f', "CAL_D_PSS3"},
-      {"Distance offset 4", -2.0, 2.0, 'f', "CAL_D_PSS4"},
-      {"Distance offset 5", -2.0, 2.0, 'f', "CAL_D_PSS5"},
-      {"Distance offset 6", -2.0, 2.0, 'f', "CAL_D_PSS6"},
+      {"Distance offset 1", -10.0, 10.0, 'f', "CAL_D_PSS1"},
+      {"Distance offset 2", -10.0, 10.0, 'f', "CAL_D_PSS2"},
+      {"Distance offset 3", -10.0, 10.0, 'f', "CAL_D_PSS3"},
+      {"Distance offset 4", -10.0, 10.0, 'f', "CAL_D_PSS4"},
+      {"Distance offset 5", -10.0, 10.0, 'f', "CAL_D_PSS5"},
+      {"Distance offset 6", -10.0, 10.0, 'f', "CAL_D_PSS6"},
     }
   },
 
@@ -452,15 +452,19 @@ struct mcom mcommands[plugh + 2] = {
       {"Elevation offset 6", -10.0, 10.0, 'f', "CAL_EL_PSS6"},
     }
   },
-
+  {COMMAND(pss_set_noise), "set pss noise level", GR_TRIM | GR_PSS, 1,
+    {
+      {"RMS deviation of summed voltages (volts)", 0.0, 10.0, 'f', "PSS_NOISE"},
+    }
+  },
   {COMMAND(pss_cal_roll), "set pss roll calibration (deg)", GR_TRIM | GR_PSS, 6,
     {
-      {"Roll offset 1", -5.0, 5.0, 'f', "CAL_ROLL_PSS1"},
-      {"Roll offset 2", -5.0, 5.0, 'f', "CAL_ROLL_PSS2"},
-      {"Roll offset 3", -5.0, 5.0, 'f', "CAL_ROLL_PSS3"},
-      {"Roll offset 4", -5.0, 5.0, 'f', "CAL_ROLL_PSS4"},
-      {"Roll offset 5", -5.0, 5.0, 'f', "CAL_ROLL_PSS5"},
-      {"Roll offset 6", -5.0, 5.0, 'f', "CAL_ROLL_PSS6"},
+      {"Roll offset 1", -10.0, 10.0, 'f', "CAL_ROLL_PSS1"},
+      {"Roll offset 2", -10.0, 10.0, 'f', "CAL_ROLL_PSS2"},
+      {"Roll offset 3", -10.0, 10.0, 'f', "CAL_ROLL_PSS3"},
+      {"Roll offset 4", -10.0, 10.0, 'f', "CAL_ROLL_PSS4"},
+      {"Roll offset 5", -10.0, 10.0, 'f', "CAL_ROLL_PSS5"},
+      {"Roll offset 6", -10.0, 10.0, 'f', "CAL_ROLL_PSS6"},
     }
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
@@ -742,16 +746,16 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(act_offset), "set the actuator encoder/lvdt offsets", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Enc_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Enc_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Enc_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "ENC_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "ENC_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "ENC_2_ACT"}
     }
   },
   {COMMAND(act_enc_trim), "manually set encoder and dead reckoning", GR_ACT, 3,
     {
-      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "Dr_0_act"},
-      {"Actuator Beta (Enc units)",  0, 65536, 'f', "Dr_1_act"},
-      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "Dr_2_act"}
+      {"Actuator Alpha (Enc units)", 0, 65536, 'f', "DR_0_ACT"},
+      {"Actuator Beta (Enc units)",  0, 65536, 'f', "DR_1_ACT"},
+      {"Actuator Gamma (Enc units)", 0, 65536, 'f', "DR_2_ACT"}
     }
   },
   {COMMAND(actuator_vel), "set the actuator velocity and acceleration", GR_ACT,
@@ -790,8 +794,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_vel), "set the waveplate rotator velocity and acceleration",
     GR_HWPR, 2,
     {
-      {"Velocity", 5, 500000, 'l', "VEL_HWPR"},
-      {"Acceleration", 1, 1000, 'i', "ACC_HWPR"},
+      {"Velocity (usteps/sec)", 5, 500000, 'l', "VEL_HWPR"},
+      {"Acceleration (usteps/sec^2", 1, 1000, 'i', "ACC_HWPR"},
     }
   },
   {COMMAND(hwpr_i), "set the waveplate rotator currents", GR_HWPR, 2,
@@ -803,13 +807,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(hwpr_goto), "move the waveplate rotator to absolute position",
     GR_HWPR, 1,
     {
-      {"destination", 0, 80000, 'l', "ENC_HWPR"}
+      {"destination (deg on the hwp, limits: 14547-14592)", 14547.0, 14592.0, 'f', "ENC_HWPR"}
     }
   },
-  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position",
-    GR_HWPR, 1,
+  {COMMAND(hwpr_goto_rel), "move the waveplate rotator to relative position (slightly dangerous)",
+    GR_HWPR | CONFIRM, 1,
     {
-      {"delta", -80000, 80000, 'l', "0"}
+      {"delta (deg on the hwp, limits: -45 to 45)", -45.0, 45.0, 'f', "0"}
     }
   },
   {COMMAND(hwpr_repeat),
@@ -823,41 +827,46 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(hwpr_define_pos),
-    "define the four hwpr potentiometer positions to be used for scans",
-    GR_HWPR, 4,
+    "define the two hwpr potentiometer positions to be used for scans",
+    GR_HWPR, 2,
     {
-      {"Position 1", 0.0, 360.0, 'f', "POS0_HWPR"},
-      {"Position 2", 0.0, 360.0, 'f', "POS1_HWPR"},
-      {"Position 3", 0.0, 360.0, 'f', "POS2_HWPR"},
-      {"Position 4", 0.0, 360.0, 'f', "POS3_HWPR"}
+      {"Position 1 (deg)", 0.0, 360.0, 'd', "POS0_HWPR"},
+      {"Position 2 (deg)", 0.0, 360.0, 'd', "POS1_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_pot),
-    "Move wave plate rotator to commanded encoder value",
+    "DEPRECATED - Move wave plate rotator to commanded encoder value",
     GR_HWPR, 1,
     {
       {"Encoder Value ", 0.0, 360.0, 'f', "POT_HWPR"},
     }
   },
   {COMMAND(hwpr_set_overshoot),
-    "set the overshoot in encoder counts for backwards hwpr moves",
+    "set the overshoot in degrees on the hwp for backwards hwpr moves",
     GR_HWPR, 1,
     {
-      {"overshoot", 0, MAX_15BIT, 'i', "OVERSHOOT_HWPR"},
+      {"overshoot (-7 to 7 deg)", -7.0, 7.0, 'd', "OVERSHOOT_HWPR"},
+    }
+  },
+  {COMMAND(hwpr_set_backoff),
+    "set the backoff in degrees on the input shaft for backwards hwpr moves",
+    GR_HWPR, 1,
+    {
+      {"backoff (deg input shaft)", 0.0, 120.0, 'd', "BACKOFF_HWPR"},
     }
   },
   {COMMAND(hwpr_goto_i),
-    "goto hwpr position (0-3)",
+    "goto hwpr position (0-1)",
     GR_HWPR, 1,
     {
-      {"hwpr position", 0, 3, 'i', "I_POS_RQ_HWPR"},
+      {"hwpr position", 0, 1, 'i', "I_POS_RQ_HWPR"},
     }
   },
   {COMMAND(hwpr_set_margin),
     "Set HWPR margin for determinting which indexed position we are at",
     GR_HWPR, 1,
     {
-      {"hwpr margin", 0, 64000, 'i', "NONE"},
+      {"hwpr margin (deg)", 0.0, 5.0, 'f', "NONE"},
     }
   },
   /* XY Stage */
@@ -1028,17 +1037,12 @@ struct mcom mcommands[plugh + 2] = {
       {"APPLY TRF FILE[1 = default, 2 = apply trf, 3 = apply last]", 1, 3, 'i', "NONE"},
     }
   },
-  {COMMAND(cal_adc), "Calibrate ADC RMS voltage using input atten", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"}
-    }
-  },
   {COMMAND(end_sweep), "exit sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(vna_sweep), "perform a new VNA sweep", CONFIRM | GR_ROACH, 1,
+  {COMMAND(vna_sweep), "perform a new VNA sweep", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
@@ -1056,7 +1060,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
   },
-  {COMMAND(reset_roach), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
+  {COMMAND(roach_reset), "re-upload roach firmware & recalibrate", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"}
     }
@@ -1210,7 +1214,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Find on res, or find max IQ grad", 0, 1, 'i', "NONE"},
     }
   },
-  {COMMAND(full_loop), "Performs full loop for single Roach", GR_ROACH, 3,
+  {COMMAND(full_loop), "Performs full loop for single Roach (MUST HAVE VNA COMB LOADED)", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
@@ -1378,16 +1382,27 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
-    }
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+  }
   },
   {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
   {
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
     {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+  }
+  },
+  {COMMAND(turnaround_loop), "Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Number of sec to stream", 0, 300, 'f', "NONE"},
+  }
+  },
+  {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
+  {
+    {"Number of sec to stream", 0, 300, 'f', "NONE"},
   }
   },
   {COMMAND(kill_roach),
@@ -1407,15 +1422,15 @@ struct mcom mcommands[plugh + 2] = {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
-  {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
+  {COMMAND(set_n_outofrange_thresh), "Set N channels out of range thresh", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
   }
   },
-  {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
+  {COMMAND(set_n_outofrange_thresh_all), "(All Roaches) Set N channels out of range thresh", GR_ROACH, 1,
   {
-    {"DF diff threshold (Hz)", 2000, 20000, 'f', "NONE"},
+    {"N out of range threshold (for retune decision)", 0, 500, 'i', "NONE"},
   }
   },
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
@@ -1446,12 +1461,39 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
     {
-      {"Data type (VNA = 0, TARG = 1, IQ = 2, DF = 3)", 0, 3, 'i', "NONE"}
+      {"VNA=0, TARG=1, IQ=2, DF=3, LAMP=4, NOISECOMP=5, BB_FREQS=6", 0, 6, 'i', "NONE"}
     }
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
       {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+    }
+  },
+  {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
+    {
+      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+    }
+  },
+  {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
+                     CONFIRM | GR_ROACH, 1,
+    {
+      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
     }
   },
   /***************************************/
@@ -1525,12 +1567,7 @@ struct mcom mcommands[plugh + 2] = {
   // },
   {COMMAND(cal_length), "set length of calibration pulse", GR_CRYO, 1,
       {
-          {"Pulse Length (ms)", 5, 1000, 'i', "PULSE_CAL"}
-      }
-  },
-  {COMMAND(set_cal_timeout), "set length of calibration pulse timeout", GR_CRYO, 1,
-      {
-          {"Timeout length (s)", 5, 1000, 'i', "timeout"}
+          {"Pulse Length (ms)", 5, 5000, 'i', "PULSE_CAL"}
       }
   },
   {COMMAND(set_tcrit_fpa), "set ADC counts of fpa critical temp", GR_CRYO, 1,
@@ -1545,9 +1582,9 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(periodic_cal), "periodic cal pulses sent", GR_CRYO, 3,
       {
-          {"Number of Pulses", 1, 15, 'i', "NUM_PULSE"},
-          {"Separation (in 5ms steps)", 2, 1000, 'i', "SEPARATION"},
-          {"Length of Pulse (in 5ms steps)", 2, 1000, 'i', "LENGTH_PULSE"},
+          {"Number of Pulses", 1, 1000, 'i', "NUM_PULSE"},
+          {"Separation (in 5ms steps)", 2, 30000, 'i', "SEPARATION"},
+          {"Length of Pulse (in 5ms steps)", 2, 30000, 'i', "LENGTH_PULSE"},
       }
   },
   {COMMAND(set_queue_execute), "command queue changed", GR_CRYO, 1,
@@ -1756,20 +1793,21 @@ struct mcom mcommands[plugh + 2] = {
             {"Pivot", 0, 5, 'i', "VERBOSE_PIV"}
         }
     },
-    {COMMAND(shutter_step), "set number of shutter steps to close (default 4224)", GR_MISC, 1,
+    {COMMAND(shutter_step), "DEPRECATED: set number of shutter steps to close (default 4224)", GR_MISC, 1,
         {
           {"Steps", 1, 5000, 'i', "STEPS_SHUTTER"},
         }
     },
-    {COMMAND(shutter_step_slow), "set number of incremental shutter steps to close (default 300)", GR_MISC, 1,
+    {COMMAND(shutter_step_slow), "DEPRECATED: set number of incremental shutter steps to close (default 300)",
+		GR_MISC, 1,
         {
           {"Steps slow", 1, 5000, 'i', "STEPS_SLOW_SHUTTER"},
         }
     },
     {COMMAND(shutter_i), "set shutter move and hold currents", GR_MISC, 2,
         {
-	  {"Shutter move current", 0, 40, 'i', "I_MOVE_SHUTTER"},
-	  {"Shutter hold current", 0, 40, 'i', "I_HOLD_SHUTTER"},
+	  {"Shutter move current", 0, 42, 'i', "I_MOVE_SHUTTER"},
+	  {"Shutter hold current", 0, 42, 'i', "I_HOLD_SHUTTER"},
         }
     },
     {COMMAND(shutter_vel), "set shutter velocity and acceleration", GR_MISC, 2,

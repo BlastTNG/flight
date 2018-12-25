@@ -35,6 +35,7 @@ stars/windows/stars
 defricher/build
 groundhog/build
 mole/build
+guaca/Makefile
 guaca/build
 
 test_programs/synclink/build
@@ -59,3 +60,5 @@ test_programs/synclink/support/test_biphase
 linklistcheck/linklistcheck
 linklistcheck/*.ll
 linklistcheck/superframe.txt
+
+scripts_gse/sonos.log

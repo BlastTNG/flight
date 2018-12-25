@@ -233,14 +233,14 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    outer_frame_200hz(0);
+    outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
     // read_chopper();
     // periodic_cal_control();
-
+    SetGyroMask();
     share_data(RATE_200HZ);
     framing_publish_200hz();
     add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe_buffer,
@@ -295,7 +295,6 @@ static void mcp_5hz_routines(void)
     SecondaryMirror();
 //    PhaseControl();
     StoreHWPRBus();
-    SetGyroMask();
     ReadHWPREnc();
 //    ChargeController();
 //    VideoTx();
@@ -447,15 +446,15 @@ int main(int argc, char *argv[])
   ph_thread_t *gps_thread = NULL;
   ph_thread_t *dgps_thread = NULL;
   ph_thread_t *lj_init_thread = NULL;
+  ph_thread_t *DiskManagerID = NULL;
+  ph_thread_t *bi0_send_worker = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t CommandDatacomm2;
   pthread_t CommandDataFIFO;
-  pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   // pthread_t bi0_send_worker;
-  ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
 
   if (argc == 1) {
@@ -593,7 +592,7 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  DiskManagerID = ph_thread_spawn((void *) &initialize_diskmanager, (void *) NULL);
 
 //  InitSched();
   initialize_motors();
@@ -609,6 +608,8 @@ blast_info("Finished initializing Beaglebones..."); */
   if (use_starcams) {
        xsc_networking_init(0);
        xsc_networking_init(1);
+       xsc_trigger(0, 0);
+       xsc_trigger(1, 0);
   }
 
   initialize_magnetometer();

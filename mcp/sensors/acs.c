@@ -34,6 +34,7 @@
 #include <channels_tng.h>
 #include <command_struct.h>
 #include <ec_motors.h>
+#include <magnetometer.h>
 #include <motors.h>
 #include <mcp.h>
 #include <pointing_struct.h>
@@ -426,8 +427,7 @@ void read_5hz_acs(void)
  */
 void read_100hz_acs(void)
 {
-    ACSData.enc_elev = el_get_position_degrees();
-	ACSData.enc_motor_elev = el_get_motor_position_degrees();
+    ACSData.enc_motor_elev = el_get_motor_position_degrees();
 }
 
 /**
@@ -539,7 +539,6 @@ void store_200hz_acs(void)
                 gyfault &= ~(1 << (gyro * 2 + box));
         }
     }
-
     SET_UINT16(fault_gy_addr, gyfault);
 }
 
@@ -550,8 +549,6 @@ void store_100hz_acs(void)
 {
     static channel_t *azAddr;
     static channel_t *elAddr;
-    static channel_t *elEncAddr;
-    static channel_t *sigmaEncAddr;
     static channel_t *elMotEncAddr;
     static channel_t *sigmaMotEncAddr;
 
@@ -604,8 +601,6 @@ void store_100hz_acs(void)
         azAddr = channels_find_by_name("az");
         elAddr = channels_find_by_name("el");
 
-        elEncAddr = channels_find_by_name("el_enc");
-        sigmaEncAddr = channels_find_by_name("sigma_enc");
         elMotEncAddr = channels_find_by_name("el_motor_enc");
         sigmaMotEncAddr = channels_find_by_name("sigma_motor_enc");
 
@@ -656,8 +651,6 @@ void store_100hz_acs(void)
     SET_SCALED_VALUE(azAddr, PointingData[i_point].az);
     SET_SCALED_VALUE(elAddr, PointingData[i_point].el);
 
-    SET_SCALED_VALUE(elEncAddr, (PointingData[i_point].enc_el + CommandData.enc_el_trim));
-    SET_SCALED_VALUE(sigmaEncAddr, PointingData[i_point].enc_sigma);
     SET_SCALED_VALUE(elMotEncAddr, (PointingData[i_point].enc_motor_el + CommandData.enc_motor_el_trim));
     SET_SCALED_VALUE(sigmaMotEncAddr, PointingData[i_point].enc_motor_sigma);
 
@@ -1056,6 +1049,8 @@ void store_5hz_acs(void)
     static channel_t* OffsetIFyawMagSGYAddr;
     static channel_t* OffsetIFrollPSSGYAddr;
     static channel_t* OffsetIFyawPSSGYAddr;
+    static channel_t* OffsetIFElMotorEncGYAddr;
+    static channel_t* OffsetIFElClinGYAddr;
     static channel_t* IFyawEarthGyAddr;
     static channel_t* IFrollEarthGyAddr;
     static channel_t* IFelEarthGyAddr;
@@ -1092,6 +1087,18 @@ void store_5hz_acs(void)
     static channel_t* calAzPss4Addr;
     static channel_t* calAzPss5Addr;
     static channel_t* calAzPss6Addr;
+    static channel_t* calElPss1Addr;
+    static channel_t* calElPss2Addr;
+    static channel_t* calElPss3Addr;
+    static channel_t* calElPss4Addr;
+    static channel_t* calElPss5Addr;
+    static channel_t* calElPss6Addr;
+    static channel_t* calRollPss1Addr;
+    static channel_t* calRollPss2Addr;
+    static channel_t* calRollPss3Addr;
+    static channel_t* calRollPss4Addr;
+    static channel_t* calRollPss5Addr;
+    static channel_t* calRollPss6Addr;
     static channel_t* calDPss1Addr;
     static channel_t* calDPss2Addr;
     static channel_t* calDPss3Addr;
@@ -1102,18 +1109,21 @@ void store_5hz_acs(void)
     static channel_t* sigmaMagNAddr;
     static channel_t* sigmaMagSAddr;
     static channel_t* sigmaPssAddr;
+	static channel_t* azrawPssAddr;
     static channel_t* azrawPss1Addr;
     static channel_t* azrawPss2Addr;
     static channel_t* azrawPss3Addr;
     static channel_t* azrawPss4Addr;
     static channel_t* azrawPss5Addr;
     static channel_t* azrawPss6Addr;
+    static channel_t* elrawPssAddr;
     static channel_t* elrawPss1Addr;
     static channel_t* elrawPss2Addr;
     static channel_t* elrawPss3Addr;
     static channel_t* elrawPss4Addr;
     static channel_t* elrawPss5Addr;
     static channel_t* elrawPss6Addr;
+    static channel_t* noisePssAddr;
     static channel_t* snrPss1Addr;
     static channel_t* snrPss2Addr;
     static channel_t* snrPss3Addr;
@@ -1137,7 +1147,6 @@ void store_5hz_acs(void)
 
     /* trim fields */
     static channel_t *trimClinAddr;
-    static channel_t *trimEncAddr;
     static channel_t *trimEncMotorAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagNAddr;
@@ -1193,7 +1202,8 @@ void store_5hz_acs(void)
 
         OffsetIFrollPSSGYAddr = channels_find_by_name("offset_ifrollpss_gy");
         OffsetIFyawPSSGYAddr = channels_find_by_name("offset_ifyawpss_gy");
-
+        OffsetIFElMotorEncGYAddr = channels_find_by_name("offset_ifelmotorenc_gy");
+        OffsetIFElClinGYAddr = channels_find_by_name("offset_ifelclin_gy");
         IFyawEarthGyAddr = channels_find_by_name("ifyaw_earth_gy");
         IFrollEarthGyAddr = channels_find_by_name("ifroll_earth_gy");
         IFelEarthGyAddr = channels_find_by_name("ifel_earth_gy");
@@ -1240,6 +1250,18 @@ void store_5hz_acs(void)
         calAzPss4Addr = channels_find_by_name("cal_az_pss4");
         calAzPss5Addr = channels_find_by_name("cal_az_pss5");
         calAzPss6Addr = channels_find_by_name("cal_az_pss6");
+		calElPss1Addr = channels_find_by_name("cal_el_pss1");
+		calElPss2Addr = channels_find_by_name("cal_el_pss2");
+		calElPss3Addr = channels_find_by_name("cal_el_pss3");
+		calElPss4Addr = channels_find_by_name("cal_el_pss4");
+		calElPss5Addr = channels_find_by_name("cal_el_pss5");
+		calElPss6Addr = channels_find_by_name("cal_el_pss6");
+		calRollPss1Addr = channels_find_by_name("cal_roll_pss1");
+		calRollPss2Addr = channels_find_by_name("cal_roll_pss2");
+		calRollPss3Addr = channels_find_by_name("cal_roll_pss3");
+		calRollPss4Addr = channels_find_by_name("cal_roll_pss4");
+		calRollPss5Addr = channels_find_by_name("cal_roll_pss5");
+		calRollPss6Addr = channels_find_by_name("cal_roll_pss6");
         calDPss1Addr = channels_find_by_name("cal_d_pss1");
         calDPss2Addr = channels_find_by_name("cal_d_pss2");
         calDPss3Addr = channels_find_by_name("cal_d_pss3");
@@ -1253,18 +1275,21 @@ void store_5hz_acs(void)
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
         sigmaPssAddr = channels_find_by_name("sigma_pss");
+		azrawPssAddr = channels_find_by_name("az_raw_pss");
         azrawPss1Addr = channels_find_by_name("az_raw_pss1");
         azrawPss2Addr = channels_find_by_name("az_raw_pss2");
         azrawPss3Addr = channels_find_by_name("az_raw_pss3");
         azrawPss4Addr = channels_find_by_name("az_raw_pss4");
         azrawPss5Addr = channels_find_by_name("az_raw_pss5");
         azrawPss6Addr = channels_find_by_name("az_raw_pss6");
+        elrawPssAddr = channels_find_by_name("el_raw_pss");
         elrawPss1Addr = channels_find_by_name("el_raw_pss1");
         elrawPss2Addr = channels_find_by_name("el_raw_pss2");
         elrawPss3Addr = channels_find_by_name("el_raw_pss3");
         elrawPss4Addr = channels_find_by_name("el_raw_pss4");
         elrawPss5Addr = channels_find_by_name("el_raw_pss5");
         elrawPss6Addr = channels_find_by_name("el_raw_pss6");
+		noisePssAddr = channels_find_by_name("noise_pss");
         snrPss1Addr = channels_find_by_name("snr_pss1");
         snrPss2Addr = channels_find_by_name("snr_pss2");
         snrPss3Addr = channels_find_by_name("snr_pss3");
@@ -1313,7 +1338,6 @@ void store_5hz_acs(void)
         lstSchedAddr = channels_find_by_name("lst_sched");
 
         trimClinAddr = channels_find_by_name("trim_clin");
-        trimEncAddr = channels_find_by_name("trim_enc");
         trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagNAddr = channels_find_by_name("trim_mag1");
@@ -1338,27 +1362,30 @@ void store_5hz_acs(void)
     i_point = GETREADINDEX(point_index);
 
     /********* PSS data *************/
-    SET_SCALED_VALUE(azrawPss1Addr, PointingData[i_point].pss_azraw[0]);
-    SET_SCALED_VALUE(azrawPss2Addr, PointingData[i_point].pss_azraw[1]);
-    SET_SCALED_VALUE(azrawPss3Addr, PointingData[i_point].pss_azraw[2]);
-    SET_SCALED_VALUE(azrawPss4Addr, PointingData[i_point].pss_azraw[3]);
-    SET_SCALED_VALUE(azrawPss5Addr, PointingData[i_point].pss_azraw[4]);
-    SET_SCALED_VALUE(azrawPss6Addr, PointingData[i_point].pss_azraw[5]);
-    SET_SCALED_VALUE(elrawPss1Addr, PointingData[i_point].pss_elraw[0]);
-    SET_SCALED_VALUE(elrawPss2Addr, PointingData[i_point].pss_elraw[1]);
-    SET_SCALED_VALUE(elrawPss3Addr, PointingData[i_point].pss_elraw[2]);
-    SET_SCALED_VALUE(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
-    SET_SCALED_VALUE(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
-    SET_SCALED_VALUE(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
-    SET_SCALED_VALUE(snrPss1Addr, PointingData[i_point].pss_snr[0]);
-    SET_SCALED_VALUE(snrPss2Addr, PointingData[i_point].pss_snr[1]);
-    SET_SCALED_VALUE(snrPss3Addr, PointingData[i_point].pss_snr[2]);
-    SET_SCALED_VALUE(snrPss4Addr, PointingData[i_point].pss_snr[3]);
-    SET_SCALED_VALUE(snrPss5Addr, PointingData[i_point].pss_snr[4]);
-    SET_SCALED_VALUE(snrPss6Addr, PointingData[i_point].pss_snr[5]);
+    SET_FLOAT(azrawPssAddr, PointingData[i_point].pss_array_azraw);
+    SET_FLOAT(azrawPss1Addr, PointingData[i_point].pss_azraw[0]);
+    SET_FLOAT(azrawPss2Addr, PointingData[i_point].pss_azraw[1]);
+    SET_FLOAT(azrawPss3Addr, PointingData[i_point].pss_azraw[2]);
+    SET_FLOAT(azrawPss4Addr, PointingData[i_point].pss_azraw[3]);
+    SET_FLOAT(azrawPss5Addr, PointingData[i_point].pss_azraw[4]);
+    SET_FLOAT(azrawPss6Addr, PointingData[i_point].pss_azraw[5]);
+    SET_FLOAT(elrawPssAddr, PointingData[i_point].pss_array_elraw);
+    SET_FLOAT(elrawPss1Addr, PointingData[i_point].pss_elraw[0]);
+    SET_FLOAT(elrawPss2Addr, PointingData[i_point].pss_elraw[1]);
+    SET_FLOAT(elrawPss3Addr, PointingData[i_point].pss_elraw[2]);
+    SET_FLOAT(elrawPss4Addr, PointingData[i_point].pss_elraw[3]);
+    SET_FLOAT(elrawPss5Addr, PointingData[i_point].pss_elraw[4]);
+    SET_FLOAT(elrawPss6Addr, PointingData[i_point].pss_elraw[5]);
+    SET_FLOAT(noisePssAddr, CommandData.pss_noise);
+    SET_FLOAT(snrPss1Addr, PointingData[i_point].pss_snr[0]);
+    SET_FLOAT(snrPss2Addr, PointingData[i_point].pss_snr[1]);
+    SET_FLOAT(snrPss3Addr, PointingData[i_point].pss_snr[2]);
+    SET_FLOAT(snrPss4Addr, PointingData[i_point].pss_snr[3]);
+    SET_FLOAT(snrPss5Addr, PointingData[i_point].pss_snr[4]);
+    SET_FLOAT(snrPss6Addr, PointingData[i_point].pss_snr[5]);
     // TODO(seth): Why are we manually adding the trim here?
-    SET_SCALED_VALUE(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
-    SET_SCALED_VALUE(PssOkAddr, PointingData[i_point].pss_ok);
+    SET_FLOAT(azPssAddr, (PointingData[i_point].pss_az + CommandData.pss_az_trim));
+    SET_UINT8(PssOkAddr, PointingData[i_point].pss_ok);
     /********** SIP GPS Data **********/
     SET_SCALED_VALUE(latSipAddr, SIPData.GPSpos.lat);
     SET_SCALED_VALUE(lonSipAddr, SIPData.GPSpos.lon);
@@ -1383,7 +1410,8 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(OffsetIFyawGYoscAddr, PointingData[i_point].offset_ifyaw_gy_xsc[1]);
     SET_SCALED_VALUE(OffsetIFrollGYAddr, PointingData[i_point].offset_ifroll_gy);
     SET_SCALED_VALUE(OffsetIFyawGYAddr, PointingData[i_point].offset_ifyaw_gy);
-
+    SET_SCALED_VALUE(OffsetIFElMotorEncGYAddr, PointingData[point_index].offset_ifelmotenc_gy);
+    SET_SCALED_VALUE(OffsetIFElClinGYAddr, PointingData[point_index].offset_ifelclin_gy);
     SET_SCALED_VALUE(OffsetIFrollMagNGYAddr, PointingData[i_point].offset_ifrollmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFyawMagNGYAddr, PointingData[i_point].offset_ifyawmag_gy[0]);
     SET_SCALED_VALUE(OffsetIFrollMagSGYAddr, PointingData[i_point].offset_ifrollmag_gy[1]);
@@ -1428,28 +1456,40 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(calYMaxMagSAddr, CommandData.cal_ymax_mag[1]);
     SET_SCALED_VALUE(calYMinMagSAddr, CommandData.cal_ymin_mag[1]);
 
-	SET_SCALED_VALUE(calAzPssArrayAddr, CommandData.cal_az_pss_array);
-    SET_SCALED_VALUE(calAzPss1Addr, CommandData.cal_az_pss[0]);
-    SET_SCALED_VALUE(calAzPss2Addr, CommandData.cal_az_pss[1]);
-    SET_SCALED_VALUE(calAzPss3Addr, CommandData.cal_az_pss[2]);
-    SET_SCALED_VALUE(calAzPss4Addr, CommandData.cal_az_pss[3]);
-    SET_SCALED_VALUE(calAzPss5Addr, CommandData.cal_az_pss[4]);
-    SET_SCALED_VALUE(calAzPss6Addr, CommandData.cal_az_pss[5]);
-    SET_SCALED_VALUE(calDPss1Addr, CommandData.cal_d_pss[0]);
-    SET_SCALED_VALUE(calDPss2Addr, CommandData.cal_d_pss[1]);
-    SET_SCALED_VALUE(calDPss3Addr, CommandData.cal_d_pss[2]);
-    SET_SCALED_VALUE(calDPss4Addr, CommandData.cal_d_pss[3]);
-    SET_SCALED_VALUE(calDPss5Addr, CommandData.cal_d_pss[4]);
-    SET_SCALED_VALUE(calDPss6Addr, CommandData.cal_d_pss[5]);
-    SET_SCALED_VALUE(calIMinPssAddr, CommandData.cal_imin_pss);
+	SET_FLOAT(calAzPssArrayAddr, CommandData.cal_az_pss_array);
+    SET_FLOAT(calAzPss1Addr, CommandData.cal_az_pss[0]);
+    SET_FLOAT(calAzPss2Addr, CommandData.cal_az_pss[1]);
+    SET_FLOAT(calAzPss3Addr, CommandData.cal_az_pss[2]);
+    SET_FLOAT(calAzPss4Addr, CommandData.cal_az_pss[3]);
+    SET_FLOAT(calAzPss5Addr, CommandData.cal_az_pss[4]);
+    SET_FLOAT(calAzPss6Addr, CommandData.cal_az_pss[5]);
+    SET_FLOAT(calElPss1Addr, CommandData.cal_el_pss[0]);
+    SET_FLOAT(calElPss2Addr, CommandData.cal_el_pss[1]);
+    SET_FLOAT(calElPss3Addr, CommandData.cal_el_pss[2]);
+    SET_FLOAT(calElPss4Addr, CommandData.cal_el_pss[3]);
+    SET_FLOAT(calElPss5Addr, CommandData.cal_el_pss[4]);
+    SET_FLOAT(calElPss6Addr, CommandData.cal_el_pss[5]);
+    SET_FLOAT(calRollPss1Addr, CommandData.cal_roll_pss[0]);
+    SET_FLOAT(calRollPss2Addr, CommandData.cal_roll_pss[1]);
+    SET_FLOAT(calRollPss3Addr, CommandData.cal_roll_pss[2]);
+    SET_FLOAT(calRollPss4Addr, CommandData.cal_roll_pss[3]);
+    SET_FLOAT(calRollPss5Addr, CommandData.cal_roll_pss[4]);
+    SET_FLOAT(calRollPss6Addr, CommandData.cal_roll_pss[5]);
+    SET_FLOAT(calDPss1Addr, CommandData.cal_d_pss[0]);
+    SET_FLOAT(calDPss2Addr, CommandData.cal_d_pss[1]);
+    SET_FLOAT(calDPss3Addr, CommandData.cal_d_pss[2]);
+    SET_FLOAT(calDPss4Addr, CommandData.cal_d_pss[3]);
+    SET_FLOAT(calDPss5Addr, CommandData.cal_d_pss[4]);
+    SET_FLOAT(calDPss6Addr, CommandData.cal_d_pss[5]);
+    SET_FLOAT(calIMinPssAddr, CommandData.cal_imin_pss);
 
     SET_SCALED_VALUE(sigmaMagNAddr, PointingData[i_point].mag_sigma[0]);
     SET_SCALED_VALUE(trimMagNAddr, CommandData.mag_az_trim[0]);
     SET_SCALED_VALUE(sigmaMagSAddr, PointingData[i_point].mag_sigma[1]);
     SET_SCALED_VALUE(trimMagSAddr, CommandData.mag_az_trim[1]);
 
-    SET_SCALED_VALUE(sigmaPssAddr, PointingData[i_point].pss_sigma);
-    SET_SCALED_VALUE(trimPssAddr, CommandData.pss_az_trim);
+    SET_FLOAT(sigmaPssAddr, (float) PointingData[i_point].pss_sigma);
+    SET_FLOAT(trimPssAddr, (float) CommandData.pss_az_trim);
     SET_SCALED_VALUE(trimDGPSAddr, CommandData.dgps_az_trim);
 
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
@@ -1459,7 +1499,6 @@ void store_5hz_acs(void)
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
 
-    SET_SCALED_VALUE(trimEncAddr, CommandData.enc_el_trim);
     SET_SCALED_VALUE(trimEncMotorAddr, CommandData.enc_motor_el_trim);
 
     SET_SCALED_VALUE(elClinAddr, (PointingData[i_point].clin_el_lut + CommandData.clin_el_trim));
@@ -1515,7 +1554,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(ra4PAddr, CommandData.pointing_mode.ra[3]);
     SET_SCALED_VALUE(dec4PAddr, CommandData.pointing_mode.dec[3]);
     sensor_veto = ((!CommandData.use_elmotenc))
-    		| ((!CommandData.use_xsc0) << 1) | ((!CommandData.use_elenc) << 2)
+    		| ((!CommandData.use_xsc0) << 1)
 			| ((!CommandData.use_mag1) << 3)  | ((!CommandData.use_mag2) << 4)
 			| ((!CommandData.use_elclin) << 5)
 			| ((!CommandData.use_xsc1) << 6) | ((CommandData.uplink_sched) << 7)
@@ -1568,4 +1607,6 @@ void store_1hz_acs(void)
     SET_SCALED_VALUE(altDGPSAddr, CSBFGPSData.altitude);
     SET_INT8(qualityDGPSAddr, CSBFGPSData.quality);
     SET_INT8(numSatDGPSAddr, CSBFGPSData.num_sat);
+    store_1hz_ethercat();
+    store_1hz_mag();
 }

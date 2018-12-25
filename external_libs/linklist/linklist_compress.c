@@ -95,37 +95,37 @@ int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *
 // generates and returns a CRC table for linlist checksum validation 
 uint16_t *mk_ll_crctable(uint16_t poly, uint16_t (*crcfn)(uint16_t, uint16_t, uint16_t))
 {
-	uint16_t *ll_crctable;
-	int i;
-	if ((ll_crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
-		return NULL;
-	}
-	for (i = 0; i < 256; i++) {
-		ll_crctable[i] = (*crcfn)(i, poly, 0);
-	}
-	return ll_crctable;
+  uint16_t *ll_crctable;
+  int i;
+  if ((ll_crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
+    return NULL;
+  }
+  for (i = 0; i < 256; i++) {
+    ll_crctable[i] = (*crcfn)(i, poly, 0);
+  }
+  return ll_crctable;
 }
 
 // generator for CRC table
 uint16_t ll_crchware(uint16_t data, uint16_t genpoly, uint16_t accum)
 {
-	static int i;
-	data <<= 8;
-	for (i = 8; i > 0; i--) {
-	  if ((data ^ accum) & 0x8000) {
+  static int i;
+  data <<= 8;
+  for (i = 8; i > 0; i--) {
+    if ((data ^ accum) & 0x8000) {
       accum = (accum << 1) ^ genpoly;
-	  } else {
+    } else {
       accum <<= 1;
     }
-	  data <<= 1;
-	}
-	return accum;
+    data <<= 1;
+  }
+  return accum;
 }
 
 // checks/generates a CRC value for received/sent message
 void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
 {
-	*accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
+  *accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
 void set_block_indices_linklist(linklist_t * ll, char * blockname, unsigned int i, unsigned int n)
@@ -340,7 +340,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
       }
 
       // update checksum
-			tlm_out_size = tlm_le->blk_size;
+      tlm_out_size = tlm_le->blk_size;
       for (j=0;j<tlm_out_size;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
     }
   }
@@ -455,7 +455,10 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     tlm_in_buf = buffer_in+tlm_in_start;
 
     // update checksum
-    for (i=0;i<tlm_in_size;i++) ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
+    for (i=0;i<tlm_in_size;i++) {
+      ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
+      prechecksum |= *(uint16_t *) &tlm_in_buf[i];
+    }
 
     p_end = j;
 
@@ -466,15 +469,17 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
 
         break;
         // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
-      } else if ((checksum != 0) && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
+      } else if (checksum && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
         // clear/replace bad data from output buffer
         if (flags & LL_VERBOSE) linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+      } else if (!checksum && !prechecksum) { // had a block of all zeros
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
 
       // reset checksum
-      prechecksum |= *(uint16_t *) tlm_in_buf;
+      prechecksum = 0;
       checksum = 0;
       sumcount++;
       p_start = j+1;
@@ -506,11 +511,6 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
       }
     }
   }
-  if (!prechecksum && !(flags & LL_IGNORE_CHECKSUM)) // all the checksums were zero; must be blank frame
-  {
-    fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
-    // ret = 0;
-  }
   // save the data
   memcpy(buffer_save, buffer_out, superframe->size);
 
@@ -534,13 +534,13 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 
     if (block->fp) { // there is a file instead of data in a buffer
       *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
-			// special hook for tar'ed files
-			// if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
-			//	 	 (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
-			// 	 *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
-			// } else {
-				*(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
-			//}
+      // special hook for tar'ed files
+      // if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
+      //      (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
+      //    *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
+      // } else {
+        *(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
+      //}
 
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
@@ -606,6 +606,11 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     //memset(buffer,0,blksize+fsize); // clear the bad block
     return;
   }
+  // report missing block
+  while (block->i < i) {
+    linklist_info("Missing block %d/%d\n", block->i+1, block->n);
+    block->i++;
+  }
  
   unsigned int loc = i*(block->le->blk_size-fsize);
 
@@ -664,16 +669,28 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 // takes superframe at buffer in and creates an all frame in buffer out
 // all frame is 1 sample per field uncompressed
 int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) {
-  int i;
+  int i, j;
   int tlm_out_start = 4; // the first 4 bytes are the serial for allframes
   int tlm_in_start = 0; 
   unsigned int tlm_size = 0; 
   uint32_t test = ALLFRAME_SERIAL;
+  uint16_t crc = 0;
 
   int wd = 1;
   if ((allframe == NULL) || (sf == NULL)) wd = 0;
 
   superframe_entry_t * ll_superframe_list = superframe->entries;
+
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if ((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+      ll_crctable = NULL;
+      return -2;
+    }
+  } 
 
   if (wd) memcpy(allframe, &test, 4);
 
@@ -681,9 +698,19 @@ int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) 
     tlm_in_start = ll_superframe_list[i].start;
     tlm_size = get_superframe_entry_size(&ll_superframe_list[i]);
 
-    if (wd) memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
+    if (wd) {
+      memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
+      for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_out_start+j],&crc,ll_crctable);
+    }
     tlm_out_start += tlm_size;
   }
+
+  if (wd) {
+    // write the crc 
+    memcpy(allframe+2,((uint8_t*)&crc)+1,1);
+    memcpy(allframe+3,((uint8_t*)&crc)+0,1);
+  }
+
   return tlm_out_start;
 
 }
@@ -697,13 +724,30 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
   int tlm_num = 0;
   int tlm_skip = 0;
   unsigned int tlm_size = 0;
+  int check_crc = 1;
   
   superframe_entry_t * ll_superframe_list = superframe->entries;
 
+  // allocate crc table if necessary
+  if (ll_crctable == NULL)
+  {
+    if ((ll_crctable = mk_ll_crctable((unsigned short)LL_CRC_POLY,ll_crchware)) == NULL)
+    {
+      linklist_fatal("mk_ll_crctable() memory allocation failed\n");
+      ll_crctable = NULL;
+      return -2;
+    }
+  } 
+
   // check to see if this is actually an allframe
-  if (*((uint32_t *) allframe) != ALLFRAME_SERIAL) { 
+  if (*((uint16_t *) allframe) != (uint16_t) ALLFRAME_SERIAL) { 
     return 0;
   }
+  if (*((uint32_t *) allframe) == (uint32_t) ALLFRAME_SERIAL) {
+    check_crc = 0;
+  }
+
+  uint16_t crc = 0;
   
   for (i = 0; i < superframe->n_entries; i++) { 
     tlm_out_start = ll_superframe_list[i].start;
@@ -711,12 +755,28 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
     tlm_num = ll_superframe_list[i].spf;
     tlm_skip = ll_superframe_list[i].skip;
 
+    for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_in_start+j],&crc,ll_crctable);
     for (j = 0; j < tlm_num; j++) {
       memcpy(sf+tlm_out_start, allframe+tlm_in_start, tlm_size);
       tlm_out_start += tlm_skip;
     }
     tlm_in_start += tlm_size;
   } 
+
+  // check the crc
+  ll_crccheck(allframe[2], &crc, ll_crctable);
+  ll_crccheck(allframe[3], &crc, ll_crctable);
+
+  if (check_crc && crc)
+  {
+    linklist_info("Bad all_frame checksum\n");
+    // give an all frame that is saved from the previous good buffer
+    if (buffer_save) memcpy(sf, buffer_save, superframe->size);
+    return -1;
+  }
+
+  // set the last good buffer to the allframe
+  if (buffer_save) memcpy(buffer_save, sf, superframe->size);
   return tlm_in_start;
 
 }
@@ -783,7 +843,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip), type ,decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
-			if (temp1 > UINT32_MAX) temp1 = UINT32_MAX;
+      if (temp1 > UINT32_MAX) temp1 = UINT32_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
       *((uint32_t*) (data_out+blk_size)) = temp1;
     }
@@ -889,7 +949,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
-			if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
+      if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
       *((uint16_t*) (data_out+blk_size)) = temp1;
     }

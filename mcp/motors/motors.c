@@ -168,8 +168,8 @@ static double get_elev_vel(void)
     /* correct offset and convert to Gyro Units */
     vel -= (PointingData[i_point].offset_ifel_gy - PointingData[i_point].ifel_earth_gy);
 
-    if (CommandData.use_elenc) {
-        el_for_limit = wrap_to(el_get_position_degrees() + CommandData.enc_el_trim, 360.0);
+    if (CommandData.use_elmotenc) {
+        el_for_limit = wrap_to(el_get_motor_position_degrees() + CommandData.enc_motor_el_trim, 360.0);
     } else {
         el_for_limit = PointingData[i_point].el;
     }
@@ -285,6 +285,7 @@ void write_motor_channels_5hz(void)
     static channel_t* gPEPivAddr;
     static channel_t* setRWAddr;
     static channel_t* frictOffPivAddr;
+    static channel_t* frictOffElAddr;
     static channel_t* accelAzAddr;
 
     /* Motor data read out over motor thread in ec_motors.c */
@@ -294,6 +295,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemRWAddr;
     static channel_t *stateRWAddr;
     static channel_t *ctl_word_read_rw_addr;
+    static channel_t *ctl_word_write_rw_addr;
     static channel_t *latched_fault_rw_addr;
 
     static channel_t *tMCElAddr;
@@ -302,6 +304,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemElAddr;
     static channel_t *stateElAddr;
     static channel_t *ctl_word_read_el_addr;
+    static channel_t *ctl_word_write_el_addr;
     static channel_t *latched_fault_el_addr;
 
     static channel_t *tMCPivAddr;
@@ -310,6 +313,7 @@ void write_motor_channels_5hz(void)
     static channel_t *networkProblemPivAddr;
     static channel_t *statePivAddr;
     static channel_t *ctl_word_read_piv_addr;
+    static channel_t *ctl_word_write_piv_addr;
     static channel_t *latched_fault_piv_addr;
 
     int i_motors;
@@ -339,6 +343,7 @@ void write_motor_channels_5hz(void)
 
         setRWAddr = channels_find_by_name("set_rw");
         frictOffPivAddr = channels_find_by_name("frict_off_piv");
+        frictOffElAddr = channels_find_by_name("frict_off_el");
         accelAzAddr = channels_find_by_name("accel_az");
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
@@ -347,6 +352,7 @@ void write_motor_channels_5hz(void)
         networkProblemRWAddr = channels_find_by_name("network_problem_rw");
         stateRWAddr = channels_find_by_name("state_rw");
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
+        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
@@ -355,6 +361,7 @@ void write_motor_channels_5hz(void)
         networkProblemElAddr = channels_find_by_name("network_problem_el");
         stateElAddr = channels_find_by_name("state_el");
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
+        ctl_word_write_el_addr = channels_find_by_name("control_word_write_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
@@ -363,6 +370,7 @@ void write_motor_channels_5hz(void)
         networkProblemPivAddr = channels_find_by_name("network_problem_piv");
         statePivAddr = channels_find_by_name("state_piv");
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
+        ctl_word_write_piv_addr = channels_find_by_name("control_word_write_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
 
         ethercat_cmds_addr = channels_find_by_name("mc_cmd_status");
@@ -382,7 +390,7 @@ void write_motor_channels_5hz(void)
     /* deadband for the el_motor integral term*/
     SET_FLOAT(gDBElAddr, CommandData.ele_gain.DB);
     /* Elevation current offset to compensate for static friction. */
-    SET_FLOAT(frictOffPivAddr, CommandData.ele_gain.F);
+    SET_FLOAT(frictOffElAddr, CommandData.ele_gain.F);
 
     /***************************************************/
     /**            Azimuth Drive Motors              **/
@@ -419,7 +427,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
     SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
     SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
@@ -427,7 +436,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusElAddr, ElevMotorData[i_motors].network_status);
     SET_UINT16(networkProblemElAddr, ElevMotorData[i_motors].network_problem);
     SET_UINT16(stateElAddr, ElevMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_el_addr, ElevMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
@@ -435,7 +445,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(networkStatusPivAddr, PivotMotorData[i_motors].network_status);
     SET_UINT16(networkProblemPivAddr, PivotMotorData[i_motors].network_problem);
     SET_UINT16(statePivAddr, PivotMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].state);
+    SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_piv_addr, PivotMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
 
     ec_cmd_status_field = ((uint8_t)CommandData.ec_devices.reset) +
@@ -1012,6 +1023,7 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
+        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1024,6 +1036,8 @@ static void do_mode_new_cap(void)
             blast_info("Approaching the top: next targ_el = %f, r = %f,"
                         "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                        targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         } else if (targ_el <= -r) {
             targ_el = -r;
             el_next_dir = 1;
@@ -1032,6 +1046,11 @@ static void do_mode_new_cap(void)
                     targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
             CommandData.trigger_roach_tuning_check = 1;
+            n_scan += 1;
+            if (n_scan != 0) {
+                calculate_el_dither(DITH_INC);
+                blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+            }
         }
     }
 
@@ -1073,15 +1092,6 @@ static void do_mode_new_cap(void)
     /*   } else if (el < el2) {  */
     /*     axes_mode.el_dir = 1; */
     /*   }     */
-
-    if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-        n_scan += 1;
-
-        if (n_scan != 0) {
-            calculate_el_dither(DITH_INC);
-            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-        }
-    }
 
     el_dir_last = axes_mode.el_dir;
 
@@ -1197,6 +1207,7 @@ static void do_mode_el_box(void)
     }
 
     if (new_step) {
+        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
         // set v for this step
         v_az = (targ_az - (az - caz)) / t;
         // set targ_az for the next step
@@ -1370,6 +1381,7 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
+        CommandData.trigger_lo_offset_check = 1;
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
@@ -1387,6 +1399,8 @@ static void do_mode_new_box(void)
                     "Approaching the top: next targ_el = %f, h*0.5 = %f, "
                     "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
                     targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         } else if (targ_el < -h * 0.5) {
             targ_el = -h * 0.5;
             el_next_dir = 1;
@@ -1396,6 +1410,11 @@ static void do_mode_new_box(void)
                     targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
             CommandData.trigger_roach_tuning_check = 1;
+            n_scan += 1;
+            if (n_scan != 0) {
+                calculate_el_dither(DITH_INC);
+                blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+            }
         }
     }
     /* check for out of range in el */
@@ -1425,13 +1444,13 @@ static void do_mode_new_box(void)
         return;
     }
 
-    if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-        n_scan += 1;
-        if (n_scan != 0) {
-            calculate_el_dither(DITH_INC);
-            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-        }
-    }
+//     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
+//         n_scan += 1;
+//         if (n_scan != 0) {
+//             calculate_el_dither(DITH_INC);
+//             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+//         }
+//     }
 
     el_dir_last = axes_mode.el_dir;
 
@@ -1580,6 +1599,7 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
+        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
@@ -1592,6 +1612,8 @@ void do_mode_quad(void) // aka radbox
                     "Approaching the top: next targ_el = %f, top-bottom = %f, "
                     "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check = 1;
         } else if (targ_el < 0) {
             targ_el = 0;
             el_next_dir = 1;
@@ -1601,16 +1623,23 @@ void do_mode_quad(void) // aka radbox
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
             CommandData.trigger_roach_tuning_check = 1;
+            // Calc El Dither for the next raster scan
+            n_scan += 1;
+            if (n_scan != 0) {
+                calculate_el_dither(DITH_INC);
+                blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+            }
         }
     }
 
-    if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
-        n_scan += 1;
-        if (n_scan != 0) {
-            calculate_el_dither(DITH_INC);
-            blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
-        }
-    }
+// LMF shouldn't be necessary now that I have moved the dither to new_step
+//     if (((axes_mode.el_dir - el_dir_last) == 2) && (CommandData.pointing_mode.nw == 0)) {
+//         n_scan += 1;
+//         if (n_scan != 0) {
+//             calculate_el_dither(DITH_INC);
+//             blast_info("We're dithering! El Dither = %f", axes_mode.el_dith);
+//         }
+//     }
 
     el_dir_last = axes_mode.el_dir;
 

@@ -26,6 +26,7 @@ class AutoSonos:
     self.lastval = 0
     self.framenum = 0
     self.changed = False
+    self.timesteady = 0
 
     self.update()
     self.track = sonos.music_library.get_tracks(search_term=self.trackname)[0]
@@ -82,6 +83,11 @@ class AutoSonos:
 # Looks at field "STATE_POTVALVE" and .truestate() == True when STATE_POTVALVE == 1
 # When the .trigger() function is called, will play the requested song on the SONOS
 PotvalveOpen = AutoSonos("Flagpole Sitta", "STATE_POTVALVE", 1)
+PotvalveOpen2 = AutoSonos("Ooh Pot Valve Open", "STATE_POTVALVE", 1)
+PotvalveYell = True
+PotvavleSong = False
+
+HWPMove = AutoSonos("You Spin Me Round", "MOVE_STAT_HWPR", 1)
 
 Lunch = AutoSonos("Sandstorm", "TIME")
 Leave = AutoSonos("End of the World as", "TIME")
@@ -94,16 +100,34 @@ while True:
   PotvalveOpen.update() # must always be called in the loop
   
   # If the truestate is reached and has been true for 20 second, then trigger the song
-  if (PotvalveOpen.truestate() and (PotvalveOpen.timesteady >= 20)):
+  if (PotvalveOpen2.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveYell == True)):
     print("Potvalve is OPEN!")
     if not song_requested: 
       PotvalveOpen.trigger()
+    song_requested = True
+    PotvalveYell = False
+    PotvavleSong = True
+
+  # If the truestate is reached and has been true for 20 second, then trigger the song
+  if (PotvalveOpen.truestate() and (PotvalveOpen.timesteady >= 20) and (PotvalveSong == True)):
+    print("Potvalve is OPEN!")
+    if not song_requested: 
+      PotvalveOpen.trigger()
+    song_requested = True
+    PotvalveYell = True
+    PotvavleSong = False
+
+  # If the HWP move state is 1 we are in state "ready" so we are sending a move command
+  if (HWPMove.truestate()):
+    print("Half-wave plate is moving!")
+    if not song_requested:
+      HWPMove.trigger()
     song_requested = True
 
   # time to leave
   Leave.update()
   date = datetime.utcfromtimestamp(Leave.lastval)
-  if ((date.hour+13)%24 == 17) and (15 <= date.minute <= 30):
+  if ((date.hour+13)%24 == 17) and (15 <= date.minute <= 25):
     print("Time to leave!")
     if not song_requested: 
       Leave.trigger(volume=65)
@@ -112,7 +136,7 @@ while True:
   # lunch
   Lunch.update()
   date = datetime.utcfromtimestamp(Lunch.lastval)
-  if ((date.hour+13)%24 == 11) and (date.minute >= 55) and (datetime.today().isoweekday() != 7):
+  if ((date.hour+13)%24 == 11) and (date.minute >= 56) and (date.second >= 17) and (datetime.today().isoweekday() != 7):
     print("Lunchtime!")
     if not song_requested: 
       Lunch.trigger(volume=50)

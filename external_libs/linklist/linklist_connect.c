@@ -123,18 +123,8 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   int i,j;
 
-  // deal with display widths
-  int n = (numlink-1)/3+1;
-  int width[3] = {0};
-  for (i=0;i<n;i++) {
-    if (strlen(name[i]) > width[0]) width[0] = strlen(name[i]);
-    if (strlen(name[i+n]) > width[1]) width[1] = strlen(name[i+n]);
-    if (strlen(name[i+n+n]) > width[2]) width[2] = strlen(name[i+n+n]);
-  }
-  for (i=0;i<3;i++) width[i] += 3;
 
   // display all the entries that match the optionally supplied linklist name
-
   int match = strlen(linklistname);
   int n_match =  numlink;
   char str_match[LINKLIST_MAX_FILENAME_SIZE] = {0};
@@ -151,6 +141,12 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 		for (i=0;i<numlink;i++) {
 			if (regexec(&regex, name[i], 0, NULL, 0) != REG_NOMATCH) {
 				strncpy(linklistname, name[i], LINKLIST_MAX_FILENAME_SIZE);
+
+        char temp[LINKLIST_SHORT_FILENAME_SIZE];
+        snprintf(temp, LINKLIST_MAX_FILENAME_SIZE, "%s", name[n_match]);
+        snprintf(name[n_match], LINKLIST_MAX_FILENAME_SIZE, "%s", name[i]);
+        snprintf(name[i], LINKLIST_MAX_FILENAME_SIZE, "%s", temp);
+
 				n_match++;
 			}
 		}
@@ -160,6 +156,19 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 
   // don't have exactly 1 matching entry, so prompt user to select
   if (n_match != 1) {
+		// deal with display widths
+    if (n_match) numlink = n_match;
+		int n = (numlink-1)/3+1;
+		int width[3] = {0};
+
+		for (i=0;i<n;i++) {
+			if (strlen(name[i]) > width[0]) width[0] = strlen(name[i]);
+			if (strlen(name[i+n]) > width[1]) width[1] = strlen(name[i+n]);
+			if (strlen(name[i+n+n]) > width[2]) width[2] = strlen(name[i+n+n]);
+		}
+		for (i=0;i<3;i++) width[i] += 3;
+
+
 		linklist_info("\nSelect archive file:\n\n");
 
 		for (i=0;i<n;i++) {

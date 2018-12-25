@@ -63,7 +63,6 @@ static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "
 static const char udp_dest[32] = "239.1.1.234";
 static const char udp_dest_name[32] = "roach-udp-dest";
 int roach_sock_fd;
-int fridge_cycle_warning;
 
 typedef struct {
     int32_t Ival;
@@ -120,8 +119,6 @@ typedef struct roach_state {
     e_roach_state state;
     e_roach_state desired_state;
 
-    int has_error;
-    const char *last_err;
     bool katcp_is_busy;
     char *address;
     uint16_t port;
@@ -132,7 +129,7 @@ typedef struct roach_state {
     bool has_vna_tones;
     bool has_targ_tones;
     bool is_streaming;
-    bool is_sweeping;
+    int is_sweeping;
     bool in_flight_mode;
     bool has_vna_sweep;
     bool has_targ_sweep;
@@ -145,18 +142,28 @@ typedef struct roach_state {
     bool tone_write_fail;
     bool lamp_check_error;
     bool doing_full_loop;
+    bool doing_turnaround_loop;
     bool is_finding_kids;
     bool doing_find_kids_loop;
     bool is_compressing_data;
     int pi_error_count;
+    bool pi_reboot_warning;
+    bool data_stream_error;
+    bool waiting_for_lamp;
+    int n_outofrange;
+    int trnaround_loop_fail;
+    int full_loop_fail;
 
     float adc_rms[2];
+    double fpga_clock_freq;
     double *freq_residuals;
-    double *targ_tones; // kid frequencies found with get_targ_freqs()
+    // double targ_tones[MAX_CHANNELS_PER_ROACH];
+    double *targ_tones;
     double lo_freq_req;
     double lo_freq_read;
     size_t current_ntones; // number of current kid frequencies
     size_t num_kids; // number of current kid frequencies
+    size_t prev_num_kids; // number of current kid frequencies
     double lo_centerfreq;
 
     // First two LUTs are for building
@@ -184,11 +191,14 @@ typedef struct roach_state {
     char *last_vna_path;
     char *last_targ_path;
     char *last_iq_path;
+    char *path_to_lamp_response;
+    char *path_to_noise_comp;
+    char *path_to_df_comp;
     char *channels_path;
 
     // For detector retune decision
     int nflag_thresh; // num channels which need to be out of range for retune
-    int has_ref; /* If 1, ref grads exist */
+    int has_ref_params; /* If 1, ref grads exist */
     bool first_calc;
     int retune_flag; // 1 if retune is recommended
     bool out_of_range[MAX_CHANNELS_PER_ROACH]; // 1 if kid df is out of range

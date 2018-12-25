@@ -380,16 +380,23 @@ typedef struct roach
     unsigned int on_res;
     unsigned int auto_find;
     unsigned int recenter_df;
-    unsigned int go_flight_mode;
     unsigned int check_response;
     unsigned int reboot_pi_now;
     unsigned int do_df_targ;
-    unsigned int auto_scan_retune; // Set whether we want to check the roach tuning after every scan.
+    unsigned int auto_el_retune;
+    // Set whether we want to check the roach tuning after every scan.
     unsigned int do_full_loop;
     unsigned int auto_correct_freqs;
     unsigned int do_noise_comp;
     unsigned int do_fk_loop;
     unsigned int kill;
+    unsigned int do_turnaround_loop;
+    unsigned int n_outofrange_thresh;
+    unsigned int enable_chop_lo;
+    unsigned int chop_lo;
+    unsigned int has_lamp_control;
+    unsigned int ext_ref;
+    unsigned int change_extref;
 } roach_status_t;
 
 typedef struct roach_params
@@ -499,9 +506,11 @@ struct CommandDataStruct {
   roach_params_t roach_params[NUM_ROACHES];
   unsigned int tar_all_data;
   unsigned int roach_run_cycle_checker;
-  unsigned int trigger_roach_tuning_check; // motors.c sets this flag when a scan is nearly complete
-                                   // to (optionally) trigger a retune
-
+  // motors.c sets this flag when a scan is nearly complete
+  // to (optionally) trigger a retune
+  unsigned int trigger_roach_tuning_check;
+  unsigned int trigger_lo_offset_check;
+  unsigned int cal_lamp_roach_hold;
   uei_commands_t uei_command;
 
   cmd_rox_bias_t rox_bias;
@@ -536,7 +545,6 @@ struct CommandDataStruct {
   double offset_ifyaw_gy;
   uint32_t gymask;
 
-  unsigned char use_elenc;
   unsigned char use_elmotenc;
   unsigned char use_elclin;
   unsigned char use_pss;
@@ -552,7 +560,6 @@ struct CommandDataStruct {
   double az_accel;
 
   double clin_el_trim;
-  double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
   double mag_az_trim[2];
@@ -577,6 +584,7 @@ struct CommandDataStruct {
   double cal_az_pss_array;
   double cal_el_pss[NUM_PSS];
   double cal_roll_pss[NUM_PSS];
+  double pss_noise;
 
 
   double cal_imin_pss;
@@ -657,17 +665,21 @@ struct CommandDataStruct {
   } actbus;
 
   struct {
-    int vel, acc, hold_i, move_i;
+    int vel;
+	int acc;
+	int hold_i, move_i;
     int force_repoll;
-    int mode, is_new, target;
-    int n_pos, repeats, step_wait, step_size, overshoot;
-	int backoff;
-    double pos[4];
+    int mode, is_new;
+	float target;
+    int n_pos, repeats, step_wait, step_size;
+	float overshoot;
+	float backoff;
+    double pos[2];
     int i_pos;
     int no_step;
     int use_pot;
     double pot_targ;
-	int margin;
+	float margin;
   } hwpr;
 
   int pin_is_in;

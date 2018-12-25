@@ -32,7 +32,7 @@
 #define GRPOS_BAL   1
 #define GRPOS_HWPR  2
 #define GRPOS_TRIM  3
-#define GRPOS_ELECT 4
+#define GRPOS_ELECT 4 // empty, remove after 2018 flight? -PAW
 #define GRPOS_BIAS  5
 #define GRPOS_VETO  6
 #define GRPOS_ACT   7
@@ -85,7 +85,7 @@ enum singleCommand {
   balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
-  elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
+  elclin_allow,     elclin_veto,
   fixed,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
@@ -152,7 +152,7 @@ enum singleCommand {
 	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
 	of_lj_on, of_lj_off, gps_timing_on, gps_timing_off,
-        gps_sw_reset, if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
+        gps_sw_reset, gps_stats, if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
 	timing_dist_on, timing_dist_off, bi0_on, bi0_off,
 	vtx_on, vtx_off, if_relay_6_on, if_relay_6_off,
 	if_eth_switch_on, if_eth_switch_off, if_relay_8_on, if_relay_8_off,
@@ -161,10 +161,10 @@ enum singleCommand {
   vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all, force_pot_refill,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
   reload_vna_all, end_sweeps_all, new_ref_params_all,
-  auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, df_targ_all, check_df_retune_all, check_dfsweep_retune_all, debug_mode, allow_watchdog,
-    disallow_watchdog, set_attens_last_all, set_attens_min_output, trigger_retune_check, full_loop_all_default,
-  set_attens_default_all, xyzzy
+  auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
+  check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
+  trigger_retune_check, full_loop_all_default, set_attens_default_all, roach_allow_scan_check_all,
+  roach_disallow_scan_check_all, chop_lo_all, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -195,7 +195,7 @@ enum multiCommand {
   // t_gyro_gain,
   timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
-  hwpr_set_overshoot,
+  hwpr_set_overshoot, hwpr_set_backoff,
   // jfet_set,
   hwpr_vel,          hwpr_i,
   gyro_off,	         quad,
@@ -211,6 +211,7 @@ enum multiCommand {
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
   shutter_i, 	    shutter_vel,
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal, pss_cal_n,
+  pss_set_noise,
   pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll, pss_cal_array_az, pss_set_imin,
   potvalve_set_thresholds,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
@@ -262,7 +263,7 @@ enum multiCommand {
   xsc_filter_matching,
   vna_sweep,
   targ_sweep,
-  reset_roach,
+  roach_reset,
   calc_df,
   opt_tones,
   auto_retune,
@@ -270,7 +271,6 @@ enum multiCommand {
   show_adc_rms,
   load_new_vna_amps,
   load_new_targ_amps,
-  cal_adc,
   change_state,
   get_state,
   set_attens,
@@ -342,6 +342,15 @@ enum multiCommand {
   set_find_kids_params,
   compress_roach_data,
   enable_cycle_checker,
+  turnaround_loop,
+  turnaround_loop_all,
+  set_n_outofrange_thresh_all,
+  set_n_outofrange_thresh,
+  enable_chop_lo_all,
+  chop_lo,
+  roach_has_lamp_control,
+  roach_set_extref,
+  roach_set_extref_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

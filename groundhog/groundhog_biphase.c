@@ -130,6 +130,8 @@ void biphase_receive(void *args)
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
   uint8_t * dummy_buffer = calloc(1, superframe->size);
+  uint64_t framenum = 0;
+  int af = 0;
 
   while(true) {
       while ((read(decom_fp, &raw_word_in, sizeof(uint16_t))) > 0) {
@@ -170,12 +172,14 @@ void biphase_receive(void *args)
                           bytes_unpacked += ll->blk_size;
                           usleep(1000);
                       }
+                      framenum = ll->blocks[0].i*100/ll->blocks[0].n;
 
                   } else { // write the linklist data to disk
-                      if (read_allframe(local_superframe, superframe, compbuffer)) {
+                      af = read_allframe(local_superframe, superframe, compbuffer);
+                      if (af > 0) { // an allframe was received
                           if (verbose) blast_info("[Biphase] Received an allframe :)\n");
                           memcpy(local_allframe, compbuffer, superframe->allframe_size);
-                      } else {
+                      } else if (af == 0) { // just a regular rame (< 0 indicates problem reading allframe)
                           // check the serials
                           if (*(uint32_t *) ll->serial != prev_serial) {
                             ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, "BI0");
@@ -192,9 +196,16 @@ void biphase_receive(void *args)
                             memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
                             write_linklist_rawfile(ll_rawfile, compbuffer);
                             flush_linklist_rawfile(ll_rawfile);
+                            framenum = tell_linklist_rawfile(ll_rawfile); 
                           }
                       }
                   }
+
+                  // fill out the telemetry report
+                  bi0_report.ll = ll;
+                  bi0_report.framenum = framenum; 
+                  bi0_report.allframe = af; 
+
                   memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);
                   compbuffer_size = 0;
               }

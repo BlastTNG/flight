@@ -2,9 +2,7 @@ status_actbus
 enc_0_act
 enc_1_act
 enc_2_act
-pos_0_act
-pos_1_act
-pos_2_act
+thermistor_59
 vel_act
 mode_act
 tol_act
@@ -12,3 +10,6 @@ acc_act
 i_hold_act
 i_move_act
 seized_act
+pos_0_act
+pos_1_act
+pos_2_act
