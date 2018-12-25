@@ -455,7 +455,10 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     tlm_in_buf = buffer_in+tlm_in_start;
 
     // update checksum
-    for (i=0;i<tlm_in_size;i++) ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
+    for (i=0;i<tlm_in_size;i++) {
+      ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
+      prechecksum |= *(uint16_t *) &tlm_in_buf[i];
+    }
 
     p_end = j;
 
@@ -466,15 +469,17 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
 
         break;
         // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
-      } else if ((checksum != 0) && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
+      } else if (checksum && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
         // clear/replace bad data from output buffer
         if (flags & LL_VERBOSE) linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+      } else if (!checksum && !prechecksum) { // had a block of all zeros
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       }
       else ret++;
 
       // reset checksum
-      prechecksum |= *(uint16_t *) tlm_in_buf;
+      prechecksum = 0;
       checksum = 0;
       sumcount++;
       p_start = j+1;
@@ -505,11 +510,6 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
         }
       }
     }
-  }
-  if (!prechecksum && !(flags & LL_IGNORE_CHECKSUM)) // all the checksums were zero; must be blank frame
-  {
-    fill_linklist_with_saved(ll, 0, ll->n_entries, buffer_out);
-    // ret = 0;
   }
   // save the data
   memcpy(buffer_save, buffer_out, superframe->size);
