@@ -343,7 +343,7 @@ int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t
       num++;
     }
   }
-  ll_array[num] = generate_superframe_linklist(superframe); // last linklist contains all the telemetry items
+  ll_array[num] = generate_superframe_linklist_opt(superframe, flags); // last linklist contains all the telemetry items
   ll_array[num+1] = NULL; // null terminate the list
 
   linklist_info("Total of %d linklists loaded from \"%s\"\n", num, linklistdir);
