@@ -1658,6 +1658,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 		  CommandData.cal_roll_pss[i] = rvalues[i];
 	  }
 	  break;
+	case pss_set_noise:
+	  CommandData.pss_noise = rvalues[0];
+	  break;
 
     /*************************************
      ********* Pointing Motor Gains ******/
@@ -1893,6 +1896,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_closed_threshold = ivalues[0];
       CommandData.Cryo.potvalve_lclosed_threshold = ivalues[1];
       CommandData.Cryo.potvalve_open_threshold = ivalues[2];
+	  // also clear the goal so it doesn't move until a command
+	  CommandData.Cryo.potvalve_goal = 0;
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
@@ -3736,6 +3741,7 @@ void InitCommandData()
     CommandData.cal_d_pss[5] = 0.0;
 
     CommandData.cal_imin_pss = 4.5;
+	CommandData.pss_noise = 0.2;
 
     SIPData.MKScal.m_hi = 0.01;
     SIPData.MKScal.m_med = 0.1;

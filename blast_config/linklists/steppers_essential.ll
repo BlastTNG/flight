@@ -1,0 +1,11 @@
+status_actbus
+enc_0_act
+enc_1_act
+enc_2_act
+lim_bal
+state_lock
+enc_hwpr
+lims_shutter
+enc_potvalve
+lims_pumpvalve
+lims_fillvalve

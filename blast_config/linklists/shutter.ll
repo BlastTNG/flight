@@ -1,3 +1,2 @@
+lims_shutter
 pos_shutter
-steps_shutter
-steps_slow_shutter

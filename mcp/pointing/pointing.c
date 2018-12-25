@@ -428,7 +428,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 
 	for (j = 0; j < NUM_PSS; j++) {
 		if (fabs(itot[j]) > pss_imin) {
-			PointingData[point_index].pss_snr[j] = fabs(itot[j])/PSS_NOISE; // 10.
+			PointingData[point_index].pss_snr[j] = fabs(itot[j])/CommandData.pss_noise; // 10.
     		weight[j]= PointingData[point_index].pss_snr[j];
 		} else {
       		PointingData[point_index].pss_snr[j] = 1.;  // 1.

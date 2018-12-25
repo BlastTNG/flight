@@ -584,6 +584,7 @@ struct CommandDataStruct {
   double cal_az_pss_array;
   double cal_el_pss[NUM_PSS];
   double cal_roll_pss[NUM_PSS];
+  double pss_noise;
 
 
   double cal_imin_pss;

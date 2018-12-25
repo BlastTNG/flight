@@ -1,8 +1,9 @@
 state_lock
 pin_in_lock
-goal_lock
 pot_lock
+thermistor_3
 pos_lock
+goal_lock
 vel_lock
 acc_lock
 i_move_lock
