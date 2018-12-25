@@ -95,37 +95,37 @@ int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *
 // generates and returns a CRC table for linlist checksum validation 
 uint16_t *mk_ll_crctable(uint16_t poly, uint16_t (*crcfn)(uint16_t, uint16_t, uint16_t))
 {
-	uint16_t *ll_crctable;
-	int i;
-	if ((ll_crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
-		return NULL;
-	}
-	for (i = 0; i < 256; i++) {
-		ll_crctable[i] = (*crcfn)(i, poly, 0);
-	}
-	return ll_crctable;
+  uint16_t *ll_crctable;
+  int i;
+  if ((ll_crctable = (uint16_t *)malloc(256*sizeof(unsigned))) == NULL) {
+    return NULL;
+  }
+  for (i = 0; i < 256; i++) {
+    ll_crctable[i] = (*crcfn)(i, poly, 0);
+  }
+  return ll_crctable;
 }
 
 // generator for CRC table
 uint16_t ll_crchware(uint16_t data, uint16_t genpoly, uint16_t accum)
 {
-	static int i;
-	data <<= 8;
-	for (i = 8; i > 0; i--) {
-	  if ((data ^ accum) & 0x8000) {
+  static int i;
+  data <<= 8;
+  for (i = 8; i > 0; i--) {
+    if ((data ^ accum) & 0x8000) {
       accum = (accum << 1) ^ genpoly;
-	  } else {
+    } else {
       accum <<= 1;
     }
-	  data <<= 1;
-	}
-	return accum;
+    data <<= 1;
+  }
+  return accum;
 }
 
 // checks/generates a CRC value for received/sent message
 void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
 {
-	*accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
+  *accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
 void set_block_indices_linklist(linklist_t * ll, char * blockname, unsigned int i, unsigned int n)
@@ -340,7 +340,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
       }
 
       // update checksum
-			tlm_out_size = tlm_le->blk_size;
+      tlm_out_size = tlm_le->blk_size;
       for (j=0;j<tlm_out_size;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
     }
   }
@@ -534,13 +534,13 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 
     if (block->fp) { // there is a file instead of data in a buffer
       *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
-			// special hook for tar'ed files
-			// if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
-			//	 	 (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
-			// 	 *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
-			// } else {
-				*(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
-			//}
+      // special hook for tar'ed files
+      // if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
+      //      (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
+      //    *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
+      // } else {
+        *(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
+      //}
 
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
@@ -700,7 +700,7 @@ int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) 
 
     if (wd) {
       memcpy(allframe+tlm_out_start, sf+tlm_in_start, tlm_size);
-			for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_out_start+j],&crc,ll_crctable);
+      for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_out_start+j],&crc,ll_crctable);
     }
     tlm_out_start += tlm_size;
   }
@@ -769,10 +769,14 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
 
   if (check_crc && crc)
   {
-    printf("Bad all_frame checksum\n");
-    if (buffer_save) memcpy(sf, buffer_save,superframe->size);
-    return 0;
+    linklist_info("Bad all_frame checksum\n");
+    // give an all frame that is saved from the previous good buffer
+    if (buffer_save) memcpy(sf, buffer_save, superframe->size);
+    return -1;
   }
+
+  // set the last good buffer to the allframe
+  if (buffer_save) memcpy(buffer_save, sf, superframe->size);
   return tlm_in_start;
 
 }
@@ -839,7 +843,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip), type ,decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
-			if (temp1 > UINT32_MAX) temp1 = UINT32_MAX;
+      if (temp1 > UINT32_MAX) temp1 = UINT32_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
       *((uint32_t*) (data_out+blk_size)) = temp1;
     }
@@ -945,7 +949,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
       temp1 = (temp1-offset)/(gain);
-			if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
+      if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
       *((uint16_t*) (data_out+blk_size)) = temp1;
     }
