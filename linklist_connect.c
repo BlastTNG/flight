@@ -387,7 +387,6 @@ void *connection_handler(void *arg)
   int client_on = 1;
   int frame_lag = 1; 
 
-  FILE * clientbufferfile = NULL;
   char linklist_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
   char * archive_filename;
@@ -681,11 +680,6 @@ void *connection_handler(void *arg)
   linklist_info("::SERVER:: closed connection to CLIENT %d\n",sock);
 
   // cleanup
-  if (clientbufferfile) 
-  {
-    fclose(clientbufferfile);
-    clientbufferfile = NULL;
-  }
   if (buffer) free(buffer);
   close(sock);
 
@@ -825,7 +819,10 @@ void send_client_error(struct TCPCONN * tc)
   uint8_t header[TCP_PACKET_HEADER_SIZE] = {0};
 
   writeTCPHeader(header,0x1badfeed, 0, 0, 1);
-  send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0);
+  if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+    linklist_err("::CLIENT %d:: could not send client error\n", tc->fd);
+    return;
+  }
 }
 
 // send a file to the client
@@ -852,6 +849,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
   writeTCPHeader(header, SERVER_LL_REQ, req_filesize, (serial & 0xffff), (serial & 0xffff0000)>>16);
   if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
     linklist_err("::CLIENT %d:: unable to send file transfer initialization message\n", tc->fd);
+    fclose(req_file);
     return -1;
   }
   memset(header, 0, TCP_PACKET_HEADER_SIZE);
@@ -866,7 +864,11 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
       linklist_err("::CLIENT %d:: file read error\n", tc->fd);
       return 0;
     } else {
-      send(tc->fd, buffer, col, 0);
+      if (send(tc->fd, buffer, col, 0) <= 0) {
+        linklist_err("::CLIENT %d:: file transfer interrupted\n", tc->fd);
+        fclose(req_file);
+        return -1;
+      }
       bytes_transferred += col;
       memset(buffer, 0, col);
     }
