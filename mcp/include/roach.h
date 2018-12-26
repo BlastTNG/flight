@@ -119,6 +119,7 @@ typedef struct roach_state {
     e_roach_state state;
     e_roach_state desired_state;
 
+    bool halted;
     bool katcp_is_busy;
     char *address;
     uint16_t port;
