@@ -361,6 +361,27 @@
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1806141344"
+                        },
+                        "_map": {
+                            "0": "0[style=No style (P1454299671)]",
+                            "1": "N_UNDER[style=xhigh (P1489452979)]",
+                            "2": "N_OVER[style=xhigh (P1489452979)]",
+                            "3": "OTHER[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1065030809"
+                    },
+                    "_caption": "TONE_FINDING_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "TONE_FINDING_ERROR_ROACH1",
+                    "type": "PMDI"
+                },
+                {
                     "PObject": {
                         "_id": "2015627384"
                     },
@@ -384,6 +405,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "392416832"
+                    },
+                    "_caption": "QDR_CAL_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "QDR_CAL_FAIL_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -425,19 +459,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "641787849"
-                    },
-                    "_caption": "TONE_FINDING_ERROR   ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_FINDING_ERROR_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "271183956"
                     },
                     "_caption": "SWEEP_FAIL",
@@ -451,19 +472,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "392416832"
-                    },
-                    "_caption": "TONE_WRITE_FAIL",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_WRITE_FAIL_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "2058456669"
                     },
                     "_caption": "FIRMWARE_UPLOAD_FAIL   ",
@@ -473,19 +481,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH1",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1026384051"
-                    },
-                    "_caption": "LAMP_CHECK_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "LAMP_CHECK_ERROR_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -567,13 +562,13 @@
                     "PObject": {
                         "_id": "1328998091"
                     },
-                    "_caption": "CHOP_LO",
+                    "_caption": "IS_CHOPPING_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "CHOP_LO_ROACH1",
+                    "_source": "IS_CHOPPING_LO_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -1000,13 +995,35 @@
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "2130806858"
+                        },
+                        "_map": {
+                            "0": "0",
+                            "1": "N_UNDER[style=xhigh (P1489452979)]",
+                            "2": "N_OVER[style=xhigh (P1489452979)]",
+                            "3": "OTHER[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1375663912"
+                    },
+                    "_caption": "TONE_FINDING_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "TONE_FINDING_ERROR_ROACH2",
+                    "type": "PMDI"
+                },
+                {
                     "PObject": {
                         "_id": "1087054721"
                     },
                     "_caption": "FPGA_CLOCK_FREQ_MHZ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1087668522)",
                     "_format": "%.2f",
                     "_source": "FPGA_CLOCK_FREQ_ROACH2",
                     "type": "PNDI"
@@ -1022,6 +1039,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1876085579"
+                    },
+                    "_caption": "QDR_CAL_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "QDR_CAL_FAIL_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1089,19 +1119,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1876085579"
-                    },
-                    "_caption": "TONE_WRITE_FAIL",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_WRITE_FAIL_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1314671417"
                     },
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
@@ -1111,19 +1128,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "803361246"
-                    },
-                    "_caption": "LAMP_CHECK_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "LAMP_CHECK_ERROR_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1204,13 +1208,13 @@
                     "PObject": {
                         "_id": "873674392"
                     },
-                    "_caption": "CHOP_LO",
+                    "_caption": "IS_CHOPPING_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "CHOP_LO_ROACH2",
+                    "_source": "IS_CHOPPING_LO_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1639,13 +1643,35 @@
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "229970478"
+                        },
+                        "_map": {
+                            "0": "0",
+                            "1": "N_UNDER[style=xhigh (P1489452979)]",
+                            "2": "N_OVER[style=xhigh (P1489452979)]",
+                            "3": "OTHER[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1481132411"
+                    },
+                    "_caption": "TONE_FINDING_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "TONE_FINDING_ERROR_ROACH3",
+                    "type": "PMDI"
+                },
+                {
                     "PObject": {
                         "_id": "374632597"
                     },
                     "_caption": "FPGA_CLOCK_FREQ_MHZ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1087668522)",
                     "_format": "%.2f",
                     "_source": "FPGA_CLOCK_FREQ_ROACH3",
                     "type": "PNDI"
@@ -1661,6 +1687,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1047312775"
+                    },
+                    "_caption": "QDR_CAL_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "QDR_CAL_FAIL_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1728,19 +1767,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1047312775"
-                    },
-                    "_caption": "TONE_WRITE_FAIL",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_WRITE_FAIL_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1159237251"
                     },
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
@@ -1750,19 +1776,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "2107513264"
-                    },
-                    "_caption": "LAMP_CHECK_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "LAMP_CHECK_ERROR_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -1844,13 +1857,13 @@
                     "PObject": {
                         "_id": "1305725969"
                     },
-                    "_caption": "CHOP_LO",
+                    "_caption": "IS_CHOPPING_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": true,
                     "_extremaID": "(P1407645461)",
                     "_format": "",
-                    "_source": "CHOP_LO_ROACH3",
+                    "_source": "IS_CHOPPING_LO_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -2276,13 +2289,35 @@
                     "type": "PNDI"
                 },
                 {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1130494302"
+                        },
+                        "_map": {
+                            "0": "0",
+                            "1": "N_UNDER[style=xhigh (P1489452979)]",
+                            "2": "N_OVER[style=xhigh (P1489452979)]",
+                            "3": "OTHER[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "69859818"
+                    },
+                    "_caption": "TONE_FINDING_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "TONE_FINDING_ERROR_ROACH5",
+                    "type": "PMDI"
+                },
+                {
                     "PObject": {
                         "_id": "40140735"
                     },
                     "_caption": "FPGA_CLOCK_FREQ_MHZ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1087668522)",
                     "_format": "%.2f",
                     "_source": "FPGA_CLOCK_FREQ_ROACH5",
                     "type": "PNDI"
@@ -2298,6 +2333,19 @@
                     "_extremaID": "(P773337968)",
                     "_format": "",
                     "_source": "HAS_QDR_CAL_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1588908666"
+                    },
+                    "_caption": "QDR_CAL_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "QDR_CAL_FAIL_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2365,19 +2413,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1588908666"
-                    },
-                    "_caption": "TONE_WRITE_FAIL",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_WRITE_FAIL_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "1822873527"
                     },
                     "_caption": "FIRMWARE_UPLOAD_FAIL",
@@ -2387,19 +2422,6 @@
                     "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FIRMWARE_UPLOAD_FAIL_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "704261931"
-                    },
-                    "_caption": "LAMP_CHECK_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "LAMP_CHECK_ERROR_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2481,12 +2503,12 @@
                     "PObject": {
                         "_id": "1420729760"
                     },
-                    "_caption": "CHOP_LO",
+                    "_caption": "IS_CHOPPING_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "CHOP_LO_ROACH5",
+                    "_source": "IS_CHOPPING_LO_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -2864,7 +2886,7 @@
                     "_extrema": true,
                     "_extremaID": "(P274232905)",
                     "_format": "",
-                    "_source": "FRIDGE_CYCLE_WARNING_ROACH1",
+                    "_source": "ROACH_FRIDGE_CYCLE_WARNING",
                     "type": "PNDI"
                 },
                 {
@@ -3326,12 +3348,12 @@
                 "_id": "1087668522"
             },
             "_high": "259",
-            "_low": "255",
+            "_low": "259",
             "_name": "FPGA_CLOCK_FREQ",
-            "_shigh": "(P1042125667)",
+            "_shigh": "(P1489452979)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
-            "_sxlow": "(P1042125667)",
+            "_sxlow": "(P1489452979)",
             "_xhigh": "259",
             "_xlow": "255"
         }
