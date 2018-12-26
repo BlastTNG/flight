@@ -30,7 +30,7 @@ find_package(OpenSSL REQUIRED)
 
 cmake_minimum_required (VERSION 2.8.8)
 
-option(USE_CLANG "build defricher using clang" OFF)
+option(USE_CLANG "build mole using clang" OFF)
 
 if (USE_CLANG)
     SET (CMAKE_C_COMPILER               "/usr/bin/clang")
