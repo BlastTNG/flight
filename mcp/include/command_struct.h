@@ -393,10 +393,12 @@ typedef struct roach
     unsigned int do_turnaround_loop;
     unsigned int n_outofrange_thresh;
     unsigned int enable_chop_lo;
-    unsigned int chop_lo;
+    unsigned int is_chopping_lo;
     unsigned int has_lamp_control;
     unsigned int ext_ref;
     unsigned int change_extref;
+    unsigned int min_nkids;
+    unsigned int max_nkids;
 } roach_status_t;
 
 typedef struct roach_params
