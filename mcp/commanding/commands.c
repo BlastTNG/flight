@@ -1295,7 +1295,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
           break;
         case chop_lo_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].chop_lo = 1;
+              CommandData.roach[i].is_chopping_lo = 1;
           }
           break;
         case xyzzy:
@@ -2603,6 +2603,26 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[i].df_retune_threshold = rvalues[0];
       }
       break;
+    case set_min_nkids:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].min_nkids = ivalues[1];
+      }
+      break;
+    case set_min_nkids_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].min_nkids = ivalues[0];
+      }
+      break;
+    case set_max_nkids:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].max_nkids = ivalues[1];
+      }
+      break;
+    case set_max_nkids_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach[i].max_nkids = ivalues[0];
+      }
+      break;
     case set_df_diff_retune_threshold:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach_params[ivalues[0]-1].df_diff_retune_threshold = rvalues[1];
@@ -2659,7 +2679,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case chop_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].chop_lo = 1;
+          CommandData.roach[ivalues[0]-1].is_chopping_lo = 1;
       }
       break;
     case roach_has_lamp_control:
@@ -3379,7 +3399,9 @@ void InitCommandData()
         CommandData.roach[i].do_turnaround_loop = 0;
         CommandData.roach[i].n_outofrange_thresh = 300;
         CommandData.roach[i].enable_chop_lo = 1;
-        CommandData.roach[i].chop_lo = 0;
+        CommandData.roach[i].is_chopping_lo = 0;
+        CommandData.roach[i].min_nkids = 50;
+        CommandData.roach[i].max_nkids = 800;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
