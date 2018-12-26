@@ -681,7 +681,7 @@ derived_tng_t derived_list[] = {
     BITWORD("QDR_CAL_FAIL_ROACH1", "status_roach1", 13, 1),
     BITWORD("FIRMWARE_UPLOAD_FAIL_ROACH1", "status_roach1", 14, 1),
     BITWORD("HAS_FIRMWARE_ROACH1", "status_roach1", 15, 1),
-    BITWORD("TONE_FINDING_ERROR_ROACH2", "status_roach1", 16, 2),
+    BITWORD("TONE_FINDING_ERROR_ROACH1", "status_roach1", 16, 2),
     BITWORD("KATCP_CONNECT_ERROR_ROACH1", "status_roach1", 18, 1),
     BITWORD("IS_COMPRESSING_ROACH1", "status_roach1", 19, 1),
     BITWORD("DOING_FULL_LOOP_ROACH1", "status_roach1", 20, 1),

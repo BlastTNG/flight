@@ -2002,6 +2002,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     } else {
         blast_err("ROACH%d, Error finding TARG freqs", m_roach->which);
         m_roach->is_finding_kids = 0;
+        m_roach->tone_finding_error = 3;
         return retval;
     }
     // handle case where either not enough, or too many channels are found
@@ -4810,6 +4811,7 @@ int roach_halt_ppc(roach_state_t *m_roach)
     KATCP_FLAG_LAST | KATCP_FLAG_STRING, "", NULL);
     m_roach->has_firmware = 0;
     m_roach->is_streaming = 0;
+    m_roach->halted = 1;
     return status;
 }
 
