@@ -559,12 +559,14 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_relays[15] = 0;
             break;
         case gps_sw_reset:
-            system("/usr/local/bin/gps_sw_reset");
-            berror(fatal, "Commands: failed to reboot gps software\n");
+            if (system("/usr/local/bin/gps_sw_reset") != 0) {
+                blast_err("Commands: failed to reboot gps software\n");
+            }
             break;
         case gps_stats:
-            system("/usr/local/bin/gps_stats");
-            berror(fatal, "Commands: failed to check gps stats\n");
+            if (system("/usr/local/bin/gps_stats") != 0) {
+                blast_err("Commands: failed to check gps stats\n");
+            }
             break;
         case if_1_cycle:
             CommandData.Relays.cycle_if_1 = 1;
