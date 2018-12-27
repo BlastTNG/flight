@@ -1422,6 +1422,30 @@ struct mcom mcommands[plugh + 2] = {
     {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
   }
   },
+  {COMMAND(set_min_nkids), "Set min N KIDS found for tone finding error to go high", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Min number KIDS found", 1, 100, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_min_nkids_all),
+      "(All Roaches) Set min N KIDS found for tone finding error to go high", GR_ROACH, 1,
+  {
+    {"Min number KIDS found", 1, 100, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_max_nkids), "Set max N KIDS found for tone finding error to go high", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"Max number KIDS found", 500, 900, 'i', "NONE"},
+  }
+  },
+  {COMMAND(set_max_nkids_all),
+      "(All Roaches) Set max N KIDS found for tone finding error to go high", GR_ROACH, 1,
+  {
+    {"Max number KIDS found", 500, 900, 'i', "NONE"},
+  }
+  },
   {COMMAND(set_n_outofrange_thresh), "Set N channels out of range thresh", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},

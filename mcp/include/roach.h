@@ -119,12 +119,14 @@ typedef struct roach_state {
     e_roach_state state;
     e_roach_state desired_state;
 
+    bool halted;
     bool katcp_is_busy;
     char *address;
     uint16_t port;
     bool has_firmware;
     bool firmware_upload_fail;
     bool has_qdr_cal;
+    bool qdr_fail;
     bool has_tones;
     bool has_vna_tones;
     bool has_targ_tones;
@@ -137,7 +139,7 @@ typedef struct roach_state {
     bool has_adc_cal;
     bool write_flag;
     bool is_averaging;
-    bool tone_finding_error;
+    int tone_finding_error;
     bool sweep_fail;
     bool tone_write_fail;
     bool lamp_check_error;

@@ -1577,6 +1577,8 @@ int file_get_path(fileentry_t *m_file, char *m_path) {
 static void *diskmanager(void *m_arg __attribute__((unused))) {
     int retval;
     while (!s_diskmanager_exit) {
+        sleep(1);
+
         while ((retval = filepool_flush_buffers()) < 0) {
             blast_warn("Got an error writing to %s",
                     s_diskpool.current_disk->dev);
@@ -1587,9 +1589,13 @@ static void *diskmanager(void *m_arg __attribute__((unused))) {
 
         if (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
             filepool_handle_disk_error(s_diskpool.current_disk);
+            continue;
         }
 
-        sleep(1);
+        if (!s_ready) {
+	          s_ready = true;
+	          blast_info("Set s_ready to true.");
+        }
     }
     blast_info("Caught signal to exit.  Flushing disks.");
     s_ready = false;
@@ -1608,16 +1614,8 @@ void initialize_diskmanager(void) {
     diskpool_mount_primary();
     initialize_total_bytes();
 
-    // wait until a non full disk is found
-    diskpool_update_mounted_free_space(s_diskpool.current_disk);
-    while (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
-				filepool_handle_disk_error(s_diskpool.current_disk);
-        diskpool_update_mounted_free_space(s_diskpool.current_disk);
-        usleep(10000);
-		}
-
-    s_ready = true;
-    blast_info("Set s_ready to true.");
+    // s_ready = true;
+    // blast_info("Set s_ready to true.");
 
     pthread_create(&diskman_thread, NULL, diskmanager, NULL);
     pthread_detach(diskman_thread);
