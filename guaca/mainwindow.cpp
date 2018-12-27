@@ -19,6 +19,7 @@
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
 
+char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
 char configfile[128] = "guaca.cfg";
 char molestat[128] = "/data/etc/mole.lnk/time";
@@ -129,6 +130,63 @@ static int one (const struct dirent *unused)
   if (unused) return 1;
 
   return 1;
+}
+
+char * get_linklist_name(char * filename)
+{
+  int length = strlen(filename);
+
+  // the name needs to be long enough and of the right format
+  if ((length < 20) || (filename[length-20] != '_')) return NULL;
+
+  for (int i=length-1; i>=0; i--) {
+     if (filename[i] == '.') { // has a file extension, so not what we're looking for
+         return NULL;
+     }
+  }
+
+  filename[length-20] = '\0'; // remove the date from the linklist name
+
+  return filename;
+}
+
+int MainWindow::generate_linklist_listfiles()
+{
+  struct dirent **dir;
+  int n = scandir(archivedir, &dir, one, alphasort);
+
+  int num_types = 0;
+  char type_names[MAX_NUM_LINKLIST_FILES][LINKLIST_SHORT_FILENAME_SIZE] = {""};
+  FILE * type_fds[MAX_NUM_LINKLIST_FILES] = {0};
+  char listfilename[LINKLIST_MAX_FILENAME_SIZE] = "";
+
+  if (n < 0) {
+      return 0;
+  }
+
+  for (int i=0; i<n; i++) {
+    char * linklistname;
+    if ((linklistname = get_linklist_name(dir[i]->d_name))) {
+      int j = 0;
+      for (j=0; j<num_types; j++) {
+        if (!strcmp(linklistname, type_names[j])) break;
+      }
+      if (j == num_types) {
+        sprintf(listfilename, "%s/%s.lst", archivedir, linklistname);
+        type_fds[j] = fopen(listfilename, "w");
+        strcpy(type_names[j], linklistname);
+        num_types++;
+      }
+      linklistname[strlen(linklistname)] = '_';
+      fprintf(type_fds[j], "%s/%s\n", archivedir, linklistname);
+    }
+  }
+  for (int i=0; i<num_types; i++) {
+    fflush(type_fds[i]);
+    fclose(type_fds[i]);
+  }
+
+  return num_types;
 }
 
 /*
@@ -468,6 +526,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fclose(cfgfile);
   }
+
+  generate_linklist_listfiles();
 
   updateSettings();
   change_remote_host(ui->remoteHost->itemText(cfg.hostindex));

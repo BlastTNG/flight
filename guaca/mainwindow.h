@@ -77,6 +77,8 @@ private:
     int get_server_data();
     void updateSettings();
     void getSettings();
+    int generate_linklist_listfiles();
+
     QIcon qi[IMAGE_TOTAL];
     QSize qs;
 
