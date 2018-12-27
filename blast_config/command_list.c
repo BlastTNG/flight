@@ -1618,7 +1618,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
       {
-          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
+          {"Labjack to reconnect", 1, 7, 'i', "NONE"},
       }
   },
   /***************************************/
