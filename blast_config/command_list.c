@@ -1668,6 +1668,12 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening move size (in encoder units)", GR_CRYO, 1,
+    {
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_MIN_TIGHTEN_MOVE"}
+    }
+  },
+
   {COMMAND(valves_set_vel), "Set cryostat valves velocity", GR_CRYO, 1,
     {
       {"Cryostat valves velocity (microsteps/sec)", 0, 100000, 'i', "VEL_VALVES"}
