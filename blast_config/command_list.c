@@ -281,10 +281,10 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
 
-  {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
-  {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
-  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
-  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(halt_fc1), "ask MCP to halt fc1", GR_MISC | CONFIRM},
+  {COMMAND(halt_fc2), "ask MCP to halt fc2", GR_MISC | CONFIRM},
+  {COMMAND(reap_fc1), "ask MCP to reap the fc1 watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(reap_fc2), "ask MCP to reap the fc2 watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
