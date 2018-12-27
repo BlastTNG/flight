@@ -71,6 +71,13 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
+static linklist_tcpconn_t tcpconn = {"cacofonix"};
+char mole_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole";
+char data_etc[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc";
+char data_rawdir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
+char symdir_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc/mole.lnk";
+char symraw_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir/LIVE";
+
 void USAGE(void) {
   
   printf("\n\nMole is a generic linklist client/server that converts raw "
@@ -98,6 +105,8 @@ void USAGE(void) {
       " -L  --loopback         Have mole extract its own binary files.\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                        The default is /data/mole.\n"
+      " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
+      "                        Relative paths are w.r.t. /data/rawdir.\n"
       " -s  --server           Run a server for other mole clients to connect to.\n"
       " -ns --no-server        Don't run a server (default).\n"
       " -S  --start X          Starting frame to read. Ignores rewind if specified.\n"
@@ -135,11 +144,6 @@ void print_display(char * text, unsigned int recv_framenum) {
 	printf("\r");
 	fflush(stdout); 
 }
-
-static linklist_tcpconn_t tcpconn = {"cacofonix"};
-char mole_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole";
-char symdir_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc/mole.lnk";
-char symraw_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir/LIVE";
 
 int main(int argc, char *argv[]) {
   // mode selection
@@ -235,6 +239,16 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--filename") == 0) ||
                (strcmp(argv[i], "-F") == 0)) { // select file by name
       strcpy(filename_selection, argv[++i]);
+    } else if ((strcmp(argv[i], "--live-name") == 0) ||
+               (strcmp(argv[i], "-N") == 0)) { // name the live output file
+      char * arg = argv[++i];
+      if (arg[0] == '/') {
+        strcpy(symraw_name, arg);
+        sprintf(symdir_name, "%s.lnk", arg);
+      } else {
+        sprintf(symraw_name, "%s/%s", data_rawdir, arg);
+        sprintf(symdir_name, "%s/%s.lnk", mole_dir, arg);
+      }
     } else if ((strcmp(argv[i], "--loopback") == 0) ||
                (strcmp(argv[i], "-L") == 0)) { // loopback mode
       bin_backup = 0;

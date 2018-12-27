@@ -35,17 +35,19 @@ class POwlAnimation : public QWidget, public PObject
 {
     Q_OBJECT
     int _lastNFrames;
-    QPixmap* _pixMaps[5];
+    int _nUpdates;
+    QPixmap _pixMaps[5];
     QLabel* _label;
     int _stage;
     QPoint _moveThingy;
+    int _H;
 public:
     friend QDataStream& operator<<(QDataStream&a,POwlAnimation&b);
     friend QDataStream& operator>>(QDataStream&a,POwlAnimation&b);
 
-    POwlAnimation();
+    POwlAnimation(int font_height);
     ~POwlAnimation();
-    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
+    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames, int dt);
     QSize sizeHint();
     const int& stage() const;
     void mousePressEvent(QMouseEvent *ev) { _moveThingy=mapFromGlobal(ev->globalPos()); activate(); }

@@ -32,7 +32,7 @@
 #define GRPOS_BAL   1
 #define GRPOS_HWPR  2
 #define GRPOS_TRIM  3
-#define GRPOS_ELECT 4
+#define GRPOS_ELECT 4 // empty, remove after 2018 flight? -PAW
 #define GRPOS_BIAS  5
 #define GRPOS_VETO  6
 #define GRPOS_ACT   7
@@ -47,6 +47,7 @@
 #define GRPOS_MISC  16
 #define GRPOS_FOCUS 17
 #define GRPOS_ROACH 18
+#define GRPOS_PSS   19
 
 #define GR_POINT        (1 << GRPOS_POINT)
 #define GR_BAL          (1 << GRPOS_BAL)
@@ -67,21 +68,24 @@
 #define GR_MISC         (1 << GRPOS_MISC)
 #define GR_FOCUS        (1 << GRPOS_FOCUS)
 #define GR_ROACH        (1 << GRPOS_ROACH)
+#define GR_PSS          (1 << GRPOS_PSS)
+
 // reserved for CONFIRM  0x80000000
 
 extern const char *command_list_serial;
 extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
+extern const char *pilot_target_names[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
 enum singleCommand {
   az_auto_gyro,     az_off,             az_on,
-  balance_auto,     balance_off,
+  balance_auto,     balance_off, balance_terminate,
   // cal_off,          cal_on,
   hwpr_panic,       el_off,             el_on,
-  elclin_allow,     elclin_veto,        elenc_allow,      elenc_veto,
+  elclin_allow,     elclin_veto,
   fixed,
   l_valve_close,    he_valve_on,        he_valve_off,     l_valve_open,
   elmotenc_allow,   elmotenc_veto,
@@ -94,8 +98,6 @@ enum singleCommand {
   trim_to_xsc0,      unlock,             lock_off,
   force_el_on,
   actbus_cycle,
-  vtx_off,	        vtx_on,
-  bi0_off,	        bi0_on,
   charge_off,	    charge_on,		charge_cycle,
 
   ifroll_1_gy_allow, ifroll_1_gy_veto,   ifroll_2_gy_allow, ifroll_2_gy_veto,
@@ -105,12 +107,12 @@ enum singleCommand {
   ifyaw_1_gy_off,   ifyaw_1_gy_on,	ifyaw_2_gy_off,	  ifyaw_2_gy_on,
   ifel_1_gy_off,    ifel_1_gy_on,	ifel_2_gy_off,	  ifel_2_gy_on,
   gybox_cycle,
-            reap_north,       reap_south,
+            reap_fc1,       reap_fc2,
   xy_panic,
   trim_to_xsc1,      antisun,            blast_rocks,      blast_sucks,
   at_float,           not_at_float,     el_auto_gyro,
   repoll,           autofocus_allow,
-  autofocus_veto,   north_halt,         south_halt,       actbus_on,
+  autofocus_veto,   halt_fc1,         halt_fc2,       actbus_on,
   actbus_off,       actuator_stop,      restore_piv,
   reset_rw,         reset_piv,
   reset_elev,       reset_ethercat,
@@ -122,6 +124,7 @@ enum singleCommand {
   hwpr_step,          hwpr_pot_is_dead, hwpr_pot_is_alive,
   hwpr_step_off,    hwpr_step_on,       shutter_init,     shutter_close,
   shutter_reset,    shutter_open,       shutter_off,      shutter_open_close,
+  shutter_keepopen, shutter_keepclosed,
   lock45,           shutter_close_slow, heater_300mk_on,  heater_300mk_off,
   charcoal_hs_on,   charcoal_hs_off,
   lna350_on, lna350_off, lna250_on, lna250_off, lna500_on, lna500_off,
@@ -137,10 +140,10 @@ enum singleCommand {
     heater_sync, allow_cycle, disallow_cycle,
 	hd_pv_cycle, eth_switch_cycle, fc1_cycle, xsc1_cycle, fc2_cycle,
 	xsc0_cycle, gyros_cycle, data_transmit_cycle, elmot_cycle, pivot_cycle,
-	mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_15_cycle,
-	gps_timing_cycle, if_1_cycle, if_2_cycle, if_3_cycle, if_4_cycle,
-	if_5_cycle, if_6_cycle, if_7_cycle, if_8_cycle, if_9_cycle,
-	if_10_cycle, force_cycle,
+    mag_cycle, rw_cycle, steppers_cycle, clino_cycle, of_lj_cycle,
+	gps_timing_cycle, if_1_cycle, if_lj_cycle, timing_dist_cycle, vtx_cycle,
+	bi0_cycle, if_6_cycle, if_eth_switch_cycle, if_8_cycle, roach_cycle,
+	cryo_hk_cycle, force_cycle,
 	hd_pv_on, hd_pv_off, eth_switch_on, eth_switch_off,
 	fc1_on, fc1_off, xsc1_on, xsc1_off,
 	fc2_on, fc2_off, xsc0_on, xsc0_off,
@@ -148,20 +151,20 @@ enum singleCommand {
 	elmot_on, elmot_off, pivot_on, pivot_off,
 	mag_on, mag_off, mag_reset, rw_on, rw_off,
 	steppers_on, steppers_off, clino_on, clino_off,
-	of_relay_15_on, of_relay_15_off, gps_timing_on, gps_timing_off,
-	if_relay_1_on, if_relay_1_off, if_relay_2_on, if_relay_2_off,
-	if_relay_3_on, if_relay_3_off, if_relay_4_on, if_relay_4_off,
-	if_relay_5_on, if_relay_5_off, if_relay_6_on, if_relay_6_off,
-	if_relay_7_on, if_relay_7_off, if_relay_8_on, if_relay_8_off,
-	if_relay_9_on, if_relay_9_off, if_relay_10_on, if_relay_10_off,
+	of_lj_on, of_lj_off, gps_timing_on, gps_timing_off,
+        gps_sw_reset, gps_stats, if_relay_1_on, if_relay_1_off, if_lj_on, if_lj_off,
+	timing_dist_on, timing_dist_off, bi0_on, bi0_off,
+	vtx_on, vtx_off, if_relay_6_on, if_relay_6_off,
+	if_eth_switch_on, if_eth_switch_off, if_relay_8_on, if_relay_8_off,
+	roach_on, roach_off, cryo_hk_on, cryo_hk_off,
 	level_sensor_pulse, single_cal_pulse, heaters_off, load_curve, vtx_xsc0,
-  vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all,
+  vtx_xsc1, vna_sweep_all, targ_sweep_all, find_kids_default_all, force_pot_refill,
   center_lo_all, calc_dfs, change_amps, load_freqs_all,
-  reload_vna_all, end_sweeps_all, set_attens_default, new_ref_params_all,
-  auto_find_kids_all, zero_df_all, reset_roach_all, flight_mode,
-  change_freqs_all, debug_mode, pilot_oth_on, pilot_oth_off,
-
-  xyzzy
+  reload_vna_all, end_sweeps_all, new_ref_params_all,
+  auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
+  check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
+  trigger_retune_check, full_loop_all_default, set_attens_default_all, roach_allow_scan_check_all,
+  roach_disallow_scan_check_all, chop_lo_all, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -170,13 +173,13 @@ enum multiCommand {
   az_el_goto,        az_gain,           az_scan,          balance_gain,
   balance_manual,    balance_vel,       balance_i,
   bias_level_500,    bias_level_350,    bias_level_250,   bias_level_rox,
-  bias_level_x,
+  bias_level_x, set_tcrit_fpa,
   // fridge_cycle_params,
   box,
   // cal_repeat,
   cap,              cur_mode,
   az_el_trim,        drift,             el_gain,
-  hwpr_jump,         hwpr_goto_i,
+  hwpr_goto_rel,         hwpr_goto_i,
   autotrim_to_sc,
   lock,              phase,             act_offset,
   pivot_gain,        ra_dec_goto,      ra_dec_set,
@@ -187,11 +190,12 @@ enum multiCommand {
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute, reconnect_lj,     set_roach_mode,
+  request_stream_file, set_pilot_oth,
 
   // t_gyro_gain,
   timeout,           vcap,
   vbox,              slot_sched,        az_gyro_offset,
-  hwpr_set_overshoot,
+  hwpr_set_overshoot, hwpr_set_backoff,
   // jfet_set,
   hwpr_vel,          hwpr_i,
   gyro_off,	         quad,
@@ -202,11 +206,13 @@ enum multiCommand {
   delta_secondary,   lvdt_limit,        thermo_param,     focus_offset,
   motors_verbose,    fix_ethercat,      bias_step,
   // phase_step,
-  hwpr_repeat,      hwpr_define_pos,          params_test,
+  hwpr_repeat,      hwpr_define_pos, hwpr_set_margin,         params_test,
   hwpr_goto,	     hwpr_goto_pot,     act_enc_trim,     actuator_tol,
   el_scan,           el_box,            shutter_step,     shutter_step_slow,
-  set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal,
-  actuators_set_used,
+  shutter_i, 	    shutter_vel,
+  set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal, pss_cal_n,
+  pss_set_noise,
+  pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll, pss_cal_array_az, pss_set_imin,
   potvalve_set_thresholds,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
@@ -257,7 +263,7 @@ enum multiCommand {
   xsc_filter_matching,
   vna_sweep,
   targ_sweep,
-  reset_roach,
+  roach_reset,
   calc_df,
   opt_tones,
   auto_retune,
@@ -265,7 +271,6 @@ enum multiCommand {
   show_adc_rms,
   load_new_vna_amps,
   load_new_targ_amps,
-  cal_adc,
   change_state,
   get_state,
   set_attens,
@@ -283,23 +288,73 @@ enum multiCommand {
   cal_amps,
   refit_freqs,
   refit_freqs_all,
+  targ_refit,
+  targ_refit_all,
   chop_template,
   load_freqs,
   new_ref_params,
-  check_retune,
-  retune,
   center_lo,
   offset_lo,
-  all_roach_ts,
+  roach_ts_all,
+  roach_ts,
   offset_lo_all,
   find_kids_default,
   change_amp,
   change_freq,
+  set_cal_timeout,
   change_phase,
   auto_find_kids,
   offset_freq,
-  lamp_check_all,
   set_attens_all,
+  reboot_pi,
+  read_attens,
+  set_attens_conserve,
+  set_attens_calc,
+  set_lo_MHz,
+  read_lo,
+  roach_df_all,
+  df_targ,
+  roach_allow_scan_check,
+  roach_disallow_scan_check,
+  full_loop,
+  full_loop_all,
+  full_loop_default,
+  check_lamp_retune,
+  check_lamp_retune_all,
+  check_df_retune,
+  check_dfsweep_retune,
+  auto_correct,
+  auto_correct_all,
+  set_retune_type,
+  set_retune_type_all,
+  noise_comp,
+  noise_comp_all,
+  find_kids_loop,
+  find_kids_loop_all,
+  kill_roach,
+  set_df_retune_threshold,
+  set_df_retune_threshold_all,
+  set_df_diff_retune_threshold,
+  set_df_diff_retune_threshold_all,
+  set_min_nkids,
+  set_min_nkids_all,
+  set_max_nkids,
+  set_max_nkids_all,
+  set_default_tone_power,
+  set_default_tone_power_all,
+  set_attens_default,
+  set_find_kids_params,
+  compress_roach_data,
+  enable_cycle_checker,
+  turnaround_loop,
+  turnaround_loop_all,
+  set_n_outofrange_thresh_all,
+  set_n_outofrange_thresh,
+  enable_chop_lo_all,
+  chop_lo,
+  roach_has_lamp_control,
+  roach_set_extref,
+  roach_set_extref_all,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

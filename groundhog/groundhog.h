@@ -20,6 +20,12 @@ struct UDPSetup {
   int downlink_index;
 };
 
+struct TlmReport {
+  linklist_t * ll;
+  uint64_t framenum;
+  int allframe;
+};
+
 void udp_receive(void *arg);
 void pilot_publish(void *arg);
 
@@ -34,6 +40,10 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t
 
 extern char datestring[80];
 extern int verbose;
+extern struct TlmReport pilot_report;
+extern struct TlmReport bi0_report;
+extern struct TlmReport highrate_report;
+extern struct TlmReport sbd_report;
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))

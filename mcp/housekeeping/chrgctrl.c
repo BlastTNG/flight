@@ -198,7 +198,8 @@ void* chrgctrlComm(void* cc) {
                 }
                 modbus_free(ctlr->mb);
                 ctlr->mb = NULL;
-                ctlr->state = CC_STATE_DISCONNECT;
+                // ctlr->state = CC_STATE_DISCONNECT;
+                ctlr->state = CC_STATE_RESET;
                 have_warned_connect = 1;
                 continue;
             }

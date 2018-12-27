@@ -1,0 +1,22 @@
+#!/bin/sh
+echo This script ignores all parameters.
+echo To change where owl will be installed, edit owl.pro!
+echo
+if [ `uname` = "Darwin" ]; then
+  opt="-spec macx-g++"
+else
+  opt=""
+fi
+if [ "x`which qmake-qt5 2>/dev/null`" != "x" ]; then
+  echo "executing \"qmake-qt5 $opt\""
+  qmake-qt5 $opt || exit 1
+elif [ "x`which qmake 2>/dev/null`" != "x" ]; then
+  echo "executing: \"qmake $opt\""
+  qmake $opt || exit 1
+else
+  echo "ERROR: Can't find qmake-qt5 nor qmake in your path!"
+  exit 1
+fi
+echo 
+echo Great! That seemed to work.
+echo Now run \"make\" and \"make install\"!

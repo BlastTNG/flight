@@ -58,6 +58,11 @@ static ph_thread_t *ecmonitor_ctl_id;
 
 extern int16_t InCharge;
 
+/**
+ * Number of ethercat controllers (including the HWP encoder)
+ */
+#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
+
 // device node Serial Numbers
 #define RW_SN 0x01bbbb65
 #define PIV_SN 0x02924687
@@ -77,7 +82,7 @@ typedef struct {
     uint8_t     subindex;
     int         offset;
 } pdo_channel_map_t;
-static GSList *pdo_list[4];
+static GSList *pdo_list[N_MCs];
 
 
 /**
@@ -95,16 +100,14 @@ static char io_map[4096];
 
 static int motors_exit = false;
 
-
-/**
- * Number of ethercat controllers (including the HWP encoder)
- */
-#define N_MCs 5 // If you change this, also change EC_MAXSLAVE in ethercatmain.h
-
 /**
  * Ethercat driver status
  */
+
+static ec_device_state_t controller_state[N_MCs] = {{0}};
+/*
 static ec_motor_state_t controller_state[N_MCs] = {ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD, ECAT_MOTOR_COLD};
+*/
 ec_state_t ec_mcp_state = {0};
 
 /**
@@ -143,16 +146,34 @@ static int16_t *target_current[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*
                                           (int16_t*) &dummy_write_var };
 
 /// Read word from encoder
-static uint32_t *hwp_position = (uint32_t*) &dummy_var;
+static uint32_t *hwp_position[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*) &dummy_var, (uint32_t*) &dummy_var,
+                                         (uint32_t*) &dummy_var, (uint32_t*) &dummy_var};
+
+int check_slave_comm_ready(int m_index) {
+    if (m_index < 1) return 0; // m_index must be > 0
+    if (!controller_state[m_index].comms_ok) {
+        return 0; // no errors in mapping
+    } else {
+        return 1;
+    }
+}
 
 uint32_t hwp_get_position(void)
 {
-    return *hwp_position;
+    if (check_slave_comm_ready(hwp_index)) {
+        return *hwp_position[hwp_index];
+    } else {
+        return 0;
+    }
 }
 
 uint16_t hwp_get_state(void)
 {
-    return ec_slave[hwp_index].state;
+    if (check_slave_comm_ready(hwp_index)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 /**
  * This set of functions return the latched faults of each motor controller
@@ -160,32 +181,85 @@ uint16_t hwp_get_state(void)
  */
 uint32_t rw_get_latched(void)
 {
-    return *latched_register[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *latched_register[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t el_get_latched(void)
 {
-    return *latched_register[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *latched_register[el_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t piv_get_latched(void)
 {
-    return *latched_register[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *latched_register[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
- * This set of functions returns the control word of each motor controller (after being set)
+ * This set of functions returns the control word of each motor controller (read back from the controller)
  * @return uint16 control word bitmap
  */
 uint16_t rw_get_ctl_word(void)
 {
-    return *control_word_read[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *control_word_read[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_ctl_word(void)
 {
-    return *control_word_read[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *control_word_read[el_index];
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_ctl_word(void)
 {
-    return *control_word_read[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *control_word_read[piv_index];
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * This set of functions returns the control word of each motor controller (sent to the controller)
+ * @return uint16 control word bitmap
+ */
+uint16_t rw_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(rw_index)) {
+        return *control_word[rw_index];
+    } else {
+        return 0;
+    }
+}
+int16_t el_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(el_index)) {
+        return *control_word[el_index];
+    } else {
+        return 0;
+    }
+}
+int16_t piv_get_ctl_word_write(void)
+{
+    if (check_slave_comm_ready(piv_index)) {
+        return *control_word[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -194,15 +268,27 @@ int16_t piv_get_ctl_word(void)
  */
 uint16_t rw_get_network_status_word(void)
 {
-    return *network_status_word[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *network_status_word[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t el_get_network_status_word(void)
 {
-    return *network_status_word[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *network_status_word[el_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t piv_get_network_status_word(void)
 {
-    return *network_status_word[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *network_status_word[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -211,19 +297,35 @@ uint16_t piv_get_network_status_word(void)
  */
 int32_t rw_get_position(void)
 {
-    return *actual_position[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *actual_position[rw_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_position(void)
 {
-    return *actual_position[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *actual_position[el_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_motor_position(void) // Offsetting motor units to correspond with elevation
 {
-    return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        return *motor_position[el_index] + ENC_RAW_EL_OFFSET/EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 int32_t piv_get_position(void)
 {
-    return *actual_position[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *actual_position[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -232,19 +334,35 @@ int32_t piv_get_position(void)
  */
 double rw_get_position_degrees(void)
 {
-    return rw_get_position() * RW_ENCODER_SCALING;
+    if (check_slave_comm_ready(rw_index)) {
+        return rw_get_position() * RW_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_position_degrees(void)
 {
-    return el_get_position() * EL_LOAD_ENCODER_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        return el_get_position() * EL_LOAD_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_motor_position_degrees(void)
 {
-    return el_get_motor_position() * EL_MOTOR_ENCODER_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        return el_get_motor_position() * EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double piv_get_position_degrees(void)
 {
-    return piv_get_position() * PIV_RESOLVER_SCALING;
+    if (check_slave_comm_ready(piv_index)) {
+        return piv_get_position() * PIV_RESOLVER_SCALING;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -254,15 +372,27 @@ double piv_get_position_degrees(void)
  */
 double rw_get_velocity_dps(void)
 {
-    return *motor_velocity[rw_index] * 0.1 * RW_ENCODER_SCALING;
+    if (check_slave_comm_ready(rw_index)) {
+        return *motor_velocity[rw_index] * 0.1 * RW_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double el_get_velocity_dps(void)
 {
-    return *motor_velocity[el_index] * 0.1 * EL_MOTOR_ENCODER_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        return *motor_velocity[el_index] * 0.1 * EL_MOTOR_ENCODER_SCALING;
+    } else {
+        return 0;
+    }
 }
 double piv_get_velocity_dps(void)
 {
-    return *motor_velocity[piv_index] * 0.1 * PIV_RESOLVER_SCALING;
+    if (check_slave_comm_ready(piv_index)) {
+        return *motor_velocity[piv_index] * 0.1 * PIV_RESOLVER_SCALING;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -272,15 +402,27 @@ double piv_get_velocity_dps(void)
  */
 int32_t rw_get_velocity(void)
 {
-    return *motor_velocity[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *motor_velocity[rw_index];
+    } else {
+        return 0;
+    }
 }
 int32_t el_get_velocity(void)
 {
-    return *motor_velocity[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *motor_velocity[el_index];
+    } else {
+        return 0;
+    }
 }
 int32_t piv_get_velocity(void)
 {
-    return *motor_velocity[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *motor_velocity[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -289,15 +431,27 @@ int32_t piv_get_velocity(void)
  */
 int16_t rw_get_current(void)
 {
-    return *motor_current[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *motor_current[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_current(void)
 {
-    return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        return *motor_current[el_index]*EL_MOTOR_CURRENT_SCALING;
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_current(void)
 {
-    return *motor_current[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *motor_current[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -306,15 +460,27 @@ int16_t piv_get_current(void)
  */
 uint16_t rw_get_status_word(void)
 {
-    return *status_word[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *status_word[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t el_get_status_word(void)
 {
-    return *status_word[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *status_word[el_index];
+    } else {
+        return 0;
+    }
 }
 uint16_t piv_get_status_word(void)
 {
-    return *status_word[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *status_word[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -323,15 +489,27 @@ uint16_t piv_get_status_word(void)
  */
 uint32_t rw_get_status_register(void)
 {
-    return *status_register[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *status_register[rw_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t el_get_status_register(void)
 {
-    return *status_register[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *status_register[el_index];
+    } else {
+        return 0;
+    }
 }
 uint32_t piv_get_status_register(void)
 {
-    return *status_register[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *status_register[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -340,15 +518,27 @@ uint32_t piv_get_status_register(void)
  */
 int16_t rw_get_amp_temp(void)
 {
-    return *amp_temp[rw_index];
+    if (check_slave_comm_ready(rw_index)) {
+        return *amp_temp[rw_index];
+    } else {
+        return 0;
+    }
 }
 int16_t el_get_amp_temp(void)
 {
-    return *amp_temp[el_index];
+    if (check_slave_comm_ready(el_index)) {
+        return *amp_temp[el_index];
+    } else {
+        return 0;
+    }
 }
 int16_t piv_get_amp_temp(void)
 {
-    return *amp_temp[piv_index];
+    if (check_slave_comm_ready(piv_index)) {
+        return *amp_temp[piv_index];
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -357,15 +547,21 @@ int16_t piv_get_amp_temp(void)
  */
 void rw_set_current(int16_t m_cur)
 {
-    *target_current[rw_index] = m_cur;
+    if (check_slave_comm_ready(rw_index)) {
+        *target_current[rw_index] = m_cur;
+    }
 }
 void el_set_current(int16_t m_cur)
 {
-    *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
+    if (check_slave_comm_ready(el_index)) {
+        *target_current[el_index] = m_cur*EL_MOTOR_CURRENT_SCALING;
+    }
 }
 void piv_set_current(int16_t m_cur)
 {
-    *target_current[piv_index] = m_cur;
+    if (check_slave_comm_ready(piv_index)) {
+        *target_current[piv_index] = m_cur;
+    }
 }
 
 /**
@@ -374,15 +570,21 @@ void piv_set_current(int16_t m_cur)
  */
 void rw_enable(void)
 {
-    *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (check_slave_comm_ready(rw_index)) {
+        *control_word[rw_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 void el_enable(void)
 {
-    *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (check_slave_comm_ready(el_index)) {
+        *control_word[el_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 void piv_enable(void)
 {
-    *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    if (check_slave_comm_ready(piv_index)) {
+        *control_word[piv_index] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+    }
 }
 
 /**
@@ -391,15 +593,21 @@ void piv_enable(void)
  */
 void rw_disable(void)
 {
-    *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
+    if (check_slave_comm_ready(rw_index)) {
+        *control_word[rw_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 void el_disable(void)
 {
-    *control_word[el_index] &= (~ECAT_CTL_ENABLE);
+    if (check_slave_comm_ready(el_index)) {
+        *control_word[el_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 void piv_disable(void)
 {
-    *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
+    if (check_slave_comm_ready(piv_index)) {
+        *control_word[piv_index] &= (~ECAT_CTL_ENABLE);
+    }
 }
 
 /**
@@ -407,15 +615,21 @@ void piv_disable(void)
  */
 void rw_quick_stop(void)
 {
-    *control_word[rw_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (check_slave_comm_ready(rw_index)) {
+        *control_word[rw_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 void el_quick_stop(void)
 {
-    *control_word[el_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (check_slave_comm_ready(el_index)) {
+        *control_word[el_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 void piv_quick_stop(void)
 {
-    *control_word[piv_index] &= (~ECAT_CTL_QUICK_STOP);
+    if (check_slave_comm_ready(piv_index)) {
+        *control_word[piv_index] &= (~ECAT_CTL_QUICK_STOP);
+    }
 }
 
 /**
@@ -423,15 +637,21 @@ void piv_quick_stop(void)
  */
 void rw_reset_fault(void)
 {
-    *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
+    if (check_slave_comm_ready(rw_index)) {
+        *control_word[rw_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 void el_reset_fault(void)
 {
-    *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
+    if (check_slave_comm_ready(el_index)) {
+        *control_word[el_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 void piv_reset_fault(void)
 {
-    *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
+    if (check_slave_comm_ready(piv_index)) {
+        *control_word[piv_index] |= ECAT_CTL_RESET_FAULT;
+    }
 }
 
 /**
@@ -530,7 +750,9 @@ static void ec_init_heartbeat(int slave_index)
  */
 static int find_controllers(void)
 {
+    blast_info("initial io_map pointer %p pointer to pointer %p", io_map, &io_map);
     ec_mcp_state.n_found = ec_config(false, &io_map);
+    blast_info("after ec_config io_map pointer %p pointer to pointer %p", io_map, &io_map);
     if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
@@ -558,6 +780,7 @@ static int find_controllers(void)
     }
     ec_mcp_state.slave_count = ec_slavecount;
     for (int i = 1; i <= ec_slavecount; i++) {
+        controller_state[i].index = i;
         /**
          * There is only one PEPER FUCHS encoder on the chain, so we test for this
          * first.  It doesn't have a fixed index number like the motor controllers,
@@ -570,35 +793,42 @@ static int find_controllers(void)
             blast_startup("PEPPERL+FUCHS encoder %d: %s: SN: %d",
                         ec_slave[i].aliasadr, ec_slave[i].name, serial);
             hwp_index = i;
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+            controller_state[i].is_hwp = 1;
+            break;
         }
         /**
          * Configure the index values for later use.  These are mapped to the hard-set
          * addresses on the motor controllers (look for the dials on the side)
          */
-        if (ec_slave[i].aliasadr == RW_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %d",
+        int32_t serial = 0;
+        int size = 4;
+        ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
+        if (serial == RW_SN) {
+            blast_startup("Reaction Wheel Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             rw_index = i;
-        } else if (ec_slave[i].aliasadr == PIV_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Pivot Motor Controller %d: %s: SN: %d",
+            blast_info("Setting rw_index to %d", rw_index);
+             blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+           controller_state[i].is_mc = 1;
+        } else if (serial == PIV_SN) {
+            blast_startup("Pivot Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             piv_index = i;
-        } else if (ec_slave[i].aliasadr == EL_ADDR) {
-            int32_t serial = 0;
-            int size = 4;
-            ec_SDOread(i, 0x2384, 1, false, &size, &serial, EC_TIMEOUTRXM);
-            blast_startup("Elevation Motor Controller %d: %s: SN: %d",
+            blast_info("Setting piv_index to %d", piv_index);
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
+            controller_state[i].is_mc = 1;
+        } else if (serial == EL_SN) {
+            blast_startup("Elevation Motor Controller %d: %s: SN: %4x",
                           ec_slave[i].aliasadr, ec_slave[i].name, serial);
             el_index = i;
+            controller_state[i].is_mc = 1;
+            blast_info("Setting el_index to %d", el_index);
+            blast_info("ec_slave[%d].outputs = %p", i, ec_slave[i].outputs);
         } else {
             blast_warn("Got unknown MC %s at position %d with alias %d",
                        ec_slave[i].name, ec_slave[i].configadr, ec_slave[i].aliasadr);
+            controller_state[i].ec_unknown = 1;
         }
     }
     while (ec_iserror()) {
@@ -623,30 +853,32 @@ static int hwp_pdo_init(void)
         return -1;
     }
 
-    blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
-            hwp_index, ec_slave[hwp_index].name);
+     blast_startup("Configuring PDO Mappings for encoder index %d (%s)",
+             hwp_index, ec_slave[hwp_index].name);
 
     /**
      * To program the PDO mapping, we first must clear the old state
      */
-/*
+
     if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_ASSIGNMENT, 0, 0)) blast_err("Failed mapping!");
     for (int i = 0; i < 4; i++) {
         if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING + i, 0, 0)) blast_err("Failed mapping!");
     }
-*/
+
     /**
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
 
-    map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
-    if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
-/*
-    if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 1)) /// Set the 0x1a00 map to contain 1 elements
-        blast_err("Failed mapping!");
-    if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
-        blast_err("Failed mapping!");
-*/
+//       map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
+//       if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
+//       map_pdo(&map, ECAT_FUCHS_OP_STATUS, 32);     // Actual Motor Velocity
+//       if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 2, map.val)) blast_err("Failed mapping!");
+//
+//      if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 2)) /// Set the 0x1a00 map to contain 1 elements
+//          blast_err("Failed mapping!");
+//      if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
+//          blast_err("Failed mapping!");
+
     return 0;
 }
 
@@ -673,6 +905,7 @@ static int motor_pdo_init(int m_slave)
     }
 
     blast_startup("Configuring PDO Mappings for controller %d (%s)", m_slave, ec_slave[m_slave].name);
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -711,8 +944,14 @@ static int motor_pdo_init(int m_slave)
         blast_err("Failed mapping!");
     }
     blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
+    map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word
+    retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
+    if (!retval) {
+        blast_err("Failed mapping!");
+    }
+    blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 1)) /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -752,6 +991,11 @@ static int motor_pdo_init(int m_slave)
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4)) /// There are four maps in the TX PDOs
         blast_err("Failed mapping!");
 
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -781,6 +1025,7 @@ static int motor_pdo_init(int m_slave)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
+    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
     return 0;
 }
 
@@ -816,21 +1061,40 @@ static void map_index_vars(int m_index)
     	blast_info("Found PDO map for %s", #_map); \
     } \
     }
-    PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
-    PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
-    PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
-    PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
-    PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
-    PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
-    PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
-    PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
-    PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+    if (controller_state[m_index].is_mc) {
+        PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
+        PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
+        PDO_SEARCH_LIST(ECAT_ACTUAL_POSITION, actual_position);
+        PDO_SEARCH_LIST(ECAT_DRIVE_STATUS, status_register);
+        PDO_SEARCH_LIST(ECAT_CTL_STATUS, status_word);
+        PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
+        PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
+        PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+        PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
+        PDO_SEARCH_LIST(ECAT_CTL_WORD, control_word_read);
+        while (ec_iserror()) {
+            blast_err("%s", ec_elist2string());
+        }
+    } else if (controller_state[m_index].is_hwp) {
+        PDO_SEARCH_LIST(ECAT_FUCHS_POSITION, hwp_position);
+        while (ec_iserror()) {
+            blast_err("%s", ec_elist2string());
+        }
+    }
 #undef PDO_SEARCH_LIST
 
     // TODO(seth): Add dynamic mapping to outputs
     /// Outputs
-    control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
-    target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+    if (controller_state[m_index].is_mc) {
+        control_word[m_index] = (uint16_t*) (ec_slave[m_index].outputs);
+        target_current[m_index] = (int16_t*) (control_word[m_index] + 1);
+        if (!(ec_slave[m_index].outputs)) {
+            blast_err("Error: IOmap was not configured correctly!  Setting slave_error = 1 for slave %d...", m_index);
+            controller_state[m_index].slave_error = 1;
+        } else {
+            controller_state[m_index].slave_error = 0;
+        }
+    }
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
@@ -843,17 +1107,28 @@ static void map_index_vars(int m_index)
 static void map_motor_vars(void)
 {
 	blast_info("Starting map_motor_vars.");
-    if (el_index) map_index_vars(el_index);
-    if (rw_index) map_index_vars(rw_index);
-    if (piv_index) map_index_vars(piv_index);
+    if (el_index) {
+        blast_info("mapping el_motors to index: %d", el_index);
+        map_index_vars(el_index);
+    }
+    if (rw_index) {
+        blast_info("mapping rw_motors to index: %d", rw_index);
+        map_index_vars(rw_index);
+    }
+    if (piv_index) {
+        blast_info("mapping piv_motors to index: %d", piv_index);
+        map_index_vars(piv_index);
+    }
     if (hwp_index) {
-        hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
+        blast_info("mapping hwp to index: %d", hwp_index);
+        map_index_vars(hwp_index);
+        // hwp_position = (uint32_t*)ec_slave[hwp_index].inputs;
     }
 
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-	blast_info("Finished map_motor_vars.");
+    blast_info("Finished map_motor_vars.");
 }
 
 /**
@@ -865,12 +1140,18 @@ static void motor_configure_timing(void)
 {
     int found_dc_master = 0;
     ec_configdc();
+    while (ec_iserror()) {
+        blast_err("Error after ec_iserror(), %s", ec_elist2string());
+    }
     for (int i = 1; i <= ec_slavecount; i++) {
         if (!found_dc_master && ec_slave[i].hasdc) {
             ec_dcsync0(i, true, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
             found_dc_master = 1;
         } else {
             ec_dcsync0(i, false, ECAT_DC_CYCLE_NS, ec_slave[i].pdelay);
+        }
+        while (ec_iserror()) {
+            blast_err("Slave %i, %s", i, ec_elist2string());
         }
         /**
          * Set the SYNC Manager mode to free-running so that we get data from the drive as soon as
@@ -879,6 +1160,14 @@ static void motor_configure_timing(void)
         ec_SDOwrite16(i, 0x1C32, 1, 0);
         while (ec_iserror()) {
             blast_err("Slave %i, %s", i, ec_elist2string());
+        }
+        blast_info("Slave %i, has_dc = %d, found_dc_master = %d", i, ec_slave[i].hasdc, found_dc_master);
+        if (ec_slave[i].hasdc && found_dc_master) {
+            controller_state[i].has_dc = 1;
+            blast_info("setting has_dc to 1");
+        } else {
+            controller_state[i].has_dc = 0;
+            blast_info("setting has_dc to 0");
         }
     }
 }
@@ -909,6 +1198,7 @@ static int motor_set_operational()
      * If we've reached fully operational state, return
      */
     if (ec_slave[0].state == EC_STATE_OPERATIONAL) {
+        blast_info("We have reached a fully operational state.");
         ec_mcp_state.status = ECAT_MOTOR_RUNNING;
         return 0;
     }
@@ -928,6 +1218,23 @@ static int motor_set_operational()
     return -1;
 }
 
+static uint8_t check_ec_ready(int index)
+{
+    uint16_t m_state = 0;
+    if ((index <= 0) || (index >= N_MCs)) {
+        return(0);
+    }
+    if (!controller_state[index].comms_ok) {
+        return(0);
+    }
+    if (controller_state[index].is_mc) {
+        m_state = *status_word[index];
+        if (!(m_state & ECAT_CTL_STATUS_READY)) {
+            return(0);
+        }
+    }
+    return(1);
+}
 static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 {
     if (firsttime) {
@@ -961,15 +1268,18 @@ static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 // Checks to see whether we have we have communicated with the El Motor and it is returning
 // a reasonable network status.
 uint8_t is_el_motor_ready() {
-    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
+    return(check_ec_ready(el_index));
+//    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
 }
 
 uint8_t is_rw_motor_ready() {
-    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
+    return(check_ec_ready(rw_index));
+//    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
 }
 
 uint8_t is_pivot_motor_ready() {
-    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
+    return(check_ec_ready(piv_index));
+//    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
 }
 
 static void read_motor_data()
@@ -985,7 +1295,8 @@ static void read_motor_data()
     RWMotorData[motor_i].motor_position = rw_get_position();
     RWMotorData[motor_i].temp = rw_get_amp_temp();
     RWMotorData[motor_i].velocity = rw_get_velocity();
-    RWMotorData[motor_i].state = rw_get_ctl_word();
+    RWMotorData[motor_i].control_word_read = rw_get_ctl_word();
+    RWMotorData[motor_i].control_word_write = rw_get_ctl_word_write();
     RWMotorData[motor_i].network_problem = check_for_network_problem(RWMotorData[motor_i].network_status, firsttime);
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
@@ -997,7 +1308,8 @@ static void read_motor_data()
     ElevMotorData[motor_i].motor_position = el_get_motor_position();
     ElevMotorData[motor_i].temp = el_get_amp_temp();
     ElevMotorData[motor_i].velocity = el_get_velocity();
-    ElevMotorData[motor_i].state = el_get_ctl_word();
+    ElevMotorData[motor_i].control_word_read = el_get_ctl_word();
+    ElevMotorData[motor_i].control_word_write = el_get_ctl_word_write();
     ElevMotorData[motor_i].network_problem  =
                           check_for_network_problem(ElevMotorData[motor_i].network_status, firsttime);
 
@@ -1009,7 +1321,9 @@ static void read_motor_data()
     PivotMotorData[motor_i].position = piv_get_position();
     PivotMotorData[motor_i].temp = piv_get_amp_temp();
     PivotMotorData[motor_i].velocity = piv_get_velocity();
-    PivotMotorData[motor_i].state = piv_get_ctl_word();
+    PivotMotorData[motor_i].control_word_read
+     = piv_get_ctl_word();
+    PivotMotorData[motor_i].control_word_write = piv_get_ctl_word_write();
     PivotMotorData[motor_i].network_problem  =
                             check_for_network_problem(PivotMotorData[motor_i].network_status, firsttime);
 
@@ -1034,7 +1348,8 @@ void mc_readPDOassign(int m_slave) {
     wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
     rdat = etohs(rdat);
     /* positive result from slave ? */
-    blast_info("Result from ec_SDOread wkc = %i, len = %i, rdat = %04x", wkc, len, rdat);
+    blast_info("Result from ec_SDOread at index %04x, wkc = %i, len = %i, rdat = %04x",
+               ECAT_TXPDO_ASSIGNMENT, wkc, len, rdat);
     if ((wkc <= 0) || (rdat <= 0))  {
     	blast_info("no data returned from ec_SDOread ... returning.");
     	return;
@@ -1053,14 +1368,16 @@ void mc_readPDOassign(int m_slave) {
         if (idx <= 0) {
         	continue;
         } else {
-            blast_info("found idx = %i at wkc = %i, idxloop = %i", idx, wkc, idxloop);
+            blast_info("found idx = %2x at wkc = %i, idxloop = %i", idx, wkc, idxloop);
         }
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
         wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
+        blast_info("Number of subindexes: %i", subidx);
         /* for each subindex */
+        blast_info("Reading out the SDOs");
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
             pdo_channel_map_t *channel = NULL;
             pdo_mapping_t pdo_map = { 0 };
@@ -1072,8 +1389,8 @@ void mc_readPDOassign(int m_slave) {
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
             pdo_list[m_slave] = g_slist_prepend(pdo_list[m_slave], channel);
-            blast_info("Read SDO wkc = %i, idx = %i, len = %i", wkc, idx, len);
-            blast_info("Appending channel to m_pdo_list = %p: index = %i, subindex = %i, offset = %i",
+            blast_info("Read SDO subidxloop = %i, wkc = %i, idx = %i, len = %i", subidxloop, wkc, idx, len);
+            blast_info("Appending channel to m_pdo_list = %p: index = %2x, subindex = %i, offset = %i",
                        pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
@@ -1103,6 +1420,9 @@ void set_ec_motor_defaults()
     ec_init_heartbeat(rw_index);
     ec_init_heartbeat(el_index);
     ec_init_heartbeat(piv_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 }
 
 int close_ec_motors()
@@ -1116,13 +1436,14 @@ int configure_ec_motors()
     find_controllers();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i == hwp_index) {
+        if (controller_state[i].is_hwp) {
             // hwp_pdo_init();
-        } else {
+            mc_readPDOassign(i);
+        } else if (controller_state[i].is_mc) {
             motor_pdo_init(i);
             mc_readPDOassign(i);
         }
-	}
+    }
     /// We re-configure the map now that we have assigned the PDOs
     blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
@@ -1132,8 +1453,11 @@ int configure_ec_motors()
      * Set the initial values of both commands to "safe" default values
      */
     for (int i = 1; i <= ec_slavecount; i++) {
-        *target_current[i] = 0;
-        *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        if ((controller_state[i].is_mc) && !(controller_state[i].slave_error)) {
+            blast_info("Initializing target current for ec_slave %d, ptr %p", i, target_current);
+            *target_current[i] = 0;
+            *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
+        }
     }
 
     if (CommandData.disable_az) {
@@ -1158,15 +1482,39 @@ int configure_ec_motors()
     motor_set_operational();
 
     for (int i = 1; i <= ec_slavecount; i++) {
-        if (i != hwp_index) {
+        if ((controller_state[i].slave_error == 0) && (controller_state[i].has_dc == 1)) {
+            controller_state[i].comms_ok = 1;
+            blast_info("Setting comms_ok to 1 for index %d, slave_error = %d, has_dc = %d",
+                i, controller_state[i].slave_error , controller_state[i].has_dc);
+        } else {
+            controller_state[i].comms_ok = 0;
+            blast_info("Setting comms_ok to 0 for index %d, slave_error = %d, has_dc = %d",
+                i, controller_state[i].slave_error , controller_state[i].has_dc);
+        }
+        if (controller_state[i].is_mc) {
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }
     return(1);
 }
 
+
 int reset_ec_motors()
 {
+    int i = 0;
+    rw_index = 0;
+    el_index = 0;
+    piv_index = 0;
+    hwp_index = 0;
+    for (i = 1; i < N_MCs; i++) {
+        controller_state[i].index = 0;
+        controller_state[i].is_hwp = 0;
+        controller_state[i].ec_unknown = 0;
+        controller_state[i].is_mc = 0;
+        controller_state[i].has_dc = 0;
+        controller_state[i].comms_ok = 0;
+        controller_state[i].slave_error = 0;
+    }
     configure_ec_motors();
     return(1);
 }
@@ -1230,7 +1578,7 @@ static void* motor_control(void* arg)
 
     /// Our work counter (WKC) provides a count of the number of items to handle.
     expectedWKC = (ec_group[0].outputsWKC * 2) + ec_group[0].inputsWKC;
-	blast_info("expectedWKC = %i", expectedWKC);
+    blast_info("expectedWKC = %i", expectedWKC);
 
     clock_gettime(CLOCK_REALTIME, &ts);
     while (!shutdown_mcp) {
@@ -1297,5 +1645,48 @@ int initialize_motors(void)
 
     motor_ctl_id =  ph_thread_spawn(motor_control, NULL);
     return 0;
+}
+
+uint8_t make_ec_status_field(int m_index)
+{
+    uint8_t m_stats = 0;
+    if ((m_index < 1) || (m_index >= N_MCs)) return m_stats;
+    m_stats |= (m_index & 0x07);
+    m_stats |= ((controller_state[m_index].comms_ok & 0x01) << 3);
+    m_stats |= ((controller_state[m_index].slave_error & 0x01) << 4);
+    m_stats |= ((controller_state[m_index].has_dc & 0x01) << 5);
+    m_stats |= ((controller_state[m_index].is_mc & 0x01) << 6);
+    m_stats |= ((controller_state[m_index].is_hwp & 0x01) << 7);
+    return m_stats;
+}
+// Called in store_1hz_acs of acs.c
+void store_1hz_ethercat(void)
+{
+    static int firsttime = 1;
+    static channel_t *NFoundECAddr;
+    static channel_t *SlaveCountECAddr;
+    static channel_t *StatusECAddr;
+    static channel_t *StatusECHWPRAddr;
+    static channel_t *StatusECRWAddr;
+    static channel_t *StatusECElAddr;
+    static channel_t *StatusECPivAddr;
+
+    if (firsttime) {
+        NFoundECAddr = channels_find_by_name("n_found_ec");
+        SlaveCountECAddr = channels_find_by_name("slave_count_ec");
+        StatusECAddr = channels_find_by_name("status_ec");
+        StatusECHWPRAddr = channels_find_by_name("status_ec_hwpr");
+        StatusECRWAddr = channels_find_by_name("status_ec_rw");
+        StatusECElAddr = channels_find_by_name("status_ec_el");
+        StatusECPivAddr = channels_find_by_name("status_ec_piv");
+        firsttime = 0;
+    }
+    SET_UINT8(NFoundECAddr, ec_mcp_state.n_found);
+    SET_UINT8(SlaveCountECAddr, ec_mcp_state.slave_count);
+    SET_UINT8(StatusECAddr, ec_mcp_state.status);
+    if (hwp_index) SET_UINT8(StatusECHWPRAddr, make_ec_status_field(hwp_index));
+    if (rw_index) SET_UINT8(StatusECRWAddr, make_ec_status_field(rw_index));
+    if (el_index) SET_UINT8(StatusECElAddr, make_ec_status_field(el_index));
+    if (piv_index) SET_UINT8(StatusECPivAddr, make_ec_status_field(piv_index));
 }
 

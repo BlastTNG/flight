@@ -1,0 +1,15 @@
+#!/bin/sh
+echo This script ignores all parameters.
+echo To change where guaca will be installed, edit guaca.pro!
+echo
+opt=""
+if [ "x`which qmake 2>/dev/null`" != "x" ]; then
+  echo "executing: \"qmake $opt\""
+  qmake $opt || exit 1
+else
+  echo "ERROR: Can't find qmake-qt4 nor qmake in your path!"
+  exit 1
+fi
+echo 
+echo Great! That seemed to work.
+echo Now run \"make\" and \"make install\"!

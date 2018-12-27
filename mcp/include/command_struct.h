@@ -32,6 +32,7 @@
 #include "channels_tng.h"
 #include "mcp_sched.h"
 #include "roach.h"
+#include "pointing_struct.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -136,7 +137,8 @@ struct PivGainStruct {
 #define SHUTTER_CLOSED2 0x0040
 #define SHUTTER_CLOSED_SLOW 0x0080
 #define SHUTTER_UNK     0x0100
-
+#define SHUTTER_KEEPCLOSED 0x0200
+#define SHUTTER_KEEPOPEN 0X0400
 
 #define ACTBUS_FM_SLEEP  0
 #define ACTBUS_FM_SERVO  1
@@ -158,13 +160,13 @@ struct PivGainStruct {
 #define XYSTAGE_JUMP   2
 #define XYSTAGE_SCAN   3
 #define XYSTAGE_RASTER 4
-#define HWPR_PANIC	0
-#define HWPR_SLEEP	1
-#define HWPR_GOTO	2
-#define HWPR_JUMP	3
-#define HWPR_STEP	4
-#define HWPR_REPEAT	5
-#define HWPR_GOTO_I	6
+#define HWPR_PANIC		0
+#define HWPR_SLEEP		1
+#define HWPR_GOTO		2
+#define HWPR_GOTO_REL	3
+#define HWPR_STEP		4
+#define HWPR_REPEAT		5
+#define HWPR_GOTO_I		6
 #define HWPR_GOTO_POT	7
 
 #define ROACH_TLM_IQDF 0x1
@@ -290,8 +292,10 @@ typedef struct {
   uint16_t force_cycle, auto_cycling;
   uint16_t pot_filling;
   uint16_t forced;
-  int labjack, send_dac, load_curve, cycle_allowed;
+  int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed, pot_forced;
   float dac_value;
+  float tcrit_fpa;
+  uint16_t counter, counter_max;
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
 
@@ -351,6 +355,7 @@ typedef struct roach
     unsigned int load_targ_amps;
     unsigned int calibrate_adc;
     unsigned int set_attens;
+    unsigned int read_attens;
     unsigned int find_kids;
     unsigned int adc_rms;
     unsigned int test_tone;
@@ -367,6 +372,7 @@ typedef struct roach
     unsigned int do_check_retune;
     unsigned int do_retune;
     unsigned int set_lo;
+    unsigned int read_lo;
     unsigned int find_kids_default;
     unsigned int change_targ_freq;
     unsigned int change_tone_phase;
@@ -374,8 +380,25 @@ typedef struct roach
     unsigned int on_res;
     unsigned int auto_find;
     unsigned int recenter_df;
-    unsigned int go_flight_mode;
     unsigned int check_response;
+    unsigned int reboot_pi_now;
+    unsigned int do_df_targ;
+    unsigned int auto_el_retune;
+    // Set whether we want to check the roach tuning after every scan.
+    unsigned int do_full_loop;
+    unsigned int auto_correct_freqs;
+    unsigned int do_noise_comp;
+    unsigned int do_fk_loop;
+    unsigned int kill;
+    unsigned int do_turnaround_loop;
+    unsigned int n_outofrange_thresh;
+    unsigned int enable_chop_lo;
+    unsigned int is_chopping_lo;
+    unsigned int has_lamp_control;
+    unsigned int ext_ref;
+    unsigned int change_extref;
+    unsigned int min_nkids;
+    unsigned int max_nkids;
 } roach_status_t;
 
 typedef struct roach_params
@@ -385,8 +408,10 @@ typedef struct roach_params
     double peak_threshold;
     double spacing_threshold;
 //  Set attenuators
-    double in_atten;
-    double out_atten;
+    double set_in_atten;
+    double set_out_atten;
+    double read_in_atten;
+    double read_out_atten;
     double new_out_atten;
     double test_freq;
     double atten_step;
@@ -398,6 +423,10 @@ typedef struct roach_params
     double delta_phase;
     double freq_offset;
     int resp_thresh;
+    double dBm_per_tone;
+    double lo_freq_MHz;
+    double df_retune_threshold;
+    double df_diff_retune_threshold;
 } roach_params_t;
 
 // Ethercat controller/device commands
@@ -477,7 +506,13 @@ struct CommandDataStruct {
   roach_status_t roach[NUM_ROACHES];
   udp_roach_t udp_roach[NUM_ROACHES];
   roach_params_t roach_params[NUM_ROACHES];
-
+  unsigned int tar_all_data;
+  unsigned int roach_run_cycle_checker;
+  // motors.c sets this flag when a scan is nearly complete
+  // to (optionally) trigger a retune
+  unsigned int trigger_roach_tuning_check;
+  unsigned int trigger_lo_offset_check;
+  unsigned int cal_lamp_roach_hold;
   uei_commands_t uei_command;
 
   cmd_rox_bias_t rox_bias;
@@ -512,7 +547,6 @@ struct CommandDataStruct {
   double offset_ifyaw_gy;
   uint32_t gymask;
 
-  unsigned char use_elenc;
   unsigned char use_elmotenc;
   unsigned char use_elclin;
   unsigned char use_pss;
@@ -528,7 +562,6 @@ struct CommandDataStruct {
   double az_accel;
 
   double clin_el_trim;
-  double enc_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
   double mag_az_trim[2];
@@ -548,15 +581,13 @@ struct CommandDataStruct {
   double cal_ymin_mag[2];
   double cal_mag_align[2];
 
-  double cal_off_pss1;
-  double cal_off_pss2;
-  double cal_off_pss3;
-  double cal_off_pss4;
+  double cal_d_pss[NUM_PSS];
+  double cal_az_pss[NUM_PSS];
+  double cal_az_pss_array;
+  double cal_el_pss[NUM_PSS];
+  double cal_roll_pss[NUM_PSS];
+  double pss_noise;
 
-  double cal_d_pss1;
-  double cal_d_pss2;
-  double cal_d_pss3;
-  double cal_d_pss4;
 
   double cal_imin_pss;
   struct {
@@ -579,7 +610,6 @@ struct CommandDataStruct {
   struct {
     int off;
     int force_repoll;
-    int which_used;
 
     /* arbitrary command */
     int cindex;
@@ -637,15 +667,21 @@ struct CommandDataStruct {
   } actbus;
 
   struct {
-    int vel, acc, hold_i, move_i;
+    int vel;
+	int acc;
+	int hold_i, move_i;
     int force_repoll;
-    int mode, is_new, target;
-    int n_pos, repeats, step_wait, step_size, overshoot;
-    double pos[4];
+    int mode, is_new;
+	float target;
+    int n_pos, repeats, step_wait, step_size;
+	float overshoot;
+	float backoff;
+    double pos[2];
     int i_pos;
     int no_step;
     int use_pot;
     double pot_targ;
+	float margin;
   } hwpr;
 
   int pin_is_in;

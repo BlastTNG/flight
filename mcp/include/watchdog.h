@@ -25,6 +25,7 @@
 #ifndef INCLUDE_WATCHDOG_H_
 #define INCLUDE_WATCHDOG_H_
 
+void watchdog_stop();
 void watchdog_ping();
 int watchdog_get_tickle(void);
 void watchdog_close(void);

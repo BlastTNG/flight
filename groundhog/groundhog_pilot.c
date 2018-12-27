@@ -38,8 +38,11 @@ void udp_receive(void *arg) {
   uint8_t * recvbuffer = NULL;
   uint32_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
-  uint32_t blk_size = 0;
+  int32_t blk_size = 0;
+  uint32_t recv_size = 0;
   uint32_t transmit_size = 0;
+  uint64_t framenum = 0;
+  int af = 0;
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -47,18 +50,18 @@ void udp_receive(void *arg) {
   // open a file to save all the raw linklist data
   linklist_rawfile_t * ll_rawfile = NULL;
 
-  uint8_t *compbuffer = calloc(1, udpsetup->maxsize);
+  uint8_t * compbuffer = calloc(1, udpsetup->maxsize);
+  uint8_t * dummy_buffer = calloc(1, superframe->size);
 
   // initialize UDP connection via bitserver/BITRecver
   initBITRecver(&udprecver, udpsetup->addr, udpsetup->port, 10, udpsetup->maxsize, udpsetup->packetsize);
 
   int bad_serial_count = 0;
-  int good_serial_count = 0;
 
   while (true) {
     do {
       // get the linklist serial for the data received
-      recvbuffer = getBITRecverAddr(&udprecver, &blk_size);
+      recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
@@ -70,11 +73,6 @@ void udp_receive(void *arg) {
       }
     } while (true);
 
-    if (serial != prev_serial) {
-      ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
-    }
-    prev_serial = serial;
-
     // set the linklist serial
     setBITRecverSerial(&udprecver, serial);
 
@@ -83,35 +81,58 @@ void udp_receive(void *arg) {
 
     // hijacking frame number for transmit size
     transmit_size = udprecver.frame_num; 
-
     // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
+
+    // blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+    // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
+
+    // this is a file that has been downlinked, so unpack and extract to disk
+    if (!strcmp(ll->name, FILE_LINKLIST)) {
+        unsigned int bytes_unpacked = 0;
+        while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
+            decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
+            bytes_unpacked += ll->blk_size;
+            usleep(1000);
+        }
+        framenum = ll->blocks[0].i*100/ll->blocks[0].n;
+
+    } else { // write the linklist data to disk
+        // decompress the linklist
+
+        af = read_allframe(local_superframe, superframe, compbuffer);
+        if (af > 0) { // an allframe was received
+            if (verbose) blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+            memcpy(local_allframe, compbuffer, superframe->allframe_size);
+        } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
+            if (serial != prev_serial) {
+                ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
+            }
+            prev_serial = serial;
+            if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+
+            if (blk_size < 0) {
+                blast_info("Malformed packed received on Pilot\n");
+                continue;
+            } else if (blk_size != transmit_size) {
+                blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
+            }
+
+            // write the linklist data to disk
+            if (ll_rawfile) {
+                memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                write_linklist_rawfile(ll_rawfile, compbuffer);
+                flush_linklist_rawfile(ll_rawfile);
+                framenum = tell_linklist_rawfile(ll_rawfile);
+            }
+        }
+    }
+
+    // fill out the telemetry report
+    pilot_report.ll = ll;
+    pilot_report.framenum = framenum; 
+    pilot_report.allframe = af; 
+
+    memset(compbuffer, 0, udpsetup->maxsize);
  
-    if (blk_size < 0) {
-      blast_info("Malformed packed received on Pilot\n");
-      continue;
-    } else if (blk_size != transmit_size) {
-      blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
-    }
-
-    // decompress the linklist
-    if (read_allframe(local_superframe, superframe, compbuffer)) { // just a regular frame
-      blast_info("[%s] Received an allframe :)\n", udpsetup->name);
-      memcpy(local_allframe, compbuffer, superframe->allframe_size);
-    } else {
-      if ((good_serial_count % 1) == 0) {
-        if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
-        // blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
-      }
-      good_serial_count++;
-      // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
-
-      // write the linklist data to disk
-      if (ll_rawfile) {
-        memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
-        write_linklist_rawfile(ll_rawfile, compbuffer);
-        flush_linklist_rawfile(ll_rawfile);
-      }
-    }
   }
 }
-

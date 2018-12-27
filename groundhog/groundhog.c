@@ -30,6 +30,21 @@
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
+#define NOR "\x1B[0m"
+#define RED "\x1B[31;1m"
+#define GRN "\x1B[32;1m"
+#define YLW "\x1B[33;1m"
+#define BLU "\x1B[34;1m"
+#define MAG "\x1B[35;1m"
+#define CYN "\x1B[36;1m"
+#define NOC "\x1B[?25l"
+#define CUR "\x1B[?25h"
+
+struct TlmReport pilot_report = {0};
+struct TlmReport bi0_report = {0};
+struct TlmReport highrate_report = {0};
+struct TlmReport sbd_report = {0};
+
 int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
@@ -115,6 +130,7 @@ int main(int argc, char * argv[]) {
     else if (strcmp(argv[i], "-highrate_only") == 0) pilot_on = bi0_on = 0;
     else if (strcmp(argv[i], "-d") == 0) daemon = 1;
     else if (strcmp(argv[i], "-quiet") == 0) verbose = 0;
+    else if (strcmp(argv[i], "-verbose") == 0) verbose = 1;
     else {
       blast_err("Unrecognized option \"%s\"", argv[i]);
       exit(1);
@@ -140,15 +156,6 @@ int main(int argc, char * argv[]) {
                                  PILOT_MAX_PACKET_SIZE,
                                  PILOT};
 
-  /*
-  struct UDPSetup udplos_setup = {"BI0-LOS", 
-                                  BI0LOS_GND_ADDR, 
-                                  BI0LOS_GND_PORT, 
-                                  BI0_MAX_BUFFER_SIZE, 
-                                  BI0LOS_MAX_PACKET_SIZE,
-                                  BI0};
-  */
-
   // Receiving data from telemetry
   pthread_t pilot_receive_worker[2];
   pthread_t biphase_receive_worker;
@@ -165,7 +172,6 @@ int main(int argc, char * argv[]) {
 
   if (bi0_on) {
     pthread_create(&biphase_receive_worker, NULL, (void *) &biphase_receive, NULL);
-    // pthread_create(&biphase_receive_worker, NULL, (void *) &udp_receive, (void *) &udplos_setup);
   }
 
   if (highrate_on) {
@@ -176,17 +182,43 @@ int main(int argc, char * argv[]) {
   // start the server thread for mole clients
   pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
-  if (pilot_on) {
-    pthread_join(pilot_receive_worker[0], NULL);
-    pthread_join(pilot_receive_worker[1], NULL);
-  }
+  sleep(1);
+  printf("\n\n\n");
 
-  if (bi0_on) {
-    pthread_join(biphase_receive_worker, NULL);
-  }
+  char fn_str[1024] = "";
+  int len = 0, prev_len = 0;
 
-  if (highrate_on) {
-    pthread_join(highrate_receive_worker, NULL);
+  // print out the reports
+  while (true) {
+
+    sprintf(fn_str, BLU "    Pilot: %s %s [%" PRIu64 "];" GRN "   BI0: %s %s [%" PRIu64 "];" YLW "  Highrate: %s %s [%" PRIu64 "];" RED "  SBD: %s %s [%" PRIu64 "];" NOR "    ", 
+            (pilot_report.ll) ? pilot_report.ll->name : "(NULL)", 
+            (pilot_report.allframe) ? "AF" : "  ",
+            pilot_report.framenum,
+
+            (bi0_report.ll) ? bi0_report.ll->name : "(NULL)", 
+            (bi0_report.allframe) ? "AF" : "  ",
+            bi0_report.framenum,
+
+            (highrate_report.ll) ? highrate_report.ll->name : "(NULL)", 
+            (highrate_report.allframe) ? "AF" : "  ",
+            highrate_report.framenum,
+
+            (sbd_report.ll) ? sbd_report.ll->name : "(NULL)", 
+            (sbd_report.allframe) ? "AF" : "  ",
+            sbd_report.framenum
+    );
+
+    // print enough characters to overwrite the previous line
+    len = strlen(fn_str);
+    for (int i = len; i < prev_len; i++) fn_str[i] = ' ';
+    fn_str[(len > prev_len) ? len : prev_len] = '\0'; // terminate
+    prev_len = len;
+
+    fprintf(stdout, "%s\r", fn_str);
+    fflush(stdout); 
+
+    usleep(200000);
   }
 
   return 0;

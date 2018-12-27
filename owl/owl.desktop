@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Exec=owl
-Icon=owl
+Icon=/usr/share/icons/hicolor/scalable/apps/owl.svg
 MimeType=application/x-owl;
 Categories=Qt;Science;
 Name=Owl

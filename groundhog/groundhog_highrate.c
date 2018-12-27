@@ -218,6 +218,7 @@ void highrate_receive(void *arg) {
   uint32_t *frame_number;
   uint32_t transmit_size;
   uint8_t *compbuffer = calloc(1, buffer_size);
+  uint8_t * dummy_buffer = calloc(1, superframe->size);
 
   uint8_t *local_superframe = calloc(1, superframe->size);
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -234,6 +235,8 @@ void highrate_receive(void *arg) {
 
   int retval = 0;
   uint32_t recv_size = 0;
+  uint64_t framenum = 0;
+  int af = 0;
 
   char * source_str = NULL;
 
@@ -295,11 +298,6 @@ void highrate_receive(void *arg) {
                       }
                       ser = *serial_number;
 
-                      if (ser != prev_ser) {
-                        ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, linkname);
-                      }
-                      prev_ser = ser;
-
                       // blast_info("Transmit size=%d, blk_size=%d, payload_size=%d, datasize=%d, i=%d, n=%d", transmit_size, ll->blk_size, payload_size, datasize, *i_pkt, *n_pkt);
 
                       retval = depacketizeBuffer(compbuffer, &recv_size, 
@@ -311,25 +309,49 @@ void highrate_receive(void *arg) {
                       // the packet is complete, so decompress
                       if ((retval == 0) && (ll != NULL))
                       {
-                          // decompress the linklist
-                          if (read_allframe(local_superframe, superframe, compbuffer)) {
-                              if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
-                              memcpy(local_allframe, compbuffer, superframe->allframe_size);
-                          } else {
-                              if (transmit_size > ll->blk_size) {
-                                  blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
-                                  transmit_size = ll->blk_size;
+                          // this is a file that has been downloaded, so unpack and extract to disk
+                          if (!strcmp(ll->name, FILE_LINKLIST)) {
+                              unsigned int bytes_unpacked = 0;
+                              while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
+                                  decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
+                                  bytes_unpacked += ll->blk_size;
+                                  usleep(1000);
                               }
-                              if (verbose) blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
+                              framenum = ll->blocks[0].i*100/ll->blocks[0].n;
+                              
+                          } else { // write the linklist data to disk
+                              // decompress the linklist
+                              af = read_allframe(local_superframe, superframe, compbuffer);
+                              if (af > 0) { // an allframe was received
+                                  if (verbose) blast_info("[%s] Received an allframe :)\n", source_str);
+                                  memcpy(local_allframe, compbuffer, superframe->allframe_size);
+                              } else if (af == 0) { // just a regular rame (< 0 indicates problem reading allframe)
+                                  if (ser != prev_ser) {
+                                    ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, linkname);
+                                  }
+                                  prev_ser = ser;
+                                  if (verbose) blast_info("[%s] Received linklist \"%s\"", source_str, ll->name);
 
-                              // write the linklist data to disk
-                              if (ll_rawfile) {
-                                  memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
-                                  write_linklist_rawfile(ll_rawfile, compbuffer);
-                                  flush_linklist_rawfile(ll_rawfile);
+                                  if (transmit_size > ll->blk_size) {
+                                      blast_err("Transmit size %d larger than assigned linklist size %d", transmit_size, superframe->allframe_size);
+                                      transmit_size = ll->blk_size;
+                                  }
+
+                                  // write the linklist data to disk
+                                  if (ll_rawfile) {
+                                      memcpy(compbuffer+ll->blk_size, local_allframe, superframe->allframe_size);
+                                      write_linklist_rawfile(ll_rawfile, compbuffer);
+                                      flush_linklist_rawfile(ll_rawfile);
+                                      framenum = tell_linklist_rawfile(ll_rawfile); 
+                                  }
+                                  // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                               }
-                              // blast_info("[%s] Received linklist with serial_number 0x%x\n", source_str, *serial_number);
                           }
+                          // fill out the telemetry report
+                          highrate_report.ll = ll;
+                          highrate_report.framenum = framenum;
+                          highrate_report.allframe = af; 
+
                           memset(compbuffer, 0, buffer_size);
                           recv_size = 0;
                       }
@@ -379,7 +401,11 @@ void highrate_receive(void *arg) {
               if (sbd_ll_rawfile) {
                   write_linklist_rawfile(sbd_ll_rawfile, gse_packet+sizeof(uint32_t));
                   flush_linklist_rawfile(sbd_ll_rawfile);
+                  sbd_report.framenum = tell_linklist_rawfile(sbd_ll_rawfile);
               }
+              // fill out the telemetry report
+              sbd_report.ll = sbd_ll;
+              sbd_report.allframe = 0; 
               /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {
               
