@@ -55,6 +55,7 @@
 #include "bias_tone.h"
 #include "sip.h"
 #include "roach.h"
+#include "watchdog.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -1165,18 +1166,17 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.hwpr.use_pot = 1;
             break;
 
-        case reap_north:  // Miscellaneous commands
-        case reap_south:
-            if ((command == reap_north && !SouthIAm) || (command == reap_south && SouthIAm)) {
-                blast_err("Commands: Reaping the watchdog tickle on command in 1 second.");
-                sleep(1);
-                // TODO(seth): Enable Watchdog reap
+        case reap_fc1:  // Miscellaneous commands
+        case reap_fc2:
+            if ((command == reap_fc1 && !SouthIAm) || (command == reap_fc2 && SouthIAm)) {
+                blast_warn("Commands: Reaping the watchdog tickle due to command.\n");
+                watchdog_stop();
             }
-            break;
-        case north_halt:
-        case south_halt:
-            if ((command == north_halt && !SouthIAm) || (command == south_halt && SouthIAm)) {
-                bputs(warning, "Commands: Halting the MCC\n");
+           break;
+        case halt_fc1:
+        case halt_fc2:
+            if ((command == halt_fc1 && !SouthIAm) || (command == halt_fc2 && SouthIAm)) {
+                blast_warn("Commands: Halting the MCC\n");
                 if (system("/sbin/reboot") < 0) berror(fatal, "Commands: failed to reboot, dying\n");
             }
             break;
