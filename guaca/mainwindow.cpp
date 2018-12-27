@@ -150,7 +150,7 @@ char * get_linklist_name(char * filename)
   return filename;
 }
 
-int MainWindow::generate_linklist_listfiles()
+int generate_linklist_listfiles()
 {
   struct dirent **dir;
   int n = scandir(archivedir, &dir, one, alphasort);
@@ -188,6 +188,15 @@ int MainWindow::generate_linklist_listfiles()
 
   return num_types;
 }
+
+void list_thread(void * arg) {
+  while (1) {
+    generate_linklist_listfiles();
+    sleep(5);
+  }
+
+}
+
 
 /*
  * Connects to a server guaca and slaves to it by retrieving
@@ -569,6 +578,8 @@ MainWindow::MainWindow(QWidget *parent) :
     f1 = QtConcurrent::run(server_thread, &cfg);
     servermode = 0;
   }
+
+  QtConcurrent::run(list_thread, (void *)NULL);
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
