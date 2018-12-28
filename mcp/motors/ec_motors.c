@@ -1227,14 +1227,13 @@ static uint8_t check_ec_ready(int index)
     if (!controller_state[index].comms_ok) {
         return(0);
     }
-    if (controller_state[index].is_mc) {
-        m_state = *status_word[index];
-        if (!(m_state & ECAT_CTL_STATUS_READY)) {
-            return(0);
-        }
+    if (!controller_state[index].is_mc) {
+        return(0);
     }
     if (check_slave_comm_ready(index)) {
-        if (!((*control_word_read[index]) == (*control_word[index]))) {
+        if (!((*control_word_read[index]) == (*control_word[index])) ||
+               (*status_register[el_index] & ECAT_STATUS_PHASE_UNINIT) ||
+               !(*status_word[index] & ECAT_CTL_STATUS_READY) ) {
             return(0);
         }
     } else {
