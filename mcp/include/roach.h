@@ -221,6 +221,7 @@ typedef struct roach_state {
     double df_on[MAX_CHANNELS_PER_ROACH];
     double df_off[MAX_CHANNELS_PER_ROACH];
     double df_diff[MAX_CHANNELS_PER_ROACH];
+    double avg_df_diff;
 
     char *last_cal_path;
     // path to the last master chop directory
