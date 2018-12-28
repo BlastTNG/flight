@@ -1617,7 +1617,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
       {
-          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
+          {"Labjack to reconnect", 1, 7, 'i', "NONE"},
       }
   },
   /***************************************/
@@ -1664,6 +1664,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Closed threshold (1000-7000)", 1000, 7000, 'i', "THRESH_CLOS_POTVALVE"},
       {"Loose close threshold (7000-10000)", 7000, 10000, 'i', "THRESHLCLOS_POTVALVE"},
       {"Open threshold (10000-16000)", 10000, 16000, 'i', "THRESH_OPEN_POTVALVE"},
+    }
+  },
+
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening move size (in encoder units)", GR_CRYO, 1,
+    {
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_MIN_TIGHTEN_MOVE"}
     }
   },
 
