@@ -1145,8 +1145,6 @@ void Pointing(void)
     static int enc_motor_ready;
     static int enc_motor_ok;
     enc_motor_ready = is_el_motor_ready();
-
-    enc_motor_ready = is_el_motor_ready();
     static int firsttime = 1;
 
     int i_point_read;

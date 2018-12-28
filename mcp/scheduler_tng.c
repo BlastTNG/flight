@@ -400,7 +400,7 @@ void DoSched(void)
 
   if (first_time) {
     blast_info("Calling DoSched for the First Time");
-    first_time = 1;
+    first_time = 0;
   }
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;

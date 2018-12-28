@@ -1233,8 +1233,18 @@ static uint8_t check_ec_ready(int index)
             return(0);
         }
     }
+    if (check_slave_comm_ready(index)) {
+        if (!((*control_word_read[index]) == (*control_word[index]))) {
+            return(0);
+        }
+    } else {
+        return 0;
+    }
+
     return(1);
 }
+
+// LMF note: Deprecated this doesn't seem to work in the new ethercat configuration.
 static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 {
     if (firsttime) {
@@ -1297,7 +1307,7 @@ static void read_motor_data()
     RWMotorData[motor_i].velocity = rw_get_velocity();
     RWMotorData[motor_i].control_word_read = rw_get_ctl_word();
     RWMotorData[motor_i].control_word_write = rw_get_ctl_word_write();
-    RWMotorData[motor_i].network_problem = check_for_network_problem(RWMotorData[motor_i].network_status, firsttime);
+    RWMotorData[motor_i].network_problem = !is_rw_motor_ready();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -1310,8 +1320,7 @@ static void read_motor_data()
     ElevMotorData[motor_i].velocity = el_get_velocity();
     ElevMotorData[motor_i].control_word_read = el_get_ctl_word();
     ElevMotorData[motor_i].control_word_write = el_get_ctl_word_write();
-    ElevMotorData[motor_i].network_problem  =
-                          check_for_network_problem(ElevMotorData[motor_i].network_status, firsttime);
+    ElevMotorData[motor_i].network_problem  = !is_el_motor_ready();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -1324,8 +1333,7 @@ static void read_motor_data()
     PivotMotorData[motor_i].control_word_read
      = piv_get_ctl_word();
     PivotMotorData[motor_i].control_word_write = piv_get_ctl_word_write();
-    PivotMotorData[motor_i].network_problem  =
-                            check_for_network_problem(PivotMotorData[motor_i].network_status, firsttime);
+    PivotMotorData[motor_i].network_problem  = !is_pivot_motor_ready();
 
     firsttime = 0;
     motor_index = INC_INDEX(motor_index);
@@ -1521,20 +1529,22 @@ int reset_ec_motors()
 
 static int check_ec_network_status()
 {
-    bool firsttime = 1;
+    static bool has_warned = 0;
     int retval = 1;
     int motor_i = motor_index;
-    if ((RWMotorData[motor_i].network_problem && CommandData.ec_devices.fix_rw) ||
-        (ElevMotorData[motor_i].network_problem && CommandData.ec_devices.fix_el) ||
-        (PivotMotorData[motor_i].network_problem && CommandData.ec_devices.fix_piv)) {
+    if ((!check_ec_ready(rw_index) && CommandData.ec_devices.fix_rw) ||
+        (!check_ec_ready(el_index) && CommandData.ec_devices.fix_el) ||
+        (!check_ec_ready(piv_index) && CommandData.ec_devices.fix_piv)) {
             retval = 0;
-            if (firsttime) {
+            if (!has_warned) {
                 blast_warn("check_ec_network_status shows a network problem. RW = %u, El = %u, Piv = %u",
                            RWMotorData[motor_i].network_problem, ElevMotorData[motor_i].network_problem,
                            PivotMotorData[motor_i].network_problem);
+                has_warned = 1;
             }
+    } else {
+       has_warned = 0;
     }
-    firsttime = 1;
     return(retval);
 }
 
