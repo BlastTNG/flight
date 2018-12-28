@@ -77,8 +77,12 @@ static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+// Penn highbay
 #define PSN_EAST_BAY_LAT 31.779300
 #define PSN_EAST_BAY_LON 264.283000
+// MCM-LDB
+#define MCM_LDB_LAT -77.8616
+#define MCM_LDB_LON 167.0592
 
 void RecalcOffset(double, double);  /* actuators.c */
 
@@ -99,7 +103,7 @@ extern char * ROACH_TYPES[NUM_RTYPES];
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
 
-struct SIPDataStruct SIPData = {.GPSpos = {.lat = PSN_EAST_BAY_LAT, .lon = PSN_EAST_BAY_LON}};
+struct SIPDataStruct SIPData = {.GPSpos = {.lat = MCM_LDB_LAT, .lon = MCM_LDB_LON}};
 struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c
@@ -1321,8 +1325,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
 #ifndef BOLOTEST
     if (!scheduled) {
         // TODO(seth): RE-enable doing_schedule
-//    if (doing_schedule)
-//      blast_info("Scheduler: *** Out of schedule file mode ***");
+        if (doing_schedule)
+             blast_info("Scheduler: *** Out of schedule file mode ***");
         CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
     } else {
         CommandData.pointing_mode.t = PointingData[i_point].t;
@@ -1563,8 +1567,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_scan_params:
-      CommandData.pointing_mode.next_i_hwpr = ivalues[0];
-      CommandData.pointing_mode.next_i_dith = ivalues[1];
+      CommandData.pointing_mode.next_i_dith = ivalues[0];
       break;
 
       /*************************************
@@ -2160,11 +2163,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case slot_sched:  // change uplinked schedule file
-        // TODO(seth): Re-enable Uplink file loading
-//      if (LoadUplinkFile(ivalues[0])) {
-//        CommandData.uplink_sched = 1;
-//        CommandData.slot_sched = ivalues[0];
-//      }
+      if (LoadUplinkFile(ivalues[0])) {
+        CommandData.uplink_sched = 1;
+        CommandData.slot_sched = ivalues[0];
+      }
       break;
     case params_test: // Do nothing, with lots of parameters
       blast_info("Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);

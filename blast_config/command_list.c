@@ -487,9 +487,8 @@ struct mcom mcommands[plugh + 2] = {
       {"Az Acceleration", 0.1, 2.0, 'f', "accel_az"}
     }
   },
-  {COMMAND(set_scan_params), "set pos hwpr and dither index for next scan", GR_POINT, 2,
+  {COMMAND(set_scan_params), "set dither index for next scan", GR_POINT, 2,
     {
-      {"Next HWPR pos (0-3, -1: no change)", -1, 3, 'i', "next_i_hwpr"},
       {"Next dither index ", 0, 200, 'i', "next_i_dith"}
     }
   },
