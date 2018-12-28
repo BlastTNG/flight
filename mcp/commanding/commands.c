@@ -1567,8 +1567,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_scan_params:
-      CommandData.pointing_mode.next_i_hwpr = ivalues[0];
-      CommandData.pointing_mode.next_i_dith = ivalues[1];
+      CommandData.pointing_mode.next_i_dith = ivalues[0];
       break;
 
       /*************************************
@@ -2163,11 +2162,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case slot_sched:  // change uplinked schedule file
-        // TODO(seth): Re-enable Uplink file loading
-//      if (LoadUplinkFile(ivalues[0])) {
-//        CommandData.uplink_sched = 1;
-//        CommandData.slot_sched = ivalues[0];
-//      }
+      if (LoadUplinkFile(ivalues[0])) {
+        CommandData.uplink_sched = 1;
+        CommandData.slot_sched = ivalues[0];
+      }
       break;
     case params_test: // Do nothing, with lots of parameters
       blast_info("Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
