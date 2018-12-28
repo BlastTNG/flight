@@ -974,7 +974,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-		case potvalve_open:
+	case potvalve_open:
         	CommandData.Cryo.potvalve_goal = opened;
         	break;
     	case potvalve_close:
@@ -1749,12 +1749,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_i:
       CommandData.actbus.shutter_move_i = ivalues[0];
       CommandData.actbus.shutter_hold_i = ivalues[1];
-      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case shutter_vel:
       CommandData.actbus.shutter_vel = ivalues[0];
       CommandData.actbus.shutter_acc = ivalues[1];
-      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
@@ -1900,6 +1898,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_open_threshold = ivalues[2];
 	  // also clear the goal so it doesn't move until a command
 	  CommandData.Cryo.potvalve_goal = 0;
+      break;
+    case potvalve_set_tighten_move:
+      CommandData.Cryo.potvalve_min_tighten_move = ivalues[0];
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];

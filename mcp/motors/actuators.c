@@ -523,7 +523,7 @@ static void TurnOffShutter()
 static void InitializeShutter()
 {
   // Set move current and speed
-  blast_info("InitializeShutter:...");
+  // blast_info("InitializeShutter:...");
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100h50R") != EZ_ERR_OK) // removing because has old settings
   // if (EZBus_Comm(&bus, id[SHUTTERNUM], "j64m100l100v10h50R") != EZ_ERR_OK) // removing because has old settings
   // bputs(info, "InitializeShutter: Error initializing shutter");
@@ -747,12 +747,14 @@ static void DoShutter(void)
     // bputs(info, "Initializing shutter...");
     EZBus_Take(&bus, id[SHUTTERNUM]);
     EZBus_Stop(&bus, id[SHUTTERNUM]); /* stop current action first */
-    InitializeShutter();
+    // InitializeShutter();
     EZBus_Release(&bus, id[SHUTTERNUM]);
     shutter_data.state = SHUTTER_OPEN;
     CommandData.actbus.shutter_goal = SHUTTER_NOP;
   }
 
+
+  InitializeShutter();
   GetShutterData(&shutter_pos);
   // shutter_data.pos = shutter_pos;
 
