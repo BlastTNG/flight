@@ -659,6 +659,8 @@ void set_execute(int which) {
 }
 
 void set_reconnect(int which) {
+    if (!InCharge) return;
+
     // force a reconnect of the stream data
     state[which].initialized = false;
     state[which].have_warned_connect = 0;
