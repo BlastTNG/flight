@@ -3404,7 +3404,7 @@ int get_lamp_response(roach_state_t *m_roach)
         fwrite(&m_roach->Q_diff[chan], sizeof(m_roach->Q_diff[chan]), 1, fd);
         fwrite(&m_roach->df_diff[chan], sizeof(m_roach->df_diff[chan]), 1, fd);
     }
-    m_roach->avg_df_diff = df_diff_sum/(double)m_roach->current_ntones;
+    m_roach->avg_df_diff = df_diff_sum/m_roach->current_ntones;
     fclose(fd);
     return 0;
 }
