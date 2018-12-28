@@ -472,7 +472,7 @@ channel_t channel_list[] =
     {"thresh_clos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"threshlclos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"thresh_open_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"potvalve_min_tighten_move", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_tight_move", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"pos_pumpvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},

@@ -1667,9 +1667,9 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening move size (in encoder units)", GR_CRYO, 1,
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening minimum move size (in encoder units)", GR_CRYO, 1,
     {
-      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_MIN_TIGHTEN_MOVE"}
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_TIGHT_MOVE"}
     }
   },
 
