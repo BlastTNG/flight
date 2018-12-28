@@ -213,7 +213,7 @@ enum multiCommand {
   set_scan_params,   mag_cal_fc1,	mag_cal_fc2,         pss_cal, pss_cal_n,
   pss_set_noise,
   pss_cal_d, pss_cal_el, pss_cal_az, pss_cal_roll, pss_cal_array_az, pss_set_imin,
-  potvalve_set_thresholds,
+  potvalve_set_thresholds, potvalve_set_tighten_move,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
 

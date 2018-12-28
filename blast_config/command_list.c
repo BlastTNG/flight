@@ -487,9 +487,8 @@ struct mcom mcommands[plugh + 2] = {
       {"Az Acceleration", 0.1, 2.0, 'f', "accel_az"}
     }
   },
-  {COMMAND(set_scan_params), "set pos hwpr and dither index for next scan", GR_POINT, 2,
+  {COMMAND(set_scan_params), "set dither index for next scan", GR_POINT, 2,
     {
-      {"Next HWPR pos (0-3, -1: no change)", -1, 3, 'i', "next_i_hwpr"},
       {"Next dither index ", 0, 200, 'i', "next_i_dith"}
     }
   },
@@ -1618,7 +1617,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
       {
-          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
+          {"Labjack to reconnect", 1, 7, 'i', "NONE"},
       }
   },
   /***************************************/
@@ -1665,6 +1664,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Closed threshold (1000-7000)", 1000, 7000, 'i', "THRESH_CLOS_POTVALVE"},
       {"Loose close threshold (7000-10000)", 7000, 10000, 'i', "THRESHLCLOS_POTVALVE"},
       {"Open threshold (10000-16000)", 10000, 16000, 'i', "THRESH_OPEN_POTVALVE"},
+    }
+  },
+
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening move size (in encoder units)", GR_CRYO, 1,
+    {
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_MIN_TIGHTEN_MOVE"}
     }
   },
 
