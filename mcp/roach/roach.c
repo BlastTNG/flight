@@ -3073,12 +3073,15 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
             }
         }
     }
-    memset(m_roach->I_on, 0, MAX_CHANNELS_PER_ROACH);
-    memset(m_roach->Q_on, 0, MAX_CHANNELS_PER_ROACH);
-    memset(m_roach->df_on, 0, MAX_CHANNELS_PER_ROACH);
-    memset(m_roach->I_off, 0, MAX_CHANNELS_PER_ROACH);
-    memset(m_roach->Q_off, 0, MAX_CHANNELS_PER_ROACH);
-    memset(m_roach->df_off, 0, MAX_CHANNELS_PER_ROACH);
+    if (lamp_on) {
+        memset(m_roach->I_on, 0, MAX_CHANNELS_PER_ROACH);
+        memset(m_roach->Q_on, 0, MAX_CHANNELS_PER_ROACH);
+        memset(m_roach->df_on, 0, MAX_CHANNELS_PER_ROACH);
+    } else {
+        memset(m_roach->I_off, 0, MAX_CHANNELS_PER_ROACH);
+        memset(m_roach->Q_off, 0, MAX_CHANNELS_PER_ROACH);
+        memset(m_roach->df_off, 0, MAX_CHANNELS_PER_ROACH);
+    }
     float nsec = CommandData.roach_params[m_roach->which - 1].num_sec;
     int npoints = (int)round(nsec * (double)DAC_FREQ_RES);
     int m_last_valid_packet_count = roach_udp[m_roach->which - 1].roach_valid_packet_count;
@@ -3390,15 +3393,18 @@ int get_lamp_response(roach_state_t *m_roach)
     blast_tmp_sprintf(var_name, "R%d_LAST_LAMP_DATA", m_roach->which);
     setenv(var_name, path_to_lamp_tarball[m_roach->which - 1], 1);
     compress_data(m_roach, LAMP);
+    double df_diff_sum = 0;
     for (size_t chan = 0; chan < m_roach->current_ntones; chan++) {
         m_roach->I_diff[chan] = m_roach->I_on[chan] - m_roach->I_off[chan];
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
+        df_diff_sum += m_roach->df_diff[chan];
         // blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
         fwrite(&m_roach->I_diff[chan], sizeof(m_roach->I_diff[chan]), 1, fd);
         fwrite(&m_roach->Q_diff[chan], sizeof(m_roach->Q_diff[chan]), 1, fd);
         fwrite(&m_roach->df_diff[chan], sizeof(m_roach->df_diff[chan]), 1, fd);
     }
+    m_roach->avg_df_diff = df_diff_sum/m_roach->current_ntones;
     fclose(fd);
     return 0;
 }
@@ -6199,6 +6205,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *AvgDfDiffAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
     static channel_t *LoFreqReadAddr[NUM_ROACHES];
     static channel_t *RoachFridgeCycleWarning;
@@ -6212,6 +6219,7 @@ void write_roach_channels_1hz(void)
     static channel_t *CmdRoachParSpaceThreshAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSetInAttenAddr[NUM_ROACHES];
     static channel_t *CmdRoachParSetOutAttenAddr[NUM_ROACHES];
+
     static channel_t *CmdRoachParReadInAttenAddr[NUM_ROACHES];
     static channel_t *CmdRoachParReadOutAttenAddr[NUM_ROACHES];
     static channel_t *FlagsKidsAddr[NUM_ROACHES][NUM_FLAG_CHANNELS_PER_ROACH];
@@ -6237,6 +6245,7 @@ void write_roach_channels_1hz(void)
     char channel_name_roach_auto_check_cycle[128] = { 0 };
     char channel_name_df_retune_thresh[128] = { 0 };
     char channel_name_df_diff_retune_thresh[128] = { 0 };
+    char channel_name_avg_df_diff[128] = { 0 };
     char channel_name_flags_kids[128] = { 0 };
     char channel_name_kids_found[128] = { 0 };
     char channel_name_prev_kids_found[128] = { 0 };
@@ -6276,6 +6285,8 @@ void write_roach_channels_1hz(void)
                         "flags_kids%04d_roach%d", j*16, i + 1);
                 FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+            snprintf(channel_name_avg_df_diff, sizeof(channel_name_avg_df_diff),
+                        "avg_df_diff_roach%d", i + 1);
             snprintf(channel_name_fpga_clock_freq, sizeof(channel_name_fpga_clock_freq),
                         "fpga_clock_freq_roach%d", i + 1);
             snprintf(channel_name_lo_freq_req, sizeof(channel_name_lo_freq_req),
@@ -6339,6 +6350,7 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
             LoFreqReadAddr[i] = channels_find_by_name(channel_name_lo_freq_read);
@@ -6388,6 +6400,7 @@ void write_roach_channels_1hz(void)
             }
             SET_UINT16(FlagsKidsAddr[i][j], flag);
         }
+        SET_FLOAT(AvgDfDiffAddr[i], roach_state_table[i].avg_df_diff);
         SET_UINT16(nKidsFoundAddr[i], roach_state_table[i].num_kids);
         SET_UINT16(PrevNkidsFoundAddr[i], roach_state_table[i].prev_num_kids);
         SET_UINT16(nKidsGoodAddr[i], n_good_kids);

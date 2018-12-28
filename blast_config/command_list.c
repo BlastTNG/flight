@@ -1479,7 +1479,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
       {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
-      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 80.0, 10000.0, 'f', "NONE"},
     }
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
