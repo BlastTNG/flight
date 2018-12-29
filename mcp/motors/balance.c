@@ -235,7 +235,9 @@ void DoBalance(struct ezbus* bus)
 
     if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
 	balance_state.do_move = 0;
+	balance_state.dir = no_move;
 	balance_state.moving = 0;
+	CommandData.balance.mode = bal_rest;
     }
 
 // Write balance data
