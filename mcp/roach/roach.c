@@ -4973,6 +4973,7 @@ void reset_flags(roach_state_t *m_roach)
     m_roach->waiting_for_lamp = 0;
     m_roach->full_loop_fail = 0;
     m_roach->trnaround_loop_fail = 0;
+    m_roach->write_flag = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
@@ -5453,7 +5454,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
                 m_roach->data_stream_error = 0;
                 recenter_lo(m_roach);
                 if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
-                    blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which - 1);
+                    blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which);
                 }
             }
             break;

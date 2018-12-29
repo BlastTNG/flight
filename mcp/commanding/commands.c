@@ -1311,6 +1311,16 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].find_kids = 1;
             }
         break;
+        case read_attens_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].read_attens = 1;
+          }
+          break;
+        case read_lo_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].read_lo = 1;
+          }
+          break;
         case reset_log:
            ResetLog = 1;
            break;

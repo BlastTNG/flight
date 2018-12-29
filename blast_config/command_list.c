@@ -349,6 +349,8 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
+  {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
+  {COMMAND(read_lo_all), "(All Roaches) Reads current LO frequencies", GR_ROACH},
   {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1422,6 +1424,17 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
     {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
+  }
+  },
+  {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
+  {
+    {"ROACH no", 1, 5, 'i', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
+  }
+  },
+  {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF diff retune threshold (Hz)", GR_ROACH, 1,
+  {
+    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
   }
   },
   {COMMAND(set_min_nkids), "Set min N KIDS found for tone finding error to go high", GR_ROACH, 2,
