@@ -322,6 +322,7 @@ void write_motor_channels_5hz(void)
     static channel_t* gPtAzAddr;
     static channel_t* gPVPivAddr;
     static channel_t* gIVPivAddr;
+    static channel_t* gIEPivAddr;
     static channel_t* gPEPivAddr;
     static channel_t* setRWAddr;
     static channel_t* frictOffPivAddr;
@@ -371,6 +372,7 @@ void write_motor_channels_5hz(void)
 
         gPVPivAddr = channels_find_by_name("g_pv_piv");
         gIVPivAddr = channels_find_by_name("g_iv_piv");
+        gIEPivAddr = channels_find_by_name("g_ie_piv");
         gPEPivAddr = channels_find_by_name("g_pe_piv");
 
         setRWAddr = channels_find_by_name("set_rw");
@@ -438,6 +440,8 @@ void write_motor_channels_5hz(void)
     SET_FLOAT(gPEPivAddr, CommandData.pivot_gain.PE);
     /* setpoint for reaction wheel */
     SET_FLOAT(setRWAddr, CommandData.pivot_gain.SP);
+    /* I term to vel error for pivot motor */
+    SET_FLOAT(gIEPivAddr, CommandData.pivot_gain.IE);
     /* Pivot current offset to compensate for static friction. */
     SET_FLOAT(frictOffPivAddr, CommandData.pivot_gain.F);
     /* Azimuth Scan Acceleration */
