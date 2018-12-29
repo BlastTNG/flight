@@ -99,6 +99,7 @@ extern int doing_schedule; /* sched.c */
 extern linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES];
 extern linklist_t * telemetries_linklist[NUM_TELEMETRIES];
 extern char * ROACH_TYPES[NUM_RTYPES];
+extern int ResetLog;
 
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
@@ -1304,6 +1305,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].is_chopping_lo = 1;
           }
           break;
+        case reset_log:
+           ResetLog = 1;
+           break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
