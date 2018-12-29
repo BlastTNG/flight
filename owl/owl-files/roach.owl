@@ -1974,8 +1974,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 851,
-            "geometryWidth": 290,
+            "geometryHeight": 850,
+            "geometryWidth": 289,
             "geometryX": 612,
             "geometryY": 17
         },
@@ -2551,7 +2551,8 @@
                     "_caption": "IS_CHOPPING_LO",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_CHOPPING_LO_ROACH5",
                     "type": "PNDI"
