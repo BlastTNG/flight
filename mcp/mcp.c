@@ -199,8 +199,8 @@ void * lj_connection_handler(void *arg) {
     // labjack_networking_init(8, 14, 1);
     // initialize_labjack_commands(8);
     // switch to this thread for flight
-    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     mult_initialize_labjack_commands(5);
+    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
     return NULL;
@@ -253,7 +253,7 @@ static void mcp_100hz_routines(void)
     read_100hz_acs();
     PointingData[i_point].recv_shared_data = recv_fast_data();
     Pointing();
-//    DoSched();
+    DoSched();
     update_axes_mode();
     store_100hz_acs();
     send_fast_data();
@@ -594,7 +594,7 @@ blast_info("Finished initializing Beaglebones..."); */
 
   DiskManagerID = ph_thread_spawn((void *) &initialize_diskmanager, (void *) NULL);
 
-//  InitSched();
+  InitSched();
   initialize_motors();
 
 // LJ THREAD

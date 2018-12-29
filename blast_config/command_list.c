@@ -281,10 +281,10 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(not_at_float), "tell the scheduler that we're not at float",
     GR_TELEM},
 
-  {COMMAND(north_halt), "ask MCP to halt north MCC", GR_MISC | CONFIRM},
-  {COMMAND(south_halt), "ask MCP to halt south MCC", GR_MISC | CONFIRM},
-  {COMMAND(reap_north), "ask MCP to reap the north watchdog tickle", GR_MISC | CONFIRM},
-  {COMMAND(reap_south), "ask MCP to reap the south watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(halt_fc1), "ask MCP to halt fc1", GR_MISC | CONFIRM},
+  {COMMAND(halt_fc2), "ask MCP to halt fc2", GR_MISC | CONFIRM},
+  {COMMAND(reap_fc1), "ask MCP to reap the fc1 watchdog tickle", GR_MISC | CONFIRM},
+  {COMMAND(reap_fc2), "ask MCP to reap the fc2 watchdog tickle", GR_MISC | CONFIRM},
   {COMMAND(xy_panic), "stop XY stage motors immediately", GR_MISC},
 
   {COMMAND(balance_auto), "Put balance system into auto mode", GR_BAL},
@@ -313,15 +313,15 @@ struct scom scommands[xyzzy + 1] = {
 
   // Shutter commands
   {COMMAND(shutter_init), "Initialize shutter move parameters", GR_MISC},
-  {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
+  {COMMAND(shutter_close), "Close shutter (will NOT keep it closed)", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
   {COMMAND(shutter_open), "Open shutter", GR_MISC},
   {COMMAND(shutter_open_close), "DEPRECATED: If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "DEPRECATED, use shutter_keepclosed instead: Close shutter using opto feedback",
 	  GR_MISC},
-  {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
-  {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
+  {COMMAND(shutter_keepopen), "Open shutter and keep open with limit switch", GR_MISC},
+  {COMMAND(shutter_keepclosed), "Close shutter and keep closed with limit switch", GR_MISC},
 
   {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
@@ -487,9 +487,8 @@ struct mcom mcommands[plugh + 2] = {
       {"Az Acceleration", 0.1, 2.0, 'f', "accel_az"}
     }
   },
-  {COMMAND(set_scan_params), "set pos hwpr and dither index for next scan", GR_POINT, 2,
+  {COMMAND(set_scan_params), "set dither index for next scan", GR_POINT, 2,
     {
-      {"Next HWPR pos (0-3, -1: no change)", -1, 3, 'i', "next_i_hwpr"},
       {"Next dither index ", 0, 200, 'i', "next_i_dith"}
     }
   },
@@ -1480,7 +1479,7 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
       {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
-      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+      {"spacing threshold (kHz)", 80.0, 10000.0, 'f', "NONE"},
     }
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
@@ -1618,7 +1617,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
       {
-          {"Labjack to reconnect", 1, 5, 'i', "NONE"},
+          {"Labjack to reconnect", 1, 7, 'i', "NONE"},
       }
   },
   /***************************************/
@@ -1665,6 +1664,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Closed threshold (1000-7000)", 1000, 7000, 'i', "THRESH_CLOS_POTVALVE"},
       {"Loose close threshold (7000-10000)", 7000, 10000, 'i', "THRESHLCLOS_POTVALVE"},
       {"Open threshold (10000-16000)", 10000, 16000, 'i', "THRESH_OPEN_POTVALVE"},
+    }
+  },
+
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening minimum move size (in encoder units)", GR_CRYO, 1,
+    {
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_TIGHT_MOVE"}
     }
   },
 

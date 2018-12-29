@@ -472,6 +472,7 @@ channel_t channel_list[] =
     {"thresh_clos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"threshlclos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"thresh_open_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"potvalve_tight_move", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"pos_pumpvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
@@ -1280,6 +1281,11 @@ channel_t channel_list[] =
     { "df_diff_retune_thresh_roach3",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_diff_retune_thresh_roach4",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_diff_retune_thresh_roach5",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
+    { "avg_df_diff_roach1",      SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_1HZ, U_NONE, 0 },
+    { "avg_df_diff_roach2",      SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_1HZ, U_NONE, 0 },
+    { "avg_df_diff_roach3",      SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_1HZ, U_NONE, 0 },
+    { "avg_df_diff_roach4",      SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_1HZ, U_NONE, 0 },
+    { "avg_df_diff_roach5",      SCALE(CONVERT_UNITY),  TYPE_FLOAT,    RATE_1HZ, U_NONE, 0 },
     /*
     { "is_averaging_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "is_averaging_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },

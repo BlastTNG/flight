@@ -523,6 +523,17 @@ void *mult_labjack_cmd_thread(void *m_lj) {
         }
         */
     }
+
+		// reset the q
+		int qstate = CommandData.Labjack_Queue.which_q[m_state->which];
+		CommandData.Labjack_Queue.which_q[m_state->which] = 0;
+		if (qstate) CommandData.Labjack_Queue.set_q = 1;
+
+    // close the modbus
+    m_state->comm_stream_state = 0;
+    modbus_close(m_state->cmd_mb);
+    modbus_free(m_state->cmd_mb);
+    m_state->cmd_mb = NULL;
     return NULL;
 }
 

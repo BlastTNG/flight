@@ -396,7 +396,12 @@ void DoSched(void)
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
+  static int first_time = 1;
 
+  if (first_time) {
+    blast_info("Calling DoSched for the First Time");
+    first_time = 0;
+  }
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
 
@@ -435,7 +440,7 @@ void DoSched(void)
         blast_info("Scheduler: Entering northern latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 0;
       }
-    } else if (CommandData.lat_range == 0) { /* norhtern band */
+    } else if (CommandData.lat_range == 0) { /* northern band */
       if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
         blast_info("Scheduler: Entering middle latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 1;
@@ -447,6 +452,7 @@ void DoSched(void)
     }
 
     S = &_S[CommandData.sucks][CommandData.lat_range];
+
 
     /* check to see if we've changed schedule files */
     if (last_l != CommandData.lat_range) {
@@ -599,4 +605,5 @@ void DoSched(void)
     ScheduledCommand(&S->event[i_sched]);
   }
   last_is = i_sched;
+  first_time = 0;
 }

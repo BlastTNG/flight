@@ -55,6 +55,7 @@
 #include "bias_tone.h"
 #include "sip.h"
 #include "roach.h"
+#include "watchdog.h"
 
 /* Lock positions are nominally at 5, 15, 25, 35, 45, 55, 65, 75
  * 90 degrees.  This is the offset to the true lock positions.
@@ -76,8 +77,12 @@ static const double lock_positions[NUM_LOCK_POS] = {0.03, 5.01, 14.95, 24.92, 34
 #define ISC_TRIGGER_POS  2
 #define ISC_TRIGGER_NEG  3
 
+// Penn highbay
 #define PSN_EAST_BAY_LAT 31.779300
 #define PSN_EAST_BAY_LON 264.283000
+// MCM-LDB
+#define MCM_LDB_LAT -77.8616
+#define MCM_LDB_LON 167.0592
 
 void RecalcOffset(double, double);  /* actuators.c */
 
@@ -98,7 +103,7 @@ extern char * ROACH_TYPES[NUM_RTYPES];
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
 
-struct SIPDataStruct SIPData = {.GPSpos = {.lat = PSN_EAST_BAY_LAT, .lon = PSN_EAST_BAY_LON}};
+struct SIPDataStruct SIPData = {.GPSpos = {.lat = MCM_LDB_LAT, .lon = MCM_LDB_LON}};
 struct CommandDataStruct CommandData;
 
 const char* SName(enum singleCommand command); // share/sip.c
@@ -973,7 +978,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             // CommandData.Cryo.BDAHeat = 0;
             // break;
         // cryo valves
-		case potvalve_open:
+	case potvalve_open:
         	CommandData.Cryo.potvalve_goal = opened;
         	break;
     	case potvalve_close:
@@ -1167,18 +1172,17 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.hwpr.use_pot = 1;
             break;
 
-        case reap_north:  // Miscellaneous commands
-        case reap_south:
-            if ((command == reap_north && !SouthIAm) || (command == reap_south && SouthIAm)) {
-                blast_err("Commands: Reaping the watchdog tickle on command in 1 second.");
-                sleep(1);
-                // TODO(seth): Enable Watchdog reap
+        case reap_fc1:  // Miscellaneous commands
+        case reap_fc2:
+            if ((command == reap_fc1 && !SouthIAm) || (command == reap_fc2 && SouthIAm)) {
+                blast_warn("Commands: Reaping the watchdog tickle due to command.\n");
+                watchdog_stop();
             }
-            break;
-        case north_halt:
-        case south_halt:
-            if ((command == north_halt && !SouthIAm) || (command == south_halt && SouthIAm)) {
-                bputs(warning, "Commands: Halting the MCC\n");
+           break;
+        case halt_fc1:
+        case halt_fc2:
+            if ((command == halt_fc1 && !SouthIAm) || (command == halt_fc2 && SouthIAm)) {
+                blast_warn("Commands: Halting the MCC\n");
                 if (system("/sbin/reboot") < 0) berror(fatal, "Commands: failed to reboot, dying\n");
             }
             break;
@@ -1321,8 +1325,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
 #ifndef BOLOTEST
     if (!scheduled) {
         // TODO(seth): RE-enable doing_schedule
-//    if (doing_schedule)
-//      blast_info("Scheduler: *** Out of schedule file mode ***");
+        if (doing_schedule)
+             blast_info("Scheduler: *** Out of schedule file mode ***");
         CommandData.pointing_mode.t = PointingData[i_point].t + CommandData.timeout;
     } else {
         CommandData.pointing_mode.t = PointingData[i_point].t;
@@ -1563,8 +1567,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_scan_params:
-      CommandData.pointing_mode.next_i_hwpr = ivalues[0];
-      CommandData.pointing_mode.next_i_dith = ivalues[1];
+      CommandData.pointing_mode.next_i_dith = ivalues[0];
       break;
 
       /*************************************
@@ -1749,12 +1752,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case shutter_i:
       CommandData.actbus.shutter_move_i = ivalues[0];
       CommandData.actbus.shutter_hold_i = ivalues[1];
-      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case shutter_vel:
       CommandData.actbus.shutter_vel = ivalues[0];
       CommandData.actbus.shutter_acc = ivalues[1];
-      CommandData.actbus.shutter_goal = SHUTTER_INIT;
       break;
     case general:  // General actuator bus command
       CommandData.actbus.caddr[CommandData.actbus.cindex] = ivalues[0] + 0x30;
@@ -1900,6 +1901,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.potvalve_open_threshold = ivalues[2];
 	  // also clear the goal so it doesn't move until a command
 	  CommandData.Cryo.potvalve_goal = 0;
+      break;
+    case potvalve_set_tighten_move:
+      CommandData.Cryo.potvalve_min_tighten_move = ivalues[0];
       break;
     case valves_set_vel:
       CommandData.Cryo.valve_vel = ivalues[0];
@@ -2159,11 +2163,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case slot_sched:  // change uplinked schedule file
-        // TODO(seth): Re-enable Uplink file loading
-//      if (LoadUplinkFile(ivalues[0])) {
-//        CommandData.uplink_sched = 1;
-//        CommandData.slot_sched = ivalues[0];
-//      }
+      if (LoadUplinkFile(ivalues[0])) {
+        CommandData.uplink_sched = 1;
+        CommandData.slot_sched = ivalues[0];
+      }
       break;
     case params_test: // Do nothing, with lots of parameters
       blast_info("Integer params 'i': %d 'l' %d", ivalues[0], ivalues[1]);
@@ -3892,13 +3895,13 @@ void InitCommandData()
     CommandData.actbus.shutter_vel = 3000;
     CommandData.actbus.shutter_acc = 1;
 
-    CommandData.Cryo.potvalve_opencurrent = 75;
-    CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_opencurrent = 35;
+    CommandData.Cryo.potvalve_closecurrent = 25;
     CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 6000;
+    CommandData.Cryo.potvalve_closed_threshold = 5200;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
-    CommandData.Cryo.potvalve_open_threshold = 12000;
+    CommandData.Cryo.potvalve_open_threshold = 10000;
     CommandData.Cryo.valve_vel = 50000;
     CommandData.Cryo.valve_move_i = 75;
     CommandData.Cryo.valve_hold_i = 0;
