@@ -148,7 +148,7 @@
 #define MAX_DATA_ERRORS 500 /* Max num allowable data errors in save_sweep_packet (ms) */
 #define MAX_LAMP_WAITS 10 /* Max num times to wait for lead roach to flash lamp (10 s) */
 #define MAX_FPG_UPLOAD_TRIES 10 /* Max number of fpg upload attempts */
-#define MAX_PACKET_COUNT_ERRORS 100000 /* Max num packet count errors for stream checker */
+#define MAX_PACKET_COUNT_ERRORS 5000 /* Max num packet count errors for stream checker */
 #define MAX_FULL_LOOP_TRIES 2 /* Max num full loop retries after fail */
 
 static int is_cycling = 0;
@@ -4891,8 +4891,9 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                    NULL);
     if (retval != KATCP_RESULT_OK) {
-        return -1;
+        blast_err("ROACH%d: FIRMWARE UPLOAD FAILED", m_roach->which);
         blast_info("ROACH%d: Failed to connect with KATCP", m_roach->which);
+        return -1;
     }
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
@@ -4913,8 +4914,9 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
             break;
         }
     }
-    // blast_info("ROACH%d: COUNT = %d", m_roach->which - 1, count);
+    // blast_info("ROACH%d: COUNT = %d", m_roach->which, count);
     if (count == MAX_FPG_UPLOAD_TRIES) {
+        blast_err("ROACH%d: FIRMWARE UPLOAD FAILED", m_roach->which);
         return -1;
     }
     blast_info("ROACH%d: FPGA programmed", m_roach->which);
@@ -4935,11 +4937,7 @@ void shutdown_roaches(void)
     close(roach_sock_fd); // close roach UDP socket
     for (int i = 0; i < NUM_ROACHES; i++) {
         blast_info("Closing KATCP on ROACH%d", i + 1);
-        if (roach_state_table[i].rpc_conn) {
-            // roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
-            // roach_read_int(&roach_state_table[i], "tx_rst");
-            destroy_rpc_katcl(roach_state_table[i].rpc_conn);
-        }
+        destroy_rpc_katcl(roach_state_table[i].rpc_conn);
         if (pi_state_table[i].pi_comm) {
             remote_serial_shutdown(pi_state_table[i].pi_comm);
             pi_state_table[i].pi_comm = NULL;
@@ -5027,24 +5025,25 @@ void pi_state_manager(pi_state_t *m_pi, int result)
 
 int roach_boot_sequence(roach_state_t *m_roach)
 {
+    blast_info("ROACH%d: INSIDE BOOT SEQ", m_roach->which);
     int retval = -1;
     int flags = 0;
-    blast_info("Attempting to connect to %s", m_roach->address);
+    // if (m_roach->rpc_conn) {
+    //     destroy_rpc_katcl(m_roach->rpc_conn);
+    //     blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
+    // }
+    blast_info("ROACH%d: Attempting to connect to %s", m_roach->which, m_roach->address);
     flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
-    m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
-    if (m_roach->katcp_fd > 0) {
-        blast_info("ROACH%d, KATCP up", m_roach->which);
-        m_roach->katcp_connect_error = 0;
-        retval = 0;
-    } else {
-        if (!m_roach->katcp_connect_error) {
-            blast_err("ROACH%d, KATCP connection error", m_roach->which);
-            m_roach->katcp_connect_error = 1;
-        }
-        // sleep(3);
+    if (m_roach->katcp_fd < 0) {
+        m_roach->katcp_connect_error = 1;
+        blast_err("ROACH%d: KATCP Connection Error", m_roach->which);
+        return retval;
     }
-    return retval;
+    m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
+    m_roach->katcp_connect_error = 0;
+    blast_info("ROACH%d: KATCP UP", m_roach->which);
+    return 0;
 }
 
 int roach_prog_registers(roach_state_t *m_roach)
@@ -5452,8 +5451,10 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 m_roach->data_stream_error = 0;
-                // start roach watchdog thread
-                // start_watchdog_thread(m_roach->which - 1);
+                recenter_lo(m_roach);
+                if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
+                    blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which - 1);
+                }
             }
             break;
         case ROACH_STATE_STREAMING:
@@ -5491,14 +5492,12 @@ void *roach_cmd_loop(void* ind)
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
-    // center LO
-    // TODO(Sam) Error handling?
-    if (recenter_lo(&roach_state_table[i])) {
+    /* if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
     if ((set_attens_to_default(&pi_state_table[i])) < 0) {
         blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
-    }
+    }*/
     int packet_error_counter = 0;
     int current_packet_count = 0;
     int last_packet_count = 0;
@@ -5509,12 +5508,7 @@ void *roach_cmd_loop(void* ind)
                                    roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
             // establish a KATCP connection to the PPC
             result = roach_boot_sequence(&roach_state_table[i]);
-            blast_info("RESULT ==== %d", result);
-            blast_info("CURRENT STATE ==== %d", roach_state_table[i].state);
-            blast_info("DESIRED STATE ==== %d", roach_state_table[i].desired_state);
             roach_state_manager(&roach_state_table[i], result);
-            // blast_info("ROACH STATE ================ %d, %d", roach_state_table[i].state,
-            //                roach_state_table[i].desired_state);
         }
         if (roach_state_table[i].state == ROACH_STATE_CONNECTED &&
             roach_state_table[i].desired_state >= ROACH_STATE_CONNECTED) {

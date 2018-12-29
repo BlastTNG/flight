@@ -1305,6 +1305,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].is_chopping_lo = 1;
           }
           break;
+        case full_loop_default_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_full_loop = 1;
+              CommandData.roach[i].find_kids = 1;
+            }
+        break;
         case reset_log:
            ResetLog = 1;
            break;
@@ -2524,6 +2530,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             CommandData.roach_params[i].num_sec = rvalues[0];
         }
         break;
+    case full_loop_default:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_full_loop = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
+      }
+      break;
     case full_loop:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_full_loop = 1;
@@ -3827,7 +3839,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
-        CommandData.roach_params[i].dBm_per_tone = -50;
+        CommandData.roach_params[i].dBm_per_tone = -47;
         CommandData.roach_params[i].df_retune_threshold = 100000;
         CommandData.roach_params[i].df_diff_retune_threshold = 100000;
     }
