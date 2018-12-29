@@ -39,6 +39,7 @@
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+
 /* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
  * it is working so we will leave it for now. If this were changed, the thresholds
  * and maybe the 750000 (microsteps to overshoot closed) would need to be changed
@@ -333,8 +334,8 @@ void DoPotValve(struct ezbus* bus)
 			// blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
-			delta = (int) (POTVALVE_STEP_ADC_RATIO *
-				MAX(((potvalve_data.adc[0] - CommandData.Cryo.potvalve_lclosed_threshold) * MOVE_OVERSHOOT_FACTOR),
+			delta = (int) (-1 * POTVALVE_STEP_ADC_RATIO *
+				MIN(((potvalve_data.adc[0] - CommandData.Cryo.potvalve_lclosed_threshold) * MOVE_OVERSHOOT_FACTOR),
 				(potvalve_data.adc[0] - POTVALVE_ENC_MIN)));
 			if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK)
 				blast_info("Error closing pot valve");
@@ -358,7 +359,7 @@ void DoPotValve(struct ezbus* bus)
 				// usleep(500000);
 				if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK) // close by ~.5 turn
 					blast_info("Error tightening pot valve");
-				blast_info("command tighten move of size %d, ADC = %f", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
+				blast_info("command tighten move of size %d, ADC = %d", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
@@ -449,7 +450,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		closedThresholdPotValveAddr = channels_find_by_name("thresh_clos_potvalve");
 	    	lclosedThresholdPotValveAddr = channels_find_by_name("threshlclos_potvalve");
 	    	openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
-		potvalveMinTightenMoveAddr = channels_find_by_name("potvalve_min_tighten_move");
+		potvalveMinTightenMoveAddr = channels_find_by_name("potvalve_tight_move");
 
 		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
 		limsFillValveAddr = channels_find_by_name("lims_fillvalve");

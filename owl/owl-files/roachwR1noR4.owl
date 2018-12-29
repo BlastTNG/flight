@@ -524,6 +524,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "646282127"
+                    },
+                    "_caption": "LAST_DF_RESPONSE [Hz]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "AVG_DF_DIFF_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "705821707"
                     },
                     "_caption": "DF_RETUNE_THRESH",
@@ -531,7 +543,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DF_RETUNE_THRESH_ROACH1",
+                    "_source": "DF_DIFF_RETUNE_THRESH_ROACH1",
                     "type": "PNDI"
                 },
                 {
@@ -1093,19 +1105,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1761023600"
-                    },
-                    "_caption": "TONE_FINDING_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_FINDING_ERROR_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "833867046"
                     },
                     "_caption": "SWEEP_FAIL",
@@ -1170,6 +1169,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1953728871"
+                    },
+                    "_caption": "LAST_DF_RESPONSE [Hz]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "AVG_DF_DIFF_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "78865280"
                     },
                     "_caption": "DF_RETUNE_THRESH",
@@ -1177,19 +1188,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DF_RETUNE_THRESH_ROACH2",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1385211942"
-                    },
-                    "_caption": "N_OUTOFRANGE",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "nkids_bad_roach2",
+                    "_source": "DF_DIFF_RETUNE_THRESH_ROACH2",
                     "type": "PNDI"
                 },
                 {
@@ -1202,6 +1201,18 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "NFLAG_THRESH_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1385211942"
+                    },
+                    "_caption": "N_OUTOFRANGE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach2",
                     "type": "PNDI"
                 },
                 {
@@ -1741,19 +1752,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1505079292"
-                    },
-                    "_caption": "TONE_FINDING_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_FINDING_ERROR_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "103053979"
                     },
                     "_caption": "SWEEP_FAIL",
@@ -1819,6 +1817,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1051911154"
+                    },
+                    "_caption": "LAST_DF_RESPONSE [Hz]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "AVG_DF_DIFF_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "594152183"
                     },
                     "_caption": "DF_RETUNE_THRESH",
@@ -1826,7 +1836,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DF_RETUNE_THRESH_ROACH3",
+                    "_source": "DF_DIFF_RETUNE_THRESH_ROACH3",
                     "type": "PNDI"
                 },
                 {
@@ -2387,19 +2397,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "995158618"
-                    },
-                    "_caption": "TONE_FINDING_ERROR",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "TONE_FINDING_ERROR_ROACH5",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "937001379"
                     },
                     "_caption": "SWEEP_FAIL",
@@ -2465,6 +2462,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "1224007190"
+                    },
+                    "_caption": "LAST_DF_RESPONSE [Hz]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "AVG_DF_DIFF_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "1029316957"
                     },
                     "_caption": "DF_RETUNE_THRESH",
@@ -2472,7 +2481,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "DF_RETUNE_THRESH_ROACH5",
+                    "_source": "DF_DIFF_RETUNE_THRESH_ROACH5",
                     "type": "PNDI"
                 },
                 {
@@ -3152,6 +3161,25 @@
                     "_format": "",
                     "_source": "COUNT_CMD_S",
                     "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "872965719"
+                        },
+                        "_map": {
+                            "0": "1[style=No style (P1555002508)]",
+                            "1": "2[style=No style (P1555002508)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "705990254"
+                    },
+                    "_caption": "FC_IN_CHARGE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "SOUTH_I_AM",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 187,
@@ -3649,7 +3677,7 @@
     ],
     "webPort": "0",
     "windowCellHeight": 60,
-    "windowCellWidth": 113,
+    "windowCellWidth": 93,
     "windowHeight": 1020,
-    "windowWidth": 1920
+    "windowWidth": 1581
 }

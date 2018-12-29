@@ -313,15 +313,15 @@ struct scom scommands[xyzzy + 1] = {
 
   // Shutter commands
   {COMMAND(shutter_init), "Initialize shutter move parameters", GR_MISC},
-  {COMMAND(shutter_close), "Close shutter and keep it closed", GR_MISC},
+  {COMMAND(shutter_close), "Close shutter (will NOT keep it closed)", GR_MISC},
   {COMMAND(shutter_reset), "Reset shutter; shutter will open", GR_MISC},
   {COMMAND(shutter_open), "Open shutter", GR_MISC},
   {COMMAND(shutter_open_close), "DEPRECATED: If shutter is open, then open completely and then close", GR_MISC},
   {COMMAND(shutter_off), "Turn off shutter; shutter will fall open", GR_MISC},
   {COMMAND(shutter_close_slow), "DEPRECATED, use shutter_keepclosed instead: Close shutter using opto feedback",
 	  GR_MISC},
-  {COMMAND(shutter_keepopen), "Keep shutter open with limit switch", GR_MISC},
-  {COMMAND(shutter_keepclosed), "Keep shutter closed with limit switch", GR_MISC},
+  {COMMAND(shutter_keepopen), "Open shutter and keep open with limit switch", GR_MISC},
+  {COMMAND(shutter_keepclosed), "Close shutter and keep closed with limit switch", GR_MISC},
 
   {COMMAND(vna_sweep_all), "(All Roaches) Do VNA sweeps", GR_ROACH},
   {COMMAND(targ_sweep_all), "(All Roaches) Do TARG sweeps", GR_ROACH},
@@ -1667,9 +1667,9 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening move size (in encoder units)", GR_CRYO, 1,
+  {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening minimum move size (in encoder units)", GR_CRYO, 1,
     {
-      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_MIN_TIGHTEN_MOVE"}
+      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_TIGHT_MOVE"}
     }
   },
 

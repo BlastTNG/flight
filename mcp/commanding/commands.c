@@ -3895,13 +3895,13 @@ void InitCommandData()
     CommandData.actbus.shutter_vel = 3000;
     CommandData.actbus.shutter_acc = 1;
 
-    CommandData.Cryo.potvalve_opencurrent = 75;
-    CommandData.Cryo.potvalve_closecurrent = 50;
+    CommandData.Cryo.potvalve_opencurrent = 35;
+    CommandData.Cryo.potvalve_closecurrent = 25;
     CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 6000;
+    CommandData.Cryo.potvalve_closed_threshold = 5200;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
-    CommandData.Cryo.potvalve_open_threshold = 12000;
+    CommandData.Cryo.potvalve_open_threshold = 10000;
     CommandData.Cryo.valve_vel = 50000;
     CommandData.Cryo.valve_move_i = 75;
     CommandData.Cryo.valve_hold_i = 0;
