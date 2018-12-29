@@ -643,6 +643,18 @@
                     "_format": "",
                     "_source": "EXT_REF_ROACH1",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "524976772"
+                    },
+                    "_caption": "IS_COMPRESSING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_ROACH1",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 850,
@@ -1290,6 +1302,18 @@
                     "_format": "",
                     "_source": "EXT_REF_ROACH2",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "718714779"
+                    },
+                    "_caption": "IS_COMPRESSING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_ROACH2",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 850,
@@ -1936,10 +1960,22 @@
                     "_format": "",
                     "_source": "EXT_REF_ROACH3",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1373745113"
+                    },
+                    "_caption": "IS_COMPRESSING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_ROACH3",
+                    "type": "PNDI"
                 }
             ],
-            "geometryHeight": 850,
-            "geometryWidth": 289,
+            "geometryHeight": 851,
+            "geometryWidth": 290,
             "geometryX": 612,
             "geometryY": 17
         },
@@ -2581,6 +2617,18 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "EXT_REF_ROACH5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "309169904"
+                    },
+                    "_caption": "IS_COMPRESSING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_ROACH3",
                     "type": "PNDI"
                 }
             ],
@@ -3676,8 +3724,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 60,
-    "windowCellWidth": 93,
-    "windowHeight": 1020,
-    "windowWidth": 1581
+    "windowCellHeight": 62,
+    "windowCellWidth": 113,
+    "windowHeight": 1056,
+    "windowWidth": 1920
 }
