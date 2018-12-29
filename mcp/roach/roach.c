@@ -4886,7 +4886,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                           .roach = m_roach
     };
     blast_info("ROACH%d: Getting permission to upload fpg", m_roach->which);
-    int retval = send_rpc_katcl(m_roach->rpc_conn, QDR_TIMEOUT,
+    int retval = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
                    KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                    NULL);
@@ -4898,7 +4898,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
     pyblast_system(upload_command);
-    sleep(5);
+    sleep(10);
     int count = 0;
     int success_val;
     while (count < MAX_FPG_UPLOAD_TRIES) {
@@ -5473,7 +5473,8 @@ void roach_state_manager(roach_state_t *m_roach, int result)
 void *roach_cmd_loop(void* ind)
 {
     int result = 0;
-    int i = *((uint16_t*) ind);
+    // int i = *((uint16_t*) ind);
+    int i = (uint64_t)ind;
     char tname[10];
     if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
     blast_tfatal("Could not name thread for roach%i", i);
@@ -6129,9 +6130,11 @@ int init_roach(uint16_t ind)
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
     // Don't create thread for Roach 4
-    if (ind != 3) {
+    uint64_t roach_idx = ind;
+    if (roach_idx != 3) {
         // blast_info("Spawning command thread for roach%i...", ind + 1);
-        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
+        // ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
+        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
         // blast_info("Spawned command thread for roach%i", ind + 1);
     }
     return 0;
