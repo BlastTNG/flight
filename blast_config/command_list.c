@@ -629,10 +629,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Current Longitude (deg)", -360, 360, 'f', "LON"}
     }
   },
-  {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 5,
+  {COMMAND(pivot_gain), "pivot gains", GR_MOTOR, 6,
     {
       {"Set Point (dps)",   -200, 200, 'f', "SET_RW"},
       {"V_err Gain (prop)", 0, CMD_L_MAX, 'd', "G_PE_PIV"},
+      {"V_err Integral time", 0, CMD_L_MAX, 'd', "G_IE_PIV"},
       {"V_RW Gain (prop)", 0, CMD_L_MAX, 'd', "G_PV_PIV"},
       {"V_RW Integral time", 0, 200, 'd', "G_IV_PIV"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_PIV"},

@@ -1934,7 +1934,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     static channel_t *p_az_ch = NULL;
     static channel_t *i_az_ch = NULL;
     static channel_t *d_az_ch = NULL;
-    static channel_t *az_integral_ch = NULL;
 
     int i_point;
     float K_p = 0.0;        //!< Proportional gain
@@ -1963,7 +1962,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         p_az_ch = channels_find_by_name("p_term_az");
         i_az_ch = channels_find_by_name("i_term_az");
         d_az_ch = channels_find_by_name("d_term_az");
-        az_integral_ch = channels_find_by_name("az_integral_step");
     }
 
     K_p = CommandData.azi_gain.P;
@@ -2058,7 +2056,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     SET_FLOAT(p_az_ch, P_term);
     SET_FLOAT(i_az_ch, I_term);
     SET_FLOAT(d_az_ch, D_term);
-    SET_FLOAT(az_integral_ch, I_step);
     return milliamp_return;
 }
 
@@ -2076,6 +2073,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     static channel_t* pRWTermPivAddr;
     static channel_t* IRWTermPivAddr;
     static channel_t* pErrTermPivAddr;
+    static channel_t* IErrTermPivAddr;
     static channel_t* frictTermPivAddr;
     static channel_t* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
 
@@ -2090,15 +2088,16 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
 
     double err_rw;
     double err_vel;
+    double I_step, I_step_err;
     double P_rw_term, P_vel_term;
-    double I_step;
-    static double I_term;
+    static double I_term, I_term_err;
     static unsigned int firsttime = 1;
 
     if (firsttime) {
         pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
         IRWTermPivAddr = channels_find_by_name("i_rw_term_piv");
         pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
+        pErrTermPivAddr = channels_find_by_name("i_err_term_piv");
         frictTermPivAddr = channels_find_by_name("frict_term_piv");
         frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
         firsttime = 0;
@@ -2120,6 +2119,10 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
+    I_step_err = P_vel_term / (CommandData.pivot_gain.IE * MOTORSR);
+    if (fabsf(I_step_err) > MAX_DI) {
+        I_step_err = copysignf(MAX_DI, I_step);
+    }
 
     /**
      * Our integral term exists to remove residual DC offset from the Proportional response,
@@ -2130,7 +2133,11 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_term) > MAX_I) {
         I_term = copysignf(MAX_I, I_term);
     }
-    milliamp_return = P_rw_term + P_vel_term + I_term;
+    I_term_err += I_step_err;
+    if (fabsf(I_term_err) > MAX_I) {
+        I_term_err = copysignf(MAX_I, I_term);
+    }
+    milliamp_return = P_rw_term + P_vel_term + I_term + I_term_err;
 
     // Calculate static friction offset term
     if (fabs(milliamp_return) < 3) {
@@ -2187,6 +2194,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     SET_FLOAT(pRWTermPivAddr, P_rw_term);
     SET_FLOAT(IRWTermPivAddr, I_term);
     SET_FLOAT(pErrTermPivAddr, P_vel_term);
+    SET_FLOAT(IErrTermPivAddr, I_term_err);
     SET_FLOAT(frictTermPivAddr, friction_out[1]);
     SET_FLOAT(frictTermUnfiltPivAddr, friction);
     return milliamp_return;

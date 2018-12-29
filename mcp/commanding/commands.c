@@ -1698,9 +1698,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case pivot_gain:   // pivot gains
       CommandData.pivot_gain.SP = rvalues[0];
       CommandData.pivot_gain.PE = rvalues[1];
-      CommandData.pivot_gain.PV = rvalues[2];
-      CommandData.pivot_gain.IV = rvalues[3];
-      CommandData.pivot_gain.F = rvalues[4];
+      CommandData.pivot_gain.IE = rvalues[2];
+      CommandData.pivot_gain.PV = rvalues[3];
+      CommandData.pivot_gain.IV = rvalues[4];
+      CommandData.pivot_gain.F = rvalues[5];
       break;
 
      /*************************************
@@ -3692,14 +3693,15 @@ void InitCommandData()
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 2500;
-    CommandData.azi_gain.I = 4;
-    CommandData.azi_gain.PT = 125;
+    CommandData.azi_gain.P = 5000;
+    CommandData.azi_gain.I = 1.0;
+    CommandData.azi_gain.PT = 75;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 12;
+    CommandData.pivot_gain.PV = 6;
     CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
+    CommandData.pivot_gain.IE = 100;
     CommandData.pivot_gain.F = 0.0;
 
     CommandData.ec_devices.reset = 0;

@@ -1186,11 +1186,10 @@ channel_t channel_list[] =
     { "i_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "d_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "error_az",             SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
-    { "az_integral_step",     SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "p_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "i_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "p_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
-
+    { "i_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
 
 
     { "dio_heaters",          SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_100HZ, U_NONE, 0 },
