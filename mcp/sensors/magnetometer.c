@@ -118,12 +118,8 @@ static void mag_set_framedata(int16_t m_magx, int16_t m_magy, int16_t m_magz)
         firsttime = 0;
     }
 
-    // TODO(seth): Mag data should should be filtered (à la gyroscopes) and read by ACS.c
-//    ACSData.mag_x = ((double)(int16_t)be16toh(m_magx))/15000.0;
     SET_SCALED_VALUE(mag_x_channel, ((double)m_magx)/15000.0);
-//    ACSData.mag_y = ((double)(int16_t)be16toh(m_magy))/15000.0;
     SET_SCALED_VALUE(mag_y_channel, ((double)m_magy)/15000.0);
-//    ACSData.mag_z = ((double)(int16_t)be16toh(m_magz))/15000.0;
     SET_SCALED_VALUE(mag_z_channel, ((double)m_magz)/15000.0);
 }
 
