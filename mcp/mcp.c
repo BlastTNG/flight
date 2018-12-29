@@ -260,6 +260,7 @@ static void mcp_100hz_routines(void)
 //   BiasControl();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
+    write_motor_channels_100hz();
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
