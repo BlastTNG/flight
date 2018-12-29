@@ -4907,14 +4907,14 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         KATCP_FLAG_LAST | KATCP_FLAG_STRING, "",
         NULL);
         if (success_val != KATCP_RESULT_OK) {
+            blast_info("ROACH%d: FPG UPLOAD COUNT = %d", m_roach->which, count);
             count++;
-            usleep(100000);
+            sleep(2);
         } else {
             m_roach->has_firmware = 0;
             break;
         }
     }
-    // blast_info("ROACH%d: COUNT = %d", m_roach->which, count);
     if (count == MAX_FPG_UPLOAD_TRIES) {
         blast_err("ROACH%d: FIRMWARE UPLOAD FAILED", m_roach->which);
         return -1;
@@ -5033,12 +5033,12 @@ int roach_boot_sequence(roach_state_t *m_roach)
     //     destroy_rpc_katcl(m_roach->rpc_conn);
     //     blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
     // }
-    blast_info("ROACH%d: Attempting to connect to %s", m_roach->which, m_roach->address);
+    blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
     flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
     if (m_roach->katcp_fd < 0) {
         m_roach->katcp_connect_error = 1;
-        blast_err("ROACH%d: KATCP Connection Error", m_roach->which);
+        blast_err("ROACH%d: KATCP CONNECTION ERROR", m_roach->which);
         return retval;
     }
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
