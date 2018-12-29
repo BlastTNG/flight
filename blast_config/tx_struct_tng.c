@@ -1152,6 +1152,7 @@ channel_t channel_list[] =
     { "g_pe_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "g_pv_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "g_iv_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
+    { "g_ie_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "set_rw",               SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_DPS, 0 },
 
     { "fault_gy",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
