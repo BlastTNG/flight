@@ -1149,7 +1149,7 @@ void Pointing(void)
 
     int i_point_read;
 
-    static struct LutType elClinLut = { "/data/etc/blast/clin_elev.lut", 0, NULL, NULL, 0 };
+    static struct LutType elClinLut = { "/data/etc/blast/clino_tng.lut", 0, NULL, NULL, 0 };
 
     struct ElAttStruct ElAtt = { 0.0, 0.0, 0.0 };
     struct AzAttStruct AzAtt = { 0.0, 0.0, 0.0, 0.0 };

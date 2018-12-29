@@ -399,7 +399,7 @@ void read_5hz_acs(void)
 	    // blast_info("PSS read, i=%d, j=%d, channel name =%s", i, j, channel_name);
       }
     }
-    elRawIfClinAddr = channels_find_by_name("el_raw_if_clin");
+    elRawIfClinAddr = channels_find_by_name("clin_if_y");
     mag_x_n_addr = channels_find_by_name("x_mag1_n");
     mag_y_n_addr = channels_find_by_name("y_mag1_n");
     mag_z_n_addr = channels_find_by_name("z_mag1_n");
