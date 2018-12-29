@@ -93,7 +93,7 @@ nkids_bad_roach5
 state_roach5
 count_cmd_s
 count_cmd_s
-fridge_cycle_warning
+roach_fridge_cycle_warning
 roach_lamp_now
 pps_count_roach1
 packet_count_roach1
