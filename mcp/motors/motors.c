@@ -2097,7 +2097,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
         pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
         IRWTermPivAddr = channels_find_by_name("i_rw_term_piv");
         pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
-        pErrTermPivAddr = channels_find_by_name("i_err_term_piv");
+        IErrTermPivAddr = channels_find_by_name("i_err_term_piv");
         frictTermPivAddr = channels_find_by_name("frict_term_piv");
         frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
         firsttime = 0;
