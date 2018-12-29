@@ -110,6 +110,7 @@ struct PivGainStruct {
     float PV; // prop to RW velocity
     float IV; // prop to RW velocity
     float PE; // prop to velocity error
+    float IE; // prop to velocity error
     double SP; // RW velocity Set Point
     double F; // Current offset to overcome static friction.
 };
