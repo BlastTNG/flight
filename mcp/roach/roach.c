@@ -1293,7 +1293,10 @@ int read_LO(pi_state_t *m_pi)
 int roach_chop_lo(roach_state_t *m_roach)
 {
     int status = -1;
-    if ((CommandData.roach[m_roach->which - 1].auto_el_retune) | (m_roach->is_sweeping)) {
+    if (!CommandData.roach[m_roach->which - 1].enable_chop_lo) {
+        return status;
+    }
+    if (m_roach->is_sweeping) {
         return status;
     }
     double set_freq[3];
@@ -1302,9 +1305,6 @@ int roach_chop_lo(roach_state_t *m_roach)
         step_hz = 10000.0;
     } else {
         step_hz = 2500.0;
-    }
-    if (!CommandData.roach[m_roach->which - 1].enable_chop_lo) {
-        return status;
     }
     // blast_info("ROACH%d: Chopping LO", m_roach->which);
     set_freq[0] = m_roach->lo_centerfreq - step_hz;
@@ -2761,7 +2761,7 @@ int compress_data(roach_state_t *m_roach, int type)
     }
     pyblast_system(tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_state_table[i].is_compressing_data = 1;
+        roach_state_table[i].is_compressing_data = 0;
     }
     return 0;
 }
@@ -2861,7 +2861,7 @@ int compress_all_data(int type)
     blast_tmp_sprintf(echo_cmd, "echo $%s", var_name);
     pyblast_system(echo_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_state_table[i].is_compressing_data = 1;
+        roach_state_table[i].is_compressing_data = 0;
     }
     return 0;
 }
@@ -3399,7 +3399,7 @@ int get_lamp_response(roach_state_t *m_roach)
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
         df_diff_sum += m_roach->df_diff[chan];
-        // blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
+        // blast_info("**** ROACH%d, chan %zd df_diff %g,", m_roach->which, chan, m_roach->df_diff[chan]);
         fwrite(&m_roach->I_diff[chan], sizeof(m_roach->I_diff[chan]), 1, fd);
         fwrite(&m_roach->Q_diff[chan], sizeof(m_roach->Q_diff[chan]), 1, fd);
         fwrite(&m_roach->df_diff[chan], sizeof(m_roach->df_diff[chan]), 1, fd);
@@ -5504,6 +5504,7 @@ void *roach_cmd_loop(void* ind)
     int current_packet_count = 0;
     int last_packet_count = 0;
     int enable_lo_chop_was_on = 0;
+    int enable_el_retune_was_on = 0;
     int n_full_loop_tries = 0;
     while (!shutdown_mcp) {
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
@@ -5655,10 +5656,17 @@ void *roach_cmd_loop(void* ind)
            }
         }
         if (CommandData.roach[i].is_chopping_lo) {
-            if ((CommandData.roach[i].enable_chop_lo) &&
-                 (!CommandData.roach[i].auto_el_retune)) {
+            if (CommandData.roach[i].enable_chop_lo) {
+                if (CommandData.roach[i].auto_el_retune) {
+                    enable_el_retune_was_on = 1;
+                    CommandData.roach[i].auto_el_retune = 0;
+                }
                 if (roach_chop_lo(&roach_state_table[i]) < 0) {
                     blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                }
+                if (enable_el_retune_was_on) {
+                    CommandData.roach[i].auto_el_retune = 1;
+                    enable_el_retune_was_on = 0;
                 }
             }
             CommandData.roach[i].is_chopping_lo = 0;
@@ -5667,10 +5675,20 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
             // Check for scan retune flag
-            if (CommandData.roach[i].enable_chop_lo) {
-                if (CommandData.trigger_lo_offset_check) {
+            if (CommandData.trigger_lo_offset_check) {
+                if (CommandData.roach[i].enable_chop_lo) {
+                    if (CommandData.roach[i].auto_el_retune) {
+                        enable_el_retune_was_on = 1;
+                        CommandData.roach[i].auto_el_retune = 0;
+                    }
+                    CommandData.roach[i].is_chopping_lo = 1;
                     if (roach_chop_lo(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                    }
+                    CommandData.roach[i].is_chopping_lo = 0;
+                    if (enable_el_retune_was_on) {
+                        CommandData.roach[i].auto_el_retune = 1;
+                        enable_el_retune_was_on = 0;
                     }
                 }
                 CommandData.trigger_lo_offset_check = 0;
