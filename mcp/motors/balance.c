@@ -233,7 +233,8 @@ void DoBalance(struct ezbus* bus)
         balance_state.moving = 0;
     }
 
-    if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
+    if ( ((balance_state.lims == 7) && (balance_state.dir == negative)) ||  // if we run into a limit switch, stop and clear goal 
+	 ((balance_state.lims == 11) && (balance_state.dir == positive)) ) {
 	balance_state.do_move = 0;
 	balance_state.dir = no_move;
 	balance_state.moving = 0;
