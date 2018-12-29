@@ -5029,10 +5029,8 @@ int roach_boot_sequence(roach_state_t *m_roach)
 {
     int retval = -1;
     int flags = 0;
-    if (!m_roach->katcp_connect_error) {
-        blast_info("Attempting to connect to %s", m_roach->address);
-        flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
-    }
+    blast_info("Attempting to connect to %s", m_roach->address);
+    flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
     if (m_roach->katcp_fd > 0) {
@@ -5400,6 +5398,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             // Check that Roach is powered on, establish KATCP link
             if (result == -1) {
                 // boot fail? KATCP fail?
+                sleep(5);
             }
             if (result == 0) {
                 m_roach->state = ROACH_STATE_CONNECTED;
@@ -5510,6 +5509,9 @@ void *roach_cmd_loop(void* ind)
                                    roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
             // establish a KATCP connection to the PPC
             result = roach_boot_sequence(&roach_state_table[i]);
+            blast_info("RESULT ==== %d", result);
+            blast_info("CURRENT STATE ==== %d", roach_state_table[i].state);
+            blast_info("DESIRED STATE ==== %d", roach_state_table[i].desired_state);
             roach_state_manager(&roach_state_table[i], result);
             // blast_info("ROACH STATE ================ %d, %d", roach_state_table[i].state,
             //                roach_state_table[i].desired_state);
