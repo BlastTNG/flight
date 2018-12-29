@@ -348,6 +348,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
   {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
+  {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
