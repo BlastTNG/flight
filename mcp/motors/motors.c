@@ -266,6 +266,46 @@ static double get_az_vel(void)
 /*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
+void write_motor_channels_100hz(void)
+{
+    int i_motors;
+    /* Motor data read out over motor thread in ec_motors.c */
+    static channel_t *statusRWAddr;
+    static channel_t *networkStatusRWAddr;
+    static channel_t *networkProblemRWAddr;
+    static channel_t *stateRWAddr;
+    static channel_t *ctl_word_read_rw_addr;
+    static channel_t *ctl_word_write_rw_addr;
+    static channel_t *latched_fault_rw_addr;
+
+    /******** Obtain correct indexes the first time here ***********/
+    static int firsttime = 1;
+
+    if (firsttime) {
+        firsttime = 0;
+        statusRWAddr = channels_find_by_name("status_rw");
+        networkStatusRWAddr = channels_find_by_name("network_status_rw");
+        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
+        stateRWAddr = channels_find_by_name("state_rw");
+        ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
+        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
+        latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
+    }
+    i_motors = GETREADINDEX(motor_index);
+    SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
+    SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
+    SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
+    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
+    SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
+}
+
+/************************************************************************/
+/*                                                                      */
+/*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
+/*                                                                      */
+/************************************************************************/
 void write_motor_channels_5hz(void)
 {
     uint8_t ec_cmd_status_field = 0;
@@ -288,15 +328,7 @@ void write_motor_channels_5hz(void)
     static channel_t* frictOffElAddr;
     static channel_t* accelAzAddr;
 
-    /* Motor data read out over motor thread in ec_motors.c */
     static channel_t *tMCRWAddr;
-    static channel_t *statusRWAddr;
-    static channel_t *networkStatusRWAddr;
-    static channel_t *networkProblemRWAddr;
-    static channel_t *stateRWAddr;
-    static channel_t *ctl_word_read_rw_addr;
-    static channel_t *ctl_word_write_rw_addr;
-    static channel_t *latched_fault_rw_addr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
@@ -347,13 +379,6 @@ void write_motor_channels_5hz(void)
         accelAzAddr = channels_find_by_name("accel_az");
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
-        statusRWAddr = channels_find_by_name("status_rw");
-        networkStatusRWAddr = channels_find_by_name("network_status_rw");
-        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
-        stateRWAddr = channels_find_by_name("state_rw");
-        ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
-        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
-        latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
@@ -423,13 +448,6 @@ void write_motor_channels_5hz(void)
      */
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
-    SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
-    SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
-    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
-    SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
-    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
-    SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
