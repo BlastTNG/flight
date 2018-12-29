@@ -1050,8 +1050,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(cal_sweeps), "perform a new set of cal sweeps", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Atten step (dB)", 0.5, 6.0, 'f', "NONE"},
-      {"Number of sweep points", 5, 101, 'f', "NONE"},
+      {"Atten step (dB)", 0.5, 6.0, 'd', "NONE"},
+      {"Number of sweep points", 5, 101, 'd', "NONE"},
       {"Number of cycles (sweeps)", 2, 20, 'i', "NONE"},
     }
   },
@@ -1097,28 +1097,28 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(find_kids), "Set the parameters for the kid finding algorithm, then execute", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
-      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
-      {"spacing threshold (kHz)", 100.0, 10000.0, 'f', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'd', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'd', "NONE"},
+      {"spacing threshold (kHz)", 100.0, 10000.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
     }
   },
   {COMMAND(read_attens), "Read attenuators", GR_ROACH, 1,
@@ -1133,14 +1133,14 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(set_attens_all), "Set all attenuators to same values (input/output)", GR_ROACH, 2,
     {
-      {"rf_out_level", 0.0, 30.0, 'f', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'f', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"new_out_atten", 0.0, 30.0, 'f', "NONE"}
+      {"new_out_atten", 0.0, 30.0, 'd', "NONE"}
     }
   },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
@@ -1151,7 +1151,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(test_tone), "Writes a single test tone to the DAC comb", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'f', "NONE"},
+      {"Test tone in Hz, between 1 - 250 MHz", 1.0e6, 250.0e6, 'd', "NONE"},
     }
   },
   {COMMAND(change_state), "Change Roach state", GR_ROACH, 3,
@@ -1175,31 +1175,31 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel no", 0, 1000, 'i', "NONE"},
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(roach_ts), "Save IQ timestreams for one Roach", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(roach_ts_all), "Save IQ timestreams for all Roaches", GR_ROACH, 1,
     {
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(roach_df_all), "Save DF timestreams for all Roaches", GR_ROACH, 1,
     {
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(cal_amps), "Tune channel responsivity with optical chop", GR_ROACH, 5,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Number of seconds to avg data", 0, 10.0, 'f', "NONE"},
+      {"Number of seconds to avg data", 0, 10.0, 'd', "NONE"},
       {"Number of cycles for cal", 0, 10.0, 'i', "NONE"},
-      {"Delta amp", 0, 10.0, 'f', "NONE"},
+      {"Delta amp", 0, 10.0, 'd', "NONE"},
       {"Desired response threshold", 0, 30000, 'i', "NONE"},
     }
   },
@@ -1218,13 +1218,13 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
     }
   },
   {COMMAND(full_loop_all), "Performs full loop for all Roaches", GR_ROACH, 2,
     {
       {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-      {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+      {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
     }
   },
   {COMMAND(full_loop_default), "Performs full loop for single Roach", GR_ROACH, 1,
@@ -1266,12 +1266,12 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(offset_lo), "shift LO by specified amount in Hz", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Amount to shift LO", -1000000., 1000000., 'f', "NONE"},
+      {"Amount to shift LO", -1000000., 1000000., 'd', "NONE"},
     }
   },
   {COMMAND(offset_lo_all), "shift all LOs by specified amount in Hz", GR_ROACH, 1,
     {
-      {"Amount to shift LO", -1000000.0, 1000000.0, 'f', "NONE"},
+      {"Amount to shift LO", -1000000.0, 1000000.0, 'd', "NONE"},
     }
   },
   {COMMAND(center_lo), "recenter the LO", GR_ROACH, 1,
@@ -1282,7 +1282,7 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_lo_MHz), "set the LO frequency", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"lo freq MHz", 100.0, 3000.0, 'f', "NONE"},
+      {"lo freq MHz", 100.0, 3000.0, 'd', "NONE"},
     }
   },
   {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
@@ -1299,7 +1299,7 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
-      {"delta_amp", -5, 5, 'f', "NONE"},
+      {"delta_amp", -5, 5, 'd', "NONE"},
     }
   },
   {COMMAND(change_freq), "Shifts freq of single chan by m_roach->df", GR_ROACH, 2,
@@ -1312,14 +1312,14 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
-      {"delta_phase", -3.14159, 3.14159, 'f', "NONE"},
+      {"delta_phase", -3.14159, 3.14159, 'd', "NONE"},
     }
   },
   {COMMAND(offset_freq), "Shifts the freq of specified channel by freq offset", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"Channel number", 0, 1015, 'i', "NONE"},
-      {"delta_freq", -1000000.0, 1000000.0, 'f', "NONE"},
+      {"delta_freq", -1000000.0, 1000000.0, 'd', "NONE"},
     }
   },
   {COMMAND(auto_find_kids), "Automatically do a VNA sweep, find kids and write tonest", GR_ROACH, 1,
@@ -1340,13 +1340,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(check_lamp_retune), "Checks response to cal lamp (I,Q,df(I,Q)) and makes retune recommendation", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(check_lamp_retune_all),
         "(All Roaches) Checks response to cal lamp (I,Q,df(I,Q)) and recommends retune", GR_ROACH, 1,
     {
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(roach_allow_scan_check), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH, 1,
@@ -1373,36 +1373,36 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(noise_comp), "Run noise comp for one Roach", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(noise_comp_all), "Run noise comp for all Roaches", GR_ROACH, 1,
     {
-      {"Number of sec to stream", 0, 300, 'f', "NONE"},
+      {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
   {COMMAND(find_kids_loop), "sweep and find freqs for one Roach", GR_ROACH, 3,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
   }
   },
   {COMMAND(find_kids_loop_all), "sweep and find freqs for all Roaches", GR_ROACH, 2,
   {
     {"Find KIDs option (1 for default, 2 for params)", 1, 2, 'i', "NONE"},
-    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
   }
   },
   {COMMAND(turnaround_loop), "Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    {"Number of sec to stream", 0, 300, 'd', "NONE"},
   }
   },
   {COMMAND(turnaround_loop_all), "(All Roaches) Cal pulse/df, TARG/REFIT/TARG, Cal pulse/df", GR_ROACH, 1,
   {
-    {"Number of sec to stream", 0, 300, 'f', "NONE"},
+    {"Number of sec to stream", 0, 300, 'd', "NONE"},
   }
   },
   {COMMAND(kill_roach),
@@ -1414,12 +1414,12 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold), "Set DF retune threshold for one Roach (Hz)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
+    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
-    {"DF threshold (Hz)", 2000, 20000, 'f', "NONE"},
+    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
   }
   },
   {COMMAND(set_min_nkids), "Set min N KIDS found for tone finding error to go high", GR_ROACH, 2,
@@ -1460,13 +1460,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_default_tone_power), "Set default tone power (target output power in dBm/tone)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
   }
   },
   {COMMAND(set_default_tone_power_all),
      "(All Roaches) Set default tone power (target output power in dBm/tone)", GR_ROACH, 1,
   {
-    {"Desired dBm per tone", -100.0, -17.0, 'f', "NONE"},
+    {"Desired dBm per tone", -100.0, -17.0, 'd', "NONE"},
   }
   },
   {COMMAND(set_attens_default), "Set attenuators", GR_ROACH, 1,
@@ -1478,9 +1478,9 @@ struct mcom mcommands[plugh + 2] = {
       "Set the parameters for the kid finding algorithm. Does not execute", GR_ROACH, 4,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"smoothing scale (kHz)", 1000.0, 100000.0, 'f', "NONE"},
-      {"peak threshold (dB)", 0.1, 100.0, 'f', "NONE"},
-      {"spacing threshold (kHz)", 80.0, 10000.0, 'f', "NONE"},
+      {"smoothing scale (kHz)", 1000.0, 100000.0, 'd', "NONE"},
+      {"peak threshold (dB)", 0.1, 100.0, 'd', "NONE"},
+      {"spacing threshold (kHz)", 80.0, 10000.0, 'd', "NONE"},
     }
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
