@@ -4909,7 +4909,7 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         if (success_val != KATCP_RESULT_OK) {
             blast_info("ROACH%d: FPG UPLOAD COUNT = %d", m_roach->which, count);
             count++;
-            sleep(2);
+            sleep(5);
         } else {
             m_roach->has_firmware = 0;
             break;
