@@ -44,7 +44,7 @@ double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
 
-char lst0str[82];
+extern char lst0str[82];
 
 // Toronto Highbay
 // #define CHECK_LON -79.3994
