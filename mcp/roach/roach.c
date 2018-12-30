@@ -5683,7 +5683,6 @@ void *roach_cmd_loop(void* ind)
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
-            // Check for scan retune flag
             if (CommandData.trigger_lo_offset_check) {
                 if (CommandData.roach[i].enable_chop_lo) {
                     if (CommandData.roach[i].auto_el_retune) {
