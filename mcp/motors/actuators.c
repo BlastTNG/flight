@@ -1672,7 +1672,7 @@ void *ActuatorBus(void *param)
 
         if (EZBus_IsUsable(&bus, id[BALANCENUM])) {
 	        // blast_info("calling DoBalance"); // DEBUG PAW
-            DoBalance(&bus);
+            // DoBalance(&bus);
             actuators_init |= 0x1 << BALANCENUM;
         } else {
 	        // blast_info("forcing repoll of balance"); // DEBUG PAW

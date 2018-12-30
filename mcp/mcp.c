@@ -293,7 +293,7 @@ static void mcp_5hz_routines(void)
     write_roach_channels_5hz();
     store_axes_mode_data();
     WriteAux();
-    ControlBalance();
+    // ControlBalance();
     StoreActBus();
     level_control();
     level_toggle();
