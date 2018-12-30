@@ -1339,6 +1339,9 @@ void Pointing(void)
         /* Load lat/lon from disk */
         last_good_lon = PointingData[0].lon = PointingData[1].lon = PointingData[2].lon = CommandData.lon;
         last_good_lat = PointingData[0].lat = PointingData[1].lat = PointingData[2].lat = CommandData.lat;
+        
+        // Initialize the slew veto counter to the stored value of slew_veto.
+        CommandData.pointing_mode.nw = CommandData.slew_veto;
     }
 
     if (elClinLut.n == 0)
