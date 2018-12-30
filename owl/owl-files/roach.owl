@@ -615,7 +615,8 @@
                     "_caption": "FULL_LOOP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FULL_LOOP_FAIL_ROACH1",
                     "type": "PNDI"
@@ -1934,7 +1935,8 @@
                     "_caption": "FULL_LOOP_FAIL",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
                     "_format": "",
                     "_source": "FULL_LOOP_FAIL_ROACH3",
                     "type": "PNDI"
@@ -2273,7 +2275,8 @@
                     "_caption": "DOING_FIND_KIDS_LOOP",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "DOING_FIND_KIDS_LOOP_ROACH5",
                     "type": "PNDI"
@@ -2796,7 +2799,7 @@
             "_boxTitle": "CRYO STATUS",
             "_style": "(P2072147126)",
             "cellHeight": 14,
-            "cellWidth": 17,
+            "cellWidth": 19,
             "cellX": 72,
             "cellY": 13,
             "dataItems": [
@@ -2966,7 +2969,7 @@
                 }
             ],
             "geometryHeight": 238,
-            "geometryWidth": 289,
+            "geometryWidth": 324,
             "geometryX": 1224,
             "geometryY": 221
         },
@@ -2976,10 +2979,10 @@
             },
             "_boxTitle": "TIMING",
             "_style": "(P2072147126)",
-            "cellHeight": 10,
+            "cellHeight": 16,
             "cellWidth": 17,
             "cellX": 72,
-            "cellY": 37,
+            "cellY": 35,
             "dataItems": [
                 {
                     "PObject": {
@@ -3076,12 +3079,60 @@
                     "_format": "",
                     "_source": "PACKET_COUNT_ROACH5",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "241703933"
+                    },
+                    "_caption": "R1_UTC_TIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.f",
+                    "_source": "CTIME_PACKET_ROACH1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "277785689"
+                    },
+                    "_caption": "R2_UTC_TIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.f",
+                    "_source": "CTIME_PACKET_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "886165404"
+                    },
+                    "_caption": "R3_UTC_TIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.f",
+                    "_source": "CTIME_PACKET_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "883242072"
+                    },
+                    "_caption": "R4_UTC_TIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.f",
+                    "_source": "CTIME_PACKET_ROACH5",
+                    "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 289,
+            "geometryHeight": 273,
+            "geometryWidth": 290,
             "geometryX": 1224,
-            "geometryY": 629
+            "geometryY": 595
         },
         {
             "PObject": {
@@ -3092,7 +3143,7 @@
             "cellHeight": 6,
             "cellWidth": 17,
             "cellX": 72,
-            "cellY": 30,
+            "cellY": 28,
             "dataItems": [
                 {
                     "PObject": {
@@ -3166,7 +3217,7 @@
             "geometryHeight": 102,
             "geometryWidth": 289,
             "geometryX": 1224,
-            "geometryY": 510
+            "geometryY": 476
         },
         {
             "PObject": {
@@ -3174,10 +3225,10 @@
             },
             "_boxTitle": "FLIGHT COMPUTERS",
             "_style": "(P2072147126)",
-            "cellHeight": 11,
+            "cellHeight": 6,
             "cellWidth": 10,
             "cellX": 81,
-            "cellY": 1,
+            "cellY": 6,
             "dataItems": [
                 {
                     "PObject": {
@@ -3223,10 +3274,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 187,
-            "geometryWidth": 170,
+            "geometryHeight": 102,
+            "geometryWidth": 171,
             "geometryX": 1377,
-            "geometryY": 17
+            "geometryY": 102
         }
     ],
     "extremas": [
@@ -3442,12 +3493,12 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 72,
-            "cellY": 46,
+            "cellX": 81,
+            "cellY": 0,
             "geometryHeight": 119,
             "geometryWidth": 85,
-            "geometryX": 1224,
-            "geometryY": 782
+            "geometryX": 1377,
+            "geometryY": 0
         }
     ],
     "styles": [
@@ -3717,8 +3768,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 62,
-    "windowCellWidth": 113,
-    "windowHeight": 1056,
-    "windowWidth": 1920
+    "windowCellHeight": 60,
+    "windowCellWidth": 109,
+    "windowHeight": 1028,
+    "windowWidth": 1855
 }
