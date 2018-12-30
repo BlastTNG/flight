@@ -144,7 +144,7 @@
 #define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
 #define DEFAULT_OUTPUT_ATTEN 4 /* dB */
 #define DEFAULT_INPUT_ATTEN 19 /* dB */
-#define SWEEP_READY_TIMEOUT 30000 /* ms, time for Roaches to wait before saving data */
+#define SWEEP_READY_TIMEOUT 1000 /* ms, time for Roaches to wait before saving data */
 #define MAX_DATA_ERRORS 500 /* Max num allowable data errors in save_sweep_packet (ms) */
 #define MAX_LAMP_WAITS 10 /* Max num times to wait for lead roach to flash lamp (10 s) */
 #define MAX_FPG_UPLOAD_TRIES 10 /* Max number of fpg upload attempts */
@@ -319,6 +319,29 @@ int roach_read_2D_file(roach_state_t *m_roach, char *m_file_path, double (*m_buf
     retval = 0;
     return retval;
 }*/
+
+void timestamp(roach_state_t *m_roach)
+{
+    char *py_command;
+    char ts[READ_LINE];
+    blast_tmp_sprintf(py_command,
+         "python /data/etc/blast/roachPython/timestamp.py > %s", m_roach->ts);
+    pyblast_system(py_command);
+    FILE *fd = fopen(m_roach->ts, "r");
+    if (!fd) {
+        blast_err("Error opening ts file");
+        return;
+    }
+    if (!fgets(ts, sizeof(ts), fd)) {
+        fclose(fd);
+        return;
+    }
+    blast_info("ROACH%d: ts = %s", m_roach->which, ts);
+    if ((roach_write_int(m_roach, "GbE_ctime", atoi(ts), 0)) < 0) {
+        blast_warn("ROACH%d: Timestamp write error", m_roach->which);
+    }
+    fclose(fd);
+}
 
 /* Function: roach_qdr_cal
  * -----------------------
@@ -955,15 +978,15 @@ int roach_select_bins(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
         m_roach->freq_residuals[i] = round((m_freqs[i] - bin_freqs[i]) / (DAC_FREQ_RES)) * (DAC_FREQ_RES);
     }
     for (int ch = 0; ch < m_freqlen; ch++) {
-        if (roach_write_int(m_roach, "bins", bins[ch], 0) < 0) {
+        if ((roach_write_int(m_roach, "bins", bins[ch], 0)) < 0) {
             return -1;
         }
         usleep(100);
-        if (roach_write_int(m_roach, "load_bins", 2*ch + 1, 0) < 0) {
+        if ((roach_write_int(m_roach, "load_bins", 2*ch + 1, 0)) < 0) {
             return -1;
         }
         usleep(100);
-        if (roach_write_int(m_roach, "load_bins", 0, 0) < 0) {
+        if ((roach_write_int(m_roach, "load_bins", 0, 0)) < 0) {
             return -1;
         }
     }
@@ -1063,11 +1086,11 @@ int roach_write_QDR(roach_state_t *m_roach)
     usleep(1000);
     roach_write_int(m_roach, "start_dac", 1, 0);
     usleep(100);
-    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 0, 0) < 0)) {
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 0, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_reset", 1, 0)) < 0) {
         return retval;
     }
     retval = 0;
@@ -1103,7 +1126,7 @@ int roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
         m_roach->write_flag = 0;
         return retval;
     }
-    if ((roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0) < 0)) {
+    if ((roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0)) < 0) {
         m_roach->write_flag = 0;
         return retval;
     }
@@ -1680,53 +1703,7 @@ void get_time(char *time_buffer)
     time_buffer[strlen(time_buffer) - 1] = 0;
 }
 
-/* Function: roach_timestamp_init
- * -------------------
- * When called, begins writing absolute time in seconds (from FC2)
- * to Roach SW register 'GbE_ctime'. This timestamp is included in the UDP
- * packet which is packetized one second later.
- *
- * @param ind roach index
-*/
-
-/* void roach_timestamp_init(uint16_t ind)
-{
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    char *sec;
-    char *nsec;
-    char sec_truncated[2];
-    char nsec_truncated[2];
-    char *timestamp;
-    blast_tmp_sprintf(sec, "%ld", ts.tv_sec);
-    blast_tmp_sprintf(nsec, "%ld", ts.tv_nsec);
-    strncpy(sec_truncated, sec+4, 8);
-    strncpy(nsec_truncated, nsec, 3);
-    sec_truncated[6] = '\0';
-    nsec_truncated[3] = '\0';
-    // blast_info("%s", sec);
-    // blast_info("%s", sec_truncated);
-    // blast_info("%s", nsec);
-    // blast_info("%s", nsec_truncated);
-    blast_tmp_sprintf(timestamp, "%s%s", sec_truncated, nsec_truncated);
-    // blast_info("%s", timestamp);
-    // blast_info("%u", atoi(timestamp));
-    // if (roach_state_table[ind].katcp_is_busy) {
-    //    blast_warn("ROACH%d: KATCP is busy", roach_state_table[ind].which);
-    //    sleep(10);
-    //    return;
-    // } else {
-    //    if ((roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0) < 0)) {
-    //        blast_warn("ROACH%d: Timestamp write error", roach_state_table[ind].which);
-    //    }
-        // roach_read_int(&roach_state_table[ind], "GbE_ctime");
-    // }
-    if ((roach_write_int(&roach_state_table[ind], "GbE_ctime", atoi(timestamp), 0) < 0)) {
-        blast_warn("ROACH%d: Timestamp write error", roach_state_table[ind].which);
-    }
-}*/
-
-int roach_timestamp_init(roach_state_t *m_roach)
+/* int roach_timestamp_init(roach_state_t *m_roach)
 {
     int retval = -1;
     struct timespec ts;
@@ -1749,7 +1726,7 @@ int roach_timestamp_init(roach_state_t *m_roach)
     // blast_info("TIMESTAMP ============ %s", timestamp);
     retval = 0;
     return retval;
-}
+}*/
 
 /* Function: get_path
  * ----------------------------
@@ -3369,8 +3346,10 @@ void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
         int wait_to_pulse = 1;
         for (int t = 0; (t < SWEEP_READY_TIMEOUT) && (wait_to_pulse); t++) {
             wait_to_pulse = 0;
+            usleep(1000);
             for (int i = 0; i < NUM_ROACHES; i++) {
-                if (!roach_state_table[i].waiting_for_lamp) {
+                if ((!roach_state_table[i].waiting_for_lamp) &&
+                        (roach_state_table[i].doing_turnaround_loop)) {
                     wait_to_pulse = 1;
                     break;
                 }
@@ -3593,10 +3572,10 @@ int read_accum_snap(roach_state_t *m_roach)
     char *filename;
     float Is[MAX_CHANNELS_PER_ROACH];
     float Qs[MAX_CHANNELS_PER_ROACH];
-    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 0, 0) < 0)) {
+    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 0, 0)) < 0) {
         return retval;
     }
-    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "accum_snap_accum_snap_ctrl", 1, 0)) < 0) {
         return retval;
     }
     if ((roach_read_data(m_roach, (uint8_t*)temp_data,
@@ -4608,6 +4587,7 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
     int sweep_check = 1;
     for (int t = 0; (t < SWEEP_READY_TIMEOUT) && (sweep_check); t++) {
         sweep_check = 0;
+        usleep(1000);
         for (int i = 0; i < NUM_ROACHES; i++) {
             if (roach_state_table[i].is_sweeping) {
                 sweep_check = 1;
@@ -5084,55 +5064,55 @@ int roach_prog_registers(roach_state_t *m_roach)
 {
     int retval = -1;
     blast_info("ROACH%d, Configuring software registers...", m_roach->which);
-    if ((roach_write_int(m_roach, "GbE_packet_info", 42, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_packet_info", 42, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "dds_shift", DDC_SHIFT, 0) < 0)) {
+    if ((roach_write_int(m_roach, "dds_shift", DDC_SHIFT, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0) < 0)) {
+    if ((roach_write_int(m_roach, "PFB_fft_shift", VNA_FFT_SHIFT, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "downsamp_sync_accum_len", accum_len, 0) < 0)) {
+    if ((roach_write_int(m_roach, "downsamp_sync_accum_len", accum_len, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destip", dest_ip, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destip", dest_ip, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destport", m_roach->dest_port, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destport", m_roach->dest_port, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcport", m_roach->src_port, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcport", m_roach->src_port, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcip", m_roach->src_ip, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcip", m_roach->src_ip, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcmac0", srcmac0[m_roach->which - 1], 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcmac0", srcmac0[m_roach->which - 1], 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_srcmac1", srcmac1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_srcmac1", srcmac1, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destmac0", destmac0, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destmac0", destmac0, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_destmac1", destmac1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_destmac1", destmac1, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "dac_reset", 1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "dac_reset", 1, 0)) < 0) {
         return retval;
     }
     // load_fir(m_roach);
@@ -5143,28 +5123,25 @@ int roach_prog_registers(roach_state_t *m_roach)
 int roach_init_gbe(roach_state_t *m_roach)
 {
     int retval = -1;
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 1, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_tx_rst", 0, 0)) < 0) {
         return retval;
     }
     usleep(100);
-    if ((roach_write_int(m_roach, "GbE_pps_start", 1, 0) < 0)) {
+    if ((roach_write_int(m_roach, "GbE_pps_start", 1, 0)) < 0) {
         return retval;
     }
     usleep(100);
     // write ctime to register
-    if (roach_timestamp_init(m_roach) < 0) {
-        return retval;
-    }
-    retval = 0;
-    return retval;
+    timestamp(m_roach);
+    return 0;
 }
 
 int roach_config_sequence(roach_state_t *m_roach)
@@ -6071,6 +6048,7 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].df_path_root, "%s/df", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].freqlist_path, "%s/bb_targ_freqs.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].qdr_log, "%s/qdr_cal.log", roach_state_table[ind].sweep_root_path);
+    asprintf(&roach_state_table[ind].ts, "%s/ts_log", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].find_kids_log, "%s/find_kids.log", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].opt_tones_log, "%s/opt_tones.log", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].random_phase_path, "%s/random_phases.dat", roach_state_table[ind].sweep_root_path);

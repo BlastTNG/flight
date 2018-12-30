@@ -232,6 +232,7 @@ typedef struct roach_state {
     double cal_amps[MAX_CHANNELS_PER_ROACH][5];
     // Python logs (for saving/reading response)
     char *qdr_log;
+    char *ts;
     char *find_kids_log;
     char *opt_tones_log;
     uint16_t dest_port;
