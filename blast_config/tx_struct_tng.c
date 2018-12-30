@@ -1243,6 +1243,11 @@ channel_t channel_list[] =
     { "packet_count_roach4",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
     { "packet_count_roach5",   SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_488HZ, U_NONE, 0 },
     // roach diagnostic channels
+    { "is_chopping_lo_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
+    { "is_chopping_lo_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
+    { "is_chopping_lo_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
+    { "is_chopping_lo_roach4",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
+    { "is_chopping_lo_roach5",      SCALE(CONVERT_UNITY),  TYPE_UINT8,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_mcp_roach1",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_mcp_roach2",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },
     { "packet_count_mcp_roach3",      SCALE(CONVERT_UNITY),  TYPE_UINT32,    RATE_5HZ, U_NONE, 0 },

@@ -5740,7 +5740,10 @@ void *roach_cmd_loop(void* ind)
             // FULL LOOP
             if (CommandData.roach[i].do_full_loop == 1) {
                 // disable lo chop and auto turnaround enables
-                CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune) {
+                    enable_el_retune_was_on = 1;
+                    CommandData.roach[i].auto_el_retune = 0;
+                }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
                     CommandData.roach[i].enable_chop_lo = 0;
@@ -5762,6 +5765,10 @@ void *roach_cmd_loop(void* ind)
                             CommandData.roach[i].enable_chop_lo = 1;
                             enable_lo_chop_was_on = 0;
                         }
+                        if (enable_el_retune_was_on) {
+                            CommandData.roach[i].auto_el_retune = 1;
+                            enable_el_retune_was_on = 0;
+                        }
                     }
                 // SUCCEED
                 } else {
@@ -5778,11 +5785,18 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
+                    if (enable_el_retune_was_on) {
+                        CommandData.roach[i].auto_el_retune = 1;
+                        enable_el_retune_was_on = 0;
+                    }
                 }
             }
             // DO FIND KIDS LOOP
             if (CommandData.roach[i].do_fk_loop == 1) {
-                CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune) {
+                    enable_el_retune_was_on = 1;
+                    CommandData.roach[i].auto_el_retune = 0;
+                }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
                     CommandData.roach[i].enable_chop_lo = 0;
@@ -5796,7 +5810,10 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                CommandData.roach[i].auto_el_retune = 1;
+                if (enable_el_retune_was_on) {
+                    CommandData.roach[i].auto_el_retune = 1;
+                    enable_el_retune_was_on = 0;
+                }
                 CommandData.roach[i].find_kids = 0;
                 CommandData.roach[i].do_fk_loop = 0;
                 CommandData.roach[i].do_sweeps = 0;
@@ -6169,6 +6186,7 @@ void write_roach_channels_5hz(void)
 {
     int i;
     static int firsttime = 1;
+    static channel_t *IsChoppingLoAddr[NUM_ROACHES];
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
@@ -6177,6 +6195,7 @@ void write_roach_channels_5hz(void)
     char channel_name_pkt_ct[128] = { 0 };
     char channel_name_valid_pkt_ct[128] = { 0 };
     char channel_name_invalid_pkt_ct[128] = { 0 };
+    char channel_name_is_chopping_lo[128] = { 0 };
     // char channel_name_roach_is_averaging[128] = { 0 };
     char channel_name_roach_lamp_now[128] = { 0 };
 
@@ -6185,6 +6204,8 @@ void write_roach_channels_5hz(void)
         snprintf(channel_name_roach_lamp_now, sizeof(channel_name_roach_lamp_now),
                 "roach_lamp_now");
         for (i = 0; i < NUM_ROACHES; i++) {
+            snprintf(channel_name_is_chopping_lo, sizeof(channel_name_is_chopping_lo),
+                    "is_chopping_lo_roach%d", i + 1);
             snprintf(channel_name_pkt_ct, sizeof(channel_name_pkt_ct),
                     "packet_count_mcp_roach%d", i + 1);
             snprintf(channel_name_valid_pkt_ct,
@@ -6195,6 +6216,7 @@ void write_roach_channels_5hz(void)
                     "packet_count_invalid_mcp_roach%d", i + 1);
             // snprintf(channel_name_roach_is_averaging,
             // sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d", i + 1);
+            IsChoppingLoAddr[i] = channels_find_by_name(channel_name_is_chopping_lo);
             RoachPktCtAddr[i] = channels_find_by_name(channel_name_pkt_ct);
             RoachValidPktCtAddr[i] = channels_find_by_name(
                     channel_name_valid_pkt_ct);
@@ -6205,6 +6227,7 @@ void write_roach_channels_5hz(void)
         RoachLampNow = channels_find_by_name(channel_name_roach_lamp_now);
     }
     for (i = 0; i < NUM_ROACHES; i++) {
+        SET_UINT8(IsChoppingLoAddr[i], CommandData.roach[i].is_chopping_lo);
         SET_UINT32(RoachPktCtAddr[i], roach_udp[i].roach_packet_count);
         SET_UINT32(RoachValidPktCtAddr[i],
         roach_udp[i].roach_valid_packet_count);
