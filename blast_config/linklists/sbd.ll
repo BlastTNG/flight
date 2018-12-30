@@ -26,6 +26,9 @@ time                    NONE 1
 time_usec               NONE 1
 x0_point_sigma          NONE 1
 x1_point_sigma          NONE 1
+el_clin                 NONE 1
+az_raw_mag1             NONE 1
+az_raw_mag2             NONE 1
 
 # cryo
 state_potvalve          NONE 1
@@ -79,4 +82,5 @@ rate_highrate           NONE 1
 rate_biphase            NONE 1
 
 # thermometry
-
+thermistor_18           NONE 1
+thermistor_56           NONE 1

@@ -187,7 +187,8 @@ void DoBalance(struct ezbus* bus)
         EZBus_Stop(bus, balance_state.addr);
 	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
 	// PAW, 2018
-        // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
+	// But if we send preamble now, it sets up limit switches correctly, does this give errors?
+        EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
