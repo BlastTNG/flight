@@ -1990,6 +1990,9 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
+    if (T_i == 0) {
+        I_step = 0;
+    }
 
     /**
      * Our integral term exists to remove residual DC offset from the Proportional response,
@@ -1999,6 +2002,10 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     I_term += I_step;
     if (fabsf(I_term) > MAX_I) {
         I_term = copysignf(MAX_I, I_term);
+    }
+    if (K_p < 0.1) {
+        // reset the integral
+        I_term = 0;
     }
 
     /**
@@ -2123,9 +2130,15 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
+    if (CommandData.pivot_gain.IV == 0) {
+        I_step = 0;
+    }
     I_step_err = P_vel_term / (CommandData.pivot_gain.IE * MOTORSR);
     if (fabsf(I_step_err) > MAX_DI) {
         I_step_err = copysignf(MAX_DI, I_step);
+    }
+    if (CommandData.pivot_gain.IE == 0) {
+        I_step_err = 0;
     }
 
     /**
@@ -2137,9 +2150,18 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_term) > MAX_I) {
         I_term = copysignf(MAX_I, I_term);
     }
+    if (CommandData.pivot_gain.PV < 0.1) {
+        // reset the integral
+        I_term = 0;
+    }
+
     I_term_err += I_step_err;
     if (fabsf(I_term_err) > MAX_I) {
         I_term_err = copysignf(MAX_I, I_term);
+    }
+    if (CommandData.pivot_gain.PE < 0.1) {
+        // reset the integral
+        I_term_err = 0;
     }
     milliamp_return = P_rw_term + P_vel_term + I_term + I_term_err;
 
