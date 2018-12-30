@@ -148,7 +148,7 @@
 #define MAX_DATA_ERRORS 500 /* Max num allowable data errors in save_sweep_packet (ms) */
 #define MAX_LAMP_WAITS 10 /* Max num times to wait for lead roach to flash lamp (10 s) */
 #define MAX_FPG_UPLOAD_TRIES 10 /* Max number of fpg upload attempts */
-#define MAX_PACKET_COUNT_ERRORS 100000 /* Max num packet count errors for stream checker */
+#define MAX_PACKET_COUNT_ERRORS 5000 /* Max num packet count errors for stream checker */
 #define MAX_FULL_LOOP_TRIES 2 /* Max num full loop retries after fail */
 
 static int is_cycling = 0;
@@ -1293,7 +1293,10 @@ int read_LO(pi_state_t *m_pi)
 int roach_chop_lo(roach_state_t *m_roach)
 {
     int status = -1;
-    if ((CommandData.roach[m_roach->which - 1].auto_el_retune) | (m_roach->is_sweeping)) {
+    if (!CommandData.roach[m_roach->which - 1].enable_chop_lo) {
+        return status;
+    }
+    if (m_roach->is_sweeping) {
         return status;
     }
     double set_freq[3];
@@ -1302,9 +1305,6 @@ int roach_chop_lo(roach_state_t *m_roach)
         step_hz = 10000.0;
     } else {
         step_hz = 2500.0;
-    }
-    if (!CommandData.roach[m_roach->which - 1].enable_chop_lo) {
-        return status;
     }
     // blast_info("ROACH%d: Chopping LO", m_roach->which);
     set_freq[0] = m_roach->lo_centerfreq - step_hz;
@@ -2761,7 +2761,7 @@ int compress_data(roach_state_t *m_roach, int type)
     }
     pyblast_system(tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_state_table[i].is_compressing_data = 1;
+        roach_state_table[i].is_compressing_data = 0;
     }
     return 0;
 }
@@ -2861,7 +2861,7 @@ int compress_all_data(int type)
     blast_tmp_sprintf(echo_cmd, "echo $%s", var_name);
     pyblast_system(echo_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
-        roach_state_table[i].is_compressing_data = 1;
+        roach_state_table[i].is_compressing_data = 0;
     }
     return 0;
 }
@@ -3399,7 +3399,7 @@ int get_lamp_response(roach_state_t *m_roach)
         m_roach->Q_diff[chan] = m_roach->Q_on[chan] - m_roach->Q_off[chan];
         m_roach->df_diff[chan] = m_roach->df_on[chan] - m_roach->df_off[chan];
         df_diff_sum += m_roach->df_diff[chan];
-        // blast_info("**** ROACH%d, chan %zd df_on - df_off= %g,", m_roach->which, chan, m_roach->df_diff[chan]);
+        // blast_info("**** ROACH%d, chan %zd df_diff %g,", m_roach->which, chan, m_roach->df_diff[chan]);
         fwrite(&m_roach->I_diff[chan], sizeof(m_roach->I_diff[chan]), 1, fd);
         fwrite(&m_roach->Q_diff[chan], sizeof(m_roach->Q_diff[chan]), 1, fd);
         fwrite(&m_roach->df_diff[chan], sizeof(m_roach->df_diff[chan]), 1, fd);
@@ -4886,18 +4886,19 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
                           .roach = m_roach
     };
     blast_info("ROACH%d: Getting permission to upload fpg", m_roach->which);
-    int retval = send_rpc_katcl(m_roach->rpc_conn, QDR_TIMEOUT,
+    int retval = send_rpc_katcl(m_roach->rpc_conn, UPLOAD_TIMEOUT,
                    KATCP_FLAG_FIRST | KATCP_FLAG_STRING, "?progremote",
                    KATCP_FLAG_ULONG | KATCP_FLAG_LAST, state.port,
                    NULL);
     if (retval != KATCP_RESULT_OK) {
-        return -1;
+        blast_err("ROACH%d: FIRMWARE UPLOAD FAILED", m_roach->which);
         blast_info("ROACH%d: Failed to connect with KATCP", m_roach->which);
+        return -1;
     }
     blast_info("Uploading fpg through netcat...");
     asprintf(&upload_command, "nc -w 2 %s %u < %s", m_roach->address, state.port, m_filename);
     pyblast_system(upload_command);
-    sleep(5);
+    sleep(10);
     int count = 0;
     int success_val;
     while (count < MAX_FPG_UPLOAD_TRIES) {
@@ -4906,15 +4907,16 @@ int roach_upload_fpg(roach_state_t *m_roach, const char *m_filename)
         KATCP_FLAG_LAST | KATCP_FLAG_STRING, "",
         NULL);
         if (success_val != KATCP_RESULT_OK) {
+            blast_info("ROACH%d: FPG UPLOAD COUNT = %d", m_roach->which, count);
             count++;
-            usleep(100000);
+            sleep(5);
         } else {
             m_roach->has_firmware = 0;
             break;
         }
     }
-    // blast_info("ROACH%d: COUNT = %d", m_roach->which - 1, count);
     if (count == MAX_FPG_UPLOAD_TRIES) {
+        blast_err("ROACH%d: FIRMWARE UPLOAD FAILED", m_roach->which);
         return -1;
     }
     blast_info("ROACH%d: FPGA programmed", m_roach->which);
@@ -4935,11 +4937,7 @@ void shutdown_roaches(void)
     close(roach_sock_fd); // close roach UDP socket
     for (int i = 0; i < NUM_ROACHES; i++) {
         blast_info("Closing KATCP on ROACH%d", i + 1);
-        if (roach_state_table[i].rpc_conn) {
-            // roach_write_int(&roach_state_table[i], "tx_rst", 1, 0);
-            // roach_read_int(&roach_state_table[i], "tx_rst");
-            destroy_rpc_katcl(roach_state_table[i].rpc_conn);
-        }
+        destroy_rpc_katcl(roach_state_table[i].rpc_conn);
         if (pi_state_table[i].pi_comm) {
             remote_serial_shutdown(pi_state_table[i].pi_comm);
             pi_state_table[i].pi_comm = NULL;
@@ -4975,6 +4973,7 @@ void reset_flags(roach_state_t *m_roach)
     m_roach->waiting_for_lamp = 0;
     m_roach->full_loop_fail = 0;
     m_roach->trnaround_loop_fail = 0;
+    m_roach->write_flag = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
@@ -5027,26 +5026,25 @@ void pi_state_manager(pi_state_t *m_pi, int result)
 
 int roach_boot_sequence(roach_state_t *m_roach)
 {
+    blast_info("ROACH%d: INSIDE BOOT SEQ", m_roach->which);
     int retval = -1;
     int flags = 0;
-    if (!m_roach->katcp_connect_error) {
-        blast_info("Attempting to connect to %s", m_roach->address);
-        flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
-    }
+    // if (m_roach->rpc_conn) {
+    //     destroy_rpc_katcl(m_roach->rpc_conn);
+    //     blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
+    // }
+    blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
+    flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
-    m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
-    if (m_roach->katcp_fd > 0) {
-        blast_info("ROACH%d, KATCP up", m_roach->which);
-        m_roach->katcp_connect_error = 0;
-        retval = 0;
-    } else {
-        if (!m_roach->katcp_connect_error) {
-            blast_err("ROACH%d, KATCP connection error", m_roach->which);
-            m_roach->katcp_connect_error = 1;
-        }
-        // sleep(3);
+    if (m_roach->katcp_fd < 0) {
+        m_roach->katcp_connect_error = 1;
+        blast_err("ROACH%d: KATCP CONNECTION ERROR", m_roach->which);
+        return retval;
     }
-    return retval;
+    m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
+    m_roach->katcp_connect_error = 0;
+    blast_info("ROACH%d: KATCP UP", m_roach->which);
+    return 0;
 }
 
 int roach_prog_registers(roach_state_t *m_roach)
@@ -5400,6 +5398,7 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             // Check that Roach is powered on, establish KATCP link
             if (result == -1) {
                 // boot fail? KATCP fail?
+                sleep(5);
             }
             if (result == 0) {
                 m_roach->state = ROACH_STATE_CONNECTED;
@@ -5453,8 +5452,10 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 m_roach->data_stream_error = 0;
-                // start roach watchdog thread
-                // start_watchdog_thread(m_roach->which - 1);
+                recenter_lo(m_roach);
+                if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
+                    blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which);
+                }
             }
             break;
         case ROACH_STATE_STREAMING:
@@ -5472,7 +5473,8 @@ void roach_state_manager(roach_state_t *m_roach, int result)
 void *roach_cmd_loop(void* ind)
 {
     int result = 0;
-    int i = *((uint16_t*) ind);
+    // int i = *((uint16_t*) ind);
+    int i = (uint64_t)ind;
     char tname[10];
     if (snprintf(tname, sizeof(tname), "rcmd%i", i + 1) < 5) {
     blast_tfatal("Could not name thread for roach%i", i);
@@ -5492,18 +5494,17 @@ void *roach_cmd_loop(void* ind)
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
-    // center LO
-    // TODO(Sam) Error handling?
-    if (recenter_lo(&roach_state_table[i])) {
+    /* if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
     if ((set_attens_to_default(&pi_state_table[i])) < 0) {
         blast_err("ROACH%d: Failed to set RUDATs...", i + 1);
-    }
+    }*/
     int packet_error_counter = 0;
     int current_packet_count = 0;
     int last_packet_count = 0;
     int enable_lo_chop_was_on = 0;
+    int enable_el_retune_was_on = 0;
     int n_full_loop_tries = 0;
     while (!shutdown_mcp) {
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
@@ -5511,8 +5512,6 @@ void *roach_cmd_loop(void* ind)
             // establish a KATCP connection to the PPC
             result = roach_boot_sequence(&roach_state_table[i]);
             roach_state_manager(&roach_state_table[i], result);
-            // blast_info("ROACH STATE ================ %d, %d", roach_state_table[i].state,
-            //                roach_state_table[i].desired_state);
         }
         if (roach_state_table[i].state == ROACH_STATE_CONNECTED &&
             roach_state_table[i].desired_state >= ROACH_STATE_CONNECTED) {
@@ -5657,10 +5656,17 @@ void *roach_cmd_loop(void* ind)
            }
         }
         if (CommandData.roach[i].is_chopping_lo) {
-            if ((CommandData.roach[i].enable_chop_lo) &&
-                 (!CommandData.roach[i].auto_el_retune)) {
+            if (CommandData.roach[i].enable_chop_lo) {
+                if (CommandData.roach[i].auto_el_retune) {
+                    enable_el_retune_was_on = 1;
+                    CommandData.roach[i].auto_el_retune = 0;
+                }
                 if (roach_chop_lo(&roach_state_table[i]) < 0) {
                     blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                }
+                if (enable_el_retune_was_on) {
+                    CommandData.roach[i].auto_el_retune = 1;
+                    enable_el_retune_was_on = 0;
                 }
             }
             CommandData.roach[i].is_chopping_lo = 0;
@@ -5669,10 +5675,20 @@ void *roach_cmd_loop(void* ind)
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
             // Check for scan retune flag
-            if (CommandData.roach[i].enable_chop_lo) {
-                if (CommandData.trigger_lo_offset_check) {
+            if (CommandData.trigger_lo_offset_check) {
+                if (CommandData.roach[i].enable_chop_lo) {
+                    if (CommandData.roach[i].auto_el_retune) {
+                        enable_el_retune_was_on = 1;
+                        CommandData.roach[i].auto_el_retune = 0;
+                    }
+                    CommandData.roach[i].is_chopping_lo = 1;
                     if (roach_chop_lo(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: Failed to Chop LO", i + 1);
+                    }
+                    CommandData.roach[i].is_chopping_lo = 0;
+                    if (enable_el_retune_was_on) {
+                        CommandData.roach[i].auto_el_retune = 1;
+                        enable_el_retune_was_on = 0;
                     }
                 }
                 CommandData.trigger_lo_offset_check = 0;
@@ -6132,9 +6148,11 @@ int init_roach(uint16_t ind)
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
     // Don't create thread for Roach 4
-    if (ind != 3) {
+    uint64_t roach_idx = ind;
+    if (roach_idx != 3) {
         // blast_info("Spawning command thread for roach%i...", ind + 1);
-        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
+        // ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
+        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
         // blast_info("Spawned command thread for roach%i", ind + 1);
     }
     return 0;

@@ -1107,19 +1107,19 @@ channel_t channel_list[] =
     { "mc_piv_pos",          PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, U_D_DEG, 0 },
 
     {"control_word_read_el", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    {"control_word_read_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    {"control_word_read_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     {"control_word_read_piv", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"control_word_write_el", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    {"control_word_write_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    {"control_word_write_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     {"control_word_write_piv", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"latched_fault_el",     SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
-    {"latched_fault_rw",     SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
+    {"latched_fault_rw",     SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
     {"latched_fault_piv",    SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     {"network_status_el",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    {"network_status_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    {"network_status_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     {"network_status_piv",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"network_problem_el",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    {"network_problem_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    {"network_problem_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     {"network_problem_piv",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"mc_cmd_status", SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0 },
 
@@ -1152,6 +1152,7 @@ channel_t channel_list[] =
     { "g_pe_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "g_pv_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "g_iv_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
+    { "g_ie_piv",             SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0 },
     { "set_rw",               SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_V_DPS, 0 },
 
     { "fault_gy",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_200HZ, U_NONE, 0 },
@@ -1164,8 +1165,8 @@ channel_t channel_list[] =
     { "frict_term_uf_el",    SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
 
     /** Motor Controller State and Status Registers */
-    { "status_rw",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
-    { "state_rw",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "status_rw",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
+    { "state_rw",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
     { "status_el",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
     { "state_el",             SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "status_piv",           SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },
@@ -1186,11 +1187,10 @@ channel_t channel_list[] =
     { "i_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "d_term_az",            0.01,             0.0,    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "error_az",             SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
-    { "az_integral_step",     SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "p_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "i_rw_term_piv",        SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
     { "p_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
-
+    { "i_err_term_piv",       SCALE(CONVERT_UNITY),    TYPE_FLOAT, RATE_200HZ, U_NONE, 0 },
 
 
     { "dio_heaters",          SCALE(CONVERT_UNITY),  TYPE_UINT16,    RATE_100HZ, U_NONE, 0 },

@@ -24,10 +24,14 @@ lat                     NONE 1
 lon                     NONE 1
 time                    NONE 1
 time_usec               NONE 1
+x0_point_sigma          NONE 1
+x1_point_sigma          NONE 1
 
 # cryo
 state_potvalve          NONE 1
 pos_hwpr                NONE 1
+tr_350_fpa              NONE 1
+tr_he3_fridge           NONE 1
 
 # steppers
 status_actbus           NONE 1
@@ -63,3 +67,16 @@ status_roach2           NONE 1
 status_roach3           NONE 1
 status_roach4           NONE 1
 status_roach5           NONE 1
+pps_count_roach1        NONE 1
+pps_count_roach2        NONE 1
+pps_count_roach3        NONE 1
+pps_count_roach4        NONE 1
+pps_count_roach5        NONE 1
+
+# telemetry
+rate_pilot              NONE 1
+rate_highrate           NONE 1
+rate_biphase            NONE 1
+
+# thermometry
+

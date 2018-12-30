@@ -87,6 +87,7 @@ extern int motor_index;
 void command_motors(void);
 void update_axes_mode(void);
 void write_motor_channels_5hz(void);
+void write_motor_channels_100hz(void);
 void write_motor_channels_200hz(void);
 void store_axes_mode_data(void);
 

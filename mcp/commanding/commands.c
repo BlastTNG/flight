@@ -99,6 +99,7 @@ extern int doing_schedule; /* sched.c */
 extern linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES];
 extern linklist_t * telemetries_linklist[NUM_TELEMETRIES];
 extern char * ROACH_TYPES[NUM_RTYPES];
+extern int ResetLog;
 
 extern int16_t SouthIAm;
 pthread_mutex_t mutex;
@@ -1304,6 +1305,25 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].is_chopping_lo = 1;
           }
           break;
+        case full_loop_default_all:
+            for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_full_loop = 1;
+              CommandData.roach[i].find_kids = 1;
+            }
+        break;
+        case read_attens_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].read_attens = 1;
+          }
+          break;
+        case read_lo_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].read_lo = 1;
+          }
+          break;
+        case reset_log:
+           ResetLog = 1;
+           break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
@@ -1698,9 +1718,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case pivot_gain:   // pivot gains
       CommandData.pivot_gain.SP = rvalues[0];
       CommandData.pivot_gain.PE = rvalues[1];
-      CommandData.pivot_gain.PV = rvalues[2];
-      CommandData.pivot_gain.IV = rvalues[3];
-      CommandData.pivot_gain.F = rvalues[4];
+      CommandData.pivot_gain.IE = rvalues[2];
+      CommandData.pivot_gain.PV = rvalues[3];
+      CommandData.pivot_gain.IV = rvalues[4];
+      CommandData.pivot_gain.F = rvalues[5];
       break;
 
      /*************************************
@@ -2519,6 +2540,12 @@ void MultiCommand(enum multiCommand command, double *rvalues,
             CommandData.roach_params[i].num_sec = rvalues[0];
         }
         break;
+    case full_loop_default:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].do_full_loop = 1;
+          CommandData.roach[ivalues[0]-1].find_kids = 1;
+      }
+      break;
     case full_loop:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].do_full_loop = 1;
@@ -3692,14 +3719,15 @@ void InitCommandData()
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 2500;
-    CommandData.azi_gain.I = 4;
-    CommandData.azi_gain.PT = 125;
+    CommandData.azi_gain.P = 5000;
+    CommandData.azi_gain.I = 1.0;
+    CommandData.azi_gain.PT = 75;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 12;
+    CommandData.pivot_gain.PV = 6;
     CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
+    CommandData.pivot_gain.IE = 100;
     CommandData.pivot_gain.F = 0.0;
 
     CommandData.ec_devices.reset = 0;
@@ -3821,7 +3849,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
-        CommandData.roach_params[i].dBm_per_tone = -50;
+        CommandData.roach_params[i].dBm_per_tone = -47;
         CommandData.roach_params[i].df_retune_threshold = 100000;
         CommandData.roach_params[i].df_diff_retune_threshold = 100000;
     }

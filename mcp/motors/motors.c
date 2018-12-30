@@ -266,6 +266,46 @@ static double get_az_vel(void)
 /*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
 /*                                                                      */
 /************************************************************************/
+void write_motor_channels_100hz(void)
+{
+    int i_motors;
+    /* Motor data read out over motor thread in ec_motors.c */
+    static channel_t *statusRWAddr;
+    static channel_t *networkStatusRWAddr;
+    static channel_t *networkProblemRWAddr;
+    static channel_t *stateRWAddr;
+    static channel_t *ctl_word_read_rw_addr;
+    static channel_t *ctl_word_write_rw_addr;
+    static channel_t *latched_fault_rw_addr;
+
+    /******** Obtain correct indexes the first time here ***********/
+    static int firsttime = 1;
+
+    if (firsttime) {
+        firsttime = 0;
+        statusRWAddr = channels_find_by_name("status_rw");
+        networkStatusRWAddr = channels_find_by_name("network_status_rw");
+        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
+        stateRWAddr = channels_find_by_name("state_rw");
+        ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
+        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
+        latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
+    }
+    i_motors = GETREADINDEX(motor_index);
+    SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
+    SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
+    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
+    SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
+    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
+    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
+    SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
+}
+
+/************************************************************************/
+/*                                                                      */
+/*    write_motor_channels: motors, and, for convenience, the inner frame lock      */
+/*                                                                      */
+/************************************************************************/
 void write_motor_channels_5hz(void)
 {
     uint8_t ec_cmd_status_field = 0;
@@ -282,21 +322,14 @@ void write_motor_channels_5hz(void)
     static channel_t* gPtAzAddr;
     static channel_t* gPVPivAddr;
     static channel_t* gIVPivAddr;
+    static channel_t* gIEPivAddr;
     static channel_t* gPEPivAddr;
     static channel_t* setRWAddr;
     static channel_t* frictOffPivAddr;
     static channel_t* frictOffElAddr;
     static channel_t* accelAzAddr;
 
-    /* Motor data read out over motor thread in ec_motors.c */
     static channel_t *tMCRWAddr;
-    static channel_t *statusRWAddr;
-    static channel_t *networkStatusRWAddr;
-    static channel_t *networkProblemRWAddr;
-    static channel_t *stateRWAddr;
-    static channel_t *ctl_word_read_rw_addr;
-    static channel_t *ctl_word_write_rw_addr;
-    static channel_t *latched_fault_rw_addr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
@@ -339,6 +372,7 @@ void write_motor_channels_5hz(void)
 
         gPVPivAddr = channels_find_by_name("g_pv_piv");
         gIVPivAddr = channels_find_by_name("g_iv_piv");
+        gIEPivAddr = channels_find_by_name("g_ie_piv");
         gPEPivAddr = channels_find_by_name("g_pe_piv");
 
         setRWAddr = channels_find_by_name("set_rw");
@@ -347,13 +381,6 @@ void write_motor_channels_5hz(void)
         accelAzAddr = channels_find_by_name("accel_az");
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
-        statusRWAddr = channels_find_by_name("status_rw");
-        networkStatusRWAddr = channels_find_by_name("network_status_rw");
-        networkProblemRWAddr = channels_find_by_name("network_problem_rw");
-        stateRWAddr = channels_find_by_name("state_rw");
-        ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
-        ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
-        latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
@@ -413,6 +440,8 @@ void write_motor_channels_5hz(void)
     SET_FLOAT(gPEPivAddr, CommandData.pivot_gain.PE);
     /* setpoint for reaction wheel */
     SET_FLOAT(setRWAddr, CommandData.pivot_gain.SP);
+    /* I term to vel error for pivot motor */
+    SET_FLOAT(gIEPivAddr, CommandData.pivot_gain.IE);
     /* Pivot current offset to compensate for static friction. */
     SET_FLOAT(frictOffPivAddr, CommandData.pivot_gain.F);
     /* Azimuth Scan Acceleration */
@@ -423,13 +452,6 @@ void write_motor_channels_5hz(void)
      */
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
-    SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
-    SET_UINT16(networkStatusRWAddr, RWMotorData[i_motors].network_status);
-    SET_UINT16(networkProblemRWAddr, RWMotorData[i_motors].network_problem);
-    SET_UINT16(stateRWAddr, RWMotorData[i_motors].drive_info);
-    SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
-    SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
-    SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
@@ -1916,7 +1938,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     static channel_t *p_az_ch = NULL;
     static channel_t *i_az_ch = NULL;
     static channel_t *d_az_ch = NULL;
-    static channel_t *az_integral_ch = NULL;
 
     int i_point;
     float K_p = 0.0;        //!< Proportional gain
@@ -1945,7 +1966,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
         p_az_ch = channels_find_by_name("p_term_az");
         i_az_ch = channels_find_by_name("i_term_az");
         d_az_ch = channels_find_by_name("d_term_az");
-        az_integral_ch = channels_find_by_name("az_integral_step");
     }
 
     K_p = CommandData.azi_gain.P;
@@ -2040,7 +2060,6 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
     SET_FLOAT(p_az_ch, P_term);
     SET_FLOAT(i_az_ch, I_term);
     SET_FLOAT(d_az_ch, D_term);
-    SET_FLOAT(az_integral_ch, I_step);
     return milliamp_return;
 }
 
@@ -2058,6 +2077,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     static channel_t* pRWTermPivAddr;
     static channel_t* IRWTermPivAddr;
     static channel_t* pErrTermPivAddr;
+    static channel_t* IErrTermPivAddr;
     static channel_t* frictTermPivAddr;
     static channel_t* frictTermUnfiltPivAddr; // For debugging only.  Remove later!
 
@@ -2072,15 +2092,16 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
 
     double err_rw;
     double err_vel;
+    double I_step, I_step_err;
     double P_rw_term, P_vel_term;
-    double I_step;
-    static double I_term;
+    static double I_term, I_term_err;
     static unsigned int firsttime = 1;
 
     if (firsttime) {
         pRWTermPivAddr = channels_find_by_name("p_rw_term_piv");
         IRWTermPivAddr = channels_find_by_name("i_rw_term_piv");
         pErrTermPivAddr = channels_find_by_name("p_err_term_piv");
+        IErrTermPivAddr = channels_find_by_name("i_err_term_piv");
         frictTermPivAddr = channels_find_by_name("frict_term_piv");
         frictTermUnfiltPivAddr = channels_find_by_name("frict_term_uf_piv");
         firsttime = 0;
@@ -2102,6 +2123,10 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_step) > MAX_DI) {
         I_step = copysignf(MAX_DI, I_step);
     }
+    I_step_err = P_vel_term / (CommandData.pivot_gain.IE * MOTORSR);
+    if (fabsf(I_step_err) > MAX_DI) {
+        I_step_err = copysignf(MAX_DI, I_step);
+    }
 
     /**
      * Our integral term exists to remove residual DC offset from the Proportional response,
@@ -2112,7 +2137,11 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (fabsf(I_term) > MAX_I) {
         I_term = copysignf(MAX_I, I_term);
     }
-    milliamp_return = P_rw_term + P_vel_term + I_term;
+    I_term_err += I_step_err;
+    if (fabsf(I_term_err) > MAX_I) {
+        I_term_err = copysignf(MAX_I, I_term);
+    }
+    milliamp_return = P_rw_term + P_vel_term + I_term + I_term_err;
 
     // Calculate static friction offset term
     if (fabs(milliamp_return) < 3) {
@@ -2169,6 +2198,7 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     SET_FLOAT(pRWTermPivAddr, P_rw_term);
     SET_FLOAT(IRWTermPivAddr, I_term);
     SET_FLOAT(pErrTermPivAddr, P_vel_term);
+    SET_FLOAT(IErrTermPivAddr, I_term_err);
     SET_FLOAT(frictTermPivAddr, friction_out[1]);
     SET_FLOAT(frictTermUnfiltPivAddr, friction);
     return milliamp_return;

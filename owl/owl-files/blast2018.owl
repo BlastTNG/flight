@@ -613,7 +613,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "HDD_DISK_SPACE_S",
+                    "_source": "HDD_DISK_INDEX_S",
                     "type": "PNDI"
                 }
             ],
@@ -2108,8 +2108,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 64,
+    "windowCellHeight": 60,
     "windowCellWidth": 90,
-    "windowHeight": 1088,
+    "windowHeight": 1028,
     "windowWidth": 1530
 }

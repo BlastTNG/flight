@@ -119,6 +119,7 @@ void StageBus(void);
 struct LOGGER logger = {0};
 uint8_t * logger_buffer = NULL;
 struct tm start_time;
+int ResetLog = 0;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL, NULL};
@@ -260,11 +261,18 @@ static void mcp_100hz_routines(void)
 //   BiasControl();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
+    write_motor_channels_100hz();
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     // write the logs to the frame
-    if (logger_buffer) readLogger(&logger, logger_buffer);
+    if (logger_buffer) {
+        if (ResetLog) {
+            resetLogger(&logger);
+            ResetLog = 0;
+        }
+        readLogger(&logger, logger_buffer);
+    }
 
     share_data(RATE_100HZ);
     framing_publish_100hz();
