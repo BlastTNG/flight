@@ -5459,15 +5459,15 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 m_roach->data_stream_error = 0;
-                recenter_lo(m_roach);
-                if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
+                // recenter_lo(m_roach);
+                /* if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
                     blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which);
-                }
+                } */
+                // do a full loop
+                CommandData.roach[m_roach->which - 1].do_full_loop = 1;
             }
             break;
         case ROACH_STATE_STREAMING:
-            // do a full loop
-            CommandData.roach[m_roach->which - 1].do_full_loop = 1;
             break;
     }
 }
