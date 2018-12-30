@@ -179,10 +179,9 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			blast_info("Valve %d closing...", index);
 		}
 	} else if (valve_data[index].stop) {
-	       if (EZBus_Stop(bus, valve_data[index].addr) == EZ_ERR_OK) {
-	       valve_data[index].stop = 0;
-	       CommandData.Cryo.valve_stop[index] = 0;
-	       }
+	       EZBus_Stop(bus, valve_data[index].addr);
+	       // valve_data[index].stop = 0;
+	       // CommandData.Cryo.valve_stop[index] = 0;
 	} else if (valve_data[index].limit == 7 || valve_data[index].limit == 11) {
 		valve_data[index].goal = 0;
 		CommandData.Cryo.valve_goals[index] = 0;
@@ -298,8 +297,8 @@ void DoPotValve(struct ezbus* bus)
 	// firstmove = 0;
 	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
-	if ((potvalve_data.on == 0) && (potvalve_data.moving == 1)) {
-	    // this if statement overrides everything else if the potvalve is turned off and moving
+	if (potvalve_data.on == 0) {
+	    // this if statement overrides everything else if the potvalve is turned off
 	    potvalve_data.do_move = 1;
 	    potvalve_data.potvalve_move = valve_stop;
 	    potvalve_data.goal = 0;
