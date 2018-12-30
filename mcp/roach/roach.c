@@ -5277,7 +5277,7 @@ int roach_full_loop(roach_state_t *m_roach)
     if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
         int n_roaches = 0;
         for (int i = 0; i < NUM_ROACHES; i++) {
-            if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
+            if (!CommandData.roach[i].has_lamp_control) {
                 n_roaches++;
             }
         }
@@ -5752,6 +5752,7 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].auto_el_retune = 1;
                         enable_el_retune_was_on = 0;
                     }
+                    CommandData.roach[i].has_lamp_control = 0;
                 // SUCCEED
                 } else {
                     blast_info("ROACH%d: FULL LOOP COMPLETED", i + 1);
