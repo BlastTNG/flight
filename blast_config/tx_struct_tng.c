@@ -558,8 +558,8 @@ channel_t channel_list[] =
     { "vel_el_mc",            1. / 6000,        0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "dir_az_mc",            SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "dir_el_mc",            SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_NONE, 0 },
-    { "slew_veto",            4.0 / SR,         0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "sveto_len",            4.0 / SR,         0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "slew_veto",            5.0 /NARROW_MAX,  0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "sveto_len",            5.0 /NARROW_MAX,  0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     { "pot_lock",             -100.0 / 16068.0, 1636800.0 / 16068.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "dith_el",              0.5 / 32768.0,    0.0, TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
