@@ -1435,7 +1435,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(altAddr, PointingData[i_point].alt);
 
 //    SET_SCALED_VALUE(mcpFrameAddr, PointingData[i_point].mcp_frame);
-    SET_VALUE(lstAddr, PointingData[i_point].lst);
+    SET_SCALED_VALUE(lstAddr, PointingData[i_point].lst/3600.0);
     // TODO(seth): Update LST Schedule channel
     SET_SCALED_VALUE(lstSchedAddr, 0);
 
