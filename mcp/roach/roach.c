@@ -1091,17 +1091,21 @@ int roach_write_tones(roach_state_t *m_roach, double *m_freqs, size_t m_freqlen)
     roach_init_DACDDC_LUTs(m_roach, LUT_BUFFER_LEN);
     if ((roach_define_DAC_LUT(m_roach, m_freqs, m_freqlen) < 0)) {
         blast_info("DEFINE DAC LUT FAIL");
+        m_roach->write_flag = 0;
         return retval;
     }
     if ((roach_define_DDC_LUT(m_roach, m_freqs, m_freqlen) < 0)) {
         blast_info("DEFINE DDC LUT FAIL");
+        m_roach->write_flag = 0;
         return retval;
     }
     blast_info("ROACH%d, Uploading Tone LUTs...", m_roach->which);
     if ((roach_write_QDR(m_roach) < 0)) {
+        m_roach->write_flag = 0;
         return retval;
     }
     if ((roach_write_int(m_roach, "write_comb_len", (uint32_t)m_freqlen, 0) < 0)) {
+        m_roach->write_flag = 0;
         return retval;
     }
     m_roach->current_ntones = m_freqlen;
@@ -2191,6 +2195,7 @@ int roach_write_saved(roach_state_t *m_roach)
     if (m_roach->num_kids > 0) {
         (m_roach->num_kids)--;
     } else {
+        roach_write_vna(m_roach);
         return retval;
     }
     blast_info("NUM kids = %zd", m_roach->num_kids);
@@ -2208,6 +2213,7 @@ int roach_write_saved(roach_state_t *m_roach)
     }
     blast_info("Uploading TARGET comb...");
     if ((roach_write_tones(m_roach, m_roach->targ_tones, m_roach->num_kids) < 0)) {
+        roach_write_vna(m_roach);
         return retval;
     }
     blast_info("ROACH%d, TARGET comb uploaded", m_roach->which);
@@ -5304,7 +5310,10 @@ int roach_fk_loop(roach_state_t* m_roach)
 {
     int status;
     int i = m_roach->which - 1;
-    // Set Attens
+    if ((!m_roach->has_vna_tones) && (m_roach->has_targ_tones)) {
+        roach_write_vna(m_roach);
+        m_roach->has_targ_tones = 0;
+    }
     m_roach->doing_find_kids_loop = 1;
     CommandData.roach[m_roach->which - 1].set_attens = 5;
     if ((status = set_attens_targ_output(m_roach)) < 0) {
