@@ -4602,6 +4602,7 @@ static int roach_check_df_sweep_retune(roach_state_t *m_roach)
 
 static int roach_check_lamp_retune(roach_state_t *m_roach)
 {
+    int status = -1;
     int sweep_check = 1;
     for (int t = 0; (t < SWEEP_READY_TIMEOUT) && (sweep_check); t++) {
         sweep_check = 0;
@@ -4613,9 +4614,8 @@ static int roach_check_lamp_retune(roach_state_t *m_roach)
         }
     }
     CommandData.cal_lamp_roach_hold = 1;
-    int status;
     // check for ref params
-    if ((status = m_roach->has_ref_params < 1)) {
+    if (!m_roach->has_ref_params) {
         blast_err("ROACH%d, No ref params found", m_roach->which);
         CommandData.cal_lamp_roach_hold = 0;
         return status;
@@ -4677,6 +4677,9 @@ int roach_turnaround_loop(roach_state_t *m_roach)
 {
     int status = -1;
     int i = m_roach->which - 1;
+    if ((!m_roach->has_targ_tones) && (!m_roach->has_ref_params)) {
+        return status;
+    }
     m_roach->doing_turnaround_loop = 1;
     // flash cal lamp
     CommandData.cal_lamp_roach_hold = 1;
