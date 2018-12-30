@@ -1933,6 +1933,7 @@ int load_last_sweep_path(roach_state_t *m_roach, int sweep_type)
 int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
 {
     int retval = -1;
+    blast_info("ROACH%d: INSIDE GET TARG FREQS", m_roach->which);
     if (!m_roach->last_vna_path) {
         blast_info("Roach%d, NO VNA PATH FOUND, loading from ref file", m_roach->which);
         if ((load_last_sweep_path(m_roach, VNA) < 0)) {
@@ -2037,6 +2038,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     save_output_trf(m_roach);
     m_roach->is_finding_kids = 0;
     m_roach->tone_finding_error = 0;
+    m_roach->has_targ_tones = 1;
     return 0;
 }
 
@@ -2192,8 +2194,7 @@ int roach_write_vna(roach_state_t *m_roach)
     m_roach->has_vna_tones = 1;
     m_roach->has_targ_tones = 0;
     m_roach->num_kids = 0;
-    retval = 0;
-    return retval;
+    return 0;
 }
 
 int roach_write_saved(roach_state_t *m_roach)
@@ -2247,7 +2248,8 @@ int roach_write_saved(roach_state_t *m_roach)
 int roach_write_targ_tones(roach_state_t *m_roach)
 {
     int retval = -1;
-    if (!m_roach->targ_tones || m_roach->num_kids == 0) {
+    if (!m_roach->num_kids) {
+        blast_err("ROACH%d: NUM KIDS = 0!", m_roach->which - 1);
         return retval;
     } else {
         blast_info("ROACH%d, Uploading TARGET comb...", m_roach->which);
@@ -4974,6 +4976,8 @@ void shutdown_roaches(void)
 void reset_flags(roach_state_t *m_roach)
 {
     CommandData.roach[m_roach->which - 1].kill = 0;
+    m_roach->doing_full_loop = 0;
+    m_roach->doing_turnaround_loop = 0;
     m_roach->has_firmware = 0;
     m_roach->firmware_upload_fail = 0;
     m_roach->is_streaming = 0;
@@ -5239,11 +5243,11 @@ int roach_vna_sweep(roach_state_t *m_roach)
 
 int roach_full_loop(roach_state_t *m_roach)
 {
-    if ((!m_roach->has_vna_tones) && (m_roach->has_targ_tones)) {
+    if (!m_roach->has_vna_tones) {
         roach_write_vna(m_roach);
         m_roach->has_targ_tones = 0;
     }
-    int status;
+    int status = -1;
     int i = m_roach->which - 1;
     // Set Attens
     m_roach->doing_full_loop = 1;
@@ -5757,35 +5761,22 @@ void *roach_cmd_loop(void* ind)
                 if (roach_full_loop(&roach_state_table[i]) < 0) {
                     blast_err("ROACH%d: FULL LOOP FAILED TO COMPLETE", i + 1);
                     roach_state_table[i].full_loop_fail = 1;
-                    n_full_loop_tries += 1;
-                    if (n_full_loop_tries == MAX_FULL_LOOP_TRIES) {
-                        n_full_loop_tries = 0;
-                        CommandData.roach[i].do_full_loop = 0;
+                    // n_full_loop_tries += 1;
+                    // if (n_full_loop_tries == MAX_FULL_LOOP_TRIES) {
+                    // n_full_loop_tries = 0;
+                    if (enable_lo_chop_was_on) {
+                        CommandData.roach[i].enable_chop_lo = 1;
+                        enable_lo_chop_was_on = 0;
+                    }
+                    if (enable_el_retune_was_on) {
                         CommandData.roach[i].auto_el_retune = 1;
-                        CommandData.roach[i].find_kids = 0;
-                        CommandData.roach[i].refit_res_freqs = 0;
-                        CommandData.roach[i].do_sweeps = 0;
-                        roach_state_table[i].doing_full_loop = 0;
-                        if (enable_lo_chop_was_on) {
-                            CommandData.roach[i].enable_chop_lo = 1;
-                            enable_lo_chop_was_on = 0;
-                        }
-                        if (enable_el_retune_was_on) {
-                            CommandData.roach[i].auto_el_retune = 1;
-                            enable_el_retune_was_on = 0;
-                        }
+                        enable_el_retune_was_on = 0;
                     }
                 // SUCCEED
                 } else {
                     blast_info("ROACH%d: FULL LOOP COMPLETED", i + 1);
                     roach_state_table[i].full_loop_fail = 0;
-                    n_full_loop_tries = 0;
-                    CommandData.roach[i].do_full_loop = 0;
-                    CommandData.roach[i].auto_el_retune = 1;
-                    CommandData.roach[i].find_kids = 0;
-                    CommandData.roach[i].refit_res_freqs = 0;
-                    CommandData.roach[i].do_sweeps = 0;
-                    roach_state_table[i].doing_full_loop = 0;
+                    // n_full_loop_tries = 0;
                     if (enable_lo_chop_was_on) {
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
@@ -5796,6 +5787,10 @@ void *roach_cmd_loop(void* ind)
                     }
                 }
                 CommandData.roach[i].do_full_loop = 0;
+                CommandData.roach[i].find_kids = 0;
+                CommandData.roach[i].refit_res_freqs = 0;
+                CommandData.roach[i].do_sweeps = 0;
+                roach_state_table[i].doing_full_loop = 0;
             }
             // DO FIND KIDS LOOP
             if (CommandData.roach[i].do_fk_loop == 1) {
