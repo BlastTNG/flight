@@ -162,7 +162,6 @@ char path_to_targ_tarball[5][100];
 char path_to_iq_tarball[5][100];
 char path_to_df_tarball[5][100];
 char path_to_lamp_tarball[5][100];
-char path_to_last_dfs[5][100];
 
 char path_to_all_vna[] = "/home/fc1user/roach_flight/all_vna_sweeps.tar.gz";
 char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
@@ -2175,6 +2174,28 @@ int save_ref_params(roach_state_t *m_roach)
     return retval;
 }
 
+int roach_write_vna(roach_state_t *m_roach)
+{
+    int retval = -1;
+    blast_info("ROACH%d, Generating VNA sweep comb...", m_roach->which);
+    roach_vna_comb(m_roach);
+    if (APPLY_VNA_TRF) {
+        CommandData.roach[m_roach->which - 1].load_vna_amps = 2;
+        blast_info("ROACH%d, Applying VNA trf correction", m_roach->which);
+    }
+    blast_info("ROACH%d, Writing tones", m_roach->which);
+    if ((roach_write_tones(m_roach, m_roach->vna_comb, m_roach->vna_comb_len) < 0)) {
+        return retval;
+    }
+    blast_info("ROACH%d, Search comb uploaded", m_roach->which);
+    m_roach->has_tones = 1;
+    m_roach->has_vna_tones = 1;
+    m_roach->has_targ_tones = 0;
+    m_roach->num_kids = 0;
+    retval = 0;
+    return retval;
+}
+
 int roach_write_saved(roach_state_t *m_roach)
 {
     int retval = -1;
@@ -2748,7 +2769,7 @@ int compress_data(roach_state_t *m_roach, int type)
         blast_info("PATH: %s", path);
         tarball = path_to_iq_tarball[m_roach->which - 1];
     } else if ((type == DF)) {
-        path = path_to_last_dfs[m_roach->which - 1];
+        path = truncate_path(m_roach->last_df_path, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_df_tarball[m_roach->which - 1];
     } else if ((type == LAMP)) {
@@ -2756,11 +2777,7 @@ int compress_data(roach_state_t *m_roach, int type)
         blast_info("PATH: %s", path);
         tarball = path_to_lamp_tarball[m_roach->which - 1];
     }
-    if ((type == DF)) {
-        blast_tmp_sprintf(tar_cmd, "tar -czf %s %s &", tarball, path);
-    } else {
-        blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
-    }
+    blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     blast_info("Creating sweep tarball: %s", tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
         roach_state_table[i].is_compressing_data = 1;
@@ -2872,7 +2889,6 @@ int compress_all_data(int type)
     return 0;
 }
 
-
 int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
 {
     int retval = -1;
@@ -2956,11 +2972,12 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
     free(Q_sum);
     for (size_t chan = 0; chan < m_roach->num_kids; chan++) {
         blast_tmp_sprintf(file_out, "%s/%zd.dat",
-             path_to_last_dfs[m_roach->which - 1], chan);
+             m_roach->last_df_path, chan);
         // blast_info("Saving %s", file_out);
         FILE *fd = fopen(file_out, "wb");
         if (!fd) {
-            blast_err("Error opening %s for writing", file_out);
+            blast_err("ROACH%d: Error opening %s for writing",
+                     m_roach->which, file_out);
             for (int k = 0; k < rows; k++) {
                 free(dfs[k]);
             }
@@ -3776,7 +3793,7 @@ int roach_df_comp(roach_state_t *m_roach)
     // with output atten at current setting
     if ((status = save_roach_dfs(m_roach,
             CommandData.roach_params[i].num_sec)) < 0) {
-        blast_err("ROACH%d: Error saving I/Q timestream", i + 1);
+        blast_err("ROACH%d: Error saving df timestream", i + 1);
         return status;
     }
     blast_tmp_sprintf(path_to_df_on, "%s", m_roach->last_df_path);
@@ -3790,7 +3807,7 @@ int roach_df_comp(roach_state_t *m_roach)
     }
     if ((status = save_roach_dfs(m_roach,
             CommandData.roach_params[i].num_sec)) < 0) {
-        blast_err("ROACH%d: Error saving I/Q timestream", i + 1);
+        blast_err("ROACH%d: Error saving df timestream", i + 1);
         return status;
     }
     CommandData.roach[i].set_attens = 5;
@@ -5162,28 +5179,6 @@ int roach_config_sequence(roach_state_t *m_roach)
     return retval;
 }
 
-int roach_write_vna(roach_state_t *m_roach)
-{
-    int retval = -1;
-    blast_info("ROACH%d, Generating VNA sweep comb...", m_roach->which);
-    roach_vna_comb(m_roach);
-    if (APPLY_VNA_TRF) {
-        CommandData.roach[m_roach->which - 1].load_vna_amps = 2;
-        blast_info("ROACH%d, Applying VNA trf correction", m_roach->which);
-    }
-    blast_info("ROACH%d, Writing tones", m_roach->which);
-    if ((roach_write_tones(m_roach, m_roach->vna_comb, m_roach->vna_comb_len) < 0)) {
-        return retval;
-    }
-    blast_info("ROACH%d, Search comb uploaded", m_roach->which);
-    m_roach->has_tones = 1;
-    m_roach->has_vna_tones = 1;
-    m_roach->has_targ_tones = 0;
-    m_roach->num_kids = 0;
-    retval = 0;
-    return retval;
-}
-
 int roach_vna_sweep(roach_state_t *m_roach)
 {
     int status = -1;
@@ -6075,8 +6070,6 @@ int init_roach(uint16_t ind)
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_df_ts.tar.gz");
     snprintf(path_to_lamp_tarball[ind], sizeof(path_to_lamp_tarball[ind]),
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_lamp_response.tar.gz");
-    snprintf(path_to_last_dfs[ind], sizeof(path_to_last_dfs[ind]),
-               "%s/roach%d_%s", roach_root_path, ind + 1, "dfs");
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
