@@ -5466,6 +5466,8 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             }
             break;
         case ROACH_STATE_STREAMING:
+            // do a full loop
+            CommandData.roach[m_roach->which - 1].do_full_loop = 1;
             break;
     }
 }
@@ -5793,6 +5795,7 @@ void *roach_cmd_loop(void* ind)
                         enable_el_retune_was_on = 0;
                     }
                 }
+                CommandData.roach[i].do_full_loop = 0;
             }
             // DO FIND KIDS LOOP
             if (CommandData.roach[i].do_fk_loop == 1) {
@@ -6166,8 +6169,11 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].waiting_for_lamp = 0;
     roach_state_table[ind].num_kids = 0;
     roach_state_table[ind].prev_num_kids = 0;
+    roach_state_table[ind].avg_df_diff = 0;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
+    CommandData.roach[ind].auto_el_retune = 1;
+    CommandData.roach[ind].enable_chop_lo = 1;
     // Don't create thread for Roach 4
     uint64_t roach_idx = ind;
     if (roach_idx != 3) {
@@ -6183,8 +6189,6 @@ int init_roach(uint16_t ind)
  * ----------------------------------
  * Populates 5 Hz frame data
  */
-// TODO(laura/sam/adrian): A lot of these diagnositic fields have been commented out in the
-// code, presumably because they have been changed.  Update and remove or reimplement the write calls.
 void write_roach_channels_5hz(void)
 {
     int i;
