@@ -2898,10 +2898,9 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
         blast_err("ROACH%d, No ref params found", m_roach->which);
         return retval;
     }
-    /* 
     if ((create_data_dir(m_roach, DF)) < 0) {
         return retval;
-    } */
+    }
     // allocate memory to hold timestreams before saving to file
     int npoints = round(m_nsec * (double)DAC_FREQ_RES) / N_AVG_DF;
     blast_info("ROACH%d, saving %d points %f sec", m_roach->which, npoints, m_nsec);
@@ -2977,7 +2976,8 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
         // blast_info("Saving %s", file_out);
         FILE *fd = fopen(file_out, "wb");
         if (!fd) {
-            blast_err("Error opening %s for writing", file_out);
+            blast_err("ROACH%d: Error opening %s for writing",
+                     m_roach->which, file_out);
             for (int k = 0; k < rows; k++) {
                 free(dfs[k]);
             }
