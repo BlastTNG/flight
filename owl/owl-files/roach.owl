@@ -651,7 +651,8 @@
                     "_caption": "IS_COMPRESSING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH1",
                     "type": "PNDI"
@@ -1310,7 +1311,8 @@
                     "_caption": "IS_COMPRESSING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH2",
                     "type": "PNDI"
@@ -1968,7 +1970,8 @@
                     "_caption": "IS_COMPRESSING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH3",
                     "type": "PNDI"
@@ -2627,7 +2630,8 @@
                     "_caption": "IS_COMPRESSING",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH3",
                     "type": "PNDI"
@@ -3011,18 +3015,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "PPS_COUNT_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1372633295"
-                    },
-                    "_caption": "R4_PPS_COUNT",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "PPS_COUNT_ROACH1",
                     "type": "PNDI"
                 },
                 {
