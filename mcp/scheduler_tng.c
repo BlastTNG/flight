@@ -336,7 +336,7 @@ int LoadUplinkFile(int slot) {
   }
 
   // check to make sure the file exists
-  snprintf(filename, sizeof(slot), "/data/etc/blast/%d.sch", slot);
+  snprintf(filename, sizeof(filename), "/data/etc/blast/%d.sch", slot);
   fp = fopen(filename, "r");
   if (fp == NULL) {
     return(0);
