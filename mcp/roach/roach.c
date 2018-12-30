@@ -4976,8 +4976,12 @@ void shutdown_roaches(void)
 void reset_flags(roach_state_t *m_roach)
 {
     CommandData.roach[m_roach->which - 1].kill = 0;
+    m_roach->fpga_clock_freq = 0.0;
+    m_roach->adc_rms[0] = 0.0;
+    m_roach->adc_rms[1] = 0.0;
     m_roach->doing_full_loop = 0;
     m_roach->doing_turnaround_loop = 0;
+    m_roach->doing_find_kids_loop = 0;
     m_roach->has_firmware = 0;
     m_roach->firmware_upload_fail = 0;
     m_roach->is_streaming = 0;
@@ -4994,8 +4998,6 @@ void reset_flags(roach_state_t *m_roach)
     m_roach->prev_num_kids = 0;
     m_roach->tone_finding_error = 0;
     m_roach->sweep_fail = 0;
-    // m_roach->tone_write_fail = 0;
-    // m_roach->lamp_check_error = 0;
     m_roach->katcp_connect_error = 0;
     m_roach->pi_error_count = 0;
     m_roach->pi_reboot_warning = 0;
@@ -5004,6 +5006,7 @@ void reset_flags(roach_state_t *m_roach)
     m_roach->full_loop_fail = 0;
     m_roach->trnaround_loop_fail = 0;
     m_roach->write_flag = 0;
+    m_roach->n_outofrange = 0;
     for (size_t i = 0; i < m_roach->current_ntones; i++) {
         m_roach->out_of_range[i] = 0;
     }
@@ -5518,7 +5521,7 @@ void *roach_cmd_loop(void* ind)
     int last_packet_count = 0;
     int enable_lo_chop_was_on = 0;
     int enable_el_retune_was_on = 0;
-    int n_full_loop_tries = 0;
+    // int n_full_loop_tries = 0;
     while (!shutdown_mcp) {
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
                                    roach_state_table[i].desired_state >= ROACH_STATE_BOOT) {
