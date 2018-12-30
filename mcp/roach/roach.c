@@ -146,7 +146,7 @@
 #define DEFAULT_INPUT_ATTEN 19 /* dB */
 #define SWEEP_READY_TIMEOUT 1000 /* ms, time for Roaches to wait before saving data */
 #define MAX_DATA_ERRORS 500 /* Max num allowable data errors in save_sweep_packet (ms) */
-#define MAX_LAMP_WAITS 10 /* Max num times to wait for lead roach to flash lamp (10 s) */
+#define MAX_LAMP_WAITS 500 /* Max num times to wait for lead roach to flash lamp (10 s) */
 #define MAX_FPG_UPLOAD_TRIES 10 /* Max number of fpg upload attempts */
 #define MAX_PACKET_COUNT_ERRORS 5000 /* Max num packet count errors for stream checker */
 #define MAX_FULL_LOOP_TRIES 2 /* Max num full loop retries after fail */
@@ -3069,9 +3069,10 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
             int wait_counter = 0;
             while ((!lead_roach_ready) && (wait_counter < MAX_LAMP_WAITS)) {
                 usleep(1000);
-            }
-            if (wait_counter == MAX_LAMP_WAITS) {
-                return retval;
+                if (wait_counter == MAX_LAMP_WAITS) {
+                    return retval;
+                }
+                wait_counter++;
             }
         }
     }
@@ -5240,23 +5241,18 @@ int roach_full_loop(roach_state_t *m_roach)
     if ((status = roach_vna_sweep(m_roach)) < 0) {
         blast_err("ROACH%d: VNA SWEEP FAIL", i + 1);
         m_roach->sweep_fail = 1;
-        // CommandData.roach[i].do_full_loop = 0;
         return status;
     }
     // Find kids
     if (CommandData.roach[i].find_kids == 2) {
         if ((status = get_targ_freqs(m_roach, 0)) < 0) {
             blast_err("ROACH%d: TONE FINDING ERROR", i + 1);
-            // CommandData.roach[i].find_kids = 0;
-            // CommandData.roach[i].do_full_loop = 0;
             return status;
         }
     }
     if (CommandData.roach[i].find_kids == 1) {
         if ((status = get_targ_freqs(m_roach, 1)) < 0) {
             blast_err("ROACH%d: TONE FINDING ERROR", i + 1);
-            // CommandData.roach[i].do_full_loop = 0;
-            // CommandData.roach[i].find_kids = 0;
             return status;
        }
     }
@@ -5264,8 +5260,6 @@ int roach_full_loop(roach_state_t *m_roach)
     // write found tones
     if ((status = roach_write_targ_tones(m_roach)) < 0) {
         blast_err("ROACH%d: ERROR WRITING TONES", i + 1);
-        // m_roach->tone_write_fail = 1;
-        // CommandData.roach[i].do_full_loop = 0;
         return status;
     }
     // Set attens again to account for change in number of tones
@@ -5277,14 +5271,20 @@ int roach_full_loop(roach_state_t *m_roach)
     CommandData.roach[i].refit_res_freqs = 1;
     if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
-        // CommandData.roach[i].refit_res_freqs = 0;
-        // CommandData.roach[i].do_full_loop = 0;
         return status;
     }
-    // CommandData.roach[i].refit_res_freqs = 0;
-    // CommandData.roach[i].do_full_loop = 0;
-    // CommandData.roach[i].do_sweeps = 0;
-    // m_roach->doing_full_loop = 0;
+    // If no one else has lamp control, take it
+    if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
+        int n_roaches = 0;
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
+                n_roaches++;
+            }
+        }
+        if (n_roaches == NUM_ROACHES) {
+            CommandData.roach[m_roach->which - 1].has_lamp_control = 1;
+        }
+    }
     return 0;
 }
 
