@@ -9,6 +9,7 @@ hdd_disk_space_s        NONE 1
 hdd_disk_index_n        NONE 1
 hdd_disk_index_s        NONE 1
 status_mcc              NONE 1
+mcp_1hz_framecount      NONE 1
 
 # pointing
 mode_p                  NONE 1
@@ -29,6 +30,9 @@ x1_point_sigma          NONE 1
 el_clin                 NONE 1
 az_raw_mag1             NONE 1
 az_raw_mag2             NONE 1
+offset_ifroll_gy        NONE 1
+offset_ifel_gy          NONE 1
+offset_ifyaw_gy         NONE 1
 
 # cryo
 state_potvalve          NONE 1
@@ -53,6 +57,7 @@ mc_piv_i_read           NONE 1
 mc_rw_i_read            NONE 1
 mc_el_i_read            NONE 1
 mc_rw_vel               NONE 1
+mc_el_motor_pos         NONE 1
 
 # roaches
 packet_count_mcp_roach1 NONE 1
