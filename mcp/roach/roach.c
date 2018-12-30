@@ -4677,7 +4677,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
 {
     int status = -1;
     int i = m_roach->which - 1;
-    if ((!m_roach->has_targ_tones) && (!m_roach->has_ref_params)) {
+    if ((!m_roach->has_targ_tones) | (!m_roach->has_ref_params)) {
         return status;
     }
     m_roach->doing_turnaround_loop = 1;
