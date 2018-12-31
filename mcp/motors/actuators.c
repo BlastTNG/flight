@@ -753,9 +753,11 @@ static void DoShutter(void)
     CommandData.actbus.shutter_goal = SHUTTER_NOP;
   }
 
-
+  EZBus_Take(&bus, id[SHUTTERNUM]);
   InitializeShutter();
   GetShutterData(&shutter_pos);
+  EZBus_Release(&bus, id[SHUTTERNUM]);
+
   // shutter_data.pos = shutter_pos;
 
   switch (CommandData.actbus.shutter_goal) {
