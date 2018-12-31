@@ -3444,6 +3444,7 @@ void InitCommandData()
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
         CommandData.roach[i].has_lamp_control = 0;
     }
+    CommandData.roach[4].has_lamp_control = 0;
     CommandData.trigger_roach_tuning_check = 0;
     CommandData.trigger_lo_offset_check = 0;
     CommandData.roach_params[0].set_out_atten = 4;

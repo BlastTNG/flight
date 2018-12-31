@@ -340,6 +340,11 @@ static void cal_pulse_monitor() {
         }
 
         // only pulse the cal lamp if the roach is not doing it already
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            if (CommandData.roach[i].is_sweeping) {
+               return;
+            }
+        }
         if (CommandData.cal_lamp_roach_hold) return;
         CommandData.Cryo.periodic_pulse = 1;
     } else {

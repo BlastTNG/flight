@@ -4673,7 +4673,6 @@ int roach_turnaround_loop(roach_state_t *m_roach)
     if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
         CommandData.roach[i].refit_res_freqs = 0;
-        CommandData.cal_lamp_roach_hold = 0;
         m_roach->doing_turnaround_loop = 0;
         return status;
     }
@@ -4949,6 +4948,7 @@ void reset_flags(roach_state_t *m_roach)
     m_roach->has_qdr_cal = 0;
     m_roach->qdr_fail = 0;
     m_roach->is_sweeping = 0;
+    CommandData.roach[m_roach->which - 1].is_sweeping = 0;
     m_roach->has_vna_sweep = 0;
     m_roach->has_vna_tones = 0;
     m_roach->has_targ_sweep = 0;
@@ -5211,6 +5211,9 @@ int roach_full_loop(roach_state_t *m_roach)
     int status = -1;
     int i = m_roach->which - 1;
     // Set Attens
+    if (!CommandData.roach[m_roach->which - 1].find_kids) {
+        CommandData.roach[m_roach->which - 1].find_kids = 1;
+    }
     m_roach->doing_full_loop = 1;
     CommandData.roach[m_roach->which - 1].set_attens = 5;
     if ((status = set_attens_targ_output(m_roach)) < 0) {
@@ -5253,6 +5256,7 @@ int roach_full_loop(roach_state_t *m_roach)
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
         return status;
     }
+    /*
     // If no one else has lamp control, take it
     if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
         int n_roaches = 0;
@@ -5264,7 +5268,7 @@ int roach_full_loop(roach_state_t *m_roach)
         if (n_roaches == NUM_ROACHES) {
             CommandData.roach[m_roach->which - 1].has_lamp_control = 1;
         }
-    }
+    } */
     return 0;
 }
 
@@ -5732,7 +5736,6 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].auto_el_retune = 1;
                         enable_el_retune_was_on = 0;
                     }
-                    CommandData.roach[i].has_lamp_control = 0;
                 // SUCCEED
                 } else {
                     blast_info("ROACH%d: FULL LOOP COMPLETED", i + 1);
@@ -6432,7 +6435,7 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
         SET_FLOAT(FpgaClockFreqAddr[i], roach_state_table[i].fpga_clock_freq);
     // Make Roach status field
-        if (roach_state_table[i].is_sweeping > 0) {
+        if (roach_state_table[i].is_sweeping) {
             CommandData.roach[i].is_sweeping = 1;
         } else {
             CommandData.roach[i].is_sweeping = 0;
