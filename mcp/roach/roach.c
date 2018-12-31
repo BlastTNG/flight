@@ -1974,9 +1974,6 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     char *var_name1;
     blast_tmp_sprintf(var_name1, "R%d_LAST_TARG_FREQS_MAGS", m_roach->which);
     setenv(var_name, path_to_mags_and_freqs, 1);
-    if (m_roach->num_kids > 0) {
-        m_roach->prev_num_kids = m_roach->num_kids;
-    }
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
@@ -2157,6 +2154,9 @@ int save_ref_params(roach_state_t *m_roach)
 
 int roach_write_vna(roach_state_t *m_roach)
 {
+    if (m_roach->num_kids > 0) {
+        m_roach->prev_num_kids = m_roach->num_kids;
+    }
     int retval = -1;
     blast_info("ROACH%d, Generating VNA sweep comb...", m_roach->which);
     roach_vna_comb(m_roach);
@@ -3338,10 +3338,14 @@ void cal_lamp_off(roach_state_t *m_roach)
 // flash cal lamp, separation = length
 void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
 {
+    if (!CommandData.enable_roach_lamp) {
+        return;
+    }
     m_roach->waiting_for_lamp = 1;
     if (!CommandData.roach[m_roach->which - 1].has_lamp_control) {
         return;
     } else {
+        CommandData.cal_lamp_roach_hold = 1;
         lead_roach_ready = 1;
         // Lead Roach waits for other Roaches to be ready to save
         int wait_to_pulse = 1;
@@ -3349,8 +3353,7 @@ void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
             wait_to_pulse = 0;
             usleep(1000);
             for (int i = 0; i < NUM_ROACHES; i++) {
-                if ((!roach_state_table[i].waiting_for_lamp) &&
-                        (roach_state_table[i].doing_turnaround_loop)) {
+                if (roach_state_table[i].waiting_for_lamp) {
                     wait_to_pulse = 1;
                     break;
                 }
@@ -3368,6 +3371,7 @@ void cal_pulses(roach_state_t *m_roach, float nsec, int num_pulse)
     if (CommandData.roach[m_roach->which - 1].has_lamp_control) {
         lead_roach_ready = 0;
     }
+    CommandData.cal_lamp_roach_hold = 0;
 }
 
 // Compare diff in I and Q of each channel with
@@ -4664,21 +4668,6 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         return status;
     }
     m_roach->doing_turnaround_loop = 1;
-    // flash cal lamp
-    CommandData.cal_lamp_roach_hold = 1;
-    // pulse cal lamp, save df
-    // CommandData.roach_params[i].num_sec = 2.0;
-    if (CommandData.enable_roach_lamp) {
-        CommandData.roach[i].do_check_retune = 2;
-        if ((status = roach_check_lamp_retune(m_roach)) < 0) {
-            CommandData.roach[i].do_check_retune = 0;
-            blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
-            CommandData.cal_lamp_roach_hold = 0;
-            m_roach->doing_turnaround_loop = 0;
-            return status;
-        }
-    }
-    CommandData.roach[i].do_check_retune = 0;
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
     if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
@@ -4688,21 +4677,8 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         m_roach->doing_turnaround_loop = 0;
         return status;
     }
-    // pulse cal lamp, save df
-    if (CommandData.enable_roach_lamp) {
-        CommandData.roach[i].do_check_retune = 2;
-        if ((status = roach_check_lamp_retune(m_roach)) < 0) {
-            CommandData.roach[i].do_check_retune = 0;
-            blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
-            CommandData.cal_lamp_roach_hold = 0;
-            m_roach->doing_turnaround_loop = 0;
-            return status;
-        }
-    }
-    CommandData.roach[i].do_check_retune = 0;
     center_df(m_roach);
     m_roach->doing_turnaround_loop = 0;
-    CommandData.cal_lamp_roach_hold = 0;
     return 0;
 }
 
@@ -6456,6 +6432,11 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
         SET_FLOAT(FpgaClockFreqAddr[i], roach_state_table[i].fpga_clock_freq);
     // Make Roach status field
+        if (roach_state_table[i].is_sweeping > 0) {
+            CommandData.roach[i].is_sweeping = 1;
+        } else {
+            CommandData.roach[i].is_sweeping = 0;
+        }
         roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
         roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
         roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);

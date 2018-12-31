@@ -3395,7 +3395,7 @@ void InitCommandData()
         CommandData.roach[i].do_cal_sweeps = 0;
         CommandData.roach[i].change_roach_state = 0;
         CommandData.roach[i].get_roach_state = 0;
-        CommandData.roach[i].find_kids = 0;
+        CommandData.roach[i].find_kids = 1;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
         CommandData.roach[i].test_tone = 0;
@@ -3438,6 +3438,7 @@ void InitCommandData()
         CommandData.roach[i].is_chopping_lo = 0;
         CommandData.roach[i].min_nkids = 50;
         CommandData.roach[i].max_nkids = 800;
+        CommandData.roach[i].is_sweeping = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
