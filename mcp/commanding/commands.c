@@ -3740,7 +3740,7 @@ void InitCommandData()
     CommandData.ec_devices.fix_hwpr = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
-    CommandData.disable_el = 1;
+    CommandData.disable_el = 0;
 
     CommandData.verbose_rw = 0;
     CommandData.verbose_el = 0;
