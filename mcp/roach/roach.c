@@ -1910,7 +1910,7 @@ int load_last_sweep_path(roach_state_t *m_roach, int sweep_type)
 int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
 {
     int retval = -1;
-    blast_info("ROACH%d: INSIDE GET TARG FREQS", m_roach->which);
+    // blast_info("ROACH%d: INSIDE GET TARG FREQS", m_roach->which);
     if (!m_roach->last_vna_path) {
         blast_info("Roach%d, NO VNA PATH FOUND, loading from ref file", m_roach->which);
         if ((load_last_sweep_path(m_roach, VNA) < 0)) {
@@ -5020,7 +5020,7 @@ void pi_state_manager(pi_state_t *m_pi, int result)
 
 int roach_boot_sequence(roach_state_t *m_roach)
 {
-    blast_info("ROACH%d: INSIDE BOOT SEQ", m_roach->which);
+    // blast_info("ROACH%d: INSIDE BOOT SEQ", m_roach->which);
     int retval = -1;
     int flags = 0;
     // if (m_roach->rpc_conn) {
@@ -5277,8 +5277,8 @@ int roach_fk_loop(roach_state_t* m_roach)
     int status;
     int i = m_roach->which - 1;
     if ((!m_roach->has_vna_tones) && (m_roach->has_targ_tones)) {
-        roach_write_vna(m_roach);
         m_roach->has_targ_tones = 0;
+        roach_write_vna(m_roach);
     }
     m_roach->doing_find_kids_loop = 1;
     CommandData.roach[m_roach->which - 1].set_attens = 5;
@@ -5291,6 +5291,7 @@ int roach_fk_loop(roach_state_t* m_roach)
         blast_err("ROACH%d: VNA SWEEP FAIL", i + 1);
         m_roach->sweep_fail = 1;
         CommandData.roach[i].do_fk_loop = 0;
+        m_roach->has_targ_tones = 0;
         return status;
     }
     // Find kids
@@ -5298,6 +5299,7 @@ int roach_fk_loop(roach_state_t* m_roach)
         if ((status = get_targ_freqs(m_roach, 0)) < 0) {
                blast_err("ROACH%d: TONE FINDING ERROR", i + 1);
                CommandData.roach[i].do_fk_loop = 0;
+               m_roach->has_targ_tones = 0;
                return status;
            }
     }
@@ -5305,9 +5307,11 @@ int roach_fk_loop(roach_state_t* m_roach)
         if ((status = get_targ_freqs(m_roach, 1)) < 0) {
                blast_err("ROACH%d: TONE FINDING ERROR", i + 1);
                CommandData.roach[i].do_fk_loop = 0;
+               m_roach->has_targ_tones = 0;
                return status;
            }
     }
+    m_roach->has_targ_tones = 0;
     CommandData.roach[i].find_kids = 0;
     CommandData.roach[i].do_sweeps = 0;
     m_roach->doing_find_kids_loop = 0;
