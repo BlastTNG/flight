@@ -2738,6 +2738,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
+    case enable_roach_cal_pulse:
+      CommandData.enable_roach_lamp = ivalues[0];
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3361,6 +3364,7 @@ void InitCommandData()
     CommandData.roach_run_cycle_checker = 1;
     // Pause automatic cal lamp pulses
     CommandData.cal_lamp_roach_hold = 0;
+    CommandData.enable_roach_lamp = 1;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;

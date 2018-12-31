@@ -144,9 +144,9 @@
 #define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
 #define DEFAULT_OUTPUT_ATTEN 4 /* dB */
 #define DEFAULT_INPUT_ATTEN 19 /* dB */
-#define SWEEP_READY_TIMEOUT 1000 /* ms, time for Roaches to wait before saving data */
-#define MAX_DATA_ERRORS 500 /* Max num allowable data errors in save_sweep_packet (ms) */
-#define MAX_LAMP_WAITS 500 /* Max num times to wait for lead roach to flash lamp (10 s) */
+#define SWEEP_READY_TIMEOUT 5000 /* ms, time for Roaches to wait before saving data */
+#define MAX_DATA_ERRORS 1000 /* Max num allowable data errors in save_sweep_packet (ms) */
+#define MAX_LAMP_WAITS 5000 /* Max num times to wait for lead roach to flash lamp (1 s) */
 #define MAX_FPG_UPLOAD_TRIES 10 /* Max number of fpg upload attempts */
 #define MAX_PACKET_COUNT_ERRORS 5000 /* Max num packet count errors for stream checker */
 #define MAX_FULL_LOOP_TRIES 2 /* Max num full loop retries after fail */
@@ -1974,6 +1974,9 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     char *var_name1;
     blast_tmp_sprintf(var_name1, "R%d_LAST_TARG_FREQS_MAGS", m_roach->which);
     setenv(var_name, path_to_mags_and_freqs, 1);
+    if (m_roach->num_kids > 0) {
+        m_roach->prev_num_kids = m_roach->num_kids;
+    }
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
@@ -2004,7 +2007,6 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     blast_info("NUM kids = %zd", m_roach->num_kids);
     if (m_roach->targ_tones) free(m_roach->targ_tones);
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
-    m_roach->prev_num_kids = m_roach->num_kids;
     for (size_t j = 0; j < m_roach->num_kids; j++) {
         m_roach->targ_tones[j] = temp_freqs[j];
         // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
@@ -2200,7 +2202,6 @@ int roach_write_saved(roach_state_t *m_roach)
     blast_info("NUM kids = %zd", m_roach->num_kids);
     if (m_roach->targ_tones) free(m_roach->targ_tones);
     m_roach->targ_tones = calloc(m_roach->num_kids, sizeof(double));
-    m_roach->prev_num_kids = m_roach->num_kids;
     for (size_t j = 0; j < m_roach->num_kids; j++) {
         m_roach->targ_tones[j] = m_temp_freqs[j];
         // blast_info("KID freq = %lg", m_roach->targ_tones[j] + m_roach->lo_centerfreq);
@@ -2286,7 +2287,6 @@ int optimize_targ_tones(roach_state_t *m_roach, char *m_last_targ_path)
         return -1;
     }
     blast_info("NUM kids = %zd", m_roach->num_kids);
-    m_roach->prev_num_kids = m_roach->num_kids;
     for (size_t j = 0; j < m_roach->num_kids; j++) {
         m_roach->targ_tones[j] = m_temp_freqs[j];
         blast_info("Optimized KID freq = %lg", m_roach->targ_tones[j]);
@@ -4668,13 +4668,15 @@ int roach_turnaround_loop(roach_state_t *m_roach)
     CommandData.cal_lamp_roach_hold = 1;
     // pulse cal lamp, save df
     // CommandData.roach_params[i].num_sec = 2.0;
-    CommandData.roach[i].do_check_retune = 2;
-    if ((status = roach_check_lamp_retune(m_roach)) < 0) {
-        CommandData.roach[i].do_check_retune = 0;
-        blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
-        CommandData.cal_lamp_roach_hold = 0;
-        m_roach->doing_turnaround_loop = 0;
-        return status;
+    if (CommandData.enable_roach_lamp) {
+        CommandData.roach[i].do_check_retune = 2;
+        if ((status = roach_check_lamp_retune(m_roach)) < 0) {
+            CommandData.roach[i].do_check_retune = 0;
+            blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
+            CommandData.cal_lamp_roach_hold = 0;
+            m_roach->doing_turnaround_loop = 0;
+            return status;
+        }
     }
     CommandData.roach[i].do_check_retune = 0;
     // TARG/REFIT/TARG
@@ -4687,18 +4689,20 @@ int roach_turnaround_loop(roach_state_t *m_roach)
         return status;
     }
     // pulse cal lamp, save df
-    CommandData.roach[i].do_check_retune = 2;
-    if ((status = roach_check_lamp_retune(m_roach)) < 0) {
-        CommandData.roach[i].do_check_retune = 0;
-        blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
-        CommandData.cal_lamp_roach_hold = 0;
-        m_roach->doing_turnaround_loop = 0;
-        return status;
+    if (CommandData.enable_roach_lamp) {
+        CommandData.roach[i].do_check_retune = 2;
+        if ((status = roach_check_lamp_retune(m_roach)) < 0) {
+            CommandData.roach[i].do_check_retune = 0;
+            blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
+            CommandData.cal_lamp_roach_hold = 0;
+            m_roach->doing_turnaround_loop = 0;
+            return status;
+        }
     }
     CommandData.roach[i].do_check_retune = 0;
-    CommandData.cal_lamp_roach_hold = 0;
     center_df(m_roach);
     m_roach->doing_turnaround_loop = 0;
+    CommandData.cal_lamp_roach_hold = 0;
     return 0;
 }
 
@@ -5226,8 +5230,8 @@ int roach_full_loop(roach_state_t *m_roach)
 {
     if (!m_roach->has_vna_tones) {
         roach_write_vna(m_roach);
-        m_roach->has_targ_tones = 0;
     }
+    m_roach->has_targ_tones = 0;
     int status = -1;
     int i = m_roach->which - 1;
     // Set Attens
@@ -6231,6 +6235,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *EnableRoachLamp;
     static channel_t *AvgDfDiffAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
     static channel_t *LoFreqReadAddr[NUM_ROACHES];
@@ -6267,6 +6272,7 @@ void write_roach_channels_1hz(void)
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
+    char channel_name_enable_roach_lamp[128] = { 0 };
     char channel_name_roach_fridge_cycle_warning[128] = { 0 };
     char channel_name_roach_auto_check_cycle[128] = { 0 };
     char channel_name_df_retune_thresh[128] = { 0 };
@@ -6301,6 +6307,8 @@ void write_roach_channels_1hz(void)
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
+        snprintf(channel_name_enable_roach_lamp, sizeof(channel_name_enable_roach_lamp),
+               "roach_enable_cal_pulse");
         snprintf(channel_name_roach_auto_check_cycle, sizeof(channel_name_roach_auto_check_cycle),
                "roach_auto_check_cycle");
         snprintf(channel_name_roach_fridge_cycle_warning, sizeof(channel_name_roach_fridge_cycle_warning),
@@ -6405,6 +6413,7 @@ void write_roach_channels_1hz(void)
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
         }
+        EnableRoachLamp = channels_find_by_name("roach_enable_cal_pulse");
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
         RoachTlmMode = channels_find_by_name("roach_tlm_mode");
         RoachAutoCheckCycle = channels_find_by_name("roach_auto_check_cycle");
@@ -6487,6 +6496,7 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(LoFreqReqAddr[i], roach_state_table[i].lo_freq_req);
         SET_FLOAT(LoFreqReadAddr[i], roach_state_table[i].lo_freq_read);
     }
+    SET_UINT8(EnableRoachLamp, CommandData.enable_roach_lamp);
     SET_UINT8(RoachFridgeCycleWarning, is_cycling);
     SET_UINT8(RoachAutoCheckCycle, CommandData.roach_run_cycle_checker);
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);

@@ -1535,6 +1535,12 @@ struct mcom mcommands[plugh + 2] = {
       {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
     }
   },
+  {COMMAND(enable_roach_cal_pulse),
+       "(All Roaches) Enables or disables cal lamp during turnaround loop", GR_ROACH, 1,
+    {
+      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+    }
+  },
   /***************************************/
   /***************************************/
   /*************** ROX Bias  *************/

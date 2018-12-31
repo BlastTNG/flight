@@ -1276,6 +1276,7 @@ channel_t channel_list[] =
     { "roach_trig_turn_retune",    SCALE(CONVERT_UNITY),  TYPE_UINT8,   RATE_1HZ, U_NONE, 0 },
     { "roach_auto_check_cycle",    SCALE(CONVERT_UNITY),  TYPE_UINT8,   RATE_1HZ, U_NONE, 0 },
     { "roach_fridge_cycle_warning",    SCALE(CONVERT_UNITY),  TYPE_UINT8,   RATE_1HZ, U_NONE, 0 },
+    { "roach_enable_cal_pulse",    SCALE(CONVERT_UNITY),  TYPE_UINT8,   RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach1",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach2",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },
     { "df_retune_thresh_roach3",      SCALE(CONVERT_UNITY),  TYPE_INT32,    RATE_1HZ, U_NONE, 0 },

@@ -515,6 +515,7 @@ struct CommandDataStruct {
   unsigned int trigger_roach_tuning_check;
   unsigned int trigger_lo_offset_check;
   unsigned int cal_lamp_roach_hold;
+  unsigned int enable_roach_lamp;
   uei_commands_t uei_command;
 
   cmd_rox_bias_t rox_bias;
