@@ -67,7 +67,7 @@
 #define EXT_NSCHED 4
 #define EXT_ROUTE  5
 
-#define MAXLIB 1024
+#define MAXLIB 65536
 
 #define MAX_RTIME 65536.0
 #define MAX_DAYS 21.0
@@ -78,8 +78,7 @@ void fillSBData(unsigned char *b, int len); /* highrate.c */
 
 extern pthread_mutex_t mutex;
 
-// TODO(seth): lst0str is in the scheduler
-char lst0str[82];
+char lst0str[82] = "\0";
 
 void SingleCommand(enum singleCommand command, int scheduled); // commands.c
 void MultiCommand(enum multiCommand command, double *rvalues,
