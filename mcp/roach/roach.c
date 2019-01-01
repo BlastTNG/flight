@@ -2039,7 +2039,7 @@ int roach_dfs(roach_state_t* m_roach)
     // m_roach->is_averaging = 1;
     int data_error_counter = 0;
     while ((m_num_received < N_AVG_DF) && (data_error_counter < MAX_DATA_ERRORS)) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -2434,6 +2434,42 @@ int pi_reboot_now(pi_state_t *m_pi)
     return 0;
 }
 
+int get_pi_temp(pi_state_t *m_pi)
+{
+    roach_state_table[m_pi->which - 1].pi_reboot_warning = 1;
+    int s;
+    int status = -1;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    char write_this[] = "./getTemps.sh\n";
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        blast_err("Pi%d: Socket failed", m_pi->which);
+        return status;
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(m_pi->address)) == NULL) {
+        blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+        return status;
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(NC2_PORT);
+    /* Copies host address to socket with aide of structures.*/
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+        blast_err("Pi%d: Connection Error", m_pi->which);
+        return status;
+    }
+    if ((status = write(s, write_this, strlen(write_this))) < 0) {
+        blast_err("Pi%d: Could not reboot", m_pi->which);
+        return status;
+    }
+    roach_state_table[m_pi->which - 1].pi_reboot_warning = 0;
+    roach_state_table[m_pi->which - 1].pi_error_count = 0;
+    return 0;
+}
+
 int valon_set_ref(pi_state_t *m_pi)
 {
     if (CommandData.roach[m_pi->which - 1].change_extref) {
@@ -2692,7 +2728,7 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     FILE *fd = fopen(file_out, "wb");
     for (int i = 0; i < npoints; i++) {
         // blast_info("i = %d", i);
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -2905,7 +2941,7 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
         int count = 0;
         int data_error_counter = 0;
         while ((m_num_received < N_AVG_DF) && (data_error_counter < MAX_DATA_ERRORS)) {
-            usleep(1000);
+            usleep(3000);
             if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
                 m_num_received++;
                 i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -3008,7 +3044,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     uint8_t i_udp_read;
     blast_info("Getting data...");
     for (int i = 0; i < npoints; i++) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -3099,7 +3135,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
     // m_roach->is_averaging = 1;
     int count = 0;
     for (int i = 0; i < npoints; i++) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
