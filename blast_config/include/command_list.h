@@ -355,6 +355,7 @@ enum multiCommand {
   roach_has_lamp_control,
   roach_set_extref,
   roach_set_extref_all,
+  enable_roach_cal_pulse,
   plugh,                // plugh should be at the end of the list
   sched_packet = 0xff   // not really a command, more of a placeholder
 };

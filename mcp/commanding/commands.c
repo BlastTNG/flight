@@ -2738,6 +2738,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           }
       }
       break;
+    case enable_roach_cal_pulse:
+      CommandData.enable_roach_lamp = ivalues[0];
+      break;
       /*************************************
       ************** Bias  ****************/
 //       used to be multiplied by 2 here, but screw up prev_satus
@@ -3361,6 +3364,7 @@ void InitCommandData()
     CommandData.roach_run_cycle_checker = 1;
     // Pause automatic cal lamp pulses
     CommandData.cal_lamp_roach_hold = 0;
+    CommandData.enable_roach_lamp = 1;
 
     /** this overrides prev_status **/
     CommandData.force_el = 0;
@@ -3391,7 +3395,7 @@ void InitCommandData()
         CommandData.roach[i].do_cal_sweeps = 0;
         CommandData.roach[i].change_roach_state = 0;
         CommandData.roach[i].get_roach_state = 0;
-        CommandData.roach[i].find_kids = 0;
+        CommandData.roach[i].find_kids = 1;
         CommandData.roach[i].opt_tones = 0;
         CommandData.roach[i].adc_rms = 0;
         CommandData.roach[i].test_tone = 0;
@@ -3434,11 +3438,13 @@ void InitCommandData()
         CommandData.roach[i].is_chopping_lo = 0;
         CommandData.roach[i].min_nkids = 50;
         CommandData.roach[i].max_nkids = 800;
+        CommandData.roach[i].is_sweeping = 0;
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
         CommandData.roach[i].has_lamp_control = 0;
     }
+    CommandData.roach[4].has_lamp_control = 1;
     CommandData.trigger_roach_tuning_check = 0;
     CommandData.trigger_lo_offset_check = 0;
     CommandData.roach_params[0].set_out_atten = 4;
@@ -3735,7 +3741,7 @@ void InitCommandData()
     CommandData.ec_devices.fix_hwpr = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
-    CommandData.disable_el = 1;
+    CommandData.disable_el = 0;
 
     CommandData.verbose_rw = 0;
     CommandData.verbose_el = 0;

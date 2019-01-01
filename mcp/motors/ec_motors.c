@@ -750,9 +750,9 @@ static void ec_init_heartbeat(int slave_index)
  */
 static int find_controllers(void)
 {
-    blast_info("initial io_map pointer %p pointer to pointer %p", io_map, &io_map);
+//    blast_info("initial io_map pointer %p pointer to pointer %p", io_map, &io_map);
     ec_mcp_state.n_found = ec_config(false, &io_map);
-    blast_info("after ec_config io_map pointer %p pointer to pointer %p", io_map, &io_map);
+//    blast_info("after ec_config io_map pointer %p pointer to pointer %p", io_map, &io_map);
     if (ec_mcp_state.n_found <= 0) {
         berror(err, "No motor controller slaves found on the network!");
         goto find_err;
@@ -905,7 +905,6 @@ static int motor_pdo_init(int m_slave)
     }
 
     blast_startup("Configuring PDO Mappings for controller %d (%s)", m_slave, ec_slave[m_slave].name);
-    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -943,13 +942,11 @@ static int motor_pdo_init(int m_slave)
     if (!retval) {
         blast_err("Failed mapping!");
     }
-    blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
     map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word
     retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
     if (!retval) {
         blast_err("Failed mapping!");
     }
-    blast_info("bytes written %i, %2x, map.val %d!", retval, ECAT_TXPDO_MAPPING+1, map.val);
 
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 2 elements
         blast_err("Failed mapping!");
@@ -995,7 +992,7 @@ static int motor_pdo_init(int m_slave)
         blast_err("%s", ec_elist2string());
     }
 
-    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
+//    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
 
     /**
      * To program the PDO mapping, we first must clear the old state
@@ -1025,7 +1022,6 @@ static int motor_pdo_init(int m_slave)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-    blast_info("ec_slave[%d].outputs = %p", m_slave, ec_slave[m_slave].outputs);
     return 0;
 }
 
@@ -1043,8 +1039,8 @@ static void map_index_vars(int m_index)
      * Inputs.  Each is sequentially mapped to the IOMap memory space
      * for the motor controller
      */
-	blast_info("Starting map_index_vars for index %d", m_index);
-    blast_info("Initial pdolist pointer: %p", test);
+// 	blast_info("Starting map_index_vars for index %d", m_index);
+//     blast_info("Initial pdolist pointer: %p", test);
 #define PDO_SEARCH_LIST(_obj, _map) { \
     found = false; \
     for (GSList *el = pdo_list[m_index]; (el); el = g_slist_next(el)) { \
@@ -1055,12 +1051,13 @@ static void map_index_vars(int m_index)
             found = true; \
         } \
     } \
-    if (!found) { \
-        blast_err("Could not find PDO map for %s", #_map); \
-    } else { \
-    	blast_info("Found PDO map for %s", #_map); \
-    } \
     }
+//     if (!found) { \
+//         blast_err("Could not find PDO map for %s", #_map); \
+//     } else { \
+//     	blast_info("Found PDO map for %s", #_map); \
+//     } \
+//     }
     if (controller_state[m_index].is_mc) {
         PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
         PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
@@ -1128,7 +1125,6 @@ static void map_motor_vars(void)
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
-    blast_info("Finished map_motor_vars.");
 }
 
 /**
@@ -1161,13 +1157,10 @@ static void motor_configure_timing(void)
         while (ec_iserror()) {
             blast_err("Slave %i, %s", i, ec_elist2string());
         }
-        blast_info("Slave %i, has_dc = %d, found_dc_master = %d", i, ec_slave[i].hasdc, found_dc_master);
         if (ec_slave[i].hasdc && found_dc_master) {
             controller_state[i].has_dc = 1;
-            blast_info("setting has_dc to 1");
         } else {
             controller_state[i].has_dc = 0;
-            blast_info("setting has_dc to 0");
         }
     }
 }
@@ -1278,17 +1271,14 @@ static uint8_t check_for_network_problem(uint16_t net_status, bool firsttime)
 // a reasonable network status.
 uint8_t is_el_motor_ready() {
     return(check_ec_ready(el_index));
-//    return(!check_for_network_problem(ElevMotorData[el_index].network_status, 0));
 }
 
 uint8_t is_rw_motor_ready() {
     return(check_ec_ready(rw_index));
-//    return(!check_for_network_problem(RWMotorData[rw_index].network_status, 0));
 }
 
 uint8_t is_pivot_motor_ready() {
     return(check_ec_ready(piv_index));
-//    return(!check_for_network_problem(RWMotorData[piv_index].network_status, 0));
 }
 
 static void read_motor_data()
@@ -1350,7 +1340,7 @@ void mc_readPDOassign(int m_slave) {
     rdat = 0;
 
 //    m_pdo_list = pdo_list[m_slave];
-    blast_info("Starting mc_readPDOassign for slave %i", m_slave);
+//    blast_info("Starting mc_readPDOassign for slave %i", m_slave);
     /* read PDO assign subindex 0 ( = number of PDO's) */
     wkc = ec_SDOread(m_slave, ECAT_TXPDO_ASSIGNMENT, 0x00, FALSE, &len, &rdat, EC_TIMEOUTRXM);
     rdat = etohs(rdat);
@@ -1375,16 +1365,16 @@ void mc_readPDOassign(int m_slave) {
         if (idx <= 0) {
         	continue;
         } else {
-            blast_info("found idx = %2x at wkc = %i, idxloop = %i", idx, wkc, idxloop);
+//            blast_info("found idx = %2x at wkc = %i, idxloop = %i", idx, wkc, idxloop);
         }
         len = sizeof(subcnt);
         subcnt = 0;
         /* read number of subindexes of PDO */
         wkc = ec_SDOread(m_slave, idx, 0x00, FALSE, &len, &subcnt, EC_TIMEOUTRXM);
         subidx = subcnt;
-        blast_info("Number of subindexes: %i", subidx);
+//        blast_info("Number of subindexes: %i", subidx);
         /* for each subindex */
-        blast_info("Reading out the SDOs");
+//        blast_info("Reading out the SDOs");
         for (subidxloop = 1; subidxloop <= subidx; subidxloop++) {
             pdo_channel_map_t *channel = NULL;
             pdo_mapping_t pdo_map = { 0 };
@@ -1396,9 +1386,9 @@ void mc_readPDOassign(int m_slave) {
             channel->subindex = pdo_map.subindex;
             channel->offset = offset;
             pdo_list[m_slave] = g_slist_prepend(pdo_list[m_slave], channel);
-            blast_info("Read SDO subidxloop = %i, wkc = %i, idx = %i, len = %i", subidxloop, wkc, idx, len);
-            blast_info("Appending channel to m_pdo_list = %p: index = %2x, subindex = %i, offset = %i",
-                       pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
+//            blast_info("Read SDO subidxloop = %i, wkc = %i, idx = %i, len = %i", subidxloop, wkc, idx, len);
+//            blast_info("Appending channel to m_pdo_list = %p: index = %2x, subindex = %i, offset = %i",
+//                       pdo_list[m_slave], channel->index, channel->subindex, channel->offset);
 
             /// Offset is the number of bytes into the memory map this element is.  First element is 0 bytes in.
             offset += (pdo_map.size / 8);
@@ -1452,7 +1442,6 @@ int configure_ec_motors()
         }
     }
     /// We re-configure the map now that we have assigned the PDOs
-    blast_info("Reconfigure the map now that we have assigned the PDOs");
     if (ec_config_map(&io_map) <= 0) blast_warn("Warning ec_config_map(&io_map) return null map size.");
     map_motor_vars();
 
@@ -1461,7 +1450,6 @@ int configure_ec_motors()
      */
     for (int i = 1; i <= ec_slavecount; i++) {
         if ((controller_state[i].is_mc) && !(controller_state[i].slave_error)) {
-            blast_info("Initializing target current for ec_slave %d, ptr %p", i, target_current);
             *target_current[i] = 0;
             *control_word[i] = ECAT_CTL_ON | ECAT_CTL_ENABLE_VOLTAGE | ECAT_CTL_QUICK_STOP| ECAT_CTL_ENABLE;
         }
@@ -1491,12 +1479,8 @@ int configure_ec_motors()
     for (int i = 1; i <= ec_slavecount; i++) {
         if ((controller_state[i].slave_error == 0) && (controller_state[i].has_dc == 1)) {
             controller_state[i].comms_ok = 1;
-            blast_info("Setting comms_ok to 1 for index %d, slave_error = %d, has_dc = %d",
-                i, controller_state[i].slave_error , controller_state[i].has_dc);
         } else {
             controller_state[i].comms_ok = 0;
-            blast_info("Setting comms_ok to 0 for index %d, slave_error = %d, has_dc = %d",
-                i, controller_state[i].slave_error , controller_state[i].has_dc);
         }
         if (controller_state[i].is_mc) {
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);

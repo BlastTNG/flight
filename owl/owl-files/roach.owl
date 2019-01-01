@@ -2966,10 +2966,22 @@
                     "_format": "",
                     "_source": "ROACH_LAMP_NOW",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1224713751"
+                    },
+                    "_caption": "ROACH_ENABLE_CAL_PULSE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "ROACH_ENABLE_CAL_PULSE",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 238,
-            "geometryWidth": 324,
+            "geometryWidth": 323,
             "geometryX": 1224,
             "geometryY": 221
         },
@@ -3129,8 +3141,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 273,
-            "geometryWidth": 290,
+            "geometryHeight": 272,
+            "geometryWidth": 289,
             "geometryX": 1224,
             "geometryY": 595
         },
@@ -3275,7 +3287,7 @@
                 }
             ],
             "geometryHeight": 102,
-            "geometryWidth": 171,
+            "geometryWidth": 170,
             "geometryX": 1377,
             "geometryY": 102
         }
@@ -3768,8 +3780,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 60,
-    "windowCellWidth": 109,
-    "windowHeight": 1028,
-    "windowWidth": 1855
+    "windowCellHeight": 62,
+    "windowCellWidth": 113,
+    "windowHeight": 1056,
+    "windowWidth": 1920
 }

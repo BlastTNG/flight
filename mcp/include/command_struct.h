@@ -401,6 +401,7 @@ typedef struct roach
     unsigned int change_extref;
     unsigned int min_nkids;
     unsigned int max_nkids;
+    unsigned int is_sweeping;
 } roach_status_t;
 
 typedef struct roach_params
@@ -515,6 +516,7 @@ struct CommandDataStruct {
   unsigned int trigger_roach_tuning_check;
   unsigned int trigger_lo_offset_check;
   unsigned int cal_lamp_roach_hold;
+  unsigned int enable_roach_lamp;
   uei_commands_t uei_command;
 
   cmd_rox_bias_t rox_bias;

@@ -336,7 +336,7 @@ int LoadUplinkFile(int slot) {
   }
 
   // check to make sure the file exists
-  snprintf(filename, sizeof(slot), "/data/etc/blast/%d.sch", slot);
+  snprintf(filename, sizeof(filename), "/data/etc/blast/%d.sch", slot);
   fp = fopen(filename, "r");
   if (fp == NULL) {
     return(0);
@@ -492,7 +492,7 @@ void DoSched(void)
     last_is = -1;
     return;
   }
-
+  // Sent at 30,000 m if we haven't already sent at_float
   if (PointingData[i_point].at_float && !CommandData.at_float) {
     bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
     /* el on */
@@ -511,19 +511,19 @@ void DoSched(void)
     /* enable hwpr autostepping */
     event.command = hwpr_step_on;
     ScheduledCommand(&event);
-    /* potvalve_open */
-    event.command = potvalve_open;
+    /* pump valve on and open */
+    event.command = pump_valve_on;
     ScheduledCommand(&event);
-    event.command = potvalve_on;
+    event.command = pump_valve_open;
     ScheduledCommand(&event);
     /* turn off lock motor hold current */
     event.command = lock_i;
     event.is_multi = 1;
-    event.ivalues[0] = 50;
+    event.ivalues[0] = 45;
     event.ivalues[1] = 0;
     ScheduledCommand(&event);
     /* activate fridge autocycle system */
-    event.command = allow_cycle;
+    event.command = disallow_cycle;
     event.is_multi = 0;
     ScheduledCommand(&event);
 
