@@ -574,7 +574,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
                 blast_err("Commands: failed to check gps stats\n");
             }
             break;
-        case if_1_cycle:
+        case auto_pump_cycle:
             CommandData.Relays.cycle_if_1 = 1;
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[0] = 1;
@@ -624,12 +624,12 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.cycled_if = 1;
             CommandData.Relays.if_relays[9] = 1;
             break;
-        case if_relay_1_on:
+        case auto_pump_on:
             CommandData.Relays.if_1_on = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[0] = 1;
             break;
-        case if_relay_1_off:
+        case auto_pump_off:
             CommandData.Relays.if_1_off = 1;
             CommandData.Relays.update_if = 1;
             CommandData.Relays.if_relays[0] = 0;
