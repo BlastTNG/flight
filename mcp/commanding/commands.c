@@ -3718,6 +3718,7 @@ void InitCommandData()
     CommandData.azi_gain.P = 5000;
     CommandData.azi_gain.I = 1.0;
     CommandData.azi_gain.PT = 75;
+    CommandData.azi_gain.D = 0;
 
     CommandData.pivot_gain.SP = 30; // dps
     CommandData.pivot_gain.PV = 6;
