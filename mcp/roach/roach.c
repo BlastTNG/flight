@@ -1644,7 +1644,7 @@ int roach_save_sweep_packet_binary(roach_state_t *m_roach, uint32_t m_sweep_freq
     int count = 0;
     int data_error_counter = 0;
     while ((m_num_received < N_AVG) && (data_error_counter < MAX_DATA_ERRORS)) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
