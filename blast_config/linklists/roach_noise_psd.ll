@@ -1,6 +1,27 @@
 # Timestreams for noise PSD
 # No downsampling or compression specified
 
+fpga_clock_freq_roach1
+fpga_clock_freq_roach2
+fpga_clock_freq_roach3
+fpga_clock_freq_roach4
+fpga_clock_freq_roach5
+prev_nkids_found_roach1
+prev_nkids_found_roach2
+prev_nkids_found_roach3
+prev_nkids_found_roach4
+prev_nkids_found_roach5
+is_chopping_lo_roach1
+is_chopping_lo_roach2
+is_chopping_lo_roach3
+is_chopping_lo_roach4
+is_chopping_lo_roach5
+avg_df_diff_roach1
+avg_df_diff_roach2
+avg_df_diff_roach3
+avg_df_diff_roach4
+avg_df_diff_roach5
+
 lo_freq_read_roach1
 lo_freq_req_roach1
 status_roach1
@@ -94,6 +115,7 @@ state_roach5
 count_cmd_s
 count_cmd_s
 roach_fridge_cycle_warning
+roach_enable_cal_pulse
 roach_lamp_now
 pps_count_roach1
 packet_count_roach1

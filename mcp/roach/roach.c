@@ -1983,6 +1983,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     } else {
         blast_err("ROACH%d, Error finding TARG freqs", m_roach->which);
         m_roach->is_finding_kids = 0;
+        m_roach->num_kids = 0;
         m_roach->tone_finding_error = 3;
         return retval;
     }
