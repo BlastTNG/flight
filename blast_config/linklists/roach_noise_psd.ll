@@ -1,6 +1,11 @@
 # Timestreams for noise PSD
 # No downsampling or compression specified
 
+pi_temp_roach1
+pi_temp_roach2
+pi_temp_roach3
+pi_temp_roach4
+pi_temp_roach5
 fpga_clock_freq_roach1
 fpga_clock_freq_roach2
 fpga_clock_freq_roach3

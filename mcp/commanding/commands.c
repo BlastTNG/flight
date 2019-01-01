@@ -1321,6 +1321,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].read_lo = 1;
           }
           break;
+        case read_pi_temp_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].read_temp = 1;
+          }
+          break;
         case reset_log:
            ResetLog = 1;
            break;
@@ -2480,6 +2485,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach[ivalues[0]-1].read_lo = 1;
       }
       break;
+    case read_pi_temp:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach[ivalues[0]-1].read_temp = 1;
+      }
+      break;
     case set_lo_MHz:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach_params[ivalues[0]-1].lo_freq_MHz = rvalues[1];
@@ -3385,6 +3395,7 @@ void InitCommandData()
     CommandData.mag_reset = 0;
 
     for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].read_temp = 0;
         CommandData.roach[i].ext_ref = 1;
         CommandData.roach[i].change_extref = 0;
         CommandData.roach[i].set_attens = 0;

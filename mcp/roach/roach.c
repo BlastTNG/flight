@@ -2436,12 +2436,12 @@ int pi_reboot_now(pi_state_t *m_pi)
 
 int get_pi_temp(pi_state_t *m_pi)
 {
-    roach_state_table[m_pi->which - 1].pi_reboot_warning = 1;
     int s;
     int status = -1;
     struct sockaddr_in sin;
     struct hostent *hp;
-    char write_this[] = "./getTemps.sh\n";
+    char buff[1024];
+    char write_this[] = "./getTemp.sh\n";
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", m_pi->which);
         return status;
@@ -2465,8 +2465,15 @@ int get_pi_temp(pi_state_t *m_pi)
         blast_err("Pi%d: Could not reboot", m_pi->which);
         return status;
     }
-    roach_state_table[m_pi->which - 1].pi_reboot_warning = 0;
-    roach_state_table[m_pi->which - 1].pi_error_count = 0;
+    bzero(buff, sizeof(buff));
+    if ((status = read(s, buff, sizeof(buff))) < 0) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        return status;
+    }
+    roach_state_table[m_pi->which - 1].pi_temp = atof(buff);
+    blast_info("ROACH%d: Pi Temp = %f", m_pi->which,
+             roach_state_table[m_pi->which - 1].pi_temp);
+    close(s);
     return 0;
 }
 
@@ -5604,6 +5611,12 @@ void *roach_cmd_loop(void* ind)
             }
             CommandData.roach[i].read_lo = 0;
         }
+        if (CommandData.roach[i].read_temp) {
+            if (get_pi_temp(&pi_state_table[i]) < 0) {
+                blast_err("PI%d, Failed to read Pi temp", i + 1);
+            }
+            CommandData.roach[i].read_temp = 0;
+        }
         if (CommandData.roach[i].get_roach_state) {
             blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));
             CommandData.roach[i].get_roach_state = 0;
@@ -6255,6 +6268,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *PiTempAddr[NUM_ROACHES];
     static channel_t *EnableRoachLamp;
     static channel_t *AvgDfDiffAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
@@ -6292,6 +6306,7 @@ void write_roach_channels_1hz(void)
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
+    char channel_name_pi_temp[128] = { 0 };
     char channel_name_enable_roach_lamp[128] = { 0 };
     char channel_name_roach_fridge_cycle_warning[128] = { 0 };
     char channel_name_roach_auto_check_cycle[128] = { 0 };
@@ -6339,6 +6354,8 @@ void write_roach_channels_1hz(void)
                         "flags_kids%04d_roach%d", j*16, i + 1);
                 FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+            snprintf(channel_name_pi_temp, sizeof(channel_name_pi_temp),
+                        "pi_temp_roach%d", i + 1);
             snprintf(channel_name_avg_df_diff, sizeof(channel_name_avg_df_diff),
                         "avg_df_diff_roach%d", i + 1);
             snprintf(channel_name_fpga_clock_freq, sizeof(channel_name_fpga_clock_freq),
@@ -6404,6 +6421,7 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
@@ -6455,6 +6473,7 @@ void write_roach_channels_1hz(void)
             }
             SET_UINT16(FlagsKidsAddr[i][j], flag);
         }
+        SET_FLOAT(PiTempAddr[i], roach_state_table[i].pi_temp);
         SET_FLOAT(AvgDfDiffAddr[i], roach_state_table[i].avg_df_diff);
         SET_UINT16(nKidsFoundAddr[i], roach_state_table[i].num_kids);
         SET_UINT16(PrevNkidsFoundAddr[i], roach_state_table[i].prev_num_kids);

@@ -351,6 +351,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
   {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
   {COMMAND(read_lo_all), "(All Roaches) Reads current LO frequencies", GR_ROACH},
+  {COMMAND(read_pi_temp_all), "(All Roaches) Reads current Pi temp", GR_ROACH},
   {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1290,6 +1291,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(read_pi_temp), "Read Pi temp", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
