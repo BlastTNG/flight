@@ -137,6 +137,7 @@
 #define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
+#define PI_TEMP_PORT 9997 /* Pi port for reading temp */
 #define ROACH_WATCHDOG_PERIOD 5 /* second period to check PPC connection */
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
@@ -2441,7 +2442,7 @@ int get_pi_temp(pi_state_t *m_pi)
     struct sockaddr_in sin;
     struct hostent *hp;
     char buff[1024];
-    char write_this[] = "./getTemp.sh\n";
+    char write_this[] = "1";
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", m_pi->which);
         return status;
@@ -2453,7 +2454,7 @@ int get_pi_temp(pi_state_t *m_pi)
     }
     /* Assigns port number. */
     sin.sin_family = AF_INET;
-    sin.sin_port = htons(NC2_PORT);
+    sin.sin_port = htons(PI_TEMP_PORT);
     /* Copies host address to socket with aide of structures.*/
     bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
     /* Requests link with server and verifies connection. */
