@@ -111,6 +111,7 @@ typedef struct {
 } roach_uint16_lut_t;
 
 typedef struct roach_state {
+    double pi_temp;
     char *fpg;
     int array;
     int which;

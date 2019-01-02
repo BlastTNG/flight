@@ -137,6 +137,7 @@
 #define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
+#define PI_TEMP_PORT 9997 /* Pi port for reading temp */
 #define ROACH_WATCHDOG_PERIOD 5 /* second period to check PPC connection */
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
@@ -1644,7 +1645,7 @@ int roach_save_sweep_packet_binary(roach_state_t *m_roach, uint32_t m_sweep_freq
     int count = 0;
     int data_error_counter = 0;
     while ((m_num_received < N_AVG) && (data_error_counter < MAX_DATA_ERRORS)) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -1983,6 +1984,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     } else {
         blast_err("ROACH%d, Error finding TARG freqs", m_roach->which);
         m_roach->is_finding_kids = 0;
+        m_roach->num_kids = 0;
         m_roach->tone_finding_error = 3;
         return retval;
     }
@@ -2038,7 +2040,7 @@ int roach_dfs(roach_state_t* m_roach)
     // m_roach->is_averaging = 1;
     int data_error_counter = 0;
     while ((m_num_received < N_AVG_DF) && (data_error_counter < MAX_DATA_ERRORS)) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             m_num_received++;
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -2433,6 +2435,49 @@ int pi_reboot_now(pi_state_t *m_pi)
     return 0;
 }
 
+int get_pi_temp(pi_state_t *m_pi)
+{
+    int s;
+    int status = -1;
+    struct sockaddr_in sin;
+    struct hostent *hp;
+    char buff[1024];
+    char write_this[] = "1";
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        blast_err("Pi%d: Socket failed", m_pi->which);
+        return status;
+    }
+    /* Gets, validates host; stores address in hostent structure. */
+    if ((hp = gethostbyname(m_pi->address)) == NULL) {
+        blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+        return status;
+    }
+    /* Assigns port number. */
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(PI_TEMP_PORT);
+    /* Copies host address to socket with aide of structures.*/
+    bcopy(hp->h_addr, (char *) &sin.sin_addr, hp->h_length);
+    /* Requests link with server and verifies connection. */
+    if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
+        blast_err("Pi%d: Connection Error", m_pi->which);
+        return status;
+    }
+    if ((status = write(s, write_this, strlen(write_this))) < 0) {
+        blast_err("Pi%d: Could not reboot", m_pi->which);
+        return status;
+    }
+    bzero(buff, sizeof(buff));
+    if ((status = read(s, buff, sizeof(buff))) < 0) {
+        blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
+        return status;
+    }
+    roach_state_table[m_pi->which - 1].pi_temp = atof(buff);
+    blast_info("ROACH%d: Pi Temp = %f", m_pi->which,
+             roach_state_table[m_pi->which - 1].pi_temp);
+    close(s);
+    return 0;
+}
+
 int valon_set_ref(pi_state_t *m_pi)
 {
     if (CommandData.roach[m_pi->which - 1].change_extref) {
@@ -2691,7 +2736,7 @@ int save_timestream(roach_state_t *m_roach, int m_chan, double m_nsec)
     FILE *fd = fopen(file_out, "wb");
     for (int i = 0; i < npoints; i++) {
         // blast_info("i = %d", i);
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -2904,7 +2949,7 @@ int save_roach_dfs(roach_state_t* m_roach, double m_nsec)
         int count = 0;
         int data_error_counter = 0;
         while ((m_num_received < N_AVG_DF) && (data_error_counter < MAX_DATA_ERRORS)) {
-            usleep(1000);
+            usleep(3000);
             if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
                 m_num_received++;
                 i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
@@ -3007,7 +3052,7 @@ int save_all_timestreams(roach_state_t *m_roach, double m_nsec)
     uint8_t i_udp_read;
     blast_info("Getting data...");
     for (int i = 0; i < npoints; i++) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -3098,7 +3143,7 @@ int avg_chan_vals(roach_state_t *m_roach, bool lamp_on)
     // m_roach->is_averaging = 1;
     int count = 0;
     for (int i = 0; i < npoints; i++) {
-        usleep(1000);
+        usleep(3000);
         if (roach_udp[m_roach->which - 1].roach_valid_packet_count > m_last_valid_packet_count) {
             i_udp_read = GETREADINDEX(roach_udp[m_roach->which - 1].index);
             data_udp_packet_t m_packet = roach_udp[m_roach->which - 1].last_pkts[i_udp_read];
@@ -5567,6 +5612,12 @@ void *roach_cmd_loop(void* ind)
             }
             CommandData.roach[i].read_lo = 0;
         }
+        if (CommandData.roach[i].read_temp) {
+            if (get_pi_temp(&pi_state_table[i]) < 0) {
+                blast_err("PI%d, Failed to read Pi temp", i + 1);
+            }
+            CommandData.roach[i].read_temp = 0;
+        }
         if (CommandData.roach[i].get_roach_state) {
             blast_info("ROACH%d, current state = %u", i + 1, get_roach_state(i));
             CommandData.roach[i].get_roach_state = 0;
@@ -6218,6 +6269,7 @@ void write_roach_channels_1hz(void)
 {
     int i, j, k, i_chan;
     static int firsttime = 1;
+    static channel_t *PiTempAddr[NUM_ROACHES];
     static channel_t *EnableRoachLamp;
     static channel_t *AvgDfDiffAddr[NUM_ROACHES];
     static channel_t *LoFreqReqAddr[NUM_ROACHES];
@@ -6255,6 +6307,7 @@ void write_roach_channels_1hz(void)
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
+    char channel_name_pi_temp[128] = { 0 };
     char channel_name_enable_roach_lamp[128] = { 0 };
     char channel_name_roach_fridge_cycle_warning[128] = { 0 };
     char channel_name_roach_auto_check_cycle[128] = { 0 };
@@ -6302,6 +6355,8 @@ void write_roach_channels_1hz(void)
                         "flags_kids%04d_roach%d", j*16, i + 1);
                 FlagsKidsAddr[i][j] = channels_find_by_name(channel_name_flags_kids);
             }
+            snprintf(channel_name_pi_temp, sizeof(channel_name_pi_temp),
+                        "pi_temp_roach%d", i + 1);
             snprintf(channel_name_avg_df_diff, sizeof(channel_name_avg_df_diff),
                         "avg_df_diff_roach%d", i + 1);
             snprintf(channel_name_fpga_clock_freq, sizeof(channel_name_fpga_clock_freq),
@@ -6367,6 +6422,7 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
             LoFreqReqAddr[i] = channels_find_by_name(channel_name_lo_freq_req);
@@ -6418,6 +6474,7 @@ void write_roach_channels_1hz(void)
             }
             SET_UINT16(FlagsKidsAddr[i][j], flag);
         }
+        SET_FLOAT(PiTempAddr[i], roach_state_table[i].pi_temp);
         SET_FLOAT(AvgDfDiffAddr[i], roach_state_table[i].avg_df_diff);
         SET_UINT16(nKidsFoundAddr[i], roach_state_table[i].num_kids);
         SET_UINT16(PrevNkidsFoundAddr[i], roach_state_table[i].prev_num_kids);

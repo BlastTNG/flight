@@ -402,6 +402,7 @@ typedef struct roach
     unsigned int min_nkids;
     unsigned int max_nkids;
     unsigned int is_sweeping;
+    unsigned int read_temp;
 } roach_status_t;
 
 typedef struct roach_params

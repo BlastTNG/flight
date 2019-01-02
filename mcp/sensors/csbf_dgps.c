@@ -150,8 +150,8 @@ static void process_gngga(const char *m_data) {
         CSBFGPSData.isnew = 1;
         have_warned = 0;
          if (first_time) {
-            blast_info("Recieved first GNGGA packet:");
-            blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
+             blast_info("Recieved first GNGGA packet:");
+             blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
                    CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
                    CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
                    first_time = 0;
@@ -206,7 +206,7 @@ static void process_gnzda(const char *m_data)
     static int first_time = 1;
     static int have_warned = 0;
     struct tm ts;
-    blast_info("Starting process_gnzda");
+    // blast_info("Starting process_gnzda");
     sscanf(m_data, "$GNZDA,"
             "%2d%2d%2d.%*d,"
             "%d,"

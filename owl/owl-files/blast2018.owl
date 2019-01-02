@@ -639,7 +639,19 @@
                             "_id": "189960814"
                         },
                         "_map": {
-                            "3": "Stop[style=Bold (P1059175281)]"
+                            "1": "Az El Goto[style=No style (P990340442)]",
+                            "10": "Quad[style=No style (P990340442)]",
+                            "11": "El Scan[style=No style (P990340442)]",
+                            "12": "El Box[style=No style (P990340442)]",
+                            "13": "Current[style=No style (P990340442)]",
+                            "2": "Az Scan[style=No style (P990340442)]",
+                            "3": "Stop[style=Bold (P1059175281)]",
+                            "4": "Ra Dec Goto[style=No style (P990340442)]",
+                            "5": "V Cap[style=No style (P990340442)]",
+                            "6": "Cap Scan[style=No style (P990340442)]",
+                            "7": "Box Scan[style=No style (P990340442)]",
+                            "8": "Locked[style=No style (P990340442)]",
+                            "9": "V Box[style=No style (P990340442)]"
                         }
                     },
                     "PObject": {
@@ -2110,6 +2122,6 @@
     "webPort": "0",
     "windowCellHeight": 60,
     "windowCellWidth": 90,
-    "windowHeight": 1028,
+    "windowHeight": 1020,
     "windowWidth": 1530
 }

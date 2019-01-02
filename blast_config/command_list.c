@@ -149,7 +149,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(clino_off), "turning off clinometers", GR_POWER},
   {COMMAND(of_lj_off), "turning off OF labjack", GR_POWER},
   {COMMAND(gps_timing_off), "turning off gps timing", GR_POWER},
-  {COMMAND(if_1_cycle), "powercycling if relay 1", GR_POWER},
+  {COMMAND(auto_pump_cycle), "powercycling auto pump", GR_POWER | CONFIRM},
   {COMMAND(if_lj_cycle), "powercycling IF labjack", GR_POWER},
   {COMMAND(timing_dist_cycle), "powercycling timing distribution box", GR_POWER},
   {COMMAND(vtx_cycle), "powercycling video transmitter", GR_POWER},
@@ -159,7 +159,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(if_8_cycle), "powercycling if relay 8", GR_POWER},
   {COMMAND(roach_cycle), "powercycling ROACH motel", GR_POWER},
   {COMMAND(cryo_hk_cycle), "powercycling cryo housekeeping", GR_POWER},
-  {COMMAND(if_relay_1_on), "turning on IF relay 1", GR_POWER},
+  {COMMAND(auto_pump_on), "turning on auto pump", GR_POWER | CONFIRM},
   {COMMAND(if_lj_on), "turning on IF labjack", GR_POWER},
   {COMMAND(timing_dist_on), "turning on timing distribution box", GR_POWER},
   {COMMAND(bi0_on), "turning on biphase transmitter", GR_POWER},
@@ -169,7 +169,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(if_relay_8_on), "turning on IF relay 8", GR_POWER},
   {COMMAND(roach_on), "turning on ROACH motel", GR_POWER},
   {COMMAND(cryo_hk_on), "turning on cryo housekeeping", GR_POWER},
-  {COMMAND(if_relay_1_off), "turning off IF relay 1", GR_POWER},
+  {COMMAND(auto_pump_off), "turning off auto pump", GR_POWER | CONFIRM},
   {COMMAND(if_lj_off), "turning off IF labjack", GR_POWER},
   {COMMAND(timing_dist_off), "turning off timing distribution box", GR_POWER},
   {COMMAND(bi0_off), "turning off biphase transmitter", GR_POWER},
@@ -351,6 +351,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
   {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
   {COMMAND(read_lo_all), "(All Roaches) Reads current LO frequencies", GR_ROACH},
+  {COMMAND(read_pi_temp_all), "(All Roaches) Reads current Pi temp", GR_ROACH},
   {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
@@ -1290,6 +1291,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
   {COMMAND(read_lo), "Read the LO frequency", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
+  {COMMAND(read_pi_temp), "Read Pi temp", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
