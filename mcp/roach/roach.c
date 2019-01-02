@@ -5072,12 +5072,12 @@ int roach_boot_sequence(roach_state_t *m_roach)
     //     destroy_rpc_katcl(m_roach->rpc_conn);
     //     blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
     // }
-    blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
+    // blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
     flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
     if (m_roach->katcp_fd < 0) {
         m_roach->katcp_connect_error = 1;
-        blast_err("ROACH%d: KATCP CONNECTION ERROR", m_roach->which);
+        // blast_err("ROACH%d: KATCP CONNECTION ERROR", m_roach->which);
         return retval;
     }
     m_roach->rpc_conn = create_katcl(m_roach->katcp_fd);
