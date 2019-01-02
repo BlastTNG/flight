@@ -657,6 +657,18 @@
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH1",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "919885767"
+                    },
+                    "_caption": "PI_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PI_TEMP_ROACH1",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 850,
@@ -1316,6 +1328,18 @@
                     "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2051746573"
+                    },
+                    "_caption": "PI_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PI_TEMP_ROACH2",
                     "type": "PNDI"
                 }
             ],
@@ -1977,6 +2001,18 @@
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH3",
                     "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "832956333"
+                    },
+                    "_caption": "PI_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PI_TEMP_ROACH3",
+                    "type": "PNDI"
                 }
             ],
             "geometryHeight": 850,
@@ -2637,6 +2673,18 @@
                     "_extremaID": "(P1407645461)",
                     "_format": "",
                     "_source": "IS_COMPRESSING_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2083694813"
+                    },
+                    "_caption": "PI_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PI_TEMP_ROACH5",
                     "type": "PNDI"
                 }
             ],
@@ -3780,8 +3828,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 62,
+    "windowCellHeight": 60,
     "windowCellWidth": 113,
-    "windowHeight": 1056,
+    "windowHeight": 1028,
     "windowWidth": 1920
 }
