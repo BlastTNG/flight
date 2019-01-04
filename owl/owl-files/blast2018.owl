@@ -2330,7 +2330,7 @@
             },
             "_boxTitle": "Stepper INITs",
             "_style": "(P2072147126)",
-            "cellHeight": 19,
+            "cellHeight": 11,
             "cellWidth": 15,
             "cellX": 68,
             "cellY": 0,
@@ -2526,8 +2526,8 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 323,
-            "geometryWidth": 255,
+            "geometryHeight": 188,
+            "geometryWidth": 256,
             "geometryX": 1156,
             "geometryY": 0
         },
@@ -2537,10 +2537,10 @@
             },
             "_boxTitle": "Balance System",
             "_style": "(P150990864)",
-            "cellHeight": 18,
+            "cellHeight": 6,
             "cellWidth": 15,
             "cellX": 68,
-            "cellY": 19,
+            "cellY": 11,
             "dataItems": [
                 {
                     "PMDI": {
@@ -2622,10 +2622,69 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 307,
+            "geometryHeight": 103,
             "geometryWidth": 256,
             "geometryX": 1156,
-            "geometryY": 323
+            "geometryY": 187
+        },
+        {
+            "PObject": {
+                "_id": "94424902"
+            },
+            "_boxTitle": "Charge Controllers",
+            "_style": "(P2072147126)",
+            "cellHeight": 4,
+            "cellWidth": 15,
+            "cellX": 68,
+            "cellY": 17,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1840902981"
+                        },
+                        "_map": {
+                            "4": "Fault[style=Important (P564751211)]",
+                            "5": "Bulk charging[style=No style (P1742122063)]",
+                            "6": "Absorption[style=Important Green (P1055304642)]",
+                            "7": "Float[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "578980185"
+                    },
+                    "_caption": "CC1 State                 ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_CC1",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1840902981"
+                        },
+                        "_map": {
+                            "4": "Fault[style=Important (P564751211)]",
+                            "5": "Bulk charging[style=No style (P1742122063)]",
+                            "6": "Absorption[style=Important Green (P1055304642)]",
+                            "7": "Float[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1145948315"
+                    },
+                    "_caption": "CC2 State        ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_CC2",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 69,
+            "geometryWidth": 256,
+            "geometryX": 1156,
+            "geometryY": 289
         }
     ],
     "extremas": [
