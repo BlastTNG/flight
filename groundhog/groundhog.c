@@ -89,6 +89,7 @@ void daemonize()
 linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile, linklist_t * ll, char * symname) {
   if (ll_rawfile) {
     close_and_free_linklist_rawfile(ll_rawfile);
+    ll_rawfile = NULL;
   } 
   char filename[128];
   make_linklist_rawfile_name(ll, filename);
