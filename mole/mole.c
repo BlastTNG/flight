@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
 
       // there is no data on the server
       if (recv_flags & TCPCONN_NO_DATA) {
-        usleep(50000);
+        sleep(5);
         continue;
       } 
 
