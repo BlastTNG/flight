@@ -9,10 +9,11 @@ enc_real_err_hwpr
 pos_hwpr
 pos0_hwpr
 pos1_hwpr
-vel_hwpr
-acc_hwpr
 i_move_hwpr
 i_hold_hwpr
-
 stat_control_hwpr
+vel_hwpr
+acc_hwpr
+i_pos_rq_hwpr
+
 td_m4
