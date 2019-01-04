@@ -2294,7 +2294,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens_conserve:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 23.0)) {
           CommandData.roach_params[ivalues[0]-1].set_out_atten = rvalues[1];
           CommandData.roach[ivalues[0]-1].set_attens = 4;
       }

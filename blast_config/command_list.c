@@ -1110,14 +1110,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 24.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
@@ -1138,14 +1138,14 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(set_attens_all), "Set all attenuators to same values (input/output)", GR_ROACH, 2,
     {
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"new_out_atten", 0.0, 30.0, 'd', "NONE"}
+      {"new_out_atten", 0.0, 31.0, 'd', "NONE"}
     }
   },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
