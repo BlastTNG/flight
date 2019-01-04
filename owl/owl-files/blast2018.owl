@@ -824,6 +824,44 @@
                     "_defaultStyle": "noStyle",
                     "_source": "PIN_IN_LOCK",
                     "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1378360889"
+                        },
+                        "_map": {
+                            "0": "ON",
+                            "1": "OFF[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1050864069"
+                    },
+                    "_caption": "AZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "DISABLE_AZ",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "2023667558"
+                        },
+                        "_map": {
+                            "0": "ON",
+                            "1": "OFF[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "834225571"
+                    },
+                    "_caption": "EL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "DISABLE_EL",
+                    "type": "PMDI"
                 }
             ],
             "geometryHeight": 782,
@@ -2285,6 +2323,309 @@
             "geometryWidth": 749,
             "geometryX": 1734,
             "geometryY": 1360
+        },
+        {
+            "PObject": {
+                "_id": "639458965"
+            },
+            "_boxTitle": "Stepper INITs",
+            "_style": "(P2072147126)",
+            "cellHeight": 19,
+            "cellWidth": 15,
+            "cellX": 68,
+            "cellY": 3,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1209999247"
+                    },
+                    "_caption": "M2 Act1   ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "ACT0_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1899460318"
+                    },
+                    "_caption": "M2 Act2     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "ACT1_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "423653054"
+                    },
+                    "_caption": "M2 Act3     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "ACT2_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "212615885"
+                    },
+                    "_caption": "Balance  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "BAL_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "185710704"
+                    },
+                    "_caption": "Lock    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LOCK_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "864706961"
+                    },
+                    "_caption": "HWPR  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "HWPR_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "279916075"
+                    },
+                    "_caption": "Shutter     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "SHUTTER_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "924194786"
+                    },
+                    "_caption": "Pot valve     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "PUMPED_POT_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "78197534"
+                    },
+                    "_caption": "Pump line valve          ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "PUMP_VALVE_INIT_ACTBUS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1461143059"
+                        },
+                        "_map": {
+                            "0": "Not ok[style=Important (P564751211)]",
+                            "1": "OK[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1702909300"
+                    },
+                    "_caption": "Boiloff valve     ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "FILL_VALVE_INIT_ACTBUS",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 647,
+            "geometryWidth": 511,
+            "geometryX": 2312,
+            "geometryY": 102
+        },
+        {
+            "PObject": {
+                "_id": "913038580"
+            },
+            "_boxTitle": "Balance System",
+            "_style": "(P150990864)",
+            "cellHeight": 17,
+            "cellWidth": 15,
+            "cellX": 68,
+            "cellY": 22,
+            "dataItems": [
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1790389500"
+                        },
+                        "_map": {
+                            "0": "Negative",
+                            "1": "Stopped",
+                            "2": "Positive[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2030314129"
+                    },
+                    "_caption": "Direction               ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "DIR_BAL",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1906115293"
+                        },
+                        "_map": {
+                            "15": "Bottom[style=No style (P1854549118)]",
+                            "3": "Middle[style=No style (P1854549118)]",
+                            "7": "Top[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "61137121"
+                    },
+                    "_caption": "Limits",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "LIM_BAL",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1952115694"
+                        },
+                        "_map": {
+                            "0": "Rest[style=No style (P1854549118)]",
+                            "1": "Manual[style=No style (P1854549118)]",
+                            "2": "Auto[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "881259441"
+                    },
+                    "_caption": "Mode",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "MODE_BAL",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1519146043"
+                        },
+                        "_map": {
+                            "0": "No[style=No style (P1854549118)]",
+                            "1": "Yes[style=No style (P1854549118)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "1703149709"
+                    },
+                    "_caption": "Moving?",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "MOVING_BAL",
+                    "type": "PMDI"
+                }
+            ],
+            "geometryHeight": 579,
+            "geometryWidth": 511,
+            "geometryX": 2312,
+            "geometryY": 748
         }
     ],
     "extremas": [
