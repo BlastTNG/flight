@@ -312,10 +312,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -449,10 +449,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 187,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 442
+            "geometryHeight": 374,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 884
         },
         {
             "PObject": {
@@ -617,10 +617,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 221,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 51
+            "geometryHeight": 442,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -826,10 +826,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -1056,10 +1056,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 867,
-            "geometryY": 51
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1734,
+            "geometryY": 102
         },
         {
             "PObject": {
@@ -1219,10 +1219,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 289,
-            "geometryX": 867,
-            "geometryY": 442
+            "geometryHeight": 476,
+            "geometryWidth": 578,
+            "geometryX": 1734,
+            "geometryY": 884
         },
         {
             "PObject": {
@@ -1344,10 +1344,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 629
+            "geometryHeight": 340,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 1258
         },
         {
             "PObject": {
@@ -1541,10 +1541,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 272,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 357
+            "geometryHeight": 544,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 714
         },
         {
             "PObject": {
@@ -1690,10 +1690,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 204,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 629
+            "geometryHeight": 408,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 1258
         },
         {
             "PObject": {
@@ -1803,10 +1803,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 799
+            "geometryHeight": 340,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 1598
         },
         {
             "PObject": {
@@ -1904,10 +1904,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 136,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 833
+            "geometryHeight": 272,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 1666
         },
         {
             "PObject": {
@@ -2035,10 +2035,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 442
+            "geometryHeight": 476,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 884
         },
         {
             "PObject": {
@@ -2202,12 +2202,26 @@
                     "_defaultStyle": "noStyle",
                     "_source": "VETO_EL_CLIN",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "890142920"
+                    },
+                    "_caption": "Gyro Mask",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_highWord": "",
+                    "_lowWord": "",
+                    "_nBits": 6,
+                    "_source": "MASK_GY",
+                    "type": "PBDI"
                 }
             ],
-            "geometryHeight": 222,
-            "geometryWidth": 290,
-            "geometryX": 578,
-            "geometryY": 680
+            "geometryHeight": 442,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 1360
         },
         {
             "PObject": {
@@ -2216,7 +2230,7 @@
             "_boxTitle": "Telemetry",
             "_style": "(P2146903282)",
             "cellHeight": 13,
-            "cellWidth": 20,
+            "cellWidth": 22,
             "cellX": 51,
             "cellY": 40,
             "dataItems": [
@@ -2267,10 +2281,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 222,
-            "geometryWidth": 341,
-            "geometryX": 867,
-            "geometryY": 680
+            "geometryHeight": 443,
+            "geometryWidth": 749,
+            "geometryX": 1734,
+            "geometryY": 1360
         }
     ],
     "extremas": [
@@ -2278,15 +2292,15 @@
             "PObject": {
                 "_id": "1555967448"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "closed",
             "_shigh": "(P1913941534)",
             "_slow": "(P2017040817)",
             "_sxhigh": "(P956360347)",
             "_sxlow": "(P949614266)",
-            "_xhigh": "2",
-            "_xlow": "-2"
+            "_xhigh": 2,
+            "_xlow": -2
         }
     ],
     "linkNames": [
@@ -2306,10 +2320,10 @@
             "cellWidth": 5,
             "cellX": 19,
             "cellY": 15,
-            "geometryHeight": 119,
-            "geometryWidth": 85,
-            "geometryX": 323,
-            "geometryY": 255
+            "geometryHeight": 238,
+            "geometryWidth": 170,
+            "geometryX": 646,
+            "geometryY": 510
         }
     ],
     "styles": [
@@ -2512,9 +2526,9 @@
             "_name": "Veto"
         }
     ],
-    "webPort": "0",
-    "windowCellHeight": 69,
+    "webPort": "\u0000",
+    "windowCellHeight": 60,
     "windowCellWidth": 109,
-    "windowHeight": 1176,
-    "windowWidth": 1855
+    "windowHeight": 2049,
+    "windowWidth": 3706
 }
