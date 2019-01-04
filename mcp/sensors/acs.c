@@ -1607,7 +1607,7 @@ void store_1hz_acs(void)
         firsttime = 0;
     }
     i_point = GETREADINDEX(point_index);
-    SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
+    SET_SCALED_VALUE(OffsetIFyawDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
     SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifrolldgps_gy);
     SET_SCALED_VALUE(latDGPSAddr, CSBFGPSData.latitude);
     SET_SCALED_VALUE(lonDGPSAddr, CSBFGPSData.longitude);
