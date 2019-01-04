@@ -22,8 +22,6 @@ lims_pumpvalve
 pos_pumpvalve
 lims_fillvalve
 pos_fillvalve
-i_hold_shutter
-i_move_shutter
 vel_shutter
 i_close_potvalve
 i_open_potvalve
@@ -31,3 +29,4 @@ i_pos_rq_hwpr
 thresh_open_potvalve
 thresh_clos_potvalve
 threshlclos_potvalve
+chatter

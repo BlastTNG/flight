@@ -50,3 +50,4 @@ control_word_write_piv 255 1
 control_word_read_rw 255 1
 control_word_write_rw 255 1
 veto_sensor 255 1
+chatter
