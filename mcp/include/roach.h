@@ -82,6 +82,7 @@ typedef enum {
     ROACH_STATE_PROGRAMMED = 2,
     ROACH_STATE_CONFIGURED = 3,
     ROACH_STATE_STREAMING = 4,
+    ROACH_STATE_HALT = 5,
 } e_roach_state;
 
 typedef enum {
