@@ -1252,7 +1252,7 @@ int valon_client(pi_state_t *m_pi, char *command)
     // If read flag = 1, parse response and store
     int status = -1;
     int s;
-    struct sockaddr_in sin;
+    struct sockaddr_in sin, client;
     struct hostent *hp;
     // char vcommand[strlen(argv[1]) + strlen(argv[2])];
     char buff[1024];
@@ -1263,10 +1263,17 @@ int valon_client(pi_state_t *m_pi, char *command)
         return status;
     }
     int one = 1;
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &one, sizeof(int)) < 0) {
         blast_err("Pi%d: Set sock options failed", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
+    }
+    /* bind client */
+    client.sin_family = AF_INET;
+    client.sin_addr.s_addr = INADDR_ANY;
+    client.sin_port = htons(50000);
+    if (bind(s, (struct sockaddr*) &client, sizeof(struct sockaddr)) < 0) {
+        blast_err("Pi%d: Unable to bind", m_pi->which);
     }
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
