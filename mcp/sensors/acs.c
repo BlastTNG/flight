@@ -1529,8 +1529,8 @@ void store_5hz_acs(void)
     SET_FLOAT(gy_totalaccel_addr, (float) (PointingData[i_point].gy_total_accel));
 
     /************* Pointing mode fields *************/
-    SET_UINT16(slewVetoAddr, (uint16_t)((float)(CommandData.pointing_mode.nw))/SR);
-    SET_UINT16(svetoLenAddr, (uint16_t)((float)(CommandData.slew_veto))/SR);
+    SET_UINT16(slewVetoAddr, (uint16_t)((float)(CommandData.pointing_mode.nw)/SR));
+    SET_UINT16(svetoLenAddr, (uint16_t)((float)(CommandData.slew_veto)/SR));
     SET_SCALED_VALUE(nextIHwprPAddr, (CommandData.pointing_mode.next_i_hwpr));
     SET_SCALED_VALUE(nextIDithPAddr, (CommandData.pointing_mode.next_i_dith));
     SET_SCALED_VALUE(nDithPAddr, (CommandData.pointing_mode.n_dith));
