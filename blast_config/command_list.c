@@ -674,7 +674,7 @@ struct mcom mcommands[plugh + 2] = {
     }
 },
 
-  {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
+  {COMMAND(slew_veto), "set the length of the gyro offset slew veto (s)", GR_TRIM,
     1,
     {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
