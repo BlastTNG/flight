@@ -1187,6 +1187,12 @@ int atten_client(pi_state_t *m_pi, char *command)
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
     }
+    int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        return status;
+    }
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
         blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
@@ -1253,6 +1259,12 @@ int valon_client(pi_state_t *m_pi, char *command)
     // bzero(command, sizeof(command));
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        return status;
+    }
+    int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
     }
@@ -2445,6 +2457,12 @@ int get_pi_temp(pi_state_t *m_pi)
     char write_this[] = "1";
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", m_pi->which);
+        return status;
+    }
+    int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
     }
     /* Gets, validates host; stores address in hostent structure. */

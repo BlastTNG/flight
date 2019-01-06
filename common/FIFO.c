@@ -356,7 +356,7 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
 */
 int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt, uint8_t * packet) {
-  // check for invalid pointers` 
+  // check for invalid pointers
   if (!buffer || !packet || !buffer_size || !i_pkt || !n_pkt) return -1;
 
   // nonsense values for i_pkt
