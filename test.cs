@@ -1883,6 +1883,7 @@ STATE_ROACH5 PHASE state_roach5 0
 ROACH_TRIG_TURN_RETUNE PHASE roach_trig_turn_retune 0
 ROACH_AUTO_CHECK_CYCLE PHASE roach_auto_check_cycle 0
 ROACH_FRIDGE_CYCLE_WARNING PHASE roach_fridge_cycle_warning 0
+ROACH_ENABLE_CAL_PULSE PHASE roach_enable_cal_pulse 0
 DF_RETUNE_THRESH_ROACH1 PHASE df_retune_thresh_roach1 0
 DF_RETUNE_THRESH_ROACH2 PHASE df_retune_thresh_roach2 0
 DF_RETUNE_THRESH_ROACH3 PHASE df_retune_thresh_roach3 0
@@ -1959,6 +1960,11 @@ CURRENT_NTONES_ROACH2 PHASE current_ntones_roach2 0
 CURRENT_NTONES_ROACH3 PHASE current_ntones_roach3 0
 CURRENT_NTONES_ROACH4 PHASE current_ntones_roach4 0
 CURRENT_NTONES_ROACH5 PHASE current_ntones_roach5 0
+PI_TEMP_ROACH1 PHASE pi_temp_roach1 0
+PI_TEMP_ROACH2 PHASE pi_temp_roach2 0
+PI_TEMP_ROACH3 PHASE pi_temp_roach3 0
+PI_TEMP_ROACH4 PHASE pi_temp_roach4 0
+PI_TEMP_ROACH5 PHASE pi_temp_roach5 0
 LO_FREQ_REQ_ROACH1 PHASE lo_freq_req_roach1 0
 LO_FREQ_REQ_ROACH2 PHASE lo_freq_req_roach2 0
 LO_FREQ_REQ_ROACH3 PHASE lo_freq_req_roach3 0
