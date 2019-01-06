@@ -138,7 +138,7 @@ void biphase_receive(void *args)
           // Fill receive and anti receive
           receive_buffer[i_word] = raw_word_in;
           anti_receive_buffer[i_word] = ~raw_word_in;
-          if (i_word == 0) {
+          if (i_word >= 0) {
               // Beginning of packet?
               du = ioctl(decom_fp, DECOM_IOC_NUM_UNLOCKED);
               if ((raw_word_in != sync_word) && (raw_word_in != (uint16_t) ~sync_word)) {
