@@ -305,6 +305,8 @@ static void connected(ph_sock_t *m_sock, int m_status, int m_errcode, const ph_s
     state->connected = true;
     state->backoff_sec = min_backoff_sec;
     m_sock->callback = mult_labjack_process_stream;
+    m_sock->timeout_duration.tv_sec = 2;
+    m_sock->timeout_duration.tv_usec = 0;
     m_sock->job.data = state;
     ph_sock_enable(state->sock, true);
 }
@@ -443,6 +445,8 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     ph_unused_parameter(m_job);
     ph_unused_parameter(m_why);
     labjack_state_t *state = (labjack_state_t*)m_data;
+
+    state->initialized = true;
 
     if (!state->have_warned_connect) blast_info("Connecting to %s", state->address);
     state->have_warned_connect = 1;

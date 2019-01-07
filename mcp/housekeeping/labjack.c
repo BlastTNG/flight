@@ -591,6 +591,7 @@ static void connect_lj(ph_job_t *m_job, ph_iomask_t m_why, void *m_data)
     state->initialized = true;
 
     if (!state->have_warned_connect) blast_info("Connecting to %s", state->address);
+    state->have_warned_connect = 1;
     ph_sock_resolve_and_connect(state->address, state->port, 0,
         &state->timeout, PH_SOCK_CONNECT_RESOLVE_SYSTEM, connected, m_data);
 }
