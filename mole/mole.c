@@ -107,6 +107,7 @@ void USAGE(void) {
       "                        The default is /data/mole.\n"
       " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
       "                        Relative paths are w.r.t. /data/rawdir.\n"
+      " -r  --rate             Expected data rate (Hz) for receiving data (default 20).\n"
       " -s  --server           Run a server for other mole clients to connect to.\n"
       " -ns --no-server        Don't run a server (default).\n"
       " -S  --start X          Starting frame to read. Ignores rewind if specified.\n"
@@ -156,6 +157,7 @@ int main(int argc, char *argv[]) {
   unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
   int bin_backup = 0;
   char filename_selection[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  unsigned int nodata_timeout = 50000; // default rate is 20 Hz = 1.0e6/50000
 
   // configure the TCP connection
   tcpconn.flag |= TCPCONN_LOOP;
@@ -236,6 +238,9 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--block-size") == 0) ||
                (strcmp(argv[i], "-bs") == 0)) { // flush files after number of frames received
       num_frames_per_flush = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "--rate") == 0) ||
+               (strcmp(argv[i], "-r") == 0)) { // expected data rate
+      nodata_timeout = 1.0e6/atof(argv[++i]);
     } else if ((strcmp(argv[i], "--filename") == 0) ||
                (strcmp(argv[i], "-F") == 0)) { // select file by name
       strcpy(filename_selection, argv[++i]);
@@ -338,7 +343,7 @@ int main(int argc, char *argv[]) {
 
       // there is no data on the server
       if (recv_flags & TCPCONN_NO_DATA) {
-        sleep(5);
+        usleep(nodata_timeout);
         continue;
       } 
 
