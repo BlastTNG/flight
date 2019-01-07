@@ -62,3 +62,7 @@ linklistcheck/*.ll
 linklistcheck/superframe.txt
 
 scripts_gse/sonos.log
+
+sched_upload/sanity
+sched_upload/sched_upload
+sched_upload/test.cs
