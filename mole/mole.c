@@ -119,12 +119,12 @@ void USAGE(void) {
 }
 
 void print_display(char * text, unsigned int recv_framenum) {
-	static char spin[] = "/-\\|";
+  static char spin[] = "/-\\|";
   static unsigned int s = 0;
   static unsigned int prev_framenum = 0;
   static unsigned int idle_count = 0;
 
-	char arrow[13] = "------------";
+  char arrow[13] = "------------";
 
   if (recv_framenum == prev_framenum) {
     idle_count++;
@@ -137,13 +137,13 @@ void print_display(char * text, unsigned int recv_framenum) {
     s = (s+1)%4;
   }
 
-	arrow[s%12] = '>';
-	arrow[(s+4)%12] = '>';
-	arrow[(s+8)%12] = '>';
-	arrow[10] = '\0';
-	printf("%c Frame %d %s %s", spin[s], recv_framenum, arrow, text);
-	printf("\r");
-	fflush(stdout); 
+  arrow[s%12] = '>';
+  arrow[(s+4)%12] = '>';
+  arrow[(s+8)%12] = '>';
+  arrow[10] = '\0';
+  printf("%c Frame %d %s %s", spin[s], recv_framenum, arrow, text);
+  printf("\r");
+  fflush(stdout); 
 }
 
 int main(int argc, char *argv[]) {
@@ -292,34 +292,34 @@ int main(int argc, char *argv[]) {
       // the file on the server has switched, so resync 
       if (resync) {
         // sync with the server and get the initial framenum
-				req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, flags, &superframe, &linklist);
-				req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
+        req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, flags, &superframe, &linklist);
+        req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
 
-				printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
+        printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
 
-				// open linklist dirfile
-				sprintf(filename, "%s/%s", mole_dir, linklistname);
+        // open linklist dirfile
+        sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
-				ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_flags);
-				unlink(symdir_name);
-				symlink(filename, symdir_name);  
+        ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_flags);
+        unlink(symdir_name);
+        symlink(filename, symdir_name);  
 
         // open the linklist rawfile
-				sprintf(filename, "%s/%s", archive_dir, linklistname);
+        sprintf(filename, "%s/%s", archive_dir, linklistname);
         if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
-				ll_rawfile = open_linklist_rawfile_opt(filename, linklist, (bin_backup) ? 0 : LL_RAWFILE_DUMMY);
+        ll_rawfile = open_linklist_rawfile_opt(filename, linklist, (bin_backup) ? 0 : LL_RAWFILE_DUMMY);
         if (bin_backup) {
-				  create_rawfile_symlinks(ll_rawfile, symraw_name);
+          create_rawfile_symlinks(ll_rawfile, symraw_name);
         }
 
-				// set the first framenum request
+        // set the first framenum request
         if ((start_frame < end_frame) && (start_frame < req_init_framenum)) { // start-end mode
           req_framenum = start_frame;
           if ((end_frame != UINT64_MAX) && (end_frame > req_init_framenum)) end_frame = req_init_framenum;
           linklist_info("Reading frames %" PRIu64" to %" PRIu64 "\n", start_frame, end_frame);
         } else { // rewind mode
-				  req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-				  req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+          req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
+          req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
         }
 
         resync = 0;
@@ -333,13 +333,13 @@ int main(int argc, char *argv[]) {
       }
   
       // send data request a rawfile has been opened 
-			recv_flags = 0;
-			recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
-			if ((recv_flags & TCPCONN_FILE_RESET) || (recv_framenum < 0)) { 
-				linklist_err("Data request failed\n");
-				resync = 1;
+      recv_flags = 0;
+      recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
+      if ((recv_flags & TCPCONN_FILE_RESET) || (recv_framenum < 0)) { 
+        linklist_err("Data request failed\n");
+        resync = 1;
         continue;
-			}
+      }
 
       // there is no data on the server
       if (recv_flags & TCPCONN_NO_DATA) {
@@ -348,44 +348,44 @@ int main(int argc, char *argv[]) {
       } 
 
       // get the data from the server
-			if (retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize) < 0) {
-				linklist_err("Data retrieve failed\n");
+      if (retrieve_data(&tcpconn, recv_buffer, ll_rawfile->framesize) < 0) {
+        linklist_err("Data retrieve failed\n");
         resync = 1;
         continue;
       }
 
       /* all flags are cleared at this point */
 
-			// write the dirfile
+      // write the dirfile
       if (ll_dirfile) {
-			  if (!(frame_i % num_frames_per_flush)) seek_linklist_dirfile(ll_dirfile, recv_framenum);
-			  write_linklist_dirfile_opt(ll_dirfile, recv_buffer, 0);
+        if (!(frame_i % num_frames_per_flush)) seek_linklist_dirfile(ll_dirfile, recv_framenum);
+        write_linklist_dirfile_opt(ll_dirfile, recv_buffer, 0);
         if (!(frame_i % num_frames_per_flush)) flush_linklist_dirfile(ll_dirfile);
       }
 
-			// write the rawfile
+      // write the rawfile
       if (bin_backup && ll_rawfile) {
-			  seek_linklist_rawfile(ll_rawfile, recv_framenum);
-			  write_linklist_rawfile_opt(ll_rawfile, recv_buffer, 0);
+        seek_linklist_rawfile(ll_rawfile, recv_framenum);
+        write_linklist_rawfile_opt(ll_rawfile, recv_buffer, 0);
         if (!(frame_i % num_frames_per_flush)) flush_linklist_rawfile(ll_rawfile);
       }
 
 /* 
-			int i;
-			for (i = 0; i < recv_size; i++) {
-				if (i % 32 == 0) printf("\n%.4d: ", i/32);
-				printf("0x%.2x ", recv_buffer[i]);
-			}
-			printf("\n");
+      int i;
+      for (i = 0; i < recv_size; i++) {
+        if (i % 32 == 0) printf("\n%.4d: ", i/32);
+        printf("0x%.2x ", recv_buffer[i]);
+      }
+      printf("\n");
 */
       if (recv_framenum >= end_frame) {
         linklist_info("\n\nFinished reading up to frame %" PRIi64".\n", recv_framenum);
         exit(0);
       }
 
-			memset(recv_buffer, 0, buffer_size);
-			memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
-			req_framenum++;
+      memset(recv_buffer, 0, buffer_size);
+      memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
+      req_framenum++;
       frame_i++;
     }
   }
