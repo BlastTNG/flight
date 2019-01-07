@@ -3921,7 +3921,7 @@ void InitCommandData()
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
 
-    CommandData.balance.vel = 1600;
+    CommandData.balance.vel = 6400;
     CommandData.balance.acc = 1000;
     CommandData.balance.move_i = 20;
     CommandData.balance.hold_i = 0;
