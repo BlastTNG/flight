@@ -3501,9 +3501,9 @@ void InitCommandData()
 
     // CommandData.Cryo.BDAHeat = 0;
 
-    CommandData.Cryo.potvalve_on = 1;
-	CommandData.Cryo.valve_stop[0] = 0;
-	CommandData.Cryo.valve_stop[1] = 0;
+    CommandData.Cryo.potvalve_on = 0;
+	CommandData.Cryo.valve_stop[0] = 1;
+	CommandData.Cryo.valve_stop[1] = 1;
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
@@ -3920,6 +3920,7 @@ void InitCommandData()
     CommandData.hwpr.acc = 1000;
     CommandData.hwpr.move_i = 20;
     CommandData.hwpr.hold_i = 0;
+    CommandData.hwpr.margin = 2;
 
     CommandData.balance.vel = 6400;
     CommandData.balance.acc = 1000;
@@ -3945,9 +3946,9 @@ void InitCommandData()
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 10000;
     CommandData.Cryo.valve_vel = 50000;
-    CommandData.Cryo.valve_move_i = 75;
+    CommandData.Cryo.valve_move_i = 30;
     CommandData.Cryo.valve_hold_i = 0;
-    CommandData.Cryo.valve_acc = 16;
+    CommandData.Cryo.valve_acc = 10;
 
 
     /* hwpr positions separated by 22.5 degs.
