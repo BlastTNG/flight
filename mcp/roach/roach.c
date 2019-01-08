@@ -1187,6 +1187,13 @@ int atten_client(pi_state_t *m_pi, char *command)
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
     }
+    /*
+    int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        return status;
+    }*/
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
         blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
@@ -1246,20 +1253,34 @@ int valon_client(pi_state_t *m_pi, char *command)
     // If read flag = 1, parse response and store
     int status = -1;
     int s;
-    struct sockaddr_in sin;
+    struct sockaddr_in sin; // , client;
     struct hostent *hp;
     // char vcommand[strlen(argv[1]) + strlen(argv[2])];
     char buff[1024];
-    // bzero(command, sizeof(command));
+    // int src_port = 50000 + (m_pi->which - 1);
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         blast_err("Pi%d: Socket failed", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
         return status;
     }
+    /* int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        return status;
+    } */
+    /* bind client */
+    /* client.sin_family = AF_INET;
+    client.sin_addr.s_addr = INADDR_ANY;
+    client.sin_port = htons(src_port);
+    if (bind(s, (struct sockaddr*) &client, sizeof(struct sockaddr)) < 0) {
+        blast_err("Pi%d: Unable to bind", m_pi->which);
+    }*/
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
         blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        close(s);
         return status;
     }
     /* Assigns port number. */
@@ -1271,6 +1292,7 @@ int valon_client(pi_state_t *m_pi, char *command)
     if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
         blast_err("ROACH%d: Connection Error", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        close(s);
         return status;
     }
     bzero(buff, sizeof(buff));
@@ -1278,11 +1300,13 @@ int valon_client(pi_state_t *m_pi, char *command)
     // printf("STATUS = %d\n", status);
         blast_err("ROACH%d: Error sending Pi command", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        close(s);
         return status;
     }
     if ((status = read(s, buff, sizeof(buff))) < 0) {
         blast_err("ROACH%d: Error receiving Pi response", m_pi->which);
         roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        close(s);
         return status;
     }
     // printf("STATUS = %d\n", status);
@@ -2447,6 +2471,13 @@ int get_pi_temp(pi_state_t *m_pi)
         blast_err("Pi%d: Socket failed", m_pi->which);
         return status;
     }
+    /*
+    int one = 1;
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0) {
+        blast_err("Pi%d: Set sock options failed", m_pi->which);
+        roach_state_table[m_pi->which - 1].pi_error_count += 1;
+        return status;
+    } */
     /* Gets, validates host; stores address in hostent structure. */
     if ((hp = gethostbyname(m_pi->address)) == NULL) {
         blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
@@ -5068,11 +5099,11 @@ int roach_boot_sequence(roach_state_t *m_roach)
     // blast_info("ROACH%d: INSIDE BOOT SEQ", m_roach->which);
     int retval = -1;
     int flags = 0;
-    // if (m_roach->rpc_conn) {
-    //     destroy_rpc_katcl(m_roach->rpc_conn);
-    //     blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
-    // }
-    // blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
+    if (m_roach->rpc_conn) {
+         destroy_rpc_katcl(m_roach->rpc_conn);
+         blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
+    }
+    blast_info("ROACH%d: ATTEMPTING TO CONNECT TO %s", m_roach->which, m_roach->address);
     flags = NETC_VERBOSE_ERRORS | NETC_VERBOSE_STATS;
     m_roach->katcp_fd = net_connect(m_roach->address, 0, flags);
     if (m_roach->katcp_fd < 0) {

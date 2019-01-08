@@ -80,7 +80,7 @@
 #define PSS_IMAX  8192.  // Maximum current (place holder for now)
 // TODO(Paul): PSS_NOISE based on outside tests with Giles at LDB,
 // should change before flight based on desk/dance floor tests
-#define PSS_NOISE     0.2
+// #define PSS_NOISE     0.2
 #define PSS_XSTRETCH  1.  // 0.995
 #define PSS_YSTRETCH  1.  // 1.008
 

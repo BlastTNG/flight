@@ -415,7 +415,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Distance offset",  -10.0, 10.0, 'f', "NONE"},
       {"Azimuth offset",   -10.0, 10.0, 'f', "NONE"},
       {"Elevation offset", -10.0, 10.0, 'f', "NONE"},
-      {"Roll offset",      -10.0, 10.0, 'f', "NONE"},
+      {"Roll offset",      -180.0, 180.0, 'f', "NONE"},
     }
   },
 
@@ -459,17 +459,17 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(pss_set_noise), "set pss noise level", GR_TRIM | GR_PSS, 1,
     {
-      {"RMS deviation of summed voltages (volts)", 0.0, 10.0, 'f', "PSS_NOISE"},
+      {"RMS deviation of summed voltages (volts)", 0.0, 10.0, 'f', "NOISE_PSS"},
     }
   },
   {COMMAND(pss_cal_roll), "set pss roll calibration (deg)", GR_TRIM | GR_PSS, 6,
     {
-      {"Roll offset 1", -10.0, 10.0, 'f', "CAL_ROLL_PSS1"},
-      {"Roll offset 2", -10.0, 10.0, 'f', "CAL_ROLL_PSS2"},
-      {"Roll offset 3", -10.0, 10.0, 'f', "CAL_ROLL_PSS3"},
-      {"Roll offset 4", -10.0, 10.0, 'f', "CAL_ROLL_PSS4"},
-      {"Roll offset 5", -10.0, 10.0, 'f', "CAL_ROLL_PSS5"},
-      {"Roll offset 6", -10.0, 10.0, 'f', "CAL_ROLL_PSS6"},
+      {"Roll offset 1", -180.0, 180.0, 'f', "CAL_ROLL_PSS1"},
+      {"Roll offset 2", -180.0, 180.0, 'f', "CAL_ROLL_PSS2"},
+      {"Roll offset 3", -180.0, 180.0, 'f', "CAL_ROLL_PSS3"},
+      {"Roll offset 4", -180.0, 180.0, 'f', "CAL_ROLL_PSS4"},
+      {"Roll offset 5", -180.0, 180.0, 'f', "CAL_ROLL_PSS5"},
+      {"Roll offset 6", -180.0, 180.0, 'f', "CAL_ROLL_PSS6"},
     }
   },
   {COMMAND(autotrim_to_sc), "enable auto-trim to ISC/OSC", GR_TRIM, 3,
@@ -674,7 +674,7 @@ struct mcom mcommands[plugh + 2] = {
     }
 },
 
-  {COMMAND(slew_veto), "set the length of the gyro offset slew veto", GR_TRIM,
+  {COMMAND(slew_veto), "set the length of the gyro offset slew veto (s)", GR_TRIM,
     1,
     {
       {"Slew Veto (s)", 0., 1200., 'f', "SVETO_LEN"},
@@ -1110,14 +1110,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 24.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
@@ -1138,14 +1138,14 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(set_attens_all), "Set all attenuators to same values (input/output)", GR_ROACH, 2,
     {
-      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"new_out_atten", 0.0, 30.0, 'd', "NONE"}
+      {"new_out_atten", 0.0, 31.0, 'd', "NONE"}
     }
   },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,

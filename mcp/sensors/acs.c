@@ -1529,8 +1529,8 @@ void store_5hz_acs(void)
     SET_FLOAT(gy_totalaccel_addr, (float) (PointingData[i_point].gy_total_accel));
 
     /************* Pointing mode fields *************/
-    SET_SCALED_VALUE(slewVetoAddr, ((float)(CommandData.pointing_mode.nw))/SR);
-    SET_SCALED_VALUE(svetoLenAddr, ((float)(CommandData.slew_veto))/SR);
+    SET_UINT16(slewVetoAddr, (uint16_t)((float)(CommandData.pointing_mode.nw)/SR));
+    SET_UINT16(svetoLenAddr, (uint16_t)((float)(CommandData.slew_veto)/SR));
     SET_SCALED_VALUE(nextIHwprPAddr, (CommandData.pointing_mode.next_i_hwpr));
     SET_SCALED_VALUE(nextIDithPAddr, (CommandData.pointing_mode.next_i_dith));
     SET_SCALED_VALUE(nDithPAddr, (CommandData.pointing_mode.n_dith));
@@ -1607,7 +1607,7 @@ void store_1hz_acs(void)
         firsttime = 0;
     }
     i_point = GETREADINDEX(point_index);
-    SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
+    SET_SCALED_VALUE(OffsetIFyawDGPSGYAddr, PointingData[i_point].offset_ifyawdgps_gy);
     SET_SCALED_VALUE(OffsetIFrollDGPSGYAddr, PointingData[i_point].offset_ifrolldgps_gy);
     SET_SCALED_VALUE(latDGPSAddr, CSBFGPSData.latitude);
     SET_SCALED_VALUE(lonDGPSAddr, CSBFGPSData.longitude);
