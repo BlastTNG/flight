@@ -335,7 +335,8 @@
                     "_caption": "IF Front",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_if_front",
                     "type": "PNDI"
@@ -347,7 +348,8 @@
                     "_caption": "IF Port",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_if_port",
                     "type": "PNDI"
@@ -359,7 +361,8 @@
                     "_caption": "IF Starboard",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_if_starboard",
                     "type": "PNDI"
@@ -371,7 +374,8 @@
                     "_caption": "IF Back",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_if_back",
                     "type": "PNDI"
@@ -383,7 +387,8 @@
                     "_caption": "IF Plate",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_if_plate",
                     "type": "PNDI"
@@ -395,7 +400,8 @@
                     "_caption": "Cryostat Lid",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1307762888)",
                     "_format": "",
                     "_source": "Tt_cryostat_lid",
                     "type": "PNDI"
@@ -407,7 +413,8 @@
                     "_caption": "Cryostat Front ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1307762888)",
                     "_format": "",
                     "_source": "Tt_cryostat_front",
                     "type": "PNDI"
@@ -419,7 +426,8 @@
                     "_caption": "ROACH Top",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_roach_top",
                     "type": "PNDI"
@@ -431,7 +439,8 @@
                     "_caption": "ROACH Port",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_roach_port",
                     "type": "PNDI"
@@ -443,7 +452,8 @@
                     "_caption": "ROACH Strbd (L-bracket) ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_roach_starboard",
                     "type": "PNDI"
@@ -1280,7 +1290,8 @@
                     "_caption": "El Motor",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P668710617)",
                     "_format": "",
                     "_source": "Tt_el_motor",
                     "type": "PNDI"
@@ -1292,7 +1303,8 @@
                     "_caption": "Pivot",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1093262273)",
                     "_format": "",
                     "_source": "Tt_pivot",
                     "type": "PNDI"
@@ -1304,7 +1316,8 @@
                     "_caption": "RW Motor",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P718546340)",
                     "_format": "",
                     "_source": "Tt_rw_motor",
                     "type": "PNDI"
@@ -1316,7 +1329,8 @@
                     "_caption": "Star Camera 1",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P254145452)",
                     "_format": "",
                     "_source": "Tt_sc1",
                     "type": "PNDI"
@@ -1328,7 +1342,8 @@
                     "_caption": "Star Camera 2 ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P254145452)",
                     "_format": "",
                     "_source": "Tt_sc2",
                     "type": "PNDI"
@@ -1340,7 +1355,8 @@
                     "_caption": "Gyro Port",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1987199696)",
                     "_format": "",
                     "_source": "Tt_gyro_1",
                     "type": "PNDI"
@@ -1352,7 +1368,8 @@
                     "_caption": "Gyro Starboard",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1987199696)",
                     "_format": "",
                     "_source": "Tt_gyro_2",
                     "type": "PNDI"
@@ -1376,7 +1393,8 @@
                     "_caption": "Balance System",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1988624569)",
                     "_format": "",
                     "_source": "Tt_bal_sys",
                     "type": "PNDI"
@@ -1405,7 +1423,8 @@
                     "_caption": "M1 Back Top",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m1_back_top",
                     "type": "PNDI"
@@ -1417,7 +1436,8 @@
                     "_caption": "M1 Back Bottom",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m1_back_bottom",
                     "type": "PNDI"
@@ -1429,7 +1449,8 @@
                     "_caption": "M1 Back Port",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m1_back_port",
                     "type": "PNDI"
@@ -1441,7 +1462,8 @@
                     "_caption": "M1 Back Starboard",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m1_back_starboard",
                     "type": "PNDI"
@@ -1453,7 +1475,8 @@
                     "_caption": "M1 Front Bottom",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m1_front_bottom",
                     "type": "PNDI"
@@ -1465,7 +1488,8 @@
                     "_caption": "M2 Back",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m2_back",
                     "type": "PNDI"
@@ -1477,7 +1501,8 @@
                     "_caption": "M2 Push Plate",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_m2_push_plate",
                     "type": "PNDI"
@@ -1489,7 +1514,8 @@
                     "_caption": "M2 Actuator",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P115374106)",
                     "_format": "",
                     "_source": "Tt_m2_act",
                     "type": "PNDI"
@@ -1602,7 +1628,8 @@
                     "_caption": "FC2",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P154279869)",
                     "_format": "",
                     "_source": "Tt_fc2",
                     "type": "PNDI"
@@ -1614,7 +1641,8 @@
                     "_caption": "Hard Drive 1",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P365504407)",
                     "_format": "",
                     "_source": "Tt_hdd_1",
                     "type": "PNDI"
@@ -1626,7 +1654,8 @@
                     "_caption": "Hard Drive 2",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P365504407)",
                     "_format": "",
                     "_source": "Tt_hdd_2",
                     "type": "PNDI"
@@ -1638,7 +1667,8 @@
                     "_caption": "OF Labjack Box 1",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1808614005)",
                     "_format": "",
                     "_source": "Tt_of_lj_1",
                     "type": "PNDI"
@@ -1650,7 +1680,8 @@
                     "_caption": "OF Labjack Box 2",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1808614005)",
                     "_format": "",
                     "_source": "Tt_of_lj_2",
                     "type": "PNDI"
@@ -1674,7 +1705,8 @@
                     "_caption": "IF Ethernet Switch  ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1987199696)",
                     "_format": "",
                     "_source": "Tt_if_eth_switch",
                     "type": "PNDI"
@@ -1686,7 +1718,8 @@
                     "_caption": "IF Labjack Box",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1808614005)",
                     "_format": "",
                     "_source": "Tt_if_lj_bob",
                     "type": "PNDI"
@@ -1698,7 +1731,8 @@
                     "_caption": "REC Box",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1987199696)",
                     "_format": "",
                     "_source": "Tt_rec",
                     "type": "PNDI"
@@ -1710,7 +1744,8 @@
                     "_caption": "REC Power Supply",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1062044342)",
                     "_format": "",
                     "_source": "Tt_rec_power",
                     "type": "PNDI"
@@ -1722,7 +1757,8 @@
                     "_caption": "Timing Box",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P2029340679)",
                     "_format": "",
                     "_source": "Tt_timing_box",
                     "type": "PNDI"
@@ -1751,7 +1787,8 @@
                     "_caption": "OF Batteries (Port)",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P608120398)",
                     "_format": "",
                     "_source": "Tt_of_batt_port",
                     "type": "PNDI"
@@ -1763,7 +1800,8 @@
                     "_caption": "IF Batteries (Stbd)",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P608120398)",
                     "_format": "",
                     "_source": "Tt_if_batt_starboard",
                     "type": "PNDI"
@@ -1775,7 +1813,8 @@
                     "_caption": "OF Power Box",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1062044342)",
                     "_format": "",
                     "_source": "Tt_of_power_box",
                     "type": "PNDI"
@@ -1787,7 +1826,8 @@
                     "_caption": "IF Power Box",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1062044342)",
                     "_format": "",
                     "_source": "Tt_if_power_bob",
                     "type": "PNDI"
@@ -1864,7 +1904,8 @@
                     "_caption": "OF Port",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P117858562)",
                     "_format": "",
                     "_source": "Tt_of_port",
                     "type": "PNDI"
@@ -1876,7 +1917,8 @@
                     "_caption": "OF Starboard",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_of_starboard",
                     "type": "PNDI"
@@ -1888,7 +1930,8 @@
                     "_caption": "OF Front",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_of_front",
                     "type": "PNDI"
@@ -1900,7 +1943,8 @@
                     "_caption": "OF Port Deck",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_of_port_deck",
                     "type": "PNDI"
@@ -1912,7 +1956,8 @@
                     "_caption": "OF Port A-Frame",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_of_port_aframe",
                     "type": "PNDI"
@@ -1924,7 +1969,8 @@
                     "_caption": "Sunshield Rear",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_sunshield_rear",
                     "type": "PNDI"
@@ -1936,7 +1982,8 @@
                     "_caption": "Sunshield Chin",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1541579599)",
                     "_format": "",
                     "_source": "Tt_sunshield_chin",
                     "type": "PNDI"
@@ -2701,6 +2748,272 @@
             "_sxlow": "(P949614266)",
             "_xhigh": 2,
             "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "2562332"
+            },
+            "_high": 1,
+            "_low": -1,
+            "_name": "Hot",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 2,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "441404878"
+            },
+            "_high": 1,
+            "_low": -1,
+            "_name": "Hot",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 48,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "86393181"
+            },
+            "_high": 1,
+            "_low": -1,
+            "_name": "Cold",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 2,
+            "_xlow": -2
+        },
+        {
+            "PObject": {
+                "_id": "1093262273"
+            },
+            "_high": 48,
+            "_low": -33,
+            "_name": "pivot",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 48,
+            "_xlow": -33
+        },
+        {
+            "PObject": {
+                "_id": "1541579599"
+            },
+            "_high": 100,
+            "_low": -100,
+            "_name": "If front",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 100,
+            "_xlow": -100
+        },
+        {
+            "PObject": {
+                "_id": "1307762888"
+            },
+            "_high": 40,
+            "_low": -5,
+            "_name": "cryo ",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 40,
+            "_xlow": -5
+        },
+        {
+            "PObject": {
+                "_id": "117858562"
+            },
+            "_high": 100,
+            "_low": -100,
+            "_name": "roach",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 100,
+            "_xlow": -100
+        },
+        {
+            "PObject": {
+                "_id": "668710617"
+            },
+            "_high": 40,
+            "_low": -3,
+            "_name": "elmot",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 40,
+            "_xlow": -3
+        },
+        {
+            "PObject": {
+                "_id": "718546340"
+            },
+            "_high": 32,
+            "_low": -4,
+            "_name": "rw",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 32,
+            "_xlow": -4
+        },
+        {
+            "PObject": {
+                "_id": "254145452"
+            },
+            "_high": 40,
+            "_low": -27,
+            "_name": "sc",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 40,
+            "_xlow": -27
+        },
+        {
+            "PObject": {
+                "_id": "1987199696"
+            },
+            "_high": 75,
+            "_low": -40,
+            "_name": "switchgyro",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 75,
+            "_xlow": -40
+        },
+        {
+            "PObject": {
+                "_id": "1988624569"
+            },
+            "_high": 85,
+            "_low": -20,
+            "_name": "balmot",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 85,
+            "_xlow": -20
+        },
+        {
+            "PObject": {
+                "_id": "608120398"
+            },
+            "_high": 45,
+            "_low": -40,
+            "_name": "battery",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 45,
+            "_xlow": -40
+        },
+        {
+            "PObject": {
+                "_id": "1062044342"
+            },
+            "_high": 100,
+            "_low": -55,
+            "_name": "power",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 100,
+            "_xlow": -55
+        },
+        {
+            "PObject": {
+                "_id": "115374106"
+            },
+            "_high": 85,
+            "_low": -20,
+            "_name": "actuator",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 85,
+            "_xlow": -20
+        },
+        {
+            "PObject": {
+                "_id": "154279869"
+            },
+            "_high": 60,
+            "_low": -20,
+            "_name": "fc",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 60,
+            "_xlow": -20
+        },
+        {
+            "PObject": {
+                "_id": "365504407"
+            },
+            "_high": 50,
+            "_low": -10,
+            "_name": "HDD",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 50,
+            "_xlow": -10
+        },
+        {
+            "PObject": {
+                "_id": "1808614005"
+            },
+            "_high": 85,
+            "_low": -40,
+            "_name": "LJ",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 85,
+            "_xlow": -40
+        },
+        {
+            "PObject": {
+                "_id": "2029340679"
+            },
+            "_high": 50,
+            "_low": -30,
+            "_name": "octo",
+            "_shigh": "(P1913941534)",
+            "_slow": "(P2017040817)",
+            "_sxhigh": "(P956360347)",
+            "_sxlow": "(P949614266)",
+            "_xhigh": 50,
+            "_xlow": -30
         }
     ],
     "linkNames": [
