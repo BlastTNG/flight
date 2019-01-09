@@ -191,6 +191,9 @@ typedef struct {
 #define ECAT_LOAD_POSITION 0x2242, 0 /* Load Encoder position in counts INT32 */
 #define ECAT_ACTUAL_POSITION 0x6063, 0  /* Encoder position used for loops in counts INT32 */
 #define ECAT_DRIVE_TEMP 0x2202, 0 /* A/D Reading in degrees C INT16 */
+#define ECAT_PHASE_ANGLE 0x2260, 0 /* Motor phasing mode (deg)*/
+#define ECAT_PHASE_ANGLE_RW 0x2262, 0 /* Motor phasing mode (deg)*/
+#define ECAT_PHASING_MODE 0x21C0, 0 /* Motor phasing mode */
 
 #define ECAT_FUCHS_POSITION  0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
 #define ECAT_FUCHS_OP_STATUS 0x6500, 0 /* PEPERL+FUCHS encoder position value UINT16 */
@@ -302,8 +305,8 @@ uint32_t rw_get_latched(void);
 uint32_t el_get_latched(void);
 uint32_t piv_get_latched(void);
 uint16_t rw_get_ctl_word(void);
-int16_t el_get_ctl_word(void);
-int16_t piv_get_ctl_word(void);
+uint16_t el_get_ctl_word(void);
+uint16_t piv_get_ctl_word(void);
 int32_t rw_get_position(void);
 int32_t el_get_position(void);
 int32_t el_get_motor_position(void);
@@ -323,6 +326,12 @@ uint32_t piv_get_status_register(void);
 int16_t rw_get_amp_temp(void);
 int16_t el_get_amp_temp(void);
 int16_t piv_get_amp_temp(void);
+int16_t rw_get_phase_angle(void);
+int16_t el_get_phase_angle(void);
+int16_t piv_get_phase_angle(void);
+uint16_t rw_get_phase_mode(void);
+uint16_t el_get_phase_mode(void);
+uint16_t piv_get_phase_mode(void);
 
 void rw_set_current(int16_t m_cur);
 void el_set_current(int16_t m_cur);
