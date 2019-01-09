@@ -1105,6 +1105,12 @@ channel_t channel_list[] =
     { "mc_el_motor_pos",     EL_MOTOR_ENCODER_SCALING,  0.0, TYPE_INT32, RATE_100HZ, U_D_DEG, 0 },
     { "mc_piv_vel",          PIV_RESOLVER_SCALING * 0.1, 0.0, TYPE_INT32, RATE_100HZ, U_V_DPS, 0 },
     { "mc_piv_pos",          PIV_RESOLVER_SCALING,      0.0, TYPE_INT32, RATE_100HZ, U_D_DEG, 0 },
+    { "mc_phase_rw",         SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "mc_phase_el",         SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "mc_phase_piv",        SCALE(CONVERT_UNITY), TYPE_INT16, RATE_5HZ, U_D_DEG, 0 },
+    { "mc_phase_mode_rw",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "mc_phase_mode_el",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "mc_phase_mode_piv",   SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
     {"control_word_read_el", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     {"control_word_read_rw", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_100HZ, U_NONE, 0 },
