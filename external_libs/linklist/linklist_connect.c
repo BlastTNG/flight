@@ -724,7 +724,7 @@ void linklist_server(void * arg)
 
 
   //Accept and incoming connection
-  linklist_info("::SERVER:: Waiting for incoming connections...\n");
+  linklist_info("::SERVER:: Waiting for incoming connections on port %d...\n", theport);
   c = sizeof(struct sockaddr_in);
   pthread_t thread_id;
 
@@ -763,7 +763,7 @@ int connect_tcp(struct TCPCONN * tc)
       goto RETRY;
     }
 
-    if (!(tc->flag & TCPCONN_NOLOOP)) linklist_info("Connecting to %s...\n",tc->ip);
+    if (!(tc->flag & TCPCONN_NOLOOP)) linklist_info("Connecting to %s:%d...\n", tc->ip, clientport);
     connected = 1; 
     if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
       fprintf(stderr, "Socket Failure!!\n");
