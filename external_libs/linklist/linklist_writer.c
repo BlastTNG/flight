@@ -541,7 +541,7 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
 
   // write the data to the dirfile
   superframe_entry_t * sfe = ll->superframe->entries;
-  unsigned int dir_loc = 0;
+  // unsigned int dir_loc = 0;
   unsigned int tlm_out_start = 0;
   unsigned int tlm_out_size = 0;
   unsigned int tlm_out_skip = 0;
@@ -559,7 +559,7 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
       // entries not in the linklist get 1 spf
 			tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
 
-			dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
+			// dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
 
 			for (j = 0; j < tlm_out_spf; j++) {
 				fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);

@@ -85,7 +85,14 @@ ExternalProject_Add(linklist
   INSTALL_COMMAND ""
   )
 
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+set(LINKLIST_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+include_directories(${LINKLIST_LIBRARY_DIR})
+set(LINKLIST_SOURCES 
+    ${LINKLIST_LIBRARY_DIR}/linklist.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_compress.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_connect.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_writer.c
+    ) 
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
@@ -97,8 +104,10 @@ include_directories (
 # add common objects
 add_executable (mole 
     ${PROJECT_SOURCE_DIR}/mole.c
+    ${LINKLIST_SOURCES}
     ) 
 
+message("${SUBSOURCES}")
 add_dependencies(mole linklist)
 
 define_file_basename_for_sources(mole)

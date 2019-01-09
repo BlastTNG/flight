@@ -214,7 +214,14 @@ ExternalProject_Add(linklist
   URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
   INSTALL_COMMAND "")
 
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+set(LINKLIST_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+include_directories(${LINKLIST_LIBRARY_DIR})
+set(LINKLIST_SOURCES 
+    ${LINKLIST_LIBRARY_DIR}/linklist.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_compress.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_connect.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_writer.c
+    ) 
 
 # Find alsa
 pkg_check_modules(PC_ALSA QUIET alsa)
@@ -413,6 +420,7 @@ add_executable (mcp
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:roach>
     $<TARGET_OBJECTS:mcp_obj>
+    ${LINKLIST_SOURCES}
     ) 
 
 add_dependencies(mcp soem phenomproj linklist)

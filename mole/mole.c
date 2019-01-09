@@ -107,6 +107,9 @@ void USAGE(void) {
       "                        The default is /data/mole.\n"
       " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
       "                        Relative paths are w.r.t. /data/rawdir.\n"
+      " -p  --client-port p    Client port to receive data (default 40204).\n"
+      " -P  --server-port p    Server port on which to serve up data (default 40204).\n"
+      "     --port p           Sets the client and server port (default 40204).\n"
       " -r  --rate             Expected data rate (Hz) for receiving data (default 20).\n"
       " -s  --server           Run a server for other mole clients to connect to.\n"
       " -ns --no-server        Don't run a server (default).\n"
@@ -241,6 +244,16 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--rate") == 0) ||
                (strcmp(argv[i], "-r") == 0)) { // expected data rate
       nodata_timeout = 1.0e6/atof(argv[++i]);
+    } else if ((strcmp(argv[i], "--client-port") == 0) ||
+               (strcmp(argv[i], "-p") == 0)) { // client port
+      set_linklist_client_port(atoi(argv[++i]));
+    } else if ((strcmp(argv[i], "--server-port") == 0) ||
+               (strcmp(argv[i], "-P") == 0)) { // server port
+      set_linklist_server_port(atoi(argv[++i]));
+    } else if (strcmp(argv[i], "--port") == 0) { // client and server port
+      int port = atoi(argv[++i]);
+      set_linklist_client_port(port);
+      set_linklist_server_port(port);
     } else if ((strcmp(argv[i], "--filename") == 0) ||
                (strcmp(argv[i], "-F") == 0)) { // select file by name
       strcpy(filename_selection, argv[++i]);

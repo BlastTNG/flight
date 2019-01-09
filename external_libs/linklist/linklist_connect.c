@@ -75,6 +75,8 @@ char archive_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 uint16_t theday = 0;
 uint16_t themonth = 0;
 uint16_t theyear = 0;
+unsigned int clientport = CLIENT_TELEM_PORT;
+unsigned int serverport = CLIENT_TELEM_PORT;
 
 /* packet header (12 bytes)
  * ----------------
@@ -85,8 +87,6 @@ uint16_t theyear = 0;
  */
 
 void writeTCPHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint16_t i_pkt, uint16_t n_packets) {
-  int j;
-
   // build header
   *((uint32_t *) (header+0)) = serial;
   *((uint32_t *) (header+4)) = frame_num;
@@ -95,8 +95,6 @@ void writeTCPHeader(uint8_t * header, uint32_t serial, uint32_t frame_num, uint1
 }
 
 void readTCPHeader(uint8_t * header, uint32_t **ser, uint32_t **frame_num, uint16_t **i_pkt, uint16_t **n_pkt) {
-  int j;
-
   // extract header
   *ser = (uint32_t *) (header+0);
   *frame_num = (uint32_t *) (header+4);
@@ -228,6 +226,13 @@ int copy_file(char *old_filename, char *new_filename)
   return 0;
 }
 
+
+void set_linklist_client_port(unsigned int port) {
+  clientport = port;
+}
+void set_linklist_server_port(unsigned int port) {
+  serverport = port;
+}
 
 // a macro function that requests format and link files and parses them;
 // this function overwrites all previously parsed telemlist format file
@@ -690,7 +695,7 @@ void linklist_server(void * arg)
 {
   int client_sock, c;
   struct sockaddr_in server , client;
-  int theport = CLIENT_TELEM_PORT;
+  int theport = serverport;
 
   //Create socket
   int socket_desc = socket(AF_INET , SOCK_STREAM , 0);
@@ -773,7 +778,7 @@ int connect_tcp(struct TCPCONN * tc)
 
     memset(&server_info, 0, sizeof(server_info));
     server_info.sin_family = AF_INET;
-    server_info.sin_port = htons(CLIENT_TELEM_PORT);
+    server_info.sin_port = htons(clientport);
     server_info.sin_addr = *((struct in_addr *)he->h_addr);
 
     if (connect(socket_fd, (struct sockaddr *)&server_info, sizeof(struct sockaddr))<0) {

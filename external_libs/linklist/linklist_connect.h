@@ -76,6 +76,8 @@ void readTCPHeader(uint8_t *, uint32_t **, uint32_t **, uint16_t **, uint16_t **
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
 unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
+void set_linklist_server_port(unsigned int );
+void set_linklist_client_port(unsigned int );
 
 int request_server_list(struct TCPCONN * , char [][LINKLIST_SHORT_FILENAME_SIZE]);
 int request_server_archive_list(struct TCPCONN * , char [][LINKLIST_SHORT_FILENAME_SIZE]);

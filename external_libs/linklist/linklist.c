@@ -957,7 +957,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   char temp[100];
   char *temps[20];
   uint8_t * frame = NULL;
-  int start, skip, num;
+  int start, skip;
   int count = 1;
   uint64_t serial = 0;
 
@@ -1016,14 +1016,11 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         sf[n_entries].type = get_sf_type_int(temps[1]); // type int
         sf[n_entries].spf = atoi(temps[2]); // samples per frame
 
-        /*
-        // TODO(javier): deal with mins and maxs if that ends up being a thing
-        if (strlen(temps[1]) > 1)
-        {
-          sscanf(temps[1],"%*c(%lf,%lf)%*s",&bit_tlms[N_TLM_TYPES].min,&bit_tlms[N_TLM_TYPES].max);
-          //printf("%s min=%f max=%f\n",bit_tlms[N_TLM_TYPES].name,bit_tlms[N_TLM_TYPES].min,bit_tlms[N_TLM_TYPES].max);
+        int type_str_len = strlen(get_sf_type_string(sf[n_entries].type));
+        if (strlen(temps[1]) > type_str_len) { // trailing characters are assumed to be min and max of format (min,max) 
+          sscanf(temps[1]+type_str_len, "(%lf,%lf)%*s", &sf[n_entries].min, &sf[n_entries].max);
+          //printf("%s min=%f max=%f\n", sf[n_entries].field, sf[n_entries].min, sf[n_entries].max);
         }
-        */
 
         // determine start byte and skip
         start = atoi(temps[3]);
