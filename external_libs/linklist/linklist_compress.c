@@ -827,15 +827,13 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     type = '0';
   }
 
-/* TODO MAXMIN
+  offset = 0;
+  gain = 1; 
   if ((le->tlm->max != 0) || (le->tlm->min != 0))
   {
     offset = le->tlm->min;
     gain = (le->tlm->max-le->tlm->min)/((double) UINT32_MAX);
   } 
-*/
-  offset = 0;
-  gain = 1; 
 
   for (i=0;i<outputnum;i++)
   {
@@ -873,15 +871,13 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
-/* TODO MAXMIN
+  offset = 0;
+  gain = 1;
   if ((le->tlm->max != 0) || (le->tlm->min != 0))
   {
     offset = le->tlm->min;
     gain = (le->tlm->max-le->tlm->min)/((double) UINT32_MAX);
   }
-*/
-  offset = 0;
-  gain = 1;
 
   double dataout = 0;
   uint32_t value = 0;
@@ -935,13 +931,11 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
 
   offset = 0;
   gain = 1;
-/* TODO MAXMIN
   if ((le->tlm->max != 0) || (le->tlm->min != 0))
   {
     offset = le->tlm->min;
     gain = (le->tlm->max-le->tlm->min)/((double) UINT16_MAX);
   }  
-*/
 
   for (i=0;i<outputnum;i++)
   {
@@ -979,15 +973,13 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
-/* TODO MAXMIN
+  offset = 0;
+  gain = 1;
   if ((le->tlm->max != 0) || (le->tlm->min != 0))
   {
     offset = le->tlm->min;
     gain = (le->tlm->max-le->tlm->min)/((double) UINT16_MAX);
   }
-*/
-  offset = 0;
-  gain = 1;
 
   double dataout = 0;
   uint16_t value = 0;

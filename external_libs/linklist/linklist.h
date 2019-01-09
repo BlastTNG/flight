@@ -104,6 +104,8 @@ struct sf_entry
   uint32_t spf;               // Samples per frame
   uint32_t start;             // Start location of first sample in the superframe
   uint32_t skip;              // Bytes to skip between samples
+  double min;                // min data value (for compression routines)
+  double max;                // max data value (for compression routines)
   char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
   char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data

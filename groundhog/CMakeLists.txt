@@ -103,7 +103,14 @@ ExternalProject_Add(linklist
   INSTALL_COMMAND ""
   )
 
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+set(LINKLIST_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+include_directories(${LINKLIST_LIBRARY_DIR})
+set(LINKLIST_SOURCES 
+    ${LINKLIST_LIBRARY_DIR}/linklist.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_compress.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_connect.c
+    ${LINKLIST_LIBRARY_DIR}/linklist_writer.c
+    ) 
 
 # configure a header file to pass some of the CMake settings to the source code
 #configure_file (
@@ -151,6 +158,7 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
     ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
     ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
+    ${LINKLIST_SOURCES}
     ) 
 
 add_dependencies(groundhog linklist)
