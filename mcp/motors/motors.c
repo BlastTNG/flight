@@ -330,6 +330,8 @@ void write_motor_channels_5hz(void)
     static channel_t* accelAzAddr;
 
     static channel_t *tMCRWAddr;
+    static channel_t *phase_angle_rw_addr;
+    static channel_t *phase_mode_rw_addr;
 
     static channel_t *tMCElAddr;
     static channel_t *statusElAddr;
@@ -339,6 +341,8 @@ void write_motor_channels_5hz(void)
     static channel_t *ctl_word_read_el_addr;
     static channel_t *ctl_word_write_el_addr;
     static channel_t *latched_fault_el_addr;
+    static channel_t *phase_angle_el_addr;
+    static channel_t *phase_mode_el_addr;
 
     static channel_t *tMCPivAddr;
     static channel_t *statusPivAddr;
@@ -348,6 +352,8 @@ void write_motor_channels_5hz(void)
     static channel_t *ctl_word_read_piv_addr;
     static channel_t *ctl_word_write_piv_addr;
     static channel_t *latched_fault_piv_addr;
+    static channel_t *phase_angle_piv_addr;
+    static channel_t *phase_mode_piv_addr;
 
     int i_motors;
 
@@ -381,6 +387,8 @@ void write_motor_channels_5hz(void)
         accelAzAddr = channels_find_by_name("accel_az");
 
         tMCRWAddr = channels_find_by_name("t_mc_rw");
+        phase_angle_rw_addr = channels_find_by_name("mc_phase_rw");
+        phase_mode_rw_addr = channels_find_by_name("mc_phase_mode_rw");
 
         tMCElAddr = channels_find_by_name("t_mc_el");
         statusElAddr = channels_find_by_name("status_el");
@@ -390,6 +398,8 @@ void write_motor_channels_5hz(void)
         ctl_word_read_el_addr = channels_find_by_name("control_word_read_el");
         ctl_word_write_el_addr = channels_find_by_name("control_word_write_el");
         latched_fault_el_addr = channels_find_by_name("latched_fault_el");
+        phase_angle_el_addr = channels_find_by_name("mc_phase_el");
+        phase_mode_el_addr = channels_find_by_name("mc_phase_mode_el");
 
         tMCPivAddr = channels_find_by_name("t_mc_piv");
         statusPivAddr = channels_find_by_name("status_piv");
@@ -399,6 +409,8 @@ void write_motor_channels_5hz(void)
         ctl_word_read_piv_addr = channels_find_by_name("control_word_read_piv");
         ctl_word_write_piv_addr = channels_find_by_name("control_word_write_piv");
         latched_fault_piv_addr = channels_find_by_name("latched_fault_piv");
+        phase_angle_piv_addr = channels_find_by_name("mc_phase_piv");
+        phase_mode_piv_addr = channels_find_by_name("mc_phase_mode_piv");
 
         ethercat_cmds_addr = channels_find_by_name("mc_cmd_status");
     }
@@ -452,6 +464,8 @@ void write_motor_channels_5hz(void)
      */
     i_motors = GETREADINDEX(motor_index);
     SET_INT16(tMCRWAddr, RWMotorData[i_motors].temp);
+    SET_INT16(phase_angle_rw_addr, RWMotorData[i_motors].phase_angle);
+    SET_INT16(phase_mode_rw_addr, RWMotorData[i_motors].phase_mode);
 
     SET_INT16(tMCElAddr, ElevMotorData[i_motors].temp);
     SET_UINT32(statusElAddr, ElevMotorData[i_motors].status);
@@ -461,6 +475,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(ctl_word_read_el_addr, ElevMotorData[i_motors].control_word_read);
     SET_UINT16(ctl_word_write_el_addr, ElevMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_el_addr, ElevMotorData[i_motors].fault_reg);
+    SET_INT16(phase_angle_el_addr, ElevMotorData[i_motors].phase_angle);
+    SET_UINT16(phase_mode_el_addr, ElevMotorData[i_motors].phase_mode);
 
     SET_INT16(tMCPivAddr, PivotMotorData[i_motors].temp);
     SET_UINT32(statusPivAddr, PivotMotorData[i_motors].status);
@@ -470,6 +486,8 @@ void write_motor_channels_5hz(void)
     SET_UINT16(ctl_word_read_piv_addr, PivotMotorData[i_motors].control_word_read);
     SET_UINT16(ctl_word_write_piv_addr, PivotMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_piv_addr, PivotMotorData[i_motors].fault_reg);
+    SET_INT16(phase_angle_piv_addr, PivotMotorData[i_motors].phase_angle);
+    SET_INT16(phase_mode_piv_addr, PivotMotorData[i_motors].phase_mode);
 
     ec_cmd_status_field = ((uint8_t)CommandData.ec_devices.reset) +
                           ((uint8_t)CommandData.ec_devices.fix_rw << 1) +

@@ -137,6 +137,12 @@ static uint32_t *latched_register[N_MCs] = { (uint32_t*) &dummy_var, (uint32_t*)
                                              (uint32_t*) &dummy_var, (uint32_t*) &dummy_var , (uint32_t*) &dummy_var };
 static uint16_t *control_word_read[N_MCs] = { (uint16_t*) &dummy_var, (uint16_t*) &dummy_var,
                                               (uint16_t*) &dummy_var, (uint16_t*) &dummy_var , (uint16_t*) &dummy_var };
+static int16_t *phase_angle[N_MCs] = { (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var,
+                                          (int16_t*) &dummy_write_var, (int16_t*) &dummy_write_var ,
+                                          (int16_t*) &dummy_write_var };
+static uint16_t *phase_mode[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
+                                          (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var ,
+                                          (uint16_t*) &dummy_write_var };
 /// Write words
 static uint16_t *control_word[N_MCs] = { (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var,
                                          (uint16_t*) &dummy_write_var, (uint16_t*) &dummy_write_var ,
@@ -216,7 +222,7 @@ uint16_t rw_get_ctl_word(void)
         return 0;
     }
 }
-int16_t el_get_ctl_word(void)
+uint16_t el_get_ctl_word(void)
 {
     if (check_slave_comm_ready(el_index)) {
         return *control_word_read[el_index];
@@ -224,10 +230,67 @@ int16_t el_get_ctl_word(void)
         return 0;
     }
 }
-int16_t piv_get_ctl_word(void)
+uint16_t piv_get_ctl_word(void)
 {
     if (check_slave_comm_ready(piv_index)) {
         return *control_word_read[piv_index];
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * This set of functions returns the phase angle for the motor controller (read back from the controller)
+ * @return uint16 phase angle in degrees
+ */
+int16_t piv_get_phase_angle(void)
+{
+    if (check_slave_comm_ready(piv_index)) {
+        return *phase_angle[piv_index];
+    } else {
+        return 0;
+    }
+}
+int16_t rw_get_phase_angle(void)
+{
+    if (check_slave_comm_ready(rw_index)) {
+        return *phase_angle[rw_index];
+    } else {
+        return 0;
+    }
+}
+int16_t el_get_phase_angle(void)
+{
+    if (check_slave_comm_ready(el_index)) {
+        return *phase_angle[el_index];
+    } else {
+        return 0;
+    }
+}
+/**
+ * This set of functions returns the phase angle for the motor controller (read back from the controller)
+ * @return uint16 phase angle in degrees
+ */
+uint16_t piv_get_phase_mode(void)
+{
+    if (check_slave_comm_ready(piv_index)) {
+        return *phase_mode[piv_index];
+    } else {
+        return 0;
+    }
+}
+uint16_t rw_get_phase_mode(void)
+{
+    if (check_slave_comm_ready(rw_index)) {
+        return *phase_mode[rw_index];
+    } else {
+        return 0;
+    }
+}
+uint16_t el_get_phase_mode(void)
+{
+    if (check_slave_comm_ready(el_index)) {
+        return *phase_mode[el_index];
     } else {
         return 0;
     }
@@ -924,8 +987,10 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_VEL_ACTUAL, 32);     // Actual Motor Velocity
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 2, map.val)) blast_err("Failed mapping!");
 
+    map_pdo(&map, ECAT_PHASING_MODE, 32);     // Phase mode
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 3, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING, 0, 2)) /// Set the 0x1a00 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING, 0, 3)) /// Set the 0x1a00 map to contain 3 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
         blast_err("Failed mapping!");
@@ -948,7 +1013,7 @@ static int motor_pdo_init(int m_slave)
         blast_err("Failed mapping!");
     }
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 3 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
@@ -979,8 +1044,11 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val)) blast_err("Failed mapping!");
 
+    map_pdo(&map, ECAT_PHASE_ANGLE, 16); // Motor phase angle
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 3, map.val)) blast_err("Failed mapping!");
 
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 2)) /// Set the 0x1a03 map to contain 2 elements
+
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3)) /// Set the 0x1a03 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3)) /// 0x1a03 maps to the fourth PDO
         blast_err("Failed mapping!");
@@ -1297,6 +1365,8 @@ static void read_motor_data()
     RWMotorData[motor_i].control_word_read = rw_get_ctl_word();
     RWMotorData[motor_i].control_word_write = rw_get_ctl_word_write();
     RWMotorData[motor_i].network_problem = !is_rw_motor_ready();
+    RWMotorData[motor_i].phase_angle = rw_get_phase_angle();
+    RWMotorData[motor_i].phase_mode = rw_get_phase_mode();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     ElevMotorData[motor_i].drive_info = el_get_status_word();
@@ -1310,6 +1380,8 @@ static void read_motor_data()
     ElevMotorData[motor_i].control_word_read = el_get_ctl_word();
     ElevMotorData[motor_i].control_word_write = el_get_ctl_word_write();
     ElevMotorData[motor_i].network_problem  = !is_el_motor_ready();
+    ElevMotorData[motor_i].phase_angle = el_get_phase_angle();
+    ElevMotorData[motor_i].phase_mode = el_get_phase_mode();
 
     PivotMotorData[motor_i].current = piv_get_current() / 100.0; /// Convert from 0.01A in register to Amps
     PivotMotorData[motor_i].drive_info = piv_get_status_word();
@@ -1323,6 +1395,8 @@ static void read_motor_data()
      = piv_get_ctl_word();
     PivotMotorData[motor_i].control_word_write = piv_get_ctl_word_write();
     PivotMotorData[motor_i].network_problem  = !is_pivot_motor_ready();
+    PivotMotorData[motor_i].phase_angle = piv_get_phase_angle();
+    PivotMotorData[motor_i].phase_mode = piv_get_phase_mode();
 
     firsttime = 0;
     motor_index = INC_INDEX(motor_index);
@@ -1615,6 +1689,7 @@ static void* motor_control(void* arg)
             blast_err("error while sleeping, code %d (%s)\n", ret, strerror(-ret));
             break;
         }
+
         ec_send_processdata();
         wkc = ec_receive_processdata(EC_TIMEOUTRET);
         if (wkc < expectedWKC) bprintf(none, "Possible missing data in communicating with Motor Controllers");
