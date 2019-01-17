@@ -109,6 +109,7 @@ struct sf_entry
   char quantity[SF_UNITS_LEN];   // eg, "Temperature" or "Angular Velocity"
   char units[SF_UNITS_LEN];      // eg, "K" or "^o/s"
   void *var;                  // Pointer to data
+  uint32_t cur;               // optional current index for adding item to the telemetry frame
   struct superframe_struct * superframe; // Pointer to corresponding superframe
 };
 
@@ -248,7 +249,7 @@ linklist_t * generate_superframe_linklist(superframe_t *);
 linklist_t * generate_superframe_linklist_opt(superframe_t *, int);
 superframe_t * parse_superframe_format(char *);
 superframe_t * parse_superframe_format_opt(char *, int);
-void write_superframe_format(superframe_t *, char *);
+void write_superframe_format(superframe_t *, const char *);
 void linklist_assign_datatodouble(superframe_t *, double (*func)(uint8_t *, uint8_t));
 void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double, uint8_t));
 uint64_t generate_superframe_serial(superframe_t *); 
@@ -256,7 +257,8 @@ superframe_t * linklist_build_superframe(superframe_entry_t *,
                                          double (*datatodouble)(uint8_t *, uint8_t), 
                                          int (*doubletodata)(uint8_t *, double, uint8_t));
 
-superframe_entry_t * superframe_find_by_name(superframe_t *, char *);
+superframe_entry_t * superframe_find_by_name(superframe_t *, const char *);
+uint32_t superframe_find_index_by_name(superframe_t *, const char *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 const char * get_sf_type_string(uint8_t);
 uint8_t get_sf_type_int(char *);
@@ -267,6 +269,7 @@ int linklist_generate_lookup(linklist_t **);
 linklist_t * linklist_lookup_by_serial(uint32_t);
 void delete_linklist(linklist_t *);
 int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
+int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 

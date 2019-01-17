@@ -67,6 +67,8 @@ int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 unsigned int ll_rawfile_default_fpf = 900; // number of frames per file before incrementing linklist rawfiles
 
+static char * def_ll_extensions[] = {".ll", LINKLIST_FORMAT_EXT, ""}; 
+
 const char * SF_TYPES_STR[] = {
   "UINT8", "UINT16", "UINT32", "UINT64", 
   "INT8", "INT16", "INT32", "INT64", 
@@ -253,7 +255,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   return superframe;
 }
 
-superframe_entry_t * superframe_find_by_name(superframe_t * sf, char * name) {
+superframe_entry_t * superframe_find_by_name(superframe_t * sf, const char * name) {
   if (!name) return NULL;
 
   return sf->hash_table[hash(name)%sf->hash_table_size];
@@ -310,9 +312,14 @@ static int one (const struct dirent *unused)
 }
 
 int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t ** ll_array, unsigned int flags) {
+  return load_all_linklists_opt(superframe, linklistdir, ll_array, flags, NULL);
+}
+int load_all_linklists_opt(superframe_t * superframe, char * linklistdir, linklist_t ** ll_array, unsigned int flags, char ** exts) {
+  if (!exts) exts = def_ll_extensions;
+
   struct dirent **dir;
   int n = scandir(linklistdir,&dir,one,alphasort);
-  int i;
+  int i, j;
   int num = 0;
 
   if (n<0) { 
@@ -334,13 +341,17 @@ int load_all_linklists(superframe_t * superframe, char * linklistdir, linklist_t
   // load linklist names
   for (i = 0; i < n; i++) {
     int len = strlen(dir[i]->d_name);
-    if ((len >= 3) && strcmp(&dir[i]->d_name[len-3], ".ll") == 0) {
-      snprintf(full_path_name, 127, "%s%s",linklistdir, dir[i]->d_name);
-      
-      if ((ll_array[num] = parse_linklist_format_opt(superframe, full_path_name, flags)) == NULL) {
-        linklist_fatal("Unable to load linklist at %s", full_path_name);
-      }
-      num++;
+    for (j=0; exts[j][0]; j++) {
+      int extlen = strlen(exts[j]);
+			if ((len >= extlen) && strcmp(&dir[i]->d_name[len-extlen], exts[j]) == 0) {
+				snprintf(full_path_name, 127, "%s%s",linklistdir, dir[i]->d_name);
+				
+				if ((ll_array[num] = parse_linklist_format_opt(superframe, full_path_name, flags)) == NULL) {
+					linklist_fatal("Unable to load linklist at %s", full_path_name);
+				}
+				num++;
+        break;
+			}
     }
   }
   ll_array[num] = generate_superframe_linklist_opt(superframe, flags); // last linklist contains all the telemetry items
@@ -400,6 +411,7 @@ void update_superframe_entry_hash(MD5_CTX *mdContext, superframe_entry_t * chan)
   MD5_Update(mdContext, &chan->spf, sizeof(chan->spf));
   MD5_Update(mdContext, &chan->start, sizeof(chan->start));
   MD5_Update(mdContext, &chan->skip, sizeof(chan->skip));
+  // TODO(javier): add min and max to the hash
 }
 
 void parse_block(linklist_t * ll, char * name)
@@ -429,6 +441,7 @@ block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
 }
 
 uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
+  if (!chan) return 0;
   size_t retsize = 0;
 
   switch (chan->type) {
@@ -451,7 +464,7 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
       retsize = 8;
       break;
     default:
-      linklist_fatal("Invalid Channel size!");
+      linklist_fatal("Invalid channel size for %s!\n", chan->field);
   }
   return retsize;
 }
@@ -1068,7 +1081,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   return superframe;
 }
 
-void write_superframe_format(superframe_t * superframe, char * fname) {
+void write_superframe_format(superframe_t * superframe, const char * fname) {
   if (!superframe || !superframe->entries) return;
   superframe_entry_t * sf = superframe->entries;
 
