@@ -16,17 +16,8 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "linklist.h"
-#include "linklist_compress.h"
-#include "linklist_writer.h"
-#include "linklist_connect.h"
-#include "blast.h"
-#include "channels_tng.h"
-#include "derived.h"
 #include "groundhog.h"
-#include "pilot.h"
-#include "bi0.h"
-#include "highrate.h"
+#include "linklist_connect.h"
 
 #define GROUNDHOG_LOG "/data/etc/groundhog.log"
 

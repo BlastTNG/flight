@@ -6,10 +6,37 @@
 #define ROACH_CHANNEL_REF_NAME "kidA_roachN"
 #define ROACH_CHANNEL_REF_INDEX_NAME "kidA_roachN_index"
 
+#include <stdarg.h>
+
+// BLAST function
+#include "blast.h"
+#include "blast_time.h"
+
+// linklist
 #include "linklist.h"
 #include "linklist_writer.h"
+#include "linklist_compress.h"
+
+// BLAST general telemetry
+#include "channels_tng.h"
 #include "derived.h"
-#include "groundhog_framing.h"
+#include "FIFO.h"
+
+// BLAST pilot
+#include "bitserver.h"
+#include "pilot.h"
+
+// BLAST biphase
+#include "bbc_pci.h"
+#include "decom_pci.h"
+#include "bi0.h"
+
+// BLAST highrate
+#include "highrate.h"
+#include "comms_serial.h"
+
+enum DownLinkTypes {PILOT, BI0, HIGHRATE, 
+                      NUM_DOWNLINKS};
 
 struct UDPSetup {
   char name[80];
@@ -44,6 +71,10 @@ extern struct TlmReport pilot_report;
 extern struct TlmReport bi0_report;
 extern struct TlmReport highrate_report;
 extern struct TlmReport sbd_report;
+
+#define groundhog_info(fmt, ...) blast_info(fmt, ##__VA_ARGS__)
+#define groundhog_warn(fmt, ...) blast_warn(fmt, ##__VA_ARGS__)
+#define groundhog_fatal(fmt, ...) blast_fatal(fmt, ##__VA_ARGS__)
 
 #ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a):(b))

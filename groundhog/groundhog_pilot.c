@@ -18,14 +18,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "linklist.h" // This gives access to channel_list and frame_size
-#include "linklist_compress.h"
-#include "linklist_writer.h"
-
-#include "bitserver.h"
-#include "blast.h"
-#include "blast_time.h"
-#include "pilot.h"
 #include "groundhog.h"
 
 void udp_receive(void *arg) {
@@ -65,7 +57,7 @@ void udp_receive(void *arg) {
       serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
-        if (verbose) blast_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
+        if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
         bad_serial_count++;
       } else {
         bad_serial_count = 0;
@@ -83,8 +75,8 @@ void udp_receive(void *arg) {
     transmit_size = udprecver.frame_num; 
     // printf("Transmit size = %d, blk_size = %d\n", transmit_size, blk_size);
 
-    // blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
-    // blast_info("[Pilot] Received linklist with serial 0x%x\n", serial);
+    // groundhog_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+    // groundhog_info("[Pilot] Received linklist with serial 0x%x\n", serial);
 
     // this is a file that has been downlinked, so unpack and extract to disk
     if (!strcmp(ll->name, FILE_LINKLIST)) {
@@ -101,20 +93,20 @@ void udp_receive(void *arg) {
 
         af = read_allframe(local_superframe, superframe, compbuffer);
         if (af > 0) { // an allframe was received
-            if (verbose) blast_info("[%s] Received an allframe :)\n", udpsetup->name);
+            if (verbose) groundhog_info("[%s] Received an allframe :)\n", udpsetup->name);
             memcpy(local_allframe, compbuffer, superframe->allframe_size);
         } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
             if (serial != prev_serial) {
                 ll_rawfile = groundhog_open_new_rawfile(ll_rawfile, ll, udpsetup->name);
             }
             prev_serial = serial;
-            if (verbose) blast_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
+            if (verbose) groundhog_info("[%s] Received linklist \"%s\"", udpsetup->name, ll->name);
 
             if (blk_size < 0) {
-                blast_info("Malformed packed received on Pilot\n");
+                groundhog_info("Malformed packed received on Pilot\n");
                 continue;
             } else if (blk_size != transmit_size) {
-                blast_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
+                groundhog_info("Packet size mismatch blk_size=%d, transmit_size=%d", blk_size, transmit_size);
             }
 
             // write the linklist data to disk

@@ -18,19 +18,7 @@
 #include <netinet/tcp.h>
 #include <pthread.h>
 
-#include "linklist.h" // This gives access to channel_list and frame_size
-#include "linklist_compress.h"
-#include "linklist_writer.h"
-
-#include "bbc_pci.h"
-#include "decom_pci.h"
-#include "bi0.h"
-#include "crc.h"
-#include "blast.h"
-#include "blast_time.h"
 #include "groundhog.h"
-#include "bitserver.h"
-#include "FIFO.h"
 
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 #define BIPHASE_PACKET_SIZE (BIPHASE_FRAME_SIZE_BYTES-2-PACKET_HEADER_SIZE)
