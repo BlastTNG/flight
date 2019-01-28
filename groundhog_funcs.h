@@ -24,6 +24,7 @@
 extern superframe_t * superframe;
 
 // groundhog helper functions
+void daemonize();
 linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
 int groundhog_check_for_fileblocks(linklist_t * ll);
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer);
