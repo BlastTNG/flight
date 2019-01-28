@@ -23,14 +23,12 @@ set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
-set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 include_directories (
     "${COMMON_DIR}/include"
     "${COMMS_DIR}/include"
     "${CONFIG_DIR}/include"
     "${COMMUNICATIONS_DIR}/include"
-    "${LIBLINKLIST_DIR}"
 )
 
 # add common objects 
@@ -38,8 +36,6 @@ add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
 add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
 # add asynchronous communication objects
 add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
-# add common linklist objects
-add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
 
 add_library (blast_common OBJECT ${GROUNDHOG_COMMON_SRCS} ${GROUNDHOG_COMMON_HEADERS})
 define_file_basename_for_sources(blast_common)
@@ -47,16 +43,10 @@ define_file_basename_for_sources(blast_common)
 add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
 define_file_basename_for_sources(blast_comms)
 
-add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
-define_file_basename_for_sources(liblinklist)
-
 define_file_basename_for_sources(groundhog)
 
 add_executable (groundhog 
-    $<TARGET_OBJECTS:liblinklist>
-    ${PROJECT_SOURCE_DIR}/groundhog_funcs.c
-    ${PROJECT_SOURCE_DIR}/groundhog_funcs.h
-
+    ${COMMON_OBJECTS}
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:blast_comms>
     ${PROJECT_SOURCE_DIR}/blast/main.c

@@ -93,13 +93,27 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
+
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
 # add the binary tree to the search path for include files so that we will find decomd_config.h
 include_directories (
+      "${LIBLINKLIST_DIR}"
       "${PROJECT_BINARY_DIR}/include"
       "${PROJECT_SOURCE_DIR}"
       )
+
+# add common linklist objects
+add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
+add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
+define_file_basename_for_sources(liblinklist)
+set(COMMON_OBJECTS
+    $<TARGET_OBJECTS:liblinklist>
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.c
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.h
+   )
+
 
 IF(NOT MAKE_BLAST AND NOT MAKE_BIT)
 		message("No _config directories found. No executable compiled.")
