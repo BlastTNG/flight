@@ -76,7 +76,7 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
-# Find getdata    
+# Find linklist    
 find_path(LL_INCLUDE_DIR NAMES linklist.h
           HINTS /usr/local/include/linklist REQUIRED)
 find_library(LL_LIBRARY NAMES linklist

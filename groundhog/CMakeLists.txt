@@ -94,35 +94,26 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
-# add linklist library
-set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
-ExternalProject_Add(linklist
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND ""
-  )
-
-set(LINKLIST_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/../external_libs/linklist)
-include_directories(${LINKLIST_LIBRARY_DIR})
-set(LINKLIST_SOURCES 
-    ${LINKLIST_LIBRARY_DIR}/linklist.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_compress.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_connect.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_writer.c
-    ) 
-
-# configure a header file to pass some of the CMake settings to the source code
-#configure_file (
-#  "${PROJECT_SOURCE_DIR}/groundhog_config.h.in"
-#  "${PROJECT_BINARY_DIR}/include/groundhog_config.h"
-#  )
+# Find linklist    
+find_path(LL_INCLUDE_DIR NAMES linklist.h
+          HINTS /usr/local/include/linklist REQUIRED)
+find_library(LL_LIBRARY NAMES linklist
+            HINTS /usr/local/lib REQUIRED)
+IF(NOT LL_INCLUDE_DIR)
+    MESSAGE(FATAL_ERROR "Did not find linklist.h.  Is liblinklist installed?")
+ENDIF()
+IF(NOT LL_LIBRARY)  
+    MESSAGE(FATAL_ERROR "Did not find liblinklist.  Is liblinklist installed?")
+ENDIF()
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
 
 # add the binary tree to the search path for include files so that we will find decomd_config.h
-include_directories ("${PROJECT_BINARY_DIR}/include")
+include_directories (
+      "${PROJECT_BINARY_DIR}/include"
+      "${LL_INCLUDE_DIR}"
+      )
 
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
@@ -161,17 +152,14 @@ add_executable (groundhog
     ${LINKLIST_SOURCES}
     ) 
 
-add_dependencies(groundhog linklist)
-
 define_file_basename_for_sources(groundhog)
 
 target_link_libraries(groundhog
-    ${LINKLIST_LIBRARY}
     ${GLIB_LIBRARY}  
     ${GD_LIBRARY}
     ${MOSQ_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
-    ssl crypto
+    linklist ssl crypto
     )
 
 set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} ${COMMS_SRCS} 
