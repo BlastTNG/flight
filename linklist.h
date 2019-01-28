@@ -40,6 +40,7 @@
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
 #define ALL_TELEMETRY_NAME "all_telemetry.ll"
+#define FILE_LINKLIST "z_file_dl.ll"
 
 #define LINKLIST_MAX_FILENAME_SIZE 1024
 #define LINKLIST_SHORT_FILENAME_SIZE 64
