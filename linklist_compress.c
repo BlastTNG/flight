@@ -757,7 +757,7 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
 
     for (j=0;j<tlm_size;j++) ll_crccheck(allframe[tlm_in_start+j],&crc,ll_crctable);
     for (j = 0; j < tlm_num; j++) {
-      memcpy(sf+tlm_out_start, allframe+tlm_in_start, tlm_size);
+      if (sf) memcpy(sf+tlm_out_start, allframe+tlm_in_start, tlm_size);
       tlm_out_start += tlm_skip;
     }
     tlm_in_start += tlm_size;
@@ -771,12 +771,12 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
   {
     linklist_info("Bad all_frame checksum\n");
     // give an all frame that is saved from the previous good buffer
-    if (buffer_save) memcpy(sf, buffer_save, superframe->size);
+    if (buffer_save && sf) memcpy(sf, buffer_save, superframe->size);
     return -1;
   }
 
   // set the last good buffer to the allframe
-  if (buffer_save) memcpy(buffer_save, sf, superframe->size);
+  if (buffer_save && sf) memcpy(buffer_save, sf, superframe->size);
   return tlm_in_start;
 
 }
