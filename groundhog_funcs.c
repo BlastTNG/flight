@@ -1,3 +1,23 @@
+#include <unistd.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <syslog.h>
+#include <signal.h>
+#include <libgen.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/statvfs.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <pthread.h>
+
 #include "groundhog_funcs.h"
 
 int verbose = 1;
@@ -16,10 +36,10 @@ void daemonize()
 
     if ((pid = fork()) != 0) {
     if (pid == -1) {
-        berror(fatal, "unable to fork to background");
+        groundhog_fatal("unable to fork to background");
     }
     if ((stream = fopen("/var/run/groundhog.pid", "w")) == NULL) {
-        berror(err, "unable to write PID to disk");
+        groundhog_fatal("unable to write PID to disk");
     }
     else {
         fprintf(stream, "%i\n", pid);
@@ -27,7 +47,7 @@ void daemonize()
         fclose(stream);
     }
     // closelog();
-    printf("PID = %i\n", pid);
+    groundhog_info("PID = %i\n", pid);
     exit(0);
     }
     atexit(clean_up);
@@ -133,7 +153,7 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile,
   create_rawfile_symlinks(ll_rawfile, fname);
 
   sprintf(fname, "%s" CALSPECS_FORMAT_EXT, filename);
-  channels_write_calspecs(fname, derived_list);
+  groundhog_write_calspecs(fname);
 
   return ll_rawfile;
 }

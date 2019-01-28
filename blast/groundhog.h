@@ -44,8 +44,3 @@ extern struct TlmReport bi0_report;
 extern struct TlmReport highrate_report;
 extern struct TlmReport sbd_report;
 
-// BLAST print functions (required)
-// must define groundhog_info, _warn, and _fatal
-#define groundhog_info(fmt, ...) blast_info(fmt, ##__VA_ARGS__)
-#define groundhog_warn(fmt, ...) blast_warn(fmt, ##__VA_ARGS__)
-#define groundhog_fatal(fmt, ...) blast_fatal(fmt, ##__VA_ARGS__)

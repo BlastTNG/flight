@@ -13,6 +13,7 @@
 #define NOC "\x1B[?25l"
 #define CUR "\x1B[?25h"
 
+#define GROUNDHOG_LOG "/data/etc/groundhog.log"
 
 // groundhog linklist
 #include "linklist.h"
@@ -31,8 +32,7 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags);
 
 // groundhog required functions (to be defined in the groundhog main c file)
-superframe_t groundhog_init_superframe();
-int groundhog_init_linklists(char * filedir, int flags);
+void groundhog_write_calspecs(char * fname);
 
 struct UDPSetup {
   char name[80];
@@ -50,6 +50,11 @@ struct TlmReport {
 };
 
 
+// BLAST print functions (required)
+// must define groundhog_info, _warn, and _fatal
+#define groundhog_info(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#define groundhog_warn(fmt, ...) printf(fmt, ##__VA_ARGS__)
+#define groundhog_fatal(fmt, ...) printf(fmt, ##__VA_ARGS__); exit(2)
 
 
 #endif

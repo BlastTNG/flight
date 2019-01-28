@@ -19,12 +19,14 @@
 #include "groundhog_blast.h"
 #include "linklist_connect.h"
 
-#define GROUNDHOG_LOG "/data/etc/groundhog.log"
-
 struct TlmReport pilot_report = {0};
 struct TlmReport bi0_report = {0};
 struct TlmReport highrate_report = {0};
 struct TlmReport sbd_report = {0};
+
+void groundhog_write_calspecs(char *fname) {
+  channels_write_calspecs(fname, derived_list);
+}
 
 int main(int argc, char * argv[]) {
   // set the directory in which to save raw linklist files received from the payload
