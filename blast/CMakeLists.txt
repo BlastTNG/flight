@@ -23,7 +23,7 @@ set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
 set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
 set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
 set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
-set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../external_libs/linklist")
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 include_directories (
     "${COMMON_DIR}/include"
