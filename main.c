@@ -177,16 +177,15 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile,
 
 
 int main(int argc, char * argv[]) {
+  // set the directory in which to save raw linklist files received from the payload
   sprintf(archive_dir, "/data/groundhog");
 
-  channels_initialize(channel_list);
-  linklist_t *ll_list[MAX_NUM_LINKLIST_FILES] = {NULL};
-  load_all_linklists(superframe, DEFAULT_LINKLIST_DIR, ll_list, LL_INCLUDE_ALLFRAME);
-  generate_housekeeping_linklist(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), ALL_TELEMETRY_NAME);
-  linklist_generate_lookup(ll_list);  
-  write_linklist_format(linklist_find_by_name(ALL_TELEMETRY_NAME, ll_list), DEFAULT_LINKLIST_DIR ALL_TELEMETRY_NAME ".auto");
+  // initialize the main telemetry superframe
+  groundhog_init_superframe();
 
-  channels_write_calspecs("test.cs", derived_list);
+  // initialize the linklists derived from the superframe
+  groundhog_init_linklists(DEFAULT_LINKLIST_DIR, LL_INCLUDE_ALLFRAME);
+
   int pilot_on = 1;
   int bi0_on = 1;
   int highrate_on = 1;

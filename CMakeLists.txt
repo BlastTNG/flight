@@ -64,6 +64,7 @@ find_path(BLAST_CONFIG NAMES tx_struct_tng.c
 IF(BLAST_CONFIG)
 		message("Have blast_config")
     set(MAKE_BLAST True)
+    add_definitions(-DMAKE_BLAST)
     include(${PROJECT_SOURCE_DIR}/CMakeLists.blast)
 ENDIF()
 
@@ -72,6 +73,7 @@ find_path(BIT_CONFIG NAMES telemlist.bit
 IF(BIT_CONFIG)
 		message("Have bit_config")
     set(MAKE_BIT True)
+    add_definitions(-DMAKE_BIT)
     include(${PROJECT_SOURCE_DIR}/CMakeLists.bit)
 ENDIF()
 
