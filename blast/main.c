@@ -16,7 +16,7 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "groundhog_blast.h"
+#include "groundhog.h"
 #include "linklist_connect.h"
 
 struct TlmReport pilot_report = {0};

@@ -18,7 +18,7 @@
 #include <netinet/tcp.h>
 #include <pthread.h>
 
-#include "groundhog_blast.h"
+#include "groundhog.h"
 
 #define BIPHASE_FRAME_SIZE_BYTES (BI0_FRAME_SIZE*2)
 #define BIPHASE_PACKET_SIZE (BIPHASE_FRAME_SIZE_BYTES-2-PACKET_HEADER_SIZE)

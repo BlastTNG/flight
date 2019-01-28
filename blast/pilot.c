@@ -18,7 +18,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "groundhog_blast.h"
+#include "groundhog.h"
 
 void udp_receive(void *arg) {
 
