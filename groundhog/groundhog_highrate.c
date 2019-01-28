@@ -297,18 +297,18 @@ void highrate_receive(void *arg) {
                       // the packet is complete, so decompress
                       if ((retval == 0) && (ll != NULL))
                       {
-													if (groundhog_check_for_fileblocks(ll)) {
-															// unpack and extract to disk
-															framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer);
+                          if (groundhog_check_for_fileblocks(ll)) {
+                              // unpack and extract to disk
+                              framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer);
                           } else { // write the linklist data to disk
-															// set flags for data extraction
-															unsigned int flags = 0;
-															if (ser != prev_ser) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
-															prev_ser = ser;
+                              // set flags for data extraction
+                              unsigned int flags = 0;
+                              if (ser != prev_ser) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+                              prev_ser = ser;
 
-															// process the linklist and write the data to disk
-															framenum = groundhog_process_and_write(ll, transmit_size, compbuffer,
-																																		local_allframe, linkname, 
+                              // process the linklist and write the data to disk
+                              framenum = groundhog_process_and_write(ll, transmit_size, compbuffer,
+                                                                    local_allframe, linkname, 
                                                                     source_str, &ll_rawfile, flags);
                           }
                           // fill out the telemetry report
@@ -346,18 +346,18 @@ void highrate_receive(void *arg) {
               }
               sbd_ser = *(uint32_t *) gse_packet;
 
-							// set flags for data extraction
-							unsigned int flags = 0;
-							if (sbd_ser != sbd_prev_ser) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
-							sbd_prev_ser = sbd_ser;
+              // set flags for data extraction
+              unsigned int flags = 0;
+              if (sbd_ser != sbd_prev_ser) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+              sbd_prev_ser = sbd_ser;
 
               // TODO(javier): check this with sipsim or real sip
               blast_info("[%s] Received packet \"%s\" from HK stack (size=%d)\n", source_str, sbd_ll->name, gse_packet_header.size);
 
-							// process the linklist and write the data to disk
-							framenum = groundhog_process_and_write(ll, gse_packet_header.size, 
+              // process the linklist and write the data to disk
+              framenum = groundhog_process_and_write(ll, gse_packet_header.size, 
                                                   gse_packet+sizeof(uint32_t), local_allframe,
-																									"ShortBurst", source_str, &sbd_ll_rawfile, flags);
+                                                  "ShortBurst", source_str, &sbd_ll_rawfile, flags);
               // fill out the telemetry report
               sbd_report.ll = sbd_ll;
               sbd_report.allframe = 0; 

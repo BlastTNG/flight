@@ -86,7 +86,7 @@ void daemonize()
  * 
  */
 int groundhog_check_for_fileblocks(linklist_t * ll) {
-	return (!strcmp(ll->name, FILE_LINKLIST));
+  return (!strcmp(ll->name, FILE_LINKLIST));
 }
 
 // ------------------------------------//
@@ -106,16 +106,16 @@ int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uin
   static uint8_t * dummy_buffer = NULL;
   if (!dummy_buffer) dummy_buffer = calloc(1, ll->superframe->size);
 
-	// unpack and extract to disk
-	if (groundhog_check_for_fileblocks(ll)) {
-		unsigned int bytes_unpacked = 0;
-		while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
-			decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
-			bytes_unpacked += ll->blk_size;
-			usleep(1000);
-		}
-		return (ll->blocks[0].i*100/ll->blocks[0].n);
-	}
+  // unpack and extract to disk
+  if (groundhog_check_for_fileblocks(ll)) {
+    unsigned int bytes_unpacked = 0;
+    while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
+      decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
+      bytes_unpacked += ll->blk_size;
+      usleep(1000);
+    }
+    return (ll->blocks[0].i*100/ll->blocks[0].n);
+  }
   return 0;
 }
 
@@ -123,35 +123,35 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
                                 uint8_t * local_allframe, char * filename_str, char * disp_str,
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags) {
   // process the linklist and write the data to disk
-	int af = read_allframe(NULL, ll->superframe, compbuffer);
+  int af = read_allframe(NULL, ll->superframe, compbuffer);
   int retval = -1;
-	if (af > 0) { // an allframe was received
-		if (verbose) groundhog_info("[%s] Received an allframe :)\n", disp_str);
-		memcpy(local_allframe, compbuffer, ll->superframe->allframe_size);
+  if (af > 0) { // an allframe was received
+    if (verbose) groundhog_info("[%s] Received an allframe :)\n", disp_str);
+    memcpy(local_allframe, compbuffer, ll->superframe->allframe_size);
 
     if (*ll_rawfile) retval = tell_linklist_rawfile(*ll_rawfile);
     else retval = 0;
-	} else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
-		if (flags && GROUNDHOG_OPEN_NEW_RAWFILE) {
-			*ll_rawfile = groundhog_open_new_rawfile(*ll_rawfile, ll, filename_str);
-		}
-		if (verbose) groundhog_info("[%s] Received linklist \"%s\"", disp_str, ll->name);
+  } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
+    if (flags && GROUNDHOG_OPEN_NEW_RAWFILE) {
+      *ll_rawfile = groundhog_open_new_rawfile(*ll_rawfile, ll, filename_str);
+    }
+    if (verbose) groundhog_info("[%s] Received linklist \"%s\"", disp_str, ll->name);
 
     // check for consistency in transmit size with linklist bulk size
-		if (transmit_size > ll->blk_size) {
-			groundhog_warn("Packet size mismatch blk_size=%d, transmit_size=%d", ll->blk_size, transmit_size);
+    if (transmit_size > ll->blk_size) {
+      groundhog_warn("Packet size mismatch blk_size=%d, transmit_size=%d", ll->blk_size, transmit_size);
       transmit_size = ll->blk_size;
-		}
+    }
 
-		// write the linklist data to disk
-		if (*ll_rawfile) {
-			memcpy(compbuffer+ll->blk_size, local_allframe, ll->superframe->allframe_size);
-			write_linklist_rawfile(*ll_rawfile, compbuffer);
-			flush_linklist_rawfile(*ll_rawfile);
+    // write the linklist data to disk
+    if (*ll_rawfile) {
+      memcpy(compbuffer+ll->blk_size, local_allframe, ll->superframe->allframe_size);
+      write_linklist_rawfile(*ll_rawfile, compbuffer);
+      flush_linklist_rawfile(*ll_rawfile);
 
-			retval = tell_linklist_rawfile(*ll_rawfile);
-		}
-	}
+      retval = tell_linklist_rawfile(*ll_rawfile);
+    }
+  }
   return retval;
 }
 
