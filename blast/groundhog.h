@@ -1,4 +1,4 @@
-#include "groundhog.h"
+#include "groundhog_funcs.h"
 
 /* ------ BEGIN CUSTOM GROUNDHOG DEFINITIONS ------ */
 

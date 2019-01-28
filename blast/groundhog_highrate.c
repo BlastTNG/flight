@@ -19,7 +19,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "groundhog.h"
+#include "groundhog_blast.h"
 
 enum HeaderType{NONE, TD_HK, TD_OMNI_HGA, IRID_HK, IRID_DIAL, PAYLOAD};
 

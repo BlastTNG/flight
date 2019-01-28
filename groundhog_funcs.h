@@ -3,6 +3,17 @@
 
 #include <stdarg.h>
 
+#define NOR "\x1B[0m"
+#define RED "\x1B[31;1m"
+#define GRN "\x1B[32;1m"
+#define YLW "\x1B[33;1m"
+#define BLU "\x1B[34;1m"
+#define MAG "\x1B[35;1m"
+#define CYN "\x1B[36;1m"
+#define NOC "\x1B[?25l"
+#define CUR "\x1B[?25h"
+
+
 // groundhog linklist
 #include "linklist.h"
 #include "linklist_writer.h"
