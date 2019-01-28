@@ -53,15 +53,18 @@ define_file_basename_for_sources(liblinklist)
 define_file_basename_for_sources(groundhog)
 
 add_executable (groundhog 
+    $<TARGET_OBJECTS:liblinklist>
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.c
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.h
+
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:blast_comms>
-    $<TARGET_OBJECTS:liblinklist>
-    ${PROJECT_SOURCE_DIR}/groundhog.c
-    ${PROJECT_SOURCE_DIR}/decom_pci.h
-    ${PROJECT_SOURCE_DIR}/groundhog.h
-    ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
-    ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
-    ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
+    ${PROJECT_SOURCE_DIR}/blast/main.c
+    ${PROJECT_SOURCE_DIR}/blast/decom_pci.h
+    ${PROJECT_SOURCE_DIR}/blast/groundhog.h
+    ${PROJECT_SOURCE_DIR}/blast/biphase.c
+    ${PROJECT_SOURCE_DIR}/blast/pilot.c
+    ${PROJECT_SOURCE_DIR}/blast/highrate.c
     ) 
 
 target_link_libraries(groundhog

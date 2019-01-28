@@ -64,7 +64,8 @@ find_path(BLAST_CONFIG NAMES tx_struct_tng.c
 IF(BLAST_CONFIG)
 		message("Have blast_config")
     set(MAKE_BLAST True)
-    include(${PROJECT_SOURCE_DIR}/CMakeLists.blast)
+    add_definitions(-DMAKE_BLAST)
+    include(${PROJECT_SOURCE_DIR}/blast/CMakeLists.txt)
 ENDIF()
 
 find_path(BIT_CONFIG NAMES telemlist.bit
@@ -72,7 +73,8 @@ find_path(BIT_CONFIG NAMES telemlist.bit
 IF(BIT_CONFIG)
 		message("Have bit_config")
     set(MAKE_BIT True)
-    include(${PROJECT_SOURCE_DIR}/CMakeLists.bit)
+    add_definitions(-DMAKE_BIT)
+    include(${PROJECT_SOURCE_DIR}/bit/CMakeLists.txt)
 ENDIF()
 
 
@@ -96,6 +98,7 @@ include_directories ("/usr/include/machine")
 # add the binary tree to the search path for include files so that we will find decomd_config.h
 include_directories (
       "${PROJECT_BINARY_DIR}/include"
+      "${PROJECT_SOURCE_DIR}"
       )
 
 IF(NOT MAKE_BLAST AND NOT MAKE_BIT)
