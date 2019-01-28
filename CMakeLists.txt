@@ -76,28 +76,25 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
-# Find linklist    
-find_path(LL_INCLUDE_DIR NAMES linklist.h
-          HINTS /usr/local/include/linklist REQUIRED)
-find_library(LL_LIBRARY NAMES linklist
-            HINTS /usr/local/lib REQUIRED)
-IF(NOT LL_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find linklist.h.  Is liblinklist installed?")
-ENDIF()
-IF(NOT LL_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find liblinklist.  Is liblinklist installed?")
-ENDIF()
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
 
 include_directories (
+    "${LIBLINKLIST_DIR}"
     "${PROJECT_SOURCE_DIR}"
-    "${LL_INCLUDE_DIR}"
     )
+
+# add common linklist objects
+add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
+add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
+define_file_basename_for_sources(liblinklist)
+
 
 # add common objects
 add_executable (mole 
+    $<TARGET_OBJECTS:liblinklist>
     ${PROJECT_SOURCE_DIR}/mole.c
     ) 
 
@@ -105,7 +102,7 @@ define_file_basename_for_sources(mole)
 
 target_link_libraries(mole
     ${CMAKE_THREAD_LIBS_INIT} 
-    linklist ssl crypto
+    ssl crypto
     m)
 
 install(TARGETS mole DESTINATION bin)
