@@ -46,7 +46,10 @@ define_file_basename_for_sources(blast_comms)
 define_file_basename_for_sources(groundhog)
 
 add_executable (groundhog 
-    ${COMMON_OBJECTS}
+    $<TARGET_OBJECTS:liblinklist>
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.c
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.h
+
     $<TARGET_OBJECTS:blast_common>
     $<TARGET_OBJECTS:blast_comms>
     ${PROJECT_SOURCE_DIR}/blast/main.c
