@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+build
+*.swp
+mole
+*.o
+=======
 **~
 **.project
 **.cproject
@@ -66,3 +72,4 @@ scripts_gse/sonos.log
 sched_upload/sanity
 sched_upload/sched_upload
 sched_upload/test.cs
+>>>>>>> 35929c76dc5c7e3424043557c37a740b858eeb11
