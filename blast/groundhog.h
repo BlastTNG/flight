@@ -22,6 +22,7 @@ enum DownLinkTypes {PILOT, BI0, HIGHRATE,
                       NUM_DOWNLINKS};
 
 // BLAST pilot
+#include "bitserver.h"
 #include "pilot.h"
 void udp_receive(void *arg);
 
@@ -35,11 +36,4 @@ void biphase_receive(void *arg);
 #include "highrate.h"
 #include "comms_serial.h"
 void highrate_receive(void *arg);
-
-// BLAST telemetry reports
-extern int verbose;
-extern struct TlmReport pilot_report;
-extern struct TlmReport bi0_report;
-extern struct TlmReport highrate_report;
-extern struct TlmReport sbd_report;
 
