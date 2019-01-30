@@ -206,23 +206,6 @@ ExternalProject_Add(phenomproj
 set(PH_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/.libs/libphenom.a)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/phenom/src/phenomproj/include")
 
-# add linklist library
-set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
-ExternalProject_Add(linklist
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND "")
-
-set(LINKLIST_LIBRARY_DIR ${PROJECT_SOURCE_DIR}/../external_libs/linklist)
-include_directories(${LINKLIST_LIBRARY_DIR})
-set(LINKLIST_SOURCES 
-    ${LINKLIST_LIBRARY_DIR}/linklist.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_compress.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_connect.c
-    ${LINKLIST_LIBRARY_DIR}/linklist_writer.c
-    ) 
-
 # Find alsa
 pkg_check_modules(PC_ALSA QUIET alsa)
 set(ALSA_DEFINITIONS ${PC_ALSA_CFLAGS_OTHER})
@@ -313,6 +296,7 @@ set(MPSSE_DIR "${PROJECT_SOURCE_DIR}/../external_libs/mpsse")
 set(SYNCLINK_DIR "${PROJECT_SOURCE_DIR}/../external_libs/synclink")
 set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/communications/")
 set(SOCAT_DIR "${PROJECT_SOURCE_DIR}/../external_libs/socat")
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 set(ETC_DIR "${PROJECT_SOURCE_DIR}/../blast_etc")
 FILE(GLOB etc_files "${ETC_DIR}/*.txt" "${ETC_DIR}/*.sch" "${ETC_DIR}/*.library" "${ETC_DIR}/*.lut" "${ETC_DIR}/WMM.COF")
@@ -325,6 +309,7 @@ include_directories (
     "${COMMUNICATIONS_DIR}/include"
     "${MPSSE_DIR}"
     "${SYNCLINK_DIR}"
+    "${LIBLINKLIST_DIR}"
     )
 
 # add commanding objects
@@ -367,6 +352,9 @@ add_subdirectory(${MPSSE_DIR} "${PROJECT_BINARY_DIR}/mpsse")
 # add SOCAT Files
 add_subdirectory(${SOCAT_DIR} "${PROJECT_BINARY_DIR}/socat")
 
+# add common linklist objects
+add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
+
 add_library (pointing OBJECT ${POINTING_SRCS} ${POINTING_HEADERS})
 define_file_basename_for_sources(pointing)
 add_library (motors OBJECT ${MOTOR_SRCS} ${MOTOR_HEADERS})
@@ -394,6 +382,9 @@ define_file_basename_for_sources(mpsse)
 add_library (roach OBJECT ${ROACH_SRCS} ${ROACH_HEADERS})
 define_file_basename_for_sources(roach)
 
+add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
+define_file_basename_for_sources(liblinklist)
+
 # add mcp objects
 add_library(mcp_obj OBJECT 
     mcp.c 
@@ -419,11 +410,11 @@ add_executable (mcp
     $<TARGET_OBJECTS:blast_comms>
     $<TARGET_OBJECTS:mpsse>
     $<TARGET_OBJECTS:roach>
+    $<TARGET_OBJECTS:liblinklist>
     $<TARGET_OBJECTS:mcp_obj>
-    ${LINKLIST_SOURCES}
     ) 
 
-add_dependencies(mcp soem phenomproj linklist)
+add_dependencies(mcp soem phenomproj)
 
 define_file_basename_for_sources(mcp)
 
@@ -436,7 +427,6 @@ target_link_libraries(mcp
 		${GLIB_LIBRARY}
 		${ECAT_LIBRARY}
     ${KATCP_LIBRARY} 
-		${LINKLIST_LIBRARY}
 		${CK_LIBRARY}
 		${PH_LIBRARY}
 		${SENSORS_LIBRARY}
