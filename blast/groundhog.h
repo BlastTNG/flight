@@ -22,7 +22,6 @@ enum DownLinkTypes {PILOT, BI0, HIGHRATE,
                       NUM_DOWNLINKS};
 
 // BLAST pilot
-#include "bitserver.h"
 #include "pilot.h"
 void udp_receive(void *arg);
 
