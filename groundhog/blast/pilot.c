@@ -18,7 +18,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "groundhog.h"
+#include "bitserver.h"
 
 void udp_receive(void *arg) {
 
@@ -65,7 +65,7 @@ void udp_receive(void *arg) {
     setBITRecverSerial(&udprecver, serial);
 
     // receive the data from payload via bitserver
-    blk_size = recvFromBITRecver(&udprecver, compbuffer, PILOT_MAX_SIZE, 0);
+    blk_size = recvFromBITRecver(&udprecver, compbuffer, udpsetup->maxsize, 0);
     if (blk_size < 0) {
         groundhog_info("Malformed packed received on Pilot\n");
         continue;
