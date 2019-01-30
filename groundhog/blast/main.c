@@ -19,10 +19,10 @@
 #include "groundhog.h"
 #include "linklist_connect.h"
 
-struct TlmReport pilot_report = {0};
-struct TlmReport bi0_report = {0};
-struct TlmReport highrate_report = {0};
-struct TlmReport sbd_report = {0};
+extern struct TlmReport pilot_report;
+extern struct TlmReport bi0_report;
+extern struct TlmReport highrate_report;
+extern struct TlmReport sbd_report;
 
 void groundhog_write_calspecs(char *fname) {
   channels_write_calspecs(fname, derived_list);
