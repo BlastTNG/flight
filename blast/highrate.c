@@ -21,6 +21,9 @@
 
 #include "groundhog.h"
 
+struct TlmReport highrate_report = {0};
+struct TlmReport sbd_report = {0};
+
 enum HeaderType{NONE, TD_HK, TD_OMNI_HGA, IRID_HK, IRID_DIAL, PAYLOAD};
 
 struct CSBFHeader {

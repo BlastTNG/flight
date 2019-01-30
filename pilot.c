@@ -18,7 +18,10 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "groundhog_funcs.h"
 #include "bitserver.h"
+
+struct TlmReport pilot_report = {0};
 
 void udp_receive(void *arg) {
 

@@ -26,6 +26,8 @@
 
 #define DEV "/dev/decom_pci"
 
+struct TlmReport bi0_report = {0};
+
 void print_packet(uint8_t * packet, size_t length) {
     printf("Packet Received is: \n");
     for (int i = 0; i < length; i++) {

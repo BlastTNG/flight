@@ -22,6 +22,7 @@
 
 #define GROUNDHOG_OPEN_NEW_RAWFILE 0x01
 extern superframe_t * superframe;
+extern int verbose;
 
 // groundhog helper functions
 void daemonize();
