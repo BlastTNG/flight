@@ -15,12 +15,9 @@
 
 // BIT pilot
 #include "bitserver.h"
+#include "address.h"
+#include "comms.h"
 void udp_receive(void *arg);
 
 // BIT biphase
 void biphase_receive(void *arg);
-
-// BIT telemetry reports
-extern int verbose;
-extern struct TlmReport pilot_report;
-extern struct TlmReport bi0_report;

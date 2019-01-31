@@ -19,7 +19,7 @@
 #include "groundhog.h"
 #include "linklist_connect.h"
 
-struct TlmReport pilot_report = {0};
+extern struct TlmReport pilot_report;
 struct TlmReport bi0_report = {0};
 
 char * cmdfile = "/data/etc/bit_config/cmdlist.bit";
@@ -83,12 +83,18 @@ int main(int argc, char * argv[]) {
   pthread_t pilot_receive_worker;
   pthread_t biphase_receive_worker;
 
+  struct UDPSetup pilot_setup = {"Pilot", 
+                                 GND_IP, 
+                                 GND_TELEM_PORT, 
+                                 superframe->size, 
+                                 PILOT_PKT_SIZE,
+                                 0};
 
   // start the server thread for mole clients
   pthread_create(&server_thread, NULL, (void *) &linklist_server, NULL);
 
   if (pilot_on) {
-    // pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
+    pthread_create(&pilot_receive_worker, NULL, (void *) &udp_receive, (void *) &pilot_setup);
   }
 
   if (bi0_on) {
