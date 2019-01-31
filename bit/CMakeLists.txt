@@ -1,8 +1,10 @@
 # Find glib    
 set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
+set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../bit_config")
 
 include_directories (
     "${COMMON_DIR}"
+    "${CONFIG_DIR}"
 )
 
 # add common objects 
@@ -20,6 +22,8 @@ add_executable (groundhog-bit
 
     $<TARGET_OBJECTS:bit_common>
     ${PROJECT_SOURCE_DIR}/bit/main.c
+
+    ${PROJECT_SOURCE_DIR}/pilot.c
     ) 
 
 target_link_libraries(groundhog-bit
