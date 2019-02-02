@@ -72,7 +72,7 @@ static char * def_ll_extensions[] = {".ll", LINKLIST_FORMAT_EXT, ""};
 const char * SF_TYPES_STR[] = {
   "UINT8", "UINT16", "UINT32", "UINT64", 
   "INT8", "INT16", "INT32", "INT64", 
-  "FLOAT32", "FLOAT64", ""
+  "FLOAT32", "FLOAT64", "BLOCK"
 };
 const char * get_sf_type_string(uint8_t m_type)
 {
@@ -447,6 +447,7 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
   switch (chan->type) {
     case SF_INT8:
     case SF_UINT8:
+    case SF_NUM:
       retsize = 1;
       break;
     case SF_INT16:
@@ -848,7 +849,7 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
   ll->items = (linkentry_t *) calloc(superframe->n_entries+extra_chksm, sizeof(linkentry_t));
   ll->flags = flags;
   ll->superframe = superframe;
-  ll->blocks = NULL;
+  ll->blocks = (struct block_container *) calloc(MAX_DATA_BLOCKS,sizeof(struct block_container));
   ll->n_entries = 0;
 
   // add initial checksum
@@ -873,10 +874,22 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
     ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
     ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].num = ll_superframe_list[i].spf;
-    ll->items[ll->n_entries].tlm = &ll_superframe_list[i];
+
+    superframe_entry_t * chan = NULL;
+    if (ll_superframe_list[i].type == SF_NUM) {
+      chan = &block_entry;
+      if (ll->num_blocks < MAX_DATA_BLOCKS) {
+        parse_block(ll, ll_superframe_list[i].field);
+      } else {
+        linklist_err("parse_linklist_format: max number of data blocks (%d) reached\n", MAX_DATA_BLOCKS);
+      }
+    } else {
+      chan = &ll_superframe_list[i];
+    }
+    ll->items[ll->n_entries].tlm = chan;
     ll->items[ll->n_entries].linklist = ll;
 
-    update_superframe_entry_hash(&mdContext, &ll_superframe_list[i]);
+    update_superframe_entry_hash(&mdContext, chan);
     update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
     byteloc += blk_size;
     ll->n_entries++;
@@ -1006,7 +1019,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         if (strncmp(temp,"BEGIN",5) == 0) begin_f = 1; // found beginning
         //printf("Line %d: BEGIN\n",count);
       } else if (!serial_f) { // next is the serial number
-        sscanf(temp, "%lx", &serial);
+        sscanf(temp, "%" PRIx64, &serial);
         serial_f = 1;
       } else if (!size_f) { // next is the frame size
         blksize = atoi(temp);
@@ -1072,7 +1085,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   }
 
   if (superframe->serial != serial) {
-    linklist_err("Parsed serial 0x%.8lx does not match file serial 0x%.8lx\n", superframe->serial, serial);
+    linklist_err("Parsed serial 0x%" PRIx64 " does not match file serial 0x%" PRIx64 "\n", superframe->serial, serial);
   }
   if (superframe->size != blksize) {
     linklist_err("Parsed size %d does not match file size %d\n", superframe->size, blksize);
@@ -1092,7 +1105,7 @@ void write_superframe_format(superframe_t * superframe, const char * fname) {
   int i = 0;
   
   fprintf(fp, "BEGIN\n");
-  fprintf(fp, "%.8lx\n", superframe->serial); 
+  fprintf(fp, "%" PRIx64 "\n", superframe->serial); 
   fprintf(fp, "%d\n", superframe->size); 
 
   for (i = 0; sf[i].field[0]; i++) {
