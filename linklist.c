@@ -811,12 +811,12 @@ int linklist_generate_lookup(linklist_t ** lll) {
 }
 
 // returns the a pointer to the linklist with the given serial number 
-linklist_t * linklist_lookup_by_serial(uint32_t serial) {
+linklist_t * linklist_lookup_by_serial(uint16_t serial) {
   if (!ll_list) {
     linklist_err("linklist lookup is unallocated\n");
     return NULL;
   }
-  int ind = linktable[*((uint16_t *) &serial)];
+  int ind = linktable[serial];
   if (ind < 0) return NULL;
   return ll_list[ind];
 }

@@ -267,7 +267,7 @@ int read_linklist_formatfile_comment(char *, char *);
 int superframe_entry_get_index(superframe_entry_t *, superframe_entry_t *);
 
 int linklist_generate_lookup(linklist_t **);
-linklist_t * linklist_lookup_by_serial(uint32_t);
+linklist_t * linklist_lookup_by_serial(uint16_t);
 void delete_linklist(linklist_t *);
 int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
 int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
