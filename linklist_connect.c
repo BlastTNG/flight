@@ -71,7 +71,6 @@
 extern "C" {
 #endif
 
-char archive_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 uint16_t theday = 0;
 uint16_t themonth = 0;
 uint16_t theyear = 0;

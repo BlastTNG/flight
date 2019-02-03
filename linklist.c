@@ -66,6 +66,7 @@ extern "C" {
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 unsigned int ll_rawfile_default_fpf = 900; // number of frames per file before incrementing linklist rawfiles
+char archive_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 
 static char * def_ll_extensions[] = {".ll", LINKLIST_FORMAT_EXT, ""}; 
 
