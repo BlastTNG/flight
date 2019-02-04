@@ -147,6 +147,7 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile,
   char filename[128];
   make_linklist_rawfile_name(ll, filename);
   ll_rawfile = open_linklist_rawfile(filename, ll);
+  groundhog_info("Opening new file \"%s\"\n", filename);
 
   char fname[128];
   sprintf(fname, "%s/%s_live", archive_dir, symname);

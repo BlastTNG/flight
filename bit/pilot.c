@@ -16,6 +16,7 @@
 #include <openssl/md5.h>
 #include <float.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/time.h>
 
 #include "groundhog.h"
@@ -36,6 +37,8 @@ void udp_receive(void *arg) {
   uint64_t framenum = 0;
   uint64_t recv_framenum = 0;
   int af = 0;
+	char symname[128];
+  int i;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
 
@@ -83,12 +86,21 @@ void udp_receive(void *arg) {
     } else { // write the linklist data to disk
         // set flags for data extraction
         unsigned int flags = 0;
-        if (serial != prev_serial) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+        if ((serial != prev_serial) || // new serial number, so new file
+            (recv_framenum < framenum)) { // frame number received
+          flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+					for (i = 0; i < strlen(ll->name); i++) {
+						if (ll->name[i] == '.') break;
+						symname[i] = toupper(ll->name[i]);
+					}
+					symname[i] = '\0';
+        }
+
         prev_serial = serial;
 
         // process the linklist and write the data to disk
         framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, local_allframe,
-                                               udpsetup->name, udpsetup->name, &ll_rawfile, flags);
+                                               symname, udpsetup->name, &ll_rawfile, flags);
     }
 
     // fill out the telemetry report
