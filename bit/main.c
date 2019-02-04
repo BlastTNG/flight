@@ -126,7 +126,7 @@ int main(int argc, char * argv[]) {
     fprintf(stdout, "%s\r", fn_str);
     fflush(stdout); 
 
-    usleep(200000);
+    sleep(1);
   }
   return 0;
 }
