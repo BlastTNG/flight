@@ -18,8 +18,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "groundhog_funcs.h"
-#include "bitserver.h"
+#include "groundhog.h"
 
 struct TlmReport pilot_report = {0};
 
@@ -33,8 +32,9 @@ void udp_receive(void *arg) {
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
-  uint32_t transmit_size = 0;
+  uint64_t transmit_size = 0;
   uint64_t framenum = 0;
+  uint64_t recv_framenum = 0;
   int af = 0;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -53,7 +53,7 @@ void udp_receive(void *arg) {
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
-      serial = *(uint32_t *) recvbuffer;
+      serial = *(uint16_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
         if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)\n", udpsetup->name, serial);
@@ -74,8 +74,8 @@ void udp_receive(void *arg) {
         continue;
     }
 
-    // hijacking frame number for transmit size
-    transmit_size = udprecver.frame_num; 
+    // process the auxiliary data into transmit size and frame number
+    get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
     if (groundhog_check_for_fileblocks(ll)) {
         // unpack and extract to disk
