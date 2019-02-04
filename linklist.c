@@ -1109,8 +1109,12 @@ void write_superframe_format(superframe_t * superframe, const char * fname) {
   fprintf(fp, "%" PRIx64 "\n", superframe->serial); 
   fprintf(fp, "%d\n", superframe->size); 
 
+  char type_string[128] = "";
+
   for (i = 0; sf[i].field[0]; i++) {
-    fprintf(fp, "%s  %s  %u  %u  %u", sf[i].field, get_sf_type_string(sf[i].type), sf[i].spf, sf[i].start, sf[i].skip);
+    if (sf[i].max > sf[i].min) sprintf(type_string, "%s(%lf,%lf)", get_sf_type_string(sf[i].type), sf[i].min, sf[i].max);
+    else sprintf(type_string, "%s", get_sf_type_string(sf[i].type));
+    fprintf(fp, "%s  %s  %u  %u  %u", sf[i].field, type_string, sf[i].spf, sf[i].start, sf[i].skip);
     if (strlen(sf[i].quantity)) fprintf(fp, "  \"%s\"  \"%s\"", sf[i].quantity, sf[i].units);
     fprintf(fp, "\n");
   }
