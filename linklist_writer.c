@@ -386,6 +386,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   ll_dirfile->bin = (FILE **) calloc(ll->superframe->n_entries, sizeof(FILE *));
 
   for (i = 0; i < ll->superframe->n_entries; i++) {
+    if (sfe[i].type == SF_NUM) continue; 
+
 		// add entry to format file
 		fprintf(formatfile,"%s RAW %s %d\n", sfe[i].field, 
 																				 get_sf_type_string(sfe[i].type), 

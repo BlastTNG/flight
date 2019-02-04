@@ -286,10 +286,10 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
     }
 
     // get the calspecs name
-    recv_ll_serial = request_server_file(tc, reqcsname, flags);
-    if (recv_ll_serial == 0x1badfeed) { // file not found
+    uint32_t temp_ll_serial = request_server_file(tc, reqcsname, flags);
+    if (temp_ll_serial == 0x1badfeed) { // file not found
       calspecs = 0; 
-    } else if (recv_ll_serial == 0) { // connection issue
+    } else if (temp_ll_serial == 0) { // connection issue
       close_connection(tc);
       tc->fd = connect_tcp(tc);
       continue;
