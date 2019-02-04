@@ -471,6 +471,31 @@ uint32_t get_superframe_entry_size(superframe_entry_t * chan) {
   return retsize;
 }
 
+enum dataCompressTypes linklist_get_comp_index(char * name) {
+  int i;
+  for (i=0; i<NUM_COMPRESS_TYPES; i++) {
+    if (strcmp(name, compRoutine[i].name) == 0) break;
+  }
+  if (i != NUM_COMPRESS_TYPES) {
+    return i;
+  } else {
+    linklist_err("Could not find compression type \"%s\"\n", name);
+    return NO_COMP;
+  }
+}
+
+enum dataCompressTypes linklist_get_default_compression(superframe_entry_t * tlm, int flags) {
+  if ((flags & LL_AUTO_FLOAT_COMP) && tlm &&
+      ((tlm->max != 0) || (tlm->min != 0))) {
+      if (tlm->type == SF_FLOAT32) {
+        return FIXED_PT_16BIT; 
+      } else if (tlm->type == SF_FLOAT64) {
+        return FIXED_PT_32BIT;
+      }
+  }
+  return NO_COMP;
+}
+
 /**
  * parse_linklist_format_opt
  * 
@@ -591,19 +616,11 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
 
           isblock = 0;
           if ((strcmp(temps[1], "NONE") == 0) || (strlen(temps[1]) == 0)) {
-            comp_type = NO_COMP;
+            comp_type = linklist_get_default_compression(chan, flags);
           } else if (strspn(temps[1], "0123456789") == strlen(temps[1])) { // normal field, number
             comp_type = atoi(temps[1]); // get compression type
           } else { // normal field, string
-            for (i=0; i<NUM_COMPRESS_TYPES; i++) {
-              if (strcmp(temps[1], compRoutine[i].name) == 0) break;
-            }
-            if (i != NUM_COMPRESS_TYPES) {
-              comp_type = i;
-            } else {
-              linklist_err("Could not find compression type \"%s\"\n", temps[1]);
-              comp_type = NO_COMP;
-            }
+            comp_type = linklist_get_comp_index(temps[1]);
           }
         }
 
@@ -837,6 +854,7 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
   unsigned int byteloc = 0;
   unsigned int blk_size = 0;
   unsigned int chksm_count = 0;
+  unsigned int comp_type = 0;
 
   unsigned int extra_chksm = !(flags & LL_NO_AUTO_CHECKSUM) ? superframe->size/MIN_CHKSM_SPACING : 0;
   extra_chksm += 5;
@@ -869,12 +887,11 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
       chksm_count = 0;
     }
 
-    blk_size = get_superframe_entry_size(&ll_superframe_list[i])*ll_superframe_list[i].spf; 
+    comp_type = linklist_get_default_compression(&ll_superframe_list[i], flags);
 
     ll->items[ll->n_entries].start = byteloc;
-    ll->items[ll->n_entries].comp_type = NO_COMP; // uncompressed
-    ll->items[ll->n_entries].blk_size = blk_size;
     ll->items[ll->n_entries].num = ll_superframe_list[i].spf;
+    ll->items[ll->n_entries].comp_type = comp_type;
 
     superframe_entry_t * chan = NULL;
     if (ll_superframe_list[i].type == SF_NUM) {
@@ -889,6 +906,13 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
     }
     ll->items[ll->n_entries].tlm = chan;
     ll->items[ll->n_entries].linklist = ll;
+
+    if (comp_type != NO_COMP) { // normal compressed field
+      blk_size = (*compRoutine[comp_type].compressFunc)(NULL, &ll->items[ll->n_entries], NULL);
+    } else { // no compression, so identical field to telemlist, but with decimation
+      blk_size = get_superframe_entry_size(&ll_superframe_list[i])*ll_superframe_list[i].spf; 
+    }
+    ll->items[ll->n_entries].blk_size = blk_size;
 
     update_superframe_entry_hash(&mdContext, chan);
     update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
