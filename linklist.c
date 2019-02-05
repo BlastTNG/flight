@@ -121,10 +121,10 @@ int def_doubletodata(uint8_t * data, double dub, uint8_t type)
 {
   if (type == SF_FLOAT64)
   {
-    *(uint64_t*) data = dub;
+    *(double *) data = dub;
     return 8;
   } else if (type == SF_FLOAT32) {
-    *(uint32_t*) data = dub;
+    *(float *) data = dub;
     return 4;
   } else if (type == SF_INT16) {
     int16_t s = dub;
