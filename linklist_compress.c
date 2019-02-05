@@ -940,13 +940,11 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     gain = (le->tlm->max-le->tlm->min)/((double) UINT16_MAX);
   }  
 
-  double temp2;
   for (i=0;i<outputnum;i++)
   {
     if (wd)
     {
       temp1 = antiAlias(data_in+(i*decim*inputskip), type, decim, inputskip, datatodouble);
-      temp2 = temp1;
       temp1 = (temp1-offset)/(gain);
       if (temp1 > UINT16_MAX) temp1 = UINT16_MAX;
       else if (temp1 < 0.0) temp1 = 0.0;
@@ -954,8 +952,6 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
     }
     blk_size+=2;
   }
-  if (wd && !strcmp(le->tlm->field, "t_ifc_cpu")) printf("%s [%lf %lf] in=%lf out=%u\n", le->tlm->field, le->tlm->min, le->tlm->max, temp2, *(uint16_t *) (data_out+blk_size-2));
-
 
   return blk_size;
 }
