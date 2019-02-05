@@ -186,8 +186,6 @@ extern char archive_dir[LINKLIST_MAX_FILENAME_SIZE];
 typedef uint32_t __attribute__((__may_alias__)) u32_a;
 typedef uint64_t __attribute__((__may_alias__)) u64_a;
 
-#include <endian.h>
-
 #   define beftoh(x) ({                             \
             float   _tmp;                           \
             u32_a *infloat = (u32_a*)&(x);    \

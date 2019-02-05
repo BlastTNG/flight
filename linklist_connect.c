@@ -38,11 +38,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <getopt.h>
 #include <termios.h>
 
 #include <sys/socket.h>
-#include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/select.h>
