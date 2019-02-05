@@ -29,7 +29,7 @@ void udp_receive(void *arg) {
 
   struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0, prev_serial = 0;
+  uint16_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
