@@ -372,7 +372,7 @@ linklist_t * linklist_find_by_name(char * name, linklist_t ** ll_array)
     if (strcmp(ll->name, name) == 0) return ll;
     ll = ll_array[++i];
   }
-  linklist_err("Linklist \"%s\" not found.\n", name);
+  // linklist_err("Linklist \"%s\" not found.\n", name);
 
   return NULL;
 }
