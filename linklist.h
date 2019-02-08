@@ -56,9 +56,14 @@
 
 #define LL_NO_AUTO_CHECKSUM 0x01
 #define LL_INCLUDE_ALLFRAME 0x02
-#define LL_USE_BIG_ENDIAN 0x04
 #define LL_VERBOSE 0x08
 #define LL_AUTO_FLOAT_COMP 0x10
+
+#define SUPERFRAME_ENDIAN_IND "/ENDIAN"
+#define SUPERFRAME_ENDIAN_LITTLE "little"
+#define SUPERFRAME_ENDIAN_BIG "big"
+
+#define SF_USE_BIG_ENDIAN 0x04
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -128,6 +133,8 @@ struct superframe_struct
 
   double (*datatodouble)(uint8_t *, uint8_t);
   int (*doubletodata)(uint8_t *, double, uint8_t);
+
+  int flags; // superframe-specific flags (endianess, etc)
 
   char calspecs[LINKLIST_MAX_FILENAME_SIZE];
 };

@@ -9,7 +9,6 @@
 struct linklist_dirfile {
   char filename[LINKLIST_MAX_FILENAME_SIZE];
   unsigned int framenum;
-  unsigned int flags;
   linklist_t * ll;
   uint8_t * map;
   FILE * format;
