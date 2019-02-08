@@ -218,7 +218,8 @@ void linklist_assign_doubletodata(superframe_t * superframe, int (*func)(uint8_t
 
 superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list, 
                                          double (*datatodouble)(uint8_t *, uint8_t), 
-                                         int (*doubletodata)(uint8_t *, double, uint8_t)) {
+                                         int (*doubletodata)(uint8_t *, double, uint8_t),
+                                         unsigned int flags) {
 
   superframe_t * superframe = calloc(1, sizeof(superframe_t));  
 
@@ -227,6 +228,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   linklist_assign_doubletodata(superframe, doubletodata);
   superframe->size = 0;
   superframe->n_entries = 0;
+  superframe->flags = flags;
 
   int i = 0;
   for (i = 0; superframe->entries[i].field[0]; i++) {
@@ -1114,9 +1116,9 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
 
   superframe_t * superframe = NULL;
   if (flags & SF_USE_BIG_ENDIAN) {
-    superframe = linklist_build_superframe(sf, &def_datatodouble_be, &def_doubletodata_be);
+    superframe = linklist_build_superframe(sf, &def_datatodouble_be, &def_doubletodata_be, flags);
   } else {
-    superframe = linklist_build_superframe(sf, NULL, NULL);
+    superframe = linklist_build_superframe(sf, NULL, NULL, flags);
   }
 
   if (superframe->serial != serial) {

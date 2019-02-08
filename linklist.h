@@ -262,7 +262,8 @@ void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double,
 uint64_t generate_superframe_serial(superframe_t *); 
 superframe_t * linklist_build_superframe(superframe_entry_t *,
                                          double (*datatodouble)(uint8_t *, uint8_t), 
-                                         int (*doubletodata)(uint8_t *, double, uint8_t));
+                                         int (*doubletodata)(uint8_t *, double, uint8_t),
+                                         unsigned int);
 
 superframe_entry_t * superframe_find_by_name(superframe_t *, const char *);
 uint32_t superframe_find_index_by_name(superframe_t *, const char *);
