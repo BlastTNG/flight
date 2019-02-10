@@ -528,7 +528,7 @@ linklist_t * generate_roach_udp_linklist(char * filename, int roach)
 
     // --- STEP 2: generate the linklist --- //
     // build the superframe
-    roach_sf = linklist_build_superframe(sfe, &channel_data_to_double, &channel_double_to_data);
+    roach_sf = linklist_build_superframe(sfe, &channel_data_to_double, &channel_double_to_data, 0);
 
     // parse the newly made linklist file
     ll = parse_linklist_format(roach_sf, filename);
