@@ -56,8 +56,14 @@
 
 #define LL_NO_AUTO_CHECKSUM 0x01
 #define LL_INCLUDE_ALLFRAME 0x02
-#define LL_USE_BIG_ENDIAN 0x04
 #define LL_VERBOSE 0x08
+#define LL_AUTO_FLOAT_COMP 0x10
+
+#define SUPERFRAME_ENDIAN_IND "/ENDIAN"
+#define SUPERFRAME_ENDIAN_LITTLE "little"
+#define SUPERFRAME_ENDIAN_BIG "big"
+
+#define SF_USE_BIG_ENDIAN 0x04
 
 #define SUPERFRAME_READY 0x1
 #define COMPFRAME_READY 0x2
@@ -128,6 +134,8 @@ struct superframe_struct
   double (*datatodouble)(uint8_t *, uint8_t);
   int (*doubletodata)(uint8_t *, double, uint8_t);
 
+  int flags; // superframe-specific flags (endianess, etc)
+
   char calspecs[LINKLIST_MAX_FILENAME_SIZE];
 };
 
@@ -184,8 +192,6 @@ extern char archive_dir[LINKLIST_MAX_FILENAME_SIZE];
  */
 typedef uint32_t __attribute__((__may_alias__)) u32_a;
 typedef uint64_t __attribute__((__may_alias__)) u64_a;
-
-#include <endian.h>
 
 #   define beftoh(x) ({                             \
             float   _tmp;                           \
@@ -256,7 +262,8 @@ void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double,
 uint64_t generate_superframe_serial(superframe_t *); 
 superframe_t * linklist_build_superframe(superframe_entry_t *,
                                          double (*datatodouble)(uint8_t *, uint8_t), 
-                                         int (*doubletodata)(uint8_t *, double, uint8_t));
+                                         int (*doubletodata)(uint8_t *, double, uint8_t),
+                                         unsigned int);
 
 superframe_entry_t * superframe_find_by_name(superframe_t *, const char *);
 uint32_t superframe_find_index_by_name(superframe_t *, const char *);
@@ -267,7 +274,7 @@ int read_linklist_formatfile_comment(char *, char *);
 int superframe_entry_get_index(superframe_entry_t *, superframe_entry_t *);
 
 int linklist_generate_lookup(linklist_t **);
-linklist_t * linklist_lookup_by_serial(uint32_t);
+linklist_t * linklist_lookup_by_serial(uint16_t);
 void delete_linklist(linklist_t *);
 int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
 int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
