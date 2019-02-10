@@ -16,10 +16,10 @@
 #include <openssl/md5.h>
 #include <float.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/time.h>
 
-#include "groundhog_funcs.h"
-#include "bitserver.h"
+#include "groundhog.h"
 
 struct TlmReport pilot_report = {0};
 
@@ -29,13 +29,16 @@ void udp_receive(void *arg) {
 
   struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint32_t serial = 0, prev_serial = 0;
+  uint16_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
-  uint32_t transmit_size = 0;
+  uint64_t transmit_size = 0;
   uint64_t framenum = 0;
+  uint64_t recv_framenum = 0;
   int af = 0;
+	char symname[128];
+  int i;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
 
@@ -53,10 +56,10 @@ void udp_receive(void *arg) {
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
-      serial = *(uint32_t *) recvbuffer;
+      serial = *(uint16_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
-        if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
+        if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)\n", udpsetup->name, serial);
         bad_serial_count++;
       } else {
         bad_serial_count = 0;
@@ -74,8 +77,8 @@ void udp_receive(void *arg) {
         continue;
     }
 
-    // hijacking frame number for transmit size
-    transmit_size = udprecver.frame_num; 
+    // process the auxiliary data into transmit size and frame number
+    get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
     if (groundhog_check_for_fileblocks(ll)) {
         // unpack and extract to disk
@@ -83,12 +86,21 @@ void udp_receive(void *arg) {
     } else { // write the linklist data to disk
         // set flags for data extraction
         unsigned int flags = 0;
-        if (serial != prev_serial) flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+        if ((serial != prev_serial) || // new serial number, so new file
+            (recv_framenum < framenum)) { // frame number received
+          flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
+					for (i = 0; i < strlen(ll->name); i++) {
+						if (ll->name[i] == '.') break;
+						symname[i] = toupper(ll->name[i]);
+					}
+					symname[i] = '\0';
+        }
+
         prev_serial = serial;
 
         // process the linklist and write the data to disk
         framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, local_allframe,
-                                               udpsetup->name, udpsetup->name, &ll_rawfile, flags);
+                                               symname, udpsetup->name, &ll_rawfile, flags);
     }
 
     // fill out the telemetry report
