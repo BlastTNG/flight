@@ -89,7 +89,6 @@ void USAGE(void) {
       "                        Default is /data/rawdir.\n"
       " -b  --backup           Backup binary data in the archive directory.\n"
       " -nb --no-backup        Do not backup data in the archive directory (default).\n"
-      " -be --big-end          Force mole to interpret data as big endian (default).\n"
       " -bs --block-size fpf   Specify the number of frames per file flush.\n"
       "                        Default is 1 frame per flush for real time.\n"
       " -c  --client           Run a client (default).\n"
@@ -101,7 +100,6 @@ void USAGE(void) {
       "                        Mole will exit once the last frame is read.\n"
       " -k  --check            Evaluate checksum values when processing data (default).\n"  
       " -nk --no-check         Ignore checksum values when processing data.\n"  
-      " -le --little-end       Force mole to interpret data as little endian.\n"
       " -L  --loopback         Have mole extract its own binary files.\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                        The default is /data/mole.\n"
@@ -153,11 +151,12 @@ int main(int argc, char *argv[]) {
   // mode selection
   int server_mode = 0;
   int client_mode = 1;
-  unsigned int flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
   unsigned int rewind = 20;
   uint64_t start_frame = UINT64_MAX;
   uint64_t end_frame = UINT64_MAX;
-  unsigned int ll_flags = LL_USE_BIG_ENDIAN; // this is the default for telemetry
+  unsigned int tcp_flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
+  unsigned int ll_rawfile_flags = 0;
+  unsigned int ll_dirfile_flags = 0;
   int bin_backup = 0;
   char filename_selection[LINKLIST_MAX_FILENAME_SIZE] = {0};
   unsigned int nodata_timeout = 50000; // default rate is 20 Hz = 1.0e6/50000
@@ -213,7 +212,7 @@ int main(int argc, char *argv[]) {
       end_frame = atoi(argv[++i]);
     } else if ((strcmp(argv[i], "--verbose") == 0) ||
                (strcmp(argv[i], "-v") == 0)) { // verbose mode
-      ll_flags |= LL_VERBOSE;
+      ll_dirfile_flags |= LL_VERBOSE;
     } else if ((strcmp(argv[i], "--backup") == 0) ||
                (strcmp(argv[i], "-b") == 0)) { // write binary backup files
       bin_backup = 1;
@@ -228,16 +227,10 @@ int main(int argc, char *argv[]) {
       strcpy(mole_dir, argv[++i]);
     } else if ((strcmp(argv[i], "--check") == 0) ||
                (strcmp(argv[i], "-k") == 0)) { // checksum 
-      ll_flags &= ~LL_IGNORE_CHECKSUM;
+      ll_dirfile_flags &= ~LL_IGNORE_CHECKSUM;
     } else if ((strcmp(argv[i], "--no-check") == 0) ||
                (strcmp(argv[i], "-nk") == 0)) { // no checksum 
-      ll_flags |= LL_IGNORE_CHECKSUM;
-    } else if ((strcmp(argv[i], "--little-end") == 0) ||
-               (strcmp(argv[i], "-le") == 0)) { // force little endian
-      ll_flags &= ~LL_USE_BIG_ENDIAN;
-    } else if ((strcmp(argv[i], "--big-end") == 0) ||
-               (strcmp(argv[i], "-be") == 0)) { // force big endian
-      ll_flags |= LL_USE_BIG_ENDIAN;
+      ll_dirfile_flags |= LL_IGNORE_CHECKSUM;
     } else if ((strcmp(argv[i], "--block-size") == 0) ||
                (strcmp(argv[i], "-bs") == 0)) { // flush files after number of frames received
       num_frames_per_flush = atoi(argv[++i]);
@@ -286,6 +279,11 @@ int main(int argc, char *argv[]) {
   if (mole_dir[strlen(mole_dir)-1] == '/') {
     mole_dir[strlen(mole_dir)-1] = '\0';
   }
+  if (bin_backup) {
+    ll_rawfile_flags &= ~LL_RAWFILE_DUMMY;
+  } else {
+    ll_rawfile_flags |= LL_RAWFILE_DUMMY;
+  }
 
   pthread_t server_thread;
   if (server_mode) {
@@ -305,7 +303,7 @@ int main(int argc, char *argv[]) {
       // the file on the server has switched, so resync 
       if (resync) {
         // sync with the server and get the initial framenum
-        req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, flags, &superframe, &linklist);
+        req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, tcp_flags, &superframe, &linklist);
         req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
 
         printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
@@ -313,14 +311,14 @@ int main(int argc, char *argv[]) {
         // open linklist dirfile
         sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
-        ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_flags);
+        ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_dirfile_flags);
         unlink(symdir_name);
         symlink(filename, symdir_name);  
 
         // open the linklist rawfile
         sprintf(filename, "%s/%s", archive_dir, linklistname);
         if (ll_rawfile) close_and_free_linklist_rawfile(ll_rawfile);
-        ll_rawfile = open_linklist_rawfile_opt(filename, linklist, (bin_backup) ? 0 : LL_RAWFILE_DUMMY);
+        ll_rawfile = open_linklist_rawfile_opt(filename, linklist, ll_rawfile_flags);
         if (bin_backup) {
           create_rawfile_symlinks(ll_rawfile, symraw_name);
         }
