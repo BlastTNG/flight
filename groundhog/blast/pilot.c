@@ -18,7 +18,10 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "groundhog_funcs.h"
 #include "bitserver.h"
+
+struct TlmReport pilot_report = {0};
 
 void udp_receive(void *arg) {
 
@@ -50,10 +53,10 @@ void udp_receive(void *arg) {
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
-      serial = *(uint32_t *) recvbuffer;
+      serial = *(uint16_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
-        if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)", udpsetup->name, serial);
+        if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)\n", udpsetup->name, serial);
         bad_serial_count++;
       } else {
         bad_serial_count = 0;

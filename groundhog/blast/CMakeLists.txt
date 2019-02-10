@@ -58,7 +58,7 @@ add_executable (groundhog
     ${PROJECT_SOURCE_DIR}/blast/biphase.c
     ${PROJECT_SOURCE_DIR}/blast/highrate.c
 
-    ${PROJECT_SOURCE_DIR}/pilot.c
+    ${PROJECT_SOURCE_DIR}/blast/pilot.c
     ) 
 
 target_link_libraries(groundhog

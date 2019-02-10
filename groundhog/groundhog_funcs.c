@@ -36,10 +36,10 @@ void daemonize()
 
     if ((pid = fork()) != 0) {
     if (pid == -1) {
-        groundhog_fatal("unable to fork to background");
+        groundhog_fatal("unable to fork to background\n");
     }
     if ((stream = fopen("/var/run/groundhog.pid", "w")) == NULL) {
-        groundhog_fatal("unable to write PID to disk");
+        groundhog_fatal("unable to write PID to disk\n");
     }
     else {
         fprintf(stream, "%i\n", pid);
@@ -119,11 +119,11 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
     if (flags && GROUNDHOG_OPEN_NEW_RAWFILE) {
       *ll_rawfile = groundhog_open_new_rawfile(*ll_rawfile, ll, filename_str);
     }
-    if (verbose) groundhog_info("[%s] Received linklist \"%s\"", disp_str, ll->name);
+    if (verbose) groundhog_info("[%s] Received linklist \"%s\"\n", disp_str, ll->name);
 
     // check for consistency in transmit size with linklist bulk size
     if (transmit_size > ll->blk_size) {
-      groundhog_warn("Packet size mismatch blk_size=%d, transmit_size=%d", ll->blk_size, transmit_size);
+      groundhog_warn("Packet size mismatch blk_size=%d, transmit_size=%d\n", ll->blk_size, transmit_size);
       transmit_size = ll->blk_size;
     }
 
@@ -147,6 +147,7 @@ linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t * ll_rawfile,
   char filename[128];
   make_linklist_rawfile_name(ll, filename);
   ll_rawfile = open_linklist_rawfile(filename, ll);
+  groundhog_info("Opening new file \"%s\"\n", filename);
 
   char fname[128];
   sprintf(fname, "%s/%s_live", archive_dir, symname);

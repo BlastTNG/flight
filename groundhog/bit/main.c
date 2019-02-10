@@ -49,7 +49,7 @@ int main(int argc, char * argv[]) {
   // initialize the linklists derived from the superframe
   linklist_t ** ll_list = calloc(MAX_NUM_LINKLIST_FILES, sizeof(linklist_t *));
   char *exts[] = {".bit",".ll",""};
-	if (load_all_linklists_opt(superframe, linklistdir, ll_list, 0, exts) < 0) {
+	if (load_all_linklists_opt(superframe, linklistdir, ll_list, LL_AUTO_FLOAT_COMP | LL_INCLUDE_ALLFRAME, exts) < 0) {
     groundhog_fatal("Unable to load linklists\n");
   }
   linklist_generate_lookup(ll_list);  
@@ -126,7 +126,7 @@ int main(int argc, char * argv[]) {
     fprintf(stdout, "%s\r", fn_str);
     fflush(stdout); 
 
-    usleep(200000);
+    sleep(1);
   }
   return 0;
 }
