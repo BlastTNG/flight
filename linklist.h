@@ -166,8 +166,8 @@ struct linklist_struct
 struct block_container
 {
   char name[80];
-  uint16_t id;
-  unsigned int i, n, num;
+  uint32_t id;
+  uint32_t i, n, num;
   struct link_entry * le;
   unsigned int alloc_size;
   unsigned int curr_size;

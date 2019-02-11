@@ -32,9 +32,7 @@
 #include "linklist.h"
 
 #define ALLFRAME_SERIAL 0x42424242
-#define BLOCK_FILE_MASK 0x8000
-#define TARGZ_FILE_MASK 0x4000
-#define TARGZ_EXT ".tar.gz"
+#define BLOCK_FILE_MASK 0x80000000
 #define LINKLIST_FILESAVE_DIR "/data/etc/downloaded_files"
 
 #ifdef __cplusplus
