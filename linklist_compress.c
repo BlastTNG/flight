@@ -153,20 +153,20 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
                                     int32_t id, int flags, unsigned int i, unsigned int n)
 {
   if (!ll) {
-    linklist_err("linklist_send_file_by_block_ind: Invalid linklist given");
+    linklist_err("linklist_send_file_by_block_ind: Invalid linklist given\n");
     return 0;
   }
 
   // find the block in the linklist
   block_t * theblock = block_find_by_name(ll, blockname);
   if (!theblock) {
-    linklist_err("linklist_send_file_by_block_ind: Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    linklist_err("linklist_send_file_by_block_ind: Block \"%s\" not found in linklist \"%s\"\n", blockname, ll->name);
     return 0;
   }
 
   // check to see if the previous send is done
   if (!(flags & BLOCK_OVERRIDE_CURRENT) && (theblock->i != theblock->n)) {
-    linklist_info("linklist_send_file_by_block_ind: Previous transfer for block \"%s\" is incomplete.", blockname);
+    linklist_info("linklist_send_file_by_block_ind: Previous transfer for block \"%s\" is incomplete.\n", blockname);
     return 0;
   }
 
@@ -179,7 +179,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
   // open the file
   FILE * fp = fopen(filename, "rb+");
   if (!fp) {
-    linklist_err("linklist_send_file_by_block_ind: File \"%s\" not found", filename);
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" not found\n", filename);
     return 0;
   }
   
@@ -196,7 +196,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
   }
 
   uint32_t n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
-  if (n_total & 0xf000) {
+  if (n_total & 0xff000000) {
     linklist_err("linklist_send_file_by_block_ind: File \"%s\" is too large\n", filename);
     return 0;
   }
@@ -215,7 +215,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
     theblock->n = MIN(n, n_total);
   }
 
-  linklist_info("File \"%s\" sent to linklist \"%s\"\n", filename, ll->name);
+  linklist_info("File \"%s\" (%d B == %d pkts) sent to linklist \"%s\" (i=%d, n=%d)\n", filename, filesize, n_total, ll->name, theblock->i, theblock->n);
 
   return 1;
 }
