@@ -131,64 +131,55 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
   *accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
-void set_block_indices_linklist(linklist_t * ll, char * blockname, unsigned int i, unsigned int n)
+block_t * block_find_by_name(linklist_t * ll, char * blockname) 
 {
-  if (!ll) {
-    linklist_err("Invalid linklist given");
-    return;
-  }
-
-  int j = 0;
-  block_t * theblock = NULL;
-
+  int j;
   // find the block
   for (j = 0; j < ll->num_blocks; j++) {
     if (strcmp(blockname, ll->blocks[j].name) == 0) {
-      theblock = &ll->blocks[j];
-      break;
+      return &ll->blocks[j];
     }
   }
-  if (!theblock) {
-    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
-    return;
-  }
-
-  theblock->i = i;
-  theblock->n = n;
+  return NULL;
 }
 
-int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, int id)
+int linklist_send_file_by_block(linklist_t * ll, char * blockname, char * filename, 
+                               int32_t id, int flags)
+{
+  return linklist_send_file_by_block_ind(ll, blockname, filename, id, flags, 0, 0);
+}
+
+int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * filename, 
+                                    int32_t id, int flags, unsigned int i, unsigned int n)
 {
   if (!ll) {
-    linklist_err("Invalid linklist given");
+    linklist_err("linklist_send_file_by_block_ind: Invalid linklist given");
     return 0;
   }
 
-  int i = 0;
-  block_t * theblock = NULL;
-
-  // find the block
-  for (i = 0; i < ll->num_blocks; i++) {
-    if (strcmp(blockname, ll->blocks[i].name) == 0) {
-      theblock = &ll->blocks[i];
-      break;
-    }
-  }
+  // find the block in the linklist
+  block_t * theblock = block_find_by_name(ll, blockname);
   if (!theblock) {
-    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    linklist_err("linklist_send_file_by_block_ind: Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
     return 0;
   }
 
   // check to see if the previous send is done
-  if (theblock->i != theblock->n) { // previous transfer not done
-    linklist_info("Previous transfer for block \"%s\" is incomplete.", blockname);
+  if (!(flags & BLOCK_OVERRIDE_CURRENT) && (theblock->i != theblock->n)) {
+    linklist_info("linklist_send_file_by_block_ind: Previous transfer for block \"%s\" is incomplete.", blockname);
     return 0;
+  }
+
+  // check for any dangling file pointers
+  if (theblock->fp) {
+    fclose(theblock->fp);
+    theblock->fp = NULL;
   }
  
   // open the file
   FILE * fp = fopen(filename, "rb+");
   if (!fp) {
-    linklist_err("File \"%s\" not found", filename);
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" not found", filename);
     return 0;
   }
   
@@ -198,22 +189,31 @@ int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, in
   filesize = ftell(fp);
   fseek(fp, 0L, SEEK_SET);
 
-  unsigned int n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
-  if (n_total > UINT16_MAX) {
-    linklist_err("File \"%s\" is too large\n", filename);
+  // deal with empty files
+  if (!filesize) {
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" is empty\n", filename);
+    return 0;
+  }
+
+  uint32_t n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  if (n_total & 0xf000) {
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" is too large\n", filename);
     return 0;
   }
 
   // set the block variables to initialize transfer
   theblock->fp = fp;
   strcpy(theblock->filename, filename); // copy the filename stripped of path
-  theblock->i = 0;
   theblock->num = 0;
-  theblock->n = n_total;
   theblock->curr_size = filesize;
-
-  // theblock->id++; // increment the block counter
   theblock->id = id;
+  if (!n && !i) { // set the whole transfer
+    theblock->i = 0;
+    theblock->n = n_total;
+  } else { // set the potential partial transfer
+    theblock->i = MIN(i, n_total);
+    theblock->n = MIN(n, n_total);
+  }
 
   linklist_info("File \"%s\" sent to linklist \"%s\"\n", filename, ll->name);
 
