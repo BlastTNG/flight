@@ -211,7 +211,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
     theblock->i = 0;
     theblock->n = n_total;
   } else { // set the potential partial transfer
-    theblock->i = MIN(i, n_total);
+    theblock->i = MIN(MIN(i, n), n_total);
     theblock->n = MIN(n, n_total);
   }
 
