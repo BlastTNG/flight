@@ -108,7 +108,10 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags) {
   // process the linklist and write the data to disk
   int af = read_allframe(NULL, ll->superframe, compbuffer);
-  int retval = -1;
+  int retval = 0;
+	if (flags && GROUNDHOG_OPEN_NEW_RAWFILE) {
+		*ll_rawfile = groundhog_open_new_rawfile(*ll_rawfile, ll, filename_str);
+	}
   if (af > 0) { // an allframe was received
     if (verbose) groundhog_info("[%s] Received an allframe :)\n", disp_str);
     memcpy(local_allframe, compbuffer, ll->superframe->allframe_size);
@@ -116,9 +119,6 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
     if (*ll_rawfile) retval = tell_linklist_rawfile(*ll_rawfile);
     else retval = 0;
   } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
-    if (flags && GROUNDHOG_OPEN_NEW_RAWFILE) {
-      *ll_rawfile = groundhog_open_new_rawfile(*ll_rawfile, ll, filename_str);
-    }
     if (verbose) groundhog_info("[%s] Received linklist \"%s\"\n", disp_str, ll->name);
 
     // check for consistency in transmit size with linklist bulk size
