@@ -165,10 +165,14 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
   }
 
   // check to see if the previous send is done
-  if (!(flags & BLOCK_OVERRIDE_CURRENT) && (theblock->i != theblock->n)) {
+  if (!(flags & BLOCK_OVERRIDE_CURRENT) && (theblock->i < theblock->n)) {
     linklist_info("linklist_send_file_by_block_ind: Previous transfer for block \"%s\" is incomplete.\n", blockname);
     return 0;
   }
+
+  // cancel any current block packetization (n < i sentinel condition)
+  theblock->n = 0;
+  theblock->i = 1;
 
   // check for any dangling file pointers
   if (theblock->fp) {
@@ -200,6 +204,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
     linklist_err("linklist_send_file_by_block_ind: File \"%s\" is too large\n", filename);
     return 0;
   }
+
 
   // set the block variables to initialize transfer
   theblock->fp = fp;
@@ -556,13 +561,11 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     block->num++;
   } else { // no blocks left
     memset(buffer, 0, block->le->blk_size);
-    block->i = block->n;
     if (block->fp) { // file was open, so close it
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
     }
-    //printf("Nothing to send\n");
   }
 
 }
@@ -602,9 +605,9 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     linklist_info("depacketize_block: index larger than total (%d > %d)\n", i, n);
     return;
   }
-  // report missing block
-  while (block->i < i) {
-    linklist_info("Missing block %d/%d\n", block->i+1, block->n);
+  // report missing block for already opened files
+  while ((block->i < i) && block->fp) {
+    linklist_info("Missing block %d/%d\n", block->i+1, n);
     block->i++;
   }
  
