@@ -20,13 +20,15 @@
 #include "linklist_writer.h"
 #include "linklist_compress.h"
 
-#define GROUNDHOG_OPEN_NEW_RAWFILE 0x01
+#define GROUNDHOG_OPEN_NEW_RAWFILE      0x01
+#define GROUNDHOG_REUSE_VALID_RAWFILE   0x02
+
 extern superframe_t * superframe;
 extern int verbose;
 
 // groundhog helper functions
 void daemonize();
-linklist_rawfile_t * groundhog_open_new_rawfile(linklist_rawfile_t *, linklist_t *, char *);
+linklist_rawfile_t * groundhog_open_rawfile(linklist_rawfile_t *, linklist_t *, char *, int);
 int groundhog_check_for_fileblocks(linklist_t * ll);
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer);
 int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
@@ -51,6 +53,13 @@ struct TlmReport {
   int allframe;
 };
 
+struct LinklistState {
+  uint32_t serial;
+  int ever_opened;
+  int is_open;
+};
+
+struct LinklistState * groundhog_ll_state(uint32_t);
 
 // BLAST print functions (required)
 // must define groundhog_info, _warn, and _fatal
