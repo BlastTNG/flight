@@ -365,17 +365,22 @@ int load_all_linklists_opt(superframe_t * superframe, char * linklistdir, linkli
   return 1;
 }
 
-linklist_t * linklist_find_by_name(char * name, linklist_t ** ll_array)
-{
+int linklist_find_id_by_name(char * name, linklist_t ** ll_array) {
   linklist_t * ll = ll_array[0];
   int i = 0;
 
   while (ll) {
-    if (strcmp(ll->name, name) == 0) return ll;
+    if (strcmp(ll->name, name) == 0) return i;
     ll = ll_array[++i];
   }
   // linklist_err("Linklist \"%s\" not found.\n", name);
 
+  return -1;
+}
+
+linklist_t * linklist_find_by_name(char * name, linklist_t ** ll_array) {
+  int i = linklist_find_id_by_name(name, ll_array);
+  if (i >= 0) return ll_array[i];
   return NULL;
 }
 

@@ -279,6 +279,7 @@ void delete_linklist(linklist_t *);
 int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
 int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
+int linklist_find_id_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 
 #ifdef __cplusplus
