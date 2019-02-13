@@ -197,11 +197,11 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
 
   // get the number of frames per file (fpf)
-  int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND);
+  int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND, "%d");
   if (fpf > 0) ll_rawfile->fpf = fpf;
   else ll_rawfile->fpf = ll_rawfile_default_fpf;
 
-  int blk_size = read_linklist_formatfile_comment(filename, LINKLIST_FILE_SIZE_IND);
+  int blk_size = read_linklist_formatfile_comment(filename, LINKLIST_FILE_SIZE_IND, "%d");
   if (blk_size > 0) {
     ll_rawfile->framesize = blk_size;
   } else {

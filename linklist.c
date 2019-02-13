@@ -689,7 +689,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   byteloc += blk_size;
   ll->n_entries++;
 
-  int file_blk_size = read_linklist_formatfile_comment(fname, LINKLIST_FILE_SIZE_IND);
+  int file_blk_size = read_linklist_formatfile_comment(fname, LINKLIST_FILE_SIZE_IND, "%d");
   if ((file_blk_size > 0) && (file_blk_size != byteloc)) {
     if (file_blk_size == byteloc+superframe->allframe_size) {
       flags |= LL_INCLUDE_ALLFRAME;
@@ -972,7 +972,7 @@ uint64_t generate_superframe_serial(superframe_t * superframe)
 }
 
 // get the number of frames per file (fpf) from the linklist formatfile
-int read_linklist_formatfile_comment(char * fin, char * comment) {
+int read_linklist_formatfile_comment(char * fin, char * comment, const char * format) {
   FILE * f;
 
   if ((f = fopen(fin, "r")) == NULL) {
@@ -982,16 +982,18 @@ int read_linklist_formatfile_comment(char * fin, char * comment) {
   char * line = NULL;
   size_t len = 0; 
   int read = 0;
+  int retval = -1;
 
   while ((read = getline(&line, &len, f)) != -1) {
     if (strncmp(line, comment, strlen(comment)) == 0) {
       fclose(f);
-      return atoi(line+strlen(comment));
+      sscanf(line+strlen(comment), format, &retval);
+      return retval;
     }
   }
   fclose(f);
 
-  return -1;
+  return retval;
 }
 
 superframe_t * parse_superframe_format(char * fname) {
