@@ -169,8 +169,8 @@ struct block_container
   uint32_t id;
   uint32_t i, n, num;
   struct link_entry * le;
-  unsigned int alloc_size;
-  unsigned int curr_size;
+  uint32_t alloc_size;
+  uint32_t curr_size;
   uint8_t * buffer;
 
   char filename[LINKLIST_MAX_FILENAME_SIZE];

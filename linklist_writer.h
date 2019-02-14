@@ -13,6 +13,7 @@ struct linklist_dirfile {
   uint8_t * map;
   FILE * format;
   FILE ** bin;
+  FILE ** blockbin;
 };
 
 struct linklist_rawfile {
