@@ -151,9 +151,9 @@ void biphase_receive(void *args)
                   // The compressed linklist has been fully reconstructed
                   // blast_info("[Biphase] Received linklist with serial_number 0x%x\n", *(uint32_t *) ll->serial);
 
-                  if (groundhog_check_for_fileblocks(ll)) {
+                  if (groundhog_check_for_fileblocks(ll, FILE_LINKLIST)) {
                       // this is a file that has been downlinked, so unpack and extract to disk
-                      framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer);
+                      framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL);
                   } else { // write the linklist data to disk
                       // set flags for data extraction
                       unsigned int flags = 0;

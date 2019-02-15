@@ -38,14 +38,14 @@ void udp_receive(void *arg) {
   uint64_t framenum = 0;
   uint64_t recv_framenum = 0;
   int af = 0;
-	char symname[128];
+	char symname[LINKLIST_MAX_FILENAME_SIZE];
   int i;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
 
-  // open a file to save all the raw linklist data
+  // raw linklist data and fileblocks
   linklist_rawfile_t * ll_rawfile = NULL;
-
+  linklist_rawfile_t * fileblocks_ll_rawfile = NULL;
   uint8_t * compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
@@ -74,16 +74,15 @@ void udp_receive(void *arg) {
     // receive the data from payload via bitserver
     blk_size = recvFromBITRecver(&udprecver, compbuffer, udpsetup->maxsize, 0);
     if (blk_size < 0) {
-			groundhog_info("Malformed packed received on Pilot\n");
+			groundhog_info("Malformed packet received on Pilot\n");
 			continue;
     }
 
     // process the auxiliary data into transmit size and frame number
     get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
-    if (groundhog_check_for_fileblocks(ll)) {
-			// unpack and extract to disk
-			framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer);
+    if (groundhog_check_for_fileblocks(ll, SCICAM_IMG_DL_LL)) {
+      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, &fileblocks_ll_rawfile);
     } else { // write the linklist data to disk
 			// set flags for data extraction
 			unsigned int flags = 0;
