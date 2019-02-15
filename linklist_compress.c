@@ -267,7 +267,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
  * compress_linklist_opt
  * 
  * Selects entries from and compresses a superframe according to the provide
- * linklist format.
+ * linklist format. Return positive number if non-zero data was written.
  * -> buffer_out: buffer in which compressed frame will be written.
  * -> ll: pointer to linklist specifying compression and entry selection
  * -> buffer_in: pointer to the superframe to be compressed. 
@@ -292,6 +292,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
   uint8_t tlm_comp_type = 0;
   struct link_entry * tlm_le;
   uint16_t checksum = 0;
+  uint8_t retval = 0;
 
   // check validity of buffers
   if (!buffer_in) {
@@ -349,10 +350,13 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
 
       // update checksum
       tlm_out_size = tlm_le->blk_size;
-      for (j=0;j<tlm_out_size;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
+      for (j=0;j<tlm_out_size;j++) {
+        ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
+        retval |= tlm_out_buf[j]; // retval is whether or not there is nonzero data
+      }
     }
   }
-  return 1;
+  return retval;
 }
 
 
