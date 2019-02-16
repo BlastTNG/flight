@@ -276,7 +276,7 @@ int read_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   }
 
   unsigned int retval = 0;
-  unsigned int framenum = ll_rawfile->fileindex*ll_rawfile->fpf+ll_rawfile->framenum;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
   if (ll_rawfile->fp) {
     seek_linklist_rawfile(ll_rawfile, framenum); 
     retval = fread(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
@@ -300,7 +300,7 @@ int write_linklist_rawfile_opt(linklist_rawfile_t * ll_rawfile, uint8_t * buffer
   }
 
   unsigned int retval = 0;
-  unsigned int framenum = ll_rawfile->fileindex*ll_rawfile->fpf+ll_rawfile->framenum;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
   if (ll_rawfile->fp) {
     seek_linklist_rawfile(ll_rawfile, framenum); 
     retval = fwrite(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
