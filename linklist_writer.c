@@ -285,6 +285,30 @@ int read_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   return retval;
 }
 
+int write_linklist_rawfile_with_allframe(linklist_rawfile_t * ll_rawfile, uint8_t * buffer, uint8_t * allframe) {
+  if (!ll_rawfile) { 
+    linklist_err("Null rawfile linklist");
+    return -1;
+  }
+  if (!buffer) { 
+    linklist_err("Null buffer");
+    return -1;
+  }
+
+  unsigned int retval = 0;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
+  if (ll_rawfile->fp) {
+    seek_linklist_rawfile(ll_rawfile, framenum); 
+    retval = fwrite(buffer, ll_rawfile->ll->blk_size, 1, ll_rawfile->fp);
+    if (allframe && (ll_rawfile->ll->flags & LL_INCLUDE_ALLFRAME)) {
+      retval += fwrite(allframe, ll_rawfile->ll->superframe->allframe_size, 1, ll_rawfile->fp);
+    }
+  }
+  ll_rawfile->framenum++;
+
+  return retval;
+}
+
 int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   return write_linklist_rawfile_opt(ll_rawfile, buffer, 0);
 }
