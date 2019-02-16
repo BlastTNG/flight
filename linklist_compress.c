@@ -586,6 +586,12 @@ FILE * fpreopenb(char *fname)
   return fopen(fname,"rb+");
 }
 
+void close_block_fp(struct block_container * block) {
+  if (!block->fp) return;
+  fclose(block->fp);
+  block->fp = NULL;
+}
+
 void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 {
   uint32_t id = 0;
@@ -598,9 +604,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      linklist_info("Completed \"%s\"\n\n", block->filename);
-      fclose(block->fp);
-      block->fp = NULL;
+      close_block_fp(block);
       block->filename[0] = '\0';
     }
     return;
@@ -623,8 +627,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
     // a different id packet was received, so close file if that packet is open
     if ((id != block->id) && block->fp) {
-      fclose(block->fp);
-      block->fp = NULL;
+      close_block_fp(block);
     }
     
     // file not open yet
@@ -641,6 +644,11 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     if ((retval = fwrite(buffer+fsize, 1, blksize, block->fp)) != blksize) {
       linklist_err("Wrote %d != %d bytes at %d to file %s", retval, blksize, loc, block->filename);
     }
+    
+		if ((block->i+1) == block->n) {
+			linklist_info("Completed \"%s\"\n\n", block->filename);
+			close_block_fp(block);
+		}
 
   } else { // just a normal block to be stored in memory
     // expand the buffer if necessary
