@@ -79,7 +79,7 @@ void udp_receive(void *arg) {
 
     if (groundhog_check_for_fileblocks(ll, FILE_LINKLIST)) {
         // unpack and extract to disk
-        framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL);
+        framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL, NULL);
     } else { // write the linklist data to disk
         // set flags for data extraction
         unsigned int flags = 0;

@@ -82,7 +82,7 @@ void udp_receive(void *arg) {
     get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
     if (groundhog_check_for_fileblocks(ll, SCICAM_IMG_DL_LL)) {
-      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, &fileblocks_ll_rawfile);
+      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, local_allframe, &fileblocks_ll_rawfile);
     } else { // write the linklist data to disk
 			// set flags for data extraction
 			unsigned int flags = 0;

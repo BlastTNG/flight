@@ -31,7 +31,7 @@ void daemonize();
 linklist_rawfile_t * groundhog_open_rawfile(linklist_rawfile_t *, linklist_t *, char *, int);
 int groundhog_check_for_fileblocks(linklist_t * ll, char *);
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
-                                linklist_rawfile_t ** ll_rawfile);
+                                uint8_t *, linklist_rawfile_t ** ll_rawfile);
 int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
                                 uint8_t * local_allframe, char * filename_str, char * disp_str,
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags);
