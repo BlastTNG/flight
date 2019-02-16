@@ -28,7 +28,32 @@ char * calspecfile = "/data/etc/bit_config/calspecs.bit";
 char * linklistdir = "/data/etc/bit_config/linklists/";
 
 void groundhog_write_calspecs(char * fname) {
+  FILE * fin = fopen(calspecfile, "r");
+  if (!fin) return;
 
+  FILE * fout = fopen(fname, "w");
+  if (!fout) {
+    groundhog_warn("Unable to open calspecs file %s\n", fname);
+    fclose(fin);
+    return;
+  }
+
+  char *line = NULL;
+  size_t len = 0;
+  int began = 0;
+
+  while (getline(&line, &len, fin) != -1) {
+    if (!strncmp(line, "END", 3)) {
+      break;
+    }
+    if (began) {
+      fprintf(fout, "%s", line); 
+    } else if (!strncmp(line, "BEGIN", 5)) {
+      began = 1;
+    }
+  }
+  fclose(fin);
+  fclose(fout);
 }
 
 int main(int argc, char * argv[]) {
