@@ -60,34 +60,37 @@ extern superframe_entry_t block_entry;
 #define LL_CRC_POLY 0x1021
 uint16_t *ll_crctable = NULL;
 
+/* block header (12 bytes)
+ * ----------------
+ * [0-3] = identifier (0x80000000 => file)
+ * [4-5] = size of data in packet [bytes]
+ * [6-8] = packet number (i)
+ * [9-11] = total number of packets (n)
+ */
 // generates the block header in the buffer
-int make_block_header(uint8_t * buffer, uint16_t id, uint16_t size, uint16_t i, uint16_t n, uint32_t totalsize)
+int make_block_header(uint8_t * buffer, uint32_t id, uint16_t size, uint32_t i, uint32_t n)
 {
-  /* block header (12 bytes)
-   * ----------------
-   * [0-1] = identifier
-   * [2-3] = packet size [bytes]
-   * [4-5] = packet number
-   * [6-7] = total number of packets
-   * [8-12] = total block size [bytes]
-   */
-  *((uint16_t *) (buffer+0)) = id; // ID
-  memcpy(buffer+2,&size,2); // packet size
-  memcpy(buffer+4,&i,2); // packet number
-  memcpy(buffer+6,&n,2); // number of packets
-  memcpy(buffer+8,&totalsize,4); // total size
+  i &= 0x00ffffff;
+  n &= 0x00ffffff;
+
+  memcpy(buffer+0, &id,   4); // ID
+  memcpy(buffer+4, &size, 2); // size of data in packet
+  memcpy(buffer+6, &i,    3); // packet number
+  memcpy(buffer+9, &n,    3); // number of packets
 
   return PACKET_HEADER_SIZE;
 }
 
 // generates the block header in the buffer
-int read_block_header(uint8_t * buffer, uint16_t *id, uint16_t *size, uint16_t *i, uint16_t *n, uint32_t *totalsize)
+int read_block_header(uint8_t * buffer, uint32_t *id, uint16_t *size, uint32_t *i, uint32_t *n)
 {
-  *id = *(uint16_t *) (buffer+0);
-  *size = *(uint16_t *) (buffer+2);
-  *i = *(uint16_t *) (buffer+4);
-  *n = *(uint16_t *) (buffer+6);
-  *totalsize = *(uint32_t *) (buffer+8);
+  *i &= 0x00ffffff;
+  *n &= 0x00ffffff;
+
+  memcpy(id,   buffer+0, 4); // ID
+  memcpy(size, buffer+4, 2); // size of data in packet
+  memcpy(i,    buffer+6, 3); // packet number
+  memcpy(n,    buffer+9, 3); // number of packets
 
   return PACKET_HEADER_SIZE;
 }
@@ -128,64 +131,59 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
   *accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
-void set_block_indices_linklist(linklist_t * ll, char * blockname, unsigned int i, unsigned int n)
+block_t * block_find_by_name(linklist_t * ll, char * blockname) 
 {
-  if (!ll) {
-    linklist_err("Invalid linklist given");
-    return;
-  }
-
-  int j = 0;
-  block_t * theblock = NULL;
-
+  int j;
   // find the block
   for (j = 0; j < ll->num_blocks; j++) {
     if (strcmp(blockname, ll->blocks[j].name) == 0) {
-      theblock = &ll->blocks[j];
-      break;
+      return &ll->blocks[j];
     }
   }
-  if (!theblock) {
-    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
-    return;
-  }
-
-  theblock->i = i;
-  theblock->n = n;
+  return NULL;
 }
 
-int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, int id)
+int linklist_send_file_by_block(linklist_t * ll, char * blockname, char * filename, 
+                               int32_t id, int flags)
+{
+  return linklist_send_file_by_block_ind(ll, blockname, filename, id, flags, 0, 0);
+}
+
+int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * filename, 
+                                    int32_t id, int flags, unsigned int i, unsigned int n)
 {
   if (!ll) {
-    linklist_err("Invalid linklist given");
+    linklist_err("linklist_send_file_by_block_ind: Invalid linklist given\n");
     return 0;
   }
 
-  int i = 0;
-  block_t * theblock = NULL;
-
-  // find the block
-  for (i = 0; i < ll->num_blocks; i++) {
-    if (strcmp(blockname, ll->blocks[i].name) == 0) {
-      theblock = &ll->blocks[i];
-      break;
-    }
-  }
+  // find the block in the linklist
+  block_t * theblock = block_find_by_name(ll, blockname);
   if (!theblock) {
-    linklist_err("Block \"%s\" not found in linklist \"%s\"", blockname, ll->name);
+    linklist_err("linklist_send_file_by_block_ind: Block \"%s\" not found in linklist \"%s\"\n", blockname, ll->name);
     return 0;
   }
 
   // check to see if the previous send is done
-  if (theblock->i != theblock->n) { // previous transfer not done
-    linklist_info("Previous transfer for block \"%s\" is incomplete.", blockname);
+  if (!(flags & BLOCK_OVERRIDE_CURRENT) && (theblock->i < theblock->n)) {
+    linklist_info("linklist_send_file_by_block_ind: Previous transfer for block \"%s\" is incomplete.\n", blockname);
     return 0;
+  }
+
+  // cancel any current block packetization (n < i sentinel condition)
+  theblock->n = 0;
+  theblock->i = 1;
+
+  // check for any dangling file pointers
+  if (theblock->fp) {
+    fclose(theblock->fp);
+    theblock->fp = NULL;
   }
  
   // open the file
   FILE * fp = fopen(filename, "rb+");
   if (!fp) {
-    linklist_err("File \"%s\" not found", filename);
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" not found\n", filename);
     return 0;
   }
   
@@ -195,24 +193,34 @@ int send_file_to_linklist(linklist_t * ll, char * blockname, char * filename, in
   filesize = ftell(fp);
   fseek(fp, 0L, SEEK_SET);
 
-  unsigned int n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
-  if (n_total > UINT16_MAX) {
-    linklist_err("File \"%s\" is too large\n", filename);
+  // deal with empty files
+  if (!filesize) {
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" is empty\n", filename);
     return 0;
   }
+
+  uint32_t n_total = (filesize-1)/(theblock->le->blk_size-PACKET_HEADER_SIZE)+1;
+  if (n_total & 0xff000000) {
+    linklist_err("linklist_send_file_by_block_ind: File \"%s\" is too large\n", filename);
+    return 0;
+  }
+
 
   // set the block variables to initialize transfer
   theblock->fp = fp;
   strcpy(theblock->filename, filename); // copy the filename stripped of path
-  theblock->i = 0;
   theblock->num = 0;
-  theblock->n = n_total;
   theblock->curr_size = filesize;
-
-  // theblock->id++; // increment the block counter
   theblock->id = id;
+  if (!n && !i) { // set the whole transfer
+    theblock->i = 0;
+    theblock->n = n_total;
+  } else { // set the potential partial transfer
+    theblock->i = MIN(MIN(i, n), n_total);
+    theblock->n = MIN(n, n_total);
+  }
 
-  linklist_info("File \"%s\" sent to linklist \"%s\"\n", filename, ll->name);
+  linklist_info("File \"%s\" (%d B == %d pkts) sent to linklist \"%s\" (i=%d, n=%d)\n", filename, filesize, n_total, ll->name, theblock->i, theblock->n);
 
   return 1;
 }
@@ -259,7 +267,7 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
  * compress_linklist_opt
  * 
  * Selects entries from and compresses a superframe according to the provide
- * linklist format.
+ * linklist format. Return positive number if non-zero data was written.
  * -> buffer_out: buffer in which compressed frame will be written.
  * -> ll: pointer to linklist specifying compression and entry selection
  * -> buffer_in: pointer to the superframe to be compressed. 
@@ -284,6 +292,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
   uint8_t tlm_comp_type = 0;
   struct link_entry * tlm_le;
   uint16_t checksum = 0;
+  uint8_t retval = 0;
 
   // check validity of buffers
   if (!buffer_in) {
@@ -341,10 +350,13 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
 
       // update checksum
       tlm_out_size = tlm_le->blk_size;
-      for (j=0;j<tlm_out_size;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
+      for (j=0;j<tlm_out_size;j++) {
+        ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable);
+        retval |= tlm_out_buf[j]; // retval is whether or not there is nonzero data
+      }
     }
   }
-  return 1;
+  return retval;
 }
 
 
@@ -447,36 +459,58 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
   if (buffer_save == NULL) buffer_save = calloc(1, superframe->size);
 
   // extract the data to the full buffer
-  for (j=0;j<ll->n_entries;j++)
-  {
+  for (j=0; j<ll->n_entries; j++) {
     tlm_le = &(ll->items[j]);
     tlm_in_size = tlm_le->blk_size;
     tlm_in_start = tlm_le->start;
     tlm_in_buf = buffer_in+tlm_in_start;
 
     // update checksum
-    for (i=0;i<tlm_in_size;i++) {
+    for (i=0; i<tlm_in_size; i++) {
       ll_crccheck(tlm_in_buf[i],&checksum,ll_crctable);
       prechecksum |= *(uint16_t *) &tlm_in_buf[i];
     }
 
     p_end = j;
 
-    if (tlm_le->tlm == NULL) // evaluating a checksum...
-    {
-      if (tlm_in_start > maxsize) { // reached the maximum input buffer size; the rest is assumed to be garbage
+    if (tlm_le->tlm == NULL) { // found a checksum field
+      if (tlm_in_start > maxsize) { // max. input buffer size; the rest assumed to be garbage
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
-
         break;
-        // linklist_info("Block %d is beyond the max size of %d", sumcount, maxsize);
       } else if (checksum && !(flags & LL_IGNORE_CHECKSUM)) { // bad data block
         // clear/replace bad data from output buffer
-        if (flags & LL_VERBOSE) linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        if (flags & LL_VERBOSE) {
+          linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
+        }
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
       } else if (!checksum && !prechecksum) { // had a block of all zeros
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+      } else { // after all that, the checksum is good
+        for (i=p_start; i<p_end; i++) { // decompress everything in that block
+					tlm_le = &(ll->items[i]);
+					tlm_in_size = tlm_le->blk_size;
+					tlm_in_start = tlm_le->start;
+					tlm_in_buf = buffer_in+tlm_in_start;
+
+					if (tlm_le->tlm == &block_entry) { // data block entry 
+						block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+						if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
+						else linklist_err("Could not find block in linklist \"%s\"", ll->name);
+
+					} else { // just a normal field
+						tlm_out_start = tlm_le->tlm->start;
+						tlm_comp_type = tlm_le->comp_type;
+						tlm_out_buf = buffer_out+tlm_out_start;
+
+						if (tlm_comp_type != NO_COMP) { // compression
+							(*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf, tlm_le, tlm_in_buf);
+						} else {
+							decimationDecompress(tlm_out_buf, tlm_le, tlm_in_buf);
+						}
+					}
+        }
+        ret++;
       }
-      else ret++;
 
       // reset checksum
       prechecksum = 0;
@@ -486,34 +520,9 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
       tot++;
 
     }
-    else
-    {
-      if (tlm_le->tlm == &block_entry) // data block entry 
-      {
-        block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
-        if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
-        else linklist_err("Could not find block in linklist \"%s\"", ll->name);
-      }
-      else // just a normal field
-      {
-        tlm_out_start = tlm_le->tlm->start;
-        tlm_comp_type = tlm_le->comp_type;
-        tlm_out_buf = buffer_out+tlm_out_start;
-
-        if (tlm_comp_type != NO_COMP) // compression
-        {
-          (*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
-        }
-        else
-        {
-          decimationDecompress(tlm_out_buf,tlm_le,tlm_in_buf);
-        }
-      }
-    }
   }
   // save the data
   memcpy(buffer_save, buffer_out, superframe->size);
-
   ret = (tot == 0) ? ret : ret/tot;
 
   return ret;
@@ -524,8 +533,13 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
   if (block->i < block->n) { // packets left to be sent 
     unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
     unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE, block->curr_size-loc);
+
+    if (cpy > UINT16_MAX) {
+      linklist_err("Block packet size %d is too large\n", cpy);
+      return;
+    }
     
-    int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n, block->curr_size);
+    int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n);
  
     if (loc > block->curr_size) {
       linklist_err("Block location %d > total size %d", loc, block->curr_size);
@@ -533,14 +547,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     }
 
     if (block->fp) { // there is a file instead of data in a buffer
-      *(uint16_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that the transfer is a file
-      // special hook for tar'ed files
-      // if ((strlen(block->filename) >= strlen(TARGZ_EXT)) && 
-      //      (strcmp(block->filename+strlen(block->filename)-strlen(TARGZ_EXT), TARGZ_EXT) == 0)) {
-      //    *(uint16_t *) buffer |= TARGZ_FILE_MASK; 
-      // } else {
-        *(uint16_t *) buffer &= ~TARGZ_FILE_MASK;
-      //}
+      *(uint32_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that transfer is a file
 
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
@@ -548,7 +555,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
         linklist_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
       }
     } else { // there is data in the buffer
-      *(uint16_t *) buffer &= ~BLOCK_FILE_MASK; // no mask for non-file types
+      *(uint32_t *) buffer &= ~BLOCK_FILE_MASK; // no mask for non-file types
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
@@ -558,13 +565,11 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     block->num++;
   } else { // no blocks left
     memset(buffer, 0, block->le->blk_size);
-    block->i = block->n;
     if (block->fp) { // file was open, so close it
       fclose(block->fp);
       block->fp = NULL;
       block->filename[0] = 0;
     }
-    //printf("Nothing to send\n");
   }
 
 }
@@ -581,55 +586,53 @@ FILE * fpreopenb(char *fname)
   return fopen(fname,"rb+");
 }
 
+void close_block_fp(struct block_container * block) {
+  if (!block->fp) return;
+  fclose(block->fp);
+  block->fp = NULL;
+}
+
 void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 {
-  uint16_t id = 0;
-  uint16_t i = 0, n = 0;
+  uint32_t id = 0;
+  uint32_t i = 0, n = 0;
   uint16_t blksize = 0;
-  uint32_t totalsize = 0;
 
-  int fsize = read_block_header(buffer,&id,&blksize,&i,&n,&totalsize);
+  int fsize = read_block_header(buffer, &id, &blksize, &i, &n);
 
   // no data to read
   if (blksize == 0) {
     // close any dangling file pointers
     if (block->fp) {
-      linklist_info("Completed \"%s\"\n\n", block->filename);
-      fclose(block->fp);
-      block->fp = NULL;
-      block->filename[0] = 0;
+      close_block_fp(block);
+      block->filename[0] = '\0';
     }
     return;
   }
   if (i >= n) { 
-    linklist_info("depacketize_block: index larger than total (%d > %d)\n",i,n);
-    //memset(buffer,0,blksize+fsize); // clear the bad block
+    linklist_info("depacketize_block: index larger than total (%d > %d)\n", i, n);
     return;
   }
-  // report missing block
-  while (block->i < i) {
-    linklist_info("Missing block %d/%d\n", block->i+1, block->n);
+  // report missing block for already opened files
+  while ((block->i < i) && block->fp) {
+    linklist_info("Missing block %d/%d\n", block->i+1, n);
     block->i++;
   }
  
   unsigned int loc = i*(block->le->blk_size-fsize);
+  unsigned int expected_size = n*(block->le->blk_size-fsize);
 
   if (id & BLOCK_FILE_MASK) { // receiving a file
-    // a different id packet was received, so close file if that packet is open
     id &= ~BLOCK_FILE_MASK; // remove the mask
 
-    char ext[16] = "";
-    if (id & TARGZ_FILE_MASK) {
-      strcpy(ext, TARGZ_EXT);
-    }
-    id &= ~TARGZ_FILE_MASK;
-
+    // a different id packet was received, so close file if that packet is open
     if ((id != block->id) && block->fp) {
-      fclose(block->fp);
-      block->fp = NULL;
+      close_block_fp(block);
     }
-    if (!block->fp) { // file not open yet
-      sprintf(block->filename, "%s/%s_%d%s", LINKLIST_FILESAVE_DIR, block->name, id, ext); // build filename
+    
+    // file not open yet
+    if (!block->fp) {
+      sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
       if (!(block->fp = fpreopenb(block->filename))) {
         linklist_err("Cannot open file %s", block->filename);
         return;
@@ -639,22 +642,26 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
     fseek(block->fp, loc, SEEK_SET); 
     int retval = 0;
     if ((retval = fwrite(buffer+fsize, 1, blksize, block->fp)) != blksize) {
-      linklist_err("Could only write %d/%d bytes at %d to file %s", retval, blksize, loc, block->filename);
+      linklist_err("Wrote %d != %d bytes at %d to file %s", retval, blksize, loc, block->filename);
     }
+    
+		if ((block->i+1) == block->n) {
+			linklist_info("Completed \"%s\"\n\n", block->filename);
+			close_block_fp(block);
+		}
 
   } else { // just a normal block to be stored in memory
     // expand the buffer if necessary
-    if (totalsize > block->alloc_size)
-    {  
-      void * tp = realloc(block->buffer,totalsize);
+    if (expected_size > block->alloc_size) {  
+      void * tp = realloc(block->buffer, expected_size);
       block->buffer = (uint8_t *) tp;
-      block->alloc_size = totalsize;
+      block->alloc_size = expected_size;
     }
-    memcpy(block->buffer+loc,buffer+fsize,blksize);
+    memcpy(block->buffer+loc, buffer+fsize, blksize);
   }
 
   // set block variables 
-  block->curr_size = totalsize;
+  block->curr_size = expected_size;
   block->i = i;
   block->n = n;
   block->id = id;  
@@ -662,7 +669,7 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
   block->i++;
   block->num++;
 
-  // linklist_info("Received \"%s\" %d/%d (%d/%d)\n",block->name,block->i,block->n,loc+blksize,totalsize);
+  // linklist_info("Received \"%s\" %d/%d (%d)\n",block->name,block->i,block->n,loc+blksize);
 
 }
 

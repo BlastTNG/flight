@@ -197,11 +197,11 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
 
   // get the number of frames per file (fpf)
-  int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND);
+  int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND, "%d");
   if (fpf > 0) ll_rawfile->fpf = fpf;
   else ll_rawfile->fpf = ll_rawfile_default_fpf;
 
-  int blk_size = read_linklist_formatfile_comment(filename, LINKLIST_FILE_SIZE_IND);
+  int blk_size = read_linklist_formatfile_comment(filename, LINKLIST_FILE_SIZE_IND, "%d");
   if (blk_size > 0) {
     ll_rawfile->framesize = blk_size;
   } else {
@@ -276,12 +276,36 @@ int read_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
   }
 
   unsigned int retval = 0;
-  unsigned int framenum = ll_rawfile->fileindex*ll_rawfile->fpf+ll_rawfile->framenum;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
   if (ll_rawfile->fp) {
     seek_linklist_rawfile(ll_rawfile, framenum); 
     retval = fread(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
   }
   ll_rawfile->framenum++;
+  return retval;
+}
+
+int write_linklist_rawfile_with_allframe(linklist_rawfile_t * ll_rawfile, uint8_t * buffer, uint8_t * allframe) {
+  if (!ll_rawfile) { 
+    linklist_err("Null rawfile linklist");
+    return -1;
+  }
+  if (!buffer) { 
+    linklist_err("Null buffer");
+    return -1;
+  }
+
+  unsigned int retval = 0;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
+  if (ll_rawfile->fp) {
+    seek_linklist_rawfile(ll_rawfile, framenum); 
+    retval = fwrite(buffer, ll_rawfile->ll->blk_size, 1, ll_rawfile->fp);
+    if (allframe && (ll_rawfile->ll->flags & LL_INCLUDE_ALLFRAME)) {
+      retval += fwrite(allframe, ll_rawfile->ll->superframe->allframe_size, 1, ll_rawfile->fp);
+    }
+  }
+  ll_rawfile->framenum++;
+
   return retval;
 }
 
@@ -300,7 +324,7 @@ int write_linklist_rawfile_opt(linklist_rawfile_t * ll_rawfile, uint8_t * buffer
   }
 
   unsigned int retval = 0;
-  unsigned int framenum = ll_rawfile->fileindex*ll_rawfile->fpf+ll_rawfile->framenum;
+  unsigned int framenum = tell_linklist_rawfile(ll_rawfile);
   if (ll_rawfile->fp) {
     seek_linklist_rawfile(ll_rawfile, framenum); 
     retval = fwrite(buffer, ll_rawfile->framesize, 1, ll_rawfile->fp);
@@ -309,6 +333,8 @@ int write_linklist_rawfile_opt(linklist_rawfile_t * ll_rawfile, uint8_t * buffer
 
   return retval;
 }
+
+#define N_BLOCK_DIRFILE_ENTRIES 6
 
 linklist_dirfile_t * open_linklist_dirfile(char * dirname, linklist_t * ll) {
   return open_linklist_dirfile_opt(dirname, ll, 0);
@@ -384,7 +410,6 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   // those in the linklist are at the full rate
   // those not in the linklist are at 1 spf
   ll_dirfile->bin = (FILE **) calloc(ll->superframe->n_entries, sizeof(FILE *));
-
   for (i = 0; i < ll->superframe->n_entries; i++) {
     if (sfe[i].type == SF_NUM) continue; 
 
@@ -393,23 +418,20 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 																				 get_sf_type_string(sfe[i].type), 
 																				 (ll_dirfile->map[i]) ? sfe[i].spf : 1);
 
-		if (strlen(sfe[i].quantity) > 0)
-		{
+    // add quantity
+		if (strlen(sfe[i].quantity) > 0) {
 			fprintf(formatfile,"%s/quantity STRING \"", sfe[i].field);
-			for (j = 0; j < strlen(sfe[i].quantity); j++)
-			{
+			for (j = 0; j < strlen(sfe[i].quantity); j++) {
 				if (sfe[i].quantity[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
 				fprintf(formatfile, "%c", sfe[i].quantity[j]);
 			}
 			fprintf(formatfile,"\"\n");
 		}
 
-		// comment out repeated entry 
-		if (strlen(sfe[i].units) > 0)
-		{
+    // add units
+		if (strlen(sfe[i].units) > 0) {
 			fprintf(formatfile,"%s/units STRING \"", sfe[i].field);
-			for (j = 0; j < strlen(sfe[i].units); j++)
-			{
+			for (j = 0; j < strlen(sfe[i].units); j++) {
 				if (sfe[i].units[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
 				fprintf(formatfile, "%c", sfe[i].units[j]);
 			}
@@ -421,6 +443,29 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 		// open the file if not already opened
 		snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", ll_dirfile->filename, sfe[i].field);
 		ll_dirfile->bin[i] = fpreopenb(binname);  
+  }
+
+  // add files for blocks
+  ll_dirfile->blockbin = (FILE **) calloc(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES, sizeof(FILE *));
+  for (i = 0; i < ll->num_blocks; i++) {
+    #define WRITE_BLOCK_FORMAT_ENTRY(_FIELD)                                                   \
+    ({                                                                                         \
+			fprintf(formatfile, "%s_" #_FIELD " RAW %s %d\n", ll->blocks[i].name,                    \
+                                                        get_sf_type_string(SF_UINT32),         \
+                                                        1);                                    \
+      fflush(formatfile);                                                                      \
+      snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s_" #_FIELD, ll_dirfile->filename,    \
+               ll->blocks[i].name);                                                            \
+      ll_dirfile->blockbin[i*N_BLOCK_DIRFILE_ENTRIES+j] = fpreopenb(binname);                  \
+      j++;                                                                                     \
+    })
+    j = 0;
+    WRITE_BLOCK_FORMAT_ENTRY(id);
+    WRITE_BLOCK_FORMAT_ENTRY(i);
+    WRITE_BLOCK_FORMAT_ENTRY(n);
+    WRITE_BLOCK_FORMAT_ENTRY(num);
+    WRITE_BLOCK_FORMAT_ENTRY(alloc_size);
+    WRITE_BLOCK_FORMAT_ENTRY(curr_size);
   }
 
   if (ll->superframe->calspecs[0]) {
@@ -448,8 +493,12 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i = 0; i < ll_dirfile->ll->superframe->n_entries; i++) {
     if (ll_dirfile->bin[i]) fclose(ll_dirfile->bin[i]);
   }
+  for (i = 0; i < ll_dirfile->ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES; i++) {
+    if (ll_dirfile->blockbin[i]) fclose(ll_dirfile->blockbin[i]);
+  }
   fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
+  free(ll_dirfile->blockbin);
   free(ll_dirfile->map);
   free(ll_dirfile);
 }
@@ -472,15 +521,22 @@ int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum
   }
   superframe_entry_t * sfe = ll->superframe->entries;
 
+  // just a normal field to be writing to the dirfile
   for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
+		if (ll_dirfile->bin[i]) { 
 			tlm_out_size = get_superframe_entry_size(&sfe[i]);
 			tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
 
 			dir_loc = framenum*tlm_out_size*tlm_out_spf;
 			fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
 		}
-  }  
+  }
+  // block-specific fields to be writing to the dirfile
+  for (i=0; i<(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
+    if (ll_dirfile->blockbin[i]) {
+      fseek(ll_dirfile->blockbin[i], framenum*sizeof(uint32_t), SEEK_SET);
+    }
+  } 
   ll_dirfile->framenum = framenum;
   return 0;
 }
@@ -499,11 +555,19 @@ int flush_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
     return -1;
   }
 
+  // just a normal field to be writting to the dirfile
   for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
+		if (ll_dirfile->bin[i]) { 
 			fflush(ll_dirfile->bin[i]);
 		}
   }  
+  // block-specific fields to be writing to the dirfile
+  for (i=0; i<(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
+    if (ll_dirfile->blockbin[i]) {
+      fflush(ll_dirfile->blockbin[i]);
+    }
+  }
+
   return 0;
 }
 
@@ -551,8 +615,9 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
 
   int i = 0;
   int j = 0;
+  // just a normal field to be writing to the dirfile
   for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { // just a normal field to be writting to the dirfile
+		if (ll_dirfile->bin[i]) { 
 			tlm_out_start = sfe[i].start;
 			tlm_out_skip = sfe[i].skip;
 			tlm_out_size = get_superframe_entry_size(&sfe[i]);
@@ -569,6 +634,22 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
 			}
 		}
   }  
+  // block-specific fields to be writing to the dirfile
+  for (i = 0; i < ll->num_blocks; i++) {
+    #define WRITE_BLOCK_ENTRY_DATA(_FIELD)                                                     \
+    ({                                                                                         \
+      FILE * blockfp = ll_dirfile->blockbin[i*N_BLOCK_DIRFILE_ENTRIES+j];                      \
+      if (blockfp) fwrite(&ll->blocks[i]._FIELD, sizeof(uint32_t), 1, blockfp);                \
+      j++;                                                                                     \
+    })
+    j = 0;
+    WRITE_BLOCK_ENTRY_DATA(id);
+    WRITE_BLOCK_ENTRY_DATA(i);
+    WRITE_BLOCK_ENTRY_DATA(n);
+    WRITE_BLOCK_ENTRY_DATA(num);
+    WRITE_BLOCK_ENTRY_DATA(alloc_size);
+    WRITE_BLOCK_ENTRY_DATA(curr_size);
+  }
   memset(superframe_buf, 0, ll->superframe->size);
   
   ll_dirfile->framenum++;

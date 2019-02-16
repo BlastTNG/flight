@@ -166,11 +166,11 @@ struct linklist_struct
 struct block_container
 {
   char name[80];
-  uint16_t id;
-  unsigned int i, n, num;
+  uint32_t id;
+  uint32_t i, n, num;
   struct link_entry * le;
-  unsigned int alloc_size;
-  unsigned int curr_size;
+  uint32_t alloc_size;
+  uint32_t curr_size;
   uint8_t * buffer;
 
   char filename[LINKLIST_MAX_FILENAME_SIZE];
@@ -270,7 +270,7 @@ uint32_t superframe_find_index_by_name(superframe_t *, const char *);
 uint32_t get_superframe_entry_size(superframe_entry_t *);
 const char * get_sf_type_string(uint8_t);
 uint8_t get_sf_type_int(char *);
-int read_linklist_formatfile_comment(char *, char *);
+int read_linklist_formatfile_comment(char *, char *, const char *);
 int superframe_entry_get_index(superframe_entry_t *, superframe_entry_t *);
 
 int linklist_generate_lookup(linklist_t **);
@@ -279,6 +279,7 @@ void delete_linklist(linklist_t *);
 int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
 int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
+int linklist_find_id_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
 
 #ifdef __cplusplus

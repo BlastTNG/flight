@@ -13,6 +13,7 @@ struct linklist_dirfile {
   uint8_t * map;
   FILE * format;
   FILE ** bin;
+  FILE ** blockbin;
 };
 
 struct linklist_rawfile {
@@ -49,6 +50,7 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char *, linklist_t *, unsigned in
 void close_and_free_linklist_rawfile(linklist_rawfile_t *);
 int write_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
 int write_linklist_rawfile_opt(linklist_rawfile_t *, uint8_t *, unsigned int);
+int write_linklist_rawfile_with_allframe(linklist_rawfile_t *, uint8_t *, uint8_t *);
 int read_linklist_rawfile(linklist_rawfile_t *, uint8_t *);
 
 void make_linklist_rawfile_name(linklist_t *, char *);
