@@ -75,6 +75,7 @@ int write_allframe(uint8_t *, superframe_t *, uint8_t *);
 int read_allframe(uint8_t *, superframe_t *, uint8_t *);
 void packetize_block_raw(struct block_container * , uint8_t *);
 void depacketize_block_raw(struct block_container * , uint8_t *);
+unsigned int linklist_blocks_queued(linklist_t *);
 
 block_t * block_find_by_name(linklist_t *, char *);
 int linklist_send_file_by_block(linklist_t *, char *, char *, int32_t, int);

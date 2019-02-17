@@ -528,6 +528,17 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
   return ret;
 }
 
+unsigned int linklist_blocks_queued(linklist_t * ll) {
+  int i;
+  unsigned int retval = 0;
+  if (!ll) return retval;
+
+  for (i=0; i<ll->num_blocks; i++) {
+    if (ll->blocks[i].i < ll->blocks[i].n) retval++;
+  }
+  return retval;
+}
+
 void packetize_block_raw(struct block_container * block, uint8_t * buffer)
 {
   if (block->i < block->n) { // packets left to be sent 
