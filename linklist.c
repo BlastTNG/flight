@@ -847,6 +847,54 @@ linklist_t * linklist_lookup_by_serial(uint16_t serial) {
   return ll_list[ind];
 }
 
+/*
+ * linklist_duplicate
+ *
+ * This function duplicates a linklist exactly, copying all entries and blocks.
+ * References to the superframe are copied as well as the serial and flags.
+*/
+linklist_t * linklist_duplicate(linklist_t * ll) {
+  if (!ll) {
+    linklist_err("Cannot duplicate NULL linklist\n");
+    return NULL;
+  }
+  int i;
+  linklist_t * ll_copy = calloc(1, sizeof(linklist_t)); 
+  
+  // copy the structure directly
+  memcpy(ll_copy, ll, sizeof(linklist_t));
+
+  // copy the entries
+  ll_copy->items = calloc(ll->n_entries, sizeof(linkentry_t));
+  memcpy(ll_copy->items, ll->items, ll->n_entries*sizeof(linkentry_t));
+
+  // copy the blocks
+  ll_copy->blocks = calloc(MAX_DATA_BLOCKS, sizeof(struct block_container));
+  memcpy(ll_copy->blocks, ll->blocks, MAX_DATA_BLOCKS*sizeof(struct block_container));
+
+  // change the reference to the copied linklist for each linkentry
+  int b_ind = 0;
+  for (i=0; i<ll_copy->n_entries; i++) {
+    ll_copy->items[i].linklist = ll_copy;
+    // allocate block memory and update reference to linkentry to the copied linklist
+    if (ll_copy->items[i].tlm == &block_entry) {
+      ll_copy->blocks[b_ind].le = &ll_copy->items[i];
+      ll_copy->blocks[b_ind].buffer = calloc(1, ll_copy->blocks[b_ind].alloc_size);
+      ll_copy->blocks[b_ind].fp = NULL; // only one block can own the file descriptor if non-NULL
+      b_ind++;
+    }
+  }
+
+  // check consistency with the number of blocks found
+  if (b_ind != ll_copy->num_blocks) {
+    linklist_err("linklist_duplicate: num_blocks mismatch (found %d, expected %d)\n", 
+                 i, ll_copy->num_blocks);
+  }
+
+  return ll_copy;
+}
+
+
 linklist_t * generate_superframe_linklist(superframe_t * superframe) {
   return generate_superframe_linklist_opt(superframe, 0);
 }
