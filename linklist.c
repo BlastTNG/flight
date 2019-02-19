@@ -221,7 +221,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
                                          int (*doubletodata)(uint8_t *, double, uint8_t),
                                          unsigned int flags) {
 
-  superframe_t * superframe = calloc(1, sizeof(superframe_t));  
+  superframe_t * superframe = (superframe_t *) calloc(1, sizeof(superframe_t));  
 
   superframe->entries = m_superframe_list;
   linklist_assign_datatodouble(superframe, datatodouble);
@@ -238,7 +238,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   }
 
   superframe->hash_table_size = superframe->n_entries*1000;
-  superframe->hash_table = calloc(superframe->hash_table_size, sizeof(superframe_entry_t *));
+  superframe->hash_table = (superframe_entry_t **) calloc(superframe->hash_table_size, sizeof(superframe_entry_t *));
  
   for (i = 0; i < superframe->n_entries; i++) {
     unsigned int hashloc = hash(superframe->entries[i].field)%superframe->hash_table_size;
@@ -484,10 +484,10 @@ enum dataCompressTypes linklist_get_comp_index(char * name) {
     if (strcmp(name, compRoutine[i].name) == 0) break;
   }
   if (i != NUM_COMPRESS_TYPES) {
-    return i;
+    return (enum dataCompressTypes) i;
   } else {
     linklist_err("Could not find compression type \"%s\"\n", name);
-    return NO_COMP;
+    return (enum dataCompressTypes) NO_COMP;
   }
 }
 
@@ -495,12 +495,12 @@ enum dataCompressTypes linklist_get_default_compression(superframe_entry_t * tlm
   if ((flags & LL_AUTO_FLOAT_COMP) && tlm &&
       ((tlm->max != 0) || (tlm->min != 0))) {
       if (tlm->type == SF_FLOAT32) {
-        return FIXED_PT_16BIT; 
+        return (enum dataCompressTypes) FIXED_PT_16BIT; 
       } else if (tlm->type == SF_FLOAT64) {
-        return FIXED_PT_32BIT;
+        return (enum dataCompressTypes) FIXED_PT_32BIT;
       }
   }
-  return NO_COMP;
+  return (enum dataCompressTypes) NO_COMP;
 }
 
 /**
@@ -859,17 +859,17 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
     return NULL;
   }
   int i;
-  linklist_t * ll_copy = calloc(1, sizeof(linklist_t)); 
+  linklist_t * ll_copy = (linklist_t *) calloc(1, sizeof(linklist_t)); 
   
   // copy the structure directly
   memcpy(ll_copy, ll, sizeof(linklist_t));
 
   // copy the entries
-  ll_copy->items = calloc(ll->n_entries, sizeof(linkentry_t));
+  ll_copy->items = (linkentry_t *) calloc(ll->n_entries, sizeof(linkentry_t));
   memcpy(ll_copy->items, ll->items, ll->n_entries*sizeof(linkentry_t));
 
   // copy the blocks
-  ll_copy->blocks = calloc(MAX_DATA_BLOCKS, sizeof(struct block_container));
+  ll_copy->blocks = (struct block_container *) calloc(MAX_DATA_BLOCKS, sizeof(struct block_container));
   memcpy(ll_copy->blocks, ll->blocks, MAX_DATA_BLOCKS*sizeof(struct block_container));
 
   // change the reference to the copied linklist for each linkentry
@@ -879,7 +879,7 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
     // allocate block memory and update reference to linkentry to the copied linklist
     if (ll_copy->items[i].tlm == &block_entry) {
       ll_copy->blocks[b_ind].le = &ll_copy->items[i];
-      ll_copy->blocks[b_ind].buffer = calloc(1, ll_copy->blocks[b_ind].alloc_size);
+      ll_copy->blocks[b_ind].buffer = (uint8_t *) calloc(1, ll_copy->blocks[b_ind].alloc_size);
       ll_copy->blocks[b_ind].fp = NULL; // only one block can own the file descriptor if non-NULL
       b_ind++;
     }
@@ -1079,7 +1079,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   unsigned int blksize = 0;
   unsigned int n_entries = 0;
 
-  superframe_entry_t * sf = calloc(def_n_entries, sizeof(superframe_entry_t));
+  superframe_entry_t * sf = (superframe_entry_t *) calloc(def_n_entries, sizeof(superframe_entry_t));
 
   while ((read = getline(&line, &len, cf)) != -1) {
      // remove the newline

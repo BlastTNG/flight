@@ -247,7 +247,7 @@ uint8_t * allocate_superframe(superframe_t * superframe)
     return NULL;
   }
 
-  uint8_t * ptr = calloc(1, superframe->size);
+  uint8_t * ptr = (uint8_t *) calloc(1, superframe->size);
 
   return ptr;
 }
@@ -456,7 +456,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
     return 0;
   }
 
-  if (buffer_save == NULL) buffer_save = calloc(1, superframe->size);
+  if (buffer_save == NULL) buffer_save = (uint8_t *) calloc(1, superframe->size);
 
   // extract the data to the full buffer
   for (j=0; j<ll->n_entries; j++) {
