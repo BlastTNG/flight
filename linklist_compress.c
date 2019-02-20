@@ -56,6 +56,7 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
 extern superframe_entry_t block_entry;
+extern superframe_entry_t stream_entry;
 
 #define LL_CRC_POLY 0x1021
 uint16_t *ll_crctable = NULL;
@@ -131,8 +132,7 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
   *accumulator = (*accumulator << 8) ^ ll_crctable[(*accumulator >> 8) ^ data];
 }
 
-block_t * block_find_by_name(linklist_t * ll, char * blockname) 
-{
+block_t * block_find_by_name(linklist_t * ll, char * blockname) {
   int j;
   // find the block
   for (j = 0; j < ll->num_blocks; j++) {
@@ -143,15 +143,19 @@ block_t * block_find_by_name(linklist_t * ll, char * blockname)
   return NULL;
 }
 
+void close_block_fp(struct block_container * block) {
+  if (!block->fp) return;
+  fclose(block->fp);
+  block->fp = NULL;
+}
+
 int linklist_send_file_by_block(linklist_t * ll, char * blockname, char * filename, 
-                               int32_t id, int flags)
-{
+                               int32_t id, int flags) {
   return linklist_send_file_by_block_ind(ll, blockname, filename, id, flags, 0, 0);
 }
 
 int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * filename, 
-                                    int32_t id, int flags, unsigned int i, unsigned int n)
-{
+                                    int32_t id, int flags, unsigned int i, unsigned int n) {
   if (!ll) {
     linklist_err("linklist_send_file_by_block_ind: Invalid linklist given\n");
     return 0;
@@ -176,8 +180,7 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
 
   // check for any dangling file pointers
   if (theblock->fp) {
-    fclose(theblock->fp);
-    theblock->fp = NULL;
+    close_block_fp(theblock);
   }
  
   // open the file
@@ -207,11 +210,11 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
 
 
   // set the block variables to initialize transfer
-  theblock->fp = fp;
+  theblock->fp = fp; // non-null file desc indicates that we want to read data from file
   strcpy(theblock->filename, filename); // copy the filename stripped of path
   theblock->num = 0;
   theblock->curr_size = filesize;
-  theblock->id = id;
+  theblock->id = id | BLOCK_FILE_MASK; // the flag/mask indicates that we want a file on the ground
   if (!n && !i) { // set the whole transfer
     theblock->i = 0;
     theblock->n = n_total;
@@ -304,46 +307,38 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
     return 0;
   }
 
-  for (i=0;i<ll->n_entries;i++)
-  {
+  for (i=0;i<ll->n_entries;i++) {
     tlm_le = &(ll->items[i]);
     tlm_out_start = tlm_le->start;
     tlm_out_buf = buffer_out+tlm_out_start;
 
-    if (tlm_le->tlm == NULL) // checksum field
-    {
-      if (!(flags & LL_IGNORE_CHECKSUM)) 
-      {
+    if (tlm_le->tlm == NULL) { // checksum field
+      if (!(flags & LL_IGNORE_CHECKSUM)) {
         memcpy(tlm_out_buf+0,((uint8_t*)&checksum)+1,1);
         memcpy(tlm_out_buf+1,((uint8_t*)&checksum)+0,1);
         for (j=0;j<2;j++) ll_crccheck(tlm_out_buf[j],&checksum,ll_crctable); // check the checksum
-        if (checksum != 0) 
-        {
+        if (checksum != 0) {
           linklist_err("compress_linklist: invalid checksum generated\n");
         }
         //printf("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
       }
       checksum = 0; // reset checksum for next block
-    }
-    else // normal field
-    {
-      if (tlm_le->tlm == &block_entry) // data block field
-      {
+    } else { // normal field
+      if (tlm_le->tlm == &block_entry) { // data block field
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
-        if (theblock) packetize_block_raw(theblock, tlm_out_buf);
+        if (theblock) packetize_block(theblock, tlm_out_buf);
         else linklist_err("Could not find block in linklist \"%s\"", ll->name);
-      }
-      else // just a normal field 
-      {
+      } else if (tlm_le->tlm == &stream_entry) { // data stream field
+        stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
+        if (thestream) packetize_stream(thestream, tlm_out_buf);
+        else linklist_err("Could not find stream in linklist \"%s\"", ll->name);
+      } else { // just a normal field 
         tlm_comp_type = tlm_le->comp_type;
         tlm_in_start = tlm_le->tlm->start;
         tlm_in_buf = buffer_in+tlm_in_start;
-        if (tlm_comp_type != NO_COMP) // compression
-        {
+        if (tlm_comp_type != NO_COMP) { // compression
           (*compRoutine[tlm_comp_type].compressFunc)(tlm_out_buf,tlm_le,tlm_in_buf);
-        }
-        else
-        {
+        } else {
           decimationCompress(tlm_out_buf,tlm_le,tlm_in_buf);
         }
       }
@@ -372,20 +367,16 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
   unsigned int tlm_size;
   unsigned int tlm_out_skip;
 
-  for (i=p_start;i<p_end;i++)
-  { 
+  for (i=p_start;i<p_end;i++) { 
     tlm_le = &(req_ll->items[i]);
-    if (tlm_le->tlm != NULL)
-    { 
-      if (tlm_le->tlm != &block_entry)
-      { 
+    if (tlm_le->tlm != NULL) { 
+      if ((tlm_le->tlm != &block_entry) && (tlm_le->tlm != &stream_entry)) { // do not fill extended items (blocks, streams)
         tlm_out_start = tlm_le->tlm->start;
         tlm_out_skip = tlm_le->tlm->skip;
         tlm_out_num = tlm_le->tlm->spf;
         tlm_size = get_superframe_entry_size(tlm_le->tlm);
         //printf("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
-        for (k=0;k<tlm_out_num;k++)
-        { 
+        for (k=0;k<tlm_out_num;k++) { 
           loc1 = tlm_out_skip*k;
           loc2 = tlm_out_skip*(tlm_out_num-1);
           memcpy(buffer_out+tlm_out_start+loc1, buffer_save+tlm_out_start+loc2, tlm_size);
@@ -494,9 +485,12 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
 
 					if (tlm_le->tlm == &block_entry) { // data block entry 
 						block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
-						if (theblock) depacketize_block_raw(theblock, tlm_in_buf);
+						if (theblock) depacketize_block(theblock, tlm_in_buf);
 						else linklist_err("Could not find block in linklist \"%s\"", ll->name);
-
+					} else if (tlm_le->tlm == &stream_entry) { // data stream entry 
+						stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
+						if (thestream) depacketize_stream(thestream, tlm_in_buf);
+						else linklist_err("Could not find stream in linklist \"%s\"", ll->name);
 					} else { // just a normal field
 						tlm_out_start = tlm_le->tlm->start;
 						tlm_comp_type = tlm_le->comp_type;
@@ -539,7 +533,7 @@ unsigned int linklist_blocks_queued(linklist_t * ll) {
   return retval;
 }
 
-void packetize_block_raw(struct block_container * block, uint8_t * buffer)
+void packetize_block(struct block_container * block, uint8_t * buffer)
 {
   if (block->i < block->n) { // packets left to be sent 
     unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
@@ -550,6 +544,7 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
       return;
     }
     
+    // make the header
     int fsize = make_block_header(buffer, block->id, cpy, block->i, block->n);
  
     if (loc > block->curr_size) {
@@ -558,28 +553,22 @@ void packetize_block_raw(struct block_container * block, uint8_t * buffer)
     }
 
     if (block->fp) { // there is a file instead of data in a buffer
-      *(uint32_t *) buffer |= BLOCK_FILE_MASK; // add the mask to indicate that transfer is a file
-
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
       if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
         linklist_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
       }
     } else { // there is data in the buffer
-      *(uint32_t *) buffer &= ~BLOCK_FILE_MASK; // no mask for non-file types
       memcpy(buffer+fsize, block->buffer+loc, cpy);
     }
 
-    // printf("Sent block %d/%d (id = %d, size = %d, loc = %d)\n",block->i+1,block->n,block->id,cpy,loc);
-    
     block->i++;
     block->num++;
   } else { // no blocks left
     memset(buffer, 0, block->le->blk_size);
     if (block->fp) { // file was open, so close it
-      fclose(block->fp);
-      block->fp = NULL;
-      block->filename[0] = 0;
+      close_block_fp(block);
+      block->filename[0] = '\0';
     }
   }
 
@@ -597,13 +586,7 @@ FILE * fpreopenb(char *fname)
   return fopen(fname,"rb+");
 }
 
-void close_block_fp(struct block_container * block) {
-  if (!block->fp) return;
-  fclose(block->fp);
-  block->fp = NULL;
-}
-
-void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
+void depacketize_block(struct block_container * block, uint8_t * buffer)
 {
   uint32_t id = 0;
   uint32_t i = 0, n = 0;
@@ -682,6 +665,12 @@ void depacketize_block_raw(struct block_container * block, uint8_t * buffer)
 
   // linklist_info("Received \"%s\" %d/%d (%d)\n",block->name,block->i,block->n,loc+blksize);
 
+}
+
+void packetize_stream(struct stream_container * stream, uint8_t * buffer) {
+}
+
+void depacketize_stream(struct stream_container * stream, uint8_t * buffer) {
 }
 
 // takes superframe at buffer in and creates an all frame in buffer out

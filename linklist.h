@@ -36,6 +36,9 @@
 #define MAX_DATA_BLOCKS 8 // maximum data blocks per linklist
 #define DEF_BLOCK_ALLOC 10000 // default block buffer size [bytes] 
 
+#define MAX_DATA_STREAMS 8 // maximum data streams per linklist
+#define DEF_STREAM_ALLOC 10000 // default stream buffer size [bytes]
+
 #define ALL_FRAME_SERIAL 0x42424242
 #define LL_PARSE_CHECKSUM "_TLM_CHECKSUM_" 
 #define DEFAULT_LINKLIST_DIR "/data/etc/linklists/"
@@ -93,14 +96,19 @@ extern "C"{
 
 enum SFType
 {
+  // these are standard types
   SF_UINT8, SF_UINT16, SF_UINT32, SF_UINT64,
   SF_INT8, SF_INT16, SF_INT32, SF_INT64,
-  SF_FLOAT32, SF_FLOAT64, SF_NUM 
+  SF_FLOAT32, SF_FLOAT64, 
+
+  // these define extended items (blocks, streams, etc)
+  SF_NUM, SF_INF 
 };
 
 struct linklist_struct;
 struct link_entry;
 struct block_container;
+struct stream_container;
 struct sf_entry;
 struct superframe_struct;
 
@@ -157,18 +165,28 @@ struct linklist_struct
   uint32_t blk_size; // size of entire compressed frame
   uint8_t serial[MD5_DIGEST_LENGTH]; // serial/id number for list
   struct link_entry * items; // pointer to entries in the list
-  struct block_container * blocks; // pointer to blocks
-  unsigned int num_blocks; // number of data block fields
   int flags; // flags for checksums, auto increment, etc
   struct superframe_struct * superframe; // pointer to corresponding superframe
+
+  // extended items:
+  // - blocks: packetized data reassembled when data is decompressed (fixed size)
+  //     - e.g. file downlinks
+  //     - e.g. science image or full frame image downloads
+  // - streams: packetized data assembled as a continuous data stream (infinite size)
+  //     - e.g. streaming logs to a file on the ground station
+  //     - e.g. image streams (ITS) for thumbnails
+  struct block_container * blocks; // pointer to blocks
+  unsigned int num_blocks; // number of data block fields
+  struct stream_container * streams; // pointer to streams
+  unsigned int num_streams; // number of data stream fields
 };
 
 struct block_container
 {
-  char name[80];
+  char name[LINKLIST_SHORT_FILENAME_SIZE];
+  struct link_entry * le;
   uint32_t id;
   uint32_t i, n, num;
-  struct link_entry * le;
   uint32_t alloc_size;
   uint32_t curr_size;
   uint8_t * buffer;
@@ -177,9 +195,32 @@ struct block_container
   FILE *fp;
 };
 
+typedef struct
+{
+  unsigned int data_size;
+  unsigned int loc;
+  unsigned int alloc_size;
+  uint8_t * buffer;
+} substream_t;
+
+struct stream_container
+{
+  char name[LINKLIST_SHORT_FILENAME_SIZE];
+  struct link_entry * le;
+  unsigned int curr_ind;
+  unsigned int next_ind;
+  substream_t * curr_buffer;
+  substream_t * next_buffer;
+  substream_t buffers[2];
+
+  char filename[LINKLIST_MAX_FILENAME_SIZE];
+  FILE *fp;
+};
+
 typedef struct linklist_struct linklist_t;
 typedef struct link_entry linkentry_t;
 typedef struct block_container block_t;
+typedef struct stream_container stream_t;
 typedef struct sf_entry superframe_entry_t;
 typedef struct superframe_struct superframe_t;
 
@@ -281,7 +322,8 @@ int load_all_linklists(superframe_t *, char *, linklist_t **, unsigned int);
 int load_all_linklists_opt(superframe_t *, char *, linklist_t **, unsigned int, char **);
 linklist_t * linklist_find_by_name(char *, linklist_t **);
 int linklist_find_id_by_name(char *, linklist_t **);
-block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le);
+block_t * linklist_find_block_by_pointer(linklist_t *, linkentry_t *);
+stream_t * linklist_find_stream_by_pointer(linklist_t *, linkentry_t *);
 
 #ifdef __cplusplus
 }

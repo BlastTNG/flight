@@ -73,9 +73,11 @@ double decompress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int
 uint8_t * allocate_superframe(superframe_t *);
 int write_allframe(uint8_t *, superframe_t *, uint8_t *);
 int read_allframe(uint8_t *, superframe_t *, uint8_t *);
-void packetize_block_raw(struct block_container * , uint8_t *);
-void depacketize_block_raw(struct block_container * , uint8_t *);
+void packetize_block(struct block_container * , uint8_t *);
+void depacketize_block(struct block_container * , uint8_t *);
 unsigned int linklist_blocks_queued(linklist_t *);
+void packetize_stream(struct stream_container * , uint8_t *);
+void depacketize_stream(struct stream_container * , uint8_t *);
 
 block_t * block_find_by_name(linklist_t *, char *);
 int linklist_send_file_by_block(linklist_t *, char *, char *, int32_t, int);
