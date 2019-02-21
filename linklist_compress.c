@@ -142,11 +142,29 @@ block_t * block_find_by_name(linklist_t * ll, char * blockname) {
   }
   return NULL;
 }
+stream_t * stream_find_by_name(linklist_t * ll, char * streamname) {
+  int j;
+  // find the stream
+  for (j = 0; j < ll->num_streams; j++) {
+    if (strcmp(streamname, ll->streams[j].name) == 0) {
+      return &ll->streams[j];
+    }
+  }
+  return NULL;
+}
 
 void close_block_fp(struct block_container * block) {
   if (!block->fp) return;
-  fclose(block->fp);
+  FILE *fp = block->fp;
   block->fp = NULL;
+  fclose(fp);
+}
+
+void close_stream_fp(struct stream_container * stream) {
+  if (!stream->fp) return;
+  FILE *fp = stream->fp;
+  stream->fp = NULL;
+  fclose(fp);
 }
 
 int linklist_send_file_by_block(linklist_t * ll, char * blockname, char * filename, 
@@ -225,6 +243,62 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
 
   linklist_info("File \"%s\" (%d B == %d pkts) sent to linklist \"%s\" (i=%d, n=%d)\n", filename, filesize, n_total, ll->name, theblock->i, theblock->n);
 
+  return 1;
+}
+
+int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * filename, 
+                                   int offset, int whence) {
+  if (!ll) {
+    linklist_err("linklist_assign_file_to_stream: Invalid linklist given\n");
+    return 0;
+  }
+
+  // find the block in the linklist
+  stream_t * thestream = stream_find_by_name(ll, streamname);
+  if (!thestream) {
+    linklist_err("linklist_assign_file_to_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
+    return 0;
+  }
+
+  if (thestream->fp) {
+    close_stream_fp(thestream);
+  }
+ 
+  // open the file
+  FILE * fp = fopen(filename, "rb+");
+  if (!fp) {
+    linklist_err("linklist_assign_file_to_stream: File \"%s\" not found\n", filename);
+    return 0;
+  }
+ 
+  // seek to specified location 
+  fseek(fp, offset, whence);
+
+  // assign the stream the file descriptor
+  strcpy(thestream->filename, filename); // copy the filename stripped of path
+  thestream->fp = fp; 
+
+  return 1;
+
+}
+
+int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
+  if (!ll) {
+    linklist_err("linklist_assign_file_to_stream: Invalid linklist given\n");
+    return 0;
+  }
+
+  // find the block in the linklist
+  stream_t * thestream = stream_find_by_name(ll, streamname);
+  if (!thestream) {
+    linklist_err("linklist_assign_file_to_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
+    return 0;
+  }
+
+  if (thestream->fp) {
+    close_stream_fp(thestream);
+    thestream->filename[0] = '\0';
+  }
   return 1;
 }
 
@@ -662,15 +736,34 @@ void depacketize_block(struct block_container * block, uint8_t * buffer)
 
   block->i++;
   block->num++;
-
-  // linklist_info("Received \"%s\" %d/%d (%d)\n",block->name,block->i,block->n,loc+blksize);
-
 }
 
 void packetize_stream(struct stream_container * stream, uint8_t * buffer) {
+  unsigned int blk_size = stream->le->blk_size;
+ 
+  memset(buffer, 0, blk_size); // always zero out the buffer
+  if (stream->fp) { // endless streaming of a file
+    fread(buffer, 1, blk_size, stream->fp);
+  } else {
+    unsigned int total = 0;
+    while (total < blk_size) {
+      // grab the current buffer
+      unsigned int curr = stream->curr;
+			substream_t * ss = &stream->buffers[curr];
+			unsigned int cpy = MIN(blk_size, ss->data_size-ss->loc);
+
+      // copy to the current buffer
+			memcpy(buffer, ss->buffer, cpy);
+      total += cpy;
+			if (cpy <= blk_size) { // reached the end of the current buffer, so go to next one
+        stream->curr = stream->next; // only a reading function can modify stream->curr
+			} 
+    }
+  }
 }
 
 void depacketize_stream(struct stream_container * stream, uint8_t * buffer) {
+
 }
 
 // takes superframe at buffer in and creates an all frame in buffer out

@@ -465,10 +465,8 @@ int parse_stream(linklist_t * ll, char * name)
     ll->streams[ind].buffers[i].alloc_size = DEF_STREAM_ALLOC;
   }
 
-  ll->streams[ind].curr_buffer = &ll->streams[ind].buffers[0];
-  ll->streams[ind].next_buffer = &ll->streams[ind].buffers[0];
-  ll->streams[ind].curr_ind = 0;
-  ll->streams[ind].next_ind = 0;
+  ll->streams[ind].curr = 0;
+  ll->streams[ind].next = 0;
 
   return ll->num_streams++;
 }
@@ -977,10 +975,8 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
         ll_copy->streams[s_ind].buffers[j].data_size = 0;
         ll_copy->streams[s_ind].buffers[j].loc = 0;
       }
-      ll_copy->streams[s_ind].curr_buffer = &ll_copy->streams[s_ind].buffers[0];
-      ll_copy->streams[s_ind].next_buffer = &ll_copy->streams[s_ind].buffers[0];
-      ll_copy->streams[s_ind].curr_ind = 0;
-      ll_copy->streams[s_ind].next_ind = 0;
+      ll_copy->streams[s_ind].curr = 0;
+      ll_copy->streams[s_ind].next = 0;
 			ll_copy->streams[s_ind].fp = NULL; // only one block can own the file descriptor if non-NULL
       ll_copy->streams[s_ind].le = &ll_copy->items[i];
       s_ind++;

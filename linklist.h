@@ -207,10 +207,8 @@ struct stream_container
 {
   char name[LINKLIST_SHORT_FILENAME_SIZE];
   struct link_entry * le;
-  unsigned int curr_ind;
-  unsigned int next_ind;
-  substream_t * curr_buffer;
-  substream_t * next_buffer;
+  char curr;
+  char next;
   substream_t buffers[2];
 
   char filename[LINKLIST_MAX_FILENAME_SIZE];
