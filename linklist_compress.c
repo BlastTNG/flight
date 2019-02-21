@@ -153,14 +153,14 @@ stream_t * stream_find_by_name(linklist_t * ll, char * streamname) {
   return NULL;
 }
 
-void close_block_fp(struct block_container * block) {
+void close_block_fp(block_t * block) {
   if (!block->fp) return;
   FILE *fp = block->fp;
   block->fp = NULL;
   fclose(fp);
 }
 
-void close_stream_fp(struct stream_container * stream) {
+void close_stream_fp(stream_t * stream) {
   if (!stream->fp) return;
   FILE *fp = stream->fp;
   stream->fp = NULL;
@@ -300,6 +300,24 @@ int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
     thestream->filename[0] = '\0';
   }
   return 1;
+}
+
+void linklist_write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) {
+  substream_t * ss = &stream->buffers[stream->next];
+ 
+  // expand the buffer if necessary
+  if (ss->alloc_size < bsize) {
+    ss->alloc_size = bsize;
+    ss->buffer = realloc(ss->buffer, ss->alloc_size);
+  }
+
+  // copy the data to the buffer
+  memcpy(ss->buffer, buffer, bsize);
+  ss->data_size = bsize;
+  ss->loc = 0;
+
+  // queue the next buffer for writing
+  stream->next = 1-stream->next; // only writing functions can modify stream->next
 }
 
 // randomizes/unrandomizes a buffer of a given size using a given seed
@@ -607,7 +625,7 @@ unsigned int linklist_blocks_queued(linklist_t * ll) {
   return retval;
 }
 
-void packetize_block(struct block_container * block, uint8_t * buffer)
+void packetize_block(block_t * block, uint8_t * buffer)
 {
   if (block->i < block->n) { // packets left to be sent 
     unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
@@ -660,7 +678,7 @@ FILE * fpreopenb(char *fname)
   return fopen(fname,"rb+");
 }
 
-void depacketize_block(struct block_container * block, uint8_t * buffer)
+void depacketize_block(block_t * block, uint8_t * buffer)
 {
   uint32_t id = 0;
   uint32_t i = 0, n = 0;
@@ -738,7 +756,7 @@ void depacketize_block(struct block_container * block, uint8_t * buffer)
   block->num++;
 }
 
-void packetize_stream(struct stream_container * stream, uint8_t * buffer) {
+void packetize_stream(stream_t * stream, uint8_t * buffer) {
   unsigned int blk_size = stream->le->blk_size;
  
   memset(buffer, 0, blk_size); // always zero out the buffer
@@ -746,24 +764,36 @@ void packetize_stream(struct stream_container * stream, uint8_t * buffer) {
     fread(buffer, 1, blk_size, stream->fp);
   } else {
     unsigned int total = 0;
-    while (total < blk_size) {
-      // grab the current buffer
-      unsigned int curr = stream->curr;
-			substream_t * ss = &stream->buffers[curr];
-			unsigned int cpy = MIN(blk_size, ss->data_size-ss->loc);
+		substream_t * ss = &stream->buffers[stream->curr];
 
-      // copy to the current buffer
-			memcpy(buffer, ss->buffer, cpy);
-      total += cpy;
-			if (cpy <= blk_size) { // reached the end of the current buffer, so go to next one
+    while (total < blk_size) {
+      // reached the end of the current buffer, so go to next one
+			if (ss->loc >= ss->data_size) { 
+        // reset this buffer
+        ss->loc = 0; 
+
+        // update current read buffer
         stream->curr = stream->next; // only a reading function can modify stream->curr
+        ss = &stream->buffers[stream->curr];
+
+        // escape if the next buffer has no data; otherwise continue
+        if (!ss->data_size) break;
+        continue;
 			} 
+
+      // copy from the current buffer
+			unsigned int cpy = MIN(blk_size, ss->data_size-ss->loc);
+			memcpy(buffer, ss->buffer, cpy); // cpy is always non-zero
+
+      // increment total bytes and buffer location
+      ss->loc += cpy;
+      total += cpy;
     }
   }
 }
 
-void depacketize_stream(struct stream_container * stream, uint8_t * buffer) {
-
+void depacketize_stream(stream_t * stream, uint8_t * buffer) {
+  linklist_write_next_stream(stream, buffer, stream->le->blk_size);
 }
 
 // takes superframe at buffer in and creates an all frame in buffer out

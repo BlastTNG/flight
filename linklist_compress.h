@@ -85,6 +85,7 @@ int linklist_send_file_by_block_ind(linklist_t *, char *, char *, int32_t, int, 
 stream_t * stream_find_by_name(linklist_t *, char *);
 int linklist_assign_file_to_stream(linklist_t *, char *, char *, int, int);
 int linklist_remove_file_from_stream(linklist_t *, char *);
+void linklist_write_next_stream(struct stream_container *, uint8_t *, unsigned int);
 
 FILE * fpreopenb(char *);
 uint8_t randomized_buffer(uint8_t *, unsigned int, unsigned int);
