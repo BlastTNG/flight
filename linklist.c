@@ -877,6 +877,12 @@ void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
 
 }
 
+void delete_superframe(superframe_t * sf) {
+  free(sf->entries);
+  free(sf->hash_table);
+  free(sf);
+}
+
 void delete_linklist(linklist_t * ll)
 {
   int i;
@@ -1280,6 +1286,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
   }
 
   superframe->flags = flags;
+  if (frame) free(frame);
 
   return superframe;
 }

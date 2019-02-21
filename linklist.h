@@ -295,6 +295,7 @@ linklist_t * generate_superframe_linklist(superframe_t *);
 linklist_t * generate_superframe_linklist_opt(superframe_t *, int);
 superframe_t * parse_superframe_format(char *);
 superframe_t * parse_superframe_format_opt(char *, int);
+void delete_superframe(superframe_t *);
 void write_superframe_format(superframe_t *, const char *);
 void linklist_assign_datatodouble(superframe_t *, double (*func)(uint8_t *, uint8_t));
 void linklist_assign_doubletodata(superframe_t *, int (*func)(uint8_t *, double, uint8_t));
