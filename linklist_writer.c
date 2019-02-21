@@ -54,6 +54,7 @@ extern "C"{
 #endif
 
 extern superframe_entry_t block_entry;
+extern superframe_entry_t stream_entry;
 extern unsigned int ll_rawfile_default_fpf;
 
 // creates a symlink for the rawfile with the new name pointing to the ll_rawfile basename 
@@ -397,7 +398,9 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   // map out all the linklist entries within the superframe
   for (i = 0; i < ll->n_entries; i++) {
     tlm_le = &(ll->items[i]);
-    if ((tlm_le->tlm) && (tlm_le->tlm != &block_entry)) {
+    if ((tlm_le->tlm) && 
+        (tlm_le->tlm != &block_entry) &&
+        (tlm_le->tlm != &stream_entry)) {
 			if ((tlm_index = superframe_entry_get_index(tlm_le->tlm, sfe)) == -1) {
 				linklist_err("Could not get superframe index for \"%s\"\n", tlm_le->tlm->field);
 				continue;
@@ -411,7 +414,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   // those not in the linklist are at 1 spf
   ll_dirfile->bin = (FILE **) calloc(ll->superframe->n_entries, sizeof(FILE *));
   for (i = 0; i < ll->superframe->n_entries; i++) {
-    if (sfe[i].type == SF_NUM) continue; 
+    // ignore extended items (blocks, streams, etc) for normal TOD 
+    if (sfe[i].type >= SF_NUM) continue; 
 
 		// add entry to format file
 		fprintf(formatfile,"%s RAW %s %d\n", sfe[i].field, 
@@ -468,6 +472,17 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
     WRITE_BLOCK_FORMAT_ENTRY(curr_size);
   }
 
+  // add files for streams
+  ll_dirfile->streambin = (FILE **) calloc(ll->num_streams, sizeof(FILE *));
+  for (i = 0; i < ll->num_streams; i++) {
+    fprintf(formatfile, "%s RAW %s %d\n", ll->streams[i].name,
+                                          get_sf_type_string(SF_UINT8),
+                                          ll->streams[i].le->blk_size);
+		// open the file if not already opened
+		snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", ll_dirfile->filename, ll->streams[i].name);
+		ll_dirfile->streambin[i] = fpreopenb(binname);  
+  }
+
   if (ll->superframe->calspecs[0]) {
     fprintf(formatfile, "\n####### Begin calspecs ######\n\n");
     FILE * calspecsfile = fopen(ll->superframe->calspecs, "rb");
@@ -496,9 +511,13 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i = 0; i < ll_dirfile->ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES; i++) {
     if (ll_dirfile->blockbin[i]) fclose(ll_dirfile->blockbin[i]);
   }
+  for (i = 0; i < ll_dirfile->ll->num_streams; i++) {
+    if (ll_dirfile->streambin[i]) fclose(ll_dirfile->streambin[i]);
+  }
   fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
   free(ll_dirfile->blockbin);
+  free(ll_dirfile->streambin);
   free(ll_dirfile->map);
   free(ll_dirfile);
 }
@@ -537,6 +556,12 @@ int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum
       fseek(ll_dirfile->blockbin[i], framenum*sizeof(uint32_t), SEEK_SET);
     }
   } 
+  // stream-specific fields to be writing to the dirfile
+  for (i=0; i<ll->num_streams; i++) {
+    if (ll_dirfile->streambin[i]) {
+      fseek(ll_dirfile->streambin[i], framenum*ll->streams[i].le->blk_size, SEEK_SET);
+    }
+  }
   ll_dirfile->framenum = framenum;
   return 0;
 }
@@ -565,6 +590,12 @@ int flush_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i=0; i<(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
     if (ll_dirfile->blockbin[i]) {
       fflush(ll_dirfile->blockbin[i]);
+    }
+  }
+  // stream-specific fields to be writing to the dirfile
+  for (i=0; i<ll->num_streams; i++) {
+    if (ll_dirfile->streambin[i]) {
+      fflush(ll_dirfile->streambin[i]);
     }
   }
 
@@ -650,6 +681,15 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
     WRITE_BLOCK_ENTRY_DATA(alloc_size);
     WRITE_BLOCK_ENTRY_DATA(curr_size);
   }
+  // stream-specific fields to be writing to the dirfile
+  for (i = 0; i < ll->num_streams; i++) {
+    // always look to the next buffer, never repeat (unlike packetize_stream)
+    ll->streams[i].curr = ll->streams[i].next; // only a reading function can modify stream->curr
+    substream_t * ss = &ll->streams[i].buffers[ll->streams[i].curr];
+    fwrite(ss->buffer, ll->streams[i].le->blk_size, 1, ll_dirfile->streambin[i]); 
+    memset(ss->buffer, 0, ll->streams[i].le->blk_size);
+  }
+
   memset(superframe_buf, 0, ll->superframe->size);
   
   ll_dirfile->framenum++;

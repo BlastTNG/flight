@@ -303,7 +303,8 @@ int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
 }
 
 void linklist_write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) {
-  substream_t * ss = &stream->buffers[stream->next];
+  unsigned int newnext = 1-stream->curr;
+  substream_t * ss = &stream->buffers[newnext]; 
  
   // expand the buffer if necessary
   if (ss->alloc_size < bsize) {
@@ -317,7 +318,7 @@ void linklist_write_next_stream(stream_t * stream, uint8_t * buffer, unsigned in
   ss->loc = 0;
 
   // queue the next buffer for writing
-  stream->next = 1-stream->next; // only writing functions can modify stream->next
+  stream->next = newnext; // only writing functions can modify stream->next
 }
 
 // randomizes/unrandomizes a buffer of a given size using a given seed
