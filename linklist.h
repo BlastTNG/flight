@@ -179,6 +179,9 @@ struct linklist_struct
   unsigned int num_blocks; // number of data block fields
   struct stream_container * streams; // pointer to streams
   unsigned int num_streams; // number of data stream fields
+
+  uint8_t * internal_buffer; // buffer for storing compressed data (optional)
+  uint64_t internal_id; // id number for current stored compressed data (optional)
 };
 
 struct block_container

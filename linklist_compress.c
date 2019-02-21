@@ -153,6 +153,19 @@ stream_t * stream_find_by_name(linklist_t * ll, char * streamname) {
   return NULL;
 }
 
+// get a list of pointers to all the streams with a given name (null terminated)
+stream_t ** linklist_get_streamlist(linklist_t ** ll_array, char * streamname) {
+  int i;
+  int num = 0;
+  stream_t ** streamlist = (stream_t **) calloc(MAX_NUM_LINKLIST_FILES, sizeof(stream_t *));
+  for (i=0; ll_array[i]; i++) {
+    if ((streamlist[num] = stream_find_by_name(ll_array[i], streamname))) num++;
+  } 
+  streamlist[num] = NULL;
+  return streamlist;
+}
+
+
 void close_block_fp(block_t * block) {
   if (!block->fp) return;
   FILE *fp = block->fp;
@@ -246,6 +259,15 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
   return 1;
 }
 
+int assign_file_to_streamlist(stream_t ** streamlist, char * filename, int offset, int whence) {
+  int i;
+  int retval = 0;
+  for (i=0; streamlist[i]; i++) {
+    retval += assign_file_to_stream(streamlist[i], filename, offset, whence);
+  }
+  return retval;
+}
+
 int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * filename, 
                                    int offset, int whence) {
   if (!ll) {
@@ -260,6 +282,10 @@ int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * fi
     return 0;
   }
 
+  return assign_file_to_stream(thestream, filename, offset, whence);
+}
+
+int assign_file_to_stream(stream_t * thestream, char * filename, int offset, int whence) {
   if (thestream->fp) {
     close_stream_fp(thestream);
   }
@@ -279,7 +305,6 @@ int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * fi
   thestream->fp = fp; 
 
   return 1;
-
 }
 
 int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
@@ -294,7 +319,10 @@ int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
     linklist_err("linklist_assign_file_to_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
     return 0;
   }
+  return remove_file_from_stream(thestream);
+}
 
+int remove_file_from_stream(stream_t * thestream) {
   if (thestream->fp) {
     close_stream_fp(thestream);
     thestream->filename[0] = '\0';
@@ -302,7 +330,23 @@ int linklist_remove_file_from_stream(linklist_t * ll, char * streamname) {
   return 1;
 }
 
-void linklist_write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) {
+
+void linklist_write_next_stream(linklist_t * ll, char * streamname, uint8_t * buffer, unsigned int bsize) {
+  if (!ll) {
+    linklist_err("linklist_write_next_stream: Invalid linklist given\n");
+    return;
+  }
+
+  // find the block in the linklist
+  stream_t * thestream = stream_find_by_name(ll, streamname);
+  if (!thestream) {
+    linklist_err("linklist_write_next_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
+    return;
+  }
+  write_next_stream(thestream, buffer, bsize);
+}
+
+void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) {
   unsigned int newnext = 1-stream->curr;
   substream_t * ss = &stream->buffers[newnext]; 
  
@@ -348,6 +392,22 @@ uint8_t * allocate_superframe(superframe_t * superframe)
   return ptr;
 }
 
+int compress_linklist_internal(uint64_t id, linklist_t * ll, uint8_t *buffer_in) {
+  return compress_linklist_internal_opt(id, ll, buffer_in, UINT32_MAX, 0);
+}
+
+int compress_linklist_internal_opt(uint64_t id, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags) {
+  // allocate the buffer if necessary
+  if (!ll->internal_buffer) {
+    ll->internal_buffer = calloc(1, ll->blk_size);
+  }
+
+  // only compress data for new id 
+  if (ll->internal_id == id) return 0;
+  ll->internal_id = id;
+
+  return compress_linklist_opt(ll->internal_buffer, ll, buffer_in, maxsize, flags);
+}
 
 /**
  * compress_linklist
@@ -420,11 +480,11 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
       if (tlm_le->tlm == &block_entry) { // data block field
         block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
         if (theblock) packetize_block(theblock, tlm_out_buf);
-        else linklist_err("Could not find block in linklist \"%s\"", ll->name);
+        else linklist_err("Could not find block in linklist \"%s\"\n", ll->name);
       } else if (tlm_le->tlm == &stream_entry) { // data stream field
         stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
         if (thestream) packetize_stream(thestream, tlm_out_buf);
-        else linklist_err("Could not find stream in linklist \"%s\"", ll->name);
+        else linklist_err("Could not find stream in linklist \"%s\"\n", ll->name);
       } else { // just a normal field 
         tlm_comp_type = tlm_le->comp_type;
         tlm_in_start = tlm_le->tlm->start;
@@ -579,11 +639,11 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
 					if (tlm_le->tlm == &block_entry) { // data block entry 
 						block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
 						if (theblock) depacketize_block(theblock, tlm_in_buf);
-						else linklist_err("Could not find block in linklist \"%s\"", ll->name);
+						else linklist_err("Could not find block in linklist \"%s\"\n", ll->name);
 					} else if (tlm_le->tlm == &stream_entry) { // data stream entry 
 						stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
 						if (thestream) depacketize_stream(thestream, tlm_in_buf);
-						else linklist_err("Could not find stream in linklist \"%s\"", ll->name);
+						else linklist_err("Could not find stream in linklist \"%s\"\n", ll->name);
 					} else { // just a normal field
 						tlm_out_start = tlm_le->tlm->start;
 						tlm_comp_type = tlm_le->comp_type;
@@ -759,42 +819,49 @@ void depacketize_block(block_t * block, uint8_t * buffer)
 
 void packetize_stream(stream_t * stream, uint8_t * buffer) {
   unsigned int blk_size = stream->le->blk_size;
+  unsigned int cpy = 0;
+  unsigned int total = 0;
+  substream_t * ss = &stream->buffers[stream->curr];
  
   memset(buffer, 0, blk_size); // always zero out the buffer
-  if (stream->fp) { // endless streaming of a file
-    fread(buffer, 1, blk_size, stream->fp);
-  } else {
-    unsigned int total = 0;
-		substream_t * ss = &stream->buffers[stream->curr];
 
-    while (total < blk_size) {
-      // reached the end of the current buffer, so go to next one
-			if (ss->loc >= ss->data_size) { 
-        // reset this buffer
-        ss->loc = 0; 
+  while (total < blk_size) {
+    // reached the end of the current buffer, so go to next one
+    if (ss->loc >= ss->data_size) { 
+      // reset this buffer
+      ss->loc = 0; 
 
-        // update current read buffer
-        stream->curr = stream->next; // only a reading function can modify stream->curr
-        ss = &stream->buffers[stream->curr];
+      // update current read buffer
+      stream->curr = stream->next; // only a reading function can modify stream->curr
+      ss = &stream->buffers[stream->curr];
 
-        // escape if the next buffer has no data; otherwise continue
-        if (!ss->data_size) break;
-        continue;
-			} 
+      // for file streams, overwrite buffer with file data
+      if (stream->fp) {
+        memset(ss->buffer, 0, ss->data_size);
+        fflush(stream->fp);
+        size_t lenl = ss->alloc_size;
+        int ret = getline((char **) &ss->buffer, &lenl, stream->fp);
+        ss->data_size = (ret > 0) ? ret : 0;
+      }
 
-      // copy from the current buffer
-			unsigned int cpy = MIN(blk_size, ss->data_size-ss->loc);
-			memcpy(buffer, ss->buffer, cpy); // cpy is always non-zero
+      // escape if the next buffer has no data; otherwise continue
+      if (!ss->data_size) break;
+      continue;
+    } 
 
-      // increment total bytes and buffer location
-      ss->loc += cpy;
-      total += cpy;
-    }
+    // copy from the current buffer
+    cpy = MIN(blk_size-total, ss->data_size-ss->loc);
+    memcpy(buffer+total, ss->buffer+ss->loc, cpy); // cpy is always non-zero
+    // printf("%s", (char *) buffer);
+
+    // increment total bytes and buffer location
+    ss->loc += cpy;
+    total += cpy;
   }
 }
 
 void depacketize_stream(stream_t * stream, uint8_t * buffer) {
-  linklist_write_next_stream(stream, buffer, stream->le->blk_size);
+  write_next_stream(stream, buffer, stream->le->blk_size);
 }
 
 // takes superframe at buffer in and creates an all frame in buffer out

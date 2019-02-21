@@ -957,6 +957,10 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
   ll_copy->blocks = (struct block_container *) calloc(MAX_DATA_BLOCKS, sizeof(struct block_container));
   memcpy(ll_copy->blocks, ll->blocks, MAX_DATA_BLOCKS*sizeof(struct block_container));
 
+  // copy the streams
+  ll_copy->streams = (struct stream_container *) calloc(MAX_DATA_STREAMS, sizeof(struct stream_container));
+  memcpy(ll_copy->streams, ll->streams, MAX_DATA_STREAMS*sizeof(struct stream_container));
+
   // change the reference to the copied linklist for each linkentry
   int b_ind = 0;
   int s_ind = 0;

@@ -67,6 +67,8 @@ extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
 #define LL_IGNORE_CHECKSUM 0x02
 int compress_linklist(uint8_t *, linklist_t *, uint8_t *);
 int compress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
+int compress_linklist_internal(uint64_t, linklist_t *, uint8_t *);
+int compress_linklist_internal_opt(uint64_t, linklist_t *, uint8_t *, uint32_t, int);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
 
@@ -78,14 +80,20 @@ void depacketize_block(struct block_container * , uint8_t *);
 unsigned int linklist_blocks_queued(linklist_t *);
 void packetize_stream(struct stream_container * , uint8_t *);
 void depacketize_stream(struct stream_container * , uint8_t *);
+int assign_file_to_stream(stream_t *, char *, int, int);
+int assign_file_to_streamlist(stream_t **, char *, int, int);
+int remove_file_from_stream(stream_t *);
+void write_next_stream(stream_t *, uint8_t *, unsigned int);
 
 block_t * block_find_by_name(linklist_t *, char *);
 int linklist_send_file_by_block(linklist_t *, char *, char *, int32_t, int);
 int linklist_send_file_by_block_ind(linklist_t *, char *, char *, int32_t, int, unsigned int, unsigned int);
+
 stream_t * stream_find_by_name(linklist_t *, char *);
+stream_t ** linklist_get_streamlist(linklist_t **, char *);
 int linklist_assign_file_to_stream(linklist_t *, char *, char *, int, int);
 int linklist_remove_file_from_stream(linklist_t *, char *);
-void linklist_write_next_stream(struct stream_container *, uint8_t *, unsigned int);
+void linklist_write_next_stream(linklist_t *, char *, uint8_t *, unsigned int);
 
 FILE * fpreopenb(char *);
 uint8_t randomized_buffer(uint8_t *, unsigned int, unsigned int);
