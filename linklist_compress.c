@@ -839,8 +839,7 @@ void packetize_stream(stream_t * stream, uint8_t * buffer) {
       if (stream->fp) {
         memset(ss->buffer, 0, ss->data_size);
         fflush(stream->fp);
-        size_t lenl = ss->alloc_size;
-        int ret = getline((char **) &ss->buffer, &lenl, stream->fp);
+        int ret = fread(ss->buffer, 1, ss->alloc_size, stream->fp);
         ss->data_size = (ret > 0) ? ret : 0;
       }
 
