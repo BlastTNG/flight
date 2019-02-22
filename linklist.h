@@ -203,6 +203,7 @@ typedef struct
   unsigned int data_size;
   unsigned int loc;
   unsigned int alloc_size;
+  unsigned int flags;
   uint8_t * buffer;
 } substream_t;
 

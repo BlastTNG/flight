@@ -37,6 +37,9 @@
 #define BLOCK_FILE_MASK 0x80000000
 #define BLOCK_OVERRIDE_CURRENT 0x01
 
+#define STREAM_MUST_SEND 0x01
+#define STREAM_DONT_CLEAR 0x02
+
 #ifdef __cplusplus
 
 extern "C"{
@@ -83,7 +86,8 @@ void depacketize_stream(struct stream_container * , uint8_t *);
 int assign_file_to_stream(stream_t *, char *, int, int);
 int assign_file_to_streamlist(stream_t **, char *, int, int);
 int remove_file_from_stream(stream_t *);
-void write_next_stream(stream_t *, uint8_t *, unsigned int);
+void write_next_stream(stream_t *, uint8_t *, unsigned int, unsigned int);
+void write_next_streamlist(stream_t **, uint8_t *, unsigned int, unsigned int);
 
 block_t * block_find_by_name(linklist_t *, char *);
 int linklist_send_file_by_block(linklist_t *, char *, char *, int32_t, int);
@@ -93,7 +97,7 @@ stream_t * stream_find_by_name(linklist_t *, char *);
 stream_t ** linklist_get_streamlist(linklist_t **, char *);
 int linklist_assign_file_to_stream(linklist_t *, char *, char *, int, int);
 int linklist_remove_file_from_stream(linklist_t *, char *);
-void linklist_write_next_stream(linklist_t *, char *, uint8_t *, unsigned int);
+void linklist_write_next_stream(linklist_t *, char *, uint8_t *, unsigned int, unsigned int);
 
 FILE * fpreopenb(char *);
 uint8_t randomized_buffer(uint8_t *, unsigned int, unsigned int);

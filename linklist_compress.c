@@ -330,8 +330,14 @@ int remove_file_from_stream(stream_t * thestream) {
   return 1;
 }
 
+void write_next_streamlist(stream_t ** streamlist, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
+  int i;
+  for (i=0; streamlist[i]; i++) {
+    write_next_stream(streamlist[i], buffer, bsize, flags);
+  }
+}
 
-void linklist_write_next_stream(linklist_t * ll, char * streamname, uint8_t * buffer, unsigned int bsize) {
+void linklist_write_next_stream(linklist_t * ll, char * streamname, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
   if (!ll) {
     linklist_err("linklist_write_next_stream: Invalid linklist given\n");
     return;
@@ -343,12 +349,15 @@ void linklist_write_next_stream(linklist_t * ll, char * streamname, uint8_t * bu
     linklist_err("linklist_write_next_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
     return;
   }
-  write_next_stream(thestream, buffer, bsize);
+  write_next_stream(thestream, buffer, bsize, flags);
 }
 
-void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) {
+void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
   unsigned int newnext = 1-stream->curr;
   substream_t * ss = &stream->buffers[newnext]; 
+
+  // do not overwrite data that must be sent
+  if ((ss->flags & STREAM_MUST_SEND) && !(flags & STREAM_MUST_SEND)) return;
  
   // expand the buffer if necessary
   if (ss->alloc_size < bsize) {
@@ -359,6 +368,7 @@ void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize) 
   // copy the data to the buffer
   memcpy(ss->buffer, buffer, bsize);
   ss->data_size = bsize;
+  ss->flags = flags;
   ss->loc = 0;
 
   // queue the next buffer for writing
@@ -831,9 +841,20 @@ void packetize_stream(stream_t * stream, uint8_t * buffer) {
       // reset this buffer
       ss->loc = 0; 
 
+      // clear the data
+      // if data is not cleared, it will be repeated, unless there is newer data to send
+      if (!(ss->flags & STREAM_DONT_CLEAR)) {
+        memset(ss->buffer, 0, ss->data_size);
+        ss->data_size = 0;
+        ss->flags = 0;
+      }
+
       // update current read buffer
       stream->curr = stream->next; // only a reading function can modify stream->curr
       ss = &stream->buffers[stream->curr];
+
+      // this buffer is the current, so it is being sent (don't need to force send again)
+      ss->flags &= ~STREAM_MUST_SEND;
 
       // for file streams, overwrite buffer with file data
       if (stream->fp) {
@@ -841,6 +862,7 @@ void packetize_stream(stream_t * stream, uint8_t * buffer) {
         fflush(stream->fp);
         int ret = fread(ss->buffer, 1, ss->alloc_size, stream->fp);
         ss->data_size = (ret > 0) ? ret : 0;
+        ss->flags = 0;
       }
 
       // escape if the next buffer has no data; otherwise continue
@@ -860,7 +882,7 @@ void packetize_stream(stream_t * stream, uint8_t * buffer) {
 }
 
 void depacketize_stream(stream_t * stream, uint8_t * buffer) {
-  write_next_stream(stream, buffer, stream->le->blk_size);
+  write_next_stream(stream, buffer, stream->le->blk_size, 0);
 }
 
 // takes superframe at buffer in and creates an all frame in buffer out
