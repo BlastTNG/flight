@@ -78,10 +78,18 @@
 #define SF_FIELD_LEN 80
 #define SF_UNITS_LEN 80
 
+#ifndef linklist_info
 #define linklist_info printf
+#endif
+#ifndef linklist_err
 #define linklist_err printf
+#endif
+#ifndef linklist_warn
 #define linklist_warn printf
+#endif
+#ifndef linklist_fatal
 #define linklist_fatal printf
+#endif
 
 
 #include <stdio.h>
