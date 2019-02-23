@@ -362,7 +362,7 @@ void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize, 
   // expand the buffer if necessary
   if (ss->alloc_size < bsize) {
     ss->alloc_size = bsize;
-    ss->buffer = realloc(ss->buffer, ss->alloc_size);
+    ss->buffer = (uint8_t *) realloc(ss->buffer, ss->alloc_size);
   }
 
   // copy the data to the buffer
@@ -409,7 +409,7 @@ int compress_linklist_internal(uint64_t id, linklist_t * ll, uint8_t *buffer_in)
 int compress_linklist_internal_opt(uint64_t id, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags) {
   // allocate the buffer if necessary
   if (!ll->internal_buffer) {
-    ll->internal_buffer = calloc(1, ll->blk_size);
+    ll->internal_buffer = (uint8_t *) calloc(1, ll->blk_size);
   }
 
   // only compress data for new id 

@@ -461,7 +461,7 @@ int parse_stream(linklist_t * ll, char * name)
   for (i=0; i<2; i++) {
     ll->streams[ind].buffers[i].data_size = 0;
     ll->streams[ind].buffers[i].loc = 0;
-    ll->streams[ind].buffers[i].buffer = calloc(1, DEF_STREAM_ALLOC);
+    ll->streams[ind].buffers[i].buffer = (uint8_t *) calloc(1, DEF_STREAM_ALLOC);
     ll->streams[ind].buffers[i].alloc_size = DEF_STREAM_ALLOC;
   }
 
