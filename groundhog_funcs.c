@@ -23,16 +23,6 @@
 int verbose = 1;
 int system_idled = 0;
 sigset_t signals;
-struct LinklistState ll_state[MAX_NUM_LINKLIST_FILES+1] = {{0}};
-
-struct LinklistState * groundhog_ll_state(uint32_t serial) {
-  int i;
-  for (i=0; i<MAX_NUM_LINKLIST_FILES; i++) {
-    if (!ll_state[i].serial || (serial == ll_state[i].serial)) break;
-  }
-  ll_state[i].serial = serial;
-  return &ll_state[i];
-}
 
 void clean_up(void) {
     unlink("/var/run/groundhog.pid");

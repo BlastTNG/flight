@@ -21,8 +21,8 @@
 
 #include "groundhog.h"
 
-extern struct LinklistState ll_state[MAX_NUM_LINKLIST_FILES];
-struct TlmReport pilot_report = {0};
+extern struct TlmReport ll_report[MAX_NUM_LINKLIST_FILES+1];
+struct LinklistState ll_state[MAX_NUM_LINKLIST_FILES+1] = {{0}};
 
 void udp_receive(void *arg) {
 
@@ -30,7 +30,7 @@ void udp_receive(void *arg) {
 
   struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint16_t serial = 0;
+  uint16_t serial = 0, prev_serial = 0;
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
@@ -42,6 +42,7 @@ void udp_receive(void *arg) {
 
   // raw linklist data and fileblocks
   struct LinklistState * state = NULL;
+  struct TlmReport * report = NULL;
   uint8_t * compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
@@ -78,9 +79,17 @@ void udp_receive(void *arg) {
     get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
     // get the linklist state struct 
-    // if this serial has not be recv'd yet, a new state will be allocated
     int flags = 0;
-    state = groundhog_ll_state(serial);
+		int i;
+    if (serial != prev_serial) {
+			for (i=0; i<MAX_NUM_LINKLIST_FILES; i++) {
+				if (!ll_state[i].serial || (serial == ll_state[i].serial)) break;
+			}
+			ll_state[i].serial = serial;
+			state = &ll_state[i];
+    }
+
+    // if this serial has not be recv'd yet, a new state will be allocated
     if (!state->ll_rawfile) {
       // set the flags to open a new rawfile
       flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
@@ -90,7 +99,6 @@ void udp_receive(void *arg) {
       ll->internal_id = 42;
 
 			// build the symlink name based on linklist name
-      int i;
 			for (i = 0; i < strlen(ll->name); i++) {
 				if (ll->name[i] == '.') break;
 				state->symname[i] = toupper(ll->name[i]);
@@ -114,11 +122,21 @@ void udp_receive(void *arg) {
       bytes_unpacked += (framenum > 0) ? ll->blk_size : ll->superframe->allframe_size;
     }
 
-    // fill out the telemetry report
-    pilot_report.ll = ll;
-    pilot_report.framenum = abs(framenum); 
-    pilot_report.allframe = (framenum < 0);
+    // get the telemetry report
+    if (serial != prev_serial) {
+			for (i=0; i<MAX_NUM_LINKLIST_FILES; i++) {
+				if (!ll_report[i].ll || (serial == *(uint16_t *) ll_report[i].ll->serial)) break;
+			}
+      report = &ll_report[i];
+		  report->ll = ll;
+      report->type = 0; // pilot report type
+    }
 
+    // fill out the telemetry report
+    report->framenum = abs(framenum); 
+    report->allframe = (framenum < 0);
+
+    prev_serial = serial;
     memset(compbuffer, 0, udpsetup->maxsize);
  
   }

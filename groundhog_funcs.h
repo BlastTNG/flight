@@ -53,7 +53,10 @@ struct UDPSetup {
 struct TlmReport {
   linklist_t * ll;
   uint64_t framenum;
+  uint64_t prev_framenum;
+  uint64_t stale;
   int allframe;
+  int type;
 };
 
 struct LinklistState {
@@ -61,8 +64,6 @@ struct LinklistState {
   char symname[LINKLIST_MAX_FILENAME_SIZE];
   linklist_rawfile_t * ll_rawfile;
 };
-
-struct LinklistState * groundhog_ll_state(uint32_t);
 
 // BLAST print functions (required)
 // must define groundhog_info, _warn, and _fatal
