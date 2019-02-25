@@ -802,6 +802,10 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   MD5_Final(md5hash,&mdContext);
   memcpy(ll->serial,md5hash,MD5_DIGEST_LENGTH);
 
+  // set defaults for the internal (de)compression routines
+  ll->internal_buffer = NULL;
+  ll->internal_id = 0;
+
   return ll;
 }
 
