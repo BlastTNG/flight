@@ -74,6 +74,8 @@ int compress_linklist_internal(uint64_t, linklist_t *, uint8_t *);
 int compress_linklist_internal_opt(uint64_t, linklist_t *, uint8_t *, uint32_t, int);
 double decompress_linklist(uint8_t *, linklist_t * , uint8_t *);
 double decompress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
+double decompress_linklist_internal(uint64_t, linklist_t * , uint8_t *);
+double decompress_linklist_internal_opt(uint64_t, linklist_t *, uint8_t *, uint32_t, int);
 
 uint8_t * allocate_superframe(superframe_t *);
 int write_allframe(uint8_t *, superframe_t *, uint8_t *);

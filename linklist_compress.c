@@ -402,6 +402,15 @@ uint8_t * allocate_superframe(superframe_t * superframe)
   return ptr;
 }
 
+/*
+ * compress_linklist_internal
+ *
+ * An implementation of compress_linklist that uses an internal buffer to store
+ * compressed data. Compression only occurs the data id (arg 1) is different
+ * from the last time the function is called. This is useful in cases where 
+ * multiple routines are compressing the same linklist so that the same linklist 
+ * isn't compressed multiple times unnecessarily for the same data.
+ */
 int compress_linklist_internal(uint64_t id, linklist_t * ll, uint8_t *buffer_in) {
   return compress_linklist_internal_opt(id, ll, buffer_in, UINT32_MAX, 0);
 }
@@ -409,7 +418,7 @@ int compress_linklist_internal(uint64_t id, linklist_t * ll, uint8_t *buffer_in)
 int compress_linklist_internal_opt(uint64_t id, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags) {
   // allocate the buffer if necessary
   if (!ll->internal_buffer) {
-    ll->internal_buffer = (uint8_t *) calloc(1, ll->blk_size);
+    ll->internal_buffer = (uint8_t *) calloc(1, ll->superframe->size);
   }
 
   // only compress data for new id 
@@ -549,6 +558,33 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
     }
   }
   return i;
+}
+
+/*
+ * decompress_linklist_internal
+ *
+ * An implementation of decompress_linklist that uses an internal buffer to store
+ * decompressed data. Decompression only occurs the data id (arg 1) is different
+ * from the last time the function is called. This is useful in cases where 
+ * multiple routines are decompressing the same linklist so that the same linklist 
+ * isn't decompressed multiple times unnecessarily for the same data.
+ */
+double decompress_linklist_internal(uint64_t id, linklist_t * ll, uint8_t *buffer_in) {
+  return decompress_linklist_internal_opt(id, ll, buffer_in, UINT32_MAX, 0);
+}
+
+double decompress_linklist_internal_opt(uint64_t id, linklist_t * ll, uint8_t *buffer_in, 
+                                        uint32_t maxsize, int flags) {
+  // allocate the buffer if necessary
+  if (!ll->internal_buffer) {
+    ll->internal_buffer = (uint8_t *) calloc(1, ll->superframe->size);
+  }
+
+  // only decompress data for new id 
+  if (ll->internal_id == id) return 0;
+  ll->internal_id = id;
+
+  return decompress_linklist_opt(ll->internal_buffer, ll, buffer_in, maxsize, flags);
 }
 
 /**
