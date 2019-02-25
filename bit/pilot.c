@@ -35,7 +35,7 @@ void udp_receive(void *arg) {
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint64_t transmit_size = 0;
-  uint64_t framenum = 0;
+  int64_t framenum = 0;
   uint64_t recv_framenum = 0;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -86,7 +86,7 @@ void udp_receive(void *arg) {
       flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
 
       // reuse the rawfile if it had been accessed before
-      if (!ll->internal_id) flags |= GROUNDHOG_REUSE_VALID_RAWFILE;
+      if (ll->internal_id) flags |= GROUNDHOG_REUSE_VALID_RAWFILE;
       ll->internal_id = 42;
 
 			// build the symlink name based on linklist name
@@ -98,23 +98,26 @@ void udp_receive(void *arg) {
 			state->symname[i] = '\0'; // terminate
     }
 
-    if (transmit_size > ll->blk_size) {
-			// Received more data than expected, so assume that multiple linklist packets were received
-			// This is useful for fileblocks/image packets where as much as the bandwidth can fit is sent
-      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, 
-                                  local_allframe, state->symname, NULL, 
-                                  &state->ll_rawfile, flags);
-    } else {
+    unsigned int bytes_unpacked = 0;
+    while (bytes_unpacked < transmit_size) {
       // Received <= the data expected for the linklist, so received a single linklist packet or a
       // bandwidth-limited linklist.
-      framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, 
+      unsigned int comp_size = MIN(ll->blk_size, transmit_size-bytes_unpacked);
+      framenum = groundhog_process_and_write(ll, comp_size, compbuffer+bytes_unpacked, 
                                              local_allframe, state->symname, udpsetup->name, 
                                              &state->ll_rawfile, flags); 
+      // only open a new rawfile once
+      flags &= ~GROUNDHOG_OPEN_NEW_RAWFILE;
+
+      // check to see how many bytes were unpacked
+      // (negative framenum indicates allframe
+      bytes_unpacked += (framenum > 0) ? ll->blk_size : ll->superframe->allframe_size;
     }
 
     // fill out the telemetry report
     pilot_report.ll = ll;
-    pilot_report.framenum = framenum; 
+    pilot_report.framenum = abs(framenum); 
+    pilot_report.allframe = (framenum < 0);
 
     memset(compbuffer, 0, udpsetup->maxsize);
  

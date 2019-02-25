@@ -183,7 +183,7 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
     if (verbose && disp_str) groundhog_info("[%s] Received an allframe :)\n", disp_str);
     if (local_allframe) memcpy(local_allframe, compbuffer, ll->superframe->allframe_size);
 
-    if (*ll_rawfile) retval = tell_linklist_rawfile(*ll_rawfile);
+    if (*ll_rawfile) retval = tell_linklist_rawfile(*ll_rawfile)*-1;
     else retval = 0;
   } else if (af == 0) { // just a regular frame (< 0 indicates problem reading allframe)
     if (verbose && disp_str) groundhog_info("[%s] Received linklist \"%s\"\n", disp_str, ll->name);

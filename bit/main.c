@@ -83,6 +83,7 @@ int main(int argc, char * argv[]) {
   int bi0_on = 1;
   int highrate_on = 1;
   int daemon = 0;
+  verbose = 0;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-no_pilot") == 0) pilot_on = 0;
@@ -151,7 +152,7 @@ int main(int argc, char * argv[]) {
     fprintf(stdout, "%s\r", fn_str);
     fflush(stdout); 
 
-    sleep(1);
+    usleep(50000);
   }
   return 0;
 }
