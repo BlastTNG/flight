@@ -77,6 +77,7 @@ char data_etc[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc";
 char data_rawdir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 char symdir_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc/mole.lnk";
 char symraw_name[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir/LIVE";
+char mole_cfg[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole/mole.cfg";
 
 void USAGE(void) {
   
@@ -117,6 +118,37 @@ void USAGE(void) {
       "\n");
 
     exit(0);
+}
+
+struct CfgItems {
+	char name[256];
+	char value[256];
+};
+typedef struct {
+  unsigned int n;
+  struct CfgItems * items;
+} Configuration;
+
+
+void load_mole_cfg(char * filename) {
+  FILE * fp = fpreopenb(filename);
+  char *line = NULL;
+  size_t len = 0;
+  unsigned int read = 0;
+
+  while ((read = getline(&line, &len, fp)) != -1) {
+    line[--read] = '\0';
+
+  }
+
+  fclose(fp);
+}
+
+void save_mole_cfg(char * filename) {
+
+  FILE * fp = fpreopenb(filename);
+
+  fclose(fp);
 }
 
 void print_display(char * text, unsigned int recv_framenum) {
