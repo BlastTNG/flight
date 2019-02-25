@@ -91,28 +91,42 @@ int groundhog_check_for_fileblocks(linklist_t * ll, char * ll_name) {
  * groundhog. If file data is in the telemetry stream, this function will loop
  * through the buffer extracting parts of the files and writing them to disk.
  * 
- * ll - the linklist for the received data
- * transmit_size - the size of the buffer received
- * buffer - the buffer received with packed linklist file blocks
+ * ll             - the linklist for the received data
+ * transmit_size  - the size of the buffer received
+ * buffer         - the buffer received with packed linklist file blocks
+ * local_allframe - a pointer to the allframe data
+ *                    - if NULL, allframe data will not be written or extracted
+ * filename_str   - the prefix for the name of the rawfile to be opened.
+ *                    - a timestamp will be appended to this file name
+ *                    - if NULL, a linklist rawfile will not be created
+ * disp_str       - in verbose mode, a modifier for the string printed to stdout
+ *                    - if NULL, no string will be printed to stdout
+ * ll_rawfile     - a pointer to the linklist rawfile pointer
+ *                    - is updated when a new file is created
+ * flags          - special flags controlling linklist rawfile handling
+ *                    - if GROUNDHOG_OPEN_NEW_RAWFILE, a new linklist rawfile
+ *                      will be opened
+ *                    - if GROUNDHOG_REUSE_VALID_RAWFILE, the last rawfile used
+ *                      that matches the filename_str will be re-opened only if
+ *                      GROUNDHOG_OPEN_NEW_RAWFILE is specified
  *
  */
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
-                                uint8_t * local_allframe, linklist_rawfile_t ** ll_rawfile) {
-  static uint8_t * dummy_buffer = NULL;
-  if (!dummy_buffer) dummy_buffer = calloc(1, ll->superframe->size);
-
+                                uint8_t * local_allframe, char * filename_str, char * disp_str,
+                                linklist_rawfile_t ** ll_rawfile, unsigned int flags) {
 	unsigned int bytes_unpacked = 0;
 	while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
 		// write the rawfile to disk 
 		if (ll_rawfile) {
-      groundhog_process_and_write(ll, ll->blk_size, compbuffer+bytes_unpacked, local_allframe, 
-                                  "FILEBLOCKS", NULL, ll_rawfile, 
-                                  !(*ll_rawfile) ? GROUNDHOG_OPEN_NEW_RAWFILE : 0);
+      groundhog_process_and_write(ll, ll->blk_size, compbuffer+bytes_unpacked, 
+                                  local_allframe, filename_str, disp_str, 
+                                  ll_rawfile, flags);
     }
-#ifdef GROUNDHOG_FILEBLOCKS_EXTRACT_TO_DISK
 		// unpack and extract to disk
-		decompress_linklist(dummy_buffer, ll, compbuffer+bytes_unpacked);
-#endif
+    if (flags & GROUNDHOG_EXTRACT_TO_DISK) {
+      int id = 1-ll->internal_id;
+		  decompress_linklist_internal(id, ll, compbuffer+bytes_unpacked);
+    }
 		bytes_unpacked += ll->blk_size;
 	}
 	return (ll->blocks[0].i*100/ll->blocks[0].n);
@@ -129,7 +143,7 @@ void groundhog_make_symlink_name(char *fname, char *symname) {
  * Data will be written to a linklist rawfile with automatic handling of allframe
  * data.
  * 
- * ll - the linklist for the received data
+ * ll             - the linklist for the received data
  * transmit_size  - the size of the buffer received
  * compbuffer     - the buffer received with linklist data
  * local_allframe - a pointer to the allframe data

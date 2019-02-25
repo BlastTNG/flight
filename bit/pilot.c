@@ -30,22 +30,18 @@ void udp_receive(void *arg) {
 
   struct BITRecver udprecver = {0};
   uint8_t * recvbuffer = NULL;
-  uint16_t serial = 0, prev_serial = 0;
+  uint16_t serial = 0;
   linklist_t * ll = NULL;
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint64_t transmit_size = 0;
   uint64_t framenum = 0;
   uint64_t recv_framenum = 0;
-  int af = 0;
-	char symname[LINKLIST_MAX_FILENAME_SIZE];
-  int i;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
 
   // raw linklist data and fileblocks
-  linklist_rawfile_t * ll_rawfile = NULL;
-  linklist_rawfile_t * fileblocks_ll_rawfile = NULL;
+  struct LinklistState * state = NULL;
   uint8_t * compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
@@ -81,49 +77,44 @@ void udp_receive(void *arg) {
     // process the auxiliary data into transmit size and frame number
     get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
-    if (groundhog_check_for_fileblocks(ll, SCICAM_IMG_DL_LL)) {
-      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, local_allframe, &fileblocks_ll_rawfile);
-    } else { // write the linklist data to disk
-			// set flags for data extraction
-			unsigned int flags = 0;
-			if (serial != prev_serial) { // new serial number, so new file
-				flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
- 
-        // Check if linklist had been opened before.
-        // If so, potentially reuse the file.
-        struct LinklistState * state = groundhog_ll_state(serial);
-        if (state->ever_opened) {
-					flags |= GROUNDHOG_REUSE_VALID_RAWFILE; 
-				}
+    // get the linklist state struct 
+    // if this serial has not be recv'd yet, a new state will be allocated
+    int flags = 0;
+    state = groundhog_ll_state(serial);
+    if (!state->ll_rawfile) {
+      // set the flags to open a new rawfile
+      flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
 
-        // set flags for opened linklist files
-        state->ever_opened = 1;
-        state->is_open = 1;
+      // reuse the rawfile if it had been accessed before
+      if (!ll->internal_id) flags |= GROUNDHOG_REUSE_VALID_RAWFILE;
+      ll->internal_id = 42;
 
-        // build the symlink name based on linklist name
-				for (i = 0; i < strlen(ll->name); i++) {
-					if (ll->name[i] == '.') break;
-					symname[i] = toupper(ll->name[i]);
-				}
-				symname[i] = '\0';
-
-				// set flag for previous file being currently not open
-        state = groundhog_ll_state(prev_serial);
-				state->is_open = 0;
-
+			// build the symlink name based on linklist name
+      int i;
+			for (i = 0; i < strlen(ll->name); i++) {
+				if (ll->name[i] == '.') break;
+				state->symname[i] = toupper(ll->name[i]);
 			}
+			state->symname[i] = '\0'; // terminate
+    }
 
-			prev_serial = serial;
-
-			// process the linklist and write the data to disk
-			framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, local_allframe,
-																						 symname, udpsetup->name, &ll_rawfile, flags);
+    if (transmit_size > ll->blk_size) {
+			// Received more data than expected, so assume that multiple linklist packets were received
+			// This is useful for fileblocks/image packets where as much as the bandwidth can fit is sent
+      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, 
+                                  local_allframe, state->symname, NULL, 
+                                  &state->ll_rawfile, flags);
+    } else {
+      // Received <= the data expected for the linklist, so received a single linklist packet or a
+      // bandwidth-limited linklist.
+      framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, 
+                                             local_allframe, state->symname, udpsetup->name, 
+                                             &state->ll_rawfile, flags); 
     }
 
     // fill out the telemetry report
     pilot_report.ll = ll;
     pilot_report.framenum = framenum; 
-    pilot_report.allframe = af; 
 
     memset(compbuffer, 0, udpsetup->maxsize);
  

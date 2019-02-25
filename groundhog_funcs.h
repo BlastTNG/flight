@@ -22,6 +22,7 @@
 
 #define GROUNDHOG_OPEN_NEW_RAWFILE      0x01
 #define GROUNDHOG_REUSE_VALID_RAWFILE   0x02
+#define GROUNDHOG_EXTRACT_TO_DISK       0x04
 
 extern superframe_t * superframe;
 extern int verbose;
@@ -31,7 +32,8 @@ void daemonize();
 linklist_rawfile_t * groundhog_open_rawfile(linklist_rawfile_t *, linklist_t *, char *, int);
 int groundhog_check_for_fileblocks(linklist_t * ll, char *);
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
-                                uint8_t *, linklist_rawfile_t ** ll_rawfile);
+                                uint8_t * local_allframe, char * filename_str, char * disp_str, 
+                                linklist_rawfile_t ** ll_rawfile, unsigned int flags);
 int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
                                 uint8_t * local_allframe, char * filename_str, char * disp_str,
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags);
@@ -56,8 +58,8 @@ struct TlmReport {
 
 struct LinklistState {
   uint32_t serial;
-  int ever_opened;
-  int is_open;
+  char symname[LINKLIST_MAX_FILENAME_SIZE];
+  linklist_rawfile_t * ll_rawfile;
 };
 
 struct LinklistState * groundhog_ll_state(uint32_t);

@@ -4,7 +4,6 @@
 
 // groundhog customization
 #define GROUNDHOG_MAX_FRAMES_RESET 900
-#define GROUNDHOG_FILEBLOCKS_EXTRACT_TO_DISK
 
 // BLAST general
 #include "blast.h"
