@@ -99,6 +99,9 @@ int groundhog_check_for_fileblocks(linklist_t * ll, char * ll_name) {
  *                    - if GROUNDHOG_REUSE_VALID_RAWFILE, the last rawfile used
  *                      that matches the filename_str will be re-opened only if
  *                      GROUNDHOG_OPEN_NEW_RAWFILE is specified
+ *                    - if GROUNDHOG_EXTRACT_TO_DISK, then the compressed data
+ *                      will be decompressed and extracted to the disk
+ *                      * currently, only file blocks are extracted to disk *
  *
  */
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
@@ -111,11 +114,6 @@ int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uin
       groundhog_process_and_write(ll, ll->blk_size, compbuffer+bytes_unpacked, 
                                   local_allframe, filename_str, disp_str, 
                                   ll_rawfile, flags);
-    }
-		// unpack and extract to disk
-    if (flags & GROUNDHOG_EXTRACT_TO_DISK) {
-      int id = 1-ll->internal_id;
-		  decompress_linklist_internal(id, ll, compbuffer+bytes_unpacked);
     }
 		bytes_unpacked += ll->blk_size;
 	}
@@ -164,11 +162,6 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
 	  *ll_rawfile = groundhog_open_rawfile(*ll_rawfile, ll, filename_str, flags);
   }
 
-  // catch null rawfile
-  if (!(*ll_rawfile)) {
-    return retval;
-  }
-
   if (af > 0) { // an allframe was received
     if (verbose && disp_str) groundhog_info("[%s] Received an allframe :)\n", disp_str);
     if (local_allframe) memcpy(local_allframe, compbuffer, ll->superframe->allframe_size);
@@ -190,6 +183,12 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
       flush_linklist_rawfile(*ll_rawfile);
 
       retval = tell_linklist_rawfile(*ll_rawfile);
+    }
+		// unpack and extract to disk
+    // only extracting file blocks to disk at the moment
+    if (flags & GROUNDHOG_EXTRACT_TO_DISK) {
+      int id = 1-ll->internal_id;
+		  decompress_linklist_internal(id, ll, compbuffer);
     }
   }
   return retval;
