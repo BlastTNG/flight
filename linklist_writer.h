@@ -14,6 +14,7 @@ struct linklist_dirfile {
   FILE * format;
   FILE ** bin;
   FILE ** blockbin;
+  FILE ** streambin;
 };
 
 struct linklist_rawfile {
