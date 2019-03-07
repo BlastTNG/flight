@@ -19,8 +19,7 @@
 #include "groundhog.h"
 #include "linklist_connect.h"
 
-extern struct TlmReport pilot_report;
-struct TlmReport bi0_report = {0};
+struct TlmReport ll_report[MAX_NUM_LINKLIST_FILES+1] = {{0}};
 
 char * cmdfile = "/data/etc/bit_config/cmdlist.bit";
 char * telemfile = "/data/etc/bit_config/telemlist.bit";
@@ -83,6 +82,7 @@ int main(int argc, char * argv[]) {
   int bi0_on = 1;
   int highrate_on = 1;
   int daemon = 0;
+  verbose = 0;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-no_pilot") == 0) pilot_on = 0;
@@ -128,20 +128,37 @@ int main(int argc, char * argv[]) {
 
   char fn_str[1024] = "";
   int len = 0, prev_len = 0;
+  int update_freq = 20;
+  int stale_ticks = 60;
+  char * report_types[] = {
+    BLU, // pilot
+    GRN, // bi0
+    YLW, // highrate
+    RED  // sbd
+  };
 
   // print out the reports
   while (true) {
+    int i;
+    fn_str[0] = '\0';
+    for (i=0; ll_report[i].ll; i++) {
+      if (ll_report[i].prev_framenum != ll_report[i].framenum) {
+        ll_report[i].stale = 0;
+      } else {
+        ll_report[i].stale++;
+      }
+      ll_report[i].prev_framenum = ll_report[i].framenum;
 
-    sprintf(fn_str, BLU "    Pilot: %s %s [%" PRIu64 "];" GRN "   BI0: %s %s [%" PRIu64 "];" NOR "    ", 
-            (pilot_report.ll) ? pilot_report.ll->name : "(NULL)", 
-            (pilot_report.allframe) ? "AF" : "  ",
-            pilot_report.framenum,
+      if (ll_report[i].stale > stale_ticks) continue;
 
-            (bi0_report.ll) ? bi0_report.ll->name : "(NULL)", 
-            (bi0_report.allframe) ? "AF" : "  ",
-            bi0_report.framenum
-    );
-
+			sprintf(fn_str, "%s %s   %s %s [%" PRIu64 "];" NOR, 
+              fn_str, 
+              report_types[ll_report[i].type],
+							ll_report[i].ll->name, 
+							(ll_report[i].allframe) ? "AF" : "  ",
+							ll_report[i].framenum
+			);
+    }
     // print enough characters to overwrite the previous line
     len = strlen(fn_str);
     for (int i = len; i < prev_len; i++) fn_str[i] = ' ';
@@ -151,7 +168,7 @@ int main(int argc, char * argv[]) {
     fprintf(stdout, "%s\r", fn_str);
     fflush(stdout); 
 
-    sleep(1);
+    usleep(1000000/update_freq);
   }
   return 0;
 }
