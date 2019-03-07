@@ -252,12 +252,16 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
     memset(pd, 0, sizeof(struct preempt_data));
 
     pd->serial = BLOCK_PREEMPT_ID; 
-    strncpy(pd->filename, filename, LINKLIST_SHORT_FILENAME_SIZE-1);
+    int i;
+    for (i=strlen(filename)-1; i>=0; i--) {
+      if (filename[i] == '/') break;
+    }
+    strncpy(pd->filename, filename+i+1, LINKLIST_SHORT_FILENAME_SIZE-1);
   }
 
   // set the block variables to initialize transfer
   theblock->fp = fp; // non-null file desc indicates that we want to read data from file
-  strcpy(theblock->filename, filename); // copy the filename stripped of path
+  strcpy(theblock->filename, filename); 
   theblock->num = 0;
   theblock->id = id;
   if (!(flags & BLOCK_NO_DOWNSTREAM_FILE)) {
@@ -755,7 +759,8 @@ unsigned int linklist_blocks_queued(linklist_t * ll) {
 void packetize_block(block_t * block, uint8_t * buffer)
 {
   if (block->fp && (block->flags & BLOCK_PREEMPT_FILE)) { // send preempt file data before the rest of the data
-    int fsize = make_block_header(buffer, block->id, block->le->blk_size-PACKET_HEADER_SIZE, 0, 1);
+    int fsize = make_block_header(buffer, block->id & ~BLOCK_FILE_MASK, 
+                                  block->le->blk_size-PACKET_HEADER_SIZE, 0, 1);
 
     memcpy(buffer+fsize, block->buffer, block->le->blk_size);
     block->flags &= ~BLOCK_PREEMPT_FILE; // clear the flag so next time, actual data can be sent
