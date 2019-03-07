@@ -180,6 +180,13 @@ void close_stream_fp(stream_t * stream) {
   fclose(fp);
 }
 
+#pragma pack(push, 1) // structure packing aligns at 1 byte (no padding)
+struct preempt_data {
+  uint32_t serial;
+  char filename[LINKLIST_SHORT_FILENAME_SIZE];
+};
+#pragma pack(pop) // undo custom structure packing
+
 int linklist_send_file_by_block(linklist_t * ll, char * blockname, char * filename, 
                                int32_t id, int flags) {
   return linklist_send_file_by_block_ind(ll, blockname, filename, id, flags, 0, 0);
@@ -239,13 +246,25 @@ int linklist_send_file_by_block_ind(linklist_t * ll, char * blockname, char * fi
     return 0;
   }
 
+  // check the preempt flag for send aux data before the file
+  if (flags & BLOCK_PREEMPT_FILE) {
+    struct preempt_data * pd = (struct preempt_data *) theblock->buffer;
+    memset(pd, 0, sizeof(struct preempt_data));
+
+    pd->serial = BLOCK_PREEMPT_ID; 
+    strncpy(pd->filename, filename, LINKLIST_SHORT_FILENAME_SIZE-1);
+  }
 
   // set the block variables to initialize transfer
   theblock->fp = fp; // non-null file desc indicates that we want to read data from file
   strcpy(theblock->filename, filename); // copy the filename stripped of path
   theblock->num = 0;
+  theblock->id = id;
+  if (!(flags & BLOCK_NO_DOWNSTREAM_FILE)) {
+    theblock->id |= BLOCK_FILE_MASK; // the flag/mask indicates that we want a file on the ground
+  }
   theblock->curr_size = filesize;
-  theblock->id = id | BLOCK_FILE_MASK; // the flag/mask indicates that we want a file on the ground
+  theblock->flags = flags;
   if (!n && !i) { // set the whole transfer
     theblock->i = 0;
     theblock->n = n_total;
@@ -267,6 +286,7 @@ int assign_file_to_streamlist(stream_t ** streamlist, char * filename, int offse
   }
   return retval;
 }
+
 
 int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * filename, 
                                    int offset, int whence) {
@@ -734,7 +754,12 @@ unsigned int linklist_blocks_queued(linklist_t * ll) {
 
 void packetize_block(block_t * block, uint8_t * buffer)
 {
-  if (block->i < block->n) { // packets left to be sent 
+  if (block->fp && (block->flags & BLOCK_PREEMPT_FILE)) { // send preempt file data before the rest of the data
+    int fsize = make_block_header(buffer, block->id, block->le->blk_size-PACKET_HEADER_SIZE, 0, 1);
+
+    memcpy(buffer+fsize, block->buffer, block->le->blk_size);
+    block->flags &= ~BLOCK_PREEMPT_FILE; // clear the flag so next time, actual data can be sent
+  } else if (block->i < block->n) { // packets left to be sent 
     unsigned int loc = (block->i*(block->le->blk_size-PACKET_HEADER_SIZE)); // location in data block
     unsigned int cpy = MIN(block->le->blk_size-PACKET_HEADER_SIZE, block->curr_size-loc);
 
@@ -825,7 +850,13 @@ void depacketize_block(block_t * block, uint8_t * buffer)
     
     // file not open yet
     if (!block->fp) {
-      sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
+      struct preempt_data * pd = (struct preempt_data *) block->buffer;
+      if (pd->serial == BLOCK_PREEMPT_ID) { // auxiliary data has been preempted, so override file defaults
+        sprintf(block->filename, "%s/%s", LINKLIST_FILESAVE_DIR, pd->filename); // build filename
+        memset(pd, 0, sizeof(struct preempt_data));
+      } else { // defaults
+        sprintf(block->filename, "%s/%s_%d", LINKLIST_FILESAVE_DIR, block->name, id); // build filename
+      }
       if (!(block->fp = fpreopenb(block->filename))) {
         linklist_err("Cannot open file %s", block->filename);
         return;

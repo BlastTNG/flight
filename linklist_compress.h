@@ -35,7 +35,11 @@
 #define LINKLIST_FILESAVE_DIR "/data/etc/downloaded_files"
 
 #define BLOCK_FILE_MASK 0x80000000
+#define BLOCK_PREEMPT_ID 0x1badface
+
 #define BLOCK_OVERRIDE_CURRENT 0x01
+#define BLOCK_NO_DOWNSTREAM_FILE 0x02
+#define BLOCK_PREEMPT_FILE 0x04
 
 #define STREAM_MUST_SEND 0x01
 #define STREAM_DONT_CLEAR 0x02
