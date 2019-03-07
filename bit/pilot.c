@@ -21,8 +21,8 @@
 
 #include "groundhog.h"
 
-extern struct LinklistState ll_state[MAX_NUM_LINKLIST_FILES];
-struct TlmReport pilot_report = {0};
+extern struct TlmReport ll_report[MAX_NUM_LINKLIST_FILES+1];
+struct LinklistState ll_state[MAX_NUM_LINKLIST_FILES+1] = {{0}};
 
 void udp_receive(void *arg) {
 
@@ -35,17 +35,14 @@ void udp_receive(void *arg) {
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint64_t transmit_size = 0;
-  uint64_t framenum = 0;
+  int64_t framenum = 0;
   uint64_t recv_framenum = 0;
-  int af = 0;
-	char symname[LINKLIST_MAX_FILENAME_SIZE];
-  int i;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
 
   // raw linklist data and fileblocks
-  linklist_rawfile_t * ll_rawfile = NULL;
-  linklist_rawfile_t * fileblocks_ll_rawfile = NULL;
+  struct LinklistState * state = NULL;
+  struct TlmReport * report = NULL;
   uint8_t * compbuffer = calloc(1, udpsetup->maxsize);
 
   // initialize UDP connection via bitserver/BITRecver
@@ -81,50 +78,65 @@ void udp_receive(void *arg) {
     // process the auxiliary data into transmit size and frame number
     get_aux_packet_data(udprecver.frame_num, &transmit_size, &recv_framenum); 
 
-    if (groundhog_check_for_fileblocks(ll, SCICAM_IMG_DL_LL)) {
-      groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, local_allframe, &fileblocks_ll_rawfile);
-    } else { // write the linklist data to disk
-			// set flags for data extraction
-			unsigned int flags = 0;
-			if (serial != prev_serial) { // new serial number, so new file
-				flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
- 
-        // Check if linklist had been opened before.
-        // If so, potentially reuse the file.
-        struct LinklistState * state = groundhog_ll_state(serial);
-        if (state->ever_opened) {
-					flags |= GROUNDHOG_REUSE_VALID_RAWFILE; 
-				}
-
-        // set flags for opened linklist files
-        state->ever_opened = 1;
-        state->is_open = 1;
-
-        // build the symlink name based on linklist name
-				for (i = 0; i < strlen(ll->name); i++) {
-					if (ll->name[i] == '.') break;
-					symname[i] = toupper(ll->name[i]);
-				}
-				symname[i] = '\0';
-
-				// set flag for previous file being currently not open
-        state = groundhog_ll_state(prev_serial);
-				state->is_open = 0;
-
+    // get the linklist state struct 
+    int flags = 0;
+		int i;
+    if (serial != prev_serial) {
+			for (i=0; i<MAX_NUM_LINKLIST_FILES; i++) {
+				if (!ll_state[i].serial || (serial == ll_state[i].serial)) break;
 			}
+			ll_state[i].serial = serial;
+			state = &ll_state[i];
+    }
 
-			prev_serial = serial;
+    // if this serial has not be recv'd yet, a new state will be allocated
+    if (!state->ll_rawfile) {
+      // set the flags to open a new rawfile
+      flags |= GROUNDHOG_OPEN_NEW_RAWFILE;
 
-			// process the linklist and write the data to disk
-			framenum = groundhog_process_and_write(ll, transmit_size, compbuffer, local_allframe,
-																						 symname, udpsetup->name, &ll_rawfile, flags);
+      // reuse the rawfile if it had been accessed before
+      if (ll->internal_id) flags |= GROUNDHOG_REUSE_VALID_RAWFILE;
+      ll->internal_id = 42;
+
+			// build the symlink name based on linklist name
+			for (i = 0; i < strlen(ll->name); i++) {
+				if (ll->name[i] == '.') break;
+				state->symname[i] = toupper(ll->name[i]);
+			}
+			state->symname[i] = '\0'; // terminate
+    }
+
+    unsigned int bytes_unpacked = 0;
+    while (bytes_unpacked < transmit_size) {
+      // Received <= the data expected for the linklist, so received a single linklist packet or a
+      // bandwidth-limited linklist.
+      unsigned int comp_size = MIN(ll->blk_size, transmit_size-bytes_unpacked);
+      framenum = groundhog_process_and_write(ll, comp_size, compbuffer+bytes_unpacked, 
+                                             local_allframe, state->symname, udpsetup->name, 
+                                             &state->ll_rawfile, flags); 
+      // only open a new rawfile once
+      flags &= ~GROUNDHOG_OPEN_NEW_RAWFILE;
+
+      // check to see how many bytes were unpacked
+      // (negative framenum indicates allframe
+      bytes_unpacked += (framenum > 0) ? ll->blk_size : ll->superframe->allframe_size;
+    }
+
+    // get the telemetry report
+    if (serial != prev_serial) {
+			for (i=0; i<MAX_NUM_LINKLIST_FILES; i++) {
+				if (!ll_report[i].ll || (serial == *(uint16_t *) ll_report[i].ll->serial)) break;
+			}
+      report = &ll_report[i];
+		  report->ll = ll;
+      report->type = 0; // pilot report type
     }
 
     // fill out the telemetry report
-    pilot_report.ll = ll;
-    pilot_report.framenum = framenum; 
-    pilot_report.allframe = af; 
+    report->framenum = abs(framenum); 
+    report->allframe = (framenum < 0);
 
+    prev_serial = serial;
     memset(compbuffer, 0, udpsetup->maxsize);
  
   }
