@@ -110,11 +110,9 @@ int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uin
 	unsigned int bytes_unpacked = 0;
 	while ((bytes_unpacked+ll->blk_size) <= transmit_size) {
 		// write the rawfile to disk 
-		if (ll_rawfile) {
-      groundhog_process_and_write(ll, ll->blk_size, compbuffer+bytes_unpacked, 
-                                  local_allframe, filename_str, disp_str, 
-                                  ll_rawfile, flags);
-    }
+		groundhog_process_and_write(ll, ll->blk_size, compbuffer+bytes_unpacked, 
+																local_allframe, filename_str, disp_str, 
+																ll_rawfile, flags);
 		bytes_unpacked += ll->blk_size;
 	}
 	return (ll->blocks[0].i*100/ll->blocks[0].n);
