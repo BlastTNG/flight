@@ -75,6 +75,7 @@ IF(BIT_CONFIG)
     set(MAKE_BIT True)
     add_definitions(-DMAKE_BIT)
     include(${PROJECT_SOURCE_DIR}/bit/CMakeLists.txt)
+    include(${PROJECT_SOURCE_DIR}/../common/CMakeLists.txt)
 ENDIF()
 
 
