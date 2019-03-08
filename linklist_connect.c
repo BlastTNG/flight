@@ -152,7 +152,7 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
 			}
 		}
     regfree(&regex);
-	  printf("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
+	  linklist_info("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
   }
 
   // don't have exactly 1 matching entry, so prompt user to select
@@ -208,12 +208,12 @@ int copy_file(char *old_filename, char *new_filename)
   ptr_new = fopen(new_filename, "wb");
 
   if (!ptr_old) {
-    printf("Can't open %s\n", old_filename);
+    linklist_err("Can't open %s\n", old_filename);
     return -1;
   }
 
   if (!ptr_new) {
-    printf("Can't open %s\n", new_filename);
+    linklist_err("Can't open %s\n", new_filename);
     fclose(ptr_old);
     return  -1;
   }
