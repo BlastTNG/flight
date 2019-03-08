@@ -63,6 +63,12 @@ extern "C" {
 
 #endif
 
+// user override-able functions for printfs
+int (*linklist_info)(const char *, ...) = printf;
+int (*linklist_err)(const char *, ...) = printf;
+int (*linklist_warn)(const char *, ...) = printf;
+int (*linklist_fatal)(const char *, ...) = printf;
+
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 superframe_entry_t stream_entry = {{0}}; // a dummy entry for streams

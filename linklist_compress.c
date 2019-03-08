@@ -55,6 +55,11 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
+
 extern superframe_entry_t block_entry;
 extern superframe_entry_t stream_entry;
 

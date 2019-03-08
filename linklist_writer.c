@@ -53,6 +53,11 @@ extern "C"{
 
 #endif
 
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
+
 extern superframe_entry_t block_entry;
 extern superframe_entry_t stream_entry;
 extern unsigned int ll_rawfile_default_fpf;

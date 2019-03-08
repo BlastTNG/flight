@@ -69,6 +69,12 @@
 extern "C" {
 #endif
 
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
+
+
 uint16_t theday = 0;
 uint16_t themonth = 0;
 uint16_t theyear = 0;
