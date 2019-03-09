@@ -63,6 +63,12 @@ extern "C" {
 
 #endif
 
+// user override-able functions for printfs
+int (*linklist_info)(const char *, ...) = printf;
+int (*linklist_err)(const char *, ...) = printf;
+int (*linklist_warn)(const char *, ...) = printf;
+int (*linklist_fatal)(const char *, ...) = printf;
+
 int num_compression_routines = 0; // number of compression routines available
 superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
 superframe_entry_t stream_entry = {{0}}; // a dummy entry for streams
@@ -1247,7 +1253,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         int type_str_len = strlen(get_sf_type_string(sf[n_entries].type));
         if (strlen(temps[1]) > type_str_len) { // trailing characters are assumed to be min and max of format (min,max) 
           sscanf(temps[1]+type_str_len, "(%lf,%lf)%*s", &sf[n_entries].min, &sf[n_entries].max);
-          //printf("%s min=%f max=%f\n", sf[n_entries].field, sf[n_entries].min, sf[n_entries].max);
+          //linklist_info("%s min=%f max=%f\n", sf[n_entries].field, sf[n_entries].min, sf[n_entries].max);
         }
 
         // determine start byte and skip
@@ -1265,7 +1271,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         for (i = 0; i < sf[n_entries].spf; i++) {
           for (j = 0; j < get_superframe_entry_size(&sf[n_entries]); j++) {
             if (frame[skip*i+start+j] == 1) {
-              printf("Warning (line %d): byte %d overlap\n", count, skip*i+start+j);
+              linklist_warn("Warning (line %d): byte %d overlap\n", count, skip*i+start+j);
             }
             frame[skip*i+start+j] = 1;
           }

@@ -78,20 +78,6 @@
 #define SF_FIELD_LEN 80
 #define SF_UNITS_LEN 80
 
-#ifndef linklist_info
-#define linklist_info printf
-#endif
-#ifndef linklist_err
-#define linklist_err printf
-#endif
-#ifndef linklist_warn
-#define linklist_warn printf
-#endif
-#ifndef linklist_fatal
-#define linklist_fatal printf
-#endif
-
-
 #include <stdio.h>
 #include <openssl/md5.h>
 #include <inttypes.h>
@@ -336,6 +322,12 @@ linklist_t * linklist_find_by_name(char *, linklist_t **);
 int linklist_find_id_by_name(char *, linklist_t **);
 block_t * linklist_find_block_by_pointer(linklist_t *, linkentry_t *);
 stream_t * linklist_find_stream_by_pointer(linklist_t *, linkentry_t *);
+
+// linklist print overrides
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
 
 #ifdef __cplusplus
 }

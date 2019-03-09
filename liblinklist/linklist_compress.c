@@ -55,6 +55,11 @@ extern "C"{
 int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 int decimationDecompress(uint8_t * data_out, struct link_entry * le, uint8_t * data_in);
 
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
+
 extern superframe_entry_t block_entry;
 extern superframe_entry_t stream_entry;
 
@@ -516,7 +521,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
         if (checksum != 0) {
           linklist_err("compress_linklist: invalid checksum generated\n");
         }
-        //printf("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
+        //linklist_info("Compressed checksum result for %s: %d 0x%x\n",name,i,checksum);
       }
       checksum = 0; // reset checksum for next block
     } else { // normal field
@@ -571,7 +576,7 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
         tlm_out_skip = tlm_le->tlm->skip;
         tlm_out_num = tlm_le->tlm->spf;
         tlm_size = get_superframe_entry_size(tlm_le->tlm);
-        //printf("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
+        //linklist_info("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
         for (k=0;k<tlm_out_num;k++) { 
           loc1 = tlm_out_skip*k;
           loc2 = tlm_out_skip*(tlm_out_num-1);
@@ -808,7 +813,7 @@ FILE * fpreopenb(char *fname)
 {
   FILE * temp = fopen(fname,"ab");
   if (!temp) {
-    printf("Cannot open %s (errno %d: %s) \n", fname, errno, strerror(errno));
+    linklist_err("Cannot open %s (errno %d: %s) \n", fname, errno, strerror(errno));
     return NULL;
   }
   fclose(temp);
@@ -945,7 +950,7 @@ void packetize_stream(stream_t * stream, uint8_t * buffer) {
     // copy from the current buffer
     cpy = MIN(blk_size-total, ss->data_size-ss->loc);
     memcpy(buffer+total, ss->buffer+ss->loc, cpy); // cpy is always non-zero
-    // printf("%s", (char *) buffer);
+    // linklist_info("%s", (char *) buffer);
 
     // increment total bytes and buffer location
     ss->loc += cpy;
@@ -1182,7 +1187,7 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
       value = (*datatodouble)(&data_in[i*4], SF_UINT32);
       dataout = ((double) value)*gain+offset;
     }
-    //printf("%f ",dataout);
+    //linklist_info("%f ",dataout);
     for (j=0;j<decim;j++)
     {
       if (wd) (*doubletodata)(data_out+outputstart,dataout,type);
@@ -1190,7 +1195,7 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
       blk_size += outputsize;
     }
   }
-  //printf("\n\n");
+  //linklist_info("\n\n");
 
   return blk_size;
 }
@@ -1286,7 +1291,7 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
       value = (*datatodouble)(&data_in[i*2], SF_UINT16);
       dataout = ((double) value)*gain+offset;
     }
-    //printf("%f ",dataout);
+    //linklist_info("%f ",dataout);
     for (j=0;j<decim;j++)
     {
       if (wd) (*doubletodata)(data_out+outputstart,dataout,type);
@@ -1294,7 +1299,7 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
       blk_size += outputsize;
     }
   }
-  //printf("\n\n");
+  //linklist_info("\n\n");
 
   return blk_size;
 }
@@ -1392,7 +1397,7 @@ int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_
   for (i=0;i<inputnum;i++)
   {
     if (wd) dataout = ((double) data_in[i+8])*gain+offset;
-    //printf("%f ",dataout);
+    //linklist_info("%f ",dataout);
     for (j=0;j<decim;j++)
     {
       if (wd) (*doubletodata)(data_out+outputstart,dataout,type);
@@ -1400,7 +1405,7 @@ int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_
       blk_size += outputsize;
     }
   }
-  //printf("\n\n");
+  //linklist_info("\n\n");
 
   return blk_size;
 }
@@ -1511,7 +1516,7 @@ int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * 
   for (i=0;i<inputnum;i++)
   {
     if (wd) dataout += ((double) data_in[i+8])*gain+offset;
-    //printf("%f ",dataout);
+    //linklist_info("%f ",dataout);
     for (j=0;j<decim;j++)
     {
       if (wd) (*doubletodata)(data_out+outputstart,dataout,type);
@@ -1519,7 +1524,7 @@ int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * 
       blk_size += outputsize;
     }
   }
-  //printf("\n\n");
+  //linklist_info("\n\n");
 
   return blk_size;
 }

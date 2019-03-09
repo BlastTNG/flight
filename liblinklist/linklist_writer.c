@@ -53,6 +53,11 @@ extern "C"{
 
 #endif
 
+extern int (*linklist_info)(const char *, ...);
+extern int (*linklist_err)(const char *, ...);
+extern int (*linklist_warn)(const char *, ...);
+extern int (*linklist_fatal)(const char *, ...);
+
 extern superframe_entry_t block_entry;
 extern superframe_entry_t stream_entry;
 extern unsigned int ll_rawfile_default_fpf;
@@ -132,7 +137,7 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
         ll_rawfile->isseekend = fileindex;
   }
 
-  // printf("%d %d\n", fileindex);
+  // linklist_info("%d %d\n", fileindex);
 
   do {
     // seek to the beginning of the fragment files
