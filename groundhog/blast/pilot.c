@@ -53,7 +53,7 @@ void udp_receive(void *arg) {
     do {
       // get the linklist serial for the data received
       recvbuffer = getBITRecverAddr(&udprecver, &recv_size);
-      serial = *(uint16_t *) recvbuffer;
+      serial = *(uint32_t *) recvbuffer;
       if (!(ll = linklist_lookup_by_serial(serial))) {
         removeBITRecverAddr(&udprecver);
         if (verbose) groundhog_info("[%s] Receiving bad serial packets (0x%x)\n", udpsetup->name, serial);
