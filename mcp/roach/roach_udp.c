@@ -260,7 +260,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
         blast_info("starting roach_process_stream");
     }
     parse_udp_packet(m_packet, m_buf);
-    uint16_t udperr = check_udp_packet(m_packet, m_roach_udp);
+    uint16_t udperr = 0; // check_udp_packet(m_packet, m_roach_udp);
     if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
         blast_info("check_udp_packet = %u", udperr);
     }

@@ -111,8 +111,10 @@ static const char drive_uuids[NUM_USB_DISKS][64] = {
         "5d064d3a-ff6c-46f0-9308-80abb3177e43", // sde1
         "f841003d-53c5-454e-915b-9e477c2f085e", // sdf1
         "548fa9fd-b0c5-46e7-b80a-553d0dd01221", // sdg1
-        "1506c53d-d16c-4063-a182-5d167fa968c7", // sdh1
-        "f1fd4434-15b2-48aa-bead-8af2394bc1db"}; // sdi1
+        // "1506c53d-d16c-4063-a182-5d167fa968c7", // sdh1
+        // "f1fd4434-15b2-48aa-bead-8af2394bc1db", // sdi1
+        "762520df-7d3a-4fbb-8cd3-32dc40d7f883", // new 10 TB test drive #1
+        "ceec37c3-89ba-42e6-a020-ecee0a6eebba"};// new 10 TB test drive #2
 
 static int file_change_disk(fileentry_t*, diskentry_t*);
 static int file_reopen_on_new_disk(fileentry_t*, diskentry_t*);
@@ -503,7 +505,7 @@ static int diskpool_mount_disk(diskentry_t *m_disk,
              * If the device is not found, or the
              * superblock is invalid, try the next filesystem in #type
              */
-            if (errno == ENODEV || errno == EINVAL) {
+            if (errno == ENODEV || errno == EINVAL || errno == ENOENT) {
                 usleep(10000);
                 continue;
             }
