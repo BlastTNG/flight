@@ -413,6 +413,9 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
       ll_dirfile->map[tlm_index] = 1; 
     }
   }
+  
+  // append linklist flags
+	ll->flags |= flags;
 
   // add all of the items from the superframe
   // those in the linklist are at the full rate
@@ -639,7 +642,7 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   if (ll->flags & LL_INCLUDE_ALLFRAME) {
     read_allframe(superframe_buf, ll->superframe, buffer+ll->blk_size);
   }
-  double ret_val = decompress_linklist_opt(superframe_buf, ll, buffer, UINT32_MAX, ll->flags);
+  double ret_val = decompress_linklist_opt(superframe_buf, ll, buffer, UINT32_MAX, ll->flags | flags);
 
   // write the data to the dirfile
   superframe_entry_t * sfe = ll->superframe->entries;

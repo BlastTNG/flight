@@ -156,7 +156,7 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
   }
 
   // don't have exactly 1 matching entry, so prompt user to select
-  if (n_match != 1) {
+  if ((n_match != 1) || (strlen(linklistname) == 0)) {
 		// deal with display widths
     if (n_match) numlink = n_match;
 		int n = (numlink-1)/3+1;
