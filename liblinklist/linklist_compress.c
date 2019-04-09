@@ -296,6 +296,37 @@ int assign_file_to_streamlist(stream_t ** streamlist, char * filename, int offse
   return retval;
 }
 
+int remove_file_from_streamlist(stream_t ** streamlist) {
+  int i;
+  int retval = 0;
+  for (i=0; streamlist[i]; i++) {
+    retval += remove_file_from_stream(streamlist[i]);
+  }
+  return retval;
+}
+
+int seek_file_in_streamlist(stream_t ** streamlist, int offset, int whence) {
+  int i;
+  int retval = 0;
+  for (i=0; streamlist[i]; i++) {
+    retval += seek_file_in_stream(streamlist[i], offset, whence);
+  }
+  return retval;
+}
+
+void write_next_streamlist(stream_t ** streamlist, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
+  int i;
+  for (i=0; streamlist[i]; i++) {
+    write_next_stream(streamlist[i], buffer, bsize, flags);
+  }
+}
+
+void stop_current_streamlist(stream_t ** streamlist) {
+  int i;
+  for (i=0; streamlist[i]; i++) {
+    stop_current_stream(streamlist[i]);
+  }
+}
 
 int linklist_assign_file_to_stream(linklist_t * ll, char * streamname, char * filename, 
                                    int offset, int whence) {
@@ -359,11 +390,27 @@ int remove_file_from_stream(stream_t * thestream) {
   return 1;
 }
 
-void write_next_streamlist(stream_t ** streamlist, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
-  int i;
-  for (i=0; streamlist[i]; i++) {
-    write_next_stream(streamlist[i], buffer, bsize, flags);
+int linklist_seek_file_in_stream(linklist_t * ll, char * streamname, int offset, int whence) {
+  if (!ll) {
+    linklist_err("linklist_seek_file_in_stream: Invalid linklist given\n");
+    return 0;
   }
+
+  // find the block in the linklist
+  stream_t * thestream = stream_find_by_name(ll, streamname);
+  if (!thestream) {
+    linklist_err("linklist_seek_file_in_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
+    return 0;
+  }
+  return seek_file_in_stream(thestream, offset, whence);
+}
+
+int seek_file_in_stream(stream_t * thestream, int offset, int whence) {
+  int retval = 0;
+  if (thestream->fp) {
+    retval = fseek(thestream->fp, offset, whence);
+  }
+  return retval;
 }
 
 void linklist_write_next_stream(linklist_t * ll, char * streamname, uint8_t * buffer, unsigned int bsize, unsigned int flags) {
@@ -402,6 +449,28 @@ void write_next_stream(stream_t * stream, uint8_t * buffer, unsigned int bsize, 
 
   // queue the next buffer for writing
   stream->next = newnext; // only writing functions can modify stream->next
+}
+
+void linklist_stop_current_stream(linklist_t * ll, char * streamname) {
+  if (!ll) {
+    linklist_err("linklist_stop_current_stream: Invalid linklist given\n");
+    return;
+  }
+
+  // find the block in the linklist
+  stream_t * thestream = stream_find_by_name(ll, streamname);
+  if (!thestream) {
+    linklist_err("linklist_stop_current_stream: Stream \"%s\" not found in linklist \"%s\"\n", streamname, ll->name);
+    return;
+  }
+  stop_current_stream(thestream);
+}
+
+// sets the current location to the data size to start the next stream (cancelling the current one)
+void stop_current_stream(stream_t * thestream) {
+  int curr = thestream->curr;
+  substream_t * ss = &thestream->buffers[curr];
+  ss->loc = ss->data_size;
 }
 
 // randomizes/unrandomizes a buffer of a given size using a given seed
