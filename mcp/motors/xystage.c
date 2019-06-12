@@ -61,6 +61,7 @@ extern int16_t InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
 
 static struct stage_struct {
+// probably need to increase size of xpos, ypos so we don't get an overflow and stop the stage early
   int xpos, ypos;
   int xlim, ylim;
   int xstp, ystp;
