@@ -29,7 +29,7 @@
 #define INCLUDE_FIFO_H_
 
 #define MEMALLOC 0x01
-
+#define PACKET_HEADER_SIZE 12 // header size for packets [bytes]
 #define MAX_TELEM_FIFO_SIZE 20000	// maximum number of telemetry entries in the FIFO
 
 #ifndef MIN
@@ -69,6 +69,8 @@ int setFifoWrite(struct Fifo *, uint8_t *);
 int getFifoSize(struct Fifo *);
 uint8_t * packetizeBuffer(uint8_t *, uint32_t, uint32_t *, uint16_t *, uint16_t *);
 int depacketizeBuffer(uint8_t *, uint32_t *, uint32_t, uint16_t *, uint16_t *, uint8_t *);
+uint8_t writePacketHeader(uint8_t *, uint16_t, uint64_t, uint16_t, uint16_t);
+uint8_t readPacketHeader(uint8_t *, uint16_t *, uint64_t *, uint16_t *, uint16_t *);
 
 #ifdef __cplusplus
 }

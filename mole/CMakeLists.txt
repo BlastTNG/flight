@@ -30,7 +30,7 @@ find_package(OpenSSL REQUIRED)
 
 cmake_minimum_required (VERSION 2.8.8)
 
-option(USE_CLANG "build defricher using clang" OFF)
+option(USE_CLANG "build mole using clang" OFF)
 
 if (USE_CLANG)
     SET (CMAKE_C_COMPILER               "/usr/bin/clang")
@@ -76,35 +76,31 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
-# add linklist library
-set(LINKLIST_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/linklist/liblinklist.a)
-ExternalProject_Add(linklist
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND ""
-  )
-
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
 
 include_directories (
+    "${LIBLINKLIST_DIR}"
     "${PROJECT_SOURCE_DIR}"
     )
 
+# add common linklist objects
+add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
+add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
+define_file_basename_for_sources(liblinklist)
+
+
 # add common objects
 add_executable (mole 
+    $<TARGET_OBJECTS:liblinklist>
     ${PROJECT_SOURCE_DIR}/mole.c
     ) 
-
-add_dependencies(mole linklist)
 
 define_file_basename_for_sources(mole)
 
 target_link_libraries(mole
-    ${LINKLIST_LIBRARY} 
     ${CMAKE_THREAD_LIBS_INIT} 
     ssl crypto
     m)

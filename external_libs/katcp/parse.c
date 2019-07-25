@@ -27,11 +27,11 @@ static void sane_parse_katcl(struct katcl_parse *p)
 {
   if(p == NULL){
     fprintf(stderr, "sane: parse is null\n");
-    abort();
+    // abort();
   }
   if(p->p_magic != KATCL_PARSE_MAGIC){
     fprintf(stderr, "sane: bad parse magic for %p (magic 0x%0x, expected 0x%x)\n", p, p->p_magic, KATCL_PARSE_MAGIC);
-    abort();
+    // abort();
   }
 }
 #else

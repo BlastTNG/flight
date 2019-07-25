@@ -39,7 +39,15 @@
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
 #define NVALVES 2 // pump valve and fill valve, don't count pot valve here
-#define POTVALVE_STEP_ADC_RATIO 318.75
+
+/* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
+ * it is working so we will leave it for now. If this were changed, the thresholds
+ * and maybe the 750000 (microsteps to overshoot closed) would need to be changed
+ * and we don't have time to do that before flight
+ * -PAW and PCA 2018/12/16
+ */
+#define POTVALVE_STEP_ADC_RATIO 250 // estimated empirically -PCA
+#define MOVE_OVERSHOOT_FACTOR 1.1
 
 typedef enum {
 	no_move = 0, opening, closing, tighten, valve_stop
@@ -171,42 +179,14 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			blast_info("Valve %d closing...", index);
 		}
 	} else if (valve_data[index].stop) {
-	       if (EZBus_Stop(bus, valve_data[index].addr) == EZ_ERR_OK) {
-	       valve_data[index].stop = 0;
-	       CommandData.Cryo.valve_stop[index] = 0;
-	       }
+	       EZBus_Stop(bus, valve_data[index].addr);
+	       // valve_data[index].stop = 0;
+	       // CommandData.Cryo.valve_stop[index] = 0;
 	} else if (valve_data[index].limit == 7 || valve_data[index].limit == 11) {
 		valve_data[index].goal = 0;
+		CommandData.Cryo.valve_goals[index] = 0;
 	}
 }
-
-/* Was going to write a new function to replace much of the work in DoPotValve, but not anymore
- *
- * void ControlPotValve(struct ezbus* bus)
-{
-	static int firsttime = 1;
-	static int tight_flag;
-	int new_goal;
-
-	if (firsttime) {
-		tight_flag = 1;
-		new_goal = 0;
-		firsttime = 0;
-	}
-	// update prev_goal and goal, test to see if they are the same
-	potvalve_data.prev_goal = potvalve_data.goal;
-	potvalve_data.goal = CommandData.Cryo.potvalve_goal;
-	new_goal = !(potvalve_data.prev_goal == potvalve_data.goal);
-
-	GetPotValvePos(bus);
-	SetValveState(tight_flag);
-
-	if (potvalve_data.state != potvalve_data.goal) {
-		potvalve_data.do_move = 1;
-	} else {
-		potvalve_data.do_move = 0;
-	}
-} */
 
 void DoPotValve(struct ezbus* bus)
 {
@@ -317,8 +297,8 @@ void DoPotValve(struct ezbus* bus)
 	// firstmove = 0;
 	// blast_info("firstmove = %d", firstmove); // DEBUG PAW
 
-	if ((potvalve_data.on == 0) && (potvalve_data.moving == 1)) {
-	    // this if statement overrides everything else if the potvalve is turned off and moving
+	if (potvalve_data.on == 0) {
+	    // this if statement overrides everything else if the potvalve is turned off
 	    potvalve_data.do_move = 1;
 	    potvalve_data.potvalve_move = valve_stop;
 	    potvalve_data.goal = 0;
@@ -340,8 +320,11 @@ void DoPotValve(struct ezbus* bus)
 			// blast_info("in case opening"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_opencurrent);
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
-			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MAX) != EZ_ERR_OK)
-                        	bputs(info, "Error opening pot valve");
+			delta = (int) (POTVALVE_STEP_ADC_RATIO *
+				MIN(((CommandData.Cryo.potvalve_open_threshold - potvalve_data.adc[0]) * MOVE_OVERSHOOT_FACTOR),
+				(POTVALVE_ENC_MAX - potvalve_data.adc[0])));
+			if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK)
+                        	blast_info("Error opening pot valve");
             // blast_info("potvalve_open: called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			tight_flag = 0;
@@ -350,8 +333,11 @@ void DoPotValve(struct ezbus* bus)
 			// blast_info("in case closing"); // DEBUG PAW
 			EZBus_SetIMove(bus, potvalve_data.addr, CommandData.Cryo.potvalve_closecurrent);
 			// blast_info("called EZBus_SetIMove"); // DEBUG PAW
-			if(EZBus_RelMove(bus, potvalve_data.addr, INT_MIN) != EZ_ERR_OK)
-				bputs(info, "Error closing pot valve");
+			delta = (int) (-1 * POTVALVE_STEP_ADC_RATIO *
+				MIN(((potvalve_data.adc[0] - CommandData.Cryo.potvalve_lclosed_threshold) * MOVE_OVERSHOOT_FACTOR),
+				(potvalve_data.adc[0] - POTVALVE_ENC_MIN)));
+			if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK)
+				blast_info("Error closing pot valve");
             // blast_info("potvalve_close: called EZBus_RelMove"); // DEBUG PAW
 			potvalve_data.moving = 1;
 			break;
@@ -360,7 +346,8 @@ void DoPotValve(struct ezbus* bus)
 			if(potvalve_data.moving == 0) { // if we're just starting to tighten
 				GetPotValvePos(bus); // check location before tightening
 				delta = (int)(-1 * POTVALVE_STEP_ADC_RATIO *
-					MAX((potvalve_data.adc[0] - CommandData.Cryo.potvalve_closed_threshold), 0) - 750000);
+					MAX((potvalve_data.adc[0] - CommandData.Cryo.potvalve_closed_threshold), 0) -
+				 	(CommandData.Cryo.potvalve_min_tighten_move * POTVALVE_STEP_ADC_RATIO));
 
 				// blast_info("after checking that we aren't moving yet"); // DEBUG PCA
 				// blast_info("tighten current: %d; goal: %d", potvalve_data.state, potvalve_data.goal);
@@ -370,8 +357,8 @@ void DoPotValve(struct ezbus* bus)
 				// blast_info("called EZBus_SetIMove"); // DEBUG PAW
 				// usleep(500000);
 				if(EZBus_RelMove(bus, potvalve_data.addr, delta) != EZ_ERR_OK) // close by ~.5 turn
-					bputs(info, "Error tightening pot valve");
-				blast_info("command tighten move of size %d, ADC = %f", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
+					blast_info("Error tightening pot valve");
+				blast_info("command tighten move of size %d, ADC = %d", delta, delta/POTVALVE_STEP_ADC_RATIO); // DEBUG PCA
 				tight_flag = 1;
 				potvalve_data.moving = 1; // so command only gets sent once
 			} else {
@@ -438,6 +425,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* closedThresholdPotValveAddr;
 	static channel_t* lclosedThresholdPotValveAddr;
 	static channel_t* openThresholdPotValveAddr;
+	static channel_t* potvalveMinTightenMoveAddr;
 
 	static channel_t* limsPumpValveAddr;
 	static channel_t* limsFillValveAddr;
@@ -459,8 +447,9 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		closeCurPotValveAddr = channels_find_by_name("i_close_potvalve");
 		holdCurPotValveAddr = channels_find_by_name("i_hold_potvalve");
 		closedThresholdPotValveAddr = channels_find_by_name("thresh_clos_potvalve");
-	        lclosedThresholdPotValveAddr = channels_find_by_name("threshlclos_potvalve");
-	        openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
+	    	lclosedThresholdPotValveAddr = channels_find_by_name("threshlclos_potvalve");
+	    	openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
+		potvalveMinTightenMoveAddr = channels_find_by_name("potvalve_tight_move");
 
 		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
 		limsFillValveAddr = channels_find_by_name("lims_fillvalve");
@@ -474,7 +463,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	}
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
-		SET_UINT16(encPotValveAddr, potvalve_data.adc[0]);
+		SET_INT16(encPotValveAddr, potvalve_data.adc[0]);
 		SET_INT32(posPotValveAddr, potvalve_data.pos);
 		SET_UINT8(statePotValveAddr, potvalve_data.state);
 		SET_UINT32(velPotValveAddr, CommandData.Cryo.potvalve_vel);
@@ -484,6 +473,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		SET_UINT16(closedThresholdPotValveAddr, CommandData.Cryo.potvalve_closed_threshold);
 		SET_UINT16(lclosedThresholdPotValveAddr, CommandData.Cryo.potvalve_lclosed_threshold);
 		SET_UINT16(openThresholdPotValveAddr, CommandData.Cryo.potvalve_open_threshold);
+		SET_UINT16(potvalveMinTightenMoveAddr, CommandData.Cryo.potvalve_min_tighten_move);
 	}
 
 	for (i = 0; i < NVALVES; i++) {

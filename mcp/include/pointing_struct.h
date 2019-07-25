@@ -60,7 +60,6 @@ struct ACSDataStruct {
   double mag_y[NUM_MAGS];     // counts;
   double mag_z[NUM_MAGS];     // counts;
   double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
-  double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts
   double ifel_gy;   // deg/s
@@ -122,6 +121,8 @@ struct PointingDataStruct {
   double offset_ifyawmag_gy[NUM_MAGS];
   double offset_ifrolldgps_gy;
   double offset_ifyawdgps_gy;
+  double offset_ifelmotenc_gy;
+  double offset_ifelclin_gy;
   double dgps_az_raw;   // degrees
   double dgps_az;   // degrees
   double dgps_sigma;   // degrees
@@ -133,7 +134,7 @@ struct PointingDataStruct {
   int pss_ok;
   int dgps_ok;
   double pss_az;
-  double pss_el;
+  double pss_el; // not used, as far as I can tell -PAW 2018/12/23
 
   // solutions for individual sensors, from PSSConvert
   double pss_azraw[NUM_PSS]; // degrees
@@ -158,8 +159,6 @@ struct PointingDataStruct {
   double estimated_xsc_dec_deg[2];
 
   bool enc_motor_ok;   // flag
-  double enc_el;
-  double enc_sigma;
   double enc_motor_el;
   double enc_motor_sigma;
 

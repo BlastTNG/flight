@@ -633,7 +633,7 @@ superframe_t * channels_generate_superframe(const channel_t * const m_channel_li
     // null terminate
     sf[i].field[0] = '\0';
 
-    return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data);
+    return linklist_build_superframe(sf, &channel_data_to_double, &channel_double_to_data, SF_USE_BIG_ENDIAN);
 }
 
 /**

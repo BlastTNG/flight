@@ -38,7 +38,9 @@
 extern "C" {
 #endif
 
-
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
 /* -------------------------
  * ------- allocFifo -------
@@ -356,6 +358,9 @@ uint8_t * packetizeBuffer(uint8_t * buffer, uint32_t buffer_size, uint32_t * pac
 */
 int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_size,
                           uint16_t * i_pkt, uint16_t * n_pkt, uint8_t * packet) {
+  // check for invalid pointers
+  if (!buffer || !packet || !buffer_size || !i_pkt || !n_pkt) return -1;
+
   // nonsense values for i_pkt
   if ((*i_pkt)*packet_size > *buffer_size) return -1;
 
@@ -366,7 +371,7 @@ int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_
   memcpy(retval, packet, packet_size);
 
   // update packet size and location
-  if (buffer_size) *buffer_size += packet_size;
+  *buffer_size += packet_size;
   *i_pkt += 1;
 
   // reached the end of the buffer
@@ -375,6 +380,53 @@ int depacketizeBuffer(uint8_t * buffer, uint32_t * buffer_size, uint32_t packet_
 
   return 1;
 }
+
+/* telemetry packet header (12 bytes)
+ * ----------------
+ * [0-1] = unique sender recver serial
+ * [2-6] = auxilliary data
+ * [7-8] = packet number
+ * [9-10] = total number of packets
+ * [11] = checksum (XOR of all preceding bytes)
+ */
+uint8_t writePacketHeader(uint8_t * header, uint16_t serial, uint64_t aux_data, uint16_t i_pkt, uint16_t n_pkt)
+{
+  int j;
+  uint8_t checksum = 0;
+  aux_data &= 0x000000ffffffffff; // will only copy 1st 5 bytes of aux data
+
+  // build header
+  memcpy(header+0, &serial,   2);
+  memcpy(header+2, &aux_data, 5);
+  memcpy(header+7, &i_pkt,    2);
+  memcpy(header+9, &n_pkt,    2);
+
+  for (j = 0; j < (PACKET_HEADER_SIZE-1); j++) checksum ^= header[j]; // check the checksum
+  header[j] = checksum;
+
+  // return the checksum
+  return checksum;
+}
+
+uint8_t readPacketHeader(uint8_t * header, uint16_t *serial, uint64_t *aux_data, uint16_t *i_pkt, uint16_t *n_pkt)
+{
+  int j;
+  uint8_t checksum = 0;
+  *aux_data = 0; // zero out aux data before copying
+
+  // extract header
+  memcpy(serial,   header+0, 2);
+  memcpy(aux_data, header+2, 5);
+  memcpy(i_pkt,    header+7, 2);
+  memcpy(n_pkt,    header+9, 2);
+
+  for (j = 0; j < PACKET_HEADER_SIZE-1; j++) checksum ^= header[j]; // check the checksum
+  checksum ^= header[j];
+
+  // non-zero implies data error
+  return checksum;
+}
+
 #ifdef __cplusplus
 }
 

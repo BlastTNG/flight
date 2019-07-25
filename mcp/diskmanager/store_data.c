@@ -285,7 +285,7 @@ void store_data_roach_udp(data_udp_packet_t * m_packet, unsigned int buffersize,
             // unlink(symlink_name);
             // symlink(fileout_name, symlink_name);
         }
-        file_index[roach]++;
+        if (storage_info_roaches[roach].fp) file_index[roach]++;
     }
     // write to the fie if opened
     if (storage_info_roaches[roach].fp) {
@@ -399,7 +399,7 @@ void store_data_hk(uint8_t * sf_buffer) {
             unlink(symlink_name);
             symlink(fileout_name, symlink_name);
         }
-        file_index++;
+        if (storage_info_hk.fp) file_index++;
     }
 
     // write to the fie if opened

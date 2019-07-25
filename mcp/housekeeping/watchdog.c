@@ -52,16 +52,31 @@ static const char watchdog_magic = 'V';
 static int watchdog_fd = -1;
 static int comms_card_tickle = 1;
 
+static int stop_watchdog_flag = 0;
+
+
+/**
+ * Sets a flag to stop triggering the watchdog tickle
+ */
+void watchdog_stop() {
+    stop_watchdog_flag = 1;
+}
+
 /**
  * Resets the watchdog timer.  Should be called liberally relative to the timeout period.
  */
 void watchdog_ping()
 {
     int dummy;
-    if (watchdog_fd != -1) {
-        ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+    // Check to make sure we have not been ordered to reap the fc.
+    if (!stop_watchdog_flag) {
+        if (watchdog_fd != -1) {
+            ioctl(watchdog_fd, WDIOC_KEEPALIVE, &dummy);
+        }
+        comms_card_tickle ^= 1;
+    } else {
+      usleep(1000);
     }
-    comms_card_tickle ^= 1;
 }
 
 /**

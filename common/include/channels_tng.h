@@ -43,7 +43,6 @@
 #define NUM_RTYPES 3
 #define NUM_ROACH_TLM 15
 #define ROACH_NAME_SARRAY "ROACH_NAMES"
-#define FILE_LINKLIST "z_file_dl.ll"
 
 #include "derived.h"
 

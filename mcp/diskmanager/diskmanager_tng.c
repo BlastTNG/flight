@@ -195,6 +195,7 @@ static int diskpool_add_init_usb_info(const char *m_uuid, int m_pos) {
     disk.initialized = 0;
     disk.isUSB = true;
     disk.last_accessed = time(NULL);
+    disk.index = m_pos;
     if (diskpool_add_to_pool(&disk) == -1) {
         blast_err("Could not add disk index %i (%s) to the diskpool.", m_pos,
                 disk.dev);
@@ -1337,7 +1338,17 @@ static int file_open_internal(fileentry_t *m_file) {
  * Returns a pointer to the string for the current disk mount point
  */
 const char * get_current_disk_mnt_point() {
+    if (!s_diskpool.current_disk) return NULL;
     return s_diskpool.current_disk->mnt_point;
+}
+
+int32_t get_current_disk_free_space() {
+    if (!s_diskpool.current_disk) return 0;
+    return s_diskpool.current_disk->free_space;
+}
+int16_t get_current_disk_index() {
+    if (!s_diskpool.current_disk) return 0;
+    return s_diskpool.current_disk->index;
 }
 
 /**
@@ -1566,6 +1577,8 @@ int file_get_path(fileentry_t *m_file, char *m_path) {
 static void *diskmanager(void *m_arg __attribute__((unused))) {
     int retval;
     while (!s_diskmanager_exit) {
+        sleep(1);
+
         while ((retval = filepool_flush_buffers()) < 0) {
             blast_warn("Got an error writing to %s",
                     s_diskpool.current_disk->dev);
@@ -1576,9 +1589,13 @@ static void *diskmanager(void *m_arg __attribute__((unused))) {
 
         if (s_diskpool.current_disk->free_space < DISK_MIN_FREE_SPACE) {
             filepool_handle_disk_error(s_diskpool.current_disk);
+            continue;
         }
 
-        sleep(1);
+        if (!s_ready) {
+	          s_ready = true;
+	          blast_info("Set s_ready to true.");
+        }
     }
     blast_info("Caught signal to exit.  Flushing disks.");
     s_ready = false;
@@ -1597,8 +1614,8 @@ void initialize_diskmanager(void) {
     diskpool_mount_primary();
     initialize_total_bytes();
 
-    s_ready = true;
-    blast_info("Set s_ready to true.");
+    // s_ready = true;
+    // blast_info("Set s_ready to true.");
 
     pthread_create(&diskman_thread, NULL, diskmanager, NULL);
     pthread_detach(diskman_thread);

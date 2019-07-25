@@ -119,6 +119,7 @@ void StageBus(void);
 struct LOGGER logger = {0};
 uint8_t * logger_buffer = NULL;
 struct tm start_time;
+int ResetLog = 0;
 
 linklist_t * linklist_array[MAX_NUM_LINKLIST_FILES] = {NULL};
 linklist_t * telemetries_linklist[NUM_TELEMETRIES] = {NULL, NULL, NULL, NULL};
@@ -199,8 +200,8 @@ void * lj_connection_handler(void *arg) {
     // labjack_networking_init(8, 14, 1);
     // initialize_labjack_commands(8);
     // switch to this thread for flight
-    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     mult_initialize_labjack_commands(5);
+    ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
     return NULL;
@@ -233,14 +234,14 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
-    outer_frame_200hz(0);
+    outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
     command_motors();
     write_motor_channels_200hz();
     // read_chopper();
-    periodic_cal_control();
-
+    // periodic_cal_control();
+    SetGyroMask();
     share_data(RATE_200HZ);
     framing_publish_200hz();
     add_frame_to_superframe(channel_data[RATE_200HZ], RATE_200HZ, master_superframe_buffer,
@@ -253,18 +254,25 @@ static void mcp_100hz_routines(void)
     read_100hz_acs();
     PointingData[i_point].recv_shared_data = recv_fast_data();
     Pointing();
-//    DoSched();
+    DoSched();
     update_axes_mode();
     store_100hz_acs();
     send_fast_data();
 //   BiasControl();
     store_100hz_xsc(0);
     store_100hz_xsc(1);
+    write_motor_channels_100hz();
     xsc_control_triggers();
     xsc_decrement_is_new_countdowns(&CommandData.XSC[0].net);
     xsc_decrement_is_new_countdowns(&CommandData.XSC[1].net);
     // write the logs to the frame
-    if (logger_buffer) readLogger(&logger, logger_buffer);
+    if (logger_buffer) {
+        if (ResetLog) {
+            resetLogger(&logger);
+            ResetLog = 0;
+        }
+        readLogger(&logger, logger_buffer);
+    }
 
     share_data(RATE_100HZ);
     framing_publish_100hz();
@@ -295,7 +303,7 @@ static void mcp_5hz_routines(void)
     SecondaryMirror();
 //    PhaseControl();
     StoreHWPRBus();
-    SetGyroMask();
+    ReadHWPREnc();
 //    ChargeController();
 //    VideoTx();
 //    cameraFields();
@@ -446,15 +454,15 @@ int main(int argc, char *argv[])
   ph_thread_t *gps_thread = NULL;
   ph_thread_t *dgps_thread = NULL;
   ph_thread_t *lj_init_thread = NULL;
+  ph_thread_t *DiskManagerID = NULL;
+  ph_thread_t *bi0_send_worker = NULL;
 
   pthread_t CommandDatacomm1;
   pthread_t CommandDatacomm2;
   pthread_t CommandDataFIFO;
-  pthread_t DiskManagerID;
   pthread_t pilot_send_worker;
   pthread_t highrate_send_worker;
   // pthread_t bi0_send_worker;
-  ph_thread_t *bi0_send_worker = NULL;
   int use_starcams = 0;
 
   if (argc == 1) {
@@ -550,6 +558,7 @@ int main(int argc, char *argv[])
   init_roach(2);
   init_roach(3);
   init_roach(4);
+  start_cycle_checker();
   blast_info("Finished initializing ROACHes...");
 #endif
 
@@ -591,9 +600,9 @@ blast_info("Finished initializing Beaglebones..."); */
   signal(SIGTERM, close_mcp);
   signal(SIGPIPE, SIG_IGN);
 
-  pthread_create(&DiskManagerID, NULL, (void*)&initialize_diskmanager, NULL);
+  DiskManagerID = ph_thread_spawn((void *) &initialize_diskmanager, (void *) NULL);
 
-//  InitSched();
+  InitSched();
   initialize_motors();
 
 // LJ THREAD
@@ -607,6 +616,8 @@ blast_info("Finished initializing Beaglebones..."); */
   if (use_starcams) {
        xsc_networking_init(0);
        xsc_networking_init(1);
+       xsc_trigger(0, 0);
+       xsc_trigger(1, 0);
   }
 
   initialize_magnetometer();

@@ -44,7 +44,7 @@ double GetJulian(time_t t);
 void radec2azel(double ra, double dec, time_t lst, double lat, double *az,
 		double *el);
 
-char lst0str[82];
+extern char lst0str[82];
 
 // Toronto Highbay
 // #define CHECK_LON -79.3994
@@ -336,7 +336,7 @@ int LoadUplinkFile(int slot) {
   }
 
   // check to make sure the file exists
-  snprintf(filename, sizeof(slot), "/data/etc/blast/%d.sch", slot);
+  snprintf(filename, sizeof(filename), "/data/etc/blast/%d.sch", slot);
   fp = fopen(filename, "r");
   if (fp == NULL) {
     return(0);
@@ -396,7 +396,12 @@ void DoSched(void)
   int i, index;
   struct ScheduleType *S = &_S[CommandData.sucks][CommandData.lat_range];
   struct ScheduleEvent event;
+  static int first_time = 1;
 
+  if (first_time) {
+    blast_info("Calling DoSched for the First Time");
+    first_time = 0;
+  }
   i_point = GETREADINDEX(point_index);
   d_lat = PointingData[i_point].lat - NOMINAL_LATITUDE;
 
@@ -435,7 +440,7 @@ void DoSched(void)
         blast_info("Scheduler: Entering northern latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 0;
       }
-    } else if (CommandData.lat_range == 0) { /* norhtern band */
+    } else if (CommandData.lat_range == 0) { /* northern band */
       if (d_lat < (LATITUDE_BAND / 2) - LATITUDE_OVERLAP) {
         blast_info("Scheduler: Entering middle latitude band. (%g)\n", d_lat);
         CommandData.lat_range = 1;
@@ -447,6 +452,7 @@ void DoSched(void)
     }
 
     S = &_S[CommandData.sucks][CommandData.lat_range];
+
 
     /* check to see if we've changed schedule files */
     if (last_l != CommandData.lat_range) {
@@ -486,7 +492,7 @@ void DoSched(void)
     last_is = -1;
     return;
   }
-
+  // Sent at 30,000 m if we haven't already sent at_float
   if (PointingData[i_point].at_float && !CommandData.at_float) {
     bputs(info, "Scheduler: *** Executing initial float commands. ***\n");
     /* el on */
@@ -505,19 +511,19 @@ void DoSched(void)
     /* enable hwpr autostepping */
     event.command = hwpr_step_on;
     ScheduledCommand(&event);
-    /* potvalve_open */
-    event.command = potvalve_open;
+    /* pump valve on and open */
+    event.command = pump_valve_on;
     ScheduledCommand(&event);
-    event.command = potvalve_on;
+    event.command = pump_valve_open;
     ScheduledCommand(&event);
     /* turn off lock motor hold current */
     event.command = lock_i;
     event.is_multi = 1;
-    event.ivalues[0] = 50;
+    event.ivalues[0] = 45;
     event.ivalues[1] = 0;
     ScheduledCommand(&event);
     /* activate fridge autocycle system */
-    event.command = allow_cycle;
+    event.command = disallow_cycle;
     event.is_multi = 0;
     ScheduledCommand(&event);
 
@@ -599,4 +605,5 @@ void DoSched(void)
     ScheduledCommand(&S->event[i_sched]);
   }
   last_is = i_sched;
+  first_time = 0;
 }

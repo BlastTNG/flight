@@ -150,8 +150,8 @@ static void process_gngga(const char *m_data) {
         CSBFGPSData.isnew = 1;
         have_warned = 0;
          if (first_time) {
-            blast_info("Recieved first GNGGA packet:");
-            blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
+             blast_info("Recieved first GNGGA packet:");
+             blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
                    CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
                    CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
                    first_time = 0;
@@ -172,19 +172,28 @@ static void process_gnhdt(const char *m_data)
     // Sometimes we don't get heading information.  mcp needs to be able to handle both cases.
     static int first_time = 1;
     static int have_warned = 0;
+    double az_read = 0.0;
     size_t bytes_read = strnlen(m_data, 20);
     if (bytes_read < 14) {
         if (!have_warned) {
             blast_info("Not enough characters for GNHDT.  We didn't get heading info.");
             have_warned = 1;
+            CSBFGPSAz.att_ok = 0;
         }
     } else {
-        sscanf(m_data, "$GNZDA,"
+        sscanf(m_data, "$GNHDT,"
             "%lf," // Heading (deg) x.x
             "%*c,", // True
-            &CSBFGPSAz.az);
+            &az_read);
+        if ((az_read <= 0.0) || (az_read >= 360.0)) {
+             // this almost certainly means we didn't read anything
+            CSBFGPSAz.att_ok = 0;
+        } else {
+            CSBFGPSAz.att_ok = 1;
+            CSBFGPSAz.az = az_read;
+        }
         if (first_time) {
-            blast_info("Read GNZDA heading = %lf", CSBFGPSAz.az);
+            blast_info("Read GNHDT heading = %lf", az_read);
             first_time = 0;
         }
     }
@@ -197,7 +206,7 @@ static void process_gnzda(const char *m_data)
     static int first_time = 1;
     static int have_warned = 0;
     struct tm ts;
-    blast_info("Starting process_gnzda");
+    // blast_info("Starting process_gnzda");
     sscanf(m_data, "$GNZDA,"
             "%2d%2d%2d.%*d,"
             "%d,"
@@ -217,7 +226,7 @@ static void process_gnzda(const char *m_data)
     ts.tm_isdst = 0;
     ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
     if (first_time) {
-        blast_info("Read GPSZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
+        blast_info("Read GNDZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
                    ts.tm_hour, ts.tm_min, ts.tm_sec,
                    ts.tm_mday, ts.tm_mon, ts.tm_year);
         first_time = 0;

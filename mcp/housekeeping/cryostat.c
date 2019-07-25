@@ -170,10 +170,16 @@ void heater_control(void) {
 void load_curve_300mk(void) {
     static int i = 0;
     static int counter = 0;
+    static int first_time = 1;
+    static channel_t* load_curve_val_Addr;
+    if (first_time == 1) {
+        load_curve_val_Addr = channels_find_by_name("load_curve");
+    }
     if (CommandData.Cryo.load_curve == 1) {
         labjack_queue_command(LABJACK_CRYO_1, 1000, voltage_array[i]);
+        SET_FLOAT(load_curve_val_Addr, voltage_array[i]);
         counter++;
-        if (counter == 600) {
+        if (counter == 900) {
             i++;
             blast_info("voltage set to %f", voltage_array[i]);
             blast_info("voltage set to %f", voltage_array[i]);
@@ -193,13 +199,10 @@ void set_dac(void) {
     float value;
     if (CommandData.Labjack_Queue.lj_q_on == 1) {
         if (CommandData.Cryo.send_dac == 1) {
-            labjack = CommandData.Cryo.labjack;
             value = CommandData.Cryo.dac_value;
             blast_info("voltage = %f, labjack = %d", value, labjack);
             CommandData.Cryo.send_dac = 0;
-            if (state[labjack].connected == 1) {
-                labjack_queue_command(labjack, 1000, value);
-            }
+            labjack_queue_command(LABJACK_CRYO_1, 1000, value);
         }
     }
 }
@@ -232,6 +235,7 @@ void cal_control(void) {
         if (CommandData.Cryo.do_cal_pulse) {
             cryo_state.cal_length = CommandData.Cryo.cal_length;
             CommandData.Cryo.do_cal_pulse = 0;
+            CommandData.Cryo.counter = CommandData.Cryo.counter_max;
         }
         static int pulsed = 0;
             if (cryo_state.cal_length > 0) {
@@ -289,6 +293,7 @@ void periodic_cal_control(void) {
                 // decrements the wait time if waiting
                 if (separation > 0) {
                     separation--;
+                    CommandData.Cryo.counter = CommandData.Cryo.counter_max;
                 // restarts the pulse at the end of the wait.
                 } else {
                     length = cal_state.length;
@@ -303,6 +308,47 @@ void periodic_cal_control(void) {
                 // blast_info("All out of pulses, sorry");
             }
         }
+    }
+}
+
+// monitors the length of time since the last cal pulse
+// and sends one if it has been too long
+static void cal_pulse_monitor() {
+    static int first_time = 1;
+    static channel_t* counter_Addr;
+    static channel_t* counter_length_Addr;
+
+    if (first_time == 1) {
+        counter_Addr = channels_find_by_name("time_to_pulse");
+        counter_length_Addr = channels_find_by_name("pulse_timer");
+        first_time = 0;
+    }
+    SET_SCALED_VALUE(counter_length_Addr, CommandData.Cryo.counter_max);
+    SET_SCALED_VALUE(counter_Addr, CommandData.Cryo.counter);
+
+    if (CommandData.Cryo.counter == 0) {
+        CommandData.Cryo.counter = CommandData.Cryo.counter_max;
+        if ((CommandData.Cryo.length > 99) && (CommandData.Cryo.length < 301)
+           && (CommandData.Cryo.num_pulse > 0) && (CommandData.Cryo.num_pulse < 11)
+           && (CommandData.Cryo.separation > 99) && (CommandData.Cryo.separation < 300)) {
+            blast_info("sending current cal pulse");
+        } else {
+            CommandData.Cryo.length = 100;
+            CommandData.Cryo.num_pulse = 3;
+            CommandData.Cryo.separation = 100;
+            blast_info("rewriting default cal pulse");
+        }
+
+        // only pulse the cal lamp if the roach is not doing it already
+        for (int i = 0; i < NUM_ROACHES; i++) {
+            if (CommandData.roach[i].is_sweeping) {
+               return;
+            }
+        }
+        if (CommandData.cal_lamp_roach_hold) return;
+        CommandData.Cryo.periodic_pulse = 1;
+    } else {
+        CommandData.Cryo.counter--;
     }
 }
 
@@ -760,8 +806,7 @@ static void cooling_cycle(void) {
         cycle_state.t350 = (59*cycle_state.t350_old/60 + cycle_state.t350/60);
         cycle_state.t500 = (59*cycle_state.t500_old/60 + cycle_state.t500/60);
 
-        if (/*cycle_state.t250 < cycle_state.tcrit_fpa &&*/
-            cycle_state.the3 < cycle_state.tcrit_fpa /* && cycle_state.t500 < cycle_state.tcrit_fpa */) {
+        if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
             // moves the standby mode once we reach the minimum temperature.
@@ -808,6 +853,7 @@ static void output_cycle(void) {
     }
     SET_SCALED_VALUE(cycle_state.cycle_state_Addr, state_value);
 }
+
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
@@ -844,6 +890,19 @@ void force_incharge(void) {
     // used for the test cryostat without watchdog board
 }
 
+static void cryo_status_update() {
+    static channel_t* cycle_allowed_Addr;
+    static channel_t* wd_allowed_Addr;
+    static int first_time = 1;
+    if (first_time == 1) {
+        first_time = 0;
+        cycle_allowed_Addr = channels_find_by_name("cycle_allowed");
+        wd_allowed_Addr = channels_find_by_name("wd_allowed");
+    }
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.cycle_allowed);
+    SET_SCALED_VALUE(cycle_allowed_Addr, CommandData.Cryo.watchdog_allowed);
+}
+
 static void pot_watchdog() {
     static int first_time = 1;
     static channel_t* pot_addr;
@@ -858,6 +917,16 @@ static void pot_watchdog() {
         pot_addr = channels_find_by_name("td_1k_fridge");
         blast_info("starting pot watchdog");
         first_time = 0;
+    }
+    if (CommandData.Cryo.pot_forced == 1) {
+        CommandData.Cryo.watchdog_allowed = 1;
+        watchdog = 1;
+        open_required = 1;
+    }
+    if (CommandData.Cryo.watchdog_allowed == 0) {
+        counter = 0;
+        open_required = 0;
+        open_counter = 0;
     }
     if (CommandData.Cryo.watchdog_allowed == 1) {
         if (state[0].connected && state[1].connected) {
@@ -903,17 +972,20 @@ void cryo_1hz(int setting_1hz) {
     if (setting_1hz == 1 && state[0].connected && state[1].connected) {
         heater_control();
         heater_read();
-        // load_curve_300mk();
+        cryo_status_update();
+        load_curve_300mk();
         set_dac();
         pot_watchdog();
+        cal_pulse_monitor();
         // read_thermometers();
     }
 }
 
 void cryo_200hz(int setting_200hz) {
     if (setting_200hz == 1 && state[0].connected && state[1].connected) {
-        cal_control();
+        periodic_cal_control();
         read_thermometers();
+        cal_control();
     }
     if (setting_200hz == 2 && state[0].connected && state[1].connected) {
         read_chopper();

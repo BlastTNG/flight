@@ -79,7 +79,7 @@ void fillSBData(unsigned char *b, int len) {
 }
 
 void highrate_compress_and_send(void *arg) {
-  linklist_t * ll = NULL, * ll_old = NULL;
+  linklist_t * ll = NULL, * ll_old = NULL, * ll_saved = NULL;
   comms_serial_t * serial = comms_serial_new(NULL);
 
   ll_array = arg;
@@ -140,7 +140,13 @@ void highrate_compress_and_send(void *arg) {
 
 		  highrate_read_buffer = getFifoRead(&highrate_fifo);
 
-      if (!strcmp(CommandData.highrate_linklist_name, FILE_LINKLIST)) { // special file downlinking
+      if (!strcmp(ll->name, FILE_LINKLIST)) { // special file downlinking
+        // done sending, so revert to other linklist
+        if (ll->blocks[0].i >= ll->blocks[0].n) {
+						ll_array[HIGHRATE_TELEMETRY_INDEX] = ll_saved;
+						continue;
+        }
+
 				// use the full bandwidth
 				transmit_size = bandwidth;
 
@@ -153,6 +159,8 @@ void highrate_compress_and_send(void *arg) {
 				decrementFifo(&highrate_fifo);
 
       } else { // normal linklist
+        ll_saved = ll;
+
 				// send allframe if necessary
 				if (allframe_bytes >= superframe->allframe_size) {
 						transmit_size = write_allframe(compbuffer, superframe, highrate_read_buffer);
