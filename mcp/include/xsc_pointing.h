@@ -35,5 +35,6 @@ void xsc_control_triggers(void);
 void xsc_control_heaters(void);
 int32_t xsc_get_loop_counter(void);
 xsc_last_trigger_state_t *xsc_get_trigger_data(int);
+void xsc_trigger(int m_which, int m_value);
 
 #endif /* INCLUDE_XSC_POINTING_H_ */

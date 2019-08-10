@@ -49,6 +49,7 @@
 #include "command_struct.h"
 #include "mcp.h"
 #include "chrgctrl.h"
+#include "diskmanager_tng.h"
 
 #include "motors.h"
 
@@ -61,8 +62,6 @@ extern int16_t InCharge;
 int EthernetIsc = 3;
 int EthernetOsc = 3;
 int EthernetSBSC = 3;
-
-extern struct chat_buf chatter_buffer;  /* mcp.c */
 
 /* in auxiliary.c */
 void ChargeController(void);
@@ -119,6 +118,9 @@ void WriteAux(void)
     static channel_t* last_cmd_addr[2];
     static channel_t* count_cmd_addr[2];
 
+    static channel_t* hddDiskSpaceAddr[2];
+    static channel_t* hddDiskIndexAddr[2];
+
     const char which_flc[2] = {'n', 's'};
 
 #define ASSIGN_BOTH_FLC(_ch, _str) \
@@ -174,6 +176,9 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(df_flc_addr, "df_flc");
         ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
+
+        ASSIGN_BOTH_FLC(hddDiskSpaceAddr, "hdd_disk_space");
+        ASSIGN_BOTH_FLC(hddDiskIndexAddr, "hdd_disk_index");
     }
 
     gettimeofday(&tv, &tz);
@@ -190,6 +195,8 @@ void WriteAux(void)
     SET_VALUE(df_flc_addr[0], computer_sensors.disk_free);
     SET_VALUE(partsSchedAddr, CommandData.parts_sched & 0xffffff);
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
+    SET_VALUE(hddDiskSpaceAddr[0], get_current_disk_free_space());
+    SET_VALUE(hddDiskIndexAddr[0], get_current_disk_index());
     i_point = GETREADINDEX(point_index);
 
 #ifdef BOLOTEST
@@ -231,45 +238,6 @@ void WriteAux(void)
     SET_VALUE(statusMCCAddr, mccstatus);
     SET_VALUE(last_cmd_addr[0], CommandData.last_command);
     SET_VALUE(count_cmd_addr[0], CommandData.command_count);
-}
-
-void WriteChatter(void)
-{
-//    static channel_t* chatterAddr;
-//    static int firsttime = 1;
-//    unsigned int chat;
-//
-//    if (firsttime) {
-//        firsttime = 0;
-//        chatterAddr = channels_find_by_name("chatter");
-//    }
-//
-//    switch (index & 0x03) {
-//        case 0x00:
-//            chat = 0x0000;
-//            break;
-//        case 0x01:
-//            chat = 0x8000;
-//            break;
-//        case 0x02:
-//            chat = 0x0080;
-//            break;
-//        case 0x03:
-//            chat = 0x8080;
-//            break;
-//        default:
-//            chat = 0x0000;
-//            break;
-//    }
-//
-//    chat += (unsigned int) (chatter_buffer.msg[chatter_buffer.reading][index * 2] & 0x7F);
-//    chat += (unsigned int) ((chatter_buffer.msg[chatter_buffer.reading][(index * 2) + 1]) & 0x7F) << 8;
-//
-//    if (index == (19)) {
-//        chatter_buffer.reading = (chatter_buffer.reading + 1) & 0x3;
-//    }
-//
-//    SET_VALUE(chatterAddr, chat);
 }
 
 /***************************************************************/

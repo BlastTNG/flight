@@ -103,7 +103,7 @@ static inline int xsc_initialize_gpio(void)
  * @param m_which Which GPIO pin
  * @param m_value Value (0 or 1) for the pin
  */
-static void xsc_trigger(int m_which, int m_value)
+void xsc_trigger(int m_which, int m_value)
 {
     const char val[2] = {'0', '1'};
     static int fd[2] = {-1, -1};
@@ -251,18 +251,18 @@ void xsc_control_triggers()
 
         case xsc_trigger_waiting_to_send_trigger:
             // TODO(seth): Remove multiple trigger mode from STARS
-            if (state_counter == 1) blast_dbg("Waiting to send trigger");
+            // if (state_counter == 1) blast_dbg("Waiting to send trigger");
             if (xsc_trigger_thresholds_satisfied()
                     || (multi_trigger_counter > 0)
                     || xsc_scan_force_trigger_threshold()) {
                 xsc_pointing_state[0].last_trigger.forced_trigger_threshold = xsc_scan_force_trigger_threshold();
 
                 max_exposure_time_used_cs = max(exposure_time_cs[0], exposure_time_cs[1]);
-                blast_dbg("Sending trigger with MCP Counter: %d", xsc_pointing_state[0].counter_mcp);
+                // blast_dbg("Sending trigger with MCP Counter: %d", xsc_pointing_state[0].counter_mcp);
                 for (int which = 0; which < 2; which++) {
                 	trigger |= (1 << which);
                     xsc_trigger(which, 1);
-                    printf("Triggering XSC%d!\n", which);
+                    // blast_info("Triggering XSC%d!", which);
 
                     xsc_pointing_state[which].last_trigger.counter_mcp = xsc_pointing_state[which].counter_mcp;
                     xsc_pointing_state[which].last_trigger.counter_stars = XSC_SERVER_DATA(which).channels.ctr_stars;

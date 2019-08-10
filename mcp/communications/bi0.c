@@ -313,6 +313,12 @@ void setup_libusb_transfers(void)
 
 void * setup_synclink_transfers(void * arg)
 {
+  // wait until InCharge
+  while (!InCharge) {
+    if (shutdown_mcp) return NULL;
+    usleep(10000);
+  }
+
   int rc = setup_synclink();
   int synclink_fd = get_synclink_fd();
 
@@ -390,21 +396,27 @@ void biphase_writer(void * arg)
     uint8_t direction = 0xBF; 
     uint32_t previous_clock_speed = CommandData.biphase_clk_speed;
 
+    static unsigned int warned_mpsse = 0;
+
     while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
-        blast_warn("Error opening mpsse. Will retry in 5s");
-
         InCharge = DEFAULT_INCHARGE;
-        blast_info("Defaulting to fc%d in charge", DEFAULT_INCHARGE+1);
 
+        if (!warned_mpsse) {
+          blast_warn("Error opening mpsse. Will retry every 5s");
+          if (InCharge) blast_info("Defaulting to in charge");
+          else blast_info("Defaulting to not in charge");
+        }
+        warned_mpsse = 1;
         sleep(5);
     }
+    warned_mpsse = 0;
 
     // biphase fifo
     allocFifo(&libusb_fifo, 2048, BIPHASE_FRAME_SIZE_BYTES);
 
     // setup linklists
     linklist_t ** ll_array = arg;
-    linklist_t * ll = NULL, * ll_old = NULL;
+    linklist_t * ll = NULL, * ll_old = NULL, * ll_saved = NULL;
     unsigned int allframe_bytes = 0; 
     double bandwidth = 0; 
     uint32_t transmit_size = 0;
@@ -428,13 +440,17 @@ void biphase_writer(void * arg)
             mpsse_closing = true;
             mpsse_close(ctx);
             while (!setup_mpsse(&ctx, serial, direction) && !shutdown_mcp) {
-                blast_warn("Error opening mpsse. Will retry in 5s");
-
                 InCharge = DEFAULT_INCHARGE;
-                blast_info("Defaulting to fc1 in charge");
 
+                if (!warned_mpsse) {
+                  blast_warn("Error opening mpsse. Will retry every 5s");
+                  if (InCharge) blast_info("Defaulting to in charge");
+                  else blast_info("Defaulting to not in charge");
+                }
+                warned_mpsse = 1;
                 sleep(5);
             }
+            warned_mpsse = 0;
             usleep(1000);
             mpsse_closing = false;
             mpsse_disconnected = false;
@@ -477,18 +493,42 @@ void biphase_writer(void * arg)
         // check if superframe is ready and compress if so
         if (!fifoIsEmpty(&bi0_fifo) && ll && InCharge) { // a superframe is ready 
 
-            // send allframe if necessary
-            if (allframe_bytes >= superframe->allframe_size) {
-                transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
-                allframe_bytes = 0;
-            } else {
-                // compress the linklist to compbuffer
-                compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
-                decrementFifo(&bi0_fifo);
+            if (!strcmp(ll->name, FILE_LINKLIST)) { // special file downlinking
+                // done sending, so revert to other linklist
+                if (ll->blocks[0].i >= ll->blocks[0].n) {
+                    ll_array[BI0_TELEMETRY_INDEX] = ll_saved;
+                    continue;
+                }
 
-                // bandwidth limit; frames are 1 Hz, so bandwidth == size
-                transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
-                allframe_bytes += bandwidth-transmit_size;
+                // use the full bandwidth
+                transmit_size = bandwidth;
+
+                // fill the downlink buffer as much as the downlink will allow 
+                unsigned int bytes_packed = 0;
+                while ((bytes_packed+ll->blk_size) <= transmit_size) {
+                    compress_linklist(compbuffer+bytes_packed, ll, getFifoRead(&bi0_fifo));
+                    bytes_packed += ll->blk_size;
+                } 
+                decrementFifo(&bi0_fifo);
+            
+            } else { // normal linklist
+                ll_saved = ll;
+
+                // send allframe if necessary
+                if (allframe_bytes >= superframe->allframe_size) {
+                    transmit_size = write_allframe(compbuffer, superframe, getFifoRead(&bi0_fifo));
+                    allframe_bytes = 0;
+                } else {
+                    // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                    transmit_size = MIN(ll->blk_size, bandwidth*(1.0-CommandData.biphase_allframe_fraction));
+
+                    // compress the linklist to compbuffer
+                    compress_linklist(compbuffer, ll, getFifoRead(&bi0_fifo));
+
+                    // bandwidth limit; frames are 1 Hz, so bandwidth == size
+                    allframe_bytes += bandwidth*CommandData.biphase_allframe_fraction;
+                    decrementFifo(&bi0_fifo);
+                }
             }
 
             // no packetization if there is nothing to transmit

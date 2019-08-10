@@ -116,6 +116,13 @@ void synclink_close(void)
     int sigs = TIOCM_RTS + TIOCM_DTR;
     if (synclink_fd != -1) {
         rc = ioctl(synclink_fd, TIOCMBIC, &sigs);
+				// Disable transmitter
+				int enable = 0;
+				rc = ioctl(synclink_fd, MGSL_IOCTXENABLE, enable);
+				if (rc < 0) {
+						blast_err("ioctl(MGSL_IOCRXENABLE) error=%d %s", errno, strerror(errno));
+						return;
+				}
         usleep(10000);
         rc = close(synclink_fd);
         blast_dbg("Closed synclink with return value %d", rc);

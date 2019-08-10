@@ -205,7 +205,7 @@ static void rec_send_values(void) {
 void rec_control(void) {
     static int rec_startup = 1;
     static int rec_trigger = 0;
-    blast_info("state 1 connected = %d", state[1].connected);
+    // blast_info("state 1 connected = %d", state[1].connected);
     if (CommandData.Labjack_Queue.lj_q_on == 1 && state[1].connected == 1) {
         if (rec_trigger == 3) { // turns off the power pulse after 1 second
             rec_init();

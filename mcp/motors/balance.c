@@ -52,7 +52,7 @@ typedef struct {
 	bal_move_type_t dir;
 	double i_el_avg;
 	int32_t pos;
-	uint8_t lims;
+	int lims;
 } balance_state_t;
 
 static balance_state_t balance_state;
@@ -174,7 +174,7 @@ void WriteBalance_5Hz(void)
 void DoBalance(struct ezbus* bus)
 {
     static int firsttime = 1;
-    char buffer[EZ_BUS_BUF_LEN];
+    // char buffer[EZ_BUS_BUF_LEN];
 
     if (firsttime) {
         blast_info("Init DoBalance");
@@ -186,7 +186,9 @@ void DoBalance(struct ezbus* bus)
         blast_info("Making sure the balance system is not running on startup.");
         EZBus_Stop(bus, balance_state.addr);
 	// Preamble is sent with all movement commands anyway, commenting for now, probably remove?
-        // EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
+	// PAW, 2018
+	// But if we send preamble now, it sets up limit switches correctly, does this give errors?
+        EZBus_MoveComm(bus, balance_state.addr, BALANCE_PREAMBLE);
         EZBus_Release(bus, balance_state.addr);
         balance_state.moving = 0;
         balance_state.dir = no_move;
@@ -232,9 +234,12 @@ void DoBalance(struct ezbus* bus)
         balance_state.moving = 0;
     }
 
-    if (balance_state.lims != 3) { // if either limit switch triggered, we're not moving
+    if ( ((balance_state.lims == 7) && (balance_state.dir == negative)) ||  // if we run into a limit switch
+	 ((balance_state.lims == 11) && (balance_state.dir == positive)) ) { // stop and clear goal
 	balance_state.do_move = 0;
-	// balance_state.moving = 0;
+	balance_state.dir = no_move;
+	balance_state.moving = 0;
+	CommandData.balance.mode = bal_rest;
     }
 
 // Write balance data

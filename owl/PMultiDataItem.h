@@ -40,7 +40,7 @@ public:
     friend class PMainWindow;
     PMultiDataItem(PBox*parent,QString caption) : PAbstractDataItem(parent,caption), _map(new PMap),_lastNStyle(0) {}
     PMultiDataItem(PBox*parent,PMultiDataItem* other) : PAbstractDataItem(parent,other), _map(other->_map),_lastNStyle(0) {}
-    void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
+    virtual void gdUpdate(GetData::Dirfile* dirFile,int lastNFrames);
     virtual PStyle* getPrevDataStyle() { return _lastNStyle?_lastNStyle:_defaultDataStyle; }
 };
 

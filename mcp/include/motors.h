@@ -72,9 +72,12 @@ typedef struct
     uint16_t network_status;      // network status
     uint32_t fault_reg;           // drive fault register
     uint16_t drive_info;          // motorinfo struct
-    uint16_t state;               // commanded state
+    uint16_t control_word_read;   // commanded state read back from controller
+    uint16_t control_word_write;  // commanded state
+    int16_t  phase_mode;          // motor phase mode
+    uint16_t phase_angle;         // motor phase angle
     uint32_t err_count;           // count of serious serial errors
-    uint8_t network_problem;         // check_for_network_problem returns 1
+    uint8_t network_problem;      // check_for_network_problem returns 1
 } motor_data_t;
 
 extern motor_data_t RWMotorData[3];
@@ -86,6 +89,7 @@ extern int motor_index;
 void command_motors(void);
 void update_axes_mode(void);
 void write_motor_channels_5hz(void);
+void write_motor_channels_100hz(void);
 void write_motor_channels_200hz(void);
 void store_axes_mode_data(void);
 

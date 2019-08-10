@@ -44,7 +44,7 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NUM_PSS 8
+#define NUM_PSS 6
 #define NUM_PSS_V 4
 
 #define NUM_MAGS 2
@@ -60,7 +60,6 @@ struct ACSDataStruct {
   double mag_y[NUM_MAGS];     // counts;
   double mag_z[NUM_MAGS];     // counts;
   double pss_i[NUM_PSS][NUM_PSS_V]; // pss voltage
-  double enc_elev;  // degrees
   double enc_motor_elev;  // degrees
   double clin_elev; // counts
   double ifel_gy;   // deg/s
@@ -109,6 +108,7 @@ struct PointingDataStruct {
   time_t lst;
   time_t unix_lsd;  // local sidereal date in seconds
 
+  bool mag_ok[NUM_MAGS];   // flag
   double mag_az[NUM_MAGS];   // degrees
   double mag_az_raw[NUM_MAGS];   // degrees
   double mag_el[NUM_MAGS];   // degrees
@@ -121,6 +121,8 @@ struct PointingDataStruct {
   double offset_ifyawmag_gy[NUM_MAGS];
   double offset_ifrolldgps_gy;
   double offset_ifyawdgps_gy;
+  double offset_ifelmotenc_gy;
+  double offset_ifelclin_gy;
   double dgps_az_raw;   // degrees
   double dgps_az;   // degrees
   double dgps_sigma;   // degrees
@@ -132,20 +134,21 @@ struct PointingDataStruct {
   int pss_ok;
   int dgps_ok;
   double pss_az;
-  double pss_el;
+  double pss_el; // not used, as far as I can tell -PAW 2018/12/23
 
-  double pss1_azraw; // degrees
-  double pss1_elraw; // degrees
-  double pss1_snr;
-  double pss2_azraw; // degrees
-  double pss2_elraw; // degrees
-  double pss2_snr;
+  // solutions for individual sensors, from PSSConvert
+  double pss_azraw[NUM_PSS]; // degrees
+  double pss_elraw[NUM_PSS]; // degrees
+  // weighted solution for the entire array, from PSSConvert
+  double pss_array_azraw, pss_array_elraw;
+  double pss_snr[NUM_PSS];
   double pss_sigma;
   double offset_ifrollpss_gy;
   double offset_ifyawpss_gy;
 
   double xsc_az[2];
   double xsc_el[2];
+  double xsc_var[2];
   double xsc_sigma[2];
   double offset_ifel_gy_xsc[2];
   double offset_ifyaw_gy_xsc[2];
@@ -155,14 +158,15 @@ struct PointingDataStruct {
   double estimated_xsc_ra_hours[2];
   double estimated_xsc_dec_deg[2];
 
-  double enc_el;
-  double enc_sigma;
+  bool enc_motor_ok;   // flag
   double enc_motor_el;
   double enc_motor_sigma;
 
+  double clin_ok;
   double clin_el;
   double clin_el_lut;
   double clin_sigma;
+  uint8_t recv_shared_data;   // flag
 
   bool requested_el_out_of_bounds;
   bool az_destination_capped;
@@ -198,6 +202,12 @@ struct PointingDataStruct {
   double d_az_xsc1;
   double prev_sol_az_xsc1;
   double prev_sol_el_xsc1;
+  double autotrim_rate_xsc;
+  uint8_t fresh;
+  double new_az;
+  double new_el;
+  double weight_az;
+  double weight_el;
 };
 
 extern struct PointingDataStruct PointingData[3];

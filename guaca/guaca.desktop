@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=guaca
+Icon=/usr/share/icons/hicolor/scalable/apps/guaca.svg
+MimeType=application/x-guaca;
+Categories=Qt;Science;
+Name=Guaca
+GenericName=Mole Wrapper

@@ -30,10 +30,12 @@
 #define NORTH_IP "192.168.1.3"
 #define SOUTH_IP "192.168.1.4"
 #define DATA_SHARING_PORT 42224
-#define DATA_SHARING_LINKLIST "/data/etc/linklists/shared.ll"
+#define FAST_DATA_SHARING_PORT 42524
 
 void data_sharing_init(linklist_t **);
 void share_data(E_RATE);
 void share_superframe(uint8_t *);
+void send_fast_data();
+bool recv_fast_data();
 
 #endif /* INCLUDE_DATA_SHARING_SERVER_H_ */

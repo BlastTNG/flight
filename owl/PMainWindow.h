@@ -24,15 +24,20 @@
 #include <QScrollArea>
 #include <QSystemSemaphore>
 #include <QSettings>
+#include <QMimeData>
+#include <time.h>
 #include "PAbstractDataItem.h"
 #include "PObject.h"
 #include "PBox.h"
 #include "POwlAnimation.h"
-#include "PServer.h"
+
+#if QT_VERSION >= 0x050300
+#include "PWebServer.h"
+#endif
 
 #ifndef PMAINWINDOW_H
 #define PMAINWINDOW_H
-#define _WINDOW_TITLE_ "Owl 4.0-pre"
+#define _WINDOW_TITLE_ "Owl 5.x"
 
 struct PTimeDataItem;
 
@@ -47,6 +52,7 @@ class PMainWindow : public QMainWindow, public PObject
     Q_OBJECT
 protected:
     QTimer* _ut;
+    QTimer* _reset_timer;
     QObject* _currentObject;
     GetData::Dirfile* _dirfile;
     QString _dirfileFilename;
@@ -60,9 +66,17 @@ protected:
     QList<PBox*> _pboxList;
     QList<POwlAnimation*> _owlList;
     bool _dirty;
-    PServer* _server;
+    int _link;
+    void keyPressEvent ( QKeyEvent * e );
+    void contextMenuEvent(QContextMenuEvent * event);
+#if QT_VERSION >= 0x050300
+    PWebServer* _server;
+#endif
+
     bool _deleteScheduled;
     QSettings *_settings;
+    int _lastNFrames;
+    time_t _lastUpdate;
 
 public:
     friend QDataStream& operator<<(QDataStream&a,PMainWindow&b);
@@ -74,24 +88,24 @@ public:
     friend class PAbstractDataItem;
     friend class PMdiArea;
     static PMainWindow* me;
-    explicit PMainWindow(QString file="", QWidget *parent = 0);
+    explicit PMainWindow(int font_size, QString file="", QWidget *parent = 0);
     QObject* currentObject() const { return _currentObject; }
     virtual ~PMainWindow();
     void closeEvent(QCloseEvent *);
     bool mouseInactive();
-
-    static QString key;
+    QStringList linkNames();
 
 public slots:
     void readmeHelp();
-    void webServerHelp();
 
     void hideEverything();
     void addPBox();
     void setCurrentObject(PBox*);
     void setCurrentObject(PAbstractDataItem*);
+    void setCurrentObject(PExtremaDataItem*);
     void setCurrentObject(PNumberDataItem*);
     void setCurrentObject(PMultiDataItem*);
+    void setCurrentObject(PBitMultiDataItem*);
     void setCurrentObject(PTimeDataItem*);
     void setCurrentObject(POwlAnimation*);
 
@@ -100,6 +114,7 @@ public slots:
     void setFileLineEditValidity(QLineEdit* fle);
     void newLabelLogic(PAbstractDataItem* padi);
     void resetLink() {curfileLogic(true);}
+    void setLink(int link, QStringList linkNames);
 
     void extremaLogic(QString);
     void extremaXHighLogic(double);
@@ -109,6 +124,7 @@ public slots:
 
     void showInKst();
 
+    void bitmultiLogic();
     void multiLogic();
     void currowLogic();
 
@@ -121,6 +137,15 @@ public slots:
     void obviate(POwlAnimation* byeBye);
     void recognizeExtrema(PExtrema*);
 
+#if QT_VERSION >= 0x050300
+    int webPort();
+    void setWebPort(const int& port);
+    void setWebEnabled(const bool& enabled);
+#endif
+
+    QVariant state();
+    QVariant stateChanges();
+
     void activate();
 
     void owlSave();
@@ -128,7 +153,11 @@ public slots:
     void owlLoad(QString file="");
     void addOwl();
 
+    void setMDIMinSize(int w, int h);
+
+    void showToolbar(bool show);
 private:
+    QVariant _data();
     Ui::PMainWindow *ui;
 };
 

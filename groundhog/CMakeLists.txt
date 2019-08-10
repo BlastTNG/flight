@@ -59,42 +59,25 @@ find_package (Threads)
 # Find ExternalProject module
 include (ExternalProject)
 
-# Find glib    
-pkg_check_modules(PC_GLIB  glib-2.0)
-set(GLIB_DEFINITIONS ${PC_GLIB_CFLAGS_OTHER})
+find_path(BLAST_CONFIG NAMES tx_struct_tng.c
+          HINTS ${PROJECT_SOURCE_DIR}/../blast_config REQUIRED)
+IF(BLAST_CONFIG)
+		message("Have blast_config")
+    set(MAKE_BLAST True)
+    add_definitions(-DMAKE_BLAST)
+    include(${PROJECT_SOURCE_DIR}/blast/CMakeLists.txt)
+ENDIF()
 
-find_path(GLIB_INCLUDE_DIR NAMES glib.h
-          HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 REQUIRED)
-find_path(GLIBCONFIG_INCLUDE_DIR NAMES glibconfig.h
-          HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES glib-2.0 REQUIRED)
-find_library(GLIB_LIBRARY NAMES glib-2.0 libglib-2.0
-            HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS} REQUIRED)
-IF(NOT GLIB_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find glib.h.  Is libglib2.0-dev installed?")
+find_path(BIT_CONFIG NAMES telemlist.bit
+          HINTS ${PROJECT_SOURCE_DIR}/../bit_config REQUIRED)
+IF(BIT_CONFIG)
+		message("Have bit_config")
+    set(MAKE_BIT True)
+    add_definitions(-DMAKE_BIT)
+    include(${PROJECT_SOURCE_DIR}/bit/CMakeLists.txt)
+    include(${PROJECT_SOURCE_DIR}/../common/CMakeLists.txt)
 ENDIF()
-IF(NOT GLIB_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libglib-2.0.  Is libglib2.0-0 installed?")
-ENDIF()
-include_directories(${GLIB_INCLUDE_DIR} ${GLIBCONFIG_INCLUDE_DIR})
 
-# Find mosquitto    
-pkg_check_modules(PC_MOSQ QUIET mosquitto)
-set(MOSQ_DEFINITIONS ${PC_MOSQ_CFLAGS_OTHER})
-
-find_path(MOSQ_INCLUDE_DIR NAMES mosquitto.h
-          HINTS ${PC_MOSQ_INCLUDEDIR} ${PC_MOSQ_INCLUDE_DIRS}
-          PATH_SUFFIXES mosquitto REQUIRED)
-find_library(MOSQ_LIBRARY NAMES mosquitto libmosquitto
-            HINTS ${PC_MOSQ_LIBDIR} ${PC_MOSQ_LIBRARY_DIRS} REQUIRED)
-IF(NOT MOSQ_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Did not find mosquitto.h.  Is libmosquitto-dev installed?")
-ENDIF()
-IF(NOT MOSQ_LIBRARY)  
-    MESSAGE(FATAL_ERROR "Did not find libmosquitto.  Is libmosquitto1 installed?")
-ENDIF()
-include_directories(${MOSQ_INCLUDE_DIR})
 
 # Find getdata    
 pkg_check_modules(PC_GD QUIET getdata)
@@ -111,84 +94,32 @@ IF(NOT GD_LIBRARY)
 ENDIF()
 include_directories(${GD_INCLUDE_DIR})
 
-# add linklist library
-set(LINKLIST_LIBRARY ${PROJECT_BINARY_DIR}/linklist/liblinklist.a)
-ExternalProject_Add(linklist
-  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/linklist
-  URL ${PROJECT_SOURCE_DIR}/../external_libs/linklist
-  INSTALL_COMMAND "")
-
-include_directories(${PROJECT_SOURCE_DIR}/../external_libs/linklist)
-
-# configure a header file to pass some of the CMake settings to the source code
-#configure_file (
-#  "${PROJECT_SOURCE_DIR}/groundhog_config.h.in"
-#  "${PROJECT_BINARY_DIR}/include/groundhog_config.h"
-#  )
+set(LIBLINKLIST_DIR "${PROJECT_SOURCE_DIR}/../liblinklist")
 
 # add machine directory for OSX builds (needs endian.h)
 include_directories ("/usr/include/machine")
-
 # add the binary tree to the search path for include files so that we will find decomd_config.h
-include_directories ("${PROJECT_BINARY_DIR}/include")
-
-set(COMMON_DIR "${PROJECT_SOURCE_DIR}/../common")
-set(COMMUNICATIONS_DIR "${PROJECT_SOURCE_DIR}/../mcp/communications")
-set(CONFIG_DIR "${PROJECT_SOURCE_DIR}/../blast_config")
-set(COMMS_DIR "${PROJECT_SOURCE_DIR}/../blast_comms")
-
 include_directories (
-    "${COMMON_DIR}/include"
-    "${COMMS_DIR}/include"
-    "${CONFIG_DIR}/include"
-    "${COMMUNICATIONS_DIR}/include"
-    )
+      "${LIBLINKLIST_DIR}"
+      "${PROJECT_BINARY_DIR}/include"
+      "${PROJECT_SOURCE_DIR}"
+      )
 
-# add common objects
-add_subdirectory(${COMMON_DIR} "${PROJECT_BINARY_DIR}/blast_common")
-add_subdirectory(${CONFIG_DIR} "${PROJECT_BINARY_DIR}/blast_config")
-# add asynchronous communication objects
-add_subdirectory(${COMMS_DIR} "${PROJECT_BINARY_DIR}/blast_comms")
-
-
-add_library (blast_common OBJECT ${GROUNDHOG_COMMON_SRCS} ${GROUNDHOG_COMMON_HEADERS})
-define_file_basename_for_sources(blast_common)
-
-add_library (blast_comms OBJECT ${COMMS_SRCS} ${COMMS_HEADERS})
-define_file_basename_for_sources(blast_comms)
-            
-add_executable (groundhog 
-    $<TARGET_OBJECTS:blast_common>
-    $<TARGET_OBJECTS:blast_comms>
-    ${PROJECT_SOURCE_DIR}/groundhog.c
-    ${PROJECT_SOURCE_DIR}/decom_pci.h
-    ${PROJECT_SOURCE_DIR}/groundhog.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.h
-    ${PROJECT_SOURCE_DIR}/groundhog_framing.c
-    ${PROJECT_SOURCE_DIR}/groundhog_biphase.c
-    ${PROJECT_SOURCE_DIR}/groundhog_pilot.c
-    ${PROJECT_SOURCE_DIR}/groundhog_highrate.c
-    ) 
-
-define_file_basename_for_sources(groundhog)
-
-target_link_libraries(groundhog
-    ${GLIB_LIBRARY}  
-    ${GD_LIBRARY}
-    ${MOSQ_LIBRARY} 
-    ${LINKLIST_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT} 
-    ssl crypto
-    )
-
-set(check_files ${FRAME_SRCS} ${GROUNDHOG_COMMON_SRCS} ${COMMS_SRCS} 
-    groundhog.c groundhog_biphase.c groundhog_pilot.c groundhog_highrate.c
-    ${FRAME_HEADERS} ${GROUNDHOG_COMMON_HEADERS} ${COMMS_HEADERS}
+# add common linklist objects
+add_subdirectory(${LIBLINKLIST_DIR} "${PROJECT_BINARY_DIR}/liblinklist")
+add_library (liblinklist OBJECT ${LL_SOURCES} ${LL_HEADERS})
+define_file_basename_for_sources(liblinklist)
+set(COMMON_OBJECTS
+    $<TARGET_OBJECTS:liblinklist>
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.c
+    ${PROJECT_SOURCE_DIR}/groundhog_funcs.h
    )
 
 
-install(TARGETS groundhog DESTINATION bin)
+IF(NOT MAKE_BLAST AND NOT MAKE_BIT)
+		message("No _config directories found. No executable compiled.")
+ENDIF()
+
 install(DIRECTORY DESTINATION "/data/rawdir"
         DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 install(DIRECTORY DESTINATION "/data/groundhog"

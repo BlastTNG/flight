@@ -54,19 +54,19 @@ struct GPSInfoStruct CSBFGPSData = {.longitude = 0.0};
 // should we write it to the frame?
 time_t csbf_gps_time;
 
-int csbf_setserial(const char *input_tty)
+int csbf_setserial(const char *input_tty, int verbosity)
 {
   int fd;
   struct termios term;
 
-  blast_info("Connecting to sip port %s...", input_tty);
+  if (verbosity > 0) blast_info("Connecting to sip port %s...", input_tty);
 
   if ((fd = open(input_tty, O_RDWR)) < 0) {
-    blast_err("Unable to open serial port");
+    if (verbosity > 0) blast_err("Unable to open serial port");
     return -1;
   }
   if (tcgetattr(fd, &term)) {
-    blast_err("Unable to get serial device attributes");
+    if (verbosity > 0) blast_err("Unable to get serial device attributes");
     return -1;
   }
 
@@ -81,19 +81,19 @@ int csbf_setserial(const char *input_tty)
   term.c_cflag |= CS8;
 
   if (cfsetospeed(&term, B19200)) {          /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial output speed");
+    if (verbosity > 0) blast_err("Error setting serial output speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (cfsetispeed(&term, B19200)) {         /*  <======= SET THE SPEED HERE */
-    blast_err("Error setting serial input speed");
+    if (verbosity > 0) blast_err("Error setting serial input speed");
     if (fd >= 0) close(fd);
     return -1;
   }
 
   if (tcsetattr(fd, TCSANOW, &term)) {
-    blast_err("Unable to set serial attributes");
+    if (verbosity > 0) blast_err("Unable to set serial attributes");
     if (fd >= 0) close(fd);
     return -1;
   }
@@ -110,7 +110,8 @@ static bool csbf_gps_verify_checksum(const char *m_buf, size_t m_linelen)
         checksum ^= m_buf[i];
     }
     if (recv_checksum != checksum) {
-        blast_info("Received invalid checksum from CSBF GPS Data! Expecting = %2x", recv_checksum);
+        blast_info("Received invalid checksum from CSBF GPS Data! Expecting = %2x, we received %2x",
+                   checksum, recv_checksum);
         return false;
     }
     return true;
@@ -123,6 +124,9 @@ static void process_gngga(const char *m_data) {
     double lat_mm;
     double lon_mm;
     float age_gps;
+    static int first_time = 1;
+    static int have_warned = 0;
+//    blast_info("Starting process_gngga");
     if (sscanf(m_data,
             "$GNGGA,"
                     "%*f,"      // UTC hhmmss.ss
@@ -138,35 +142,60 @@ static void process_gngga(const char *m_data) {
             &lat, &lat_mm, &lat_ns,
             &lon, &lon_mm, &lon_ew,
             &(CSBFGPSData.quality), &(CSBFGPSData.num_sat),
-            &(CSBFGPSData.altitude), &age_gps) == 10) {
+            &(CSBFGPSData.altitude), &age_gps) >= 9) {
             CSBFGPSData.latitude = (double)lat + lat_mm*GPS_MINS_TO_DEG;
             CSBFGPSData.longitude = (double)lon + lon_mm*GPS_MINS_TO_DEG;
             if (lat_ns == 'S') CSBFGPSData.latitude *= -1.0;
             if (lon_ew == 'W') CSBFGPSData.longitude *= -1.0;
-//         blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
-//                   CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
-//                   CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
         CSBFGPSData.isnew = 1;
+        have_warned = 0;
+         if (first_time) {
+             blast_info("Recieved first GNGGA packet:");
+             blast_info("Read GNGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
+                   CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
+                   CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+                   first_time = 0;
+        }
     } else {
-        blast_info("Read error: %s", m_data);
-        blast_info("Read GNGGA: lat = %d%lf%c, lon = %d%lf%c, qual = %d, num_sat = %d, alt = %lf, age =%f",
-                  lat, lat_mm, lat_ns, lon, lon_mm, lon_ew, CSBFGPSData.quality,
-                  CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+        if (!have_warned) {
+            blast_info("Read error: %s", m_data);
+            blast_info("Read GNGGA: lat = %d%lf%c, lon = %d%lf%c, qual = %d, num_sat = %d, alt = %lf, age =%f",
+                      lat, lat_mm, lat_ns, lon, lon_mm, lon_ew, CSBFGPSData.quality,
+                      CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+            have_warned = 1;
+        }
     }
 }
 
 static void process_gnhdt(const char *m_data)
 {
     // Sometimes we don't get heading information.  mcp needs to be able to handle both cases.
+    static int first_time = 1;
+    static int have_warned = 0;
+    double az_read = 0.0;
     size_t bytes_read = strnlen(m_data, 20);
     if (bytes_read < 14) {
-        // blast_info("Not enough characters.  We didn't get heading info.");
+        if (!have_warned) {
+            blast_info("Not enough characters for GNHDT.  We didn't get heading info.");
+            have_warned = 1;
+            CSBFGPSAz.att_ok = 0;
+        }
     } else {
-        sscanf(m_data, "$GNZDA,"
+        sscanf(m_data, "$GNHDT,"
             "%lf," // Heading (deg) x.x
             "%*c,", // True
-            &CSBFGPSAz.az);
-//             blast_info("Read heading = %lf", CSBFGPSAz.az);
+            &az_read);
+        if ((az_read <= 0.0) || (az_read >= 360.0)) {
+             // this almost certainly means we didn't read anything
+            CSBFGPSAz.att_ok = 0;
+        } else {
+            CSBFGPSAz.att_ok = 1;
+            CSBFGPSAz.az = az_read;
+        }
+        if (first_time) {
+            blast_info("Read GNHDT heading = %lf", az_read);
+            first_time = 0;
+        }
     }
 }
 
@@ -174,7 +203,10 @@ static void process_gnhdt(const char *m_data)
 static void process_gnzda(const char *m_data)
 {
 //    blast_info("Starting process_gnzda...");
+    static int first_time = 1;
+    static int have_warned = 0;
     struct tm ts;
+    // blast_info("Starting process_gnzda");
     sscanf(m_data, "$GNZDA,"
             "%2d%2d%2d.%*d,"
             "%d,"
@@ -193,9 +225,12 @@ static void process_gnzda(const char *m_data)
 
     ts.tm_isdst = 0;
     ts.tm_mon--; /* Jan is 0 in struct tm.tm_mon, not 1 */
-//     blast_info("Read GPSZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
-//                   ts.tm_hour, ts.tm_min, ts.tm_sec,
-//                   ts.tm_mday, ts.tm_mon, ts.tm_year);
+    if (first_time) {
+        blast_info("Read GNDZA: hr = %2d, min = %2d, sec = %2d, mday = %d, mon = %d, year =%d",
+                   ts.tm_hour, ts.tm_min, ts.tm_sec,
+                   ts.tm_mday, ts.tm_mon, ts.tm_year);
+        first_time = 0;
+    }
 
     csbf_gps_time = mktime(&ts);
 }
@@ -209,6 +244,8 @@ void * DGPSMonitor(void * arg)
     unsigned char buf;
     char indata[128];
     uint16_t i_char = 0;
+    static int has_warned = 0;
+    static int first_time = 1;
     e_dgps_read_status readstage = DGPS_WAIT_FOR_START;
     typedef struct
     {
@@ -222,16 +259,18 @@ void * DGPSMonitor(void * arg)
                                   { NULL, "" } };
     snprintf(tname, sizeof(tname), "DGPS");
     nameThread(tname);
-
+    blast_startup("Starting DGPSMonitor thread.");
     for (;;) {
         usleep(10000); /* sleep for 10ms */
         // wait for a valid file descriptor
-    		while (get_serial_fd) {
-            if ((tty_fd = csbf_setserial(CSBFGPSCOM)) >= 0) {
+        while (get_serial_fd) {
+            if ((tty_fd = csbf_setserial(CSBFGPSCOM, !has_warned)) >= 0) {
                 break;
             }
+            has_warned = 1;
             sleep(5);
         }
+        has_warned = 0;
         get_serial_fd = 0;
         /* Loop until data come in */
         while (read(tty_fd, &buf, 1) <= 0) {
@@ -252,13 +291,19 @@ void * DGPSMonitor(void * arg)
         indata[i_char] = buf;
         if (buf == '\r') {
             indata[i_char] = '\0'; // Terminate with '\0' instead of '\r'
-//            blast_info("Finished reading packet %s", indata);
+            if (first_time) {
+                blast_info("Finished reading packet %s", indata);
+            }
             if (!csbf_gps_verify_checksum(indata, i_char)) {
                 blast_err("checksum failed");
             } else {
                 for (nmea_handler_t *handler = handlers; handler->proc; handler++) {
                     if (!strncmp(indata, handler->str, (int) strlen(handler->str)-1)) handler->proc(indata);
                 }
+            }
+            if (first_time) {
+                blast_info("Finished calling the handlers");
+                first_time = 0;
             }
         }
         i_char++;

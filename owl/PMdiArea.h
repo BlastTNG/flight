@@ -46,11 +46,14 @@ public:
         pal.setColor(backgroundRole(),"white");
         setPalette(pal);
         setAutoFillBackground(1);
+        _H = fontMetrics().height();
     }
+    void set_H(int h_in) {_H = h_in;}
 
 protected:
     void dragEnterEvent(QDragEnterEvent *ev);
     void dropEvent(QDropEvent *ev);
+    int _H;
 
 public slots:
     void createPBox(int x=0,int y=0,PBox*c_pbox=0);

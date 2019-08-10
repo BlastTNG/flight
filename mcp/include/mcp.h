@@ -48,15 +48,12 @@ extern struct tm start_time;
 
 #define DEFAULT_INCHARGE !SouthIAm
 
-#define MCP_FREQ 24400
-#define MCP_NS_PERIOD (1000000000 / MCP_FREQ)
-#define HZ_COUNTER(_freq) (MCP_FREQ / (_freq))
-
 // telemetry defines
-#define NUM_TELEMETRIES 3
+#define NUM_TELEMETRIES 4
 #define PILOT_TELEMETRY_INDEX 0
 #define BI0_TELEMETRY_INDEX 1
 #define HIGHRATE_TELEMETRY_INDEX 2
+#define SBD_TELEMETRY_INDEX 3
 
 // Max Slew Veto
 #define VETO_MAX 60000

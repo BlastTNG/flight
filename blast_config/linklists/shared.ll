@@ -38,6 +38,10 @@ time_flc_n
 time_flc_s
 timeout_n
 timeout_s
+hdd_disk_space_n
+hdd_disk_space_s
+hdd_disk_index_n
+hdd_disk_index_s
 
 test_values
 heater_status_write
@@ -167,12 +171,6 @@ current_rw_mot
 current_hd_pv
 current_gyros
 current_data_transmit
-current_if1
-current_if2
-current_if3
-current_if4
-current_if5
-current_if6
 
 clin_of_x
 clin_of_y
@@ -193,9 +191,17 @@ status_cal_lamp
 x_mag1_n
 y_mag1_n
 z_mag1_n
+status_mag1_n
+err_count_mag1_n
+timeout_count_mag1_n
+reset_count_mag1_n
 x_mag2_s
 y_mag2_s
 z_mag2_s
+status_mag2_s
+err_count_mag2_s
+timeout_count_mag2_s
+reset_count_mag2_s
 
 pos_lock
 state_lock
@@ -205,3 +211,15 @@ pin_in_lock
 mc_rw_vel
 mc_el_motor_pos
 mc_piv_pos
+
+offset_ifel_gy
+offset_ifroll_gy
+offset_ifyaw_gy
+offset_ifrollmag1_gy
+offset_ifyawmag1_gy
+offset_ifrolldgps_gy
+offset_ifyawdgps_gy
+offset_ifrollmag2_gy
+offset_ifyawmag2_gy
+offset_ifrollpss_gy
+offset_ifyawpss_gy

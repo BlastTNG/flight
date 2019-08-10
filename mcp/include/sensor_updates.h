@@ -10,5 +10,6 @@
 // defining all of the channels for sun sensors
 
 void update_sun_sensors(void);
+void process_sun_sensors(void);
 
 #endif /* sensor_updates_h */

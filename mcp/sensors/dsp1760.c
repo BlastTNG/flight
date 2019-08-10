@@ -98,6 +98,7 @@ typedef struct
     uint32_t        gyro_valid_packet_count[3];
     uint8_t         index;
     int16_t         temp;
+    uint8_t         has_warned;
     dsp1760_std_t   last_pkt;
     float           gyro_input[3][DSP1760_NPOLES+1];
 } dsp_storage_t;
@@ -224,12 +225,15 @@ static int activate_921k_clock(uint8_t m_serial)
  */
 static inline void dsp1760_disconnect(ph_serial_t *m_serial, dsp_storage_t *gyro)
 {
-    blast_info("Will attempt to reconnect to Gyro box %d in %d seconds", gyro->which, gyro->backoff_sec);
     ph_serial_enable(m_serial, false);
     ph_serial_free(m_serial);
     gyro_comm[gyro->which] = NULL;
     ph_job_set_timer_in_ms(&gyro->connect_job, gyro->backoff_sec * 1000);
-    if (gyro->backoff_sec < max_backoff_sec) gyro->backoff_sec *= 2;
+    if (gyro->backoff_sec < max_backoff_sec) {
+        gyro->backoff_sec *= 2;
+        blast_info("Will attempt to reconnect to Gyro box %d every %d seconds",
+                    gyro->which, gyro->backoff_sec);
+    }
     if (gyro->backoff_sec > max_backoff_sec) gyro->backoff_sec = max_backoff_sec;
 }
 
@@ -253,12 +257,15 @@ static void dsp1760_process_data(ph_serial_t *m_serial, ph_iomask_t m_why, void 
     }
 
     if ((m_why & PH_IOMASK_TIME) && !(m_why & PH_IOMASK_READ)) {
-        blast_err("Timeout on Gyro box %d", gyro->which);
+        if (!gyro->has_warned) blast_err("Timeout on Gyro box %d", gyro->which);
+        gyro->has_warned = 1;
         dsp1760_disconnect(m_serial, gyro);
         return;
     }
 
     if (!(m_why & PH_IOMASK_READ)) return;
+
+    gyro->has_warned = 0;
 
     /// We loop here to catch multiple packets that may have been delivered since we last read
     while (ph_bufq_discard_until(m_serial->rbuf, header, 4)) {
@@ -380,6 +387,7 @@ static void dsp1760_connect_gyro(ph_job_t *m_job, ph_iomask_t m_why, void *m_dat
  */
 void dsp1760_reset_gyro(int m_which)
 {
+    blast_info("Setting want_reset = true for gyro %d", m_which);
     gyro_data[m_which].want_reset = true;
 }
 

@@ -26,7 +26,7 @@ add_definitions(-DKATCP_USE_FLOATS)
 # perform redundant checks, abort if things don't look alright
 # enabling this reduces performance and makes the system less
 # resistant to failures, but will also notice failures sooner
-add_definitions(-DKATCP_CONSISTENCY_CHECKS)
+# add_definitions(-DKATCP_CONSISTENCY_CHECKS)
 
 # log selected noncritical failures to stderr 
 add_definitions(-DKATCP_STDERR_ERRORS)

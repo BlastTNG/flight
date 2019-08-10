@@ -30,7 +30,6 @@ extern int mcp_initial_controls;
 double ReadCalData(channel_t *m_ch);
 void StoreData(void);
 void WriteAux(void);
-void WriteChatter(void);
 void SetGyroMask(void);
 
 #endif

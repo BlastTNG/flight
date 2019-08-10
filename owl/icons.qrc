@@ -1,9 +1,22 @@
 <RCC>
     <qresource prefix="/icons">
-        <file>owl0.png</file>
-        <file>owl1.png</file>
-        <file>owl2.png</file>
-        <file>owl3.png</file>
-        <file>owl-1.png</file>
+        <file>icons/document-edit.png</file>
+        <file>icons/document-open.png</file>
+        <file>icons/document-save-as.png</file>
+        <file>icons/document-save.png</file>
+        <file>icons/owl-icon.png</file>
+        <file>icons/view-refresh.png</file>
+        <file>icons/link.png</file>
+        <file>icons/server.png</file>
+        <file>icons/Owl0.png</file>
+        <file>icons/Owl1.png</file>
+        <file>icons/Owl2.png</file>
+        <file>icons/Owl3.png</file>
+        <file>icons/Owl-empty.png</file>
+        <file>icons/Owl0.svg</file>
+        <file>icons/Owl1.svg</file>
+        <file>icons/Owl2.svg</file>
+        <file>icons/Owl3.svg</file>
+        <file>icons/Owl-empty.svg</file>
     </qresource>
 </RCC>

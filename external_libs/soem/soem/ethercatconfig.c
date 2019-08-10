@@ -867,10 +867,11 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
    uint16 currentsegment = 0;
    uint32 segmentsize = 0;
    int thrn, thrc;
-
+   printf("beginning ecx_config_map_group\n",slave);
    if ((*(context->slavecount) > 0) && (group < context->maxgroup))
    {   
       EC_PRINT("ec_config_map_group IOmap:%p group:%d\n", pIOmap, group);
+      printf("ec_config_map_group IOmap:%p group:%d\n", pIOmap, group);
       LogAddr = context->grouplist[group].logstartaddr;
       oLogAddr = LogAddr;
       BitPos = 0;
@@ -902,6 +903,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                ecx_mapt[thrn].context = context;
                ecx_mapt[thrn].slave = slave;
                ecx_mapt[thrn].running = 1;
+               printf("mapping slave %d, group %d\n", slave, group);
                osal_thread_create(&(ecx_threadh[thrn]), 128000, 
                   &ecx_mapper_thread, &(ecx_mapt[thrn]));
             }
@@ -929,6 +931,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
       /* do input mapping of slave and program FMMUs */
       for (slave = 1; slave <= *(context->slavecount); slave++)
       {
+         printf("do input mapping of slave %d and program FMMUs\n", slave);
          configadr = context->slavelist[slave].configadr;
 
          if (!group || (group == context->slavelist[slave].group))
@@ -940,16 +943,20 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
             EndAddr = 0;
             FMMUsize = 0;
             FMMUdone = 0;
+            printf("starting group %d\n", group);
             /* create output mapping */
             if (context->slavelist[slave].Obits)
             {
                EC_PRINT("  OUTPUT MAPPING\n");
+               printf("slave %d Obits %d\n", slave, context->slavelist[slave].Obits);
                /* search for SM that contribute to the output mapping */
                while ( (SMc < (EC_MAXSM - 1)) && (FMMUdone < ((context->slavelist[slave].Obits + 7) / 8)))
                {   
                   EC_PRINT("    FMMU %d\n", FMMUc);
+                  printf("    FMMU %d\n", FMMUc);
                   while ( (SMc < (EC_MAXSM - 1)) && (context->slavelist[slave].SMtype[SMc] != 3)) SMc++;
                   EC_PRINT("      SM%d\n", SMc);
+                  printf("    FMMU %d\n", FMMUc);
                   context->slavelist[slave].FMMU[FMMUc].PhysStart = 
                      context->slavelist[slave].SM[SMc].StartAddr;
                   SMlength = etohs(context->slavelist[slave].SM[SMc].SMlength);
@@ -966,6 +973,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                         break;
                      }
                      EC_PRINT("      SM%d\n", SMc);
+                     printf("      SM%d\n", SMc);
                      SMlength = etohs(context->slavelist[slave].SM[SMc].SMlength);
                      ByteCount += SMlength;
                      BitCount += SMlength * 8;
@@ -977,6 +985,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                      context->slavelist[slave].FMMU[FMMUc].LogStart = htoel(LogAddr);
                      context->slavelist[slave].FMMU[FMMUc].LogStartbit = 0;
 
+                     printf("byte oriented slave, seth had a TODO here.\n");
                      /** TODO (seth): Static packet sizing with 8 bytes per slave */
                      FMMUsize = ByteCount;
                      if ((FMMUsize + FMMUdone)> (int)context->slavelist[slave].Obytes)
@@ -999,12 +1008,18 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                   {   
                      context->slavelist[slave].outputs = 
                         (uint8 *)(pIOmap) + etohl(context->slavelist[slave].FMMU[FMMUc].LogStart);
+                     printf("**** ecx_config_map_group configuring set outputs for slave %d \n",slave);
                      context->slavelist[slave].Ostartbit = 
                         context->slavelist[slave].FMMU[FMMUc].LogStartbit;
                      EC_PRINT("    slave %d Outputs %p startbit %d\n", 
                         slave, 
                         context->slavelist[slave].outputs, 
                         context->slavelist[slave].Ostartbit);
+                     printf("outputs %p LogStart %d Ostartbit =%d, FMMUc = %d\n", 
+                            context->slavelist[slave].outputs,
+                            etohl(context->slavelist[slave].FMMU[FMMUc].LogStart),
+                            context->slavelist[slave].Ostartbit,
+                            FMMUc);
                   }
                   FMMUc++;
                }   
@@ -1029,6 +1044,7 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
       }
 
       context->grouplist[group].outputs = pIOmap;
+      printf("**** Setting outputs for group %d to pIOmap: %p", group, context->grouplist[group].outputs);
       context->grouplist[group].Obytes = LogAddr;
       context->grouplist[group].nsegments = currentsegment + 1;
       context->grouplist[group].Isegment = currentsegment;
@@ -1036,12 +1052,17 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
       if (!group)
       {   
          context->slavelist[0].outputs = pIOmap;
+         printf("**** There's no group! Setting outputs for slave 0 to pIOmap: %p", context->grouplist[group].outputs);
          context->slavelist[0].Obytes = LogAddr; /* store output bytes in master record */
       }   
+      printf("Setting outputs to pIOmap %p %d %d %d %d\n",
+            pIOmap, LogAddr, currentsegment + 1, currentsegment, segmentsize);
       
       /* do input mapping of slave and program FMMUs */
+      printf("do input mapping of slave and program FMMUs\n");
       for (slave = 1; slave <= *(context->slavecount); slave++)
       {
+         printf("Starting slave %d\n", slave);
          configadr = context->slavelist[slave].configadr;
          if (!group || (group == context->slavelist[slave].group))
          {
@@ -1060,12 +1081,15 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
             if (context->slavelist[slave].Ibits)
             {
                EC_PRINT(" =Slave %d, INPUT MAPPING\n", slave);
+               printf(" =Slave %d, INPUT MAPPING\n", slave);
                /* search for SM that contribute to the input mapping */
                while ( (SMc < (EC_MAXSM - 1)) && (FMMUdone < ((context->slavelist[slave].Ibits + 7) / 8)))
                {   
                   EC_PRINT("    FMMU %d\n", FMMUc);
+                  printf("    FMMU %d\n", FMMUc);
                   while ( (SMc < (EC_MAXSM - 1)) && (context->slavelist[slave].SMtype[SMc] != 4)) SMc++;
                   EC_PRINT("      SM%d\n", SMc);
+                  printf("      SM%d\n", SMc);
                   context->slavelist[slave].FMMU[FMMUc].PhysStart = 
                      context->slavelist[slave].SM[SMc].StartAddr;
                   SMlength = etohs(context->slavelist[slave].SM[SMc].SMlength);
@@ -1104,6 +1128,9 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
                      context->slavelist[slave].Istartbit = 
                         context->slavelist[slave].FMMU[FMMUc].LogStartbit;
                      EC_PRINT("    Inputs %p startbit %d\n", 
+                        context->slavelist[slave].inputs, 
+                        context->slavelist[slave].Istartbit);
+                     printf("    Inputs %p startbit %d\n", 
                         context->slavelist[slave].inputs, 
                         context->slavelist[slave].Istartbit);
                   }
@@ -1166,10 +1193,12 @@ int ecx_config_map_group(ecx_contextt *context, void *pIOmap, uint8 group)
          context->slavelist[0].Ibytes = LogAddr - context->slavelist[0].Obytes; /* store input bytes in master record */
       }   
 
-      EC_PRINT("IOmapSize %d\n", LogAddr - context->grouplist[group].logstartaddr);      
+      EC_PRINT("IOmapSize %d\n", LogAddr - context->grouplist[group].logstartaddr);  
+      printf("Returning IOmapSize %d\n", LogAddr - context->grouplist[group].logstartaddr);
+      printf("pIOmap pointer at return %p\n", pIOmap);
    
       return (LogAddr - context->grouplist[group].logstartaddr);
-   }
+   } // if ((*(context->slavecount) > 0) && (group < context->maxgroup))
    
    return 0;
 }   
