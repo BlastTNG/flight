@@ -49,7 +49,7 @@
 #define STAGEX_ID EZ_WHO_S6
 #define STAGEY_ID EZ_WHO_S7
 
-#define STAGE_BUS_ACCEL 2
+#define STAGE_BUS_ACCEL 200
 #define STAGE_BUS_IHOLD 20
 #define STAGE_BUS_IMOVE 75
 

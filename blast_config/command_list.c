@@ -878,8 +878,8 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,
     {
-      {"X destination", 0, 200000, 'l', "X_STAGE"},
-      {"Y destination", 0, 200000, 'l', "Y_STAGE"},
+      {"X destination", 0, 8000000, 'l', "X_STAGE"},
+      {"Y destination", 0, 8000000, 'l', "Y_STAGE"},
       {"X speed", 0, 100000, 'i', "X_VEL_STAGE"},
       {"Y speed", 0, 100000, 'i', "Y_VEL_STAGE"}
     }
@@ -887,35 +887,35 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
     GR_MISC, 4,
     {
-      {"X delta", -120000, 120000, 'l', "0"},
-      {"Y delta", -120000, 120000, 'l', "0"},
-      {"X speed", 0, 160000, 'i', "X_VEL_STAGE"},
-      {"Y speed", 0, 160000, 'i', "Y_VEL_STAGE"}
+      {"X delta", -1000000, 1000000, 'l', "0"},
+      {"Y delta", -1000000, 1000000, 'l', "0"},
+      {"X speed", 0, 100000, 'i', "X_VEL_STAGE"},
+      {"Y speed", 0, 100000, 'i', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 3,
     {
-      {"X center", 0, 2000000, 'l', "X_STAGE"},
-      {"delta X", 0, 800000, 'l', "NONE"},
-      {"X speed", 0, 100000, 'i', "X_VEL_STAGE"},
+      {"X center", 0, 8000000, 'l', "X_STAGE"},
+      {"delta X", 0, 4000000, 'l', "NONE"},
+      {"X speed", 0, 1000000, 'i', "X_VEL_STAGE"},
     }
   },
   {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 3,
     {
-      {"Y center", 0, 200000, 'l', "Y_STAGE"},
-      {"delta Y", 0, 80000, 'l', "NONE"},
-      {"Y speed", 0, 100000, 'i', "Y_VEL_STAGE"},
+      {"Y center", 0, 8000000, 'l', "Y_STAGE"},
+      {"delta Y", 0, 4000000, 'l', "NONE"},
+      {"Y speed", 0, 1000000, 'i', "Y_VEL_STAGE"},
     }
   },
   {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 7,
     {
-      {"X center", 0, 2000000, 'l', "X_STAGE"},
-      {"X Width", 0, 400000, 'i', "NONE"},
-      {"Y center", 0, 2000000, 'l', "Y_STAGE"},
-      {"Y Width", 0, 400000, 'i', "NONE"},
-      {"X Velocity", 0, 100000, 'i', "X_VEL_STAGE"},
-      {"Y Velocity", 0, 100000, 'i', "Y_VEL_STAGE"},
-      {"Step Size", 0, 400000, 'i', "NONE"},
+      {"X center", 0, 8000000, 'l', "X_STAGE"},
+      {"X Width", 0, 4000000, 'i', "NONE"},
+      {"Y center", 0, 8000000, 'l', "Y_STAGE"},
+      {"Y Width", 0, 4000000, 'i', "NONE"},
+      {"X Velocity", 0, 1000000, 'i', "X_VEL_STAGE"},
+      {"Y Velocity", 0, 1000000, 'i', "Y_VEL_STAGE"},
+      {"Step Size", 0, 4000000, 'i', "NONE"},
     }
   },
 

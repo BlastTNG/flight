@@ -27,7 +27,7 @@
 #ifndef INCLUDE_XYSTAGE_H_
 #define INCLUDE_XYSTAGE_H_
 
-#define XYSTAGE_PREAMBLE "j256n0" // set microstep res, do not use limit switches for now
+#define XYSTAGE_PREAMBLE "j256n2" // set microstep res, use limit switches
 
 void StoreStageBus(int index);
 void GoWait(struct ezbus *bus, int dest, int vel, int is_y);
