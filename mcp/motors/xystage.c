@@ -309,6 +309,8 @@ void ControlXYStage(struct ezbus* bus)
 	int xvel = CommandData.xystage.xvel;
 	int yvel = CommandData.xystage.yvel;
 	int step = CommandData.xystage.step;
+	// if we want the raster to only scan once (and therefore be faster) we can change the two initial GoWaits
+	// to go to a corner and then do only one call to Raster like the second one here
 	GoWait(bus, xcent, xvel, 0);
 	GoWait(bus, ycent - ysize, yvel, 1);
 	Raster(bus, xcent, xcent + xsize, 0, ycent + ysize, ycent - ysize,
