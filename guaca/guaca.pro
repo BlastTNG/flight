@@ -10,6 +10,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 QT += testlib
 
+QMAKE_CXXFLAGS += -std=c++0x
+
 TARGET = guaca
 TEMPLATE = app
 
@@ -33,23 +35,27 @@ INCLUDEPATH += ../common/include/ \
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    ../external_libs/linklist/linklist.c \
-    ../external_libs/linklist/linklist_compress.c \
-    ../external_libs/linklist/linklist_writer.c \
-    ../external_libs/linklist/linklist_connect.c \
-    ../common/CRC_func.c \
+    ../liblinklist/linklist.c \
+    ../liblinklist/linklist_compress.c \
+    ../liblinklist/linklist_writer.c \
+    ../liblinklist/linklist_connect.c \
+    options.cpp \
+    logscroll.cpp
 
 HEADERS  += mainwindow.h \
-    ../external_libs/linklist/linklist.h \
-    ../external_libs/linklist/linklist_compress.h \
-    ../external_libs/linklist/linklist_writer.h \
-    ../external_libs/linklist/linklist_connect.h \
-    ../common/include/CRC_func.h \
+    ../liblinklist/linklist.h \
+    ../liblinklist/linklist_compress.h \
+    ../liblinklist/linklist_writer.h \
+    ../liblinklist/linklist_connect.h \
+    options.h \
+    logscroll.h
 
 LIBS += -lssl -lcrypto
 
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    options.ui \
+    logscroll.ui
 
 RESOURCES += \
     guacapics.qrc

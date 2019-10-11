@@ -139,59 +139,61 @@ void user_file_select(linklist_tcpconn_t * tc, char *linklistname)
       linklist_err("Regex failed\n");
       return;
     }
-		for (i=0;i<numlink;i++) {
-			if (regexec(&regex, name[i], 0, NULL, 0) != REG_NOMATCH) {
-				strncpy(linklistname, name[i], LINKLIST_MAX_FILENAME_SIZE);
+    for (i=0;i<numlink;i++) {
+      if (regexec(&regex, name[i], 0, NULL, 0) != REG_NOMATCH) {
+        strncpy(linklistname, name[i], LINKLIST_MAX_FILENAME_SIZE);
 
         char temp[LINKLIST_SHORT_FILENAME_SIZE];
-        snprintf(temp, LINKLIST_MAX_FILENAME_SIZE, "%s", name[n_match]);
-        snprintf(name[n_match], LINKLIST_MAX_FILENAME_SIZE, "%s", name[i]);
-        snprintf(name[i], LINKLIST_MAX_FILENAME_SIZE, "%s", temp);
+        snprintf(temp, LINKLIST_SHORT_FILENAME_SIZE, "%s", name[n_match]);
+        snprintf(name[n_match], LINKLIST_SHORT_FILENAME_SIZE, "%s", name[i]);
+        snprintf(name[i], LINKLIST_SHORT_FILENAME_SIZE, "%s", temp);
 
-				n_match++;
-			}
-		}
+        n_match++;
+      }
+    }
     regfree(&regex);
-	  linklist_info("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
+    linklist_info("Found %d matches for regex entry \"%s\"\n\n", n_match, str_match);
   }
 
   // don't have exactly 1 matching entry, so prompt user to select
   if ((n_match != 1) || (strlen(linklistname) == 0)) {
-		// deal with display widths
+    // deal with display widths
     if (n_match) numlink = n_match;
-		int n = (numlink-1)/3+1;
-		int width[3] = {0};
+    int n = (numlink-1)/3+1;
+    int width[3] = {0};
 
-		for (i=0;i<n;i++) {
-			if (strlen(name[i]) > width[0]) width[0] = strlen(name[i]);
-			if (strlen(name[i+n]) > width[1]) width[1] = strlen(name[i+n]);
-			if (strlen(name[i+n+n]) > width[2]) width[2] = strlen(name[i+n+n]);
-		}
-		for (i=0;i<3;i++) width[i] += 3;
+    for (i=0;i<n;i++) {
+      if ((int) strlen(name[i]) > width[0]) width[0] = strlen(name[i]);
+      if ((int) strlen(name[i+n]) > width[1]) width[1] = strlen(name[i+n]);
+      if ((int) strlen(name[i+n+n]) > width[2]) width[2] = strlen(name[i+n+n]);
+    }
+    for (i=0;i<3;i++) width[i] += 3;
 
 
-		linklist_info("\nSelect archive file:\n\n");
+    linklist_info("\nSelect archive file:\n\n");
 
-		for (i=0;i<n;i++) {
-			if (name[i][0]) printf("%.2d: %s",i,name[i]);
-			for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
-			if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
-			for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
-			if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
-			printf("\n");
-		}
+    for (i=0;i<n;i++) {
+      if (name[i][0]) printf("%.2d: %s",i,name[i]);
+      for (j = strlen(name[i]); j < width[0]; j++) printf(" ");
+      if (name[i+n][0]) printf("%.2d: %s",i+n,name[i+n]);
+      for (j = strlen(name[i+n]); j < width[1]; j++) printf(" ");
+      if (name[i+n+n][0]) printf("%.2d: %s",i+n+n,name[i+n+n]);
+      printf("\n");
+    }
 
-		while (1) {
-			char ta[10];
-			printf("\nFile number: ");
-			fscanf(stdin,"%s",ta);
-			int cn = atoi(ta);
-			if ((cn >= 0) && (cn < numlink)) {
-				strncpy(linklistname, name[cn], LINKLIST_MAX_FILENAME_SIZE);
-				break;
-			}
-			linklist_info("\nInvalid selection\n");
-		} 
+    while (1) {
+      char ta[10];
+      printf("\nFile number: ");
+      if (fscanf(stdin,"%s",ta) == 0) {
+        linklist_err("Unable to parse file number\n");
+      }
+      int cn = atoi(ta);
+      if ((cn >= 0) && (cn < numlink)) {
+        strncpy(linklistname, name[cn], LINKLIST_MAX_FILENAME_SIZE);
+        break;
+      }
+      linklist_info("\nInvalid selection\n");
+    } 
   }
   
   linklist_info("Archive file \"%s\" selected\n", linklistname);
@@ -365,7 +367,7 @@ char *get_real_file_name(char * real_name, char * symlink_name)
   strncpy(real_name, resolved_name+i+1, LINKLIST_MAX_FILENAME_SIZE);
 
   // strip the file extension
-  for (i = 0; i < strlen(real_name); i++) {
+  for (i = 0; i < (int) strlen(real_name); i++) {
     if (real_name[i] == '.') break;
   }
   real_name[i] = '\0';
@@ -379,7 +381,7 @@ void *connection_handler(void *arg)
   int sock = *((int *) arg);
   *(int *) arg = -1; // unlock server thread so new clients can be accepted
 
-  struct TCPCONN tc = {{0}};
+  struct TCPCONN tc = {0};
   tc.fd = sock;
 
   int read_size;
@@ -468,7 +470,7 @@ void *connection_handler(void *arg)
       // load archive names
       for (i = 0; i < n; i++) {
         int pos;
-        for (pos = 0; pos < strlen(dir[i]->d_name); pos++) {
+        for (pos = 0; pos < (int) strlen(dir[i]->d_name); pos++) {
           if (dir[i]->d_name[pos] == '.') break;
         }
         char tempc[LINKLIST_MAX_FILENAME_SIZE];
@@ -696,6 +698,8 @@ void *connection_handler(void *arg)
 
 void linklist_server(void * arg)
 {
+  (void) arg; // not used for now
+
   int client_sock, c;
   struct sockaddr_in server , client;
   int theport = serverport;
@@ -784,6 +788,21 @@ int connect_tcp(struct TCPCONN * tc)
     server_info.sin_port = htons(clientport);
     server_info.sin_addr = *((struct in_addr *)he->h_addr);
 
+    // Set non-blocking 
+    /*
+    long int arg = 0;
+    if((arg = fcntl(socket_fd, F_GETFL, NULL)) < 0) { 
+      fprintf(stderr, "Error fcntl(..., F_GETFL) (%s)\n", strerror(errno)); 
+      exit(0); 
+    } 
+    arg |= O_NONBLOCK; 
+    if( fcntl(socket_fd, F_SETFL, arg) < 0) { 
+      fprintf(stderr, "Error fcntl(..., F_SETFL) (%s)\n", strerror(errno)); 
+      exit(0); 
+    } 
+    */
+
+    // connect to the socket
     if (connect(socket_fd, (struct sockaddr *)&server_info, sizeof(struct sockaddr))<0) {
       connected = 0;
       close(socket_fd);
@@ -794,6 +813,21 @@ int connect_tcp(struct TCPCONN * tc)
       linklist_info("Connection refused...trying again\n");
       goto RETRY;
     }
+
+    /*
+    // Set to blocking mode again... 
+    if( (arg = fcntl(socket_fd, F_GETFL, NULL)) < 0) { 
+      fprintf(stderr, "Error fcntl(..., F_GETFL) (%s)\n", strerror(errno)); 
+      exit(0); 
+    } 
+    arg &= (~O_NONBLOCK); 
+    if( fcntl(socket_fd, F_SETFL, arg) < 0) { 
+      fprintf(stderr, "Error fcntl(..., F_SETFL) (%s)\n", strerror(errno)); 
+      exit(0); 
+    } 
+    */
+
+    // break since all was well
     break;
 
     RETRY : 
@@ -803,7 +837,9 @@ int connect_tcp(struct TCPCONN * tc)
     // try a new host if not in multi mole mode
     if ((numtries >= MAX_CONNECT_TRIES) && !(tc->flag & TCPCONN_LOOP)) {
       linklist_info("\nTry a different host: ");
-      fscanf(stdin,"%s",tc->ip);
+      if (fscanf(stdin,"%s",tc->ip) == 0) {
+        linklist_err("Unable to parse host\n");
+      }
       if (tc->ip[strlen(tc->ip)-1] == '\n') tc->ip[strlen(tc->ip)-1] = 0;
       numtries = 0;
     }
