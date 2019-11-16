@@ -33,6 +33,37 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="13" column="1">
+     <widget class="QCheckBox" name="server">
+      <property name="text">
+       <string>Start a mole server</string>
+      </property>
+     </widget>
+    </item>
+    <item row="16" column="0" colspan="2">
+     <widget class="QLabel" name="linkDir_3">
+      <property name="text">
+       <string>Remote hostname or address:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0" colspan="2">
+     <widget class="QLabel" name="linkDir_4">
+      <property name="text">
+       <string>Primary Link (/data/etc/mole.lnk):</string>
+      </property>
+     </widget>
+    </item>
+    <item row="17" column="0" colspan="2">
+     <widget class="QComboBox" name="remoteHost">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+     </widget>
+    </item>
     <item row="20" column="0">
      <widget class="QLabel" name="dance">
       <property name="sizePolicy">
@@ -58,27 +89,29 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="0" colspan="2">
-     <widget class="QLabel" name="linkDir_4">
-      <property name="text">
-       <string>Primary Link (/data/etc/mole.lnk):</string>
+    <item row="2" column="0" colspan="2">
+     <widget class="QListWidget" name="multiLinkSelect">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
-     </widget>
-    </item>
-    <item row="16" column="0" colspan="2">
-     <widget class="QLabel" name="linkDir_3">
-      <property name="text">
-       <string>Remote hostname or address:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="17" column="0" colspan="2">
-     <widget class="QComboBox" name="remoteHost">
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>30</height>
+        <height>150</height>
        </size>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QLabel" name="linkDir_2">
+      <property name="text">
+       <string>Frame Rewind:</string>
       </property>
      </widget>
     </item>
@@ -89,6 +122,29 @@
         <width>0</width>
         <height>30</height>
        </size>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0">
+     <widget class="QLineEdit" name="numRewind">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>100</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <widget class="QCheckBox" name="checksum">
+      <property name="text">
+       <string>Ignore checksums</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
@@ -120,20 +176,6 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="1">
-     <widget class="QCheckBox" name="backup">
-      <property name="text">
-       <string>Backup binary data</string>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="1">
-     <widget class="QCheckBox" name="server">
-      <property name="text">
-       <string>Start a mole server</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="0" colspan="2">
      <widget class="QLabel" name="linkDir">
       <property name="font">
@@ -146,52 +188,10 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="1">
-     <widget class="QCheckBox" name="checksum">
+    <item row="7" column="1">
+     <widget class="QCheckBox" name="backup">
       <property name="text">
-       <string>Ignore checksums</string>
-      </property>
-      <property name="checked">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QListWidget" name="multiLinkSelect">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>150</height>
-       </size>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::ExtendedSelection</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLineEdit" name="numRewind">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>30</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>100</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="linkDir_2">
-      <property name="text">
-       <string>Frame Rewind:</string>
+       <string>Backup binary data</string>
       </property>
      </widget>
     </item>
@@ -224,7 +224,7 @@
      <x>0</x>
      <y>0</y>
      <width>406</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -233,6 +233,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionSlave_to"/>
+    <addaction name="actionOptions"/>
     <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -242,7 +243,14 @@
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionPurge_old_data"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionClose">
@@ -263,6 +271,16 @@
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
+   </property>
+  </action>
+  <action name="actionPurge_old_data">
+   <property name="text">
+    <string>Purge old data...</string>
    </property>
   </action>
  </widget>

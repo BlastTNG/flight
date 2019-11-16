@@ -64,28 +64,36 @@ extern unsigned int ll_rawfile_default_fpf;
 
 // creates a symlink for the rawfile with the new name pointing to the ll_rawfile basename 
 void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
-  char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
-  char symname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char filename[LINKLIST_MAX_FILENAME_SIZE*2] = {0};
+  char symname[LINKLIST_MAX_FILENAME_SIZE*2] = {0};
 
-  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".00", newname);
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
   unlink(symname);
-  symlink(filename, symname);
+  if (symlink(filename, symname) < 0) {
+    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
+  }
 
-  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, newname);
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" SUPERFRAME_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
-  symlink(filename, symname);
+  if (symlink(filename, symname) < 0) {
+    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
+  }
 
-  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, newname);
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
-  symlink(filename, symname);
+  if (symlink(filename, symname) < 0) {
+    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
+  }
 
-  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s" CALSPECS_FORMAT_EXT, newname);
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" CALSPECS_FORMAT_EXT, newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
-  symlink(filename, symname);
+  if (symlink(filename, symname) < 0) {
+    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
+  }
 }
 
 void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
@@ -98,7 +106,7 @@ void make_linklist_rawfile_name(linklist_t * ll, char * filename) {
 
   int i;
   // strip possible extensions in name
-  for (i = 0; i < strlen(ll->name); i++) {
+  for (i = 0; i < (int) strlen(ll->name); i++) {
     if (ll->name[i] == '.') break;
   }
   strncpy(tempname, ll->name, i);
@@ -110,29 +118,29 @@ int seekend_linklist_rawfile(linklist_rawfile_t * ll_rawfile) {
   int fileindex = ll_rawfile->isseekend;
 
   if (ll_rawfile->isseekend < 0) {
-		// get the directory that the binary files are located
-		int i, pos;
-		char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
-		strcpy(filename, ll_rawfile->basename);
-		for (pos = strlen(filename)-1; pos >= 0; pos--) {
-			if (filename[pos] == '/') {
-				filename[pos] = '\0';
-				break;
-			}
-		}
+    // get the directory that the binary files are located
+    int i, pos;
+    char filename[LINKLIST_MAX_FILENAME_SIZE] = {0};
+    strcpy(filename, ll_rawfile->basename);
+    for (pos = strlen(filename)-1; pos >= 0; pos--) {
+      if (filename[pos] == '/') {
+        filename[pos] = '\0';
+        break;
+      }
+    }
 
-		// get list of the files in the directory
-		struct dirent **dir;
-		int n = scandir(filename, &dir, NULL, alphasort);
+    // get list of the files in the directory
+    struct dirent **dir;
+    int n = scandir(filename, &dir, NULL, alphasort);
 
-		// find the highest number binary fragment file with the matching name in the directory
-		snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
-		for (i = 0; i < n; i++) {
-			if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
-				int tmpindex = atoi(dir[i]->d_name+strlen(filename));
-				fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
-			}
-		}
+    // find the highest number binary fragment file with the matching name in the directory
+    snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".", ll_rawfile->basename+pos+1);
+    for (i = 0; i < n; i++) {
+      if (strncmp(filename, dir[i]->d_name, strlen(filename)) == 0) {
+        int tmpindex = atoi(dir[i]->d_name+strlen(filename));
+        fileindex = (tmpindex > fileindex) ? tmpindex : fileindex;
+      }
+    }
         if (fileindex < 0) fileindex = 0; // catch exception if no files exist
         ll_rawfile->isseekend = fileindex;
   }
@@ -162,15 +170,15 @@ int seek_linklist_rawfile(linklist_rawfile_t * ll_rawfile, unsigned int framenum
 
   if (fileindex != ll_rawfile->fileindex || !ll_rawfile->fp) {
     ll_rawfile->fileindex = fileindex;
-    if (fileindex > ll_rawfile->isseekend) ll_rawfile->isseekend = fileindex;
+    if ((int64_t) fileindex > ll_rawfile->isseekend) ll_rawfile->isseekend = fileindex;
 
     // close the old file 
     if (ll_rawfile->fp) {
       fclose(ll_rawfile->fp);
       ll_rawfile->fp = NULL;
     }
-    char filename[LINKLIST_MAX_FILENAME_SIZE];
-    snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, fileindex);
+    char filename[LINKLIST_MAX_FILENAME_SIZE*2];
+    snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".%.2u", ll_rawfile->basename, fileindex);
     ll_rawfile->fp = fpreopenb(filename);
     if (!ll_rawfile->fp) {
       linklist_err("Could not open raw linklist binary file %s\n", filename);
@@ -199,8 +207,8 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
   ll_rawfile->ll = ll;
   ll_rawfile->isseekend = -1;
 
-  char filename[LINKLIST_MAX_FILENAME_SIZE];
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
+  char filename[LINKLIST_MAX_FILENAME_SIZE*2];
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_FORMAT_EXT, ll_rawfile->basename);
 
   // get the number of frames per file (fpf)
   int fpf = read_linklist_formatfile_comment(filename, LINKLIST_FRAMES_PER_FILE_IND, "%d");
@@ -228,16 +236,16 @@ linklist_rawfile_t * open_linklist_rawfile_opt(char * basename, linklist_t * ll,
     }
   } else {
     // open and seek to the beginning of the linklist rawfile
-		if (seekend_linklist_rawfile(ll_rawfile) < 0) {
-			free(ll_rawfile);
-			return NULL;
-		}
-		if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
-			// write the superframe and linklist format files
-			write_linklist_format(ll_rawfile->ll, filename);
-			snprintf(filename, LINKLIST_MAX_FILENAME_SIZE, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
-			write_superframe_format(ll->superframe, filename);
-		}
+    if (seekend_linklist_rawfile(ll_rawfile) < 0) {
+      free(ll_rawfile);
+      return NULL;
+    }
+    if ((fpf < 0) || (blk_size < 0)) { // assume this is a new file, so write out the format files
+      // write the superframe and linklist format files
+      write_linklist_format(ll_rawfile->ll, filename);
+      snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
+      write_superframe_format(ll->superframe, filename);
+    }
   }
 
   return ll_rawfile;
@@ -320,6 +328,9 @@ int write_linklist_rawfile(linklist_rawfile_t * ll_rawfile, uint8_t * buffer) {
 }
 
 int write_linklist_rawfile_opt(linklist_rawfile_t * ll_rawfile, uint8_t * buffer, unsigned int flags) {
+
+  (void) flags; // unused for now
+
   if (!ll_rawfile) { 
     linklist_err("Null rawfile linklist");
     return -1;
@@ -378,8 +389,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   }
 
   // open formatfile
-  char formatname[LINKLIST_MAX_FILENAME_SIZE] = {0};
-  snprintf(formatname, LINKLIST_MAX_FILENAME_SIZE, "%s/format", ll_dirfile->filename);
+  char formatname[LINKLIST_MAX_FILENAME_SIZE+8] = {0};
+  snprintf(formatname, LINKLIST_MAX_FILENAME_SIZE+8, "%s/format", ll_dirfile->filename);
   FILE * formatfile = fopen(formatname, "w");
   fprintf(formatfile,"# Linklist Dirfile Format File\n");
   fprintf(formatfile,"# Auto-generated by linklist_writer\n\n");
@@ -393,80 +404,83 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   fprintf(formatfile, "/PROTECT none\n");
   fprintf(formatfile, "/ENCODING none\n");
 
+  // write the filename to the dirfile
+  fprintf(formatfile, "ll_filename STRING %s\n", ll_dirfile->filename);
+
   // generate binary files
   int i, j;
-  char binname[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char binname[LINKLIST_MAX_FILENAME_SIZE*2] = {0};
   linkentry_t * tlm_le = NULL; 
   int tlm_index = 0;
   superframe_entry_t * sfe = ll->superframe->entries;
 
   // map out all the linklist entries within the superframe
-  for (i = 0; i < ll->n_entries; i++) {
+  for (i = 0; i < (int) ll->n_entries; i++) {
     tlm_le = &(ll->items[i]);
     if ((tlm_le->tlm) && 
         (tlm_le->tlm != &block_entry) &&
         (tlm_le->tlm != &stream_entry)) {
-			if ((tlm_index = superframe_entry_get_index(tlm_le->tlm, sfe)) == -1) {
-				linklist_err("Could not get superframe index for \"%s\"\n", tlm_le->tlm->field);
-				continue;
-			}
+      if ((tlm_index = superframe_entry_get_index(tlm_le->tlm, sfe)) == -1) {
+        linklist_err("Could not get superframe index for \"%s\"\n", tlm_le->tlm->field);
+        continue;
+      }
       ll_dirfile->map[tlm_index] = 1; 
     }
   }
   
   // append linklist flags
-	ll->flags |= flags;
+  ll->flags |= flags;
 
   // add all of the items from the superframe
   // those in the linklist are at the full rate
   // those not in the linklist are at 1 spf
   ll_dirfile->bin = (FILE **) calloc(ll->superframe->n_entries, sizeof(FILE *));
-  for (i = 0; i < ll->superframe->n_entries; i++) {
+  for (i = 0; i < (int) ll->superframe->n_entries; i++) {
     // ignore extended items (blocks, streams, etc) for normal TOD 
     if (sfe[i].type >= SF_NUM) continue; 
 
-		// add entry to format file
-		fprintf(formatfile,"%s RAW %s %d\n", sfe[i].field, 
-																				 get_sf_type_string(sfe[i].type), 
-																				 (ll_dirfile->map[i]) ? sfe[i].spf : 1);
+    // add entry to format file
+    fprintf(formatfile,"%s RAW %s %d\n", sfe[i].field, 
+                                         get_sf_type_string(sfe[i].type), 
+                                         (ll_dirfile->map[i]) ? sfe[i].spf : 1);
 
     // add quantity
-		if (strlen(sfe[i].quantity) > 0) {
-			fprintf(formatfile,"%s/quantity STRING \"", sfe[i].field);
-			for (j = 0; j < strlen(sfe[i].quantity); j++) {
-				if (sfe[i].quantity[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
-				fprintf(formatfile, "%c", sfe[i].quantity[j]);
-			}
-			fprintf(formatfile,"\"\n");
-		}
+    if (strlen(sfe[i].quantity) > 0) {
+      fprintf(formatfile,"%s/quantity STRING \"", sfe[i].field);
+      for (j = 0; j < (int) strlen(sfe[i].quantity); j++) {
+        if (sfe[i].quantity[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
+        fprintf(formatfile, "%c", sfe[i].quantity[j]);
+      }
+      fprintf(formatfile,"\"\n");
+    }
 
     // add units
-		if (strlen(sfe[i].units) > 0) {
-			fprintf(formatfile,"%s/units STRING \"", sfe[i].field);
-			for (j = 0; j < strlen(sfe[i].units); j++) {
-				if (sfe[i].units[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
-				fprintf(formatfile, "%c", sfe[i].units[j]);
-			}
-			fprintf(formatfile,"\"\n");
-		}
+    if (strlen(sfe[i].units) > 0) {
+      fprintf(formatfile,"%s/units STRING \"", sfe[i].field);
+      for (j = 0; j < (int) strlen(sfe[i].units); j++) {
+        if (sfe[i].units[j] == 92) fprintf(formatfile, "\\"); // fix getdata escape
+        fprintf(formatfile, "%c", sfe[i].units[j]);
+      }
+      fprintf(formatfile,"\"\n");
+    }
 
-		fflush(formatfile);
+    fflush(formatfile);
 
-		// open the file if not already opened
-		snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", ll_dirfile->filename, sfe[i].field);
-		ll_dirfile->bin[i] = fpreopenb(binname);  
+    // open the file if not already opened
+    snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/%s", ll_dirfile->filename, sfe[i].field);
+    ll_dirfile->bin[i] = fpreopenb(binname);  
   }
 
   // add files for blocks
   ll_dirfile->blockbin = (FILE **) calloc(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES, sizeof(FILE *));
-  for (i = 0; i < ll->num_blocks; i++) {
+  for (i = 0; i < (int) ll->num_blocks; i++) {
     #define WRITE_BLOCK_FORMAT_ENTRY(_FIELD)                                                   \
     ({                                                                                         \
-			fprintf(formatfile, "%s_" #_FIELD " RAW %s %d\n", ll->blocks[i].name,                    \
+      fprintf(formatfile, "%s_" #_FIELD " RAW %s %d\n", ll->blocks[i].name,                    \
                                                         get_sf_type_string(SF_UINT32),         \
                                                         1);                                    \
       fflush(formatfile);                                                                      \
-      snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s_" #_FIELD, ll_dirfile->filename,    \
+      snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/%s_" #_FIELD, ll_dirfile->filename,    \
                ll->blocks[i].name);                                                            \
       ll_dirfile->blockbin[i*N_BLOCK_DIRFILE_ENTRIES+j] = fpreopenb(binname);                  \
       j++;                                                                                     \
@@ -482,50 +496,76 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 
   // add files for streams
   ll_dirfile->streambin = (FILE **) calloc(ll->num_streams, sizeof(FILE *));
-  for (i = 0; i < ll->num_streams; i++) {
+  for (i = 0; i < (int) ll->num_streams; i++) {
     fprintf(formatfile, "%s RAW %s %d\n", ll->streams[i].name,
                                           get_sf_type_string(SF_UINT8),
                                           ll->streams[i].le->blk_size);
-		// open the file if not already opened
-		snprintf(binname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s", ll_dirfile->filename, ll->streams[i].name);
-		ll_dirfile->streambin[i] = fpreopenb(binname);  
+    // open the file if not already opened
+    snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/%s", ll_dirfile->filename, ll->streams[i].name);
+    ll_dirfile->streambin[i] = fpreopenb(binname);  
   }
 
+  // add files for extra linklist_writer-specific fields
+  ll_dirfile->extrabin = (FILE **) calloc(LL_DIRFILE_NUM_EXTRA, sizeof(FILE *));
+  #define WRITE_EXTRA_FORMAT_ENTRY(_FIELD, _TYPE)                                            \
+  ({                                                                                         \
+    fprintf(formatfile, "ll_" #_FIELD " RAW %s %d\n", get_sf_type_string(_TYPE), 1);         \
+    fflush(formatfile);                                                                      \
+    snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/ll_" #_FIELD, ll_dirfile->filename); \
+    ll_dirfile->extrabin[j] = fpreopenb(binname);                                            \
+    j++;                                                                                     \
+  })
+  j = 0;
+  // can only do 4 byte data
+  WRITE_EXTRA_FORMAT_ENTRY(framenum, SF_UINT32);
+  WRITE_EXTRA_FORMAT_ENTRY(data_integrity, SF_FLOAT32);
+  WRITE_EXTRA_FORMAT_ENTRY(local_time, SF_UINT32);
+
+  // tack on calspecs file
   if (ll->superframe->calspecs[0]) {
     fprintf(formatfile, "\n####### Begin calspecs ######\n\n");
     FILE * calspecsfile = fopen(ll->superframe->calspecs, "rb");
     if (!calspecsfile) {
       linklist_err("Could not open calspecs file \"%s\"\n", ll->superframe->calspecs);
+    } else {
+      int a;
+      while (1) {
+        a = fgetc(calspecsfile); 
+        if (!feof(calspecsfile)) fputc(a, formatfile);
+        else break;
+      }
+      fclose(calspecsfile);
+      fflush(formatfile);
     }
-    int a;
-    while (1) {
-			a = fgetc(calspecsfile); 
-			if (!feof(calspecsfile)) fputc(a, formatfile);
-			else break;
-    }
-    fclose(calspecsfile);
-    fflush(formatfile);
   }
+
 
   ll_dirfile->format = formatfile;
   return ll_dirfile;
 }
 
+void parse_calspecs(char * filename, FILE * formatfile) {
+}
+
 void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   int i;
-  for (i = 0; i < ll_dirfile->ll->superframe->n_entries; i++) {
+  for (i = 0; i < (int) ll_dirfile->ll->superframe->n_entries; i++) {
     if (ll_dirfile->bin[i]) fclose(ll_dirfile->bin[i]);
   }
-  for (i = 0; i < ll_dirfile->ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES; i++) {
+  for (i = 0; i < (int) ll_dirfile->ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES; i++) {
     if (ll_dirfile->blockbin[i]) fclose(ll_dirfile->blockbin[i]);
   }
-  for (i = 0; i < ll_dirfile->ll->num_streams; i++) {
+  for (i = 0; i < (int) ll_dirfile->ll->num_streams; i++) {
     if (ll_dirfile->streambin[i]) fclose(ll_dirfile->streambin[i]);
+  }
+  for (i = 0; i < LL_DIRFILE_NUM_EXTRA; i++) {
+    if (ll_dirfile->extrabin[i]) fclose(ll_dirfile->extrabin[i]);
   }
   fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
   free(ll_dirfile->blockbin);
   free(ll_dirfile->streambin);
+  free(ll_dirfile->extrabin);
   free(ll_dirfile->map);
   free(ll_dirfile);
 }
@@ -549,25 +589,31 @@ int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum
   superframe_entry_t * sfe = ll->superframe->entries;
 
   // just a normal field to be writing to the dirfile
-  for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { 
-			tlm_out_size = get_superframe_entry_size(&sfe[i]);
-			tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
+  for (i = 0; i < (int) ll->superframe->n_entries; i++) {
+    if (ll_dirfile->bin[i]) { 
+      tlm_out_size = get_superframe_entry_size(&sfe[i]);
+      tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
 
-			dir_loc = framenum*tlm_out_size*tlm_out_spf;
-			fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
-		}
+      dir_loc = framenum*tlm_out_size*tlm_out_spf;
+      fseek(ll_dirfile->bin[i], dir_loc, SEEK_SET);
+    }
   }
   // block-specific fields to be writing to the dirfile
-  for (i=0; i<(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
+  for (i=0; i<(int) (ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
     if (ll_dirfile->blockbin[i]) {
       fseek(ll_dirfile->blockbin[i], framenum*sizeof(uint32_t), SEEK_SET);
     }
   } 
   // stream-specific fields to be writing to the dirfile
-  for (i=0; i<ll->num_streams; i++) {
+  for (i=0; i<(int) ll->num_streams; i++) {
     if (ll_dirfile->streambin[i]) {
       fseek(ll_dirfile->streambin[i], framenum*ll->streams[i].le->blk_size, SEEK_SET);
+    }
+  }
+  // ll_dirfile-specific field to be writing to the dirfile
+  for (i=0; i<LL_DIRFILE_NUM_EXTRA; i++) {
+    if(ll_dirfile->extrabin[i]) {
+      fseek(ll_dirfile->extrabin[i], framenum*sizeof(uint32_t), SEEK_SET);
     }
   }
   ll_dirfile->framenum = framenum;
@@ -589,21 +635,27 @@ int flush_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   }
 
   // just a normal field to be writting to the dirfile
-  for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { 
-			fflush(ll_dirfile->bin[i]);
-		}
+  for (i = 0; i < (int) ll->superframe->n_entries; i++) {
+    if (ll_dirfile->bin[i]) { 
+      fflush(ll_dirfile->bin[i]);
+    }
   }  
   // block-specific fields to be writing to the dirfile
-  for (i=0; i<(ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
+  for (i=0; i<(int) (ll->num_blocks*N_BLOCK_DIRFILE_ENTRIES); i++) {
     if (ll_dirfile->blockbin[i]) {
       fflush(ll_dirfile->blockbin[i]);
     }
   }
   // stream-specific fields to be writing to the dirfile
-  for (i=0; i<ll->num_streams; i++) {
+  for (i=0; i<(int) ll->num_streams; i++) {
     if (ll_dirfile->streambin[i]) {
       fflush(ll_dirfile->streambin[i]);
+    }
+  }
+  // ll_dirfile-specific fields to be writing to the dirfile
+  for (i=0; i<(int) LL_DIRFILE_NUM_EXTRA; i++) {
+    if (ll_dirfile->extrabin[i]) {
+      fflush(ll_dirfile->extrabin[i]);
     }
   }
 
@@ -642,7 +694,7 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   if (ll->flags & LL_INCLUDE_ALLFRAME) {
     read_allframe(superframe_buf, ll->superframe, buffer+ll->blk_size);
   }
-  double ret_val = decompress_linklist_opt(superframe_buf, ll, buffer, UINT32_MAX, ll->flags | flags);
+  double retval = decompress_linklist_opt(superframe_buf, ll, buffer, UINT32_MAX, ll->flags | flags);
 
   // write the data to the dirfile
   superframe_entry_t * sfe = ll->superframe->entries;
@@ -655,26 +707,26 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   int i = 0;
   int j = 0;
   // just a normal field to be writing to the dirfile
-  for (i = 0; i < ll->superframe->n_entries; i++) {
-		if (ll_dirfile->bin[i]) { 
-			tlm_out_start = sfe[i].start;
-			tlm_out_skip = sfe[i].skip;
-			tlm_out_size = get_superframe_entry_size(&sfe[i]);
+  for (i = 0; i < (int) ll->superframe->n_entries; i++) {
+    if (ll_dirfile->bin[i]) { 
+      tlm_out_start = sfe[i].start;
+      tlm_out_skip = sfe[i].skip;
+      tlm_out_size = get_superframe_entry_size(&sfe[i]);
 
       // entries in the linklist get the full rate
       // entries not in the linklist get 1 spf
-			tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
+      tlm_out_spf = (ll_dirfile->map[i]) ? sfe[i].spf : 1;
 
-			// dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
+      // dir_loc = ll_dirfile->framenum*tlm_out_size*tlm_out_spf;
 
-			for (j = 0; j < tlm_out_spf; j++) {
-				fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
-				tlm_out_start += tlm_out_skip;
-			}
-		}
+      for (j = 0; j < (int) tlm_out_spf; j++) {
+        fwrite(superframe_buf+tlm_out_start, tlm_out_size, 1, ll_dirfile->bin[i]);
+        tlm_out_start += tlm_out_skip;
+      }
+    }
   }  
   // block-specific fields to be writing to the dirfile
-  for (i = 0; i < ll->num_blocks; i++) {
+  for (i = 0; i < (int) ll->num_blocks; i++) {
     #define WRITE_BLOCK_ENTRY_DATA(_FIELD)                                                     \
     ({                                                                                         \
       FILE * blockfp = ll_dirfile->blockbin[i*N_BLOCK_DIRFILE_ENTRIES+j];                      \
@@ -690,19 +742,35 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
     WRITE_BLOCK_ENTRY_DATA(curr_size);
   }
   // stream-specific fields to be writing to the dirfile
-  for (i = 0; i < ll->num_streams; i++) {
+  for (i = 0; i < (int) ll->num_streams; i++) {
     // always look to the next buffer, never repeat (unlike packetize_stream)
     ll->streams[i].curr = ll->streams[i].next; // only a reading function can modify stream->curr
     substream_t * ss = &ll->streams[i].buffers[ll->streams[i].curr];
     fwrite(ss->buffer, ll->streams[i].le->blk_size, 1, ll_dirfile->streambin[i]); 
     memset(ss->buffer, 0, ll->streams[i].le->blk_size);
   }
+  // Report fields for decompressed data
+  ll_dirfile->framenum++;
+  ll_dirfile->local_time = time(0);
+  ll_dirfile->data_integrity = retval;
+
+  // ll_dirfile-specific fields to be writing to the dirfile
+  #define WRITE_EXTRA_ENTRY_DATA(_FIELD, _TYPE)                                              \
+  ({                                                                                         \
+    FILE * extrafp = ll_dirfile->extrabin[j];                                                \
+    if (extrafp) fwrite(&ll_dirfile->_FIELD, sizeof(_TYPE), 1, extrafp);                     \
+    j++;                                                                                     \
+  })
+  j = 0;
+  WRITE_EXTRA_ENTRY_DATA(framenum, uint32_t);
+  WRITE_EXTRA_ENTRY_DATA(data_integrity, float);
+  WRITE_EXTRA_ENTRY_DATA(local_time, uint32_t);
+
+  // nothing needs to be done for calspecs since it is handled by getdata :)
 
   memset(superframe_buf, 0, ll->superframe->size);
   
-  ll_dirfile->framenum++;
-
-  return ret_val;
+  return retval;
 }
 
 #ifdef __cplusplus

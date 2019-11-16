@@ -1,0 +1,6 @@
+.qmake.stash
+moc_predefs.h
+qrc_guacapics.cpp
+ui_mainwindow.h
+ui_options.h
+

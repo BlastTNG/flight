@@ -11,23 +11,24 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "../external_libs/linklist/linklist.h"
-#include "../external_libs/linklist/linklist_connect.h"
+#include "../liblinklist/linklist.h"
+#include "../liblinklist/linklist_connect.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
+#define LL_LIVE_SUFFIX "_live"
 
 char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
 char configfile[128] = "guaca.cfg";
-char molestat[128] = "/data/etc/mole.lnk/time";
+char molestat[128] = "/data/etc/mole.lnk/gps_time";
 char masterlink[128] = "/data/etc/mole.lnk";
 char masterloglink[128] = "/data/etc/mole.log";
 
 char *remote_hosts[] = {
-  "cacofonix",
+  "zaphod.bit",
   NULL
 };
 
@@ -190,6 +191,7 @@ int generate_linklist_listfiles()
 }
 
 void list_thread(void * arg) {
+  (void) arg; // not used for now
   while (1) {
     generate_linklist_listfiles();
     sleep(5);
@@ -579,12 +581,17 @@ MainWindow::MainWindow(QWidget *parent) :
     servermode = 0;
   }
 
+  options = new Options(this);
+
   QtConcurrent::run(list_thread, (void *)NULL);
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
   connect(_ut,SIGNAL(timeout()),this,SLOT(dancing()));
   _ut->start();
+
+  QSettings settings("SuperBIT", "guaca");
+  restoreGeometry(settings.value("mainwindow").toByteArray());
 }
 
 MainWindow::~MainWindow()
@@ -600,7 +607,22 @@ MainWindow::~MainWindow()
     if (ret < 0) printf("Unable to kill mole in slave mode\n");
   }
   server_active = 0;
+
+  if (options) delete options;
   delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    savePosition();
+    event->accept();
+    delete options;
+    options = NULL;
+}
+
+void MainWindow::savePosition()
+{
+    QSettings settings("SuperBIT", "guaca");
+    settings.setValue("mainwindow", saveGeometry());
 }
 
 /*
@@ -743,6 +765,8 @@ void MainWindow::on_toggleMole_clicked()
     on_linkSelect_currentIndexChanged(ui->linkSelect->currentText());
     //qDebug(ui->linkSelect->currentText().toLatin1());
 
+    options->show_helpers();
+
     data_incoming = 1;
     logend = time(0);
   }
@@ -802,18 +826,13 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
 }
 void MainWindow::on_remoteHost_activated(const int &arg1)
 {
-  QString hostname = ui->remoteHost->itemText(arg1);
+  QString hostname = ui->remoteHost->itemText(arg1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
 
   if (arg1 == (ui->remoteHost->count()-1)) // last item is the custom item
   {
-    QString thehost;
+    QString thehost = hostname;
     bool ok;
     hostname = QInputDialog::getText(this, "Choose Remote Host", "What remote host should mole connect to?", QLineEdit::Normal, thehost, &ok);
-    if (!ok)
-    {
-      printf("No host to connect to. Exiting.\n");
-      exit(0);
-    }
     hostname += SELECTION_APPEND_TEXT;
     ui->remoteHost->setItemText(arg1,hostname);
   }
@@ -846,7 +865,12 @@ void MainWindow::change_remote_host(const QString &arg)
     //ui->multiLinkSelect->clear();
     for (int i=0;i<numlink;i++)
     {
-      bool active = 0;
+      bool active = false;
+      unsigned int name_len = strlen(names[i]);
+      unsigned int live_len = strlen(LL_LIVE_SUFFIX);
+      if (name_len >= live_len) {
+          active = !strncmp(names[i]+name_len-live_len, LL_LIVE_SUFFIX, live_len);
+      }
 
       ui->multiLinkSelect->addItem(names[i]);
       if (active)
@@ -861,9 +885,11 @@ void MainWindow::change_remote_host(const QString &arg)
   }
   else
   {
-    printf("No archive found at %s\n", tcpconn.ip);
     ui->remoteHost->setCurrentIndex(ui->remoteHost->count()-1);
-    on_remoteHost_activated(ui->remoteHost->count()-1);
+    QMessageBox::information(
+        this,
+        tr("Guaca-mole"),
+        tr("No archive found.") );
   }
   close_connection(&tcpconn);
 }
@@ -913,4 +939,27 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionAbout_Qt_triggered()
 {
   QMessageBox::aboutQt(this,"About Qt");
+}
+
+void MainWindow::on_actionOptions_triggered()
+{
+    options->load_options();
+    options->show();
+}
+
+void MainWindow::on_actionPurge_old_data_triggered()
+{
+    QString deletecmd = "find " + QString(archivedir) + "/. -type d -exec rm -r \"{}\" \\;";
+    QMessageBox::StandardButton reply = QMessageBox::question(this,
+                                                              "Delete archived data?",
+                                                              "Are you sure you want to run '" + deletecmd + "'?",
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        if (system(deletecmd.toLatin1().data()) < 0) {
+          QMessageBox::information(
+          this,
+          tr("Guacamole!"),
+          tr("Couldn't clear archived data."));
+        }
+    }
 }

@@ -138,7 +138,7 @@ void ll_crccheck(uint16_t data, uint16_t *accumulator, uint16_t *ll_crctable)
 }
 
 block_t * block_find_by_name(linklist_t * ll, char * blockname) {
-  int j;
+  unsigned int j;
   // find the block
   for (j = 0; j < ll->num_blocks; j++) {
     if (strcmp(blockname, ll->blocks[j].name) == 0) {
@@ -148,7 +148,7 @@ block_t * block_find_by_name(linklist_t * ll, char * blockname) {
   return NULL;
 }
 stream_t * stream_find_by_name(linklist_t * ll, char * streamname) {
-  int j;
+  unsigned int j;
   // find the stream
   for (j = 0; j < ll->num_streams; j++) {
     if (strcmp(streamname, ll->streams[j].name) == 0) {
@@ -477,7 +477,7 @@ void stop_current_stream(stream_t * thestream) {
 uint8_t randomized_buffer(uint8_t * buffer, unsigned int bufsize, unsigned int seed)
 {
   srand(seed);
-  int i = 0;
+  unsigned int i = 0;
   unsigned int sum = 0;
   for (i = 0; i < bufsize; i++) {
     buffer[i] ^= rand();
@@ -547,6 +547,9 @@ int compress_linklist(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in)
  */
 int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_in, uint32_t maxsize, int flags)
 {
+
+  (void) maxsize; // unsued for now
+ 
   // allocate crc table if necessary
   if (ll_crctable == NULL)
   {
@@ -556,7 +559,7 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
     }
   } 
 
-  int i,j;
+  unsigned int i,j;
 
   unsigned int tlm_in_start = 0;
   unsigned int tlm_out_start = 0;
@@ -627,9 +630,9 @@ int compress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *buffer_
 
 uint8_t * buffer_save = NULL;
 
-int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_t *buffer_out)
+int fill_linklist_with_saved(linklist_t * req_ll, unsigned int p_start, unsigned int p_end, uint8_t *buffer_out)
 {
-  int i, k;
+  unsigned int i, k;
   struct link_entry * tlm_le = NULL;
   unsigned int tlm_out_start;
   unsigned int loc1, loc2;
@@ -645,7 +648,7 @@ int fill_linklist_with_saved(linklist_t * req_ll, int p_start, int p_end, uint8_
         tlm_out_skip = tlm_le->tlm->skip;
         tlm_out_num = tlm_le->tlm->spf;
         tlm_size = get_superframe_entry_size(tlm_le->tlm);
-        //linklist_info("Fixing %s (start = %d)\n",tlm_le->tlm->name,tlm_out_start);
+        // linklist_info("Fixing %s (start = %d)\n",tlm_le->tlm->field,tlm_out_start);
         for (k=0;k<tlm_out_num;k++) { 
           loc1 = tlm_out_skip*k;
           loc2 = tlm_out_skip*(tlm_out_num-1);
@@ -720,7 +723,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
 
   superframe_t * superframe = ll->superframe;
 
-  int i, j;
+  unsigned int i, j;
 
   unsigned int tlm_in_start = 0;
   unsigned int tlm_out_start = 0;
@@ -728,7 +731,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
   uint8_t * tlm_in_buf, * tlm_out_buf;
   uint8_t tlm_comp_type = 0;
   struct link_entry * tlm_le;
-  int p_start = 0, p_end = 0;
+  unsigned int p_start = 0, p_end = 0;
   uint16_t checksum = 0;
   uint16_t prechecksum = 0;
   uint16_t sumcount = 0;
@@ -771,36 +774,39 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
           linklist_info("decompress_linklist: checksum failed -> bad data (block %d)\n", sumcount);
         }
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+        ret++;
       } else if (!checksum && !prechecksum) { // had a block of all zeros
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
+        if (flags & LL_VERBOSE) {
+          linklist_info("decompress_linklist: block of zeros (block %d)\n", sumcount);
+        }
       } else { // after all that, the checksum is good
         for (i=p_start; i<p_end; i++) { // decompress everything in that block
-					tlm_le = &(ll->items[i]);
-					tlm_in_size = tlm_le->blk_size;
-					tlm_in_start = tlm_le->start;
-					tlm_in_buf = buffer_in+tlm_in_start;
+          tlm_le = &(ll->items[i]);
+          tlm_in_size = tlm_le->blk_size;
+          tlm_in_start = tlm_le->start;
+          tlm_in_buf = buffer_in+tlm_in_start;
 
-					if (tlm_le->tlm == &block_entry) { // data block entry 
-						block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
-						if (theblock) depacketize_block(theblock, tlm_in_buf);
-						else linklist_err("Could not find block in linklist \"%s\"\n", ll->name);
-					} else if (tlm_le->tlm == &stream_entry) { // data stream entry 
-						stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
-						if (thestream) depacketize_stream(thestream, tlm_in_buf);
-						else linklist_err("Could not find stream in linklist \"%s\"\n", ll->name);
-					} else { // just a normal field
-						tlm_out_start = tlm_le->tlm->start;
-						tlm_comp_type = tlm_le->comp_type;
-						tlm_out_buf = buffer_out+tlm_out_start;
+          if (tlm_le->tlm == &block_entry) { // data block entry 
+            block_t * theblock = linklist_find_block_by_pointer(ll, tlm_le);
+            if (theblock) depacketize_block(theblock, tlm_in_buf);
+            else linklist_err("Could not find block in linklist \"%s\"\n", ll->name);
+          } else if (tlm_le->tlm == &stream_entry) { // data stream entry 
+            stream_t * thestream = linklist_find_stream_by_pointer(ll, tlm_le);
+            if (thestream) depacketize_stream(thestream, tlm_in_buf);
+            else linklist_err("Could not find stream in linklist \"%s\"\n", ll->name);
+          } else { // just a normal field
+            tlm_out_start = tlm_le->tlm->start;
+            tlm_comp_type = tlm_le->comp_type;
+            tlm_out_buf = buffer_out+tlm_out_start;
 
-						if (tlm_comp_type != NO_COMP) { // compression
-							(*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf, tlm_le, tlm_in_buf);
-						} else {
-							decimationDecompress(tlm_out_buf, tlm_le, tlm_in_buf);
-						}
-					}
+            if (tlm_comp_type != NO_COMP) { // compression
+              (*compRoutine[tlm_comp_type].decompressFunc)(tlm_out_buf, tlm_le, tlm_in_buf);
+            } else {
+              decimationDecompress(tlm_out_buf, tlm_le, tlm_in_buf);
+            }
+          }
         }
-        ret++;
       }
 
       // reset checksum
@@ -814,13 +820,13 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
   }
   // save the data
   memcpy(buffer_save, buffer_out, superframe->size);
-  ret = (tot == 0) ? ret : ret/tot;
+  ret = (tot == 0) ? NAN : (tot-ret)/tot;
 
   return ret;
 }
 
 unsigned int linklist_blocks_queued(linklist_t * ll) {
-  int i;
+  unsigned int i;
   unsigned int retval = 0;
   if (!ll) return retval;
 
@@ -858,7 +864,7 @@ void packetize_block(block_t * block, uint8_t * buffer)
     if (block->fp) { // there is a file instead of data in a buffer
       fseek(block->fp, loc, SEEK_SET); // go to the location in the file
       int retval = 0;
-      if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != cpy) {
+      if ((retval = fread(buffer+fsize, 1, cpy, block->fp)) != (int) cpy) {
         linklist_err("Could only read %d/%d bytes at %d from file %s", retval, cpy, loc, block->filename);
       }
     } else { // there is data in the buffer
@@ -894,6 +900,7 @@ void depacketize_block(block_t * block, uint8_t * buffer)
   uint32_t id = 0;
   uint32_t i = 0, n = 0;
   uint16_t blksize = 0;
+  static FILE * missed_pkts_fp = NULL;
 
   int fsize = read_block_header(buffer, &id, &blksize, &i, &n);
 
@@ -911,6 +918,22 @@ void depacketize_block(block_t * block, uint8_t * buffer)
     return;
   }
   // report missing block for already opened files
+  if (block->i < i) {
+    if (!missed_pkts_fp) {
+      missed_pkts_fp = fpreopenb(LINKLIST_MISSED_PKTS_FILE);
+      time_t now;
+      time(&now);
+      fprintf(missed_pkts_fp, "\n--------\n%s--------\n", ctime(&now));
+    } 
+    if (missed_pkts_fp) {
+      fprintf(missed_pkts_fp, "%s %d %d\n", 
+              (strlen(block->filename) > 0) ? block->filename : "(missing)", 
+              block->i, 
+              i+1);
+      fflush(missed_pkts_fp);
+    }
+  }
+  // ... and print them to terminal
   while ((block->i < i) && block->fp) {
     linklist_info("Missing block %d/%d\n", block->i+1, n);
     block->i++;
@@ -923,7 +946,7 @@ void depacketize_block(block_t * block, uint8_t * buffer)
     id &= ~BLOCK_FILE_MASK; // remove the mask
 
     // a different id packet was received, so close file if that packet is open
-    if ((id != block->id) && block->fp) {
+    if ((id != block->id) || (i < block->i)  || (n != block->n)) {
       close_block_fp(block);
     }
     
@@ -941,6 +964,13 @@ void depacketize_block(block_t * block, uint8_t * buffer)
         return;
       }
       linklist_info("File \"%s\" opened\n", block->filename);
+      // make symlink to newest opened file
+      char symname[LINKLIST_MAX_FILENAME_SIZE] = "";
+      snprintf(symname, LINKLIST_MAX_FILENAME_SIZE, "%s/%s.lnk", LINKLIST_FILESAVE_DIR, block->name);
+      unlink(symname);
+      if (symlink(block->filename, symname) < 0) {
+        linklist_err("Unable to form symlink %s -> %s\n", block->filename, symname);
+      }
     }
     fseek(block->fp, loc, SEEK_SET); 
     int retval = 0;
@@ -948,10 +978,11 @@ void depacketize_block(block_t * block, uint8_t * buffer)
       linklist_err("Wrote %d != %d bytes at %d to file %s", retval, blksize, loc, block->filename);
     }
     
-		if ((block->i+1) == block->n) {
-			linklist_info("Completed \"%s\"\n\n", block->filename);
-			close_block_fp(block);
-		}
+    // got last packet, so close
+    if ((i+1) == n) {
+      linklist_info("Completed \"%s\"\n\n", block->filename);
+      close_block_fp(block);
+    }
 
   } else { // just a normal block to be stored in memory
     // expand the buffer if necessary
@@ -1034,7 +1065,7 @@ void depacketize_stream(stream_t * stream, uint8_t * buffer) {
 // takes superframe at buffer in and creates an all frame in buffer out
 // all frame is 1 sample per field uncompressed
 int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) {
-  int i, j;
+  unsigned int i, j;
   int tlm_out_start = 4; // the first 4 bytes are the serial for allframes
   int tlm_in_start = 0; 
   unsigned int tlm_size = 0; 
@@ -1083,11 +1114,11 @@ int write_allframe(uint8_t * allframe, superframe_t * superframe, uint8_t * sf) 
 // takes an allframe at buffer in at 1 sample per frame and writes repeated
 // samples in the superframe
 int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
-  int i,j;
-  int tlm_out_start = 0;
-  int tlm_in_start = 4;
-  int tlm_num = 0;
-  int tlm_skip = 0;
+  unsigned int i,j;
+  unsigned int tlm_out_start = 0;
+  unsigned int tlm_in_start = 4;
+  unsigned int tlm_num = 0;
+  unsigned int tlm_skip = 0;
   unsigned int tlm_size = 0;
   int check_crc = 1;
   
@@ -1142,14 +1173,14 @@ int read_allframe(uint8_t * sf, superframe_t * superframe, uint8_t * allframe) {
 
   // set the last good buffer to the allframe
   if (buffer_save && sf) memcpy(buffer_save, sf, superframe->size);
-  return tlm_in_start;
+  return (int) tlm_in_start;
 
 }
 
 double antiAlias(uint8_t * data_in, char type, unsigned int num, unsigned int skip,
                    double (*datatodouble)(uint8_t *, uint8_t))
 {
-  int i;
+  unsigned int i;
   double halfsum = 0;
   double ret = 0;  
 
@@ -1184,7 +1215,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
   int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
-  int i;
+  unsigned int i;
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -1219,7 +1250,7 @@ int stream32bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
 
 int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in)
 {
-  int i,j;
+  unsigned int i,j;
   int wd = 1;
   int blk_size = 0;
   double gain = 1.0, offset = 0.0;
@@ -1227,8 +1258,8 @@ int stream32bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   char type = le->tlm->type;
   unsigned int outputsize = get_superframe_entry_size(le->tlm);
   unsigned int outputskip = le->tlm->skip;
-  int outputnum = le->tlm->spf;
-  int inputnum = le->num;
+  unsigned int outputnum = le->tlm->spf;
+  unsigned int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
 
@@ -1288,7 +1319,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
   double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
   int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
-  int i;
+  unsigned int i;
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
@@ -1323,7 +1354,7 @@ int stream16bitFixedPtComp(uint8_t * data_out, struct link_entry * le, uint8_t *
 
 int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in)
 {
-  int i,j;
+  unsigned int i,j;
   int wd = 1;
   int blk_size = 0;
   double gain = 1.0, offset = 0.0;
@@ -1331,8 +1362,8 @@ int stream16bitFixedPtDecomp(uint8_t * data_out, struct link_entry * le, uint8_t
   char type = le->tlm->type;
   unsigned int outputsize = get_superframe_entry_size(le->tlm);
   unsigned int outputskip = le->tlm->skip;
-  int outputnum = le->tlm->spf;
-  int inputnum = le->num;
+  unsigned int outputnum = le->tlm->spf;
+  unsigned int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
 
@@ -1390,7 +1421,7 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
   double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
   int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
-  int i;
+  unsigned int i;
   double min = 1.0e30, max = -1.0e30, temp1 = 0;
 
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
@@ -1435,7 +1466,7 @@ int stream8bitComp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in
 
 int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in)
 {
-  int i,j;
+  unsigned int i,j;
   int wd = 1;
   int blk_size = 0;
   float gain = 0;
@@ -1444,8 +1475,8 @@ int stream8bitDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_
   char type = le->tlm->type;
   unsigned int outputsize = get_superframe_entry_size(le->tlm);
   unsigned int outputskip = le->tlm->skip;
-  int outputnum = le->tlm->spf;
-  int inputnum = le->num;
+  unsigned int outputnum = le->tlm->spf;
+  unsigned int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
 
@@ -1499,7 +1530,7 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
   double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
   int (*doubletodata)(uint8_t *, double, uint8_t) = le->linklist->superframe->doubletodata; 
 
-  int i;
+  unsigned int i;
   double temp1 = 0, temp2 = 0, dif = 0;
   double min = INT32_MAX, max= -INT32_MAX;
 
@@ -1554,7 +1585,7 @@ int stream8bitDeltaComp(uint8_t * data_out, struct link_entry * le, uint8_t * da
 
 int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * data_in)
 {
-  int i,j;
+  unsigned int i,j;
   int wd = 1;
   int blk_size = 0;
   float gain = 0;
@@ -1563,8 +1594,8 @@ int stream8bitDeltaDecomp(uint8_t * data_out, struct link_entry * le, uint8_t * 
   char type = le->tlm->type;
   unsigned int outputsize = get_superframe_entry_size(le->tlm);
   unsigned int outputskip = le->tlm->skip;
-  int outputnum = le->tlm->spf;
-  int inputnum = le->num;
+  unsigned int outputnum = le->tlm->spf;
+  unsigned int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
   unsigned int outputstart = 0;
 
@@ -1619,7 +1650,7 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
   double (*datatodouble)(uint8_t *, uint8_t) = le->linklist->superframe->datatodouble; 
 
   if (decim == 0) return 0;
-  int i;
+  unsigned int i;
   if ((data_out == NULL) || (data_in == NULL)) wd = 0; // don't read/write data
 
   uint64_t dout = 0;
@@ -1642,13 +1673,13 @@ int decimationCompress(uint8_t * data_out, struct link_entry * le, uint8_t * dat
 
 int decimationDecompress(uint8_t * data_out, struct link_entry *le, uint8_t * data_in)
 {
-  int i,j;
+  unsigned int i,j;
   int wd = 1;
   int blk_size = 0;
 
   unsigned int outputskip = le->tlm->skip;
-  int outputnum = le->tlm->spf;
-  int inputnum = le->num;
+  unsigned int outputnum = le->tlm->spf;
+  unsigned int inputnum = le->num;
   unsigned int decim = outputnum/inputnum;
 
   unsigned int size = get_superframe_entry_size(le->tlm);

@@ -5,6 +5,7 @@
 #include "linklist.h"
 
 #define LL_RAWFILE_DUMMY 0x8
+#define LL_DIRFILE_NUM_EXTRA 3 // the number of extra ll_dirfile-specific fields are included
 
 struct linklist_dirfile {
   char filename[LINKLIST_MAX_FILENAME_SIZE];
@@ -15,6 +16,10 @@ struct linklist_dirfile {
   FILE ** bin;
   FILE ** blockbin;
   FILE ** streambin;
+  FILE ** extrabin;
+
+  float data_integrity;
+  uint32_t local_time;
 };
 
 struct linklist_rawfile {

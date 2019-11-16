@@ -102,10 +102,12 @@ void USAGE(void) {
       " -k  --check            Evaluate checksum values when processing data (default).\n"  
       " -nk --no-check         Ignore checksum values when processing data.\n"  
       " -L  --loopback         Have mole extract its own binary files.\n"
+      "                        Binary files at archive-dir will be extracted to mole-dir\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                        The default is /data/mole.\n"
       " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
       "                        Relative paths are w.r.t. /data/rawdir.\n"
+      " -O  --offset           Offset frame where the data will start being written (default 0).\n"
       " -p  --client-port p    Client port to receive data (default 40204).\n"
       " -P  --server-port p    Server port on which to serve up data (default 40204).\n"
       "     --port p           Sets the client and server port (default 40204).\n"
@@ -114,6 +116,9 @@ void USAGE(void) {
       " -ns --no-server        Don't run a server (default).\n"
       " -S  --start X          Starting frame to read. Ignores rewind if specified.\n"
       " -w  --rewind X         Start acquiring data X frames from the latest index (default 20).\n"
+      "                        Ignores how much data had been read already.\n"
+      " -W  --smart-rewind X   Start acquiring data X frames from the latest index (default 20).\n"
+      "                        Will start from the latest data acquired within the rewind value.\n"
       " -v  --verbose          Verbose mode.\n"
       "\n");
 
@@ -184,6 +189,7 @@ int main(int argc, char *argv[]) {
   int server_mode = 0;
   int client_mode = 1;
   unsigned int rewind = 20;
+  int force_rewind = 1;
   uint64_t start_frame = UINT64_MAX;
   uint64_t end_frame = UINT64_MAX;
   unsigned int tcp_flags = TCPCONN_FILE_RAW | TCPCONN_RESOLVE_NAME;
@@ -191,6 +197,7 @@ int main(int argc, char *argv[]) {
   unsigned int ll_dirfile_flags = 0;
   int bin_backup = 0;
   char filename_selection[LINKLIST_MAX_FILENAME_SIZE] = {0};
+  char custom_calspecs[LINKLIST_MAX_FILENAME_SIZE] = {0};
   unsigned int nodata_timeout = 50000; // default rate is 20 Hz = 1.0e6/50000
 
   // configure the TCP connection
@@ -206,6 +213,7 @@ int main(int argc, char *argv[]) {
   uint8_t recv_header[TCP_PACKET_HEADER_SIZE] = {0};
   unsigned int buffer_size = 0;
   int64_t recv_framenum = 0;
+  uint64_t offset_framenum = 0;
   uint16_t recv_flags = 0;
   int resync = 1;
   unsigned int num_frames_per_flush = 1; // 1 ensures real time frame push to disk
@@ -236,6 +244,11 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--rewind") == 0) ||
                (strcmp(argv[i], "-w") == 0)) { // rewind value 
       rewind = atoi(argv[++i]);
+      force_rewind = 1;
+    } else if ((strcmp(argv[i], "--smart-rewind") == 0) ||
+               (strcmp(argv[i], "-W") == 0)) { // rewind value 
+      rewind = atoi(argv[++i]);
+      force_rewind = 0;
     } else if ((strcmp(argv[i], "--start") == 0) ||
                (strcmp(argv[i], "-S") == 0)) { // start frame 
       start_frame = atoi(argv[++i]);
@@ -279,6 +292,19 @@ int main(int argc, char *argv[]) {
       int port = atoi(argv[++i]);
       set_linklist_client_port(port);
       set_linklist_server_port(port);
+    } else if ((strcmp(argv[i], "--offset") == 0) ||
+               (strcmp(argv[i], "-O") == 0)) { // frame number offset
+      offset_framenum = atoi(argv[++i]);
+      printf("Data written at frame offset %" PRIu64"\n", offset_framenum);
+    } else if ((strcmp(argv[i], "--calspecs") == 0) ||
+               (strcmp(argv[i], "-cs") == 0)) { // custom calspecs file
+      FILE * test_exists = fopen(argv[i+1], "r");
+      if (test_exists) {
+        strcpy(custom_calspecs, argv[++i]);
+        fclose(test_exists);
+      } else {
+        printf("Calspecs file \"%s\" does not exist!\n", argv[++i]);
+      }
     } else if ((strcmp(argv[i], "--filename") == 0) ||
                (strcmp(argv[i], "-F") == 0)) { // select file by name
       strcpy(filename_selection, argv[++i]);
@@ -340,6 +366,12 @@ int main(int argc, char *argv[]) {
 
         printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
 
+        // override calspecs file with custom calspecs
+        if (custom_calspecs[0]) {
+          strcpy(linklist->superframe->calspecs, custom_calspecs);
+          printf("Using custom calsecs file at \"%s\"\n", custom_calspecs);
+        }
+
         // open linklist dirfile
         sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
@@ -362,7 +394,7 @@ int main(int argc, char *argv[]) {
           linklist_info("Reading frames %" PRIu64" to %" PRIu64 "\n", start_frame, end_frame);
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-          req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+          if (!force_rewind) req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
         }
 
         resync = 0;
@@ -401,14 +433,16 @@ int main(int argc, char *argv[]) {
 
       // write the dirfile
       if (ll_dirfile) {
-        if (!(frame_i % num_frames_per_flush)) seek_linklist_dirfile(ll_dirfile, recv_framenum);
+        if (!(frame_i % num_frames_per_flush)) {
+          seek_linklist_dirfile(ll_dirfile, recv_framenum + offset_framenum);
+        }
         write_linklist_dirfile_opt(ll_dirfile, recv_buffer, 0);
         if (!(frame_i % num_frames_per_flush)) flush_linklist_dirfile(ll_dirfile);
       }
 
       // write the rawfile
       if (bin_backup && ll_rawfile) {
-        seek_linklist_rawfile(ll_rawfile, recv_framenum);
+        seek_linklist_rawfile(ll_rawfile, recv_framenum + offset_framenum);
         write_linklist_rawfile_opt(ll_rawfile, recv_buffer, 0);
         if (!(frame_i % num_frames_per_flush)) flush_linklist_rawfile(ll_rawfile);
       }
