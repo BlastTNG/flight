@@ -695,7 +695,7 @@ double decompress_linklist_internal_opt(uint64_t id, linklist_t * ll, uint8_t *b
  */
 double decompress_linklist(uint8_t * buffer_out, linklist_t * ll, uint8_t * buffer_in)
 {
-  return decompress_linklist_opt(buffer_out, ll, buffer_in, UINT32_MAX, LL_VERBOSE);
+  return decompress_linklist_opt(buffer_out, ll, buffer_in, UINT32_MAX, 0);
 }
 
 /**
