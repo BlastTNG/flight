@@ -36,7 +36,11 @@ char bit_colortag[NAMELEN] = "\n[] ";
 char spider_filename[NAMELEN] = "/data/etc/defile.lnk";
 char spider_tdrssname[NAMELEN] = "/data/etc/tdrss.lnk";
 char spider_dataname[NAMELEN] = "logstream";
-char spider_colortag[NAMELEN] = "\n";
+char spider_colortag[NAMELEN] = " \n";
+
+char blast_filename[NAMELEN] = "/data/etc/mole.lnk";
+char blast_dataname[NAMELEN] = "chatter";
+char blast_colortag[NAMELEN] = " \n";
 
 
 void usage(char *exe)
@@ -45,6 +49,7 @@ void usage(char *exe)
   fprintf(stderr, "Translate FIELD from DIRFILE into ASCII on stdout.\n");
   fprintf(stderr, "-d <PATH_TO_DIRFILE>\n");
   fprintf(stderr, "-c <FIELD>\n");
+  fprintf(stderr, "-B                    BLAST:   same as -d %s -c %s\n", blast_filename, blast_dataname);
   fprintf(stderr, "-s                    Spider:   same as -d %s -c %s\n", spider_filename, spider_dataname);
   fprintf(stderr, "-t                    Spider TDRSS:   same as -d %s -c %s\n", spider_tdrssname, spider_dataname);
   fprintf(stderr, "-b                    superBIT: same as -d %s -c %s\n", bit_filename, bit_dataname);
@@ -69,7 +74,7 @@ int main(int argc, char **argv)
   snprintf(filename, NAMELEN, "%s", spider_filename);
   snprintf(dataname, NAMELEN, "%s", spider_dataname);
   
-  while ((c = getopt(argc, argv, "d:c:sbtmk")) != -1) {
+  while ((c = getopt(argc, argv, "d:c:sbtmkB")) != -1) {
     switch (c) {
       case 'd':
         snprintf(filename, NAMELEN, "%s", optarg);
@@ -90,6 +95,11 @@ int main(int argc, char **argv)
         snprintf(filename, NAMELEN, "%s", bit_filename);
         snprintf(dataname, NAMELEN, "%s", bit_dataname);
         color_tag = bit_colortag;
+        break;
+      case 'B':
+        snprintf(filename, NAMELEN, "%s", blast_filename);
+        snprintf(dataname, NAMELEN, "%s", blast_dataname);
+        color_tag = blast_colortag;
         break;
       case 'k':
         is_color = 1;
