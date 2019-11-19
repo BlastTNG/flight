@@ -17,7 +17,7 @@
 // BLAST elog code
 //////////////////////////////////////////////////////////////////////
 
-#define ELOG_HOST   "cacofonix"
+#define ELOG_HOST   "blastgs1"
 #define ELOG_PORT   "8020"
 #define ELOG_LOG    "blasttng2018"
 #define ELOG_AUTH   "blastcmd-daemon"
