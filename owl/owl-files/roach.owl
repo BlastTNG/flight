@@ -2991,19 +2991,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "1078273291"
-                    },
-                    "_caption": "FRIDGE_CYCLE_WARNING ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": true,
-                    "_extremaID": "(P274232905)",
-                    "_format": "",
-                    "_source": "ROACH_FRIDGE_CYCLE_WARNING",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "685343768"
                     },
                     "_caption": "ROACH_LAMP_NOW",
@@ -3828,8 +3815,8 @@
         }
     ],
     "webPort": "0",
-    "windowCellHeight": 60,
+    "windowCellHeight": 62,
     "windowCellWidth": 113,
-    "windowHeight": 1028,
+    "windowHeight": 1056,
     "windowWidth": 1920
 }
