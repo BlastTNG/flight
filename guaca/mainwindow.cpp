@@ -23,7 +23,7 @@
 char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
 char configfile[128] = "guaca.cfg";
-char molestat[128] = "/data/etc/mole.lnk/gps_time";
+char molestat[128] = "/data/etc/mole.lnk/time";
 char masterlink[128] = "/data/etc/mole.lnk";
 char masterloglink[128] = "/data/etc/mole.log";
 
