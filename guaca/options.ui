@@ -24,8 +24,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>355</width>
-    <height>300</height>
+    <width>65536</width>
+    <height>65536</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -62,7 +62,7 @@
      <property name="currentIndex">
       <number>2</number>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="widget">
       <attribute name="title">
        <string>Helpers</string>
       </attribute>
@@ -165,10 +165,20 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <widget class="QLineEdit" name="live_name"/>
+       </item>
        <item row="0" column="1">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Server Port:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Auto-select Links:</string>
          </property>
         </widget>
        </item>
@@ -179,14 +189,14 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="server_port">
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>40204</string>
+          <string>Reference Field:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="6" column="1">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -198,6 +208,23 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="server_port">
+         <property name="text">
+          <string>40204</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLineEdit" name="lineEdit"/>
+       </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="auto_live">
+         <property name="text">
+          <string>Enabled</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

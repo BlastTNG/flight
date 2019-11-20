@@ -1,7 +1,12 @@
 #include "options.h"
 #include "ui_options.h"
 
+#define LL_DEFAULT_LIVE_SUFFIX "_live"
+
 extern char configdir[128];
+
+#define new_key "options/customized_2019"
+#define old_key "options/customized"
 
 Options::Options(QWidget *parent) :
     QDialog(parent),
@@ -11,7 +16,14 @@ Options::Options(QWidget *parent) :
     ui->setupUi(this);
     main = parent;
 
-    if (settings.contains("options/customized")) {
+    // remove old key
+    if (settings.contains(old_key)) {
+        qDebug() << "Deleting old options";
+        settings.remove(old_key);
+    }
+
+    // check new key
+    if (settings.contains(new_key)) {
         qDebug() << "Restoring saved options";
         restore_options();
     } else {
@@ -23,9 +35,16 @@ Options::Options(QWidget *parent) :
     ui->server_port->setValidator(new QIntValidator(0, 1e8, this) );
 
     on_buttonBox_clicked(ui->buttonBox->button(QDialogButtonBox::Save));
+    if (auto_live) ui->live_name->setEnabled(true);
+    else ui->live_name->setDisabled(true);
+
+    restoreGeometry(settings.value("options").toByteArray());
 }
 
 Options::~Options() {
+    // save the geometry of the options window
+    settings.setValue("options", saveGeometry());
+
     for (unsigned int i=0; i<helpers.size(); i++) {
         delete helpers[i];
     }
@@ -80,8 +99,10 @@ void Options::save_options()
 
     settings.setValue("options/server_port", server_port);
     settings.setValue("options/client_port", client_port);
+    settings.setValue("options/live_name", live_name);
+    settings.setValue("options/auto_live", auto_live);
 
-    settings.setValue("options/customized", true);
+    settings.setValue(new_key, true);
 }
 
 void Options::restore_options()
@@ -102,6 +123,8 @@ void Options::restore_options()
 
     ui->server_port->setText(QString::number(QVariant(settings.value("options/server_port")).toInt()));
     ui->client_port->setText(QString::number(QVariant(settings.value("options/client_port")).toInt()));
+    ui->live_name->setText(QVariant(settings.value("options/live_name")).toString());
+    ui->auto_live->setChecked(QVariant(settings.value("options/auto_live")).toBool());
 }
 
 void Options::default_options()
@@ -121,6 +144,8 @@ void Options::default_options()
 
     ui->server_port->setText(QString::number(40204));
     ui->client_port->setText(QString::number(40204));
+    ui->live_name->setText(QString(LL_DEFAULT_LIVE_SUFFIX));
+    ui->auto_live->setChecked(true);
 }
 
 void Options::load_options()
@@ -141,6 +166,8 @@ void Options::load_options()
 
     ui->server_port->setText(QString::number(server_port));
     ui->client_port->setText(QString::number(client_port));
+    ui->live_name->setText(live_name);
+    ui->auto_live->setChecked(auto_live);
 }
 
 void Options::apply_options() {
@@ -163,6 +190,9 @@ void Options::apply_options() {
     server_port = (!server_port) ? 40204 : server_port;
     client_port = ui->client_port->text().toInt();
     client_port = (!client_port) ? 40204 : client_port;
+
+    live_name = ui->live_name->text();
+    auto_live = ui->auto_live->isChecked();
 }
 
 void Options::enable_options() {
@@ -173,6 +203,9 @@ void Options::enable_options() {
 
     ui->client_port->setEnabled(true);
     ui->server_port->setEnabled(true);
+
+    ui->auto_live->setEnabled(true);
+    if (auto_live) ui->live_name->setEnabled(true);
 }
 
 void Options::disable_options() {
@@ -183,6 +216,9 @@ void Options::disable_options() {
 
     ui->client_port->setDisabled(true);
     ui->server_port->setDisabled(true);
+
+    ui->auto_live->setDisabled(true);
+    ui->live_name->setDisabled(true);
 }
 
 void Options::start_helpers() {
@@ -269,4 +305,11 @@ void Options::on_buttonBox_clicked(QAbstractButton *button)
         save_options();
         start_helpers();
     }
+}
+
+void Options::on_auto_live_toggled(bool checked)
+{
+    auto_live = checked;
+    if (checked) ui->live_name->setEnabled(true);
+    else ui->live_name->setDisabled(true);
 }

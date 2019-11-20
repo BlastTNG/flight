@@ -61,6 +61,10 @@ public:
     unsigned int server_port;
     unsigned int client_port;
 
+    bool auto_live;
+    QString live_name;
+    QString stat_field;
+
 private:
     QWidget *main;
     Ui::Options *ui;
@@ -75,6 +79,7 @@ private slots:
     void on_addHelper_clicked();
     void on_deleteHelper_clicked();
     void on_buttonBox_clicked(QAbstractButton *button);
+    void on_auto_live_toggled(bool checked);
 };
 
 

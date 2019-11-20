@@ -18,7 +18,6 @@
 
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
-#define LL_LIVE_SUFFIX "_live"
 
 char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
@@ -898,23 +897,14 @@ void MainWindow::change_remote_host(const QString &arg)
   if ((numlink = request_server_archive_list(&tcpconn,names)) > 0)// made a connection with the server
   {
     printf("Got server list\n");
-    int numactive = 0;
 
     //ui->multiLinkSelect->clear();
-    for (int i=0;i<numlink;i++)
+    for (int i=0; i<numlink; i++)
     {
-      bool active = false;
-      unsigned int name_len = strlen(names[i]);
-      unsigned int live_len = strlen(LL_LIVE_SUFFIX);
-      if (name_len >= live_len) {
-          active = !strncmp(names[i]+name_len-live_len, LL_LIVE_SUFFIX, live_len);
-      }
-
-      ui->multiLinkSelect->addItem(names[i]);
-      if (active)
-      {
+      QString name = QString(names[i]);
+      ui->multiLinkSelect->addItem(name);
+      if (options->auto_live && name.endsWith(options->live_name)) {
           ui->multiLinkSelect->item(i)->setSelected(true);
-          numactive++;
       }
       num_linkfile++;
     }
