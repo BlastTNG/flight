@@ -39,14 +39,27 @@ public:
     ~Options();
 
     void start_helpers();
+    void start_a_helper(Helper * helper);
     void show_helpers();
     void hide_helpers();
     void load_options();
     void restore_options();
     void default_options();
+    void apply_options();
+    void save_options();
+    void enable_options();
+    void disable_options();
     unsigned int add_helper(QString cmdname, QString args, bool terminal, unsigned int row);
     unsigned int remove_helper(unsigned int row);
-    void save_options();
+
+
+    bool server;
+    bool backup;
+    bool no_checksums;
+    bool mole_terminal;
+
+    unsigned int server_port;
+    unsigned int client_port;
 
 private:
     QWidget *main;

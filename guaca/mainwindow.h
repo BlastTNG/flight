@@ -36,7 +36,7 @@ struct GUACACONFIG
 };
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -50,7 +50,10 @@ public:
 
 private slots:
     void on_toggleMole_clicked();
+
     void dancing();
+
+    void make_listfiles();
 
     void on_multiLinkSelect_itemSelectionChanged();
 
@@ -79,20 +82,30 @@ private:
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
     Options *options;
+    std::vector<Logscroll *> mole_logs;
+    bool still_dancing;
+    QSettings settings;
+
     struct GUACACONFIG cfg;
     void freeze();
     void unfreeze();
     void start_a_mole(int );
+    void stop_all_moles();
     int get_server_data();
     void updateSettings();
     void getSettings();
     void savePosition();
+
+    void saveConfig();
+    void loadConfig();
+    void defaultConfig();
+
     void closeEvent(QCloseEvent *event);
 
     QIcon qi[IMAGE_TOTAL];
     QSize qs;
 
-    QTimer * _ut;
+    QTimer * _ut, * _ut_listfiles;
     int image_i, inc;
     FILE * logfile;
     FILE * statfile;

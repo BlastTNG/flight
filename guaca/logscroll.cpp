@@ -1,56 +1,84 @@
 #include "logscroll.h"
 #include "ui_logscroll.h"
 
-Logscroll::Logscroll(QWidget *parent, QString cmd) :
+Logscroll::Logscroll(QWidget *parent, QString cmd, bool save_position) :
     QWidget(parent),
     ui(new Ui::Logscroll)
 {
     ui->setupUi(this);
+    this->save_position = save_position;
 
-    process = new QProcess(this);
+    process = NULL;
     cmdstring = cmd;
-
-    connect(process, &QProcess::readyReadStandardOutput, this, &Logscroll::processStandardOutput);
-    connect(process, &QProcess::readyReadStandardError, this, &Logscroll::processStandardError);
-    connect(process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &Logscroll::close);
+    startProcess();
 
     QSettings settings("SuperBIT", "guaca");
     restoreGeometry(settings.value(cmdstring).toByteArray());
-
-    process->start(cmdstring);
 }
 
 Logscroll::~Logscroll()
 {
     qDebug() << "Destroying log";
     savePosition();
-    process->kill();
+    stopProcess();
     delete ui;
+}
+
+void Logscroll::stopProcess() {
+    if (process) process->kill();
+}
+
+bool Logscroll::doneProcess() {
+    return (process->state() == QProcess::NotOpen);
+}
+
+void Logscroll::startProcess() {
+    stopProcess();
+
+    process = new QProcess(this);
+
+    connect(process, &QProcess::readyReadStandardOutput, this, &Logscroll::processStandardOutput);
+    connect(process, &QProcess::readyReadStandardError, this, &Logscroll::processStandardError);
+    connect(process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &Logscroll::close);
+
+    process->start(cmdstring);
+    qDebug() << "Starting process: " + cmdstring;
 }
 
 void Logscroll::savePosition()
 {
-    QSettings settings("SuperBIT", "guaca");
-    settings.setValue(cmdstring, saveGeometry());
+    if (save_position) {
+        QSettings settings("SuperBIT", "guaca");
+        settings.setValue(cmdstring, saveGeometry());
+    }
 }
 
 void Logscroll::closeEvent(QCloseEvent *event)
 {
+    qDebug() << cmdstring << " told to close";
     savePosition();
     QWidget::closeEvent(event);
 }
 
 void Logscroll::processStandardOutput() {
-    ui->logText->moveCursor (QTextCursor::End);
-    QString text = process->readAllStandardOutput();
-    ui->logText->insertPlainText(text);
+    ui->logText->moveCursor(QTextCursor::End);
+    latest_str = process->readAllStandardOutput();
+    ui->logText->insertPlainText(latest_str);
+    if (*latest_str.end() == '\r') {
+        printf("line!\n");
+        ui->logText->moveCursor(QTextCursor::StartOfLine);
+    }
     ui->logText->moveCursor (QTextCursor::End);
 }
 
 
 void Logscroll::processStandardError() {
-    ui->logText->moveCursor (QTextCursor::End);
-    QString text = process->readAllStandardError();
-    ui->logText->insertPlainText(text);
-    ui->logText->moveCursor (QTextCursor::End);
+    ui->logText->moveCursor(QTextCursor::End);
+    latest_str = process->readAllStandardError();
+    ui->logText->insertPlainText(latest_str);
+    ui->logText->moveCursor(QTextCursor::End);
+}
+
+QString Logscroll::get_latest_str() {
+    return latest_str;
 }
