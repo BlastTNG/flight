@@ -1,7 +1,9 @@
 #include "options.h"
 #include "ui_options.h"
 
+#define LL_DEFAULT_STAT_FIELD "/data/etc/mole.lnk/time"
 #define LL_DEFAULT_LIVE_SUFFIX "_live"
+#define GUACA_DEFAULT_PORT 40204
 
 extern char configdir[128];
 
@@ -101,6 +103,7 @@ void Options::save_options()
     settings.setValue("options/client_port", client_port);
     settings.setValue("options/live_name", live_name);
     settings.setValue("options/auto_live", auto_live);
+    settings.setValue("options/stat_field", stat_field);
 
     settings.setValue(new_key, true);
 }
@@ -125,6 +128,7 @@ void Options::restore_options()
     ui->client_port->setText(QString::number(QVariant(settings.value("options/client_port")).toInt()));
     ui->live_name->setText(QVariant(settings.value("options/live_name")).toString());
     ui->auto_live->setChecked(QVariant(settings.value("options/auto_live")).toBool());
+    ui->stat_field->setText(QVariant(settings.value("options/stat_field")).toString());
 }
 
 void Options::default_options()
@@ -142,10 +146,11 @@ void Options::default_options()
     ui->checksum->setChecked(false);
     ui->mole_terminal->setChecked(false);
 
-    ui->server_port->setText(QString::number(40204));
-    ui->client_port->setText(QString::number(40204));
+    ui->server_port->setText(QString::number(GUACA_DEFAULT_PORT));
+    ui->client_port->setText(QString::number(GUACA_DEFAULT_PORT));
     ui->live_name->setText(QString(LL_DEFAULT_LIVE_SUFFIX));
     ui->auto_live->setChecked(true);
+    ui->stat_field->setText(QString(LL_DEFAULT_STAT_FIELD));
 }
 
 void Options::load_options()
@@ -168,6 +173,7 @@ void Options::load_options()
     ui->client_port->setText(QString::number(client_port));
     ui->live_name->setText(live_name);
     ui->auto_live->setChecked(auto_live);
+    ui->stat_field->setText(stat_field);
 }
 
 void Options::apply_options() {
@@ -193,6 +199,7 @@ void Options::apply_options() {
 
     live_name = ui->live_name->text();
     auto_live = ui->auto_live->isChecked();
+    stat_field = ui->stat_field->text();
 }
 
 void Options::enable_options() {
@@ -206,6 +213,7 @@ void Options::enable_options() {
 
     ui->auto_live->setEnabled(true);
     if (auto_live) ui->live_name->setEnabled(true);
+    ui->stat_field->setEnabled(true);
 }
 
 void Options::disable_options() {
@@ -219,6 +227,7 @@ void Options::disable_options() {
 
     ui->auto_live->setDisabled(true);
     ui->live_name->setDisabled(true);
+    ui->stat_field->setDisabled(true);
 }
 
 void Options::start_helpers() {

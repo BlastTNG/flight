@@ -22,7 +22,6 @@
 char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
 char configfile[128] = "guaca.cfg";
-char molestat[128] = "/data/etc/mole.lnk/time";
 char masterlink[128] = "/data/etc/mole.lnk";
 char masterloglink[128] = "/data/etc/mole.log";
 
@@ -347,7 +346,7 @@ void MainWindow::dancing()
 
     if (statfile == NULL)
     {
-      statfile = fopen(molestat,"r");
+      statfile = fopen(options->stat_field.toLatin1().data(), "r");
     }
 
     if (statfile != NULL)
@@ -573,7 +572,7 @@ MainWindow::MainWindow(QWidget *parent) :
   syncstate = 0;
 
   logend = time(0);
-  statfile = fopen(molestat,"r");
+  statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
   if (QCoreApplication::arguments().count() > 1) // slave mode
   {
