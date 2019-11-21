@@ -34,7 +34,7 @@ void udp_receive(void *arg) {
   int32_t blk_size = 0;
   uint32_t recv_size = 0;
   uint32_t transmit_size = 0;
-  uint64_t framenum = 0;
+  int64_t framenum = 0;
   int af = 0;
 
   uint8_t *local_allframe = calloc(1, superframe->allframe_size);
@@ -94,7 +94,7 @@ void udp_receive(void *arg) {
 
     // fill out the telemetry report
     pilot_report.ll = ll;
-    pilot_report.framenum = framenum; 
+    pilot_report.framenum = abs(framenum); 
     pilot_report.allframe = af; 
 
     memset(compbuffer, 0, udpsetup->maxsize);
