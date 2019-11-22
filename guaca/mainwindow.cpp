@@ -367,6 +367,8 @@ void MainWindow::dancing()
     }
     else
     {
+      QMessageBox::warning(this,"Invalid stat file",
+                           "Reference field "+ options->stat_field + " is invalid.\n Change under File->Options->Advanced->Reference Field.");
       data_incoming = 0;
     }
 
