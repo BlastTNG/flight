@@ -1492,7 +1492,9 @@ void set_rw_motor_defaults()
 //    rw_init_phasing();
 
     /// Set the default current limits
-//    rw_init_encoder();
+    if (!CommandData.ec_devices.have_commutated_rw) {
+        rw_init_encoder();
+    }
     rw_init_current_limit();
     rw_init_current_pid();
     ec_init_heartbeat(rw_index);
