@@ -440,6 +440,7 @@ typedef struct {
     bool fix_el;
     bool fix_piv;
     bool fix_hwpr;
+    bool have_commutated_rw;
 } ec_devices_struct_t;
 
 typedef struct {

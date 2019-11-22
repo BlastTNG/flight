@@ -282,7 +282,7 @@ typedef struct {
 #  define ECAT_CTL_HALT                     (1<<8)
 
 #define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
-                                  /* NOTE: this bit field can only be mapped to 
+                                  /* NOTE: this bit field can only be mapped to */
                                   /* a transmit PDO */
 #  define ECAT_NET_NODE_STATUS      (1<<0) /* This is two bits */
 #  define ECAT_NET_SYNC_MISSING     (1<<4)

@@ -1485,42 +1485,49 @@ void mc_readPDOassign(int m_slave) {
     }
 }
 
-// Set defaults for the current limits, and pids
-void set_ec_motor_defaults()
+// Attempts to connect to the EtherCat devices.
+void set_rw_motor_defaults()
 {
     /// Configure the reaction wheel phasing
-    rw_init_phasing();
+//    rw_init_phasing();
 
     /// Set the default current limits
+//    rw_init_encoder();
     rw_init_current_limit();
-    el_init_current_limit();
-    piv_init_current_limit();
-    while (ec_iserror()) {
-        blast_err("%s", ec_elist2string());
-    }
-
     rw_init_current_pid();
-    el_init_current_pid();
-    piv_init_current_pid();
-    while (ec_iserror()) {
-        blast_err("%s", ec_elist2string());
-    }
-
-    /// Set the encoder defaults
-    rw_init_encoder();
-    el_init_encoder();
-    piv_init_resolver();
-    while (ec_iserror()) {
-        blast_err("%s", ec_elist2string());
-    }
-
-    /// Set up the heartbeat which tracks communication errors with the slaves
     ec_init_heartbeat(rw_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+}
+void set_el_motor_defaults()
+{
+    el_init_current_limit();
+    el_init_current_pid();
+    el_init_encoder();
     ec_init_heartbeat(el_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+}
+
+void set_pivot_motor_defaults()
+{
+    piv_init_current_limit();
+    piv_init_current_pid();
+    piv_init_resolver();
     ec_init_heartbeat(piv_index);
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
+}
+
+// Set defaults for the current limits, and pids
+void set_ec_motor_defaults()
+{
+    set_rw_motor_defaults();
+    set_el_motor_defaults();
+    set_pivot_motor_defaults();
 }
 
 int close_ec_motors()
@@ -1570,13 +1577,16 @@ int configure_ec_motors()
     }
 
     set_ec_motor_defaults();
+
     /// Start the Distributed Clock cycle
     motor_configure_timing();
+
 
     /// Put the motors in Operational mode (EtherCAT Operation)
     blast_info("Setting the EtherCAT devices in operational mode.");
     motor_set_operational();
 
+    blast_info("Writing the drive state to start current mode.");
     for (int i = 1; i <= ec_slavecount; i++) {
         if ((controller_state[i].slave_error == 0) && (controller_state[i].has_dc == 1)) {
             controller_state[i].comms_ok = 1;
@@ -1587,6 +1597,8 @@ int configure_ec_motors()
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }
+    // If things seem to be working then we don't need to recommutate the RW.
+    if (controller_state[rw_index].comms_ok) CommandData.ec_devices.have_commutated_rw = 1;
     return(1);
 }
 
@@ -1698,7 +1710,11 @@ static void* motor_control(void* arg)
             if (!reset_ec_motors()) blast_err("Reset of EtherCat devices failed!");
             CommandData.ec_devices.reset = 0;
         }
-
+        if (!CommandData.ec_devices.have_commutated_rw) {
+            set_rw_motor_defaults();
+            CommandData.ec_devices.have_commutated_rw = 1;
+        }
+        blast_info("Enabling or disabling the motor as appropriate.");
         if (CommandData.disable_az) {
             rw_disable();
             piv_disable();
