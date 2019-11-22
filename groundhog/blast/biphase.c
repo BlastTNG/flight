@@ -117,7 +117,7 @@ void biphase_receive(void *args)
   /* set up our outputs */
   openlog("decomd", LOG_PID, LOG_DAEMON);
   // buos_use_syslog();
-  uint64_t framenum = 0;
+  int64_t framenum = 0;
   int af = 0;
 
   while(true) {
@@ -153,8 +153,8 @@ void biphase_receive(void *args)
 
                   if (groundhog_check_for_fileblocks(ll, FILE_LINKLIST)) {
                       // this is a file that has been downlinked, so unpack and extract to disk
-											framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL,
-																														 NULL, NULL, NULL, GROUNDHOG_EXTRACT_TO_DISK);
+                      framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL,
+                                                             NULL, NULL, NULL, GROUNDHOG_EXTRACT_TO_DISK);
                   } else { // write the linklist data to disk
                       // set flags for data extraction
                       unsigned int flags = 0;
@@ -169,7 +169,7 @@ void biphase_receive(void *args)
 
                   // fill out the telemetry report
                   bi0_report.ll = ll;
-                  bi0_report.framenum = framenum; 
+                  bi0_report.framenum = abs(framenum); 
                   bi0_report.allframe = af; 
 
                   memset(compbuffer, 0, BI0_MAX_BUFFER_SIZE);

@@ -70,8 +70,8 @@ int (*linklist_warn)(const char *, ...) = printf;
 int (*linklist_fatal)(const char *, ...) = printf;
 
 int num_compression_routines = 0; // number of compression routines available
-superframe_entry_t block_entry = {{0}}; // a dummy entry for blocks
-superframe_entry_t stream_entry = {{0}}; // a dummy entry for streams
+superframe_entry_t block_entry; // a dummy entry for blocks
+superframe_entry_t stream_entry; // a dummy entry for streams
 unsigned int ll_rawfile_default_fpf = 900; // number of frames per file before incrementing linklist rawfiles
 char archive_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
 
@@ -247,7 +247,7 @@ superframe_t * linklist_build_superframe(superframe_entry_t* m_superframe_list,
   superframe->hash_table_size = superframe->n_entries*1000;
   superframe->hash_table = (superframe_entry_t **) calloc(superframe->hash_table_size, sizeof(superframe_entry_t *));
  
-  for (i = 0; i < superframe->n_entries; i++) {
+  for (i = 0; i < (int) superframe->n_entries; i++) {
     unsigned int hashloc = hash(superframe->entries[i].field)%superframe->hash_table_size;
     if (superframe->hash_table[hashloc]) {
       memset(superframe->hash_table, 0, sizeof(superframe_entry_t *)*superframe->hash_table_size);
@@ -316,8 +316,9 @@ void parse_line(char *line, char ** sinks, unsigned int nargs)
   
 }
 
-static int one (const struct dirent *unused)
+static int one (const struct dirent * unused)
 {
+  (void) unused;
   return 1;
 }
 
@@ -346,7 +347,7 @@ int load_all_linklists_opt(superframe_t * superframe, char * linklistdir, linkli
     i++;
   }
 
-  char full_path_name[128] = {0};
+  char full_path_name[LINKLIST_MAX_FILENAME_SIZE] = {0};
 
   // load linklist names
   for (i = 0; i < n; i++) {
@@ -354,7 +355,7 @@ int load_all_linklists_opt(superframe_t * superframe, char * linklistdir, linkli
     for (j=0; exts[j][0]; j++) {
       int extlen = strlen(exts[j]);
       if ((len >= extlen) && strcmp(&dir[i]->d_name[len-extlen], exts[j]) == 0) {
-        snprintf(full_path_name, 127, "%s%s",linklistdir, dir[i]->d_name);
+        snprintf(full_path_name, LINKLIST_MAX_FILENAME_SIZE, "%s%s",linklistdir, dir[i]->d_name);
         
         if ((ll_array[num] = parse_linklist_format_opt(superframe, full_path_name, flags)) == NULL) {
           linklist_fatal("Unable to load linklist at %s", full_path_name);
@@ -480,7 +481,7 @@ int parse_stream(linklist_t * ll, char * name)
 block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
 {
   int i;
-  for (i = 0; i < ll->num_blocks; i++) {
+  for (i = 0; i < (int) ll->num_blocks; i++) {
     if (ll->blocks[i].le == le) return &ll->blocks[i];
   }
   return NULL;
@@ -488,7 +489,7 @@ block_t * linklist_find_block_by_pointer(linklist_t * ll, linkentry_t * le)
 stream_t * linklist_find_stream_by_pointer(linklist_t * ll, linkentry_t * le)
 {
   int i;
-  for (i = 0; i < ll->num_streams; i++) {
+  for (i = 0; i < (int) ll->num_streams; i++) {
     if (ll->streams[i].le == le) return &ll->streams[i];
   }
   return NULL;
@@ -640,7 +641,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
     }
     read = i+1;
     
-    if (ll->n_entries >= (def_n_entries-1)) {
+    if ((int) ll->n_entries >= (def_n_entries-1)) {
       realloc_list(ll,&def_n_entries);
     }
 
@@ -754,7 +755,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   fclose(cf);
 
   // check memory allocation
-  if (ll->n_entries >= (def_n_entries-1)) {
+  if ((int) ll->n_entries >= (def_n_entries-1)) {
     realloc_list(ll,&def_n_entries);
   }
 
@@ -767,7 +768,7 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
   // fix linkentry pointers for blocks and streams
   int b_ind = 0;
   int s_ind = 0;
-  for (i=0; i<ll->n_entries; i++) {
+  for (i=0; i<(int) ll->n_entries; i++) {
     if (ll->items[i].tlm == &block_entry) {
       ll->blocks[b_ind].le = &ll->items[i];
       b_ind++;
@@ -776,16 +777,16 @@ linklist_t * parse_linklist_format_opt(superframe_t * superframe, char *fname, i
       s_ind++;
     } 
   }
-  if (b_ind != ll->num_blocks) {
+  if (b_ind != (int) ll->num_blocks) {
     linklist_err("Found inconsistent number of blocks (%d != %d)\n", b_ind, ll->num_blocks);
   }
-  if (s_ind != ll->num_streams) {
+  if (s_ind != (int) ll->num_streams) {
     linklist_err("Found inconsistent number of streams (%d != %d)\n", s_ind, ll->num_streams);
   }
 
   int file_blk_size = read_linklist_formatfile_comment(fname, LINKLIST_FILE_SIZE_IND, "%d");
-  if ((file_blk_size > 0) && (file_blk_size != byteloc)) {
-    if (file_blk_size == byteloc+superframe->allframe_size) {
+  if ((file_blk_size > 0) && (file_blk_size != (int) byteloc)) {
+    if (file_blk_size == (int) (byteloc+superframe->allframe_size)) {
       flags |= LL_INCLUDE_ALLFRAME;
     } else {
       linklist_err("File blksize %d inconsistent with parsed blksize %d\n", file_blk_size, byteloc);
@@ -850,7 +851,7 @@ void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
   
   fprintf(formatfile, "%s\n\n", STR(LL_NO_AUTO_CHECKSUM));
 
-  for (i = 0; i < ll->n_entries; i++) { 
+  for (i = 0; i < (int) ll->n_entries; i++) { 
     if (ll->items[i].tlm == &block_entry) { // a block
       block_t * theblock = linklist_find_block_by_pointer(ll, &ll->items[i]);
       if (theblock) {
@@ -877,7 +878,7 @@ void write_linklist_format_opt(linklist_t * ll, char * fname, int flags)
         fprintf(formatfile, "%s    ", compRoutine[ll->items[i].comp_type].name); // compression type
       }
       fprintf(formatfile, "%u\n", ll->items[i].num); // samples per frame (spf)
-    } else if ((i != 0) && (i != (ll->n_entries-1))){ // don't include first or last checksum
+    } else if ((i != 0) && (i != (int) (ll->n_entries-1))){ // don't include first or last checksum
       fprintf(formatfile, "%s\n", LL_PARSE_CHECKSUM); // checksum indicator
     }
 
@@ -896,10 +897,10 @@ void delete_superframe(superframe_t * sf) {
 void delete_linklist(linklist_t * ll)
 {
   int i;
-  for (i = 0; i < ll->num_blocks; i++) {
+  for (i = 0; i < (int) ll->num_blocks; i++) {
     free(ll->blocks[i].buffer);
   }
-  for (i = 0; i < ll->num_streams; i++) {
+  for (i = 0; i < (int) ll->num_streams; i++) {
     free(ll->streams[i].buffers[0].buffer);
     free(ll->streams[i].buffers[1].buffer);
   }
@@ -980,7 +981,7 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
   // change the reference to the copied linklist for each linkentry
   int b_ind = 0;
   int s_ind = 0;
-  for (i=0; i<ll_copy->n_entries; i++) {
+  for (i=0; i<(int) ll_copy->n_entries; i++) {
     ll_copy->items[i].linklist = ll_copy;
     // allocate block memory and update reference to linkentry to the copied linklist
     if (ll_copy->items[i].tlm == &block_entry) {
@@ -1004,7 +1005,7 @@ linklist_t * linklist_duplicate(linklist_t * ll) {
   }
 
   // check consistency with the number of blocks found
-  if (b_ind != ll_copy->num_blocks) {
+  if (b_ind != (int) ll_copy->num_blocks) {
     linklist_err("linklist_duplicate: num_blocks mismatch (found %d, expected %d)\n", 
                  i, ll_copy->num_blocks);
   }
@@ -1054,7 +1055,7 @@ linklist_t * generate_superframe_linklist_opt(superframe_t * superframe, int fla
   ll->n_entries++;
 
   // add all telemetry entries
-  for (i = 0; i < superframe->n_entries; i++) {
+  for (i = 0; i < (int) superframe->n_entries; i++) {
     if ((chksm_count >= MIN_CHKSM_SPACING) && !(flags & LL_NO_AUTO_CHECKSUM)) {
       blk_size = set_checksum_field(&(ll->items[ll->n_entries]), byteloc);
       update_linklist_hash(&mdContext, &ll->items[ll->n_entries]);
@@ -1240,7 +1241,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
           }
           continue;
         }
-        if (n_entries >= (def_n_entries-1)) {
+        if ((int) n_entries >= (def_n_entries-1)) {
           def_n_entries += 5;
           sf = (superframe_entry_t *) realloc(sf, def_n_entries*sizeof(superframe_entry_t));
         }
@@ -1250,7 +1251,7 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         sf[n_entries].type = get_sf_type_int(temps[1]); // type int
         sf[n_entries].spf = atoi(temps[2]); // samples per frame
 
-        int type_str_len = strlen(get_sf_type_string(sf[n_entries].type));
+        unsigned int type_str_len = strlen(get_sf_type_string(sf[n_entries].type));
         if (strlen(temps[1]) > type_str_len) { // trailing characters are assumed to be min and max of format (min,max) 
           sscanf(temps[1]+type_str_len, "(%lf,%lf)%*s", &sf[n_entries].min, &sf[n_entries].max);
           //linklist_info("%s min=%f max=%f\n", sf[n_entries].field, sf[n_entries].min, sf[n_entries].max);
@@ -1268,8 +1269,8 @@ superframe_t * parse_superframe_format_opt(char * fname, int flags) {
         sf[n_entries].var = NULL;
 
         // populate byte map
-        for (i = 0; i < sf[n_entries].spf; i++) {
-          for (j = 0; j < get_superframe_entry_size(&sf[n_entries]); j++) {
+        for (i = 0; i < (int) sf[n_entries].spf; i++) {
+          for (j = 0; j < (int) get_superframe_entry_size(&sf[n_entries]); j++) {
             if (frame[skip*i+start+j] == 1) {
               linklist_warn("Warning (line %d): byte %d overlap\n", count, skip*i+start+j);
             }

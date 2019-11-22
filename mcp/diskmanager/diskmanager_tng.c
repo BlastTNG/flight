@@ -97,22 +97,42 @@ typedef struct diskpool
 
 // Hardware IDs for the drives connected by USB
 static const char drive_uuids[NUM_USB_DISKS][64] = {
-		    "ccbff6e7-8e51-49e4-a987-9ebf5644813e",
-        "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
+        // FC1
+        "bf17960b-f52c-42c4-8002-86510ed95488",
+        "8b1e8c9f-4728-4318-bd0d-ee7e4a0320fc",
         "67e991c8-1e1e-4f77-84f1-9273c050e385",
         "22804e9d-a3e1-4cf8-a5b2-ff2fcf22bc5e",
-        "94ac1984-a52b-4be6-afb7-cb8302d249e0",
-        "993e105e-1cbc-4913-abca-29540242c57e",
         "6846dffc-cf41-447a-a576-4ab34cad7974",
+        "fadb24a6-3581-4ad0-9dea-a35fd719f87d",
         "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c",
-        "526a82ec-cf24-4047-8ae5-a23e761e3704", // sdb1
-        "a175b5d4-3aed-4f2a-b801-4d79a558375d", // sdc1
-        "01249958-4154-4af0-85df-eeebab5b9cf7", // sdd1
-        "5d064d3a-ff6c-46f0-9308-80abb3177e43", // sde1
-        "f841003d-53c5-454e-915b-9e477c2f085e", // sdf1
-        "548fa9fd-b0c5-46e7-b80a-553d0dd01221", // sdg1
-        "1506c53d-d16c-4063-a182-5d167fa968c7", // sdh1
-        "f1fd4434-15b2-48aa-bead-8af2394bc1db"}; // sdi1
+        "a22457be-1514-4803-8a6f-45dc889d363b",
+
+        // FC2
+        "069ed89b-676e-44aa-816a-6fa94b4a7dcd",
+        "8164401c-3472-49fe-a17b-a02e7d191f99",
+        "1506c53d-d16c-4063-a182-5d167fa968c7",
+        "f1fd4434-15b2-48aa-bead-8af2394bc1db",
+        "e9cc1ca6-31a4-42bc-a747-c36077d475fb",
+        "c463c467-90df-40c4-a34d-2338aa4494ac",
+        "01249958-4154-4af0-85df-eeebab5b9cf7",
+        "5d064d3a-ff6c-46f0-9308-80abb3177e43"};
+
+//        "ccbff6e7-8e51-49e4-a987-9ebf5644813e",
+//        "674e5a19-eb93-4c05-b12c-6a50c03ca5c1",
+//        "67e991c8-1e1e-4f77-84f1-9273c050e385",
+//        "22804e9d-a3e1-4cf8-a5b2-ff2fcf22bc5e",
+//        "94ac1984-a52b-4be6-afb7-cb8302d249e0",
+//        "993e105e-1cbc-4913-abca-29540242c57e",
+//        "6846dffc-cf41-447a-a576-4ab34cad7974",
+//        "a52e5c25-8dbc-4e55-ae73-7c5f8b49968c",
+//        "526a82ec-cf24-4047-8ae5-a23e761e3704", // sdb1
+//        "a175b5d4-3aed-4f2a-b801-4d79a558375d", // sdc1
+//        "01249958-4154-4af0-85df-eeebab5b9cf7", // sdd1
+//        "5d064d3a-ff6c-46f0-9308-80abb3177e43", // sde1
+//        "f841003d-53c5-454e-915b-9e477c2f085e", // sdf1
+//        "548fa9fd-b0c5-46e7-b80a-553d0dd01221", // sdg1
+//        "1506c53d-d16c-4063-a182-5d167fa968c7", // sdh1
+//        "f1fd4434-15b2-48aa-bead-8af2394bc1db"}; // sdi1
 
 static int file_change_disk(fileentry_t*, diskentry_t*);
 static int file_reopen_on_new_disk(fileentry_t*, diskentry_t*);

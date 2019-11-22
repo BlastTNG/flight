@@ -33,6 +33,7 @@
 
 #define ALLFRAME_SERIAL 0x42424242
 #define LINKLIST_FILESAVE_DIR "/data/etc/downloaded_files"
+#define LINKLIST_MISSED_PKTS_FILE LINKLIST_FILESAVE_DIR "/missed_pkts.log"
 
 #define BLOCK_FILE_MASK 0x80000000
 #define BLOCK_PREEMPT_ID 0x1badface

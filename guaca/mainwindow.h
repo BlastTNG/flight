@@ -8,9 +8,13 @@
 #include <QInputDialog>
 #include <QtConcurrent/QtConcurrent>
 #include <QTest>
+#include <QCloseEvent>
+
+#include "options.h"
 
 #define MAX_NUM_LINKFILE 256
-#define GUACAPORT 31413
+//#define GUACAPORT 31413
+#define GUACAPORT 40204
 #define MAXLINELENGTH 256
 #define IMAGE_IND_OFF 0
 #define IMAGE_LOOP_LOW 19
@@ -32,7 +36,7 @@ struct GUACACONFIG
 };
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -42,10 +46,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    unsigned int mole_active;
 
 private slots:
     void on_toggleMole_clicked();
+
     void dancing();
+
+    void make_listfiles();
 
     void on_multiLinkSelect_itemSelectionChanged();
 
@@ -63,35 +71,51 @@ private slots:
 
     void on_actionAbout_Qt_triggered();
 
+    void on_actionOptions_triggered();
+
+    void on_actionPurge_old_data_triggered();
+
 private:
     int num_linkfile;
     int linkids[3];
     int syncstate;
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
-    unsigned int mole_active;
+    Options *options;
+    std::vector<Logscroll *> mole_logs;
+    bool still_dancing;
+    QSettings settings;
+
     struct GUACACONFIG cfg;
     void freeze();
     void unfreeze();
     void start_a_mole(int );
+    void stop_all_moles();
     int get_server_data();
     void updateSettings();
     void getSettings();
+    void savePosition();
+
+    void saveConfig();
+    void loadConfig();
+    void defaultConfig();
+
+    void closeEvent(QCloseEvent *event);
 
     QIcon qi[IMAGE_TOTAL];
     QSize qs;
 
-    QTimer * _ut;
+    QTimer * _ut, * _ut_listfiles;
     int image_i, inc;
     FILE * logfile;
-		FILE * statfile;
+    FILE * statfile;
     char buf[MAXLINELENGTH+5];
     uint64_t prev_size;
-		int logend;
+    int logend;
     int data_incoming;
-		char gnd_ip[128];
-		int servermode;
-		QFuture<void> f1;
+    char gnd_ip[128];
+    int servermode;
+    QFuture<void> f1;
 };
 
 #endif // MAINWINDOW_H

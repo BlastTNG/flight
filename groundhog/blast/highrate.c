@@ -226,7 +226,7 @@ void highrate_receive(void *arg) {
 
   int retval = 0;
   uint32_t recv_size = 0;
-  uint64_t framenum = 0;
+  int64_t framenum = 0;
   int af = 0;
 
   char * source_str = NULL;
@@ -302,8 +302,8 @@ void highrate_receive(void *arg) {
                       {
                           if (groundhog_check_for_fileblocks(ll, FILE_LINKLIST)) {
                               // unpack and extract to disk
-															framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL,
-																																		 NULL, NULL, NULL, GROUNDHOG_EXTRACT_TO_DISK);
+                              framenum = groundhog_unpack_fileblocks(ll, transmit_size, compbuffer, NULL,
+                                                                     NULL, NULL, NULL, GROUNDHOG_EXTRACT_TO_DISK);
                           } else { // write the linklist data to disk
                               // set flags for data extraction
                               unsigned int flags = 0;
@@ -317,7 +317,7 @@ void highrate_receive(void *arg) {
                           }
                           // fill out the telemetry report
                           highrate_report.ll = ll;
-                          highrate_report.framenum = framenum;
+                          highrate_report.framenum = abs(framenum);
                           highrate_report.allframe = af; 
 
                           memset(compbuffer, 0, buffer_size);
@@ -364,6 +364,7 @@ void highrate_receive(void *arg) {
                                                   "ShortBurst", source_str, &sbd_ll_rawfile, flags);
               // fill out the telemetry report
               sbd_report.ll = sbd_ll;
+              sbd_report.framenum = abs(framenum);
               sbd_report.allframe = 0; 
               /*
               if (*(uint32_t *) gse_packet == SLOWDLSYNCWORD) {

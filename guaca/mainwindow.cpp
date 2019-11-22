@@ -11,8 +11,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "../external_libs/linklist/linklist.h"
-#include "../external_libs/linklist/linklist_connect.h"
+#include "../liblinklist/linklist.h"
+#include "../liblinklist/linklist_connect.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -22,12 +22,11 @@
 char archivedir[128] = "/data/mole";
 char configdir[128] = "/data/mole";
 char configfile[128] = "guaca.cfg";
-char molestat[128] = "/data/etc/mole.lnk/time";
 char masterlink[128] = "/data/etc/mole.lnk";
 char masterloglink[128] = "/data/etc/mole.log";
 
 char *remote_hosts[] = {
-  "cacofonix",
+  "zaphod.bit",
   NULL
 };
 
@@ -189,12 +188,8 @@ int generate_linklist_listfiles()
   return num_types;
 }
 
-void list_thread(void * arg) {
-  while (1) {
-    generate_linklist_listfiles();
-    sleep(5);
-  }
-
+void MainWindow::make_listfiles() {
+  generate_linklist_listfiles();
 }
 
 
@@ -265,7 +260,6 @@ int MainWindow::get_server_data()
 
 
     if (VERBOSE) printf("Received config from master guaca\n");
-    //printf("%d %d %d %d %d %d %d %s\n",cfg.linkindex,cfg.hostindex,cfg.checksum,cfg.server,cfg.backup,cfg.rewind,cfg.active,cfg.customhost);
     updateSettings();
   }
   else
@@ -285,6 +279,7 @@ int MainWindow::get_server_data()
 
 void MainWindow::dancing()
 {
+  still_dancing = true;
   QString msg = "";
 
   if (logfile == NULL)
@@ -323,9 +318,11 @@ void MainWindow::dancing()
       i++;
     }
 
-    //printf("%s\n",last_newline);
-    msg = QString(last_newline);
-
+    // msg = QString(last_newline);
+    unsigned int current_index = ui->linkSelect->currentIndex();
+    if (mole_logs.size() > current_index) {
+        msg = mole_logs[current_index]->get_latest_str();
+    }
     fclose(logfile);
     logfile = NULL;
   }
@@ -349,7 +346,7 @@ void MainWindow::dancing()
 
     if (statfile == NULL)
     {
-      statfile = fopen(molestat,"r");
+      statfile = fopen(options->stat_field.toLatin1().data(), "r");
     }
 
     if (statfile != NULL)
@@ -428,6 +425,7 @@ void MainWindow::dancing()
 
   image_i = (image_i+inc)%IMAGE_TOTAL;
 
+  still_dancing = false;
 }
 
 
@@ -438,12 +436,9 @@ void MainWindow::updateSettings()
 {
   ui->remoteHost->setCurrentIndex(cfg.hostindex);
   ui->numRewind->setText(QString::number(cfg.rewind));
-  if (cfg.checksum) ui->checksum->setChecked(true);
-  else  ui->checksum->setChecked(false);
-  if (cfg.backup) ui->backup->setChecked(true);
-  else  ui->backup->setChecked(false);
-  if (cfg.server) ui->server->setChecked(true);
-  else  ui->server->setChecked(false);
+  options->server = cfg.server;
+  options->backup = cfg.backup;
+  options->no_checksums = cfg.checksum;
 
   ui->multiLinkSelect->clearSelection();
 
@@ -466,10 +461,10 @@ void MainWindow::updateSettings()
 void MainWindow::getSettings()
 {
   cfg.hostindex = ui->remoteHost->currentIndex();
-  cfg.checksum = (ui->checksum->checkState() == Qt::Checked);
-  cfg.server = (ui->server->checkState() == Qt::Checked);
-  cfg.backup = (ui->backup->checkState() == Qt::Checked);
   cfg.rewind = ui->numRewind->text().toInt();
+  cfg.server = options->server;
+  cfg.backup = options->backup;
+  cfg.checksum = options->no_checksums;
 
   QModelIndexList indexes = ui->multiLinkSelect->selectionModel()->selectedIndexes();
 
@@ -497,13 +492,16 @@ void MainWindow::getSettings()
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    settings("SuperBIT", "guaca")
 {
   ui->setupUi(this);
 
   //on_remoteHost_currentIndexChanged("localhost");
 
   ui->numRewind->setValidator(new QIntValidator(0, 1e8, this) );
+  ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
+  ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
 
   logfile = NULL;
 
@@ -538,7 +536,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
   generate_linklist_listfiles();
 
+  options = new Options(this);
+
   updateSettings();
+
+  if (settings.contains("mainwindow/customConfig")) {
+      qDebug() << "Restoring saved options";
+      loadConfig();
+  } else {
+      qDebug() << "Using default options";
+      defaultConfig();
+      saveConfig();
+  }
+
   change_remote_host(ui->remoteHost->itemText(cfg.hostindex));
 
   QString base = ":/images/guaca-";
@@ -562,7 +572,7 @@ MainWindow::MainWindow(QWidget *parent) :
   syncstate = 0;
 
   logend = time(0);
-  statfile = fopen(molestat,"r");
+  statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
   if (QCoreApplication::arguments().count() > 1) // slave mode
   {
@@ -579,28 +589,74 @@ MainWindow::MainWindow(QWidget *parent) :
     servermode = 0;
   }
 
-  QtConcurrent::run(list_thread, (void *)NULL);
-
   _ut = new QTimer(this);
   _ut->setInterval(90);
   connect(_ut,SIGNAL(timeout()),this,SLOT(dancing()));
   _ut->start();
+
+  _ut_listfiles = new QTimer(this);
+  _ut_listfiles->setInterval(5000);
+  connect(_ut_listfiles,SIGNAL(timeout()),this,SLOT(make_listfiles()));
+  _ut_listfiles->start();
+
+  restoreGeometry(settings.value("mainwindow").toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
+  printf("Destructing main window\n");
+  saveConfig();
+
   if (logfile) fclose(logfile);
-  if (!servermode)
-  {
+  if (!servermode) {
     f1.cancel();
   }
-  else
-  {
-    int ret = system("pkill mole");
-    if (ret < 0) printf("Unable to kill mole in slave mode\n");
-  }
   server_active = 0;
-  delete ui;
+
+  if (options) delete options;
+  options = NULL;
+  if (ui) delete ui;
+  ui = NULL;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    savePosition();
+    event->accept();
+    _ut->stop();
+    while(still_dancing) QTest::qWait(90);
+    if (options) delete options;
+    options = NULL;
+}
+
+void MainWindow::savePosition()
+{
+    settings.setValue("mainwindow", saveGeometry());
+}
+
+void MainWindow::saveConfig() {
+    settings.setValue("mainwindow/numRewind", ui->numRewind->text().toInt());
+    settings.setValue("mainwindow/smartRewind", ui->smartRewind->isChecked());
+    settings.setValue("mainwindow/startFrame", ui->startFrame->text().toInt());
+    settings.setValue("mainwindow/endFrame", ui->endFrame->text().toInt());
+    settings.setValue("mainwindow/tabSelection", ui->tabWidget->currentIndex());
+
+    settings.setValue("mainwindow/customConfig", true);
+}
+
+void MainWindow::loadConfig() {
+    ui->numRewind->setText(QString::number(QVariant(settings.value("mainwindow/numRewind")).toInt()));
+    ui->smartRewind->setChecked(QVariant(settings.value("mainwindow/smartRewind")).toBool());
+    ui->startFrame->setText(QString::number(QVariant(settings.value("mainwindow/startFrame")).toInt()));
+    ui->endFrame->setText(QString::number(QVariant(settings.value("mainwindow/endFrame")).toInt()));
+    ui->tabWidget->setCurrentIndex(QVariant(settings.value("mainwindow/tabSelection")).toInt());
+}
+
+void MainWindow::defaultConfig() {
+    ui->numRewind->setText("100");
+    ui->smartRewind->setChecked(true);
+    ui->startFrame->setText("");
+    ui->endFrame->setText("");
+    ui->tabWidget->setCurrentIndex(0);
 }
 
 /*
@@ -611,25 +667,26 @@ void MainWindow::unfreeze()
   if (!servermode)
   {
     ui->toggleMole->setText("Start MOLE");
-    ui->checksum->setEnabled(true);
-    ui->server->setEnabled(true);;
     ui->multiLinkSelect->setEnabled(true);
     ui->numRewind->setEnabled(true);
     ui->remoteHost->setEnabled(true);
-    ui->backup->setEnabled(true);
     ui->toggleMole->setEnabled(true);
     ui->linkSelect->setEnabled(true);
+    ui->tabWidget->setEnabled(true);
+
+    options->enable_options();
   }
   else
   {
-    ui->checksum->setDisabled(true);
-    ui->server->setDisabled(true);;
+
     ui->multiLinkSelect->setDisabled(true);
     ui->numRewind->setDisabled(true);
     ui->remoteHost->setDisabled(true);
-    ui->backup->setDisabled(true);
     ui->toggleMole->setDisabled(true);
     ui->linkSelect->setDisabled(true);
+    ui->tabWidget->setDisabled(true);
+
+    options->disable_options();
   }
 }
 
@@ -640,13 +697,12 @@ void MainWindow::unfreeze()
  */
 void MainWindow::freeze()
 {
-  ui->checksum->setDisabled(true);
-  ui->server->setDisabled(true);
   ui->multiLinkSelect->setDisabled(true);
   ui->numRewind->setDisabled(true);
   ui->remoteHost->setDisabled(true);
-  ui->backup->setDisabled(true);
+  ui->tabWidget->setDisabled(true);
   ui->toggleMole->setText("Stop MOLE");
+  options->disable_options();
 
   if (servermode)
   {
@@ -663,27 +719,43 @@ void MainWindow::start_a_mole(int index)
 {
   QString mole_cmd = "mole --live-name "+ui->linkSelect->itemText(index)+" "+
                           "--filename "+ui->linkSelect->itemText(index)+" "+
-                          "@"+ui->remoteHost->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
+                          "@"+ui->remoteHost->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0]+" "+
+                          "-p "+QString::number(options->client_port)+" -P "+QString::number(options->server_port)+" ";
 
-  if (!ui->numRewind->text().isEmpty()) mole_cmd += " --rewind " +ui->numRewind->text();
-  else
-  {
-    mole_cmd += " --rewind=0";
-    ui->numRewind->setText(QString::number(0));
+  QWidget * current_tab = ui->tabWidget->currentWidget();
+  if (current_tab == ui->rewindTab) {
+      if (ui->smartRewind->isChecked()) {
+          mole_cmd += " -W ";
+      } else {
+          mole_cmd += " -w ";
+      }
+      if (!ui->numRewind->text().isEmpty()) {
+        mole_cmd += ui->numRewind->text();
+      } else {
+        mole_cmd += "0";
+        ui->numRewind->setText(QString::number(0));
+      }
+  } else if (current_tab == ui->dataSelectionTab) {
+      if (!ui->startFrame->text().isEmpty()) {
+          mole_cmd += " -S " + ui->startFrame->text();
+      } else {
+          mole_cmd += "- S 0";
+          ui->startFrame->setText(QString::number(0));
+      }
+      if (!ui->endFrame->text().isEmpty()) {
+          mole_cmd += " -E " + ui->endFrame->text();
+      } else {
+          mole_cmd += "- E " + QString::number(INT32_MAX);
+          ui->endFrame->setText(QString::number(INT32_MAX));
+      }
   }
 
-  if (ui->checksum->checkState() == Qt::Checked) mole_cmd += " --no-check";
-  if (ui->backup->checkState() == Qt::Checked) mole_cmd += " --backup";
-  if (ui->server->checkState() == Qt::Checked) mole_cmd += " --server";
-
-
-  QString aname = ui->linkSelect->itemText(index);
-  QString linkname = QString(configdir)+"/"+aname+".log";
-
-  mole_cmd += " > "+linkname+" &";
-  getSettings();
+  if (options->no_checksums) mole_cmd += " --no-check";
+  if (options->backup) mole_cmd += " --backup";
+  if (options->server) mole_cmd += " --server";
 
   // update configuration file
+  getSettings();
   char fname[128];
   sprintf(fname,"%s/%s",configdir,configfile);
   FILE * cfgfile = fopen(fname,"wb");
@@ -691,42 +763,28 @@ void MainWindow::start_a_mole(int index)
   fflush(cfgfile);
   fclose(cfgfile);
 
-  /*
-  QMessageBox::information(
-      this,
-      tr("Application Name"),
-      mole_cmd);
-  */
-
-  QByteArray ba = mole_cmd.toLatin1();
-  int ret = system(ba.data());
-  printf("%s\n",ba.data());
-  if (ret < 0)
-  {
-    QMessageBox::information(
-    this,
-    tr("Guacamole!"),
-    tr("Couldn't start mole."));
+  Logscroll * mole_log = new Logscroll(NULL, mole_cmd, false);
+  mole_log->setWindowTitle(mole_cmd);
+  mole_logs.push_back(mole_log);
+  if (options->mole_terminal) {
+      mole_log->show();
   }
-  //printf("Ran %s\n",ba.data());
-  QTest::qWait(50);
 
+}
+
+void MainWindow::stop_all_moles() {
+
+    for (unsigned int i = 0; i < mole_logs.size(); i++) {
+        delete mole_logs[i];
+    }
+    mole_logs.clear();
 }
 
 /*
  * Toggles whether or not mole clients are active
  */
-void MainWindow::on_toggleMole_clicked()
-{
-  int ret = system("pkill mole");
-
-  if (ret < 0)
-  {
-    QMessageBox::information(
-      this,
-      tr("Guacamole!"),
-      tr("Couldn't kill mole."));
-  }
+void MainWindow::on_toggleMole_clicked() {
+  stop_all_moles();
 
   if (mole_active)
   {
@@ -742,6 +800,8 @@ void MainWindow::on_toggleMole_clicked()
 
     on_linkSelect_currentIndexChanged(ui->linkSelect->currentText());
     //qDebug(ui->linkSelect->currentText().toLatin1());
+
+    options->show_helpers();
 
     data_incoming = 1;
     logend = time(0);
@@ -802,18 +862,13 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
 }
 void MainWindow::on_remoteHost_activated(const int &arg1)
 {
-  QString hostname = ui->remoteHost->itemText(arg1);
+  QString hostname = ui->remoteHost->itemText(arg1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
 
   if (arg1 == (ui->remoteHost->count()-1)) // last item is the custom item
   {
-    QString thehost;
+    QString thehost = hostname;
     bool ok;
     hostname = QInputDialog::getText(this, "Choose Remote Host", "What remote host should mole connect to?", QLineEdit::Normal, thehost, &ok);
-    if (!ok)
-    {
-      printf("No host to connect to. Exiting.\n");
-      exit(0);
-    }
     hostname += SELECTION_APPEND_TEXT;
     ui->remoteHost->setItemText(arg1,hostname);
   }
@@ -841,18 +896,14 @@ void MainWindow::change_remote_host(const QString &arg)
   if ((numlink = request_server_archive_list(&tcpconn,names)) > 0)// made a connection with the server
   {
     printf("Got server list\n");
-    int numactive = 0;
 
     //ui->multiLinkSelect->clear();
-    for (int i=0;i<numlink;i++)
+    for (int i=0; i<numlink; i++)
     {
-      bool active = 0;
-
-      ui->multiLinkSelect->addItem(names[i]);
-      if (active)
-      {
+      QString name = QString(names[i]);
+      ui->multiLinkSelect->addItem(name);
+      if (options->auto_live && name.endsWith(options->live_name)) {
           ui->multiLinkSelect->item(i)->setSelected(true);
-          numactive++;
       }
       num_linkfile++;
     }
@@ -861,9 +912,11 @@ void MainWindow::change_remote_host(const QString &arg)
   }
   else
   {
-    printf("No archive found at %s\n", tcpconn.ip);
     ui->remoteHost->setCurrentIndex(ui->remoteHost->count()-1);
-    on_remoteHost_activated(ui->remoteHost->count()-1);
+    QMessageBox::information(
+        this,
+        tr("Guaca-mole"),
+        tr("No archive found.") );
   }
   close_connection(&tcpconn);
 }
@@ -913,4 +966,27 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_actionAbout_Qt_triggered()
 {
   QMessageBox::aboutQt(this,"About Qt");
+}
+
+void MainWindow::on_actionOptions_triggered()
+{
+    options->load_options();
+    options->show();
+}
+
+void MainWindow::on_actionPurge_old_data_triggered()
+{
+    QString deletecmd = "find " + QString(archivedir) + "/. -type d -exec rm -r \"{}\" \\;";
+    QMessageBox::StandardButton reply = QMessageBox::question(this,
+                                                              "Delete archived data?",
+                                                              "Are you sure you want to run '" + deletecmd + "'?",
+                                                              QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        if (system(deletecmd.toLatin1().data()) < 0) {
+          QMessageBox::information(
+          this,
+          tr("Guacamole!"),
+          tr("Couldn't clear archived data."));
+        }
+    }
 }

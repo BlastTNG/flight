@@ -33,10 +33,10 @@
 #define MIN_CHKSM_SPACING 200 // number of bytes after which a checksum is automatically appended
 #define PACKET_HEADER_SIZE 12
 
-#define MAX_DATA_BLOCKS 8 // maximum data blocks per linklist
+#define MAX_DATA_BLOCKS 20 // maximum data blocks per linklist
 #define DEF_BLOCK_ALLOC 10000 // default block buffer size [bytes] 
 
-#define MAX_DATA_STREAMS 8 // maximum data streams per linklist
+#define MAX_DATA_STREAMS 20 // maximum data streams per linklist
 #define DEF_STREAM_ALLOC 10000 // default stream buffer size [bytes]
 
 #define ALL_FRAME_SERIAL 0x42424242

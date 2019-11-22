@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <getopt.h>
 #include <signal.h>
+#include <string.h>
 
 #define NAMELEN 100
 
@@ -30,13 +31,17 @@ char dataname[NAMELEN];
 
 char bit_filename[NAMELEN] = "/data/etc/mole.lnk";
 char bit_dataname[NAMELEN] = "ifc_log";
+char bit_colortag[NAMELEN] = "\n[] ";
 
 char spider_filename[NAMELEN] = "/data/etc/defile.lnk";
 char spider_tdrssname[NAMELEN] = "/data/etc/tdrss.lnk";
 char spider_dataname[NAMELEN] = "logstream";
+char spider_colortag[NAMELEN] = " \n";
 
 char blast_filename[NAMELEN] = "/data/etc/mole.lnk";
 char blast_dataname[NAMELEN] = "chatter";
+char blast_colortag[NAMELEN] = " \n";
+
 
 void usage(char *exe)
 {
@@ -44,10 +49,10 @@ void usage(char *exe)
   fprintf(stderr, "Translate FIELD from DIRFILE into ASCII on stdout.\n");
   fprintf(stderr, "-d <PATH_TO_DIRFILE>\n");
   fprintf(stderr, "-c <FIELD>\n");
+  fprintf(stderr, "-B                    BLAST:   same as -d %s -c %s\n", blast_filename, blast_dataname);
   fprintf(stderr, "-s                    Spider:   same as -d %s -c %s\n", spider_filename, spider_dataname);
   fprintf(stderr, "-t                    Spider TDRSS:   same as -d %s -c %s\n", spider_tdrssname, spider_dataname);
   fprintf(stderr, "-b                    superBIT: same as -d %s -c %s\n", bit_filename, bit_dataname);
-  fprintf(stderr, "-B                    BLAST-tng: same as -d %s -c %s\n", blast_filename, blast_dataname);
   fprintf(stderr, "-k                    color (default)\n");
   fprintf(stderr, "-m                    monochrome\n");
   
@@ -61,15 +66,15 @@ int main(int argc, char **argv)
   char c;
   char bname[NAMELEN];
   int is_color = 1;
-  char prev_char = '\n';
   int sync = 0;
+  char * color_tag = spider_colortag;
     
 
   // FIXME: sticky defaults
   snprintf(filename, NAMELEN, "%s", spider_filename);
   snprintf(dataname, NAMELEN, "%s", spider_dataname);
   
-  while ((c = getopt(argc, argv, "d:c:sbtB")) != -1) {
+  while ((c = getopt(argc, argv, "d:c:sbtmkB")) != -1) {
     switch (c) {
       case 'd':
         snprintf(filename, NAMELEN, "%s", optarg);
@@ -80,6 +85,7 @@ int main(int argc, char **argv)
       case 's':
         snprintf(filename, NAMELEN, "%s", spider_filename);
         snprintf(dataname, NAMELEN, "%s", spider_dataname);
+        color_tag = spider_colortag;
         break;
       case 't':
         snprintf(filename, NAMELEN, "%s", spider_tdrssname);
@@ -88,10 +94,12 @@ int main(int argc, char **argv)
       case 'b':
         snprintf(filename, NAMELEN, "%s", bit_filename);
         snprintf(dataname, NAMELEN, "%s", bit_dataname);
+        color_tag = bit_colortag;
         break;
       case 'B':
         snprintf(filename, NAMELEN, "%s", blast_filename);
         snprintf(dataname, NAMELEN, "%s", blast_dataname);
+        color_tag = blast_colortag;
         break;
       case 'k':
         is_color = 1;
@@ -118,40 +126,60 @@ int main(int argc, char **argv)
   FILE * df = fopen(bname,"rb");
   printf("Reading \"%s\" from %s\n",dataname,filename);
 
-  int i = 0;
+  int i = 0, j = 0;
+  int new_state = 0;
+  char state_c = color_tag[0];
+  int color_tag_len = strlen(color_tag);
   
   fseek(df,0,SEEK_END);
   while (1) {
     while ((c = fgetc(df)) != EOF) {
       i = 0;
 //      if ((c >= 0x20) || (c == '\n')) printf("%c",c);
-      
+
+      new_state = 0;
+      for (j = 0; j < color_tag_len; j++) {
+          if (c == color_tag[(j+1)%color_tag_len] && state_c == color_tag[j]) {
+              new_state = 1;
+              break;
+          }
+      }
+      if (new_state) {
+          state_c = c;
+      }
+
       if (is_color) {
-        if (prev_char == '\n' && (c == '*' || c == '!' || c == '$')) {
-          printf(RED);
-        }
-        if (prev_char == '\n' && (c == '+' || c == '#')) {
-          printf(CYN);
-        }
-        if (prev_char == '\n' && (c == ':')) {
-          printf(YLW);
-        }
-        if (prev_char == '\n' && (c == '=')) {
-          printf(MAG);
-        }
-        if (prev_char == '\n' && (c == '&')) {
-          printf(BLU);
+        if (state_c == color_tag[color_tag_len-1]) {
+          if (c == '*' || c == '!' || c == '$') {
+            printf(RED);
+          }
+          if (c == '+' || c == '#') {
+            printf(CYN);
+          }
+          if (c == ':') {
+            printf(YLW);
+          }
+          if (c == '=') {
+            printf(MAG);
+          }
+          if (c == '&') {
+            printf(BLU);
+          }
         }
         if (c == '\n') {
           printf(NOR);
         }
       }
       if (c >= 0x20 || c == '\n') {
-        if (is_color && sync > IDLE_SYNC) {
-          printf(CUR);
+        if (is_color) {
+          if (sync > IDLE_SYNC) {
+            printf(CUR);
+          }
+          if (state_c == color_tag[color_tag_len-1] && c != state_c) {
+            state_c = color_tag[0];
+          }
         }
         putchar(c);
-        prev_char = c;
         sync = 0;
       } else {
         sync++;

@@ -18,6 +18,7 @@ IF(BUILD_LIBRARY)
 		project(linklist)
 		cmake_minimum_required(VERSION 2.8.8)
 		include(GNUInstallDirs)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 		add_library(linklist STATIC
 				${LL_SOURCES}
@@ -27,7 +28,11 @@ IF(BUILD_LIBRARY)
 		target_include_directories(linklist PRIVATE .)
 
 		install(TARGETS linklist DESTINATION ${CMAKE_INSTALL_LIBDIR})
-		install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/linklist)
+    IF(CUSTOM_INSTALL)
+		  install(TARGETS linklist DESTINATION ${CUSTOM_INSTALL}) 
+    ELSE()
+		  install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/linklist)
+    ENDIF()
 ELSE()
 		set(LL_HEADERS
 				${LL_HEADERS}
