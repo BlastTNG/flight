@@ -380,6 +380,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_relays[10] = 1;
             break;
         case rw_cycle:
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             CommandData.Relays.cycle_of_12 = 1;
             CommandData.Relays.cycled_of = 1;
             CommandData.Relays.of_relays[11] = 1;
@@ -518,11 +519,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_12_on = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[11] = 1;
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             break;
         case rw_off:
             CommandData.Relays.of_12_off = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[11] = 0;
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             break;
         case steppers_on:
             CommandData.Relays.of_13_on = 1;
@@ -3760,7 +3763,7 @@ void InitCommandData()
     // including the encoder defaults.  This will trigger a wake-and-wiggle recommutation
     // of the reaction wheel which will make it unable to generate torque for many seconds.
     CommandData.ec_devices.have_commutated_rw = 0;
-
+    CommandData.ec_devices.rw_commutate_next_ec_reset = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
     CommandData.disable_el = 0;

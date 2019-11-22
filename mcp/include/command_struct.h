@@ -441,6 +441,7 @@ typedef struct {
     bool fix_piv;
     bool fix_hwpr;
     bool have_commutated_rw;
+    bool rw_commutate_next_ec_reset;
 } ec_devices_struct_t;
 
 typedef struct {

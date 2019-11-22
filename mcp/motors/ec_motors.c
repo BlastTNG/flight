@@ -1541,7 +1541,10 @@ int close_ec_motors()
 int configure_ec_motors()
 {
     find_controllers();
-
+    if (CommandData.ec_devices.rw_commutate_next_ec_reset) {
+        CommandData.ec_devices.have_commutated_rw = 0;
+        CommandData.ec_devices.rw_commutate_next_ec_reset = 0;
+    }
     for (int i = 1; i <= ec_slavecount; i++) {
         if (controller_state[i].is_hwp) {
             // hwp_pdo_init();
@@ -1716,7 +1719,6 @@ static void* motor_control(void* arg)
             set_rw_motor_defaults();
             CommandData.ec_devices.have_commutated_rw = 1;
         }
-        blast_info("Enabling or disabling the motor as appropriate.");
         if (CommandData.disable_az) {
             rw_disable();
             piv_disable();
