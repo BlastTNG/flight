@@ -194,9 +194,16 @@ typedef struct {
 #define ECAT_PHASE_ANGLE 0x2260, 0 /* Motor phasing mode (deg)*/
 #define ECAT_PHASE_ANGLE_RW 0x2262, 0 /* Motor phasing mode (deg)*/
 #define ECAT_PHASING_MODE 0x21C0, 0 /* Motor phasing mode */
+#define ECAT_MOTOR_HALL_OFF 0x2383, 6 /* Motor Hall Sensor Offset (deg)*/
+#define ECAT_PHASE_INIT_CONFIG 0x21C4, 0 /* ALGORITHMIC PHASE INITIALIZATION CONFIG  UINT16*/
+#define ECAT_CONTROL_MODE 0x6060, 0 /* Motor Control Mode UINT8*/
+#define ECAT_COMMUTATION_ANGLE 0x60EA, 0 /* Commutation Angle (2^16) UINT16 */
 
 #define ECAT_FUCHS_POSITION  0x6004, 0 /* PEPERL+FUCHS encoder position value UINT32 */
 #define ECAT_FUCHS_OP_STATUS 0x6500, 0 /* PEPERL+FUCHS encoder position value UINT16 */
+
+
+#define ECAT_PHASE_INIT 0x04 /* This is the configuration that we will start with  UINT16*/
 
 #define ECAT_DRIVE_STATUS 0x1002, 0 /* Drive status bitmap UINT32 */
 #  define ECAT_STATUS_SHORTCIRCUIT          (1<<0)
@@ -275,6 +282,8 @@ typedef struct {
 #  define ECAT_CTL_HALT                     (1<<8)
 
 #define ECAT_NET_STATUS 0x21B4, 0 /* Motor controller network status */
+                                  /* NOTE: this bit field can only be mapped to 
+                                  /* a transmit PDO */
 #  define ECAT_NET_NODE_STATUS      (1<<0) /* This is two bits */
 #  define ECAT_NET_SYNC_MISSING     (1<<4)
 #  define ECAT_NET_GUARD_ERROR      (1<<5)
