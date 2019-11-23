@@ -721,6 +721,24 @@ void piv_reset_fault(void)
  * Sets the current limits for each motor.
  * TODO: Update the current limits for each motor controller/motor pair
  */
+void rw_init_phasing(void)
+{
+    uint16_t phase_mode = 0;
+    uint8_t control_mode = 0;
+    int size = 0;
+    if (rw_index) {
+        ec_SDOread(rw_index, ECAT_PHASE_INIT_CONFIG, false, &size, &phase_mode, EC_TIMEOUTRXM);
+        blast_info("Algorithmic phasing initialization config = %d, writing %d, read %d bytes",
+                    phase_mode, ECAT_PHASE_INIT, size);
+        ec_SDOwrite16(rw_index, ECAT_PHASE_INIT_CONFIG, ECAT_PHASE_INIT);
+        ec_SDOread(rw_index, ECAT_CONTROL_MODE, false, &size, &control_mode, EC_TIMEOUTRXM);
+        blast_info("Control mode = %d, read %d bytes",
+                    control_mode, size);
+        ec_SDOread(rw_index, ECAT_PHASE_INIT_CONFIG, false, &size, &phase_mode, EC_TIMEOUTRXM);
+        blast_info("After change Algorithmic phasing initialization config = %d, read %d bytes",
+                    phase_mode, size);
+    }
+}
 void rw_init_current_limit(void)
 {
     if (rw_index) {
@@ -803,7 +821,7 @@ static void ec_init_heartbeat(int slave_index)
 {
     if (slave_index) {
         ec_SDOwrite16(slave_index, ECAT_HEARTBEAT_TIME, HEARTBEAT_MS);
-        ec_SDOwrite32(slave_index, ECAT_LIFETIME_FACTOR, LIFETIME_FACTOR_EC);
+        ec_SDOwrite8(slave_index, ECAT_LIFETIME_FACTOR, LIFETIME_FACTOR_EC);
     }
 }
 
@@ -932,16 +950,6 @@ static int hwp_pdo_init(void)
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
 
-//       map_pdo(&map, ECAT_FUCHS_POSITION, 32);  // Motor Position
-//       if (!ec_SDOwrite32(hwp_index, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
-//       map_pdo(&map, ECAT_FUCHS_OP_STATUS, 32);     // Actual Motor Velocity
-//       if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 2, map.val)) blast_err("Failed mapping!");
-//
-//      if (!ec_SDOwrite8(hwp_index, ECAT_TXPDO_MAPPING, 0, 2)) /// Set the 0x1a00 map to contain 1 elements
-//          blast_err("Failed mapping!");
-//      if (!ec_SDOwrite16(hwp_index, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
-//          blast_err("Failed mapping!");
-
     return 0;
 }
 
@@ -981,16 +989,16 @@ static int motor_pdo_init(int m_slave)
     /**
      * Define the PDOs that we want to send to the flight computer from the Controllers
      */
+    /**
+     * First map (0x1a00 register)
+     */
     map_pdo(&map, ECAT_MOTOR_POSITION, 32);  // Motor Position
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 1, map.val)) blast_err("Failed mapping!");
 
     map_pdo(&map, ECAT_VEL_ACTUAL, 32);     // Actual Motor Velocity
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 2, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_PHASING_MODE, 32);     // Phase mode
-    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING, 3, map.val)) blast_err("Failed mapping!");
-
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING, 0, 3)) /// Set the 0x1a00 map to contain 3 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING, 0, 2)) /// Set the 0x1a00 map to contain 2 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 1, ECAT_TXPDO_MAPPING)) /// 0x1a00 maps to the first PDO
         blast_err("Failed mapping!");
@@ -1002,21 +1010,22 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_ACTUAL_POSITION, 32); // Actual Position (load for El, duplicates ECAT_MOTOR_POSITION for others)
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 1, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word
     retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 2, map.val);
     if (!retval) {
         blast_err("Failed mapping!");
     }
-    map_pdo(&map, ECAT_CTL_WORD, 16); // Control Word
-    retval = ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val);
-    if (!retval) {
-        blast_err("Failed mapping!");
-    }
+
+    map_pdo(&map, ECAT_NET_STATUS, 16); // Network Status (including heartbeat monitor)
+    if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+1, 3, map.val)) blast_err("Failed mapping!");
 
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+1, 0, 3)) /// Set the 0x1a01 map to contain 3 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 2, ECAT_TXPDO_MAPPING + 1)) /// 0x1a01 maps to the second PDO
         blast_err("Failed mapping!");
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 
     /**
      * Third map (0x1a02 register)
@@ -1034,6 +1043,9 @@ static int motor_pdo_init(int m_slave)
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 3, ECAT_TXPDO_MAPPING + 2)) /// 0x1a02 maps to the third PDO
         blast_err("Failed mapping!");
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
 
     /**
      * Fourth map (0x1a03 register)
@@ -1044,15 +1056,14 @@ static int motor_pdo_init(int m_slave)
     map_pdo(&map, ECAT_CURRENT_ACTUAL, 16); // Measured current output
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 2, map.val)) blast_err("Failed mapping!");
 
-    map_pdo(&map, ECAT_PHASE_ANGLE, 16); // Motor phase angle
+//    map_pdo(&map, ECAT_PHASE_ANGLE, 16); // Motor phase angle
+    map_pdo(&map, ECAT_COMMUTATION_ANGLE, 16); // Commutation angle
     if (!ec_SDOwrite32(m_slave, ECAT_TXPDO_MAPPING+3, 3, map.val)) blast_err("Failed mapping!");
 
-
-    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3)) /// Set the 0x1a03 map to contain 2 elements
+    if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_MAPPING+3, 0, 3)) /// Set the 0x1a03 map to contain 3 elements
         blast_err("Failed mapping!");
     if (!ec_SDOwrite16(m_slave, ECAT_TXPDO_ASSIGNMENT, 4, ECAT_TXPDO_MAPPING + 3)) /// 0x1a03 maps to the fourth PDO
         blast_err("Failed mapping!");
-
     if (!ec_SDOwrite8(m_slave, ECAT_TXPDO_ASSIGNMENT, 0, 4)) /// There are four maps in the TX PDOs
         blast_err("Failed mapping!");
 
@@ -1078,6 +1089,10 @@ static int motor_pdo_init(int m_slave)
 
     map_pdo(&map, ECAT_CURRENT_LOOP_CMD, 16);    // Target Current
     ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 2, map.val);
+
+// Uncomment this once the phasing angle readout has been debugged
+//    map_pdo(&map, ECAT_PHASING_MODE, 16);    // Phasing Mode
+//    ec_SDOwrite32(m_slave, ECAT_RXPDO_MAPPING, 3, map.val);
 
     ec_SDOwrite8(m_slave, ECAT_RXPDO_MAPPING, 0, 2); /// Set the 0x1600 map to contain 2 elements
     ec_SDOwrite16(m_slave, ECAT_RXPDO_ASSIGNMENT, 1, ECAT_RXPDO_MAPPING); /// Set the 0x1600 map to the first PDO
@@ -1119,13 +1134,11 @@ static void map_index_vars(int m_index)
             found = true; \
         } \
     } \
+    if (!found) { \
+        blast_err("Could not find PDO map for index %d channdel index = %2x, subindex = %d", \
+                   m_index, object_index(_obj),  object_subindex(_obj)); \
+    } \
     }
-//     if (!found) { \
-//         blast_err("Could not find PDO map for %s", #_map); \
-//     } else { \
-//     	blast_info("Found PDO map for %s", #_map); \
-//     } \
-//     }
     if (controller_state[m_index].is_mc) {
         PDO_SEARCH_LIST(ECAT_MOTOR_POSITION, motor_position);
         PDO_SEARCH_LIST(ECAT_VEL_ACTUAL, motor_velocity);
@@ -1135,6 +1148,8 @@ static void map_index_vars(int m_index)
         PDO_SEARCH_LIST(ECAT_DRIVE_TEMP, amp_temp);
         PDO_SEARCH_LIST(ECAT_LATCHED_DRIVE_FAULT, latched_register);
         PDO_SEARCH_LIST(ECAT_CURRENT_ACTUAL, motor_current);
+//        PDO_SEARCH_LIST(ECAT_PHASE_ANGLE, phase_angle);
+        PDO_SEARCH_LIST(ECAT_COMMUTATION_ANGLE, phase_angle);
         PDO_SEARCH_LIST(ECAT_NET_STATUS, network_status_word);
         PDO_SEARCH_LIST(ECAT_CTL_WORD, control_word_read);
         while (ec_iserror()) {
@@ -1171,7 +1186,7 @@ static void map_index_vars(int m_index)
  */
 static void map_motor_vars(void)
 {
-	blast_info("Starting map_motor_vars.");
+    blast_info("Starting map_motor_vars.");
     if (el_index) {
         blast_info("mapping el_motors to index: %d", el_index);
         map_index_vars(el_index);
@@ -1365,7 +1380,7 @@ static void read_motor_data()
     RWMotorData[motor_i].control_word_read = rw_get_ctl_word();
     RWMotorData[motor_i].control_word_write = rw_get_ctl_word_write();
     RWMotorData[motor_i].network_problem = !is_rw_motor_ready();
-    RWMotorData[motor_i].phase_angle = rw_get_phase_angle();
+    RWMotorData[motor_i].phase_angle = rw_get_phase_angle()/65536.0*360.0;
     RWMotorData[motor_i].phase_mode = rw_get_phase_mode();
 
     ElevMotorData[motor_i].current = el_get_current() / 100.0; /// Convert from 0.01A in register to Amps
@@ -1470,30 +1485,51 @@ void mc_readPDOassign(int m_slave) {
     }
 }
 
-// Set defaults for the current limits, and pids
-void set_ec_motor_defaults()
+// Attempts to connect to the EtherCat devices.
+void set_rw_motor_defaults()
 {
+    /// Configure the reaction wheel phasing
+//    rw_init_phasing();
+
     /// Set the default current limits
+    if (!CommandData.ec_devices.have_commutated_rw) {
+        rw_init_encoder();
+    }
     rw_init_current_limit();
-    el_init_current_limit();
-    piv_init_current_limit();
-
     rw_init_current_pid();
-    el_init_current_pid();
-    piv_init_current_pid();
-
-    /// Set the encoder defaults
-    rw_init_encoder();
-    el_init_encoder();
-    piv_init_resolver();
-
-    /// Set up the heartbeat which tracks communication errors with the slaves
     ec_init_heartbeat(rw_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+}
+void set_el_motor_defaults()
+{
+    el_init_current_limit();
+    el_init_current_pid();
+    el_init_encoder();
     ec_init_heartbeat(el_index);
+    while (ec_iserror()) {
+        blast_err("%s", ec_elist2string());
+    }
+}
+
+void set_pivot_motor_defaults()
+{
+    piv_init_current_limit();
+    piv_init_current_pid();
+    piv_init_resolver();
     ec_init_heartbeat(piv_index);
     while (ec_iserror()) {
         blast_err("%s", ec_elist2string());
     }
+}
+
+// Set defaults for the current limits, and pids
+void set_ec_motor_defaults()
+{
+    set_rw_motor_defaults();
+    set_el_motor_defaults();
+    set_pivot_motor_defaults();
 }
 
 int close_ec_motors()
@@ -1505,7 +1541,10 @@ int close_ec_motors()
 int configure_ec_motors()
 {
     find_controllers();
-
+    if (CommandData.ec_devices.rw_commutate_next_ec_reset) {
+        CommandData.ec_devices.have_commutated_rw = 0;
+        CommandData.ec_devices.rw_commutate_next_ec_reset = 0;
+    }
     for (int i = 1; i <= ec_slavecount; i++) {
         if (controller_state[i].is_hwp) {
             // hwp_pdo_init();
@@ -1543,13 +1582,16 @@ int configure_ec_motors()
     }
 
     set_ec_motor_defaults();
+
     /// Start the Distributed Clock cycle
     motor_configure_timing();
+
 
     /// Put the motors in Operational mode (EtherCAT Operation)
     blast_info("Setting the EtherCAT devices in operational mode.");
     motor_set_operational();
 
+    blast_info("Writing the drive state to start current mode.");
     for (int i = 1; i <= ec_slavecount; i++) {
         if ((controller_state[i].slave_error == 0) && (controller_state[i].has_dc == 1)) {
             controller_state[i].comms_ok = 1;
@@ -1560,6 +1602,8 @@ int configure_ec_motors()
             ec_SDOwrite16(i, ECAT_DRIVE_STATE, ECAT_DRIVE_STATE_PROG_CURRENT);
         }
     }
+    // If things seem to be working then we don't need to recommutate the RW.
+    if (controller_state[rw_index].comms_ok) CommandData.ec_devices.have_commutated_rw = 1;
     return(1);
 }
 
@@ -1671,7 +1715,10 @@ static void* motor_control(void* arg)
             if (!reset_ec_motors()) blast_err("Reset of EtherCat devices failed!");
             CommandData.ec_devices.reset = 0;
         }
-
+        if (!CommandData.ec_devices.have_commutated_rw) {
+            set_rw_motor_defaults();
+            CommandData.ec_devices.have_commutated_rw = 1;
+        }
         if (CommandData.disable_az) {
             rw_disable();
             piv_disable();

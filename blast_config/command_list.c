@@ -353,6 +353,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(read_lo_all), "(All Roaches) Reads current LO frequencies", GR_ROACH},
   {COMMAND(read_pi_temp_all), "(All Roaches) Reads current Pi temp", GR_ROACH},
   {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
+  {COMMAND(rw_wake_and_wiggle), "Trigger a wake-and wiggle re-commutation of the reaction wheel motor.", GR_MOTOR},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 

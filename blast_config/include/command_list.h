@@ -115,7 +115,7 @@ enum singleCommand {
   autofocus_veto,   halt_fc1,         halt_fc2,       actbus_on,
   actbus_off,       actuator_stop,      restore_piv,
   reset_rw,         reset_piv,
-  reset_elev,       reset_ethercat,
+  reset_elev,       reset_ethercat, rw_wake_and_wiggle,
   // hs_pot_on,        hs_pot_off,       bda_on,             bda_off,
   hwpr_enc_on,
   hwpr_enc_off,     hwpr_enc_pulse,

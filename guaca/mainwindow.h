@@ -9,6 +9,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QTest>
 #include <QCloseEvent>
+#include <QListWidgetItem>
 
 #include "options.h"
 
@@ -55,13 +56,9 @@ private slots:
 
     void make_listfiles();
 
-    void on_multiLinkSelect_itemSelectionChanged();
-
     void on_linkSelect_currentIndexChanged(const QString &arg1);
 
-    void on_remoteHost_activated(const int &arg1);
-
-    void change_remote_host(const QString &arg);
+    bool change_remote_host(const QString &arg);
 
     void on_actionClose_triggered();
 
@@ -74,6 +71,14 @@ private slots:
     void on_actionOptions_triggered();
 
     void on_actionPurge_old_data_triggered();
+
+    void on_actionClear_remote_hosts_triggered();
+
+    void on_hosts_activated(int index);
+
+    void on_linkSelect_activated(const QString &arg1);
+
+    void on_multiLinkSelect_itemSelectionChanged();
 
 private:
     int num_linkfile;
@@ -95,6 +100,7 @@ private:
     void updateSettings();
     void getSettings();
     void savePosition();
+    void auto_select_link();
 
     void saveConfig();
     void loadConfig();
@@ -116,6 +122,11 @@ private:
     char gnd_ip[128];
     int servermode;
     QFuture<void> f1;
+
+    int host_index;
+    QString linkItem;
+    QStringList linkSelect;
+    bool has_warned;
 };
 
 #endif // MAINWINDOW_H
