@@ -106,7 +106,6 @@ void server_thread(void * arg)
       {
         *((int *) (configbuf+loc)) = cfg->multilinkindex[i]; loc += 4;
       } 
-      strcpy((char *) (configbuf+loc),cfg->customhost); loc += 64;
 
       if (send(sock, configbuf, loc, 0) <= 0)
       {
@@ -256,7 +255,6 @@ int MainWindow::get_server_data()
     {
       cfg.multilinkindex[i] = *((int *) (buf+loc)); loc += 4;
     }
-    strcpy(cfg.customhost,(char *) (buf+loc));
 
 
     if (VERBOSE) printf("Received config from master guaca\n");
@@ -364,9 +362,13 @@ void MainWindow::dancing()
       }
       fclose(statfile);
       statfile = NULL;
+      has_warned = false;
     }
     else
     {
+      if (!has_warned) QMessageBox::warning(this,"Invalid stat file",
+                            "Reference field "+ options->stat_field + " is invalid.\n Change under File->Options->Advanced->Reference Field.");
+      has_warned = true;
       data_incoming = 0;
     }
 
@@ -434,23 +436,10 @@ void MainWindow::dancing()
  */
 void MainWindow::updateSettings()
 {
-  ui->remoteHost->setCurrentIndex(cfg.hostindex);
   ui->numRewind->setText(QString::number(cfg.rewind));
   options->server = cfg.server;
   options->backup = cfg.backup;
   options->no_checksums = cfg.checksum;
-
-  ui->multiLinkSelect->clearSelection();
-
-
-  for (int i=0;i<cfg.multilinknum;i++)
-  {
-    //printf("%d\n",cfg.multilinkindex[i]);
-    if (cfg.multilinkindex[i] < ui->multiLinkSelect->count()) ui->multiLinkSelect->item(cfg.multilinkindex[i])->setSelected(true);
-  }
-  ui->linkSelect->setCurrentIndex(cfg.linkindex);
-  ui->remoteHost->setItemText(ui->remoteHost->count()-1,QString(cfg.customhost)+SELECTION_APPEND_TEXT);
- 
 
   //printf("set to %d\n",cfg.linkindex);
 }
@@ -460,27 +449,12 @@ void MainWindow::updateSettings()
  */
 void MainWindow::getSettings()
 {
-  cfg.hostindex = ui->remoteHost->currentIndex();
   cfg.rewind = ui->numRewind->text().toInt();
   cfg.server = options->server;
   cfg.backup = options->backup;
   cfg.checksum = options->no_checksums;
 
-  QModelIndexList indexes = ui->multiLinkSelect->selectionModel()->selectedIndexes();
-
-  int i = 0;
-  foreach(QModelIndex index, indexes)
-  {
-      cfg.multilinkindex[i] = index.row();
-      //printf("%d %d\n",i,index.row());
-      i++;
-  }
-  cfg.multilinknum = i;
-  cfg.linkindex = ui->linkSelect->currentIndex();
   //printf("saved to %d\n",cfg.linkindex);
-  QString customhost = ui->remoteHost->itemText(ui->remoteHost->count()-1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
-
-  strcpy(cfg.customhost,customhost.toLatin1().data());
 
 }
 
@@ -497,8 +471,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
 
-  //on_remoteHost_currentIndexChanged("localhost");
-
   ui->numRewind->setValidator(new QIntValidator(0, 1e8, this) );
   ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
   ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
@@ -507,13 +479,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
   memset((void *) &cfg,0,sizeof(struct GUACACONFIG));
   cfg.rewind = 100;
-
-  // file the remote hosts selection box
-  for (int i = 0; remote_hosts[i]; i++)
-  {
-    ui->remoteHost->addItem(QString(remote_hosts[i]));
-  }
-  ui->remoteHost->addItem(QString(" - Custom selection - "));
 
   // open the configuration directory and check previous configuration
   mkdir(configdir,00755);
@@ -549,7 +514,7 @@ MainWindow::MainWindow(QWidget *parent) :
       saveConfig();
   }
 
-  change_remote_host(ui->remoteHost->itemText(cfg.hostindex));
+  change_remote_host(ui->hosts->currentText());
 
   QString base = ":/images/guaca-";
   QString ext = ".svg";
@@ -640,6 +605,15 @@ void MainWindow::saveConfig() {
     settings.setValue("mainwindow/endFrame", ui->endFrame->text().toInt());
     settings.setValue("mainwindow/tabSelection", ui->tabWidget->currentIndex());
 
+    QStringList hosts;
+    for (int i = 1; i < ui->hosts->count()-1; i++) {
+        hosts << ui->hosts->itemText(i);
+    }
+    settings.setValue("mainwindow/host_list", hosts);
+    settings.setValue("mainwindow/host_index", ui->hosts->currentIndex());
+    settings.setValue("mainwindow/linkItem", linkItem);
+    settings.setValue("mainwindow/linkSelect", linkSelect);
+
     settings.setValue("mainwindow/customConfig", true);
 }
 
@@ -649,6 +623,18 @@ void MainWindow::loadConfig() {
     ui->startFrame->setText(QString::number(QVariant(settings.value("mainwindow/startFrame")).toInt()));
     ui->endFrame->setText(QString::number(QVariant(settings.value("mainwindow/endFrame")).toInt()));
     ui->tabWidget->setCurrentIndex(QVariant(settings.value("mainwindow/tabSelection")).toInt());
+
+    QStringList hosts = QVariant(settings.value("mainwindow/host_list")).toStringList();
+    for (int i = 0; i < hosts.count(); i++) {
+        ui->hosts->insertItem(i+1, hosts[i]);
+    }
+    host_index = QVariant(settings.value("mainwindow/host_index")).toInt();
+    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : 0;
+    ui->hosts->setCurrentIndex(host_index);
+    linkItem = QVariant(settings.value("mainwindow/linkItem")).toString();
+    linkSelect = QVariant(settings.value("mainwindow/linkSelect")).toStringList();
+    qDebug() << linkSelect;
+
 }
 
 void MainWindow::defaultConfig() {
@@ -657,6 +643,8 @@ void MainWindow::defaultConfig() {
     ui->startFrame->setText("");
     ui->endFrame->setText("");
     ui->tabWidget->setCurrentIndex(0);
+    ui->linkSelect->setCurrentIndex(0);
+    linkItem = "default";
 }
 
 /*
@@ -669,7 +657,7 @@ void MainWindow::unfreeze()
     ui->toggleMole->setText("Start MOLE");
     ui->multiLinkSelect->setEnabled(true);
     ui->numRewind->setEnabled(true);
-    ui->remoteHost->setEnabled(true);
+    ui->hosts->setEnabled(true);
     ui->toggleMole->setEnabled(true);
     ui->linkSelect->setEnabled(true);
     ui->tabWidget->setEnabled(true);
@@ -681,7 +669,7 @@ void MainWindow::unfreeze()
 
     ui->multiLinkSelect->setDisabled(true);
     ui->numRewind->setDisabled(true);
-    ui->remoteHost->setDisabled(true);
+    ui->hosts->setDisabled(true);
     ui->toggleMole->setDisabled(true);
     ui->linkSelect->setDisabled(true);
     ui->tabWidget->setDisabled(true);
@@ -699,7 +687,7 @@ void MainWindow::freeze()
 {
   ui->multiLinkSelect->setDisabled(true);
   ui->numRewind->setDisabled(true);
-  ui->remoteHost->setDisabled(true);
+  ui->hosts->setDisabled(true);
   ui->tabWidget->setDisabled(true);
   ui->toggleMole->setText("Stop MOLE");
   options->disable_options();
@@ -719,7 +707,7 @@ void MainWindow::start_a_mole(int index)
 {
   QString mole_cmd = "mole --live-name "+ui->linkSelect->itemText(index)+" "+
                           "--filename "+ui->linkSelect->itemText(index)+" "+
-                          "@"+ui->remoteHost->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0]+" "+
+                          "@"+ui->hosts->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0]+" "+
                           "-p "+QString::number(options->client_port)+" -P "+QString::number(options->server_port)+" ";
 
   QWidget * current_tab = ui->tabWidget->currentWidget();
@@ -811,20 +799,6 @@ void MainWindow::on_toggleMole_clicked() {
   cfg.active = mole_active;
 }
 
-/*
- * Populates the linklist selector based on the linklists chosen from
- * the main linklist list widget.
- */
-void MainWindow::on_multiLinkSelect_itemSelectionChanged()
-{
-  ui->linkSelect->clear();
-
-  QList<QListWidgetItem *> items = ui->multiLinkSelect->selectedItems();
-  foreach(QListWidgetItem * T, items)
-  {
-    ui->linkSelect->addItem(T->text());
-  }
-}
 
 /*
  * Forms symlinks for a given linklist when the option is changed
@@ -860,25 +834,11 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
     printf("Symlink failed (%s->%s)\n",masterloglink,ba.data());
   }
 }
-void MainWindow::on_remoteHost_activated(const int &arg1)
+
+bool MainWindow::change_remote_host(const QString &arg)
 {
-  QString hostname = ui->remoteHost->itemText(arg1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
+  bool connected = false;
 
-  if (arg1 == (ui->remoteHost->count()-1)) // last item is the custom item
-  {
-    QString thehost = hostname;
-    bool ok;
-    hostname = QInputDialog::getText(this, "Choose Remote Host", "What remote host should mole connect to?", QLineEdit::Normal, thehost, &ok);
-    hostname += SELECTION_APPEND_TEXT;
-    ui->remoteHost->setItemText(arg1,hostname);
-  }
-
-  change_remote_host(hostname);
-}
-
-
-void MainWindow::change_remote_host(const QString &arg)
-{
   QString hostname = arg.split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
   struct TCPCONN tcpconn;
   strcpy(tcpconn.ip,hostname.toLatin1().data());
@@ -888,7 +848,6 @@ void MainWindow::change_remote_host(const QString &arg)
   int numlink = 0;
 
   num_linkfile = 0;
-  //for (int i=0;i<ui->multiLinkSelect->count();i++) ui->multiLinkSelect->takeItem(i);
   ui->multiLinkSelect->clear();
 
 
@@ -897,28 +856,41 @@ void MainWindow::change_remote_host(const QString &arg)
   {
     printf("Got server list\n");
 
-    //ui->multiLinkSelect->clear();
+    QStringList storedLinkSelect = linkSelect;
+
     for (int i=0; i<numlink; i++)
     {
       QString name = QString(names[i]);
       ui->multiLinkSelect->addItem(name);
-      if (options->auto_live && name.endsWith(options->live_name)) {
+      if ((options->auto_live && name.endsWith(options->live_name)) || storedLinkSelect.contains(name)) {
           ui->multiLinkSelect->item(i)->setSelected(true);
       }
       num_linkfile++;
     }
+    linkSelect = storedLinkSelect;
+
+    // auto select the active link
+    auto_select_link();
 
     ui->linkDir->setText("Available telemetry streams from "+QString(hostname.data()));
+    connected = true;
   }
   else
   {
-    ui->remoteHost->setCurrentIndex(ui->remoteHost->count()-1);
     QMessageBox::information(
         this,
         tr("Guaca-mole"),
         tr("No archive found.") );
   }
   close_connection(&tcpconn);
+
+  return connected;
+}
+
+void MainWindow::auto_select_link() {
+    int linkIndex = ui->linkSelect->findText(linkItem);
+    if (linkIndex < 0) linkIndex = 0;
+    ui->linkSelect->setCurrentIndex(linkIndex);
 }
 
 void MainWindow::on_actionClose_triggered()
@@ -989,4 +961,75 @@ void MainWindow::on_actionPurge_old_data_triggered()
           tr("Couldn't clear archived data."));
         }
     }
+}
+
+void MainWindow::on_hosts_activated(int index)
+{
+    bool reconnect = host_index != index;
+    bool newitem = false;
+
+    // the last item was selected, which is the add host option
+    if (index == (ui->hosts->count()-1)) {
+      bool ok;
+      QString thehost = QInputDialog::getText(this, "Add remote host", "What remote host should mole connect to?", QLineEdit::Normal, NULL, &ok);
+      if (ok) {
+          int existing_index = ui->hosts->findText(thehost);
+          if (existing_index < 0) {
+              // add the new host
+              ui->hosts->insertItem(index, thehost);
+              newitem = true;
+          } else {
+              index = existing_index;
+          }
+          reconnect = true;
+      } else {
+          // return to previously selected
+          ui->hosts->setCurrentIndex(host_index);
+          reconnect = false;
+      }
+    }
+    // reconnect to the server if host has actually changed
+    if (reconnect) {
+        if (change_remote_host(ui->hosts->itemText(index))) {
+            host_index = index;
+        } else if (newitem) {
+            ui->hosts->removeItem(index);
+            change_remote_host(ui->hosts->itemText(host_index));
+        }
+        ui->hosts->setCurrentIndex(host_index);
+    }
+}
+
+void MainWindow::on_actionClear_remote_hosts_triggered()
+{
+    while (ui->hosts->count() > 2) {
+        ui->hosts->removeItem(1);
+    }
+    host_index = 1;
+    on_hosts_activated(1);
+}
+
+void MainWindow::on_linkSelect_activated(const QString &arg1)
+{
+    linkItem = arg1;
+}
+
+/*
+ * Populates the linklist selector based on the linklists chosen from
+ * the main linklist list widget.
+ */
+
+void MainWindow::on_multiLinkSelect_itemSelectionChanged()
+{
+    ui->linkSelect->clear();
+    linkSelect.clear();
+
+    QList<QListWidgetItem *> items = ui->multiLinkSelect->selectedItems();
+    foreach(QListWidgetItem * T, items)
+    {
+      ui->linkSelect->addItem(T->text());
+      linkSelect << T->text();
+    }
+
+    auto_select_link();
 }
