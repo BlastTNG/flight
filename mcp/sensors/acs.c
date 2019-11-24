@@ -456,9 +456,9 @@ void store_200hz_acs(void)
     static channel_t* ifRollgy2Addr;
     static channel_t* ifYawgy2Addr;
 
-    float gy_ifel;
-    float gy_ifroll;
-    float gy_ifyaw;
+    static float gy_ifel, gy_ifel_calc;
+    static float gy_ifroll, gy_ifroll_calc;
+    static float gy_ifyaw, gy_ifyaw_calc;
     static channel_t* ifel_gy_addr;
     static channel_t* ifroll_gy_addr;
     static channel_t* ifyaw_gy_addr;
@@ -470,6 +470,7 @@ void store_200hz_acs(void)
     static channel_t* gyro_valid_addr[2][3];
     static uint32_t gyro_valid_count[2][3] = {{0}};
     static uint32_t gyro_valid_set[2][3] = {{0}};
+    static uint32_t gyro_zero_count[3] = {0};
 
     static int firsttime = 1;
     if (firsttime) {
@@ -511,12 +512,33 @@ void store_200hz_acs(void)
     SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
     SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
 
-    gy_ifroll= gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1
-             + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
-    gy_ifyaw = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1
-             + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
-    gy_ifel  = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1
-             + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
+    gy_ifroll_calc = gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1
+                   + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
+    gy_ifyaw_calc  = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1
+                   + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
+    gy_ifel_calc   = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1
+                   + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
+
+    // Handle zero readings
+    float * gy_if_calc[3] = {&gy_ifroll_calc, &gy_ifyaw_calc, &gy_ifel_calc};
+    float * gy_if[3] = {&gy_ifroll, &gy_ifyaw, &gy_ifel};
+    for (int i = 0; i < 3; i++) {
+        if (*gy_if_calc[i] == 0.0) {
+            if (gyro_zero_count[i] < 400) {
+                // tentative zero
+                gyro_zero_count[i]++;
+            } else {
+                // true zero (i.e. powered off), so report it
+                *gy_if[i] = *gy_if_calc[i];
+            }
+        } else {
+            // got a non-zero reading, so report as such
+            *gy_if[i] = *gy_if_calc[i];
+            gyro_zero_count[i] = 0;
+        }
+    }
+
+
     SET_FLOAT(ifel_gy_addr, gy_ifel);
     SET_FLOAT(ifroll_gy_addr, gy_ifroll);
     SET_FLOAT(ifyaw_gy_addr, gy_ifyaw);

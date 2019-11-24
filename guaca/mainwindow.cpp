@@ -96,7 +96,7 @@ void server_thread(void * arg)
       *((int *) (configbuf+loc)) = cfg->linkindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->hostindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->checksum;     loc += 4;
-      *((int *) (configbuf+loc)) = cfg->server;      loc += 4;
+      *((int *) (configbuf+loc)) = cfg->server;     d loc += 4;
       *((int *) (configbuf+loc)) = cfg->backup;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4; 
       *((int *) (configbuf+loc)) = cfg->active;       loc += 4;
@@ -629,11 +629,10 @@ void MainWindow::loadConfig() {
         ui->hosts->insertItem(i+1, hosts[i]);
     }
     host_index = QVariant(settings.value("mainwindow/host_index")).toInt();
-    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : 0;
+    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : (ui->hosts->count()-1);
     ui->hosts->setCurrentIndex(host_index);
     linkItem = QVariant(settings.value("mainwindow/linkItem")).toString();
     linkSelect = QVariant(settings.value("mainwindow/linkSelect")).toStringList();
-    qDebug() << linkSelect;
 
 }
 
@@ -643,7 +642,9 @@ void MainWindow::defaultConfig() {
     ui->startFrame->setText("");
     ui->endFrame->setText("");
     ui->tabWidget->setCurrentIndex(0);
-    ui->linkSelect->setCurrentIndex(0);
+
+    ui->hosts->setCurrentIndex(ui->hosts->count()-1);
+    host_index = ui->hosts->count()-1;
     linkItem = "default";
 }
 
