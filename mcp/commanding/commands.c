@@ -3787,6 +3787,7 @@ void InitCommandData()
     CommandData.clin_el_trim = 0;
     CommandData.enc_motor_el_trim = 25.16;
     CommandData.null_az_trim = 0;
+    CommandData.null_el_trim = 0;
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;

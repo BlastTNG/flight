@@ -1068,6 +1068,7 @@ void store_5hz_acs(void)
     static channel_t* latAddr;
     static channel_t* lonAddr;
     static channel_t* lstAddr;
+    static channel_t* elNullAddr;
     static channel_t* azNullAddr;
     static channel_t* azMagNAddr;
     static channel_t* azRawMagNAddr;
@@ -1155,6 +1156,7 @@ void store_5hz_acs(void)
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncMotorAddr;
+    static channel_t *trimElNullAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagNAddr;
     static channel_t *trimMagSAddr;
@@ -1278,6 +1280,7 @@ void store_5hz_acs(void)
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagNAddr = channels_find_by_name("sigma_mag1");
         sigmaMagSAddr = channels_find_by_name("sigma_mag2");
+        elNullAddr = channels_find_by_name("el_null");
         azNullAddr = channels_find_by_name("az_null");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
@@ -1346,6 +1349,7 @@ void store_5hz_acs(void)
 
         trimClinAddr = channels_find_by_name("trim_clin");
         trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
+        trimElNullAddr = channels_find_by_name("trim_el_null");
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagNAddr = channels_find_by_name("trim_mag1");
         trimMagSAddr = channels_find_by_name("trim_mag2");
@@ -1502,6 +1506,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
+    SET_SCALED_VALUE(elNullAddr, PointingData[i_point].null_el);
     SET_SCALED_VALUE(azNullAddr, PointingData[i_point].null_az);
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
@@ -1513,6 +1518,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(sigmaClinAddr, PointingData[i_point].clin_sigma);
     SET_SCALED_VALUE(trimClinAddr, CommandData.clin_el_trim);
 
+    SET_SCALED_VALUE(trimElNullAddr, CommandData.null_el_trim);
     SET_SCALED_VALUE(trimNullAddr, CommandData.null_az_trim);
 
     SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);

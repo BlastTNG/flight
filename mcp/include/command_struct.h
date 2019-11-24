@@ -571,6 +571,7 @@ struct CommandDataStruct {
   double clin_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
+  double null_el_trim;
   double mag_az_trim[2];
   double pss_az_trim;
   double dgps_az_trim;
