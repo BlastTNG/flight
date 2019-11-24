@@ -21,6 +21,10 @@ ui_*
 cow/cow
 cow/Makefile
 cow/.qmake.stash
+cow/cow-icon.png
+cow/cow.ico
+cow/data/cbn_bit.herd
+cow/data/spider.herd
 owl/other_makefile/
 owl/owl
 owl/Makefile
