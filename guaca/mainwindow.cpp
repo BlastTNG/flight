@@ -46,31 +46,31 @@ void server_thread(void * arg)
   struct GUACACONFIG * cfg = (struct GUACACONFIG *) arg;
 
   unsigned int theport = GUACAPORT;
-  
-  //Create socket 
+
+  //Create socket
   int socket_desc = socket(AF_INET , SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (socket_desc == -1)
-  { 
+  {
     perror("socket could not create server socket");
     return;
   }
-  
+
   //Prepare the sockaddr_in structure
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(theport);
-  
+
   int tru = 1;
   setsockopt(socket_desc,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
-  
+
   //Bind
   if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-  { 
+  {
     //print the error message
     perror("bind failed. Unable to start guacamole server: ");
     return;
   }
-  
+
   //Listen
   listen(socket_desc , 3);
 
@@ -78,9 +78,9 @@ void server_thread(void * arg)
   //Accept and incoming connection
   if (VERBOSE) printf("Waiting for incoming connections...\n");
   c = sizeof(struct sockaddr_in);
- 
+
   uint8_t configbuf[2048] = {0};
- 
+
   while (server_active)
   {
     if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0)
@@ -96,21 +96,21 @@ void server_thread(void * arg)
       *((int *) (configbuf+loc)) = cfg->linkindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->hostindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->checksum;     loc += 4;
-      *((int *) (configbuf+loc)) = cfg->server;     d loc += 4;
+      *((int *) (configbuf+loc)) = cfg->server;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->backup;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4; 
+      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->active;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->multilinknum; loc += 4;
 
       for (int i=0;i<MAX_NUM_LINKFILE; i++)
       {
         *((int *) (configbuf+loc)) = cfg->multilinkindex[i]; loc += 4;
-      } 
+      }
 
       if (send(sock, configbuf, loc, 0) <= 0)
       {
         printf("Unable to send client data\n");
-      } 
+      }
 
       close(sock);
     }

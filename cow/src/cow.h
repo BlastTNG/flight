@@ -86,7 +86,7 @@ public:
 private:
     double *rdefaults[MAX_N_PARAMS];
     int *idefaults[MAX_N_PARAMS];
-    char (*sdefaults[MAX_N_PARAMS])[32];
+    char (*sdefaults[MAX_N_PARAMS])[CMD_STRING_LEN];
 };
 
 extern Defaults *defaults;
@@ -96,7 +96,7 @@ class MainForm : public QMainWindow
     Q_OBJECT
 
 public:
-    MainForm(const char *cf, const QString &herdfile, QWidget* parent = 0, const char* name = 0,
+    MainForm(const char *cf, const QString &herdfile, int link, QWidget* parent = 0, const char* name = 0,
              Qt::WindowFlags fl = 0);
     ~MainForm();
 
