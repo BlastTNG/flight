@@ -80,6 +80,8 @@ private slots:
 
     void on_multiLinkSelect_itemSelectionChanged();
 
+    int add_a_host(const QString &thehost);
+
 private:
     int num_linkfile;
     int linkids[3];

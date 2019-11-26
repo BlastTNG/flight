@@ -73,19 +73,6 @@
 #define HEAT_CALIBRATOR      0x0040
 #define HEAT_HWPR_POS        0x0080
 
-#define LS_CLOSED      0x0002
-#define LS_DRIVE_OFF   0x0004
-#define LS_POT_RAIL    0x0008  // now defunct
-#define LS_DRIVE_EXT   0x0010
-#define LS_DRIVE_RET   0x0020
-#define LS_DRIVE_STP   0x0040
-#define LS_DRIVE_JIG   0x0080  // now defunct
-#define LS_DRIVE_UNK   0x0100
-#define LS_EL_OK       0x0200
-#define LS_IGNORE_EL   0x0400
-#define LS_DRIVE_FORCE 0x0800
-#define LS_DRIVE_MASK  0x09F4
-
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
 /* time (slow frames) to keep power off when power cycling devices */
@@ -115,13 +102,13 @@ struct PivGainStruct {
     double F; // Current offset to overcome static friction.
 };
 
-#define LS_OPEN        0x0001
-#define LS_CLOSED      0x0002
-#define LS_DRIVE_OFF   0x0004
+#define LS_OPEN        0x0001  // Set => Lock is OPEN
+#define LS_CLOSED      0x0002  // Set => Lock is CLOSED
+#define LS_DRIVE_OFF   0x0004  // Set => Drive is OFF or NOT MOVING
 #define LS_POT_RAIL    0x0008  // now defunct
-#define LS_DRIVE_EXT   0x0010
-#define LS_DRIVE_RET   0x0020
-#define LS_DRIVE_STP   0x0040
+#define LS_DRIVE_EXT   0x0010  // Set => Drive is extending
+#define LS_DRIVE_RET   0x0020  // Set => Drive is retracting
+#define LS_DRIVE_STP   0x0040  // This is never set. No idea what this is.
 #define LS_DRIVE_JIG   0x0080  // now defunct
 #define LS_DRIVE_UNK   0x0100
 #define LS_EL_OK       0x0200
@@ -571,6 +558,7 @@ struct CommandDataStruct {
   double clin_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
+  double null_el_trim;
   double mag_az_trim[2];
   double pss_az_trim;
   double dgps_az_trim;

@@ -30,6 +30,16 @@ char *remote_hosts[] = {
   NULL
 };
 
+void USAGE(void) {
+
+  printf("\n\nGUI front-end for mole to conveniently grab telemetry data from server.\n\n"
+      "Usage: guaca [host] [OPTION]...\n\n"
+      " -h                 Display this message.\n"
+      "\n");
+
+    exit(0);
+}
+
 /*
  * This thread waits for slave guacas to connect and then serves
  * up the configuration file to the slave
@@ -46,31 +56,31 @@ void server_thread(void * arg)
   struct GUACACONFIG * cfg = (struct GUACACONFIG *) arg;
 
   unsigned int theport = GUACAPORT;
-  
-  //Create socket 
+
+  //Create socket
   int socket_desc = socket(AF_INET , SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (socket_desc == -1)
-  { 
+  {
     perror("socket could not create server socket");
     return;
   }
-  
+
   //Prepare the sockaddr_in structure
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(theport);
-  
+
   int tru = 1;
   setsockopt(socket_desc,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
-  
+
   //Bind
   if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-  { 
+  {
     //print the error message
     perror("bind failed. Unable to start guacamole server: ");
     return;
   }
-  
+
   //Listen
   listen(socket_desc , 3);
 
@@ -78,9 +88,9 @@ void server_thread(void * arg)
   //Accept and incoming connection
   if (VERBOSE) printf("Waiting for incoming connections...\n");
   c = sizeof(struct sockaddr_in);
- 
+
   uint8_t configbuf[2048] = {0};
- 
+
   while (server_active)
   {
     if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0)
@@ -96,21 +106,21 @@ void server_thread(void * arg)
       *((int *) (configbuf+loc)) = cfg->linkindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->hostindex;    loc += 4;
       *((int *) (configbuf+loc)) = cfg->checksum;     loc += 4;
-      *((int *) (configbuf+loc)) = cfg->server;      loc += 4;
+      *((int *) (configbuf+loc)) = cfg->server;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->backup;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4; 
+      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->active;       loc += 4;
       *((int *) (configbuf+loc)) = cfg->multilinknum; loc += 4;
 
       for (int i=0;i<MAX_NUM_LINKFILE; i++)
       {
         *((int *) (configbuf+loc)) = cfg->multilinkindex[i]; loc += 4;
-      } 
+      }
 
       if (send(sock, configbuf, loc, 0) <= 0)
       {
         printf("Unable to send client data\n");
-      } 
+      }
 
       close(sock);
     }
@@ -514,6 +524,26 @@ MainWindow::MainWindow(QWidget *parent) :
       saveConfig();
   }
 
+  // Parse arguments
+  QStringList args = QCoreApplication::arguments();
+  for (int i = 1; i < args.count(); i++) {
+      if (QString(args[i]).startsWith('-')) {
+          if (QString(args[i]) == "-h") {
+              USAGE();
+          } else {
+              printf("\n\n");
+              qDebug() << "Unrecognized option: " + args[i];
+              USAGE();
+          }
+      } else if (i == 1) { // first argument is host
+          host_index = add_a_host(args.at(1));
+          ui->hosts->setCurrentIndex(host_index);
+      } else {
+          USAGE();
+      }
+  }
+
+  // Query remote host
   change_remote_host(ui->hosts->currentText());
 
   QString base = ":/images/guaca-";
@@ -539,20 +569,9 @@ MainWindow::MainWindow(QWidget *parent) :
   logend = time(0);
   statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
-  if (QCoreApplication::arguments().count() > 1) // slave mode
-  {
-    QByteArray ba = QCoreApplication::arguments().at(1).toLatin1();
-    const char *c_str2 = ba.data();
-    strcpy(gnd_ip,c_str2);
-    printf("Guaca is slaved to \"%s\"\n",gnd_ip);
-    //servermode = 1;
-  }
-  else
-  {
-    server_active = 1;
-    f1 = QtConcurrent::run(server_thread, &cfg);
-    servermode = 0;
-  }
+  server_active = 1;
+  f1 = QtConcurrent::run(server_thread, &cfg);
+  servermode = 0;
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
@@ -629,11 +648,10 @@ void MainWindow::loadConfig() {
         ui->hosts->insertItem(i+1, hosts[i]);
     }
     host_index = QVariant(settings.value("mainwindow/host_index")).toInt();
-    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : 0;
+    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : (ui->hosts->count()-1);
     ui->hosts->setCurrentIndex(host_index);
     linkItem = QVariant(settings.value("mainwindow/linkItem")).toString();
     linkSelect = QVariant(settings.value("mainwindow/linkSelect")).toStringList();
-    qDebug() << linkSelect;
 
 }
 
@@ -643,7 +661,9 @@ void MainWindow::defaultConfig() {
     ui->startFrame->setText("");
     ui->endFrame->setText("");
     ui->tabWidget->setCurrentIndex(0);
-    ui->linkSelect->setCurrentIndex(0);
+
+    ui->hosts->setCurrentIndex(ui->hosts->count()-1);
+    host_index = ui->hosts->count()-1;
     linkItem = "default";
 }
 
@@ -963,6 +983,20 @@ void MainWindow::on_actionPurge_old_data_triggered()
     }
 }
 
+int MainWindow::add_a_host(const QString &thehost)
+{
+    int index = ui->hosts->count()-1;
+
+    int existing_index = ui->hosts->findText(thehost);
+    if (existing_index < 0) {
+        // add the new host
+        ui->hosts->insertItem(index, thehost);
+        return index;
+    } else {
+        return existing_index;
+    }
+}
+
 void MainWindow::on_hosts_activated(int index)
 {
     bool reconnect = host_index != index;
@@ -973,14 +1007,7 @@ void MainWindow::on_hosts_activated(int index)
       bool ok;
       QString thehost = QInputDialog::getText(this, "Add remote host", "What remote host should mole connect to?", QLineEdit::Normal, NULL, &ok);
       if (ok) {
-          int existing_index = ui->hosts->findText(thehost);
-          if (existing_index < 0) {
-              // add the new host
-              ui->hosts->insertItem(index, thehost);
-              newitem = true;
-          } else {
-              index = existing_index;
-          }
+          newitem = add_a_host(thehost) == index;
           reconnect = true;
       } else {
           // return to previously selected
