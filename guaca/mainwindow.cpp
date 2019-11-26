@@ -30,6 +30,16 @@ char *remote_hosts[] = {
   NULL
 };
 
+void USAGE(void) {
+
+  printf("\n\nGUI front-end for mole to conveniently grab telemetry data from server.\n\n"
+      "Usage: guaca [host] [OPTION]...\n\n"
+      " -h                 Display this message.\n"
+      "\n");
+
+    exit(0);
+}
+
 /*
  * This thread waits for slave guacas to connect and then serves
  * up the configuration file to the slave
@@ -514,6 +524,26 @@ MainWindow::MainWindow(QWidget *parent) :
       saveConfig();
   }
 
+  // Parse arguments
+  QStringList args = QCoreApplication::arguments();
+  for (int i = 1; i < args.count(); i++) {
+      if (QString(args[i]).startsWith('-')) {
+          if (QString(args[i]) == "-h") {
+              USAGE();
+          } else {
+              printf("\n\n");
+              qDebug() << "Unrecognized option: " + args[i];
+              USAGE();
+          }
+      } else if (i == 1) { // first argument is host
+          host_index = add_a_host(args.at(1));
+          ui->hosts->setCurrentIndex(host_index);
+      } else {
+          USAGE();
+      }
+  }
+
+  // Query remote host
   change_remote_host(ui->hosts->currentText());
 
   QString base = ":/images/guaca-";
@@ -539,20 +569,9 @@ MainWindow::MainWindow(QWidget *parent) :
   logend = time(0);
   statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
-  if (QCoreApplication::arguments().count() > 1) // slave mode
-  {
-    QByteArray ba = QCoreApplication::arguments().at(1).toLatin1();
-    const char *c_str2 = ba.data();
-    strcpy(gnd_ip,c_str2);
-    printf("Guaca is slaved to \"%s\"\n",gnd_ip);
-    //servermode = 1;
-  }
-  else
-  {
-    server_active = 1;
-    f1 = QtConcurrent::run(server_thread, &cfg);
-    servermode = 0;
-  }
+  server_active = 1;
+  f1 = QtConcurrent::run(server_thread, &cfg);
+  servermode = 0;
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
@@ -964,6 +983,20 @@ void MainWindow::on_actionPurge_old_data_triggered()
     }
 }
 
+int MainWindow::add_a_host(const QString &thehost)
+{
+    int index = ui->hosts->count()-1;
+
+    int existing_index = ui->hosts->findText(thehost);
+    if (existing_index < 0) {
+        // add the new host
+        ui->hosts->insertItem(index, thehost);
+        return index;
+    } else {
+        return existing_index;
+    }
+}
+
 void MainWindow::on_hosts_activated(int index)
 {
     bool reconnect = host_index != index;
@@ -974,14 +1007,7 @@ void MainWindow::on_hosts_activated(int index)
       bool ok;
       QString thehost = QInputDialog::getText(this, "Add remote host", "What remote host should mole connect to?", QLineEdit::Normal, NULL, &ok);
       if (ok) {
-          int existing_index = ui->hosts->findText(thehost);
-          if (existing_index < 0) {
-              // add the new host
-              ui->hosts->insertItem(index, thehost);
-              newitem = true;
-          } else {
-              index = existing_index;
-          }
+          newitem = add_a_host(thehost) == index;
           reconnect = true;
       } else {
           // return to previously selected
