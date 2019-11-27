@@ -48,10 +48,12 @@ Options::~Options() {
     settings.setValue("options", saveGeometry());
 
     for (unsigned int i=0; i<helpers.size(); i++) {
-        delete helpers[i];
+        if (helpers[i]) delete helpers[i];
+        helpers[i] = NULL;
     }
     qDebug() << "Destroying options";
-    delete ui;
+    if (ui) delete ui;
+    ui = NULL;
 }
 
 unsigned int Options::add_helper(QString cmdname, QString args, bool terminal, unsigned int row) {
@@ -285,6 +287,7 @@ Helper::Helper(QString cmdname, QString args, bool terminal) {
 Helper::~Helper() {
     qDebug() << "Destroying helper";
     if (log) delete log;
+    log = NULL;
 }
 
 
@@ -303,7 +306,8 @@ void Options::on_buttonBox_clicked(QAbstractButton *button)
     if (button != ui->buttonBox->button(QDialogButtonBox::Close)) {
         // clear old helpers
         for (unsigned int i=0; i<helpers.size(); i++) {
-            delete helpers[i];
+            if (helpers[i]) delete helpers[i];
+            helpers[i] = NULL;
         }
         helpers.clear();
         if (button == ui->buttonBox->button(QDialogButtonBox::Save)) {
