@@ -21,11 +21,14 @@ Logscroll::~Logscroll()
     qDebug() << "Destroying log";
     savePosition();
     stopProcess();
-    delete ui;
+    if (ui) delete ui;
+    ui = NULL;
+    printf("Destroyed log\n");
 }
 
 void Logscroll::stopProcess() {
     if (process) process->kill();
+    process = NULL;
 }
 
 bool Logscroll::doneProcess() {

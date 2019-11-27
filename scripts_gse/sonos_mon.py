@@ -5,11 +5,11 @@ from datetime import datetime
 import pygetdata as gd
 import soco
 
-DEVICE_ADDRESS = "192.168.0.135"
+DEVICE_ADDRESS = "192.168.0.140"
 DATAFILE = "/data/etc/mole.lnk"
 
-#sonos = soco.SoCo(DEVICE_ADDRESS)
-sonos = soco.discovery.any_soco()
+sonos = soco.SoCo(DEVICE_ADDRESS)
+#sonos = soco.discovery.any_soco()
 df = gd.dirfile(DATAFILE, gd.RDONLY)
 
 # find the tracks

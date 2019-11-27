@@ -782,10 +782,13 @@ void MainWindow::start_a_mole(int index)
 
 void MainWindow::stop_all_moles() {
 
+    printf("Stopping all moles...\n");
     for (unsigned int i = 0; i < mole_logs.size(); i++) {
-        delete mole_logs[i];
+        if (mole_logs[i]) delete mole_logs[i];
+        mole_logs[i] = NULL;
     }
     mole_logs.clear();
+    printf("All moles stopped\n");
 }
 
 /*
