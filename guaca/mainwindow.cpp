@@ -516,10 +516,10 @@ MainWindow::MainWindow(QWidget *parent) :
   updateSettings();
 
   if (settings.contains("mainwindow/customConfig")) {
-      qDebug() << "Restoring saved options";
+      qDebug() << "Restoring saved config";
       loadConfig();
   } else {
-      qDebug() << "Using default options";
+      qDebug() << "Using default config";
       defaultConfig();
       saveConfig();
   }
@@ -601,6 +601,7 @@ MainWindow::~MainWindow()
   options = NULL;
   if (ui) delete ui;
   ui = NULL;
+  qDebug() << "Closing";
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -631,12 +632,13 @@ void MainWindow::saveConfig() {
     settings.setValue("mainwindow/host_list", hosts);
     settings.setValue("mainwindow/host_index", ui->hosts->currentIndex());
     settings.setValue("mainwindow/linkItem", linkItem);
-    settings.setValue("mainwindow/linkSelect", linkSelect);
+    settings.setValue("mainwindow/linkSelect", QVariant::fromValue(linkSelect));
 
     settings.setValue("mainwindow/customConfig", true);
 }
 
 void MainWindow::loadConfig() {
+
     ui->numRewind->setText(QString::number(QVariant(settings.value("mainwindow/numRewind")).toInt()));
     ui->smartRewind->setChecked(QVariant(settings.value("mainwindow/smartRewind")).toBool());
     ui->startFrame->setText(QString::number(QVariant(settings.value("mainwindow/startFrame")).toInt()));
@@ -651,11 +653,12 @@ void MainWindow::loadConfig() {
     host_index = (host_index < (ui->hosts->count()-1)) ? host_index : (ui->hosts->count()-1);
     ui->hosts->setCurrentIndex(host_index);
     linkItem = QVariant(settings.value("mainwindow/linkItem")).toString();
-    linkSelect = QVariant(settings.value("mainwindow/linkSelect")).toStringList();
+    linkSelect = QStringList(QVariant(settings.value("mainwindow/linkSelect")).toStringList());
 
 }
 
 void MainWindow::defaultConfig() {
+    qDebug() << "Default config";
     ui->numRewind->setText("100");
     ui->smartRewind->setChecked(true);
     ui->startFrame->setText("");
@@ -795,6 +798,7 @@ void MainWindow::stop_all_moles() {
  * Toggles whether or not mole clients are active
  */
 void MainWindow::on_toggleMole_clicked() {
+  saveConfig();
   stop_all_moles();
 
   if (mole_active)
@@ -871,15 +875,14 @@ bool MainWindow::change_remote_host(const QString &arg)
   int numlink = 0;
 
   num_linkfile = 0;
-  ui->multiLinkSelect->clear();
+  QStringList storedLinkSelect = QStringList(linkSelect);
 
+  ui->multiLinkSelect->clear();
 
   printf("Attempting to connect to %s...\n", tcpconn.ip);
   if ((numlink = request_server_archive_list(&tcpconn,names)) > 0)// made a connection with the server
   {
     printf("Got server list\n");
-
-    QStringList storedLinkSelect = linkSelect;
 
     for (int i=0; i<numlink; i++)
     {

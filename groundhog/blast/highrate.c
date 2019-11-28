@@ -359,7 +359,7 @@ void highrate_receive(void *arg) {
               blast_info("[%s] Received packet \"%s\" from HK stack (size=%d)\n", source_str, sbd_ll->name, gse_packet_header.size);
 
               // process the linklist and write the data to disk
-              framenum = groundhog_process_and_write(ll, gse_packet_header.size, 
+              framenum = groundhog_process_and_write(sbd_ll, gse_packet_header.size, 
                                                   gse_packet+sizeof(uint32_t), local_allframe,
                                                   "ShortBurst", source_str, &sbd_ll_rawfile, flags);
               // fill out the telemetry report
