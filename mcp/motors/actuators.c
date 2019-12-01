@@ -1696,7 +1696,7 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << BALANCENUM);
         }
 
-		for (i = 0; i < 3; i++) {
+		for (i = 0; i < 2; i++) {
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {
