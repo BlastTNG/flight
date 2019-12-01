@@ -6154,7 +6154,7 @@ int init_roach(uint16_t ind)
     }
     if ((ind == 1)) {
         roach_state_table[ind].array = 250;
-        roach_state_table[ind].lo_centerfreq = 827.0e6;
+        roach_state_table[ind].lo_centerfreq = 829.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6226,12 +6226,12 @@ int init_roach(uint16_t ind)
     CommandData.roach[ind].enable_chop_lo = 1;
     // Don't create thread for Roach 4
     uint64_t roach_idx = ind;
-    if (roach_idx != 3) {
+    // if (roach_idx != 3) {
         // blast_info("Spawning command thread for roach%i...", ind + 1);
         // ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
-        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
+    ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
         // blast_info("Spawned command thread for roach%i", ind + 1);
-    }
+    // }
     return 0;
 }
 
