@@ -1590,7 +1590,7 @@ void *ActuatorBus(void *param)
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
         } else if (i == POTVALVE_NUM) {
 	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-		} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+		} else if ((i == FILLVALVE_NUM)) {
 	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
 		} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
