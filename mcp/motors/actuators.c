@@ -1537,7 +1537,7 @@ void *ActuatorBus(void *param)
     int is_init = 0;
     int first_time = 1;
     int sf_ok;
-    int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
+    int valve_arr[2] = {POTVALVE_NUM, FILLVALVE_NUM};
 
     // int hwp_pos; // DEBUG PCA
 

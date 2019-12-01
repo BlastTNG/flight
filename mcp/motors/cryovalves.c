@@ -38,7 +38,7 @@
 // #define POTVALVE_OPEN 10000
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
-#define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+#define NVALVES 1 // fill valve only, don't count pot valve here
 
 /* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
  * it is working so we will leave it for now. If this were changed, the thresholds
@@ -81,7 +81,7 @@ void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
 	// blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
-	int valve_addr[NVALVES] = {PUMPVALVE_NUM, FILLVALVE_NUM};
+	int valve_addr[NVALVES] = {FILLVALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
 		// blast_info("calling DoPotValve"); // DEBUG PAW
