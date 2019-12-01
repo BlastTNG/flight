@@ -444,6 +444,7 @@ channel_t channel_list[] =
 
     { "status_eth",           SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
+    { "el_null",              I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, U_D_DEG, 0 },
     { "az_null",              I2DEG,            0.0, TYPE_UINT16, RATE_100HZ, U_D_DEG, 0 },
     { "az_sun",               I2DEG,            0.0, TYPE_UINT16, RATE_5HZ, U_D_DEG, 0 },
     { "lvdt_low_act",         1.0,              -5000.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
@@ -539,6 +540,7 @@ channel_t channel_list[] =
     { "dec_4_p",              I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_clin",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_motor_enc",       I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
+    { "trim_el_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_null",            I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_mag1",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },
     { "trim_mag2",             I2DEG,            0.0, TYPE_INT16, RATE_5HZ, U_NONE, 0 },

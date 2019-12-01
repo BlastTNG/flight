@@ -25,6 +25,8 @@
 
 #ifndef INCLUDE_ACTUATORS_H_
 #define INCLUDE_ACTUATORS_H_
+// set the actbus default chatter level
+#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 // set microstep resolution for lockpin and shutter
 #define LOCK_PREAMBLE "j256"
 #define SHUTTER_PREAMBLE "j256n2"

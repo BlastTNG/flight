@@ -211,7 +211,7 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
-	        EZBus_SetAccel(bus, potvalve_data.addr, 1000);
+	    EZBus_SetAccel(bus, potvalve_data.addr, 1000);
 		// I don't think there is any point to this PAW 2018/06/20
 		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
@@ -305,6 +305,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	if (potvalve_data.do_move) {
+		bus->chatter = EZ_CHAT_BUS;
 	switch (potvalve_data.potvalve_move) {
 		case(valve_stop):
 	    	if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
@@ -367,6 +368,7 @@ void DoPotValve(struct ezbus* bus)
 			}
 			break;
 	} // end switch
+		bus->chatter = ACTBUS_CHATTER;
 	} // end if(do_move)
 
 

@@ -127,6 +127,7 @@ struct PointingDataStruct {
   double dgps_az;   // degrees
   double dgps_sigma;   // degrees
   double null_az; // degrees
+  double null_el; // degrees
 
   double sun_az; // degrees current calculated az of sun
   double sun_el; // degrees current calculated el of sun

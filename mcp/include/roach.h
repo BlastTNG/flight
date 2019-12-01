@@ -256,6 +256,8 @@ typedef struct roach_state {
 
     // PPC link
     struct katcl_line *rpc_conn;
+
+    int has_warned;
 } roach_state_t;
 
 typedef struct pi_state {

@@ -1,5 +1,5 @@
 EXECUTABLE = linklistcheck 
-LINKLIST_DIR = ../external_libs/linklist
+LINKLIST_DIR = ../liblinklist
 INCLUDEDIRS = -I ../liblinklist/ -I ../common/include/ -I../mcp/include/ \
 			-I ../blast_config/include/ -I $(LINKLIST_DIR)/
 SOURCES = ../common/CRC_func.c ../common/channels_tng.c \
