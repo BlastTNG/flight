@@ -87,7 +87,7 @@ static void run_ir_source(){
             if (hawkeye.on == 1) {
                 labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 1);
                 counter++;
-                if (counter == length) {
+                if (counter == hawkeye.length) {
                     hawkeye.just_swapped = 1;
                     counter = 0;
                     hawkeye.on = 0;
@@ -96,7 +96,7 @@ static void run_ir_source(){
             if (hawkeye.on == 0 && hawkeye.just_swapped == 0) {
                 labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 0);
                 counter++;
-                if (counter == length) {
+                if (counter == hawkeye.length) {
                     hawkeye.just_swapped = 1;
                     counter = 0;
                     hawkeye.on = 0;
