@@ -41,7 +41,7 @@
 #include "labjack_functions.h"
 #include "blast.h"
 
-#define IR_POWER_ADDR = 2008;
+
 extern labjack_state_t state[NUM_LABJACKS];
 
 typedef struct {
