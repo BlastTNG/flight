@@ -6,6 +6,6 @@
 //
 //
 
-#define IR_POWER_ADDR = 2008
+#define IR_POWER_ADDR 2008
 
 void hawkeye_control(int);
