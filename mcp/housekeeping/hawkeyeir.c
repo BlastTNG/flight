@@ -53,12 +53,12 @@ typedef struct {
     int stop;
 } ir_control_t;
 
-ir_control_t hawkeye={0};
+ir_control_t hawkeye;
 
 static void update_ir_values(){
-    hawkeye.go = ComamandData.IRsource.go;
-    hawkeye.length = ComamandData.IRsource.length;
-    hawkeye.on = ComamandData.IRsource.on;
+    hawkeye.go = CommandData.IRsource.go;
+    hawkeye.length = CommandData.IRsource.length;
+    hawkeye.on = CommandData.IRsource.on;
     hawkeye.no_pulse = CommandData.IRsource.no_pulse;
 }
 
