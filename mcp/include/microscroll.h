@@ -15,3 +15,4 @@
 #define thermistor_6  11
 #define thermistor_7  12
 #define thermistor_8  13
+#endif
