@@ -40,7 +40,7 @@
 #include "labjack.h"
 #include "labjack_functions.h"
 #include "blast.h"
-
+#include "hawkeye.h"
 
 extern labjack_state_t state[NUM_LABJACKS];
 
