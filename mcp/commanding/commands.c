@@ -3556,7 +3556,7 @@ void InitCommandData()
     CommandData.Cryo.sync = 0;
     CommandData.Cryo.counter = 1200;
     CommandData.Cryo.counter_max = 1200;
-    
+
     /* for controlling the hawkeye IR source */
     CommandData.IRsource.go = 0;
     CommandData.IRsource.length = 10;

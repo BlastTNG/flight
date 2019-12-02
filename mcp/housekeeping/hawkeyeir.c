@@ -55,14 +55,14 @@ typedef struct {
 
 ir_control_t hawkeye;
 
-static void update_ir_values(){
+static void update_ir_values() {
     hawkeye.go = CommandData.IRsource.go;
     hawkeye.length = CommandData.IRsource.length;
     hawkeye.on = CommandData.IRsource.on;
     hawkeye.no_pulse = CommandData.IRsource.no_pulse;
 }
 
-static void static_ir_load(){
+static void static_ir_load() {
     update_ir_values();
     if (state[10].connected) {
         if (hawkeye.go == 0) {
@@ -74,7 +74,7 @@ static void static_ir_load(){
     }
 }
 
-static void run_ir_source(){
+static void run_ir_source() {
     static int counter = 0;
     update_ir_values();
     hawkeye.just_swapped = 0;
@@ -106,7 +106,7 @@ static void run_ir_source(){
     }
 }
 
-static void publish_value(){
+static void publish_value() {
     static int first_time = 1;
     static channel_t* hawkeye_Addr;
     if (first_time == 1) {
@@ -123,7 +123,7 @@ static void publish_value(){
 }
 
 
-void hawkeye_control(int run){
+void hawkeye_control(int run) {
     if (run == 1) {
         static_ir_source();
         run_ir_source();
