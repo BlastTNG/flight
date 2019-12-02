@@ -51,7 +51,7 @@ typedef struct {
     int just_swapped;
     int no_pulse;
     int stop;
-} ir_control_t
+} ir_control_t;
 
 ir_control_t hawkeye={0};
 
