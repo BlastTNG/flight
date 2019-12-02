@@ -289,7 +289,7 @@ typedef struct {
 } cryo_cmds_t;
 
 typedef struct {
-    int go, on;
+    int go, on, no_pulse;
     uint16_t length;
 } ir_cmds_t;
 
