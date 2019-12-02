@@ -289,6 +289,11 @@ typedef struct {
 } cryo_cmds_t;
 
 typedef struct {
+    int go, on;
+    uint16_t length;
+} ir_cmds_t;
+
+typedef struct {
   float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
   float of_1_off, of_2_off, of_3_off, of_4_off, of_5_off, of_6_off, of_7_off, of_8_off;
   float of_9_on, of_10_on, of_11_on, of_12_on, of_13_on, of_14_on, of_15_on, of_16_on;
@@ -593,6 +598,7 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+  ir_cmds_t IRsource;
 
   labjack_queue_t Labjack_Queue;
 

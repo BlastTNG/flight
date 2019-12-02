@@ -200,6 +200,14 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
             break;
+        case stop_ir:
+            CommandData.IRsource.go = 0;
+            CommandData.IRsource.no_pulse = 0;
+            break;
+        case static_ir:
+            CommandData.IRsource.no_pulse = 1;
+            CommandData.IRsource.go = 1;
+            break;
         case force_pot_refill:
             CommandData.Cryo.pot_forced = 1;
             break;
@@ -2022,6 +2030,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.separation = ivalues[1];
       CommandData.Cryo.length = ivalues[2];
       break;
+    case ir_source_pulse:
+      CommandData.IRsource.on = 1;
+      CommandData.IRsource.go = 1;
+      CommandData.IRsource.length = ivalues[0];
+      break;
     case set_cal_timeout:
       CommandData.Cryo.counter_max = ivalues[0];
       CommandData.Cryo.counter = ivalues[0];
@@ -3543,6 +3556,12 @@ void InitCommandData()
     CommandData.Cryo.sync = 0;
     CommandData.Cryo.counter = 1200;
     CommandData.Cryo.counter_max = 1200;
+    
+    /* for controlling the hawkeye IR source */
+    CommandData.IRsource.go = 0;
+    CommandData.IRsource.length = 10;
+    CommandData.IRsource.on = 0;
+    CommandData.IRsource.no_pulse = 0;
 
     /* Added for triggering cal lamp */
     CommandData.Cryo.num_pulse = 3;
