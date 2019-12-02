@@ -125,7 +125,7 @@ static void publish_value() {
 
 void hawkeye_control(int run) {
     if (run == 1) {
-        static_ir_source();
+        static_ir_load();
         run_ir_source();
         publish_value();
     }
