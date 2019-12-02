@@ -1461,8 +1461,9 @@ int set_atten_conserved(pi_state_t *m_pi)
     int ind = m_pi->which - 1;
     char *command;
     double out_in_atten[2];
-    CommandData.roach_params[ind].set_in_atten =
-        ATTEN_TOTAL - CommandData.roach_params[ind].set_out_atten;
+    // CommandData.roach_params[ind].set_in_atten =
+    //    ATTEN_TOTAL - CommandData.roach_params[ind].set_out_atten;
+    CommandData.roach_params[ind].set_in_atten = 0;
     // the order of input and output attenuators is switched between PIs
     if (ind == 0) {
         blast_tmp_sprintf(command, "set %g %g",
@@ -1524,20 +1525,21 @@ int find_atten(roach_state_t *m_roach, double pow_per_tone) {
 */
 
 int find_atten(roach_state_t *m_roach, double pow_per_tone_desired) {
-    double out_atten = rf_pow_out[m_roach->current_ntones] - pow_per_tone_desired;
+    double out_atten = rf_pow_out[m_roach->current_ntones - 1] - pow_per_tone_desired;
     // Check if out_atten is inside allowable limits
     if (out_atten < 0) {
         out_atten = 0;
-        blast_err("ROACH%d: Atten request too low, setting to 30 dB (max possible)",
+        blast_err("ROACH%d: Atten request too low, setting to 0 dB (min possible)",
                m_roach->which);
     } else if (out_atten > 30) {
         out_atten = 30;
         blast_err("ROACH%d: Atten request too high, setting to 30 dB (max possible)",
                m_roach->which);
     }
-    double out_atten_rounded = round(out_atten / 0.5) * 0.5;
+    double out_atten_rounded = round(2 * out_atten) * 0.5;
     CommandData.roach_params[m_roach->which - 1].set_out_atten = out_atten_rounded;
-    CommandData.roach_params[m_roach->which - 1].set_in_atten = ATTEN_TOTAL - out_atten_rounded;
+    // CommandData.roach_params[m_roach->which - 1].set_in_atten = ATTEN_TOTAL - out_atten_rounded;
+    CommandData.roach_params[m_roach->which - 1].set_in_atten = 0;
     blast_info("ROACH%d, output atten = %f for %f dBm/tone with Ntones = %zd",
        m_roach->which, out_atten, pow_per_tone_desired, m_roach->current_ntones);
     return 0;
@@ -5346,10 +5348,10 @@ int roach_full_loop(roach_state_t *m_roach)
         CommandData.roach[m_roach->which - 1].find_kids = 1;
     }
     m_roach->doing_full_loop = 1;
-    // CommandData.roach[m_roach->which - 1].set_attens = 5;
-    // if ((status = set_attens_targ_output(m_roach)) < 0) {
-    //     blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
-    // }
+    CommandData.roach[m_roach->which - 1].set_attens = 5;
+    if ((status = set_attens_targ_output(m_roach)) < 0) {
+         blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+    }
     // VNA sweep
     CommandData.roach[i].do_sweeps = 1;
     if ((status = roach_vna_sweep(m_roach)) < 0) {
@@ -5377,10 +5379,10 @@ int roach_full_loop(roach_state_t *m_roach)
         return status;
     }
     // Set attens again to account for change in number of tones
-    // CommandData.roach[m_roach->which - 1].set_attens = 5;
-    // if ((status = set_attens_targ_output(m_roach)) < 0) {
-    //     blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
-    // }
+    CommandData.roach[m_roach->which - 1].set_attens = 5;
+    if ((status = set_attens_targ_output(m_roach)) < 0) {
+         blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+    }
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
     if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
@@ -5562,11 +5564,12 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 m_roach->data_stream_error = 0;
-                // recenter_lo(m_roach);
+                recenter_lo(m_roach);
                 /* if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
                     blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which);
                 } */
                 // do a full loop
+                load_tone_powers();
                 CommandData.roach[m_roach->which - 1].do_full_loop = 1;
             }
             break;
@@ -5646,7 +5649,6 @@ void *roach_cmd_loop(void* ind)
                 roach_state_manager(&roach_state_table[i], result);
             } else {
                 // if write succeeds, check streaming
-                // load_tone_powers();
                 result = roach_check_streaming(&roach_state_table[i], STREAM_NTRIES, STREAM_TIMEOUT);
             }
             roach_state_manager(&roach_state_table[i], result);
