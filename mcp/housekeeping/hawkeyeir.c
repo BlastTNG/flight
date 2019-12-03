@@ -136,10 +136,10 @@ static void publish_value() {
     }
     if (state[10].connected) {
         if (hawkeye.go == 1) {
-            SET_SCALED_VALUE(hawkeye_Addr, 1.0);
+            SET_SCALED_VALUE(hawkeye_Addr, 1);
         }
         if (hawkeye.go == 0) {
-            SET_SCALED_VALUE(hawkeye_Addr, 0.0);
+            SET_SCALED_VALUE(hawkeye_Addr, 1);
         }
     }
     if (state[10].connected == 0) {
