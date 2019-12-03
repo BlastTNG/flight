@@ -15,4 +15,5 @@
 #define thermistor_6  11
 #define thermistor_7  12
 #define thermistor_8  13
+#define pump_1_power_val 
 #endif
