@@ -51,6 +51,7 @@ typedef struct {
     int just_swapped;
     int no_pulse;
     int stop;
+    int_just_received;
 } ir_control_t;
 
 ir_control_t hawkeye;
@@ -58,7 +59,7 @@ ir_control_t hawkeye;
 static void update_ir_values() {
     hawkeye.go = CommandData.IRsource.go;
     hawkeye.length = CommandData.IRsource.length;
-    hawkeye.on = CommandData.IRsource.on;
+    hawkeye.just_received = CommandData.IRsource.just_received;
     hawkeye.no_pulse = CommandData.IRsource.no_pulse;
 }
 
@@ -100,6 +101,10 @@ static void run_ir_source() {
             labjack_queue_command(10, 2008, 0.0);
         }
         if (hawkeye.go == 1 && hawkeye.no_pulse == 0) {
+            if (hawkeye.just_received) {
+                CommandData.IRsource.just_received = 0;
+                hawkeye.on = 1;
+            }
             if (hawkeye.on == 1) {
                 labjack_queue_command(10, 2008, 1.0);
                 counter++;
@@ -115,7 +120,7 @@ static void run_ir_source() {
                 if (counter == hawkeye.length) {
                     hawkeye.just_swapped = 1;
                     counter = 0;
-                    hawkeye.on = 0;
+                    hawkeye.on = 1;
                 }
             }
         }
