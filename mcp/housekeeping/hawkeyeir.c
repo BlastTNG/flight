@@ -62,14 +62,30 @@ static void update_ir_values() {
     hawkeye.no_pulse = CommandData.IRsource.no_pulse;
 }
 
+static void clear_eio() {
+    static int first_time = 1;
+    if (first_time && state[10].connected) {
+        blast_info("clearing the EIOs");
+        labjack_queue_command(10, 2008, 0.0);
+        labjack_queue_command(10, 2009, 0.0);
+        labjack_queue_command(10, 2010, 0.0);
+        labjack_queue_command(10, 2011, 0.0);
+        labjack_queue_command(10, 2012, 0.0);
+        labjack_queue_command(10, 2013, 0.0);
+        labjack_queue_command(10, 2014, 0.0);
+        labjack_queue_command(10, 2015, 0.0);
+        first_time = 0;
+    }
+}
+
 static void static_ir_load() {
     update_ir_values();
     if (state[10].connected) {
         if (hawkeye.go == 0) {
-            labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 0);
+            labjack_queue_command(10, 2008, 0.0);
         }
         if (hawkeye.no_pulse == 1 && hawkeye.go == 1) {
-            labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 1);
+            labjack_queue_command(10, 2008, 1.0);
         }
     }
 }
@@ -81,11 +97,11 @@ static void run_ir_source() {
     if (state[10].connected) {
         if (hawkeye.go == 0) {
             counter = 0;
-            labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 0);
+            labjack_queue_command(10, 2008, 0.0);
         }
         if (hawkeye.go == 1) {
             if (hawkeye.on == 1) {
-                labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 1);
+                labjack_queue_command(10, 2008, 1.0);
                 counter++;
                 if (counter == hawkeye.length) {
                     hawkeye.just_swapped = 1;
@@ -93,8 +109,8 @@ static void run_ir_source() {
                     hawkeye.on = 0;
                 }
             }
-            if (hawkeye.on == 0 && hawkeye.just_swapped == 0) {
-                labjack_queue_command(LABJACK_IR, IR_POWER_ADDR, 0);
+            if (hawkeye.on == 0 && hawkeye.just_swapped == 0.0) {
+                labjack_queue_command(10, 2008, 0);
                 counter++;
                 if (counter == hawkeye.length) {
                     hawkeye.just_swapped = 1;
@@ -111,6 +127,7 @@ static void publish_value() {
     static channel_t* hawkeye_Addr;
     if (first_time == 1) {
         hawkeye_Addr = channels_find_by_name("hawkeye");
+        first_time = 0;
     }
     if (state[10].connected) {
         if (hawkeye.go == 1) {
@@ -120,11 +137,23 @@ static void publish_value() {
             SET_SCALED_VALUE(hawkeye_Addr, 0.0);
         }
     }
+    if (state[10].connected = 0) {
+        blast_info("lj11 not connected");
+    }
 }
 
 
+void hawkeye_spewer() {
+    update_ir_values();
+    blast_info("go is %d", hawkeye.go);
+    blast_info("length is %d", hawkeye.length);
+    blast_info("on is %d", hawkeye.on);
+    blast_info("no_pulse is %d", hawkeye.no_pulse);
+}
+
 void hawkeye_control(int run) {
     if (run == 1) {
+        clear_eio();
         static_ir_load();
         run_ir_source();
         publish_value();
