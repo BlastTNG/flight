@@ -2031,8 +2031,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.length = ivalues[2];
       break;
     case ir_source_pulse:
-      CommandData.IRsource.on = 1;
+      CommandData.IRsource.just_received = 1;
       CommandData.IRsource.go = 1;
+      CommandData.IRsource.no_pulse = 0;
       CommandData.IRsource.length = ivalues[0];
       break;
     case set_cal_timeout:

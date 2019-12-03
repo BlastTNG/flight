@@ -289,6 +289,7 @@ static void mcp_5hz_routines(void)
     // Tickles software WD 2.5x as fast as timeout
 
     update_sun_sensors();
+    hawkeye_spewer();
     read_5hz_acs();
     store_5hz_acs();
     store_5hz_xsc(0);
@@ -337,7 +338,6 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       }
     }
-    hawkeye_spewer();
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();
