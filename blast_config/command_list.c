@@ -59,6 +59,8 @@ const char *linklist_names[] = {0};
 
 struct scom scommands[xyzzy + 1] = {
   {COMMAND(load_curve), "starting load curve", GR_CRYO},
+  {COMMAND(static_ir), "starting hawkeye IR source", GR_CRYO},
+  {COMMAND(stop_ir), "stopping hawkeye IR source", GR_CRYO},
   {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_POWER},
   {COMMAND(vtx_xsc0), "Setting video transmitter to XSC0", GR_XSC_MODE | GR_TELEM},
   {COMMAND(vtx_xsc1), "Setting video transmitter to XSC1", GR_XSC_MODE | GR_TELEM},
@@ -1647,6 +1649,11 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(reconnect_lj), "rebooting labjack cryo 1", GR_CRYO, 1,
       {
           {"Labjack to reconnect", 1, 7, 'i', "NONE"},
+      }
+  },
+  {COMMAND(ir_source_pulse), "Pulsing IR source", GR_CRYO, 1,
+      {
+          {"Length of Pulse (in 5ms steps)", 1, 30000, 'i', "LENGTH_PULSE"},
       }
   },
   /***************************************/

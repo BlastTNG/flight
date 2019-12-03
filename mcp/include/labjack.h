@@ -40,6 +40,8 @@
 #define LABJACK_OF_2 3
 #define LABJACK_OF_3 4
 #define LABJACK_HIGHBAY 7
+#define LABJACK_MICROSCROLL 9
+#define LABJACK_IR 10
 #define LABJACK_CRYO_NCHAN 14 // Number of Channels to stream (14 = all analog input channels)
 #define LABJACK_CRYO_SPP 1 // Number of scans to readout per streaming packet
 
