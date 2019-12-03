@@ -137,7 +137,7 @@ static void publish_value() {
             SET_SCALED_VALUE(hawkeye_Addr, 0.0);
         }
     }
-    if (state[10].connected = 0) {
+    if (state[10].connected == 0) {
         blast_info("lj11 not connected");
     }
 }
