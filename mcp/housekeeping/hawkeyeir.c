@@ -84,9 +84,11 @@ static void static_ir_load() {
     if (state[10].connected) {
         if (hawkeye.go == 0) {
             labjack_queue_command(10, 2008, 0.0);
+            hawkeye.on = 0;
         }
         if (hawkeye.no_pulse == 1 && hawkeye.go == 1) {
             labjack_queue_command(10, 2008, 1.0);
+            hawkeye.on = 1;
         }
     }
 }
@@ -135,10 +137,10 @@ static void publish_value() {
         first_time = 0;
     }
     if (state[10].connected) {
-        if (hawkeye.go == 1) {
+        if (hawkeye.on == 1) {
             SET_SCALED_VALUE(hawkeye_Addr, 1);
         }
-        if (hawkeye.go == 0) {
+        if (hawkeye.on == 0) {
             SET_SCALED_VALUE(hawkeye_Addr, 0);
         }
     }
