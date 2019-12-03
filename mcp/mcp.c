@@ -337,6 +337,7 @@ static void mcp_1hz_routines(void)
          incrementFifo(telem_fifo[i]);
       }
     }
+    hawkeye_spewer();
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();

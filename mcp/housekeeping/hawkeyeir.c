@@ -99,7 +99,7 @@ static void run_ir_source() {
             counter = 0;
             labjack_queue_command(10, 2008, 0.0);
         }
-        if (hawkeye.go == 1) {
+        if (hawkeye.go == 1 && hawkeye.no_pulse == 0) {
             if (hawkeye.on == 1) {
                 labjack_queue_command(10, 2008, 1.0);
                 counter++;
