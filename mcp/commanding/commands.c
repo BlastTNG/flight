@@ -3673,6 +3673,12 @@ void InitCommandData()
     CommandData.Labjack_Queue.which_q[2] = 0;
     CommandData.Labjack_Queue.which_q[3] = 0;
     CommandData.Labjack_Queue.which_q[4] = 0;
+    CommandData.Labjack_Queue.which_q[5] = 0;
+    CommandData.Labjack_Queue.which_q[6] = 0;
+    CommandData.Labjack_Queue.which_q[7] = 0;
+    CommandData.Labjack_Queue.which_q[8] = 0;
+    CommandData.Labjack_Queue.which_q[9] = 0;
+    CommandData.Labjack_Queue.which_q[10] = 0;
     CommandData.Cryo.load_curve = 0;
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;
