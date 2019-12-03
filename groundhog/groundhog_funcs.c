@@ -177,7 +177,7 @@ int64_t groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size,
     }
 
     // write the linklist data to disk
-    if (*ll_rawfile) {
+    if (ll_rawfile) {
       write_linklist_rawfile_with_allframe(*ll_rawfile, compbuffer, local_allframe);
       flush_linklist_rawfile(*ll_rawfile);
 

@@ -38,7 +38,7 @@
 // #define POTVALVE_OPEN 10000
 // #define POTVALVE_CLOSED 4200
 // #define POTVALVE_LOOSE_CLOSED 6500
-#define NVALVES 2 // pump valve and fill valve, don't count pot valve here
+#define NVALVES 1 // fill valve only, don't count pot valve here
 
 /* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
  * it is working so we will leave it for now. If this were changed, the thresholds
@@ -81,7 +81,7 @@ void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
 	// blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
-	int valve_addr[NVALVES] = {PUMPVALVE_NUM, FILLVALVE_NUM};
+	int valve_addr[NVALVES] = {FILLVALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
 		// blast_info("calling DoPotValve"); // DEBUG PAW
@@ -211,7 +211,7 @@ void DoPotValve(struct ezbus* bus)
 		EZBus_Take(bus, potvalve_data.addr);
 		blast_info("Making sure the potvalve is not running on startup.");
 		EZBus_Stop(bus, potvalve_data.addr);
-	        EZBus_SetAccel(bus, potvalve_data.addr, 1000);
+	    EZBus_SetAccel(bus, potvalve_data.addr, 1000);
 		// I don't think there is any point to this PAW 2018/06/20
 		// EZBus_MoveComm(bus, potvalve_data.addr, POTVALVE_PREAMBLE);
 		EZBus_Release(bus, potvalve_data.addr);
@@ -305,6 +305,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	if (potvalve_data.do_move) {
+		// bus->chatter = EZ_CHAT_BUS;
 	switch (potvalve_data.potvalve_move) {
 		case(valve_stop):
 	    	if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
@@ -367,6 +368,7 @@ void DoPotValve(struct ezbus* bus)
 			}
 			break;
 	} // end switch
+		// bus->chatter = ACTBUS_CHATTER;
 	} // end if(do_move)
 
 
