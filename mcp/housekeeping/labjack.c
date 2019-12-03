@@ -649,6 +649,7 @@ void labjack_choose_execute(void) {
         } else if (state[10].connected == 1) {
         CommandData.Labjack_Queue.set_q = 0;
         CommandData.Labjack_Queue.which_q[10] = 1;
+        blast_info("Labjack 11 is executing the command queue");
         } else {
             if (!has_warned) blast_info("no queue selected, trying again every 1s");
             has_warned = true;
