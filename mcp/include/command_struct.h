@@ -317,7 +317,7 @@ typedef struct {
 
 typedef struct {
     uint16_t lj_q_on;
-    uint16_t which_q[5];
+    uint16_t which_q[11];
     uint16_t set_q;
 } labjack_queue_t;
 

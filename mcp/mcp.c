@@ -202,6 +202,8 @@ void * lj_connection_handler(void *arg) {
     // initialize_labjack_commands(8);
     // switch to this thread for flight
     mult_initialize_labjack_commands(5);
+    labjack_networking_init(10, 14, 1);
+    initialize_labjack_commands(10);
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
