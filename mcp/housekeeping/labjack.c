@@ -620,8 +620,7 @@ static int initialized(void) {
     if (state[10].initialized) {
         // blast_info("a labjack was seen");
         return 1;
-    }
-    else {
+    } else {
         // blast_info("no labjack was seen");
         return 0;
     }
