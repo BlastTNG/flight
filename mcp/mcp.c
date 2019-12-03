@@ -289,7 +289,7 @@ static void mcp_5hz_routines(void)
     // Tickles software WD 2.5x as fast as timeout
 
     update_sun_sensors();
-    hawkeye_spewer();
+    // hawkeye_spewer();
     read_5hz_acs();
     store_5hz_acs();
     store_5hz_xsc(0);
