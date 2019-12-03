@@ -10,4 +10,5 @@
 #define IR_POWER_ADDR 2008
 
 void hawkeye_control(int);
+void hawkeye_spewer();
 #endif
