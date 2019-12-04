@@ -145,7 +145,7 @@ static void publish_value() {
         }
     }
     if (state[10].connected == 0) {
-        blast_info("lj11 not connected");
+        // blast_info("lj11 not connected");
     }
 }
 
