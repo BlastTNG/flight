@@ -18,12 +18,18 @@
 #define pump_1_power_val
 
 #define N_AALBORG_VALVES 3
-#define AALBORG_CLOSE_LEVEL    8.5
-#define AALBORG_OPEN_LEVEL     3.5
+#define AALBORG_HIGH_LEVEL  8.5
+#define AALBORG_LOW_LEVEL   3.5
 
-#define AALBORG_OPENED   0x0001
-#define AALBORG_CLOSED   0x0002
-#define AALBORG_OPENING  0x0004
-#define AALBORG_CLOSING  0x0008
+#define AALBORG_OPENED     0x01
+#define AALBORG_CLOSED     0x02
+#define AALBORG_OPENING    0x04
+#define AALBORG_CLOSING    0x08
+#define AALBORG_NOT_CLOSED 0x10
+#define AALBORG_INTERMED   0x20
+
+// we wait 7 seconds after commanding aalborg to open to declare it is open
+// this is because the signal we read is closed/not closed, but we know how it takes about 6 to open
+#define AALBORG_WAIT_OPENING 35 // 7s at 5 Hz
 void ControlAalborg(int index);
 #endif
