@@ -42,7 +42,7 @@
 
 #define BI0_INCHARGE_CALL_PERIOD 250000 // Number of microseconds between in charge calls.
 #define WATCHDOG_CTRL_INIT_TIMEOUT 10   // Wait n calls before we actually decide whether we are in charge.
-#define WATCHDOG_CTRL_MIN_COUNT 10      // Need n consistent calls before we change in charge state
+#define WATCHDOG_CTRL_MIN_COUNT 4      // Need n consistent calls before we change in charge state
 
 extern int16_t SouthIAm;
 extern int16_t InCharge;
@@ -136,12 +136,14 @@ void set_incharge(int in_charge_from_wd) {
         first_call = 0;
     }
 
+    /*
     static struct timeval call_time;
     struct timeval now;
     gettimeofday(&now, NULL);
     blast_info("set_incharge called after %f s", (now.tv_sec+(now.tv_usec/1000000.0) -
                                     (call_time.tv_sec+(call_time.tv_usec/1000000.0))));
     gettimeofday(&call_time, NULL);
+    */
 
     // Handle initialization timeout.
     // Return early if we have not satisfied the timeout on initialization.
