@@ -775,7 +775,7 @@ double decompress_linklist_opt(uint8_t *buffer_out, linklist_t * ll, uint8_t *bu
         }
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
         ret++;
-      } else if (!checksum && !prechecksum) { // had a block of all zeros
+      } else if (!checksum && !prechecksum && !(flags & LL_IGNORE_CHECKSUM)) { // had a block of all zeros
         fill_linklist_with_saved(ll, p_start, p_end, buffer_out);
         if (flags & LL_VERBOSE) {
           linklist_info("decompress_linklist: block of zeros (block %d)\n", sumcount);
