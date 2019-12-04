@@ -72,7 +72,7 @@ extern struct dataCompressor compRoutine[NUM_COMPRESS_TYPES+1];
 #define COMPRESS(x) (int)x, #x
 #define LL_CHANNEL_DATA(_chan) _chan->var
 
-#define LL_IGNORE_CHECKSUM 0x02
+#define LL_IGNORE_CHECKSUM 0x80
 int compress_linklist(uint8_t *, linklist_t *, uint8_t *);
 int compress_linklist_opt(uint8_t *, linklist_t *, uint8_t *, uint32_t, int);
 int compress_linklist_internal(uint64_t, linklist_t *, uint8_t *);
