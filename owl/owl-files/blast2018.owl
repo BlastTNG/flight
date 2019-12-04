@@ -290,11 +290,28 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATUS_CHARCOAL_HS",
                     "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "426870972"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "384152564"
+                    },
+                    "_caption": "Cycle status",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "CYCLE_STATE",
+                    "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 272,
-            "geometryX": 51,
+            "geometryHeight": 782,
+            "geometryWidth": 544,
+            "geometryX": 102,
             "geometryY": 0
         },
         {
@@ -439,10 +456,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 187,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 391
+            "geometryHeight": 374,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 782
         },
         {
             "PObject": {
@@ -607,9 +624,9 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 221,
-            "geometryWidth": 255,
-            "geometryX": 323,
+            "geometryHeight": 442,
+            "geometryWidth": 510,
+            "geometryX": 646,
             "geometryY": 0
         },
         {
@@ -854,9 +871,9 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 578,
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1156,
             "geometryY": 0
         },
         {
@@ -1084,9 +1101,9 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 391,
-            "geometryWidth": 289,
-            "geometryX": 867,
+            "geometryHeight": 782,
+            "geometryWidth": 578,
+            "geometryX": 1734,
             "geometryY": 0
         },
         {
@@ -1247,10 +1264,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 289,
-            "geometryX": 867,
-            "geometryY": 391
+            "geometryHeight": 476,
+            "geometryWidth": 578,
+            "geometryX": 1734,
+            "geometryY": 782
         },
         {
             "PObject": {
@@ -1380,10 +1397,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 578
+            "geometryHeight": 340,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 1156
         },
         {
             "PObject": {
@@ -1585,10 +1602,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 272,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 306
+            "geometryHeight": 544,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 612
         },
         {
             "PObject": {
@@ -1744,10 +1761,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 204,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 578
+            "geometryHeight": 408,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 1156
         },
         {
             "PObject": {
@@ -1861,10 +1878,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 170,
-            "geometryWidth": 272,
-            "geometryX": 51,
-            "geometryY": 748
+            "geometryHeight": 340,
+            "geometryWidth": 544,
+            "geometryX": 102,
+            "geometryY": 1496
         },
         {
             "PObject": {
@@ -1969,10 +1986,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 136,
-            "geometryWidth": 255,
-            "geometryX": 323,
-            "geometryY": 782
+            "geometryHeight": 272,
+            "geometryWidth": 510,
+            "geometryX": 646,
+            "geometryY": 1564
         },
         {
             "PObject": {
@@ -2100,10 +2117,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 238,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 391
+            "geometryHeight": 476,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 782
         },
         {
             "PObject": {
@@ -2283,10 +2300,10 @@
                     "type": "PBDI"
                 }
             ],
-            "geometryHeight": 221,
-            "geometryWidth": 289,
-            "geometryX": 578,
-            "geometryY": 629
+            "geometryHeight": 442,
+            "geometryWidth": 578,
+            "geometryX": 1156,
+            "geometryY": 1258
         },
         {
             "PObject": {
@@ -2346,10 +2363,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 221,
-            "geometryWidth": 374,
-            "geometryX": 867,
-            "geometryY": 629
+            "geometryHeight": 442,
+            "geometryWidth": 748,
+            "geometryX": 1734,
+            "geometryY": 1258
         },
         {
             "PObject": {
@@ -2534,9 +2551,9 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 187,
-            "geometryWidth": 255,
-            "geometryX": 1156,
+            "geometryHeight": 374,
+            "geometryWidth": 510,
+            "geometryX": 2312,
             "geometryY": 0
         },
         {
@@ -2630,10 +2647,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 102,
-            "geometryWidth": 255,
-            "geometryX": 1156,
-            "geometryY": 187
+            "geometryHeight": 204,
+            "geometryWidth": 510,
+            "geometryX": 2312,
+            "geometryY": 374
         },
         {
             "PObject": {
@@ -2689,10 +2706,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 68,
-            "geometryWidth": 255,
-            "geometryX": 1156,
-            "geometryY": 289
+            "geometryHeight": 136,
+            "geometryWidth": 510,
+            "geometryX": 2312,
+            "geometryY": 578
         },
         {
             "PObject": {
@@ -2730,10 +2747,10 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 51,
-            "geometryWidth": 374,
-            "geometryX": 867,
-            "geometryY": 731
+            "geometryHeight": 102,
+            "geometryWidth": 748,
+            "geometryX": 1734,
+            "geometryY": 1462
         }
     ],
     "extremas": [
@@ -3035,10 +3052,10 @@
             "cellWidth": 5,
             "cellX": 19,
             "cellY": 12,
-            "geometryHeight": 119,
-            "geometryWidth": 85,
-            "geometryX": 323,
-            "geometryY": 204
+            "geometryHeight": 238,
+            "geometryWidth": 170,
+            "geometryX": 646,
+            "geometryY": 408
         }
     ],
     "styles": [
@@ -3242,8 +3259,8 @@
         }
     ],
     "webPort": "\u0000",
-    "windowCellHeight": 58,
-    "windowCellWidth": 95,
-    "windowHeight": 998,
-    "windowWidth": 1615
+    "windowCellHeight": 60,
+    "windowCellWidth": 109,
+    "windowHeight": 2049,
+    "windowWidth": 3706
 }
