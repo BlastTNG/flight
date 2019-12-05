@@ -3561,7 +3561,7 @@ void InitCommandData()
     /* for controlling the hawkeye IR source */
     CommandData.IRsource.go = 0;
     CommandData.IRsource.length = 10;
-    CommandData.IRsource.just_received = 0;
+    CommandData.IRsource.just_received  = 0;
     CommandData.IRsource.no_pulse = 0;
 
     /* Added for triggering cal lamp */

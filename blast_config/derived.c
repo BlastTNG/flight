@@ -920,6 +920,15 @@ derived_tng_t derived_list[] = {
     LINTERP("Rt_therm72", "THERMISTOR_72", LUT_DIR "Thermistor_VtoR.lut"),
     LINTERP("Rt_therm73", "THERMISTOR_73", LUT_DIR "Thermistor_VtoR.lut"),
     LINTERP("Rt_therm74", "THERMISTOR_74", LUT_DIR "Thermistor_VtoR.lut"),
+    
+    LINTERP("Micro_rt_therm1", "MICRO_THERMISTOR_1", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm2", "MICRO_THERMISTOR_2", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm3", "MICRO_THERMISTOR_3", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm4", "MICRO_THERMISTOR_4", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm5", "MICRO_THERMISTOR_5", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm6", "MICRO_THERMISTOR_6", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm7", "MICRO_THERMISTOR_7", LUT_DIR "Thermistor_VtoR.lut"),
+    LINTERP("Micro_rt_therm8", "MICRO_THERMISTOR_8", LUT_DIR "Thermistor_VtoR.lut"),
 
     LINTERP("Tt_if_front", "Rt_therm1", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_if_back", "Rt_therm2", LUT_DIR "Thermistor_RtoT.lut"),
@@ -991,6 +1000,15 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_roach5_ppc", "Rt_therm72", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_lj_1", "Rt_therm73", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_of_lj_2", "Rt_therm74", LUT_DIR "Thermistor_RtoT.lut"),
+
+    LINTERP("Tt_bonus_1", "Micro_rt_therm1", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_2", "Micro_rt_therm2", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_3", "Micro_rt_therm3", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_4", "Micro_rt_therm4", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_5", "Micro_rt_therm5", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_6", "Micro_rt_therm6", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_7", "Micro_rt_therm7", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_bonus_8", "Micro_rt_therm8", LUT_DIR "Thermistor_RtoT.lut"),
 
 
     BITWORD("Labjack0_conn_status", "labjack_conn_status", 0, 1),
