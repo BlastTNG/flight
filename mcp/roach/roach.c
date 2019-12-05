@@ -134,7 +134,7 @@
 #define AUTO_CAL_ADC 0 /* Choose to run the adc cal routine after initial tone write */
 #define AUTO_CAL_AMPS 0
 #define APPLY_VNA_TRF 1 /* Apply Roach output transfer function to vna freqs by default */
-#define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
+#define APPLY_TARG_TRF 1 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
 #define PI_TEMP_PORT 9997 /* Pi port for reading temp */
