@@ -129,7 +129,7 @@ void set_incharge(int in_charge_from_wd) {
     static int incharge_old=-1;
     static int init_timeout = WATCHDOG_CTRL_INIT_TIMEOUT+1;
     static int incharge_count = 0;
-    int in_charge=-1;
+    int in_charge = incharge_old;
 
     if (first_call == 1) {
         blast_info("Called set_incharge for the first time");
