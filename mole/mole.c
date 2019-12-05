@@ -408,7 +408,7 @@ int main(int argc, char *argv[]) {
       }
   
       // send data request a rawfile has been opened 
-      recv_flags = 0;
+      recv_flags = 0; 
       recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
       if ((recv_flags & TCPCONN_FILE_RESET) || (recv_framenum < 0)) { 
         linklist_err("Data request failed\n");
@@ -436,7 +436,7 @@ int main(int argc, char *argv[]) {
         if (!(frame_i % num_frames_per_flush)) {
           seek_linklist_dirfile(ll_dirfile, recv_framenum + offset_framenum);
         }
-        write_linklist_dirfile_opt(ll_dirfile, recv_buffer, 0);
+        write_linklist_dirfile_opt(ll_dirfile, recv_buffer, ll_dirfile_flags);
         if (!(frame_i % num_frames_per_flush)) flush_linklist_dirfile(ll_dirfile);
       }
 

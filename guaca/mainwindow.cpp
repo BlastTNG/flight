@@ -20,10 +20,8 @@
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
 
 char archivedir[128] = "/data/mole";
-char configdir[128] = "/data/mole";
-char configfile[128] = "guaca.cfg";
+char moledir[128] = "/data/mole";
 char masterlink[128] = "/data/etc/mole.lnk";
-char masterloglink[128] = "/data/etc/mole.log";
 
 char *remote_hosts[] = {
   "zaphod.bit",
@@ -45,15 +43,12 @@ void USAGE(void) {
  * up the configuration file to the slave
  */
 
-int server_active = 0;
-
-void server_thread(void * arg)
+// TODO: switch to QProcess
+void server_thread(void * )
 {
   int sock;
   int client_sock , c;
   struct sockaddr_in server , client;
-
-  struct GUACACONFIG * cfg = (struct GUACACONFIG *) arg;
 
   unsigned int theport = GUACAPORT;
 
@@ -74,7 +69,7 @@ void server_thread(void * arg)
   setsockopt(socket_desc,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
 
   //Bind
-  if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+  if (bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
   {
     //print the error message
     perror("bind failed. Unable to start guacamole server: ");
@@ -89,43 +84,18 @@ void server_thread(void * arg)
   if (VERBOSE) printf("Waiting for incoming connections...\n");
   c = sizeof(struct sockaddr_in);
 
-  uint8_t configbuf[2048] = {0};
-
-  while (server_active)
-  {
-    if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0)
-    {
+  while (1) {
+    if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0) {
       sock = client_sock;
-      if (VERBOSE) printf("Client request for config\n");
 
-      memset(configbuf,0,2048);
-
-      int loc = 0;
-
-      configbuf[0] = 0xff; loc += 1; // header
-      *((int *) (configbuf+loc)) = cfg->linkindex;    loc += 4;
-      *((int *) (configbuf+loc)) = cfg->hostindex;    loc += 4;
-      *((int *) (configbuf+loc)) = cfg->checksum;     loc += 4;
-      *((int *) (configbuf+loc)) = cfg->server;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->backup;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->active;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->multilinknum; loc += 4;
-
-      for (int i=0;i<MAX_NUM_LINKFILE; i++)
-      {
-        *((int *) (configbuf+loc)) = cfg->multilinkindex[i]; loc += 4;
-      }
-
-      if (send(sock, configbuf, loc, 0) <= 0)
-      {
-        printf("Unable to send client data\n");
-      }
+      // TODO: load ini file and send it
+      // send config data
+      //if (send(sock, configbuf, loc, 0) <= 0) {
+      //  printf("Unable to send client data\n");
+      //}
 
       close(sock);
-    }
-    else
-    {
+    } else {
       usleep(200000);
     }
   }
@@ -216,7 +186,7 @@ int MainWindow::get_server_data()
   struct hostent *he;
   int socket_fd;
 
-  uint8_t buf[2048] = {0};
+  //uint8_t buf[2048] = {0};
 
   if ((he = gethostbyname(gnd_ip))==NULL)
   {
@@ -245,36 +215,9 @@ int MainWindow::get_server_data()
     return -1;
   }
 
-  int rsize = recv(socket_fd,buf,2048,0);
+  // TODO receive ini file, save to disk, and reload settings
+  // int rsize = recv(socket_fd,buf,2048,0);
   ::close(socket_fd);
-
-  int loc = 0;
-  if ((buf[0] == 0xff) && (rsize > 0))
-  {
-    loc += 1;
-    cfg.linkindex = *((int *) (buf+loc));    loc += 4;
-    cfg.hostindex = *((int *) (buf+loc));    loc += 4;
-    cfg.checksum = *((int *) (buf+loc));     loc += 4;
-    cfg.server = *((int *) (buf+loc));      loc += 4;
-    cfg.backup = *((int *) (buf+loc));       loc += 4;
-    cfg.rewind = *((int *) (buf+loc));       loc += 4;
-    cfg.active = *((int *) (buf+loc));       loc += 4;
-    cfg.multilinknum = *((int *) (buf+loc)); loc += 4;
-
-    for (int i=0;i<MAX_NUM_LINKFILE;i++)
-    {
-      cfg.multilinkindex[i] = *((int *) (buf+loc)); loc += 4;
-    }
-
-
-    if (VERBOSE) printf("Received config from master guaca\n");
-    updateSettings();
-  }
-  else
-  {
-    printf("Received invalid server message\n");
-    return -1;
-  }
 
   return 1;
 }
@@ -287,95 +230,31 @@ int MainWindow::get_server_data()
 
 void MainWindow::dancing()
 {
-  still_dancing = true;
-  QString msg = "";
-
-  if (logfile == NULL)
-  {
-    logfile = fopen(masterloglink,"r");
-  }
-
-  if (logfile != NULL)
-  {
-    fseek(logfile, -MAXLINELENGTH, SEEK_END);
-
-    ssize_t len = fread(buf, 1, MAXLINELENGTH-1, logfile);
-    buf[len] = '\0';
-    char *last_newline = buf;
-
-    unsigned int i = 1;
-    while (strncmp("Frame",last_newline,5) != 0)
-    {
-      if (i>(MAXLINELENGTH-5))
-      {
-        last_newline[0] = 0;
-        break;
-      }
-      last_newline = buf+i;
-      i++;
-    }
-
-    i = 0;
-    while (last_newline[i] && (i<strlen(last_newline)))
-    {
-      if (last_newline[i] == '\r')
-      {
-        last_newline[i] = 0;
-        break;
-      }
-      i++;
-    }
-
-    // msg = QString(last_newline);
-    unsigned int current_index = ui->linkSelect->currentIndex();
-    if (mole_logs.size() > current_index) {
-        msg = mole_logs[current_index]->get_latest_str();
-    }
-    fclose(logfile);
-    logfile = NULL;
-  }
-  fflush(stdout);
-
-  int togglethemole = 0;
-
   int thetime = time(0);
 
-  // get file size
-  if ((thetime-logend)>1)
-  {
-    getSettings();
-    if (servermode) syncstate = get_server_data();
-    else
-    {
-      syncstate = 0;
-    }
+  still_dancing = true;
 
+  // get file size
+  if ((thetime-logend) > 1) {
     uint64_t file_size = 0;
 
-    if (statfile == NULL)
-    {
+    if (statfile == NULL) {
       statfile = fopen(options->stat_field.toLatin1().data(), "r");
     }
 
-    if (statfile != NULL)
-    {
+    if (statfile != NULL) {
       fseek(statfile,0,SEEK_END);
       file_size = ftell(statfile);
 
-      if (file_size == prev_size)
-      {
+      if (file_size == prev_size) {
         data_incoming = 0;
-      }
-      else
-      {
+      } else {
         data_incoming = 1;
       }
       fclose(statfile);
       statfile = NULL;
       has_warned = false;
-    }
-    else
-    {
+    } else {
       if (!has_warned) QMessageBox::warning(this,"Invalid stat file",
                             "Reference field "+ options->stat_field + " is invalid.\n Change under File->Options->Advanced->Reference Field.");
       has_warned = true;
@@ -385,49 +264,39 @@ void MainWindow::dancing()
     prev_size = file_size;
 
     logend = thetime;
-    //printf("%s\n",temp);
-    togglethemole = 1;
   }
 
-  if (!data_incoming) msg = "Mole not receiving data.\n";
+  QString msg = "Mole not receiving data.\n";
+  if (data_incoming) {
+      unsigned int current_index = ui->linkSelect->currentIndex();
+      if (mole_logs.size() > current_index) {
+          msg = mole_logs[current_index]->get_latest_str();
+      }
+  }
 
+  // check if mole is running at all
   int isrun = system("pidof -x mole > /dev/null");
-  if(!isrun) // mole is running on the system
-  {
+  if(!isrun) { // mole is running on the system
     mole_active = 1;
     freeze();
-    if (!cfg.active && servermode && togglethemole) // slaved and shouldn't be running
-    {
-      on_toggleMole_clicked();
-    }
-  }
-  else // mole is not running on the system
-  {
+  } else { // mole is not running on the system
     mole_active = 0;
     unfreeze();
-
-    if (cfg.active && servermode && togglethemole) // saved and should be running
-    {
-      on_toggleMole_clicked();
-    }
   }
 
-  cfg.active = mole_active;
   ui->statusBar->showMessage(msg);
 
-  if (mole_active)
-  {
-    if (data_incoming)
-    {
+  // dancing logic
+  if (mole_active) {
+    if (data_incoming) {
       if (image_i==IMAGE_LOOP_HIGH) inc = -1;
       else if (image_i==IMAGE_LOOP_LOW) inc = 1;
+    } else {
+      inc = 1;
     }
-    else inc = 1;
-  }
-  else
-  {
+  } else {
     inc = 1;
-    if  (image_i==(IMAGE_IND_OFF+1)%IMAGE_TOTAL) image_i = IMAGE_IND_OFF;
+    if (image_i==(IMAGE_IND_OFF+1)%IMAGE_TOTAL) image_i = IMAGE_IND_OFF;
   }
 
   int ss = qMin(ui->dance->width(),ui->dance->height())*15/8;
@@ -438,34 +307,6 @@ void MainWindow::dancing()
   image_i = (image_i+inc)%IMAGE_TOTAL;
 
   still_dancing = false;
-}
-
-
-/*
- * Updates the mole setting based on the configuration file
- */
-void MainWindow::updateSettings()
-{
-  ui->numRewind->setText(QString::number(cfg.rewind));
-  options->server = cfg.server;
-  options->backup = cfg.backup;
-  options->no_checksums = cfg.checksum;
-
-  //printf("set to %d\n",cfg.linkindex);
-}
-
-/*
- * Gets the settings from the GUI and saves them to the configuration file.
- */
-void MainWindow::getSettings()
-{
-  cfg.rewind = ui->numRewind->text().toInt();
-  cfg.server = options->server;
-  cfg.backup = options->backup;
-  cfg.checksum = options->no_checksums;
-
-  //printf("saved to %d\n",cfg.linkindex);
-
 }
 
 /*
@@ -487,33 +328,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
   logfile = NULL;
 
-  memset((void *) &cfg,0,sizeof(struct GUACACONFIG));
-  cfg.rewind = 100;
-
-  // open the configuration directory and check previous configuration
-  mkdir(configdir,00755);
-  char fname[128] = {0};
-  sprintf(fname,"%s/%s",configdir,configfile);
-
-  if (access(fname,F_OK) == 0)
-  {
-    // get previous config
-    FILE * cfgfile = fopen(fname,"rb");
-    uint8_t overflow;
-
-    if ((fread(&cfg,1,sizeof(struct GUACACONFIG),cfgfile) != sizeof(struct GUACACONFIG)) || (fread(&overflow,1,1,cfgfile) != 0))
-    {
-      memset(&cfg,0,sizeof(struct GUACACONFIG));
-    }
-
-    fclose(cfgfile);
-  }
-
   generate_linklist_listfiles();
 
   options = new Options(this);
-
-  updateSettings();
 
   if (settings.contains("mainwindow/customConfig")) {
       qDebug() << "Restoring saved config";
@@ -564,14 +381,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
   mole_active = 0;
   data_incoming = 1;
-  syncstate = 0;
 
   logend = time(0);
   statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
+  /*
   server_active = 1;
   f1 = QtConcurrent::run(server_thread, &cfg);
-  servermode = 0;
+  */
+
+  servermode = false;
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
@@ -595,7 +414,6 @@ MainWindow::~MainWindow()
   if (!servermode) {
     f1.cancel();
   }
-  server_active = 0;
 
   if (options) delete options;
   options = NULL;
@@ -765,15 +583,6 @@ void MainWindow::start_a_mole(int index)
   if (options->backup) mole_cmd += " --backup";
   if (options->server) mole_cmd += " --server";
 
-  // update configuration file
-  getSettings();
-  char fname[128];
-  sprintf(fname,"%s/%s",configdir,configfile);
-  FILE * cfgfile = fopen(fname,"wb");
-  fwrite(&cfg,sizeof(GUACACONFIG),1,cfgfile);
-  fflush(cfgfile);
-  fclose(cfgfile);
-
   Logscroll * mole_log = new Logscroll(NULL, mole_cmd, false);
   mole_log->setWindowTitle(mole_cmd);
   mole_logs.push_back(mole_log);
@@ -823,7 +632,6 @@ void MainWindow::on_toggleMole_clicked() {
   }
 
   mole_active = 1-mole_active;
-  cfg.active = mole_active;
 }
 
 
@@ -833,11 +641,10 @@ void MainWindow::on_toggleMole_clicked() {
  */
 void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
 {
-
   if (arg1.length() == 0) return;
 
   QString aname = arg1;
-  QString linkname = QString(configdir)+"/"+aname+".lnk";
+  QString linkname = QString(moledir)+"/"+aname+".lnk";
 
   QByteArray ba = linkname.toLatin1();
 
@@ -847,18 +654,6 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
   if (symlink(ba.data(),masterlink) < 0)
   {
     printf("Symlink failed (%s->%s)\n",masterlink,ba.data());
-  }
-
-  aname = arg1;
-  linkname = QString(configdir)+"/"+aname+".log";
-  ba = linkname.toLatin1();
-
-  printf("%s -> %s\n",masterloglink,ba.data());
-
-  unlink(masterloglink);
-  if (symlink(ba.data(),masterloglink) < 0)
-  {
-    printf("Symlink failed (%s->%s)\n",masterloglink,ba.data());
   }
 }
 
@@ -926,30 +721,26 @@ void MainWindow::on_actionClose_triggered()
 
 void MainWindow::on_actionSlave_to_triggered()
 {
+  return;
+
   bool ok;
   QString thehost;
   QString host = QInputDialog::getText(this, "Choose Master", "What master server should guaca connect to?", QLineEdit::Normal, thehost, &ok);
 
-  if (!ok)
-  {
+  if (!ok) {
     return;
-  }
-  else
-  {
+  } else {
     QByteArray ba = host.toLatin1();
     const char *c_str2 = ba.data();
     strcpy(gnd_ip,c_str2);
-    servermode = 1;
+    servermode = true;
     while (syncstate == 0) QTest::qWait(200);
-    if (syncstate > 0)
-    {
+    if (syncstate > 0) {
       QMessageBox::information(this,"Guaca is slaved","Guaca slaved to \""+host+"\"...",QMessageBox::Cancel);
-      servermode = 0;
-    }
-    else
-    {
+      servermode = false;
+    } else {
       QMessageBox::warning(this,"Guaca is not slaved","Could not connect to \""+host+"\".",QMessageBox::Cancel);
-      servermode = 0;
+      servermode = false;
     }
   }
 }
@@ -1025,6 +816,7 @@ void MainWindow::on_hosts_activated(int index)
     if (reconnect) {
         if (change_remote_host(ui->hosts->itemText(index))) {
             host_index = index;
+            saveConfig();
         } else if (newitem) {
             ui->hosts->removeItem(index);
             change_remote_host(ui->hosts->itemText(host_index));

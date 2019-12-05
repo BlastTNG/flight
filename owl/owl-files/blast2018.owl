@@ -42,38 +42,18 @@
                             "_id": "423137424"
                         },
                         "_map": {
-                            "11": "OPEN[style=Important Green (P1055304642)]",
+                            "11": "OPEN[style=Important (P564751211)]",
                             "3": "Intermediate",
-                            "7": "CLOSED[style=Important (P564751211)]"
+                            "7": "CLOSED[style=Important Green (P1055304642)]"
                         }
                     },
                     "PObject": {
                         "_id": "2030093021"
                     },
-                    "_caption": "Pump-line Valve ",
+                    "_caption": "Main He Tank Valve   ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "LIMS_PUMPVALVE",
-                    "type": "PMDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "1333828410"
-                        },
-                        "_map": {
-                            "11": "OPEN[style=Important (P564751211)]",
-                            "3": "Intermediate[style=No style (P1911761389)]",
-                            "7": "CLOSED[style=Important Green (P1055304642)]"
-                        }
-                    },
-                    "PObject": {
-                        "_id": "2123354357"
-                    },
-                    "_caption": "Boiloff Valve",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "LIMS_FILLVALVE",
                     "type": "PMDI"
                 },
                 {
@@ -309,6 +289,23 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "STATUS_CHARCOAL_HS",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "426870972"
+                        },
+                        "_map": {
+                        }
+                    },
+                    "PObject": {
+                        "_id": "384152564"
+                    },
+                    "_caption": "Cycle status",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "CYCLE_STATE",
                     "type": "PMDI"
                 }
             ],
@@ -2547,29 +2544,10 @@
                     "PObject": {
                         "_id": "78197534"
                     },
-                    "_caption": "Pump line valve          ",
+                    "_caption": "Boiloff valve          ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "PUMP_VALVE_INIT_ACTBUS",
-                    "type": "PMDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "1461143059"
-                        },
-                        "_map": {
-                            "0": "Not ok[style=Important (P564751211)]",
-                            "1": "OK[style=Important Green (P1055304642)]"
-                        }
-                    },
-                    "PObject": {
-                        "_id": "1702909300"
-                    },
-                    "_caption": "Boiloff valve     ",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "FILL_VALVE_INIT_ACTBUS",
                     "type": "PMDI"
                 }
             ],
@@ -2770,7 +2748,7 @@
                 }
             ],
             "geometryHeight": 102,
-            "geometryWidth": 749,
+            "geometryWidth": 748,
             "geometryX": 1734,
             "geometryY": 1462
         }

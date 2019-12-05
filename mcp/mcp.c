@@ -97,6 +97,7 @@
 #include "xystage.h"
 #include "sip.h"
 #include "scheduler_tng.h"
+#include "hawkeyeir.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -201,6 +202,8 @@ void * lj_connection_handler(void *arg) {
     // initialize_labjack_commands(8);
     // switch to this thread for flight
     mult_initialize_labjack_commands(5);
+    labjack_networking_init(10, 14, 1);
+    initialize_labjack_commands(10);
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
@@ -234,6 +237,7 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
+    hawkeye_control(1);
     outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
@@ -285,6 +289,7 @@ static void mcp_5hz_routines(void)
     // Tickles software WD 2.5x as fast as timeout
 
     update_sun_sensors();
+    // hawkeye_spewer();
     read_5hz_acs();
     store_5hz_acs();
     store_5hz_xsc(0);

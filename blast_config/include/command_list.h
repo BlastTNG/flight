@@ -164,7 +164,8 @@ enum singleCommand {
   auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
   check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
   trigger_retune_check, full_loop_default_all, set_attens_default_all, roach_allow_scan_check_all,
-  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log, read_pi_temp_all, xyzzy
+  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log,
+  read_pi_temp_all, stop_ir, static_ir, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -190,7 +191,7 @@ enum multiCommand {
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute, reconnect_lj,     set_roach_mode,
-  request_stream_file, set_pilot_oth,
+  request_stream_file, set_pilot_oth, ir_source_pulse,
 
   // t_gyro_gain,
   timeout,           vcap,

@@ -2022,13 +2022,686 @@
         },
         {
             "PObject": {
+                "_id": "-300026089"
+            },
+            "_boxTitle": "ROACH4 (GIZMO)",
+            "_style": "(P2072147126)",
+            "cellHeight": 50,
+            "cellWidth": 17,
+            "cellX": 54,
+            "cellY": 1,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "789443327"
+                    },
+                    "_caption": "IS_STREAMING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1837166662)",
+                    "_format": "",
+                    "_source": "IS_STREAMING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "657128871"
+                        },
+                        "_map": {
+                            "0": "Boot",
+                            "1": "Connected",
+                            "2": "Programmed",
+                            "3": "Configured[style=No style (P577109550)]",
+                            "4": "Streaming[style=No style (P577109550)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "-1859533283"
+                    },
+                    "_caption": "STATE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "STATE_ROACH4",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "343370457"
+                    },
+                    "_caption": "HAS_FIRMWARE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_FIRMWARE_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1607829451"
+                    },
+                    "_caption": "DATA_STREAM_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "DATA_STREAM_ERROR_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "929200081"
+                    },
+                    "_caption": "ALLOW_AUTO_TRNAROUND",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "AUTO_ALLOW_TRNAROUND_LOOP_ROACH4status_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "609129917"
+                    },
+                    "_caption": "ALLOW_CHOP_LO",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "ALLOW_CHOP_LO_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-32302109"
+                    },
+                    "_caption": "CURRENT_N_TONES    ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "(P1369470654)",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "CURRENT_NTONES_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "850216675"
+                    },
+                    "_caption": "N_CHANNELS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_found_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1378065725"
+                    },
+                    "_caption": "PREV_N_CHANNELS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "prev_nkids_found_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1293822733"
+                    },
+                    "_caption": "HAS_VNA_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P331515062)",
+                    "_format": "",
+                    "_source": "HAS_VNA_TONES_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "148685249"
+                    },
+                    "_caption": "HAS_TARG_TONES",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P331515062)",
+                    "_format": "",
+                    "_source": "HAS_TARG_TONES_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-735439929"
+                    },
+                    "_caption": "POWER_PER_TONE [dBm]  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1739180927)",
+                    "_format": "%.2f",
+                    "_source": "POW_PER_TONE_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-479707267"
+                    },
+                    "_caption": "SET_ATTEN_OUT [dB]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "SET_ATTEN_OUT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "657086263"
+                    },
+                    "_caption": "READ_ATTEN_OUT [dB]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "READ_ATTEN_OUT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "770690583"
+                    },
+                    "_caption": "SET_ATTEN_IN [dB]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "SET_ATTEN_IN_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1746370195"
+                    },
+                    "_caption": "READ_ATTEN_IN [dB]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "READ_ATTEN_IN_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1932678241"
+                    },
+                    "_caption": "ADC_RMS_I [mV]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
+                    "_format": "%.2f",
+                    "_source": "ADCI_RMS_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1861907309"
+                    },
+                    "_caption": "ADC_RMS_Q [mV]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1012535193)",
+                    "_format": "%.2f",
+                    "_source": "ADCQ_RMS_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1021057225"
+                    },
+                    "_caption": "LO_CENTER_FREQ_MHZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "LO_CENTER_FREQ_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "160138899"
+                    },
+                    "_caption": "LO_FREQ_READ_MHZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.3f",
+                    "_source": "LO_FREQ_READ_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "631080073"
+                    },
+                    "_caption": "DOING_FULL_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FULL_LOOP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "691815459"
+                    },
+                    "_caption": "DOING_FIND_KIDS_LOOP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_FIND_KIDS_LOOP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1475225685"
+                    },
+                    "_caption": "DOING_TURNAROUND_LOOP  ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "DOING_TURNAROUND_LOOP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-96323593"
+                    },
+                    "_caption": "IS_WRITING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "WRITE_FLAG_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1684777887"
+                        },
+                        "_map": {
+                            "0": "0[style=low (P1016205289)]",
+                            "1": "VNA[style=SWEEPS (P1161173888)]",
+                            "2": "TARG[style=SWEEPS (P1161173888)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "-1718813153"
+                    },
+                    "_caption": "IS_SWEEPING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "IS_SWEEPING_ROACH4",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1191451439"
+                    },
+                    "_caption": "IS_FINDING_KIDS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_FINDING_KIDS_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "-1579958867"
+                        },
+                        "_map": {
+                            "0": "0",
+                            "1": "N_UNDER[style=xhigh (P1489452979)]",
+                            "2": "N_OVER[style=xhigh (P1489452979)]",
+                            "3": "OTHER[style=xhigh (P1489452979)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "698598181"
+                    },
+                    "_caption": "TONE_FINDING_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "TONE_FINDING_ERROR_ROACH4",
+                    "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "401407351"
+                    },
+                    "_caption": "FPGA_CLOCK_FREQ_MHZ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1087668522)",
+                    "_format": "%.2f",
+                    "_source": "FPGA_CLOCK_FREQ_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1876437215"
+                    },
+                    "_caption": "HAS_QDR_CAL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_QDR_CAL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1290782523"
+                    },
+                    "_caption": "QDR_CAL_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "QDR_CAL_FAIL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "631709157"
+                    },
+                    "_caption": "HAS_VNA_SWEEP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_VNA_SWEEP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "547105921"
+                    },
+                    "_caption": "HAS_TARG_SWEEP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_TARG_SWEEP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-993822159"
+                    },
+                    "_caption": "HAS_REF_PARAMS",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P773337968)",
+                    "_format": "",
+                    "_source": "HAS_REF_PARAMS_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "780079199"
+                    },
+                    "_caption": "SWEEP_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "SWEEP_FAIL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1048866087"
+                    },
+                    "_caption": "FIRMWARE_UPLOAD_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "FIRMWARE_UPLOAD_FAIL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-298510303"
+                    },
+                    "_caption": "KATCP_CONNECT_ERROR",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "KATCP_CONNECT_ERROR_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-422449911"
+                    },
+                    "_caption": "PI_ERROR_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1547091814)",
+                    "_format": "",
+                    "_source": "PI_ERROR_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1601423603"
+                    },
+                    "_caption": "PI_REBOOT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "PI_REBOOT_WARNING_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-644829987"
+                    },
+                    "_caption": "LAST_DF_RESPONSE [Hz]",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.2f",
+                    "_source": "AVG_DF_DIFF_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1703234979"
+                    },
+                    "_caption": "DF_RETUNE_THRESH",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "DF_DIFF_RETUNE_THRESH_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-848105975"
+                    },
+                    "_caption": "N_OUT_OF_RANGE_THRESH",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "NFLAG_THRESH_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "342420481"
+                    },
+                    "_caption": "N_OUTOFRANGE",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "nkids_bad_roach4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1322395713"
+                    },
+                    "_caption": "IS_CHOPPING_LO",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_CHOPPING_LO_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-361529887"
+                    },
+                    "_caption": "HAS_LAMP_CONTROL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "HAS_LAMP_CONTROL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-722790107"
+                    },
+                    "_caption": "WAITING_FOR_LAMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "WAITING_FOR_LAMP_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1973643725"
+                    },
+                    "_caption": "FULL_LOOP_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "FULL_LOOP_FAIL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "794724207"
+                    },
+                    "_caption": "TURN_AROUND_LOOP_FAIL",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P274232905)",
+                    "_format": "",
+                    "_source": "TRNAROUND_LOOP_FAIL_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1945638601"
+                    },
+                    "_caption": "EXT_REF",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "EXT_REF_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-1203268255"
+                    },
+                    "_caption": "IS_COMPRESSING",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": true,
+                    "_extremaID": "(P1407645461)",
+                    "_format": "",
+                    "_source": "IS_COMPRESSING_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "-637888349"
+                    },
+                    "_caption": "PI_TEMP",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PI_TEMP_ROACH5",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 850,
+            "geometryWidth": 289,
+            "geometryX": 918,
+            "geometryY": 17
+        },
+        {
+            "PObject": {
                 "_id": "2117481039"
             },
             "_boxTitle": "ROACH5 (RUBBLE)",
             "_style": "(P2072147126)",
             "cellHeight": 50,
             "cellWidth": 17,
-            "cellX": 54,
+            "cellX": 72,
             "cellY": 1,
             "dataItems": [
                 {
@@ -2690,7 +3363,7 @@
             ],
             "geometryHeight": 850,
             "geometryWidth": 289,
-            "geometryX": 918,
+            "geometryX": 1224,
             "geometryY": 17
         },
         {
@@ -2701,7 +3374,7 @@
             "_style": "(P2072147126)",
             "cellHeight": 11,
             "cellWidth": 8,
-            "cellX": 72,
+            "cellX": 90,
             "cellY": 1,
             "dataItems": [
                 {
@@ -2837,7 +3510,7 @@
             ],
             "geometryHeight": 187,
             "geometryWidth": 136,
-            "geometryX": 1224,
+            "geometryX": 1530,
             "geometryY": 17
         },
         {
@@ -2848,7 +3521,7 @@
             "_style": "(P2072147126)",
             "cellHeight": 14,
             "cellWidth": 19,
-            "cellX": 72,
+            "cellX": 90,
             "cellY": 13,
             "dataItems": [
                 {
@@ -3017,7 +3690,7 @@
             ],
             "geometryHeight": 238,
             "geometryWidth": 323,
-            "geometryX": 1224,
+            "geometryX": 1530,
             "geometryY": 221
         },
         {
@@ -3028,7 +3701,7 @@
             "_style": "(P2072147126)",
             "cellHeight": 16,
             "cellWidth": 17,
-            "cellX": 72,
+            "cellX": 90,
             "cellY": 35,
             "dataItems": [
                 {
@@ -3178,7 +3851,7 @@
             ],
             "geometryHeight": 272,
             "geometryWidth": 289,
-            "geometryX": 1224,
+            "geometryX": 1530,
             "geometryY": 595
         },
         {
@@ -3189,7 +3862,7 @@
             "_style": "(P2072147126)",
             "cellHeight": 6,
             "cellWidth": 17,
-            "cellX": 72,
+            "cellX": 90,
             "cellY": 28,
             "dataItems": [
                 {
@@ -3263,7 +3936,7 @@
             ],
             "geometryHeight": 102,
             "geometryWidth": 289,
-            "geometryX": 1224,
+            "geometryX": 1530,
             "geometryY": 476
         },
         {
@@ -3272,10 +3945,10 @@
             },
             "_boxTitle": "FLIGHT COMPUTERS",
             "_style": "(P2072147126)",
-            "cellHeight": 6,
-            "cellWidth": 10,
-            "cellX": 81,
-            "cellY": 6,
+            "cellHeight": 5,
+            "cellWidth": 12,
+            "cellX": 99,
+            "cellY": 7,
             "dataItems": [
                 {
                     "PObject": {
@@ -3321,10 +3994,10 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 102,
-            "geometryWidth": 170,
-            "geometryX": 1377,
-            "geometryY": 102
+            "geometryHeight": 85,
+            "geometryWidth": 204,
+            "geometryX": 1683,
+            "geometryY": 119
         }
     ],
     "extremas": [
@@ -3332,197 +4005,197 @@
             "PObject": {
                 "_id": "1601442318"
             },
-            "_high": "65",
-            "_low": "65",
+            "_high": 65,
+            "_low": 65,
             "_name": "r1fpga",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1489452979)",
-            "_xhigh": "70",
-            "_xlow": "10"
+            "_xhigh": 70,
+            "_xlow": 10
         },
         {
             "PObject": {
                 "_id": "395081801"
             },
-            "_high": "8.51e+08",
-            "_low": "8.49e+08",
+            "_high": 851000000,
+            "_low": 849000000,
             "_name": "lo_roach3",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "8.51e+08",
-            "_xlow": "8.49e+08"
+            "_xhigh": 851000000,
+            "_xlow": 849000000
         },
         {
             "PObject": {
                 "_id": "674313813"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "IS_SWEEPING",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-1"
+            "_xhigh": 1,
+            "_xlow": -1
         },
         {
             "PObject": {
                 "_id": "274232905"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "BOOLEAN_TRUE_BAD",
             "_shigh": "(P1489452979)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-1"
+            "_xhigh": 1,
+            "_xlow": -1
         },
         {
             "PObject": {
                 "_id": "1407645461"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "FULL_LOOP",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1443171059)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-1"
+            "_xhigh": 1,
+            "_xlow": -1
         },
         {
             "PObject": {
                 "_id": "773337968"
             },
-            "_high": "1",
-            "_low": "0",
+            "_high": 1,
+            "_low": 0,
             "_name": "BOOLEAN_FALSE_BAD",
             "_shigh": "(P1489452979)",
             "_slow": "(P1489452979)",
             "_sxhigh": "(P1016205289)",
             "_sxlow": "(P1489452979)",
-            "_xhigh": "1",
-            "_xlow": "-1"
+            "_xhigh": 1,
+            "_xlow": -1
         },
         {
             "PObject": {
                 "_id": "2103860321"
             },
-            "_high": "0.29",
-            "_low": "0",
+            "_high": 0.28999999165534973,
+            "_low": 0,
             "_name": "TEMPS",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "0.29",
-            "_xlow": "0"
+            "_xhigh": 0.28999999165534973,
+            "_xlow": 0
         },
         {
             "PObject": {
                 "_id": "1547091814"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "PI_ERROR",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-2"
+            "_xhigh": 1,
+            "_xlow": -2
         },
         {
             "PObject": {
                 "_id": "1837166662"
             },
-            "_high": "1",
-            "_low": "0",
+            "_high": 1,
+            "_low": 0,
             "_name": "IS_STREAMING",
             "_shigh": "(P1489452979)",
             "_slow": "(P1489452979)",
             "_sxhigh": "(P1553648692)",
             "_sxlow": "(P1489452979)",
-            "_xhigh": "1",
-            "_xlow": "0"
+            "_xhigh": 1,
+            "_xlow": 0
         },
         {
             "PObject": {
                 "_id": "1739180927"
             },
-            "_high": "-30",
-            "_low": "-30",
+            "_high": -30,
+            "_low": -30,
             "_name": "TONE_POWERS",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1489452979)",
-            "_xhigh": "-30",
-            "_xlow": "-70"
+            "_xhigh": -30,
+            "_xlow": -70
         },
         {
             "PObject": {
                 "_id": "1012535193"
             },
-            "_high": "200",
-            "_low": "-1",
+            "_high": 200,
+            "_low": -1,
             "_name": "ADC_RMS",
             "_shigh": "(P1489452979)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "200",
-            "_xlow": "-2"
+            "_xhigh": 200,
+            "_xlow": -2
         },
         {
             "PObject": {
                 "_id": "933645065"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "ROACH_LAMP_NOW",
             "_shigh": "(P2012763546)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-2"
+            "_xhigh": 1,
+            "_xlow": -2
         },
         {
             "PObject": {
                 "_id": "331515062"
             },
-            "_high": "1",
-            "_low": "-1",
+            "_high": 1,
+            "_low": -1,
             "_name": "HAS_TONES",
             "_shigh": "(P1016205289)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1369470654)",
             "_sxlow": "(P1042125667)",
-            "_xhigh": "1",
-            "_xlow": "-1"
+            "_xhigh": 1,
+            "_xlow": -1
         },
         {
             "PObject": {
                 "_id": "1087668522"
             },
-            "_high": "259",
-            "_low": "259",
+            "_high": 259,
+            "_low": 259,
             "_name": "FPGA_CLOCK_FREQ",
             "_shigh": "(P1489452979)",
             "_slow": "(P1016205289)",
             "_sxhigh": "(P1489452979)",
             "_sxlow": "(P1489452979)",
-            "_xhigh": "259",
-            "_xlow": "255"
+            "_xhigh": 259,
+            "_xlow": 255
         }
     ],
     "linkNames": [
@@ -3540,11 +4213,11 @@
             },
             "cellHeight": 7,
             "cellWidth": 5,
-            "cellX": 81,
+            "cellX": 99,
             "cellY": 0,
             "geometryHeight": 119,
             "geometryWidth": 85,
-            "geometryX": 1377,
+            "geometryX": 1683,
             "geometryY": 0
         }
     ],
@@ -3814,9 +4487,9 @@
             "_name": "SWEEPS"
         }
     ],
-    "webPort": "0",
-    "windowCellHeight": 62,
-    "windowCellWidth": 113,
-    "windowHeight": 1056,
-    "windowWidth": 1920
+    "webPort": "\u0000",
+    "windowCellHeight": 60,
+    "windowCellWidth": 110,
+    "windowHeight": 1025,
+    "windowWidth": 1867
 }

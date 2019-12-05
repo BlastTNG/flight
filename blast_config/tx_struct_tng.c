@@ -77,6 +77,7 @@ channel_t channel_list[] =
     { "cycle_allowed",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "wd_allowed",            1,      0, TYPE_UINT16, RATE_1HZ, U_NONE, 0},
     { "load_curve",            1,      0, TYPE_FLOAT, RATE_1HZ, U_NONE, 0},
+    { "hawkeye",            1,      0, TYPE_UINT8, RATE_200HZ, U_NONE, 0},
     { "stage_chopper",    SCALE(CRYO_D), TYPE_UINT16, RATE_200HZ, U_V_V, 0 },
 
     { "read_dio",         SCALE(CRYO_D), TYPE_UINT16, RATE_1HZ, U_NONE, 0 },
@@ -473,7 +474,8 @@ channel_t channel_list[] =
     {"thresh_clos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"threshlclos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"thresh_open_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"potvalve_tight_move", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"tight_move_potvalve",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"enable_potvalve",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"pos_pumpvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},

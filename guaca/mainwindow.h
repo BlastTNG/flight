@@ -22,20 +22,6 @@
 #define IMAGE_LOOP_HIGH 23
 #define IMAGE_TOTAL 32
 
-struct GUACACONFIG
-{
-    int linkindex;
-    int hostindex;
-    int checksum;
-    int server;
-    int backup;
-    int rewind;
-    int active;
-    int multilinknum;
-    int multilinkindex[MAX_NUM_LINKFILE];
-    char customhost[64];
-};
-
 namespace Ui {
     class MainWindow;
 }
@@ -84,7 +70,6 @@ private slots:
 
 private:
     int num_linkfile;
-    int linkids[3];
     int syncstate;
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
@@ -92,15 +77,13 @@ private:
     std::vector<Logscroll *> mole_logs;
     bool still_dancing;
     QSettings settings;
+    bool servermode;
 
-    struct GUACACONFIG cfg;
     void freeze();
     void unfreeze();
     void start_a_mole(int );
     void stop_all_moles();
     int get_server_data();
-    void updateSettings();
-    void getSettings();
     void savePosition();
     void auto_select_link();
 
@@ -122,7 +105,6 @@ private:
     int logend;
     int data_incoming;
     char gnd_ip[128];
-    int servermode;
     QFuture<void> f1;
 
     int host_index;

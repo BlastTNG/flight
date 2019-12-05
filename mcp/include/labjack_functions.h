@@ -97,7 +97,7 @@
 // Maximum number of addresses that can be targeted in stream mode.
 #define MAX_NUM_ADDRESSES 4096
 
-#define NUM_LABJACKS 9
+#define NUM_LABJACKS 11
 
 typedef struct { // temp names
     channel_t* status_charcoal_heater_Addr;

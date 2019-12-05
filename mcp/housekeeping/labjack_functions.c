@@ -136,6 +136,24 @@ labjack_state_t state[NUM_LABJACKS] = {
         .channel_postfix = "_mapping_labjack",
         .initialized = 0,
         .have_warned_write_reg = 0,
+    },
+    {
+        .which = 9,
+        .address = "labjack10",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_microscroll_labjack",
+        .initialized = 0,
+        .have_warned_write_reg = 0,
+    },
+    {
+        .which = 10,
+        .address = "labjack11",
+        .port = LJ_DATA_PORT,
+        .DAC = {0, 0},
+        .channel_postfix = "_hawkeye_labjack",
+        .initialized = 0,
+        .have_warned_write_reg = 0,
     }
 };
 

@@ -112,7 +112,7 @@
 #define PI_READ_ERROR -10 /* Error code: Pi read */
 #define READ_LINE 256 /* Line length for buffer reads, bytes */
 #define READ_BUFFER 4096 /* Number of bytes to read from a buffer */
-#define STREAM_NTRIES 10 /* Number of times to check stream status */
+#define STREAM_NTRIES 100000 /* Number of times to check stream status */
 #define STREAM_TIMEOUT 2 /* Seconds to wait between checks */
 #define PI_READ_NTRIES 50 /* Number of times to attempt Pi read */
 #define PI_READ_TIMEOUT (800*1000) /* Pi read timeout, usec */
@@ -134,7 +134,7 @@
 #define AUTO_CAL_ADC 0 /* Choose to run the adc cal routine after initial tone write */
 #define AUTO_CAL_AMPS 0
 #define APPLY_VNA_TRF 1 /* Apply Roach output transfer function to vna freqs by default */
-#define APPLY_TARG_TRF 0 /* Apply Roach output transfer function to targ freqs by default */
+#define APPLY_TARG_TRF 1 /* Apply Roach output transfer function to targ freqs by default */
 #define ATTEN_PORT 9998 /* Pi port for atten socket */
 #define VALON_PORT 9999 /* Pi port for valon socket */
 #define PI_TEMP_PORT 9997 /* Pi port for reading temp */
@@ -142,9 +142,9 @@
 #define N_WATCHDOG_FAILS 5 /* Number of check fails before state is reset to boot */
 #define MAX_PI_ERRORS_REBOOT 10 /* If there are 10 consecutive Pi errors, reboot */
 #define VNA_COMB_LEN 1000 /* Number of tones in search comb */
-#define ATTEN_TOTAL 23 /* In atten (dB) + out atten (dB). Number is conserved */
-#define DEFAULT_OUTPUT_ATTEN 4 /* dB */
-#define DEFAULT_INPUT_ATTEN 19 /* dB */
+#define ATTEN_TOTAL 7 /* In atten (dB) + out atten (dB). Number is conserved */
+#define DEFAULT_OUTPUT_ATTEN 7 /* dB */
+#define DEFAULT_INPUT_ATTEN 0 /* dB */
 #define SWEEP_READY_TIMEOUT 5000 /* ms, time for Roaches to wait before saving data */
 #define MAX_DATA_ERRORS 1000 /* Max num allowable data errors in save_sweep_packet (ms) */
 #define MAX_LAMP_WAITS 5000 /* Max num times to wait for lead roach to flash lamp (1 s) */
@@ -157,6 +157,9 @@ extern int16_t InCharge; /* See mcp.c */
 extern int roach_sock_fd; /* File descriptor for shared Roach UDP socket */
 static int fft_len = 1024; /* Order of FW FFT */
 static uint32_t accum_len = (1 << 19) - 1; /* Number of FW FFT accumulations */
+
+static double rf_pow_out[1000];
+char rf_tone_power_path[100] = "/home/fc1user/roach_flight/rfPowerOut.dat";
 
 char path_to_vna_tarball[5][100];
 char path_to_targ_tarball[5][100];
@@ -226,6 +229,33 @@ static int lead_roach_ready;
 static int roach_lamp_now; // indicates Roach is turning on lamp with periodic_cal()
 
 static char null_string[] = "";
+
+// Load list of initial RF tone powers
+int load_tone_powers()
+{
+    int retval = -1;
+    FILE *fd = fopen(rf_tone_power_path, "r");
+    if (!fd) {
+        blast_strerror("Could not open %s for reading", rf_tone_power_path);
+         for (size_t i = 0; i < 1000; i++) {
+            rf_pow_out[i] = -35.0;
+            blast_info("%f", rf_pow_out[i]);
+        }
+        return retval;
+    } else {
+        blast_info("Loading RF tone powers");
+        for (size_t i = 0; i < 1000; i++) {
+            if (fscanf(fd, "%lg\n", &rf_pow_out[i]) != EOF) {
+                blast_info("%f", rf_pow_out[i]);
+            } else {
+                retval = 0;
+                break;
+            }
+        }
+        fclose(fd);
+    }
+    return retval;
+}
 
 // Generic function to handle system calls for python scripts with additional niceness.
 void pyblast_system(char* cmd)
@@ -1160,17 +1190,16 @@ int roach_check_streaming(roach_state_t *m_roach, int ntries, int sec_timeout)
         sleep(sec_timeout);
         if (roach_udp[m_roach->which - 1].roach_packet_count > m_last_packet_count) {
             blast_info("ROACH%d, Streaming OK.", m_roach->which);
-            break;
+            // set streaming flag
+            m_roach->is_streaming = 1;
+            return 0;
         } else {
             count += 1;
         }
-        blast_err("Data stream error on ROACH%d", m_roach->which);
-        m_roach->is_streaming = 0;
-        return retval;
     }
-    // set streaming flag
-    m_roach->is_streaming = 1;
-    return 0;
+    blast_err("Data stream error on ROACH%d", m_roach->which);
+    m_roach->is_streaming = 0;
+    return retval;
 }
 
 int atten_client(pi_state_t *m_pi, char *command)
@@ -1432,8 +1461,9 @@ int set_atten_conserved(pi_state_t *m_pi)
     int ind = m_pi->which - 1;
     char *command;
     double out_in_atten[2];
-    CommandData.roach_params[ind].set_in_atten =
-        ATTEN_TOTAL - CommandData.roach_params[ind].set_out_atten;
+    // CommandData.roach_params[ind].set_in_atten =
+    //    ATTEN_TOTAL - CommandData.roach_params[ind].set_out_atten;
+    CommandData.roach_params[ind].set_in_atten = 0;
     // the order of input and output attenuators is switched between PIs
     if (ind == 0) {
         blast_tmp_sprintf(command, "set %g %g",
@@ -1472,6 +1502,7 @@ int set_atten_conserved(pi_state_t *m_pi)
     return 0;
 }
 
+/*
 int find_atten(roach_state_t *m_roach, double pow_per_tone) {
     double out_atten = -47.0 - pow_per_tone - 10.0*log10(m_roach->current_ntones/1000.0);
     // Check if out_atten is inside allowable limits
@@ -1489,6 +1520,28 @@ int find_atten(roach_state_t *m_roach, double pow_per_tone) {
     CommandData.roach_params[m_roach->which - 1].set_in_atten = ATTEN_TOTAL - out_atten_rounded;
     blast_info("ROACH%d, output atten = %f for %f dBm/tone with Ntones = %zd",
        m_roach->which, out_atten, pow_per_tone, m_roach->current_ntones);
+    return 0;
+}
+*/
+
+int find_atten(roach_state_t *m_roach, double pow_per_tone_desired) {
+    double out_atten = rf_pow_out[m_roach->current_ntones - 1] - pow_per_tone_desired;
+    // Check if out_atten is inside allowable limits
+    if (out_atten < 0) {
+        out_atten = 0;
+        blast_err("ROACH%d: Atten request too low, setting to 0 dB (min possible)",
+               m_roach->which);
+    } else if (out_atten > 30) {
+        out_atten = 30;
+        blast_err("ROACH%d: Atten request too high, setting to 30 dB (max possible)",
+               m_roach->which);
+    }
+    double out_atten_rounded = round(2 * out_atten) * 0.5;
+    CommandData.roach_params[m_roach->which - 1].set_out_atten = out_atten_rounded;
+    // CommandData.roach_params[m_roach->which - 1].set_in_atten = ATTEN_TOTAL - out_atten_rounded;
+    CommandData.roach_params[m_roach->which - 1].set_in_atten = 0;
+    blast_info("ROACH%d, output atten = %f for %f dBm/tone with Ntones = %zd",
+       m_roach->which, out_atten, pow_per_tone_desired, m_roach->current_ntones);
     return 0;
 }
 
@@ -5223,6 +5276,7 @@ int roach_config_sequence(roach_state_t *m_roach)
         retval = -3;
         return retval;
     }
+    // load rf tone powers
     retval = 0;
     return retval;
 }
@@ -5290,14 +5344,13 @@ int roach_full_loop(roach_state_t *m_roach)
     m_roach->has_targ_tones = 0;
     int status = -1;
     int i = m_roach->which - 1;
-    // Set Attens
     if (!CommandData.roach[m_roach->which - 1].find_kids) {
         CommandData.roach[m_roach->which - 1].find_kids = 1;
     }
     m_roach->doing_full_loop = 1;
     CommandData.roach[m_roach->which - 1].set_attens = 5;
     if ((status = set_attens_targ_output(m_roach)) < 0) {
-        blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+         blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
     }
     // VNA sweep
     CommandData.roach[i].do_sweeps = 1;
@@ -5328,7 +5381,7 @@ int roach_full_loop(roach_state_t *m_roach)
     // Set attens again to account for change in number of tones
     CommandData.roach[m_roach->which - 1].set_attens = 5;
     if ((status = set_attens_targ_output(m_roach)) < 0) {
-        blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
+         blast_err("ROACH%d: Failed to set attenuators, but continuing full loop", i + 1);
     }
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
@@ -5511,11 +5564,12 @@ void roach_state_manager(roach_state_t *m_roach, int result)
             if (result == 0) {
                 m_roach->state = ROACH_STATE_STREAMING;
                 m_roach->data_stream_error = 0;
-                // recenter_lo(m_roach);
+                recenter_lo(m_roach);
                 /* if ((set_attens_to_default(&pi_state_table[m_roach->which - 1])) < 0) {
                     blast_err("ROACH%d: Failed to set RUDATs...", m_roach->which);
                 } */
                 // do a full loop
+                load_tone_powers();
                 CommandData.roach[m_roach->which - 1].do_full_loop = 1;
             }
             break;
@@ -6154,7 +6208,7 @@ int init_roach(uint16_t ind)
     }
     if ((ind == 1)) {
         roach_state_table[ind].array = 250;
-        roach_state_table[ind].lo_centerfreq = 827.0e6;
+        roach_state_table[ind].lo_centerfreq = 829.0e6;
         roach_state_table[ind].vna_comb_len = VNA_COMB_LEN;
         roach_state_table[ind].p_max_freq = 246.001234e6;
         roach_state_table[ind].p_min_freq = 1.02342e6;
@@ -6226,12 +6280,12 @@ int init_roach(uint16_t ind)
     CommandData.roach[ind].enable_chop_lo = 1;
     // Don't create thread for Roach 4
     uint64_t roach_idx = ind;
-    if (roach_idx != 3) {
+    // if (roach_idx != 3) {
         // blast_info("Spawning command thread for roach%i...", ind + 1);
         // ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) &ind);
-        ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
+    ph_thread_spawn((ph_thread_func)roach_cmd_loop, (void*) roach_idx);
         // blast_info("Spawned command thread for roach%i", ind + 1);
-    }
+    // }
     return 0;
 }
 
