@@ -153,13 +153,15 @@ static void clear_fio() {
 
 static void publish_values() {
     static int first_time = 1;
-    static channel_t* pumpa_Addr, pumpb_Addr;
+    static channel_t* pumpa_Addr;
+    static channel_t* pumpb_Addr;
     if (first_time) {
         pumpa_Addr = channels_find_by_name("microscroll_a");
         pumpb_Addr = channels_find_by_name("microscroll_b");
     }
     if (state[9].connected) {
-        SET_SCALED_VALUE(pumpa_Addr, microscroll.supply_24va_on)
+        SET_SCALED_VALUE(pumpa_Addr, microscroll.supply_24va)
+        SET_SCALED_VALUE(pumpb_Addr, microscroll.supply_24vb)
     }
 }
 
