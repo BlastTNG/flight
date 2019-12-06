@@ -164,14 +164,12 @@ static void publish_values() {
 }
 
 static void update_microscroll() {
-    micrscroll.supply_24va_on = CommandData.Microscroll.supply_24va_on;
-    micrscroll.supply_24va_off = CommandData.Microscroll.supply_24va_off;
-    micrscroll.supply_24vb_on = CommandData.Microscroll.supply_24vb_on;
-    micrscroll.supply_24vb_off = CommandData.Microscroll.supply_24vb_off;
+    micrscroll.supply_24va = CommandData.Microscroll.supply_24va;
+    micrscroll.supply_24vb = CommandData.Microscroll.supply_24vb;
     microscroll.relay_12v_on = CommandData.Microscroll.relay_12v_on;
     microscroll.relay_12v_off = CommandData.Microscroll.relay_12v_off;
 }
-
+// add protection below here to not send these things continuously
 static void control_24va_supply() {
     if (state[9].connected) {
         labjack_queue_command(LABJACK_MICROSCROLL, supply_24Va, microscroll.supply_24va);
