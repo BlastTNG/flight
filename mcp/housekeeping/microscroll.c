@@ -167,8 +167,8 @@ static void publish_values() {
 }
 
 static void update_microscroll() {
-    micrscroll.supply_24va = CommandData.Microscroll.supply_24va;
-    micrscroll.supply_24vb = CommandData.Microscroll.supply_24vb;
+    microscroll.supply_24va = CommandData.Microscroll.supply_24va;
+    microscroll.supply_24vb = CommandData.Microscroll.supply_24vb;
     microscroll.relay_12v_on = CommandData.Microscroll.relay_12v_on;
     microscroll.relay_12v_off = CommandData.Microscroll.relay_12v_off;
 }
