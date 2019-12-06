@@ -158,10 +158,11 @@ static void publish_values() {
     if (first_time) {
         pumpa_Addr = channels_find_by_name("microscroll_a");
         pumpb_Addr = channels_find_by_name("microscroll_b");
+        first_time = 0;
     }
     if (state[9].connected) {
-        SET_SCALED_VALUE(pumpa_Addr, microscroll.supply_24va)
-        SET_SCALED_VALUE(pumpb_Addr, microscroll.supply_24vb)
+        SET_SCALED_VALUE(pumpa_Addr, microscroll.supply_24va);
+        SET_SCALED_VALUE(pumpb_Addr, microscroll.supply_24vb);
     }
 }
 
