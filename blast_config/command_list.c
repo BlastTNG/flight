@@ -1656,6 +1656,11 @@ struct mcom mcommands[plugh + 2] = {
           {"Length of Pulse (in 5ms steps)", 1, 30000, 'i', "LENGTH_PULSE"},
       }
   },
+  {COMMAND(set_cal_timeout), "Setting timeout to cal pulse and resetting counter", GR_CRYO, 1,
+      {
+          {"Length of timeout in seconds", 600, 216000, 'i', "TIMEOUT_LENGTH"},
+      }
+  },
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",
