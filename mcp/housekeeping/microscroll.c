@@ -227,13 +227,13 @@ static void update_microscroll_thermistors() {
         first_time = 0;
     }
     if (state[9].connected) {
-        SET_SCALED_VALUE(therm1_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_1));
-        SET_SCALED_VALUE(therm2_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_2));
-        SET_SCALED_VALUE(therm3_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_3));
-        SET_SCALED_VALUE(therm4_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_4));
-        SET_SCALED_VALUE(therm5_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_5));
-        SET_SCALED_VALUE(therm6_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_6));
-        SET_SCALED_VALUE(therm7_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_7));
-        SET_SCALED_VALUE(therm8_Addr, labjack_get_value(LABJACK_MICROSCROLL,thermistor_8));
+        SET_SCALED_VALUE(therm1_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_1));
+        SET_SCALED_VALUE(therm2_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_2));
+        SET_SCALED_VALUE(therm3_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_3));
+        SET_SCALED_VALUE(therm4_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_4));
+        SET_SCALED_VALUE(therm5_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_5));
+        SET_SCALED_VALUE(therm6_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_6));
+        SET_SCALED_VALUE(therm7_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_7));
+        SET_SCALED_VALUE(therm8_Addr, labjack_get_value(LABJACK_MICROSCROLL, thermistor_8));
     }
 }
