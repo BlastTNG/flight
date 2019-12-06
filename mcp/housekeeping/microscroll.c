@@ -49,7 +49,7 @@ typedef struct {
     float supply_24va, supply_24vb;
     float relay_12v_on, relay_12v_off;
     int have_pulsed_relay;
-} microscroll_control_t;
+} microscroll_t;
 
 microscroll_t microscroll;
 
