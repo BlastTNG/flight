@@ -49,16 +49,19 @@
 #define STAGEX_ID EZ_WHO_S6
 #define STAGEY_ID EZ_WHO_S7
 
-#define STAGE_BUS_ACCEL 2
+#define STAGE_BUS_ACCEL 200
 #define STAGE_BUS_IHOLD 20
-#define STAGE_BUS_IMOVE 50
+#define STAGE_BUS_IMOVE 75
 
 #define STAGEXNUM 0
 #define STAGEYNUM 1
 #define POLL_TIMEOUT 500 /* 15 seconds */
+#define NSTAGE_ACTS 2
 
 extern int16_t InCharge; /* tx.c */
 void nameThread(const char*);	/* mcp.c */
+
+static const int id_stage[NSTAGE_ACTS] = {EZ_WHO_S6, EZ_WHO_S7};
 
 static struct stage_struct {
   int xpos, ypos;
@@ -78,23 +81,24 @@ static void ReadStage(struct ezbus* bus)
   EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
   EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
 
-  if (counter == 0)
+  if (counter == 0) {
     EZBus_ReadInt(bus, STAGEX_ID, "?1", &stage_data.xstr);
-  else if (counter == 1)
+    blast_info("Reading position, etc from XY Stage");
+  } else if (counter == 1) {
     EZBus_ReadInt(bus, STAGEX_ID, "?3", &stage_data.xstp);
-  else if (counter == 2)
+  } else if (counter == 2) {
     EZBus_ReadInt(bus, STAGEX_ID, "?4", &stage_data.xlim);
-  else if (counter == 3)
+  } else if (counter == 3) {
     EZBus_ReadInt(bus, STAGEX_ID, "?5", &stage_data.xvel);
-  else if (counter == 4)
+  } else if (counter == 4) {
     EZBus_ReadInt(bus, STAGEY_ID, "?1", &stage_data.ystr);
-  else if (counter == 5)
+  } else if (counter == 5) {
     EZBus_ReadInt(bus, STAGEY_ID, "?3", &stage_data.ystp);
-  else if (counter == 6)
+  } else if (counter == 6) {
     EZBus_ReadInt(bus, STAGEY_ID, "?5", &stage_data.yvel);
-  else if (counter == 7)
+  } else if (counter == 7) {
     EZBus_ReadInt(bus, STAGEY_ID, "?4", &stage_data.ylim);
-
+  }
   counter = (counter + 1) % 8;
 }
 
@@ -148,6 +152,8 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 {
   int now;
   char who = (is_y) ? STAGEY_ID : STAGEX_ID;
+  int counter = 100; // to print status once a second with loop running every 10 ms
+  int again = 12000; // try again after 2 minutes
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
 	return;
@@ -168,6 +174,22 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 
     EZBus_ReadInt(bus, STAGEX_ID, "?0", &stage_data.xpos);
     EZBus_ReadInt(bus, STAGEY_ID, "?0", &stage_data.ypos);
+
+    counter--;
+    counter %= 100;
+    if (!counter) {
+        blast_info("In GoWait, requesting XY Stage Position");
+	blast_info("Pos_XStage = %d, Pos_YStage = %d", stage_data.xpos, stage_data.ypos);
+    }
+
+    again--;
+    if (!again) {
+	EZBus_Stop(bus, who);
+	blast_info("Not to commanded position after 2 minutes, trying again");
+        blast_info("Move %c to %i at speed %i and wait", (is_y) ? 'Y' : 'X', dest, vel);
+        EZBus_GotoVel(bus, who, dest, vel);
+	again = 12000;
+    }
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
     } while (now != dest);
@@ -198,15 +220,31 @@ void Raster(struct ezbus *bus, int start, int end, int is_y, int y,
 void ControlXYStage(struct ezbus* bus)
 {
   int my_cindex = 0;
+  int caddr_match;
+  int i;
 
   /* Send the uplinked command, if any */
+  // my_cindex = GETREADINDEX(CommandData.actbus.cindex);
+  // if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID
+  //     || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
+  //   EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
+  // 	CommandData.actbus.command[my_cindex]);
+  //   CommandData.actbus.caddr[my_cindex] = 0;
+  // }
+
   my_cindex = GETREADINDEX(CommandData.actbus.cindex);
-  if (CommandData.actbus.caddr[my_cindex] == STAGEX_ID
-      || CommandData.actbus.caddr[my_cindex] == STAGEY_ID) {
-    EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex],
-	CommandData.actbus.command[my_cindex]);
-    CommandData.actbus.caddr[my_cindex] = 0;
-  }
+  caddr_match = 0;
+  for (i = 0; i < NSTAGE_ACTS; i++)
+      if (CommandData.actbus.caddr[my_cindex] == id_stage[i]) caddr_match = 1;
+          if (caddr_match) {
+              blast_info("Sending command %s to Act %c\n", CommandData.actbus.command[my_cindex],
+                         CommandData.actbus.caddr[my_cindex]);
+              // increase print level for uplinked manual commands
+              bus->chatter = EZ_CHAT_BUS;
+              EZBus_Comm(bus, CommandData.actbus.caddr[my_cindex], CommandData.actbus.command[my_cindex]);
+              CommandData.actbus.caddr[my_cindex] = 0;
+              bus->chatter = STAGE_BUS_CHATTER;
+        }
 
   /* respond to normal movement commands */
   if (CommandData.xystage.is_new) {
@@ -271,6 +309,8 @@ void ControlXYStage(struct ezbus* bus)
 	int xvel = CommandData.xystage.xvel;
 	int yvel = CommandData.xystage.yvel;
 	int step = CommandData.xystage.step;
+	// if we want the raster to only scan once (and therefore be faster) we can change the two initial GoWaits
+	// to go to a corner and then do only one call to Raster like the second one here
 	GoWait(bus, xcent, xvel, 0);
 	GoWait(bus, ycent - ysize, yvel, 1);
 	Raster(bus, xcent, xcent + xsize, 0, ycent + ysize, ycent - ysize,
@@ -331,8 +371,8 @@ void StageBus(void)
   EZBus_SetPreamble(&bus, STAGEX_ID, XYSTAGE_PREAMBLE);
   EZBus_SetPreamble(&bus, STAGEY_ID, XYSTAGE_PREAMBLE);
 
-  EZBus_Comm(&bus, STAGEX_ID, "z10000R"); // Wake up at position 10000 so we have space to move in either direction.
-  EZBus_Comm(&bus, STAGEY_ID, "z10000R"); // May want to use home command to re-zero on limit switches.
+  EZBus_Comm(&bus, STAGEX_ID, "z20000R"); // Wake up at position 20000 so we have space to move in either direction.
+  EZBus_Comm(&bus, STAGEY_ID, "z20000R"); // May want to use home command to re-zero on limit switches.
   all_ok = !(EZBus_Poll(&bus) & EZ_ERR_POLL);
 
   for (;;) {

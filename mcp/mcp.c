@@ -186,6 +186,8 @@ void * lj_connection_handler(void *arg) {
     }
     // LABJACKS
     blast_info("I am now in charge, initializing LJs");
+    // Set the queue to allow new set
+    CommandData.Labjack_Queue.set_q = 1;
     // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
@@ -333,10 +335,10 @@ static void mcp_1hz_routines(void)
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
     if (ready && InCharge) {
-      for (int i = 0; i < NUM_TELEMETRIES; i++) {
-         memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
-         incrementFifo(telem_fifo[i]);
-      }
+        for (int i = 0; i < NUM_TELEMETRIES; i++) {
+           memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
+           incrementFifo(telem_fifo[i]);
+        }
     }
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
@@ -648,7 +650,6 @@ blast_info("Finished initializing Beaglebones..."); */
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-
 #ifndef USE_XY_THREAD
   // for now put ActBus inside ifndef so that only one of Actbus thread and XYbus thread run
   act_thread = ph_thread_spawn(ActuatorBus, NULL);
