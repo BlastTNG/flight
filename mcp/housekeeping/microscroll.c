@@ -206,8 +206,14 @@ static void control_24vb_supply() {
 
 static void update_microscroll_thermistors() {
     static int first_time = 1;
-    static channel_t* therm1_Addr, therm2_Addr, therm3_Addr, therm4_Addr;
-    static channel_t* therm5_Addr, therm6_Addr, therm7_Addr, therm8_Addr;
+    static channel_t* therm1_Addr;
+    static channel_t* therm2_Addr;
+    static channel_t* therm3_Addr;
+    static channel_t* therm4_Addr;
+    static channel_t* therm5_Addr;
+    static channel_t* therm6_Addr;
+    static channel_t* therm7_Addr;
+    static channel_t* therm8_Addr;
     if (first_time) {
         therm1_Addr = channels_find_by_name("micro_thermistor1");
         therm2_Addr = channels_find_by_name("micro_thermistor2");
