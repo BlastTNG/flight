@@ -77,18 +77,17 @@ static void clear_eio() {
         labjack_queue_command(10, 2015, 0.0);
         first_time = 0;
     }
+    if (!state[10].connected) {
+        first_time = 1;
+    }
 }
 
 static void static_ir_load() {
     update_ir_values();
     if (state[10].connected) {
-        if (hawkeye.go == 0) {
-            labjack_queue_command(10, 2008, 0.0);
-            hawkeye.on = 0;
-        }
-        if (hawkeye.no_pulse == 1 && hawkeye.go == 1) {
-            labjack_queue_command(10, 2008, 1.0);
-            hawkeye.on = 1;
+        if (hawkeye.no_pulse == 1 && hawkeye.go == 1 && hawkeye.on == 0) {
+                labjack_queue_command(10, 2008, 1.0);
+                hawkeye.on = 1;
         }
     }
 }
@@ -97,32 +96,40 @@ static void run_ir_source() {
     static int counter = 0;
     update_ir_values();
     hawkeye.just_swapped = 0;
+    static int pulsed = 0;
+    static int clear_pulsed = 0;
     if (state[10].connected) {
         if (hawkeye.go == 0) {
-            counter = 0;
-            labjack_queue_command(10, 2008, 0.0);
-        }
-        if (hawkeye.go == 1 && hawkeye.no_pulse == 0) {
-            if (hawkeye.just_received) {
-                CommandData.IRsource.just_received = 0;
-                hawkeye.on = 1;
+            if (!clear_pulsed) {
+                pulsed = 0;
+                counter = 0;
+                labjack_queue_command(10, 2008, 0.0);
+                clear_pulsed = 1;
+                hawkeye.on = 0;
             }
+        } else if (hawkeye.no_pulse == 0) {
+            clear_pulsed = 0;
             if (hawkeye.on == 1) {
-                labjack_queue_command(10, 2008, 1.0);
+                if (!pulsed) {
+                    pulsed = 1;
+                    labjack_queue_command(10, 2008, 1.0);
+                }
                 counter++;
-                if (counter == hawkeye.length) {
-                    hawkeye.just_swapped = 1;
+                if (counter >= hawkeye.length) {
                     counter = 0;
                     hawkeye.on = 0;
+                    pulsed = 0;
                 }
-            }
-            if (hawkeye.on == 0 && hawkeye.just_swapped == 0.0) {
-                labjack_queue_command(10, 2008, 0);
+            } else {
+                if (!pulsed) {
+                    pulsed = 1;
+                    labjack_queue_command(10, 2008, 0.0);
+                }
                 counter++;
-                if (counter == hawkeye.length) {
-                    hawkeye.just_swapped = 1;
+                if (counter >= hawkeye.length) {
                     counter = 0;
                     hawkeye.on = 1;
+                    pulsed = 0;
                 }
             }
         }
@@ -132,11 +139,13 @@ static void run_ir_source() {
 static void publish_value() {
     static int first_time = 1;
     static channel_t* hawkeye_Addr;
+    static int have_warned = 0;
     if (first_time == 1) {
         hawkeye_Addr = channels_find_by_name("hawkeye");
         first_time = 0;
     }
     if (state[10].connected) {
+        have_warned = 0;
         if (hawkeye.on == 1) {
             SET_SCALED_VALUE(hawkeye_Addr, 1);
         }
@@ -144,8 +153,9 @@ static void publish_value() {
             SET_SCALED_VALUE(hawkeye_Addr, 0);
         }
     }
-    if (state[10].connected == 0) {
+    if (state[10].connected == 0 && !have_warned) {
         blast_info("lj11 not connected");
+        have_warned = 1;
     }
 }
 

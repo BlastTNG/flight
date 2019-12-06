@@ -33,6 +33,7 @@
 #include "mcp_sched.h"
 #include "roach.h"
 #include "pointing_struct.h"
+#include "microscroll.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -267,6 +268,8 @@ typedef struct {
   uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   uint16_t potvalve_min_tighten_move;
+  uint16_t aalborg_valve_goals[N_AALBORG_VALVES];
+  float aalborg_speed;
   valve_state_t valve_goals[2];
   int valve_stop[2];
   uint16_t valve_vel, valve_move_i, valve_hold_i, valve_acc;
@@ -292,6 +295,11 @@ typedef struct {
     int go, just_received, no_pulse;
     uint16_t length;
 } ir_cmds_t;
+
+typedef struct {
+    float supply_24va, supply_24vb;
+    float relay_12v_on, relay_12v_off;
+} microscroll_control_t;
 
 typedef struct {
   float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
@@ -599,6 +607,7 @@ struct CommandDataStruct {
 
   cryo_cmds_t Cryo;
   ir_cmds_t IRsource;
+  microscroll_control_t Microscroll;
 
   labjack_queue_t Labjack_Queue;
 

@@ -305,7 +305,7 @@ void DoPotValve(struct ezbus* bus)
 	}
 
 	if (potvalve_data.do_move) {
-		bus->chatter = EZ_CHAT_BUS;
+		// bus->chatter = EZ_CHAT_BUS;
 	switch (potvalve_data.potvalve_move) {
 		case(valve_stop):
 	    	if (EZBus_Stop(bus, potvalve_data.addr) == EZ_ERR_OK) potvalve_data.moving = 0;
@@ -368,7 +368,7 @@ void DoPotValve(struct ezbus* bus)
 			}
 			break;
 	} // end switch
-		bus->chatter = ACTBUS_CHATTER;
+		// bus->chatter = ACTBUS_CHATTER;
 	} // end if(do_move)
 
 
