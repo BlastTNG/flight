@@ -51,7 +51,7 @@ typedef struct {
     int have_pulsed_relay;
 } microscroll_control_t;
 
-microscroll_control_t microscroll;
+microscroll_t microscroll;
 
 typedef struct {
 	uint16_t valve_state[N_AALBORG_VALVES];
