@@ -95,8 +95,22 @@ static void control_24va_supply() {
 }
 
 static void control_12v_relay() {
+    static int have_pulsed = 0;
     if (state[9].connected) {
-        int a = 1;
+        if (have_pulsed) {
+            labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, 0);
+            labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_off, 0);
+        }
+        if (microscroll.relay_12v_on) {
+            CommandData.Microscroll.relay_12v_on = 0;
+            have_pulsed = 1;
+            labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, 1);
+        }
+        if (microscroll.relay_12v_on) {
+            CommandData.Microscroll.relay_12v_off = 0;
+            have_pulsed = 1;
+            labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_off, 1);
+        }
     }
 }
 
