@@ -652,10 +652,6 @@ void labjack_choose_execute(void) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
             blast_info("Labjack 5 is executing the command queue");
-        } else if (state[10].connected == 1) {
-        CommandData.Labjack_Queue.set_q = 0;
-        CommandData.Labjack_Queue.which_q[10] = 1;
-        blast_info("Labjack 11 is executing the command queue");
         } else if (state[9].connected == 1) {
         CommandData.Labjack_Queue.set_q = 0;
         CommandData.Labjack_Queue.which_q[9] = 1;
@@ -776,6 +772,7 @@ void *labjack_cmd_thread(void *m_lj) {
 		int qstate = CommandData.Labjack_Queue.which_q[m_state->which];
 		CommandData.Labjack_Queue.which_q[m_state->which] = 0;
 		if (qstate) CommandData.Labjack_Queue.set_q = 1;
+        if (qstate) CommandData.Labjack_Queue.lj_q_on = 0;
 
     // close the modbus
     m_state->comm_stream_state = 0;

@@ -188,6 +188,10 @@ void * lj_connection_handler(void *arg) {
     blast_info("I am now in charge, initializing LJs");
     // Set the queue to allow new set
     CommandData.Labjack_Queue.set_q = 1;
+    CommandData.Labjack_Queue.lj_q_on = 0;
+    for (int h = 0; h < NUM_LABJACKS; h++) {
+        CommandData.Labjack_Queue.which_q[h] = 0;
+    }
     // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
