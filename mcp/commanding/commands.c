@@ -3982,7 +3982,7 @@ void InitCommandData()
     CommandData.Cryo.potvalve_closecurrent = 25;
     CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 5200;
+    CommandData.Cryo.potvalve_closed_threshold = 4700;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 10000;
     CommandData.Cryo.valve_vel = 50000;

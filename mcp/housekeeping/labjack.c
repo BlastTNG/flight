@@ -629,23 +629,29 @@ static int initialized(void) {
 void labjack_choose_execute(void) {
     int init = initialized();
     static bool has_warned = false;
+    // blast_info("set_q = %d, init = %d", CommandData.Labjack_Queue.set_q, init);
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
         // blast_info("setting cmd queue executor");
         if (state[0].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;
+            blast_info("Labjack 1 is executing the command queue");
         } else if (state[1].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[1] = 1;
+            blast_info("Labjack 2 is executing the command queue");
         } else if (state[2].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[2] = 1;
+            blast_info("Labjack 3 is executing the command queue");
         } else if (state[3].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[3] = 1;
+            blast_info("Labjack 4 is executing the command queue");
         } else if (state[4].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
+            blast_info("Labjack 5 is executing the command queue");
         } else if (state[10].connected == 1) {
         CommandData.Labjack_Queue.set_q = 0;
         CommandData.Labjack_Queue.which_q[10] = 1;

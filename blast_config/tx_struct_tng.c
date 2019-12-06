@@ -484,7 +484,8 @@ channel_t channel_list[] =
     {"thresh_clos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"threshlclos_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"thresh_open_potvalve",    SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"potvalve_tight_move", SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"tight_move_potvalve",     SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"enable_potvalve",         SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
 
     {"lims_pumpvalve",        SCALE(CONVERT_UNITY), TYPE_UINT8, RATE_5HZ, U_NONE, 0},
     {"pos_pumpvalve",         SCALE(CONVERT_UNITY), TYPE_INT32, RATE_5HZ, U_NONE, 0},
@@ -1013,8 +1014,8 @@ channel_t channel_list[] =
     { "xel_if_clin",          0.00546739,       -25. * 6.144, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "el_raw_if_clin",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
 
-    { "x_stage",              2.0,              0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
-    { "y_stage",              2.0,              0.0, TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
+    { "x_stage",              2.0,              0.0, TYPE_INT32, RATE_5HZ, U_NONE, 0 },
+    { "y_stage",              2.0,              0.0, TYPE_INT32, RATE_5HZ, U_NONE, 0 },
 
     { "ifpm_hall",            SCALE(CONVERT_UNITY),            TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
     { "lvdt_65_act",          LVDT65_ADC_TO_ENC, LVDT65_ZERO,    TYPE_UINT16, RATE_5HZ, U_NONE, 0 },
