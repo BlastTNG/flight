@@ -650,6 +650,10 @@ void labjack_choose_execute(void) {
         CommandData.Labjack_Queue.set_q = 0;
         CommandData.Labjack_Queue.which_q[10] = 1;
         blast_info("Labjack 11 is executing the command queue");
+        } else if (state[9].connected == 1) {
+        CommandData.Labjack_Queue.set_q = 0;
+        CommandData.Labjack_Queue.which_q[9] = 1;
+        blast_info("Labjack 10 is executing the command queue");
         } else {
             if (!has_warned) blast_info("no queue selected, trying again every 1s");
             has_warned = true;
@@ -665,6 +669,11 @@ void set_execute(int which) {
     CommandData.Labjack_Queue.which_q[3] = 0;
     CommandData.Labjack_Queue.which_q[4] = 0;
     CommandData.Labjack_Queue.which_q[5] = 0;
+    CommandData.Labjack_Queue.which_q[6] = 0;
+    CommandData.Labjack_Queue.which_q[7] = 0;
+    CommandData.Labjack_Queue.which_q[8] = 0;
+    CommandData.Labjack_Queue.which_q[9] = 0;
+    CommandData.Labjack_Queue.which_q[10] = 0;
     CommandData.Labjack_Queue.which_q[which] = 1;
 }
 

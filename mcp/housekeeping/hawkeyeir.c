@@ -132,11 +132,13 @@ static void run_ir_source() {
 static void publish_value() {
     static int first_time = 1;
     static channel_t* hawkeye_Addr;
+    static int have_warned = 0;
     if (first_time == 1) {
         hawkeye_Addr = channels_find_by_name("hawkeye");
         first_time = 0;
     }
     if (state[10].connected) {
+        have_warned = 0;
         if (hawkeye.on == 1) {
             SET_SCALED_VALUE(hawkeye_Addr, 1);
         }
@@ -144,8 +146,9 @@ static void publish_value() {
             SET_SCALED_VALUE(hawkeye_Addr, 0);
         }
     }
-    if (state[10].connected == 0) {
+    if (state[10].connected == 0 && !have_warned) {
         blast_info("lj11 not connected");
+        have_warned = 1;
     }
 }
 
