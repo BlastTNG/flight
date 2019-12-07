@@ -152,8 +152,10 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 {
   int now;
   char who = (is_y) ? STAGEY_ID : STAGEX_ID;
+  // something is very long with the loop in this function, it should run every 10 ms,
+  // but it seems to run about 6 time slower, so I am decreasing again to 2000 so it actually retries about every 2 min
   int counter = 100; // to print status once a second with loop running every 10 ms
-  int again = 12000; // try again after 2 minutes
+  int again = 2000; // try again after 2 minutes
 
   if (CommandData.xystage.mode == XYSTAGE_PANIC || vel == 0)
 	return;
@@ -188,7 +190,7 @@ void GoWait(struct ezbus *bus, int dest, int vel, int is_y)
 	blast_info("Not to commanded position after 2 minutes, trying again");
         blast_info("Move %c to %i at speed %i and wait", (is_y) ? 'Y' : 'X', dest, vel);
         EZBus_GotoVel(bus, who, dest, vel);
-	again = 12000;
+	again = 2000;
     }
 
     now = (is_y) ? stage_data.ypos : stage_data.xpos;
