@@ -56,7 +56,9 @@ microscroll_t microscroll;
 typedef struct {
 	uint16_t valve_state[N_AALBORG_VALVES];
 	uint16_t valve_goal[N_AALBORG_VALVES];
-	uint16_t valve_dir_mb_addr[N_AALBORG_VALVES];
+	// valve_dir_addr is the modbus address used to set the direction for each valve
+	uint16_t valve_dir_addr[N_AALBORG_VALVES];
+	// the speed the valve should move at, 0-2.5
 	float valve_speed;
 } aalborg_control_t;
 
@@ -80,65 +82,105 @@ void ControlAalborg(int index)
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
 			snprintf(channel_name, sizeof(channel_name), "ain_aalborg_valve_%d", i);
 			labjackAinAddr[i] = channels_find_by_name(channel_name);
+			aalborg_data.valve_state[i] = 0;
 		}
+		// store the valve direction modbus addresses in the struct
+		aalborg_data.valve_dir_addr[0] = valve1_dir;
+		aalborg_data.valve_dir_addr[1] = valve2_dir;
+		aalborg_data.valve_dir_addr[2] = valve3_dir;
 	}
 
 	// get labjack AIN values from the frame, store locally
 	GET_SCALED_VALUE(labjackAinAddr[index], labjack_ain[index]);
 	// get the current goal from the command struct
-	aalborg_data.valve_goal[index] = CommandData.Cryo.aalborg_valve_goals[index];
+	aalborg_data.valve_goal[index] = CommandData.Cryo.aalborg_valve_goal[index];
 	// set prev_speed so we can compare previous with current value in command struct
 	prev_speed = aalborg_data.valve_speed;
 	aalborg_data.valve_speed = CommandData.Cryo.aalborg_speed;
 
 	// if the aalborg speed has been changed in commanding, we need to change it
 	if (aalborg_data.valve_speed != prev_speed) {
-		// labjack function to set the new speed goes here
+		// set the new speed on the labjack DAC
+        labjack_queue_command(LABJACK_MICROSCROLL, speed_reg, aalborg_data.valve_speed);
 	}
 
 	// if the value on the AIN is high, the valve is closed
 	if (labjack_ain[index] > AALBORG_HIGH_LEVEL) {
+		// set CLOSED bit, and clear all others (shouldn't be moving now)
 		aalborg_data.valve_state[index] = AALBORG_CLOSED;
 	// if it is low, we are NOT closed (either open or moving in either direction)
 	} else if (labjack_ain[index] < AALBORG_LOW_LEVEL) {
 		// if the timer is still going, we are still closing
 		if (valve_timer > 0) {
-			aalborg_data.valve_state[index] = AALBORG_NOT_CLOSED;
+			aalborg_data.valve_state[index] |= AALBORG_NOT_CLOSED;
 		// but if it has reached zero, we should be open
 		} else if (valve_timer == 0) {
+			// set OPENED bit, and clear all others (shouldn't be moving now)
 			aalborg_data.valve_state[index] = AALBORG_OPENED;
 		}
-	// if the value on the AIN is in the middle, we are intermediate
 	} else {
-		aalborg_data.valve_state[index] = AALBORG_INTERMED;
+		// the output from the valve is digital, should never be neither high nor low
+		// this shouldn't happen...
+		aalborg_data.valve_state[index] = AALBORG_UNK;
 	}
 
 	// if the state of the current valve does not match the goal, we need to do something
-	if (aalborg_data.valve_state[index] != aalborg_data.valve_goal[index]) {
+	if (!(aalborg_data.valve_state[index] && aalborg_data.valve_goal[index])) {
 		// if the goal is open and we got here, we know we aren't open
 		// if we aren't already opening the valve, do it
-		if ((aalborg_data.valve_goal[index] == AALBORG_OPENED) && (aalborg_data.valve_state[index] != AALBORG_OPENING)) {
+		if ((aalborg_data.valve_goal[index] && AALBORG_OPENED) && !(aalborg_data.valve_state[index] && AALBORG_OPENING)) {
 			// set labjack output to open this valve
-
+        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_OPEN_CMD);
 			// set state to opening
-			aalborg_data.valve_state[index] = AALBORG_OPENING;
+			aalborg_data.valve_state[index] |= AALBORG_OPENING;
 			// start a timer because the signal immediately tells us the valve is NOT closed
 			// and we know it should take about 6 seconds to open, so set a 7 second timer
 			valve_timer = AALBORG_WAIT_OPENING;
 		}
 		// if the goal is closed and we got here, we know we aren't closed
 		// if we aren't already closing the valve, do it
-		if ((aalborg_data.valve_goal[index] == AALBORG_CLOSED) && (aalborg_data.valve_state[index] != AALBORG_CLOSING)) {
+		if ((aalborg_data.valve_goal[index] && AALBORG_CLOSED) && !(aalborg_data.valve_state[index] && AALBORG_CLOSING)) {
 			// set labjack output to close this valve
-
+        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_CLOSE_CMD);
 			// set state to closing
-			aalborg_data.valve_state[index] = AALBORG_CLOSING;
+			aalborg_data.valve_state[index] |= AALBORG_CLOSING;
 			// set valve timer less than 0 so it doesn't become 0
 			valve_timer = -1;
 		}
 	}
 }
 
+void WriteAalborgs()
+{
+	static int first_time = 1;
+
+	static channel_t* aalborg1StateAddr;
+	static channel_t* aalborg2StateAddr;
+	static channel_t* aalborg3StateAddr;
+	static channel_t* aalborgSpeedAddr;
+	static channel_t* aalborg1GoalAddr;
+	static channel_t* aalborg2GoalAddr;
+	static channel_t* aalborg3GoalAddr;
+
+	if (first_time) {
+		first_time = 0;
+		aalborg1StateAddr = channels_find_by_name("state_1_aalborg");
+		aalborg2StateAddr = channels_find_by_name("state_2_aalborg");
+		aalborg3StateAddr = channels_find_by_name("state_3_aalborg");
+		aalborgSpeedAddr = channels_find_by_name("speed_aalborg");
+		aalborg1GoalAddr = channels_find_by_name("goal_1_aalborg");
+		aalborg2GoalAddr = channels_find_by_name("goal_2_aalborg");
+		aalborg3GoalAddr = channels_find_by_name("goal_3_aalborg");
+	}
+
+	SET_UINT16(aalborg1StateAddr, aalborg_data.valve_state[0]);
+	SET_UINT16(aalborg2StateAddr, aalborg_data.valve_state[1]);
+	SET_UINT16(aalborg3StateAddr, aalborg_data.valve_state[2]);
+	SET_FLOAT(aalborgSpeedAddr, aalborg_data.valve_speed);
+	SET_UINT16(aalborg1GoalAddr, aalborg_data.valve_goal[0]);
+	SET_UINT16(aalborg2GoalAddr, aalborg_data.valve_goal[1]);
+	SET_UINT16(aalborg3GoalAddr, aalborg_data.valve_goal[2]);
+}
 
 static void clear_fio() {
     static int first_time = 1;
