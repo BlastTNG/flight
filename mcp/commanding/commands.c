@@ -1031,6 +1031,24 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 0;
 	    	break;
+		case aalborg_valve1_open:
+			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_OPENED;
+			break;
+		case aalborg_valve2_open:
+			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_OPENED;
+			break;
+		case aalborg_valve3_open:
+			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_OPENED;
+			break;
+		case aalborg_valve1_close:
+			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_CLOSED;
+			break;
+		case aalborg_valve2_close:
+			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_CLOSED;
+			break;
+		case aalborg_valve3_close:
+			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_CLOSED;
+			break;
 		case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
             CommandData.Cryo.lvalve_close = 0;
@@ -1957,6 +1975,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
       break;
+	case aalborg_set_speed:
+	  CommandData.Cryo.aalborg_speed = rvalues[0];
+	  break;
 
 // .
     // XY STAGE

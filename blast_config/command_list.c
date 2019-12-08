@@ -272,6 +272,12 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO | CONFIRM},
   {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
   {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve2_open), "open aalborg valve 2 (connected to pump 2)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve3_open), "open aalborg valve 3 (open to atmposphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve1_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve2_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve3_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -1735,6 +1741,12 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(valves_set_acc), "Set cryostat valves acceleration", GR_CRYO, 1,
     {
       {"Cryostat valves acceleration", 0, 6000, 'i', "ACC_VALVES"}
+    }
+  },
+
+  {COMMAND(aalborg_set_speed), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 1,
+    {
+      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "ACC_VALVES"}
     }
   },
 
