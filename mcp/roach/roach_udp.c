@@ -260,7 +260,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
     if (udperr > 0) return;
     udp_store_to_structure(m_roach_udp, m_packet);
     m_roach_udp->have_warned = 0;
-        if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
         debug_count++;
     }
 }
@@ -272,6 +272,8 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
 void poll_socket(void)
 {
     init_roach_socket();
+    static data_udp_packet_t m_packet;
+
     int debug_count = 0;
     // blast_info("Roach socket file descriptor is %i", roach_sock_fd);
     if (!roach_sock_fd) {
@@ -295,13 +297,12 @@ void poll_socket(void)
         if (rv == -1) {
             blast_err("Roach socket poll error");
         } else {
-            data_udp_packet_t m_packet;
-
             if (ufds[0].revents & POLLIN) { // check for events on socket
                 if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("roach_udp poll event!");
-                uint32_t bytes_read = recv(roach_sock_fd, buf,
-                ROACH_UDP_BUF_LEN, 0);
+                uint32_t bytes_read = recv(roach_sock_fd, buf, ROACH_UDP_BUF_LEN, 0);
+
                 if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("bytes read = %u!", bytes_read);
+
                 // Don't even try to read the header if we read less than the size of a udp header struct.
                 if (bytes_read < (sizeof(struct udphdr) + sizeof(struct iphdr) + sizeof(struct ethhdr))) {
                     blast_err("We read only %ud", bytes_read);
