@@ -61,7 +61,7 @@ double round(double x);
 #define INPUT_TTY "/dev/ttyCMD"
 #define LOGFILE DATA_ETC_DIR "/blastcmd.log"
 
-static char *pilot_oth_host[2] = { "109.233.44.229:41414", "109.233.44.229:41514" };
+static char *pilot_oth_host[2] = { "109.233.41.164:41414", "109.233.41.164:41514" };
 
 char err_message[ERR_MESSAGE_LEN];
 
