@@ -32,6 +32,9 @@
  *
  * -------------------------- Revisions --------------------------------
  *
+ * 2019 - mole is now project agnostic and makes use of liblinklist to 
+ * connect, extract, and, write data. This constitutes version 2.0.
+ *
  * 26/08/17 - made mole independent of local telemlist.bit and linklists;
  * the telemlist and linklist for a specified link is requested from the
  * bittlm server and parsed locally so that mole is always up-to-date
@@ -71,6 +74,8 @@
 #include <linklist_writer.h>
 #include <linklist_connect.h>
 
+#define MOLE_VERSION "2.0" 
+
 static linklist_tcpconn_t tcpconn = {"cacofonix"};
 char mole_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole";
 char data_etc[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc";
@@ -83,6 +88,7 @@ void USAGE(void) {
   
   printf("\n\nMole is a generic linklist client/server that converts raw "
       "binary data to dirfiles.\n\n"
+      "Version " MOLE_VERSION ": compiled on " __DATE__ ".\n\n"
       "Usage: mole [OPTION]...\n\n"
       " @host                  Connect to a specific host.\n"
       " -ad --archive-dir dir  Save raw binary files to specified directory.\n"
@@ -120,6 +126,7 @@ void USAGE(void) {
       " -W  --smart-rewind X   Start acquiring data X frames from the latest index (default 20).\n"
       "                        Will start from the latest data acquired within the rewind value.\n"
       " -v  --verbose          Verbose mode.\n"
+      "     --version          Print this message\n"
       "\n");
 
     exit(0);
