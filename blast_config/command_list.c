@@ -658,7 +658,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Proportional Gain", 0, CMD_L_MAX, 'd', "G_P_EL"},
       {"Integral Time",     0, 200, 'd', "G_I_EL"},
       {"Derivative Time",   0, 200, 'd', "G_D_EL"},
-      {"Pointing Gain",     0, CMD_L_MAX, 'f', "G_PT_EL"},
+      {"Pointing Gain",     0, CMD_L_MAX, 'd', "G_PT_EL"},
       {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_EL"},
     }
