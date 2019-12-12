@@ -413,7 +413,7 @@ int main(int argc, char *argv[]) {
               if (end_frame > req_init_framenum) end_frame = req_init_framenum;
               linklist_info(" to %" PRIu64".\n", end_frame);
           } else {
-              linklist_info(" indefinitely.\n");
+              linklist_info(".\n");
           }
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
