@@ -105,6 +105,7 @@ void USAGE(void) {
       "                        Otherwise, the file selection dialog box will be prompted.\n"
       " -E  --end X            Last frame to read. Ignores rewind if specified.\n"
       "                        Mole will exit once the last frame is read.\n"
+      "                        Must specify a start frame (-S) in this mode.\n"
       " -k  --check            Evaluate checksum values when processing data (default).\n"  
       " -nk --no-check         Ignore checksum values when processing data.\n"  
       " -L  --loopback         Have mole extract its own binary files.\n"
@@ -350,6 +351,16 @@ int main(int argc, char *argv[]) {
     ll_rawfile_flags |= LL_RAWFILE_DUMMY;
   }
 
+  // Argument sanitization
+  //
+  if ((start_frame == UINT64_MAX) && (end_frame != UINT64_MAX)) {
+      linklist_info("Must specify end frame (-E) when using start frame (-S)\n");
+      exit(1);
+  } else if (start_frame > end_frame) {
+      linklist_info("Start frame %"PRIu64" is larger than end frame %"PRIu64".\n", start_frame, end_frame);
+      exit(1);
+  }
+
   pthread_t server_thread;
   if (server_mode) {
     // start the server to accept clients
@@ -395,10 +406,15 @@ int main(int argc, char *argv[]) {
         }
 
         // set the first framenum request
-        if ((start_frame < end_frame) && (start_frame < req_init_framenum)) { // start-end mode
+        if (start_frame != UINT64_MAX) { // user specified start
           req_framenum = start_frame;
-          if (end_frame > req_init_framenum) end_frame = req_init_framenum;
-          linklist_info("Reading frames %" PRIu64" to %" PRIu64 "\n", start_frame, end_frame);
+          linklist_info("Reading from frame %" PRIu64, start_frame);
+          if (end_frame != UINT64_MAX) { // user specified end
+              if (end_frame > req_init_framenum) end_frame = req_init_framenum;
+              linklist_info(" to %" PRIu64".\n", end_frame);
+          } else {
+              linklist_info(" to the end.\n");
+          }
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
           if (!force_rewind) req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
