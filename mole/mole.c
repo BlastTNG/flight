@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
         // set the first framenum request
         if ((start_frame < end_frame) && (start_frame < req_init_framenum)) { // start-end mode
           req_framenum = start_frame;
-          if ((end_frame != UINT64_MAX) && (end_frame > req_init_framenum)) end_frame = req_init_framenum;
+          if (end_frame > req_init_framenum) end_frame = req_init_framenum;
           linklist_info("Reading frames %" PRIu64" to %" PRIu64 "\n", start_frame, end_frame);
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
