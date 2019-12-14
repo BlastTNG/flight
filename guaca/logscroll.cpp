@@ -27,7 +27,10 @@ Logscroll::~Logscroll()
 }
 
 void Logscroll::stopProcess() {
-    if (process) process->kill();
+    if (process) {
+        process->kill();
+        delete process;
+    }
     process = NULL;
 }
 
