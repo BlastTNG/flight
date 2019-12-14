@@ -3742,6 +3742,18 @@
                 },
                 {
                     "PObject": {
+                        "_id": "907147979"
+                    },
+                    "_caption": "R4_PPS_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PPS_COUNT_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
                         "_id": "195387184"
                     },
                     "_caption": "R5_PPS_COUNT",
@@ -3786,6 +3798,18 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "PACKET_COUNT_ROACH3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1309621643"
+                    },
+                    "_caption": "R4_PACKET_COUNT",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "PACKET_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -3841,6 +3865,18 @@
                         "_id": "883242072"
                     },
                     "_caption": "R4_UTC_TIME",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%.f",
+                    "_source": "CTIME_PACKET_ROACH4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "938834800"
+                    },
+                    "_caption": "R5_UTC_TIME",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,

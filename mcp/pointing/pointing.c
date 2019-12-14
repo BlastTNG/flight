@@ -1359,10 +1359,6 @@ void Pointing(void)
 
     i_point_read = GETREADINDEX(point_index);
 
-//  Only add the encoder solution if we are getting data from the El drive.  Or if we
-//  are not InCharge and getting shared El data from the other FCC.
-    enc_motor_ok = enc_motor_ready;
-
     // If we are not in charge then we need to read some pointing data from the ICC
 //     if (j % 500 == 0) {
 //         blast_info("Before sharing: ISCAz.angle %f, ISCEl.angle %f, ISCEl.variance %f"
@@ -1377,6 +1373,10 @@ void Pointing(void)
     if ((!InCharge) && PointingData[i_point_read].recv_shared_data) {
          ReadICCPointing(read_shared_pdata);
     }
+
+//  Only add the encoder solution if we are getting data from the El drive.  Or if we
+//  are not InCharge and getting shared El data from the other FCC.
+    enc_motor_ok = enc_motor_ready;
 
     // Make aristotle correct
     R = 15.0 / 3600.0;
