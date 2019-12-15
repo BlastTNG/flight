@@ -121,7 +121,8 @@
                     "_caption": "N_CHANNELS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1445295416)",
                     "_format": "",
                     "_source": "nkids_found_roach1",
                     "type": "PNDI"
@@ -185,7 +186,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_OUT_ROACH1",
                     "type": "PNDI"
                 },
@@ -197,7 +198,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_OUT_ROACH1",
                     "type": "PNDI"
                 },
@@ -209,7 +210,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_IN_ROACH1",
                     "type": "PNDI"
                 },
@@ -221,7 +222,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_IN_ROACH1",
                     "type": "PNDI"
                 },
@@ -793,7 +794,8 @@
                     "_caption": "N_CHANNELS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1445295416)",
                     "_format": "",
                     "_source": "nkids_found_roach2",
                     "type": "PNDI"
@@ -857,7 +859,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_OUT_ROACH2",
                     "type": "PNDI"
                 },
@@ -869,7 +871,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_OUT_ROACH2",
                     "type": "PNDI"
                 },
@@ -881,7 +883,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_IN_ROACH2",
                     "type": "PNDI"
                 },
@@ -893,7 +895,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_IN_ROACH2",
                     "type": "PNDI"
                 },
@@ -1465,7 +1467,8 @@
                     "_caption": "N_CHANNELS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1445295416)",
                     "_format": "",
                     "_source": "nkids_found_roach3",
                     "type": "PNDI"
@@ -1529,7 +1532,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_OUT_ROACH3",
                     "type": "PNDI"
                 },
@@ -1541,7 +1544,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_OUT_ROACH3",
                     "type": "PNDI"
                 },
@@ -1553,7 +1556,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_IN_ROACH3",
                     "type": "PNDI"
                 },
@@ -1565,7 +1568,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_IN_ROACH3",
                     "type": "PNDI"
                 },
@@ -2137,7 +2140,8 @@
                     "_caption": "N_CHANNELS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1445295416)",
                     "_format": "",
                     "_source": "nkids_found_roach4",
                     "type": "PNDI"
@@ -2201,7 +2205,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_OUT_ROACH4",
                     "type": "PNDI"
                 },
@@ -2213,7 +2217,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_OUT_ROACH4",
                     "type": "PNDI"
                 },
@@ -2225,7 +2229,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_IN_ROACH4",
                     "type": "PNDI"
                 },
@@ -2237,7 +2241,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_IN_ROACH4",
                     "type": "PNDI"
                 },
@@ -2810,7 +2814,8 @@
                     "_caption": "N_CHANNELS",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
-                    "_extrema": false,
+                    "_extrema": true,
+                    "_extremaID": "(P1445295416)",
                     "_format": "",
                     "_source": "nkids_found_roach5",
                     "type": "PNDI"
@@ -2874,7 +2879,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_OUT_ROACH5",
                     "type": "PNDI"
                 },
@@ -2886,7 +2891,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_OUT_ROACH5",
                     "type": "PNDI"
                 },
@@ -2898,7 +2903,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "SET_ATTEN_IN_ROACH5",
                     "type": "PNDI"
                 },
@@ -2910,7 +2915,7 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
-                    "_format": "",
+                    "_format": "%.2f",
                     "_source": "READ_ATTEN_IN_ROACH5",
                     "type": "PNDI"
                 },
@@ -3742,18 +3747,6 @@
                 },
                 {
                     "PObject": {
-                        "_id": "907147979"
-                    },
-                    "_caption": "R4_PPS_COUNT",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "PPS_COUNT_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
                         "_id": "195387184"
                     },
                     "_caption": "R5_PPS_COUNT",
@@ -3798,18 +3791,6 @@
                     "_extrema": false,
                     "_format": "",
                     "_source": "PACKET_COUNT_ROACH3",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "1309621643"
-                    },
-                    "_caption": "R4_PACKET_COUNT",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "",
-                    "_source": "PACKET_COUNT_ROACH4",
                     "type": "PNDI"
                 },
                 {
@@ -3865,18 +3846,6 @@
                         "_id": "883242072"
                     },
                     "_caption": "R4_UTC_TIME",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_extrema": false,
-                    "_format": "%.f",
-                    "_source": "CTIME_PACKET_ROACH4",
-                    "type": "PNDI"
-                },
-                {
-                    "PObject": {
-                        "_id": "938834800"
-                    },
-                    "_caption": "R5_UTC_TIME",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
@@ -4232,6 +4201,20 @@
             "_sxlow": "(P1489452979)",
             "_xhigh": 259,
             "_xlow": 255
+        },
+        {
+            "PObject": {
+                "_id": "1445295416"
+            },
+            "_high": 1,
+            "_low": 0,
+            "_name": "nchannels",
+            "_shigh": "NO STYLE",
+            "_slow": "(P1489452979)",
+            "_sxhigh": "NO STYLE",
+            "_sxlow": "(P1489452979)",
+            "_xhigh": 2,
+            "_xlow": -1
         }
     ],
     "linkNames": [
@@ -4525,7 +4508,7 @@
     ],
     "webPort": "\u0000",
     "windowCellHeight": 60,
-    "windowCellWidth": 110,
-    "windowHeight": 1025,
-    "windowWidth": 1867
+    "windowCellWidth": 113,
+    "windowHeight": 1020,
+    "windowWidth": 1916
 }
