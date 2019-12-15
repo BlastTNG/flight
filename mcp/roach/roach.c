@@ -239,14 +239,14 @@ int load_tone_powers()
         blast_strerror("Could not open %s for reading", rf_tone_power_path);
          for (size_t i = 0; i < 1000; i++) {
             rf_pow_out[i] = -35.0;
-            blast_info("%f", rf_pow_out[i]);
+            // blast_info("%f", rf_pow_out[i]);
         }
         return retval;
     } else {
         blast_info("Loading RF tone powers");
         for (size_t i = 0; i < 1000; i++) {
             if (fscanf(fd, "%lg\n", &rf_pow_out[i]) != EOF) {
-                blast_info("%f", rf_pow_out[i]);
+                // blast_info("%f", rf_pow_out[i]);
             } else {
                 retval = 0;
                 break;
