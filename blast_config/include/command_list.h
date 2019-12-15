@@ -134,6 +134,8 @@ enum singleCommand {
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   pump_valve_open, pump_valve_close, pump_valve_off, pump_valve_on,
   fill_valve_open, fill_valve_close, fill_valve_off, fill_valve_on,
+  aalborg_valve1_open, aalborg_valve2_open, aalborg_valve3_open,
+  aalborg_valve1_close, aalborg_valve2_close, aalborg_valve3_close,
   ln_valve_on, ln_valve_off,
   potvalve_on, potvalve_off, potvalve_open, potvalve_close,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
@@ -218,6 +220,7 @@ enum multiCommand {
   potvalve_set_thresholds, potvalve_set_tighten_move,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
+  aalborg_set_speed,
 
   xsc_is_new_window_period,
   xsc_offset,

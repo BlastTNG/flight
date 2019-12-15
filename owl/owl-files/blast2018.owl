@@ -297,6 +297,11 @@
                             "_id": "426870972"
                         },
                         "_map": {
+                            "0": "disallow[style=No style (P1810709534)]",
+                            "1": "standby[style=No style (P1810709534)]",
+                            "2": "warming[style=No style (P1810709534)]",
+                            "3": "burning off[style=No style (P1810709534)]",
+                            "4": "cooling[style=No style (P1810709534)]"
                         }
                     },
                     "PObject": {

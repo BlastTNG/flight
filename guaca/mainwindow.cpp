@@ -18,6 +18,7 @@
 
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
+#define GUACA_MIN_TIME_CHECK_DATA 2
 
 char archivedir[128] = "/data/mole";
 char moledir[128] = "/data/mole";
@@ -231,59 +232,22 @@ int MainWindow::get_server_data()
 void MainWindow::dancing()
 {
   int thetime = time(0);
-
   still_dancing = true;
 
-  // get file size
-  if ((thetime-logend) > 1) {
-    uint64_t file_size = 0;
-
-    if (statfile == NULL) {
-      statfile = fopen(options->stat_field.toLatin1().data(), "r");
-    }
-
-    if (statfile != NULL) {
-      fseek(statfile,0,SEEK_END);
-      file_size = ftell(statfile);
-
-      if (file_size == prev_size) {
-        data_incoming = 0;
-      } else {
-        data_incoming = 1;
-      }
-      fclose(statfile);
-      statfile = NULL;
-      has_warned = false;
-    } else {
-      if (!has_warned) QMessageBox::warning(this,"Invalid stat file",
-                            "Reference field "+ options->stat_field + " is invalid.\n Change under File->Options->Advanced->Reference Field.");
-      has_warned = true;
-      data_incoming = 0;
-    }
-
-    prev_size = file_size;
-
-    logend = thetime;
-  }
-
+  // get the latest text from the currently active mole process
   QString msg = "Mole not receiving data.\n";
-  if (data_incoming) {
-      unsigned int current_index = ui->linkSelect->currentIndex();
-      if (mole_logs.size() > current_index) {
-          msg = mole_logs[current_index]->get_latest_str();
-      }
+  unsigned int current_index = ui->linkSelect->currentIndex();
+  if (mole_logs.size() > current_index) {
+      msg = mole_logs[current_index]->get_latest_str();
   }
 
-  // check if mole is running at all
-  int isrun = system("pidof -x mole > /dev/null");
-  if(!isrun) { // mole is running on the system
-    mole_active = 1;
-    freeze();
-  } else { // mole is not running on the system
-    mole_active = 0;
-    unfreeze();
+  // check the status of data based on mole terminal text
+  // this sets the data incoming status
+  if ((thetime-logend) > GUACA_MIN_TIME_CHECK_DATA) {
+      data_incoming = (msg != last_msg);
+      last_msg = msg;
+      logend = thetime;
   }
-
   ui->statusBar->showMessage(msg);
 
   // dancing logic
@@ -318,7 +282,7 @@ void MainWindow::dancing()
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    settings("SuperBIT", "guaca")
+    settings("guacamole", "guaca")
 {
   ui->setupUi(this);
 
@@ -326,14 +290,22 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
   ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
 
-  logfile = NULL;
-
   generate_linklist_listfiles();
 
   options = new Options(this);
 
+  QSettings oldsettings("SuperBIT", "guaca");
   if (settings.contains("mainwindow/customConfig")) {
       qDebug() << "Restoring saved config";
+      loadConfig();
+  } else if (oldsettings.contains("mainwindow/customConfig")) {
+      qDebug() << "Migrating to new settings";
+      QStringList items = oldsettings.allKeys();
+      for (int i=0; i<items.size(); i++){
+          settings.setValue(items[i], oldsettings.value(items[i]));
+          qDebug() << "Transfering " << items[i];
+      }
+      oldsettings.clear();
       loadConfig();
   } else {
       qDebug() << "Using default config";
@@ -379,11 +351,8 @@ MainWindow::MainWindow(QWidget *parent) :
   inc = 1;
   srand(time(0));
 
-  mole_active = 0;
-  data_incoming = 1;
-
+  mole_active = false;
   logend = time(0);
-  statfile = fopen(options->stat_field.toLatin1().data() , "r");
 
   /*
   server_active = 1;
@@ -410,7 +379,6 @@ MainWindow::~MainWindow()
   printf("Destructing main window\n");
   saveConfig();
 
-  if (logfile) fclose(logfile);
   if (!servermode) {
     f1.cancel();
   }
@@ -610,28 +578,31 @@ void MainWindow::on_toggleMole_clicked() {
   saveConfig();
   stop_all_moles();
 
-  if (mole_active)
-  {
+  if (mole_active) {
+    // unfreeze the UI
     unfreeze();
-    data_incoming = 1;
-  }
-  else
-  {
+  } else {
+    // ensure there is a primary link selected before doing anything
+    if (ui->linkSelect->count() == 0) {
+        QMessageBox::warning(this,"No Link Selected","No primary link selected\nPlease make a linklist(s) selection and then select primary link.");
+        return;
+    }
+
+    // freeze the UI
     freeze();
+
+    // start moles
     for (int i=0;i<ui->linkSelect->count();i++) start_a_mole(i);
 
-    if (ui->linkSelect->count() == 0) QMessageBox::warning(this,"No Link Selected","No primary link selected\nPlease make a linklist(s) selection and then select primary link.");
-
+    // establish symlinks
     on_linkSelect_currentIndexChanged(ui->linkSelect->currentText());
-    //qDebug(ui->linkSelect->currentText().toLatin1());
 
+    // show helper functions, if necessary
     options->show_helpers();
-
-    data_incoming = 1;
-    logend = time(0);
   }
 
-  mole_active = 1-mole_active;
+  // toggle
+  mole_active = !mole_active;
 }
 
 
@@ -655,6 +626,8 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
   {
     printf("Symlink failed (%s->%s)\n",masterlink,ba.data());
   }
+  // force check
+  logend = time(0)-GUACA_MIN_TIME_CHECK_DATA-1;
 }
 
 bool MainWindow::change_remote_host(const QString &arg)

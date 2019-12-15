@@ -12,7 +12,7 @@ Logscroll::Logscroll(QWidget *parent, QString cmd, bool save_position) :
     cmdstring = cmd;
     startProcess();
 
-    QSettings settings("SuperBIT", "guaca");
+    QSettings settings("guacamole", "guaca");
     restoreGeometry(settings.value(cmdstring).toByteArray());
 }
 
@@ -27,7 +27,10 @@ Logscroll::~Logscroll()
 }
 
 void Logscroll::stopProcess() {
-    if (process) process->kill();
+    if (process) {
+        process->kill();
+        delete process;
+    }
     process = NULL;
 }
 
@@ -51,7 +54,7 @@ void Logscroll::startProcess() {
 void Logscroll::savePosition()
 {
     if (save_position) {
-        QSettings settings("SuperBIT", "guaca");
+        QSettings settings("guacamole", "guaca");
         settings.setValue(cmdstring, saveGeometry());
     }
 }

@@ -662,7 +662,7 @@ void *connection_handler(void *arg)
         // reallocate the buffer if necessary
         if (buffersize < archive_rawfile->framesize) {
           if (!(buffer = realloc(buffer, archive_rawfile->framesize))) {
-            linklist_err("::CLIENt %d:: cannot allocate buffer\n", sock);
+            linklist_err("::CLIENT %d:: cannot allocate buffer\n", sock);
             client_on = 0; 
             break;
           }
@@ -690,7 +690,10 @@ void *connection_handler(void *arg)
   linklist_info("::SERVER:: closed connection to CLIENT %d\n",sock);
 
   // cleanup
+  if (archive_rawfile) close_and_free_linklist_rawfile(archive_rawfile);
+  archive_rawfile = NULL;
   if (buffer) free(buffer);
+  buffer = NULL;
   close(sock);
 
   return 0;

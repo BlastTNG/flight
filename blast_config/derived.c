@@ -213,6 +213,35 @@ derived_tng_t derived_list[] = {
     BITWORD("LS_IGNORE_EL_LOCK", "state_lock", 10, 1),
     BITWORD("LS_DRIVE_FORCE_LOCK", "state_lock", 11, 1),
 
+    COMMENT("Aalborg Valves"),
+    BITWORD("OPENED_1_AALBORG", "state_1_aalborg", 0, 1),
+    BITWORD("CLOSED_1_AALBORG", "state_1_aalborg", 1, 1),
+    BITWORD("OPENING_1_AALBORG", "state_1_aalborg", 2, 1),
+    BITWORD("CLOSING_1_AALBORG", "state_1_aalborg", 3, 1),
+    BITWORD("NOT_CLOSED_1_AALBORG", "state_1_aalborg", 4, 1),
+    BITWORD("UNK_1_AALBORG", "state_1_aalborg", 5, 1),
+
+    BITWORD("OPENED_2_AALBORG", "state_2_aalborg", 0, 1),
+    BITWORD("CLOSED_2_AALBORG", "state_2_aalborg", 1, 1),
+    BITWORD("OPENING_2_AALBORG", "state_2_aalborg", 2, 1),
+    BITWORD("CLOSING_2_AALBORG", "state_2_aalborg", 3, 1),
+    BITWORD("NOT_CLOSED_2_AALBORG", "state_2_aalborg", 4, 1),
+    BITWORD("UNK_2_AALBORG", "state_2_aalborg", 5, 1),
+
+    BITWORD("OPENED_3_AALBORG", "state_3_aalborg", 0, 1),
+    BITWORD("CLOSED_3_AALBORG", "state_3_aalborg", 1, 1),
+    BITWORD("OPENING_3_AALBORG", "state_3_aalborg", 2, 1),
+    BITWORD("CLOSING_3_AALBORG", "state_3_aalborg", 3, 1),
+    BITWORD("NOT_CLOSED_3_AALBORG", "state_3_aalborg", 4, 1),
+    BITWORD("UNK_3_AALBORG", "state_3_aalborg", 5, 1),
+
+    BITWORD("OPENED_GOAL_1_AALBORG", "goal_1_aalborg", 0, 1),
+    BITWORD("CLOSED_GOAL_1_AALBORG", "goal_1_aalborg", 1, 1),
+    BITWORD("OPENED_GOAL_2_AALBORG", "goal_2_aalborg", 0, 1),
+    BITWORD("CLOSED_GOAL_2_AALBORG", "goal_2_aalborg", 1, 1),
+    BITWORD("OPENED_GOAL_3_AALBORG", "goal_3_aalborg", 0, 1),
+    BITWORD("CLOSED_GOAL_3_AALBORG", "goal_3_aalborg", 1, 1),
+
 //      ),
 
   /* Secondary Focus */
