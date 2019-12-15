@@ -204,8 +204,8 @@ void * lj_connection_handler(void *arg) {
     initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
-    // labjack_networking_init(8, 14, 1);
-    // initialize_labjack_commands(8);
+    labjack_networking_init(9, 14, 1);
+    initialize_labjack_commands(9);
     // switch to this thread for flight
     mult_initialize_labjack_commands(5);
     // labjack_networking_init(10, 14, 1);

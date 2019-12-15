@@ -273,9 +273,9 @@ static void control_12v_supply() {
 static void start_up_defaults() {
     static int first_time = 1;
     if (state[9].connected && first_time) {
-        labjack_queue_command(LABJACK_MICROSCROLL, supply_24va, 0);
-        labjack_queue_command(LABJACK_MICROSCROLL, supply_24vb, 1);
-        labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, 1);
+        labjack_queue_command(LABJACK_MICROSCROLL, microscroll.supply_24va, 0);
+        labjack_queue_command(LABJACK_MICROSCROLL, microscroll.supply_24vb, 1);
+        labjack_queue_command(LABJACK_MICROSCROLL, microscroll.relay_12V_on, 1);
         first_time = 0;
     }
 }
