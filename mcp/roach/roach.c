@@ -6576,10 +6576,10 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
-        SET_SCALED_VALUE(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
-        SET_SCALED_VALUE(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
-        SET_SCALED_VALUE(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
-        SET_SCALED_VALUE(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
+        SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
+        SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
+        SET_FLOAT(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
+        SET_FLOAT(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
         SET_FLOAT(RoachAdcIRmsAddr[i], roach_state_table[i].adc_rms[0]);
         SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
