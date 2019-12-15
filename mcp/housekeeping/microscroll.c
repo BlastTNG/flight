@@ -266,7 +266,6 @@ static void control_12v_supply() {
         prev_status = microscroll.supply_12v;
         labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, microscroll.supply_12v);
     }
-    
 }
 
 
@@ -291,14 +290,14 @@ static void update_microscroll_thermistors() {
     static channel_t* therm7_Addr;
     static channel_t* therm8_Addr;
     if (first_time) {
-        therm1_Addr = channels_find_by_name("micro_thermistor1");
-        therm2_Addr = channels_find_by_name("micro_thermistor2");
-        therm3_Addr = channels_find_by_name("micro_thermistor3");
-        therm4_Addr = channels_find_by_name("micro_thermistor4");
-        therm5_Addr = channels_find_by_name("micro_thermistor5");
-        therm6_Addr = channels_find_by_name("micro_thermistor6");
-        therm7_Addr = channels_find_by_name("micro_thermistor7");
-        therm8_Addr = channels_find_by_name("micro_thermistor8");
+        therm1_Addr = channels_find_by_name("micro_thermistor_1");
+        therm2_Addr = channels_find_by_name("micro_thermistor_2");
+        therm3_Addr = channels_find_by_name("micro_thermistor_3");
+        therm4_Addr = channels_find_by_name("micro_thermistor_4");
+        therm5_Addr = channels_find_by_name("micro_thermistor_5");
+        therm6_Addr = channels_find_by_name("micro_thermistor_6");
+        therm7_Addr = channels_find_by_name("micro_thermistor_7");
+        therm8_Addr = channels_find_by_name("micro_thermistor_8");
         first_time = 0;
     }
     if (state[9].connected) {
