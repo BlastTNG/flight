@@ -3963,8 +3963,8 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
         return retval;
     }
     blast_info("ROACH%d, Fit sweep complete, calculating new freqs", m_roach->which);
-    blast_tmp_sprintf(py_command, "python %s %s %d", refit_freqs_script,
-      m_roach->last_targ_path, m_on_res);
+    blast_tmp_sprintf(py_command, "python %s %s %d %d", refit_freqs_script,
+      m_roach->last_targ_path, m_roach->which, m_on_res);
     blast_info("Command: %s", py_command);
     pyblast_system(py_command);
     // system(py_command);
