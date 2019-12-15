@@ -266,7 +266,6 @@ static void control_12v_supply() {
         prev_status = microscroll.supply_12v;
         labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, microscroll.supply_12v);
     }
-    
 }
 
 
