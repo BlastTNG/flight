@@ -299,6 +299,7 @@ typedef struct {
 typedef struct {
     float supply_24va, supply_24vb;
     float relay_12v_on, relay_12v_off;
+    float supply_12v;
 } microscroll_control_t;
 
 typedef struct {
