@@ -626,8 +626,8 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
   {
     printf("Symlink failed (%s->%s)\n",masterlink,ba.data());
   }
-  // force check
-  logend = time(0)-GUACA_MIN_TIME_CHECK_DATA-1;
+  // force dance check
+  logend = 0;
 }
 
 bool MainWindow::change_remote_host(const QString &arg)
