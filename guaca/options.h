@@ -63,7 +63,6 @@ public:
 
     bool auto_live;
     QString live_name;
-    QString stat_field;
 
 private:
     QWidget *main;
