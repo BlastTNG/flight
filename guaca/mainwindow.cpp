@@ -294,8 +294,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
   options = new Options(this);
 
+  QSettings oldsettings("SuperBIT", "guaca");
   if (settings.contains("mainwindow/customConfig")) {
       qDebug() << "Restoring saved config";
+      loadConfig();
+  } else if (oldsettings.contains("mainwindow/customConfig")) {
+      qDebug() << "Migrating to new settings";
+      QStringList items = oldsettings.allKeys();
+      for (int i=0; i<items.size(); i++){
+          settings.setValue(items[i], oldsettings.value(items[i]));
+          qDebug() << "Transfering " << items[i];
+      }
+      oldsettings.clear();
       loadConfig();
   } else {
       qDebug() << "Using default config";
