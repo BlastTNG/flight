@@ -127,7 +127,8 @@ void groundhog_make_symlink_name(char *fname, char *symname) {
 // ------------------------------------//
 /* This function unpacks telemetry data that has been downlinked as linklist data.
  * Data will be written to a linklist rawfile with automatic handling of allframe
- * data.
+ * data. The return value will be the current framenumber, where a negative 
+ * framenumber implies an allframe had been received.
  * 
  * ll             - the linklist for the received data
  * transmit_size  - the size of the buffer received
@@ -149,7 +150,7 @@ void groundhog_make_symlink_name(char *fname, char *symname) {
  *                      GROUNDHOG_OPEN_NEW_RAWFILE is specified
  *
  */
-int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
+int64_t groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
                                 uint8_t * local_allframe, char * filename_str, char * disp_str,
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags) {
   // process the linklist and write the data to disk
@@ -157,7 +158,7 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
   int retval = 0;
 
   if ((flags & GROUNDHOG_OPEN_NEW_RAWFILE) && filename_str) {
-	  *ll_rawfile = groundhog_open_rawfile(*ll_rawfile, ll, filename_str, flags);
+    *ll_rawfile = groundhog_open_rawfile(*ll_rawfile, ll, filename_str, flags);
   }
 
   if (af > 0) { // an allframe was received
@@ -176,7 +177,7 @@ int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uin
     }
 
     // write the linklist data to disk
-    if (*ll_rawfile) {
+    if (ll_rawfile) {
       write_linklist_rawfile_with_allframe(*ll_rawfile, compbuffer, local_allframe);
       flush_linklist_rawfile(*ll_rawfile);
 

@@ -97,6 +97,7 @@
 #include "xystage.h"
 #include "sip.h"
 #include "scheduler_tng.h"
+#include "hawkeyeir.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -185,6 +186,12 @@ void * lj_connection_handler(void *arg) {
     }
     // LABJACKS
     blast_info("I am now in charge, initializing LJs");
+    // Set the queue to allow new set
+    CommandData.Labjack_Queue.set_q = 1;
+    CommandData.Labjack_Queue.lj_q_on = 0;
+    for (int h = 0; h < NUM_LABJACKS; h++) {
+        CommandData.Labjack_Queue.which_q[h] = 0;
+    }
     // init labjacks, first 2 args correspond to the cryo LJs, the next 3 are OF LJs
     // last argument turns commanding on/off
     // arguments are 1/0 0 off 1 on
@@ -197,10 +204,12 @@ void * lj_connection_handler(void *arg) {
     initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
-    // labjack_networking_init(8, 14, 1);
-    // initialize_labjack_commands(8);
+    labjack_networking_init(9, 14, 1);
+    initialize_labjack_commands(9);
     // switch to this thread for flight
     mult_initialize_labjack_commands(5);
+    // labjack_networking_init(10, 14, 1);
+    // initialize_labjack_commands(10);
     ph_thread_t *cmd_thread = mult_initialize_labjack_commands(6);
     ph_thread_join(cmd_thread, NULL);
 
@@ -234,6 +243,7 @@ static void mcp_244hz_routines(void)
 
 static void mcp_200hz_routines(void)
 {
+    hawkeye_control(1);
     outer_frame_200hz(1);
     process_sun_sensors();
     store_200hz_acs();
@@ -285,6 +295,7 @@ static void mcp_5hz_routines(void)
     // Tickles software WD 2.5x as fast as timeout
 
     update_sun_sensors();
+    // hawkeye_spewer();
     read_5hz_acs();
     store_5hz_acs();
     store_5hz_xsc(0);
@@ -328,14 +339,15 @@ static void mcp_1hz_routines(void)
     // int i = 0;
     // for (i = 0; i < RATE_END; i++) ready = ready && !superframe_counter[i];
     if (ready && InCharge) {
-      for (int i = 0; i < NUM_TELEMETRIES; i++) {
-         memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
-         incrementFifo(telem_fifo[i]);
-      }
+        for (int i = 0; i < NUM_TELEMETRIES; i++) {
+           memcpy(getFifoWrite(telem_fifo[i]), master_superframe_buffer, superframe->size);
+           incrementFifo(telem_fifo[i]);
+        }
     }
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();
+    execute_microscroll_functions();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off
@@ -643,7 +655,6 @@ blast_info("Finished initializing Beaglebones..."); */
 
   // pthread_create(&sensors_id, NULL, (void*)&SensorReader, NULL);
   // pthread_create(&compression_id, NULL, (void*)&CompressionWriter, NULL);
-
 #ifndef USE_XY_THREAD
   // for now put ActBus inside ifndef so that only one of Actbus thread and XYbus thread run
   act_thread = ph_thread_spawn(ActuatorBus, NULL);

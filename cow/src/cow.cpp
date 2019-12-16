@@ -27,6 +27,7 @@
 // *  further desecrated by cbn                      *
 // *  Commanding hacked to hell by M.D.P.Truch       *
 // *  "Ported" to qt4 by Joshua Netterfield          *
+// *  Herds added by cbn                             *
 // ***************************************************
 
 #define _XOPEN_SOURCE 501
@@ -95,15 +96,11 @@
 #define PADDING 3
 #define SPACING 3
 
-//#define DEF_CURFILE CUR_DIR "/defile.lnk"
 #define LOGFILE DATA_ETC_COW_DIR "/log.txt"
 #define LOGFILEDIR DATA_ETC_COW_DIR "/log/"
+#define HERDFILEDIR "/data/etc/cow/"
 
 #define DATA_DIR DATA_ETC_COW_DIR
-
-#ifndef ELOG_HOST
-#define ELOG_HOST "elog.blast"
-#endif
 
 #define PING_TIME 19000
 #define WAIT_TIME 80
@@ -121,6 +118,7 @@
 #endif
 
 QString blastcmd_host;
+QString herdfile;
 int stop_comms;
 int missed_pongs;
 
@@ -334,7 +332,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
         break;
       }
       if(NParamFields[i-1]->isVisible() && !words[i].isEmpty()) {
-        words[i].replace("..",".");
+        // words[i].replace("..","."); // doesn't seem to do anything...
         bool ok=dynamic_cast<CowStringEntry*>(NParamFields[i-1]);
         if(ok) {
           int j=i;
@@ -358,7 +356,7 @@ void MainForm::OmniParse(QString x) //evil, evil function (-Joshua)
       }
     }
     if(words.size()&&words.back()=="") words.pop_back();
-    if(words.size()!=max) {
+    if(words.size()<max) {
       QPalette f = NOmniBox->palette();
       f.setColor(QPalette::Base,"pink");
       NOmniBox->setPalette(f);
@@ -408,9 +406,9 @@ void MainForm::OmniSync()
   QString x=NOmniBox->text();
   QStringList words=x.split(" ");
   for(int i=1;i<words.size();i++) {
-    if(NParamFields[i-1]->isVisible()&&!words[i].isEmpty()) {
-      words[i].replace("..",".");
-      if(i<MAX_N_PARAMS) words[i]=dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->Text();
+    if((i<MAX_N_PARAMS) && NParamFields[i-1]->isVisible() && !words[i].isEmpty()) {
+      // words[i].replace("..","."); // doesn't seem to do anything...
+      words[i]=dynamic_cast<AbstractCowEntry*>(NParamFields[i-1])->Text();
     }
   }
 
@@ -461,9 +459,10 @@ void MainForm::ChangeCommandList(bool really) {
         NCommandList->addItem(client_scommands[indexes[i]].name);
       }
   } else {
-    NCommandList->addItems(HerdHash[ListOfHerds.at(GetGroup())]);
-    NCommandList->setSelectionMode(QAbstractItemView::SingleSelection);
-
+    if (ListOfHerds.size() > 0) {
+      NCommandList->addItems(HerdHash[ListOfHerds.at(GetGroup())]);
+      NCommandList->setSelectionMode(QAbstractItemView::SingleSelection);
+    }
   }
   ChooseCommand();
   //    OmniParse();
@@ -617,6 +616,11 @@ void MainForm::ChooseCommand(bool index_combo_changed, int combo_index) {
             NParamFields[i]->setGeometry(geometry);
           }
           NParamFields[i]->show();
+          if (i > 0) {
+            setTabOrder(NParamFields[i-1], NParamFields[i]);
+          } else {
+            setTabOrder(NCommandList, NParamFields[i]);
+          }
           dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetParentField(index, i);
           dynamic_cast<AbstractCowEntry*>(NParamFields[i])->SetType(client_mcommands[index].params[i].type);
           if (client_mcommands[index].params[i].type == 's') {
@@ -821,9 +825,11 @@ char *MainForm::LongestParam() {
 void MainForm::Quit() {
   // Settings should be sticky
   {
-    QSettings settings;
-    settings.setValue("blastcmd_host",QString(blastcmd_host));
-    settings.setValue("curfile",NCurFile->text());
+        QSettings settings("University of Toronto","cow");
+        settings.setValue("blastcmd_host",QString(blastcmd_host));
+        settings.setValue("curfile",NCurFile->text());
+        settings.setValue("link",NSendMethod->currentIndex());
+        settings.setValue("geometry", saveGeometry());
   }
 
   int i;
@@ -972,6 +978,7 @@ void MainForm::SendCommand() {
   int index, j;
   char buffer[1024];
   char request[1024];
+  char sparam[CMD_STRING_LEN];
   const char link[] = "LTIP";
   const char route[] = "12";
 
@@ -1008,32 +1015,35 @@ void MainForm::SendCommand() {
 
       for (j = 0; j < client_mcommands[index].numparams; j++) {
         dynamic_cast<AbstractCowEntry*>(NParamFields[j])->RecordDefaults();
-        if (defaults->asDouble(index, j)
-            < client_mcommands[index].params[j].min)
-        {
+        if (defaults->asDouble(index, j) < client_mcommands[index].params[j].min) {
           sprintf(buffer, "Error: Parameter \"%s\" out of range: %f < %f",
-              client_mcommands[index].params[j].name, defaults->asDouble(index,
-                j), client_mcommands[index].params[j].min);
+                  client_mcommands[index].params[j].name,
+                  defaults->asDouble(index, j),
+                  client_mcommands[index].params[j].min);
           WriteCmd(NLog, buffer);
           WriteErr(NLog, 10);
           return;
-        } else if (defaults->asDouble(index, j)
-            > client_mcommands[index].params[j].max) {
+        } else if (defaults->asDouble(index, j) > client_mcommands[index].params[j].max) {
           sprintf(buffer, "Error: Parameter \"%s\" out of range: %f > %f",
-              client_mcommands[index].params[j].name,
-              defaults->asDouble(index, j),
-              client_mcommands[index].params[j].max);
+                  client_mcommands[index].params[j].name,
+                  defaults->asDouble(index, j),
+                  client_mcommands[index].params[j].max);
           WriteCmd(NLog, buffer);
           WriteErr(NLog, 10);
           return;
         }
         if (client_mcommands[index].params[j].type == 'i'
-            || client_mcommands[index].params[j].type == 'l')
+            || client_mcommands[index].params[j].type == 'l') {
           sprintf(buffer, " %i", defaults->asInt(index, j));
-        else if (client_mcommands[index].params[j].type == 's')
-          sprintf(buffer, " %s", defaults->asString(index, j));
-        else
+        } else if (client_mcommands[index].params[j].type == 's') {
+          sprintf(sparam, "%s", defaults->asString(index, j));
+          for (int ic = 0; sparam[ic] != '\0'; ic++) {
+            if (sparam[ic]==' ') sparam[ic] = '\a';
+          }
+          sprintf(buffer, " %s", sparam);
+        } else {
           sprintf(buffer, " %f", defaults->asDouble(index, j));
+        }
         strcat(request, buffer);
       }
     } else {
@@ -1242,21 +1252,6 @@ void MainForm::WriteLog(const char *request) {
     logfile.close();
   }
 
-#ifdef USE_ELOG
-  if (fork() == 0) {
-    QString elog_command = QString(
-        ELOG " -h " ELOG_HOST " -p " ELOG_PORT " -l blast-cow "
-        "-u cow submmblast "
-        "-a User=%1 -a Source=cow -a Category=%2 -m %3 > /dev/null 2>&1")
-      .arg(QString((getpwuid(getuid()))->pw_name))
-      .arg(Group)
-      .arg(logfilename);
-
-    if (system(elog_command))
-      perror("Unable to exec " ELOG);
-    exit(0);
-  }
-#endif
 }
 
 void MainForm::ReadHerdFile(const QString &herd_file_name)
@@ -1500,7 +1495,7 @@ void MainForm::PopulateOmnibox()
 //
 //-------------------------------------------------------------
 
-MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  const char* name,
+MainForm::MainForm(const char *cf, const QString &herdfile, int link, QWidget* parent,  const char* name,
     Qt::WindowFlags fl) : QMainWindow( parent, fl )
 {
   setObjectName(name?QString(name):"Cow");
@@ -1509,6 +1504,10 @@ MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  co
   QSize tempsize;
   QPoint point;
   int w1, w2, w3, h1, h2, h3;
+
+  QSettings settings("University of Toronto","cow");
+
+  restoreGeometry(settings.value("geometry").toByteArray());
 
   ReadHerdFile(herdfile);
 
@@ -1663,6 +1662,9 @@ MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  co
 
     point.setX(w1 + PADDING + (i % 2) * (w2 + w3 + PADDING) + w2);
     NParamFields[i]->setGeometry(point.x(), 0, w3, h3);
+    if (i>0) {
+        setTabOrder(NParamFields[i-1], NParamFields[i]);
+    }
   }
 
   memset(tmp, 'B', SIZE_ABOUT);
@@ -1713,12 +1715,6 @@ MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  co
   NHost->setText(blastcmd_host);
   connect(NHost,SIGNAL(clicked()),this,SLOT(ChangeHost()));
 
-  NVerbose = new QCheckBox(NTopFrame);
-  NVerbose->setObjectName("NVerbose");
-  NVerbose->setText(tr("Verbose"));
-  NVerbose->setChecked(false);
-  NVerbose->adjustSize();
-
   NSendMethod = new QComboBox(NTopFrame);
   NSendMethod->setObjectName("NSendMethod");
   NSendMethod->addItem(tr("LOS"));
@@ -1726,12 +1722,19 @@ MainForm::MainForm(const char *cf, const QString &herdfile, QWidget* parent,  co
   NSendMethod->addItem(tr("Iridum"));
   NSendMethod->addItem(tr("Pilot"));
   NSendMethod->adjustSize();
+  NSendMethod->setCurrentIndex(link);
 
   NSendRoute = new QComboBox(NTopFrame);
   NSendRoute->setObjectName("NSendRoute");
   NSendRoute->addItem(tr("COMM 1"));
   NSendRoute->addItem(tr("COMM 2"));
   NSendRoute->adjustSize();
+
+  NVerbose = new QCheckBox(NTopFrame);
+  NVerbose->setObjectName("NVerbose");
+  NVerbose->setText(tr("Verbose"));
+  NVerbose->setChecked(false);
+  NVerbose->adjustSize();
 
   NCurFile->setGeometry(
       PADDING,
@@ -1905,6 +1908,19 @@ void handle_sigabrt(int sig)
   exit(1);
 }
 
+void USAGE() {
+    fprintf(stderr, "USAGE:\n"
+            "cow <command host>\n"
+            "or\n"
+            "cow <options>\n"
+            "\n"
+            "Options:\n"
+            "-h     print this message\n"
+            "-c <command host>\n"
+            "-H <herd file>\n");
+    exit(1);
+}
+
 Defaults *defaults;
 int main(int argc, char* argv[]) {
 
@@ -1917,34 +1933,64 @@ int main(int argc, char* argv[]) {
   QApplication::setOrganizationName("University of Toronto");
   QApplication::setApplicationName("cow");
 
-  if (argc > 2||(argc==2&&(QString(argv[1]).contains("help",Qt::CaseInsensitive)||
-          QString(argv[1]).contains("-h",Qt::CaseInsensitive)))) {
-    printf(
-        "COW (SVN revision " COW_SVN_REVISION ") "
-        "can take one argument: the host to connect to.  It was compiled at "
-        __DATE__ "\nand is copyright (C) 2002-2013 University of Toronto.\n\n"
-        "This program comes with NO WARRANTY, not even for MERCHANTABILITY or "
-        "FITNESS\n"
-        "FOR A PARTICULAR PURPOSE. You may redistribute it under the terms of "
-        "the GNU\n"
-        "General Public License; see the file named COPYING for details.\n\n"
-        "Narsil was written by Adam Hincks.  It was later poked at a bit by\n"
-        "D. V. Wiebe and then further desecrated by cbn.\n"
-        "Joshua Netterfield created cow by fixing the UI, "
-        "and updating it to Qt4."
-        );
-    exit(1);
+  /* Host determination */
+  if (argc == 2) {
+      if (argv[1][0] == '-') {
+          USAGE();
+      } else {
+          blastcmd_host = QString(argv[1]);
+      };
+  } else {
+      QString argv_i;
+      for (int i = 1; i<argc; i++) {
+          argv_i = QString(argv[i]);
+          if (argv_i == "-h") {
+              USAGE();
+          } else if (argv_i == "-c") {
+              i++;
+              if (i>=argc) USAGE();
+              blastcmd_host = QString(argv[i]);
+          } else if (argv_i == "-H") {
+              i++;
+              if (i>=argc) USAGE();
+              herdfile = QString(argv[i]);
+          } else {
+              USAGE();
+          }
+      }
   }
 
-  /* Host determination */
-  if (argc == 2)
-  {
-    blastcmd_host = argv[1];
+  QSettings settings("University of Toronto","cow");
+
+  /* Link Determination */
+  int link = settings.value("link", 0).toInt();
+
+  if (blastcmd_host.isEmpty()) {
+      blastcmd_host = settings.value("blastcmd_host",QString("widow\0")).toString();
   }
-  else {
-    QSettings settings("University of Toronto","cow");
-    blastcmd_host = settings.value("blastcmd_host",QString("widow\0")).toString();
+
+  if (herdfile.isEmpty()) {
+      herdfile = settings.value("blastcmd_herdfile",QString("widow\0")).toString();
   }
+
+  if (!herdfile.endsWith(".herd")) {
+      herdfile = herdfile + ".herd";
+  }
+
+  if (!QFile::exists(herdfile)) {
+      herdfile = QString(HERDFILEDIR) + herdfile;
+  }
+
+  QFileInfo herd_fileinfo(herdfile);
+
+  herdfile = herd_fileinfo.canonicalFilePath();
+    printf("%s\n", herdfile.toLatin1().constData());
+  if (!QFile::exists(herdfile)) {
+      printf("warning: herdfile (%s) does not exist\n", herdfile.toLatin1().constData());
+  }
+
+  settings.setValue("blastcmd_host",QString(blastcmd_host));
+  settings.setValue("blastcmd_herdfile",QString(herdfile));
 
   int retCode=1337;
   while(retCode==1337) {
@@ -1988,15 +2034,11 @@ int main(int argc, char* argv[]) {
     QSettings settings;
     QString curfile=settings.value("curfile",QString("")).toString();
     if(curfile.isEmpty()) {
-      curfile= "/data/etc/defile.lnk"; //QFileDialog::getExistingDirectory(0,"Choose a curdir");
-      //curfile+="/defile.lnk";
+      curfile= "/data/etc/mole.lnk"; //QFileDialog::getExistingDirectory(0,"Choose a curdir");
     }
 
 
-    // TODO the one place where Spider/BIT differ. Add GUI to set herd file
-    QString herdfile = "/data/etc/cow/blast.herd";
-
-    MainForm moo(curfile.toStdString().c_str(), herdfile, 0, "moo", 0);
+    MainForm moo(curfile.toStdString().c_str(), herdfile, link, 0, "moo", 0);
     moo.show();
     retCode= app.exec();
     NetCmdDrop();

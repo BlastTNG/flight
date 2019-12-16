@@ -115,7 +115,7 @@ enum singleCommand {
   autofocus_veto,   halt_fc1,         halt_fc2,       actbus_on,
   actbus_off,       actuator_stop,      restore_piv,
   reset_rw,         reset_piv,
-  reset_elev,       reset_ethercat,
+  reset_elev,       reset_ethercat, rw_wake_and_wiggle,
   // hs_pot_on,        hs_pot_off,       bda_on,             bda_off,
   hwpr_enc_on,
   hwpr_enc_off,     hwpr_enc_pulse,
@@ -134,6 +134,8 @@ enum singleCommand {
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
   pump_valve_open, pump_valve_close, pump_valve_off, pump_valve_on,
   fill_valve_open, fill_valve_close, fill_valve_off, fill_valve_on,
+  aalborg_valve1_open, aalborg_valve2_open, aalborg_valve3_open,
+  aalborg_valve1_close, aalborg_valve2_close, aalborg_valve3_close,
   ln_valve_on, ln_valve_off,
   potvalve_on, potvalve_off, potvalve_open, potvalve_close,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
@@ -164,7 +166,9 @@ enum singleCommand {
   auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
   check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
   trigger_retune_check, full_loop_default_all, set_attens_default_all, roach_allow_scan_check_all,
-  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log, read_pi_temp_all, xyzzy
+  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log,
+  read_pi_temp_all, stop_ir, static_ir, blue_valve_enable, blue_valve_disable, pumps_enable,
+    pumps_disable, aalborg_enable, aalborg_disable, xyzzy
 };
 
 /* multiCommand enumeration.  The command list here does NOT have to be in
@@ -190,7 +194,7 @@ enum multiCommand {
   biphase_clk_speed, highrate_through_tdrss,   set_linklists,
   request_file,      set_roach_chan,   set_roach_all_chan,
   set_queue_execute, reconnect_lj,     set_roach_mode,
-  request_stream_file, set_pilot_oth,
+  request_stream_file, set_pilot_oth, ir_source_pulse,
 
   // t_gyro_gain,
   timeout,           vcap,
@@ -216,6 +220,7 @@ enum multiCommand {
   potvalve_set_thresholds, potvalve_set_tighten_move,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
+  aalborg_set_speed,
 
   xsc_is_new_window_period,
   xsc_offset,

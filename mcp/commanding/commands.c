@@ -190,6 +190,24 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case blue_valve_disable:
+            CommandData.Microscroll.supply_12v = 1;
+            break;
+        case blue_valve_enable:
+            CommandData.Microscroll.supply_12v = 0;
+            break;
+        case pumps_enable:
+            CommandData.Microscroll.supply_24va = 0;
+            break;
+        case pumps_disable:
+            CommandData.Microscroll.supply_24va = 1;
+            break;
+        case aalborg_enable:
+            CommandData.Microscroll.supply_24vb = 0;
+            break;
+        case aalborg_disable:
+            CommandData.Microscroll.supply_24vb = 1;
+            break;
         case vtx_xsc1:
             CommandData.vtx_sel[0] = VTX_XSC1;
             CommandData.Relays.video_trans = 1;
@@ -199,6 +217,14 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.vtx_sel[0] = VTX_XSC0;
             CommandData.Relays.video_trans = 0;
             CommandData.Relays.update_video = 1;
+            break;
+        case stop_ir:
+            CommandData.IRsource.go = 0;
+            CommandData.IRsource.no_pulse = 0;
+            break;
+        case static_ir:
+            CommandData.IRsource.no_pulse = 1;
+            CommandData.IRsource.go = 1;
             break;
         case force_pot_refill:
             CommandData.Cryo.pot_forced = 1;
@@ -380,6 +406,7 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_relays[10] = 1;
             break;
         case rw_cycle:
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             CommandData.Relays.cycle_of_12 = 1;
             CommandData.Relays.cycled_of = 1;
             CommandData.Relays.of_relays[11] = 1;
@@ -518,11 +545,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
             CommandData.Relays.of_12_on = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[11] = 1;
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             break;
         case rw_off:
             CommandData.Relays.of_12_off = 1;
             CommandData.Relays.update_of = 1;
             CommandData.Relays.of_relays[11] = 0;
+            CommandData.ec_devices.rw_commutate_next_ec_reset = 1;
             break;
         case steppers_on:
             CommandData.Relays.of_13_on = 1;
@@ -1020,6 +1049,24 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 0;
 	    	break;
+		case aalborg_valve1_open:
+			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_OPENED;
+			break;
+		case aalborg_valve2_open:
+			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_OPENED;
+			break;
+		case aalborg_valve3_open:
+			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_OPENED;
+			break;
+		case aalborg_valve1_close:
+			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_CLOSED;
+			break;
+		case aalborg_valve2_close:
+			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_CLOSED;
+			break;
+		case aalborg_valve3_close:
+			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_CLOSED;
+			break;
 		case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
             CommandData.Cryo.lvalve_close = 0;
@@ -1329,6 +1376,9 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case reset_log:
            ResetLog = 1;
            break;
+        case rw_wake_and_wiggle:
+           CommandData.ec_devices.have_commutated_rw = 0;
+        break;
         case xyzzy:
            break;
 	#ifdef USE_XY_THREAD
@@ -1943,6 +1993,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
       break;
+	case aalborg_set_speed:
+	  CommandData.Cryo.aalborg_speed = rvalues[0];
+	  break;
 
 // .
     // XY STAGE
@@ -2015,6 +2068,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.num_pulse = ivalues[0];
       CommandData.Cryo.separation = ivalues[1];
       CommandData.Cryo.length = ivalues[2];
+      break;
+    case ir_source_pulse:
+      CommandData.IRsource.go = 1;
+      CommandData.IRsource.no_pulse = 0;
+      CommandData.IRsource.length = ivalues[0];
       break;
     case set_cal_timeout:
       CommandData.Cryo.counter_max = ivalues[0];
@@ -2297,7 +2355,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case set_attens_conserve:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 23.0)) {
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES) && ((rvalues[1] >= 0.0) && rvalues[1] <= 30.0)) {
           CommandData.roach_params[ivalues[0]-1].set_out_atten = rvalues[1];
           CommandData.roach[ivalues[0]-1].set_attens = 4;
       }
@@ -2685,7 +2743,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case set_default_tone_power_all:
       for (int i = 0; i < NUM_ROACHES; i++) {
-          CommandData.roach_params[ivalues[0]-1].dBm_per_tone = rvalues[0];
+          CommandData.roach_params[i].dBm_per_tone = rvalues[0];
       }
       break;
     case set_find_kids_params:
@@ -3433,7 +3491,7 @@ void InitCommandData()
         CommandData.roach[i].change_tone_freq = 0;
         CommandData.roach[i].on_res = 1;
         CommandData.roach[i].auto_find = 0;
-        CommandData.roach_params[i].set_in_atten = 19;
+        CommandData.roach_params[i].set_in_atten = 0;
         CommandData.roach[i].recenter_df = 0;
         CommandData.roach[i].check_response = 0;
         CommandData.roach[i].reboot_pi_now = 0;
@@ -3461,11 +3519,11 @@ void InitCommandData()
     CommandData.roach[4].has_lamp_control = 1;
     CommandData.trigger_roach_tuning_check = 0;
     CommandData.trigger_lo_offset_check = 0;
-    CommandData.roach_params[0].set_out_atten = 4;
-    CommandData.roach_params[1].set_out_atten = 4;
-    CommandData.roach_params[2].set_out_atten = 4;
-    CommandData.roach_params[3].set_out_atten = 4;
-    CommandData.roach_params[4].set_out_atten = 4;
+    CommandData.roach_params[0].set_out_atten = 7;
+    CommandData.roach_params[1].set_out_atten = 7;
+    CommandData.roach_params[2].set_out_atten = 7;
+    CommandData.roach_params[3].set_out_atten = 7;
+    CommandData.roach_params[4].set_out_atten = 7;
 
     CommandData.Bias.biasRamp = 0;
     CommandData.Bias.biasStep.do_step = 0;
@@ -3537,6 +3595,12 @@ void InitCommandData()
     CommandData.Cryo.sync = 0;
     CommandData.Cryo.counter = 1200;
     CommandData.Cryo.counter_max = 1200;
+
+    /* for controlling the hawkeye IR source */
+    CommandData.IRsource.go = 0;
+    CommandData.IRsource.length = 10;
+    CommandData.IRsource.just_received  = 0;
+    CommandData.IRsource.no_pulse = 0;
 
     /* Added for triggering cal lamp */
     CommandData.Cryo.num_pulse = 3;
@@ -3648,6 +3712,15 @@ void InitCommandData()
     CommandData.Labjack_Queue.which_q[2] = 0;
     CommandData.Labjack_Queue.which_q[3] = 0;
     CommandData.Labjack_Queue.which_q[4] = 0;
+    CommandData.Labjack_Queue.which_q[5] = 0;
+    CommandData.Labjack_Queue.which_q[6] = 0;
+    CommandData.Labjack_Queue.which_q[7] = 0;
+    CommandData.Labjack_Queue.which_q[8] = 0;
+    CommandData.Labjack_Queue.which_q[9] = 0;
+    CommandData.Labjack_Queue.which_q[10] = 0;
+    CommandData.Microscroll.supply_24va = 0;
+    CommandData.Microscroll.supply_24vb = 1;
+    CommandData.Microscroll.supply_12v = 0;
     CommandData.Cryo.load_curve = 0;
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;
@@ -3753,6 +3826,11 @@ void InitCommandData()
     CommandData.ec_devices.fix_el = 0;
     CommandData.ec_devices.fix_piv = 0;
     CommandData.ec_devices.fix_hwpr = 0;
+    // By default trigger a write of all of the RW motor set-up parameters on mcp startup
+    // including the encoder defaults.  This will trigger a wake-and-wiggle recommutation
+    // of the reaction wheel which will make it unable to generate torque for many seconds.
+    CommandData.ec_devices.have_commutated_rw = 0;
+    CommandData.ec_devices.rw_commutate_next_ec_reset = 0;
     // /TODO: Re-enable El prior to flight
     CommandData.disable_az = 1;
     CommandData.disable_el = 0;
@@ -3776,6 +3854,7 @@ void InitCommandData()
     CommandData.clin_el_trim = 0;
     CommandData.enc_motor_el_trim = 25.16;
     CommandData.null_az_trim = 0;
+    CommandData.null_el_trim = 0;
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
@@ -3866,7 +3945,7 @@ void InitCommandData()
         CommandData.roach_params[i].delta_phase = 0.0;
         CommandData.roach_params[i].freq_offset = 0.0;
         CommandData.roach_params[i].resp_thresh = 2000;
-        CommandData.roach_params[i].dBm_per_tone = -47;
+        CommandData.roach_params[i].dBm_per_tone = -50;
         CommandData.roach_params[i].df_retune_threshold = 100000;
         CommandData.roach_params[i].df_diff_retune_threshold = 100000;
     }
@@ -3945,7 +4024,7 @@ void InitCommandData()
     CommandData.Cryo.potvalve_closecurrent = 25;
     CommandData.Cryo.potvalve_hold_i = 0;
     CommandData.Cryo.potvalve_vel = 50000;
-    CommandData.Cryo.potvalve_closed_threshold = 5200;
+    CommandData.Cryo.potvalve_closed_threshold = 4700;
     CommandData.Cryo.potvalve_lclosed_threshold = 8000;
     CommandData.Cryo.potvalve_open_threshold = 10000;
     CommandData.Cryo.valve_vel = 50000;

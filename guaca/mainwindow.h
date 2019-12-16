@@ -9,6 +9,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QTest>
 #include <QCloseEvent>
+#include <QListWidgetItem>
 
 #include "options.h"
 
@@ -21,22 +22,8 @@
 #define IMAGE_LOOP_HIGH 23
 #define IMAGE_TOTAL 32
 
-struct GUACACONFIG
-{
-    int linkindex;
-    int hostindex;
-    int checksum;
-    int server;
-    int backup;
-    int rewind;
-    int active;
-    int multilinknum;
-    int multilinkindex[MAX_NUM_LINKFILE];
-    char customhost[64];
-};
-
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -46,19 +33,18 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    unsigned int mole_active;
+    bool mole_active;
 
 private slots:
     void on_toggleMole_clicked();
+
     void dancing();
 
-    void on_multiLinkSelect_itemSelectionChanged();
+    void make_listfiles();
 
     void on_linkSelect_currentIndexChanged(const QString &arg1);
 
-    void on_remoteHost_activated(const int &arg1);
-
-    void change_remote_host(const QString &arg);
+    bool change_remote_host(const QString &arg);
 
     void on_actionClose_triggered();
 
@@ -72,37 +58,58 @@ private slots:
 
     void on_actionPurge_old_data_triggered();
 
+    void on_actionClear_remote_hosts_triggered();
+
+    void on_hosts_activated(int index);
+
+    void on_linkSelect_activated(const QString &arg1);
+
+    void on_multiLinkSelect_itemSelectionChanged();
+
+    int add_a_host(const QString &thehost);
+
 private:
     int num_linkfile;
-    int linkids[3];
     int syncstate;
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
     Options *options;
-    struct GUACACONFIG cfg;
+    std::vector<Logscroll *> mole_logs;
+    bool still_dancing;
+    QSettings settings;
+    bool servermode;
+
     void freeze();
     void unfreeze();
     void start_a_mole(int );
+    void stop_all_moles();
     int get_server_data();
-    void updateSettings();
-    void getSettings();
     void savePosition();
+    void auto_select_link();
+
+    void saveConfig();
+    void loadConfig();
+    void defaultConfig();
+
     void closeEvent(QCloseEvent *event);
 
     QIcon qi[IMAGE_TOTAL];
     QSize qs;
 
-    QTimer * _ut;
+    QTimer * _ut, * _ut_listfiles;
     int image_i, inc;
-    FILE * logfile;
-    FILE * statfile;
     char buf[MAXLINELENGTH+5];
     uint64_t prev_size;
-    int logend;
-    int data_incoming;
+    uint64_t logend;
+    bool data_incoming;
     char gnd_ip[128];
-    int servermode;
     QFuture<void> f1;
+
+    int host_index;
+    QString linkItem;
+    QStringList linkSelect;
+    bool has_warned;
+    QString last_msg;
 };
 
 #endif // MAINWINDOW_H

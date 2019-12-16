@@ -18,61 +18,65 @@
 
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
-#define LL_LIVE_SUFFIX "_live"
+#define GUACA_MIN_TIME_CHECK_DATA 2
 
 char archivedir[128] = "/data/mole";
-char configdir[128] = "/data/mole";
-char configfile[128] = "guaca.cfg";
-char molestat[128] = "/data/etc/mole.lnk/gps_time";
+char moledir[128] = "/data/mole";
 char masterlink[128] = "/data/etc/mole.lnk";
-char masterloglink[128] = "/data/etc/mole.log";
 
 char *remote_hosts[] = {
   "zaphod.bit",
   NULL
 };
 
+void USAGE(void) {
+
+  printf("\n\nGUI front-end for mole to conveniently grab telemetry data from server.\n\n"
+      "Usage: guaca [host] [OPTION]...\n\n"
+      " -h                 Display this message.\n"
+      "\n");
+
+    exit(0);
+}
+
 /*
  * This thread waits for slave guacas to connect and then serves
  * up the configuration file to the slave
  */
 
-int server_active = 0;
-
-void server_thread(void * arg)
+// TODO: switch to QProcess
+void server_thread(void * )
 {
   int sock;
   int client_sock , c;
   struct sockaddr_in server , client;
 
-  struct GUACACONFIG * cfg = (struct GUACACONFIG *) arg;
-
   unsigned int theport = GUACAPORT;
-  
-  //Create socket 
+
+  //Create socket
   int socket_desc = socket(AF_INET , SOCK_STREAM | SOCK_NONBLOCK, 0);
   if (socket_desc == -1)
-  { 
+  {
     perror("socket could not create server socket");
     return;
   }
-  
+
   //Prepare the sockaddr_in structure
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(theport);
-  
+
   int tru = 1;
   setsockopt(socket_desc,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
-  
+
   //Bind
-  if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-  { 
+  if (bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+  {
     //print the error message
     perror("bind failed. Unable to start guacamole server: ");
     return;
   }
-  
+
   //Listen
   listen(socket_desc , 3);
 
@@ -80,45 +84,19 @@ void server_thread(void * arg)
   //Accept and incoming connection
   if (VERBOSE) printf("Waiting for incoming connections...\n");
   c = sizeof(struct sockaddr_in);
- 
-  uint8_t configbuf[2048] = {0};
- 
-  while (server_active)
-  {
-    if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0)
-    {
+
+  while (1) {
+    if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0) {
       sock = client_sock;
-      if (VERBOSE) printf("Client request for config\n");
 
-      memset(configbuf,0,2048);
-
-      int loc = 0;
-
-      configbuf[0] = 0xff; loc += 1; // header
-      *((int *) (configbuf+loc)) = cfg->linkindex;    loc += 4;
-      *((int *) (configbuf+loc)) = cfg->hostindex;    loc += 4;
-      *((int *) (configbuf+loc)) = cfg->checksum;     loc += 4;
-      *((int *) (configbuf+loc)) = cfg->server;      loc += 4;
-      *((int *) (configbuf+loc)) = cfg->backup;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->rewind;       loc += 4; 
-      *((int *) (configbuf+loc)) = cfg->active;       loc += 4;
-      *((int *) (configbuf+loc)) = cfg->multilinknum; loc += 4;
-
-      for (int i=0;i<MAX_NUM_LINKFILE; i++)
-      {
-        *((int *) (configbuf+loc)) = cfg->multilinkindex[i]; loc += 4;
-      } 
-      strcpy((char *) (configbuf+loc),cfg->customhost); loc += 64;
-
-      if (send(sock, configbuf, loc, 0) <= 0)
-      {
-        printf("Unable to send client data\n");
-      } 
+      // TODO: load ini file and send it
+      // send config data
+      //if (send(sock, configbuf, loc, 0) <= 0) {
+      //  printf("Unable to send client data\n");
+      //}
 
       close(sock);
-    }
-    else
-    {
+    } else {
       usleep(200000);
     }
   }
@@ -190,13 +168,8 @@ int generate_linklist_listfiles()
   return num_types;
 }
 
-void list_thread(void * arg) {
-  (void) arg; // not used for now
-  while (1) {
-    generate_linklist_listfiles();
-    sleep(5);
-  }
-
+void MainWindow::make_listfiles() {
+  generate_linklist_listfiles();
 }
 
 
@@ -214,7 +187,7 @@ int MainWindow::get_server_data()
   struct hostent *he;
   int socket_fd;
 
-  uint8_t buf[2048] = {0};
+  //uint8_t buf[2048] = {0};
 
   if ((he = gethostbyname(gnd_ip))==NULL)
   {
@@ -243,38 +216,9 @@ int MainWindow::get_server_data()
     return -1;
   }
 
-  int rsize = recv(socket_fd,buf,2048,0);
+  // TODO receive ini file, save to disk, and reload settings
+  // int rsize = recv(socket_fd,buf,2048,0);
   ::close(socket_fd);
-
-  int loc = 0;
-  if ((buf[0] == 0xff) && (rsize > 0))
-  {
-    loc += 1;
-    cfg.linkindex = *((int *) (buf+loc));    loc += 4;
-    cfg.hostindex = *((int *) (buf+loc));    loc += 4;
-    cfg.checksum = *((int *) (buf+loc));     loc += 4;
-    cfg.server = *((int *) (buf+loc));      loc += 4;
-    cfg.backup = *((int *) (buf+loc));       loc += 4;
-    cfg.rewind = *((int *) (buf+loc));       loc += 4;
-    cfg.active = *((int *) (buf+loc));       loc += 4;
-    cfg.multilinknum = *((int *) (buf+loc)); loc += 4;
-
-    for (int i=0;i<MAX_NUM_LINKFILE;i++)
-    {
-      cfg.multilinkindex[i] = *((int *) (buf+loc)); loc += 4;
-    }
-    strcpy(cfg.customhost,(char *) (buf+loc));
-
-
-    if (VERBOSE) printf("Received config from master guaca\n");
-    //printf("%d %d %d %d %d %d %d %s\n",cfg.linkindex,cfg.hostindex,cfg.checksum,cfg.server,cfg.backup,cfg.rewind,cfg.active,cfg.customhost);
-    updateSettings();
-  }
-  else
-  {
-    printf("Received invalid server message\n");
-    return -1;
-  }
 
   return 1;
 }
@@ -287,140 +231,36 @@ int MainWindow::get_server_data()
 
 void MainWindow::dancing()
 {
-  QString msg = "";
-
-  if (logfile == NULL)
-  {
-    logfile = fopen(masterloglink,"r");
-  }
-
-  if (logfile != NULL)
-  {
-    fseek(logfile, -MAXLINELENGTH, SEEK_END);
-
-    ssize_t len = fread(buf, 1, MAXLINELENGTH-1, logfile);
-    buf[len] = '\0';
-    char *last_newline = buf;
-
-    unsigned int i = 1;
-    while (strncmp("Frame",last_newline,5) != 0)
-    {
-      if (i>(MAXLINELENGTH-5))
-      {
-        last_newline[0] = 0;
-        break;
-      }
-      last_newline = buf+i;
-      i++;
-    }
-
-    i = 0;
-    while (last_newline[i] && (i<strlen(last_newline)))
-    {
-      if (last_newline[i] == '\r')
-      {
-        last_newline[i] = 0;
-        break;
-      }
-      i++;
-    }
-
-    //printf("%s\n",last_newline);
-    msg = QString(last_newline);
-
-    fclose(logfile);
-    logfile = NULL;
-  }
-  fflush(stdout);
-
-  int togglethemole = 0;
-
   int thetime = time(0);
+  still_dancing = true;
 
-  // get file size
-  if ((thetime-logend)>1)
-  {
-    getSettings();
-    if (servermode) syncstate = get_server_data();
-    else
-    {
-      syncstate = 0;
-    }
-
-    uint64_t file_size = 0;
-
-    if (statfile == NULL)
-    {
-      statfile = fopen(molestat,"r");
-    }
-
-    if (statfile != NULL)
-    {
-      fseek(statfile,0,SEEK_END);
-      file_size = ftell(statfile);
-
-      if (file_size == prev_size)
-      {
-        data_incoming = 0;
-      }
-      else
-      {
-        data_incoming = 1;
-      }
-      fclose(statfile);
-      statfile = NULL;
-    }
-    else
-    {
-      data_incoming = 0;
-    }
-
-    prev_size = file_size;
-
-    logend = thetime;
-    //printf("%s\n",temp);
-    togglethemole = 1;
+  // get the latest text from the currently active mole process
+  QString msg = "Mole not receiving data.\n";
+  unsigned int current_index = ui->linkSelect->currentIndex();
+  if (mole_logs.size() > current_index) {
+      msg = mole_logs[current_index]->get_latest_str();
   }
 
-  if (!data_incoming) msg = "Mole not receiving data.\n";
-
-  int isrun = system("pidof -x mole > /dev/null");
-  if(!isrun) // mole is running on the system
-  {
-    mole_active = 1;
-    freeze();
-    if (!cfg.active && servermode && togglethemole) // slaved and shouldn't be running
-    {
-      on_toggleMole_clicked();
-    }
+  // check the status of data based on mole terminal text
+  // this sets the data incoming status
+  if ((thetime-logend) > GUACA_MIN_TIME_CHECK_DATA) {
+      data_incoming = (msg != last_msg);
+      last_msg = msg;
+      logend = thetime;
   }
-  else // mole is not running on the system
-  {
-    mole_active = 0;
-    unfreeze();
-
-    if (cfg.active && servermode && togglethemole) // saved and should be running
-    {
-      on_toggleMole_clicked();
-    }
-  }
-
-  cfg.active = mole_active;
   ui->statusBar->showMessage(msg);
 
-  if (mole_active)
-  {
-    if (data_incoming)
-    {
+  // dancing logic
+  if (mole_active) {
+    if (data_incoming) {
       if (image_i==IMAGE_LOOP_HIGH) inc = -1;
       else if (image_i==IMAGE_LOOP_LOW) inc = 1;
+    } else {
+      inc = 1;
     }
-    else inc = 1;
-  }
-  else
-  {
+  } else {
     inc = 1;
-    if  (image_i==(IMAGE_IND_OFF+1)%IMAGE_TOTAL) image_i = IMAGE_IND_OFF;
+    if (image_i==(IMAGE_IND_OFF+1)%IMAGE_TOTAL) image_i = IMAGE_IND_OFF;
   }
 
   int ss = qMin(ui->dance->width(),ui->dance->height())*15/8;
@@ -430,65 +270,7 @@ void MainWindow::dancing()
 
   image_i = (image_i+inc)%IMAGE_TOTAL;
 
-}
-
-
-/*
- * Updates the mole setting based on the configuration file
- */
-void MainWindow::updateSettings()
-{
-  ui->remoteHost->setCurrentIndex(cfg.hostindex);
-  ui->numRewind->setText(QString::number(cfg.rewind));
-  if (cfg.checksum) ui->checksum->setChecked(true);
-  else  ui->checksum->setChecked(false);
-  if (cfg.backup) ui->backup->setChecked(true);
-  else  ui->backup->setChecked(false);
-  if (cfg.server) ui->server->setChecked(true);
-  else  ui->server->setChecked(false);
-
-  ui->multiLinkSelect->clearSelection();
-
-
-  for (int i=0;i<cfg.multilinknum;i++)
-  {
-    //printf("%d\n",cfg.multilinkindex[i]);
-    if (cfg.multilinkindex[i] < ui->multiLinkSelect->count()) ui->multiLinkSelect->item(cfg.multilinkindex[i])->setSelected(true);
-  }
-  ui->linkSelect->setCurrentIndex(cfg.linkindex);
-  ui->remoteHost->setItemText(ui->remoteHost->count()-1,QString(cfg.customhost)+SELECTION_APPEND_TEXT);
- 
-
-  //printf("set to %d\n",cfg.linkindex);
-}
-
-/*
- * Gets the settings from the GUI and saves them to the configuration file.
- */
-void MainWindow::getSettings()
-{
-  cfg.hostindex = ui->remoteHost->currentIndex();
-  cfg.checksum = (ui->checksum->checkState() == Qt::Checked);
-  cfg.server = (ui->server->checkState() == Qt::Checked);
-  cfg.backup = (ui->backup->checkState() == Qt::Checked);
-  cfg.rewind = ui->numRewind->text().toInt();
-
-  QModelIndexList indexes = ui->multiLinkSelect->selectionModel()->selectedIndexes();
-
-  int i = 0;
-  foreach(QModelIndex index, indexes)
-  {
-      cfg.multilinkindex[i] = index.row();
-      //printf("%d %d\n",i,index.row());
-      i++;
-  }
-  cfg.multilinknum = i;
-  cfg.linkindex = ui->linkSelect->currentIndex();
-  //printf("saved to %d\n",cfg.linkindex);
-  QString customhost = ui->remoteHost->itemText(ui->remoteHost->count()-1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
-
-  strcpy(cfg.customhost,customhost.toLatin1().data());
-
+  still_dancing = false;
 }
 
 /*
@@ -499,49 +281,59 @@ void MainWindow::getSettings()
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    settings("guacamole", "guaca")
 {
   ui->setupUi(this);
 
-  //on_remoteHost_currentIndexChanged("localhost");
-
   ui->numRewind->setValidator(new QIntValidator(0, 1e8, this) );
-
-  logfile = NULL;
-
-  memset((void *) &cfg,0,sizeof(struct GUACACONFIG));
-  cfg.rewind = 100;
-
-  // file the remote hosts selection box
-  for (int i = 0; remote_hosts[i]; i++)
-  {
-    ui->remoteHost->addItem(QString(remote_hosts[i]));
-  }
-  ui->remoteHost->addItem(QString(" - Custom selection - "));
-
-  // open the configuration directory and check previous configuration
-  mkdir(configdir,00755);
-  char fname[128] = {0};
-  sprintf(fname,"%s/%s",configdir,configfile);
-
-  if (access(fname,F_OK) == 0)
-  {
-    // get previous config
-    FILE * cfgfile = fopen(fname,"rb");
-    uint8_t overflow;
-
-    if ((fread(&cfg,1,sizeof(struct GUACACONFIG),cfgfile) != sizeof(struct GUACACONFIG)) || (fread(&overflow,1,1,cfgfile) != 0))
-    {
-      memset(&cfg,0,sizeof(struct GUACACONFIG));
-    }
-
-    fclose(cfgfile);
-  }
+  ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
+  ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
 
   generate_linklist_listfiles();
 
-  updateSettings();
-  change_remote_host(ui->remoteHost->itemText(cfg.hostindex));
+  options = new Options(this);
+
+  QSettings oldsettings("SuperBIT", "guaca");
+  if (settings.contains("mainwindow/customConfig")) {
+      qDebug() << "Restoring saved config";
+      loadConfig();
+  } else if (oldsettings.contains("mainwindow/customConfig")) {
+      qDebug() << "Migrating to new settings";
+      QStringList items = oldsettings.allKeys();
+      for (int i=0; i<items.size(); i++){
+          settings.setValue(items[i], oldsettings.value(items[i]));
+          qDebug() << "Transfering " << items[i];
+      }
+      oldsettings.clear();
+      loadConfig();
+  } else {
+      qDebug() << "Using default config";
+      defaultConfig();
+      saveConfig();
+  }
+
+  // Parse arguments
+  QStringList args = QCoreApplication::arguments();
+  for (int i = 1; i < args.count(); i++) {
+      if (QString(args[i]).startsWith('-')) {
+          if (QString(args[i]) == "-h") {
+              USAGE();
+          } else {
+              printf("\n\n");
+              qDebug() << "Unrecognized option: " + args[i];
+              USAGE();
+          }
+      } else if (i == 1) { // first argument is host
+          host_index = add_a_host(args.at(1));
+          ui->hosts->setCurrentIndex(host_index);
+      } else {
+          USAGE();
+      }
+  }
+
+  // Query remote host
+  change_remote_host(ui->hosts->currentText());
 
   QString base = ":/images/guaca-";
   QString ext = ".svg";
@@ -559,70 +351,109 @@ MainWindow::MainWindow(QWidget *parent) :
   inc = 1;
   srand(time(0));
 
-  mole_active = 0;
-  data_incoming = 1;
-  syncstate = 0;
-
+  mole_active = false;
   logend = time(0);
-  statfile = fopen(molestat,"r");
 
-  if (QCoreApplication::arguments().count() > 1) // slave mode
-  {
-    QByteArray ba = QCoreApplication::arguments().at(1).toLatin1();
-    const char *c_str2 = ba.data();
-    strcpy(gnd_ip,c_str2);
-    printf("Guaca is slaved to \"%s\"\n",gnd_ip);
-    //servermode = 1;
-  }
-  else
-  {
-    server_active = 1;
-    f1 = QtConcurrent::run(server_thread, &cfg);
-    servermode = 0;
-  }
+  /*
+  server_active = 1;
+  f1 = QtConcurrent::run(server_thread, &cfg);
+  */
 
-  options = new Options(this);
-
-  QtConcurrent::run(list_thread, (void *)NULL);
+  servermode = false;
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
   connect(_ut,SIGNAL(timeout()),this,SLOT(dancing()));
   _ut->start();
 
-  QSettings settings("SuperBIT", "guaca");
+  _ut_listfiles = new QTimer(this);
+  _ut_listfiles->setInterval(5000);
+  connect(_ut_listfiles,SIGNAL(timeout()),this,SLOT(make_listfiles()));
+  _ut_listfiles->start();
+
   restoreGeometry(settings.value("mainwindow").toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
-  if (logfile) fclose(logfile);
-  if (!servermode)
-  {
+  printf("Destructing main window\n");
+  saveConfig();
+
+  if (!servermode) {
     f1.cancel();
   }
-  else
-  {
-    int ret = system("pkill mole");
-    if (ret < 0) printf("Unable to kill mole in slave mode\n");
-  }
-  server_active = 0;
 
   if (options) delete options;
-  delete ui;
+  options = NULL;
+  if (ui) delete ui;
+  ui = NULL;
+  qDebug() << "Closing";
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     savePosition();
     event->accept();
-    delete options;
+    _ut->stop();
+    while(still_dancing) QTest::qWait(90);
+    if (options) delete options;
     options = NULL;
 }
 
 void MainWindow::savePosition()
 {
-    QSettings settings("SuperBIT", "guaca");
     settings.setValue("mainwindow", saveGeometry());
+}
+
+void MainWindow::saveConfig() {
+    settings.setValue("mainwindow/numRewind", ui->numRewind->text().toInt());
+    settings.setValue("mainwindow/smartRewind", ui->smartRewind->isChecked());
+    settings.setValue("mainwindow/startFrame", ui->startFrame->text().toInt());
+    settings.setValue("mainwindow/endFrame", ui->endFrame->text().toInt());
+    settings.setValue("mainwindow/tabSelection", ui->tabWidget->currentIndex());
+
+    QStringList hosts;
+    for (int i = 1; i < ui->hosts->count()-1; i++) {
+        hosts << ui->hosts->itemText(i);
+    }
+    settings.setValue("mainwindow/host_list", hosts);
+    settings.setValue("mainwindow/host_index", ui->hosts->currentIndex());
+    settings.setValue("mainwindow/linkItem", linkItem);
+    settings.setValue("mainwindow/linkSelect", QVariant::fromValue(linkSelect));
+
+    settings.setValue("mainwindow/customConfig", true);
+}
+
+void MainWindow::loadConfig() {
+
+    ui->numRewind->setText(QString::number(QVariant(settings.value("mainwindow/numRewind")).toInt()));
+    ui->smartRewind->setChecked(QVariant(settings.value("mainwindow/smartRewind")).toBool());
+    ui->startFrame->setText(QString::number(QVariant(settings.value("mainwindow/startFrame")).toInt()));
+    ui->endFrame->setText(QString::number(QVariant(settings.value("mainwindow/endFrame")).toInt()));
+    ui->tabWidget->setCurrentIndex(QVariant(settings.value("mainwindow/tabSelection")).toInt());
+
+    QStringList hosts = QVariant(settings.value("mainwindow/host_list")).toStringList();
+    for (int i = 0; i < hosts.count(); i++) {
+        ui->hosts->insertItem(i+1, hosts[i]);
+    }
+    host_index = QVariant(settings.value("mainwindow/host_index")).toInt();
+    host_index = (host_index < (ui->hosts->count()-1)) ? host_index : (ui->hosts->count()-1);
+    ui->hosts->setCurrentIndex(host_index);
+    linkItem = QVariant(settings.value("mainwindow/linkItem")).toString();
+    linkSelect = QStringList(QVariant(settings.value("mainwindow/linkSelect")).toStringList());
+
+}
+
+void MainWindow::defaultConfig() {
+    qDebug() << "Default config";
+    ui->numRewind->setText("100");
+    ui->smartRewind->setChecked(true);
+    ui->startFrame->setText("");
+    ui->endFrame->setText("");
+    ui->tabWidget->setCurrentIndex(0);
+
+    ui->hosts->setCurrentIndex(ui->hosts->count()-1);
+    host_index = ui->hosts->count()-1;
+    linkItem = "default";
 }
 
 /*
@@ -633,25 +464,26 @@ void MainWindow::unfreeze()
   if (!servermode)
   {
     ui->toggleMole->setText("Start MOLE");
-    ui->checksum->setEnabled(true);
-    ui->server->setEnabled(true);;
     ui->multiLinkSelect->setEnabled(true);
     ui->numRewind->setEnabled(true);
-    ui->remoteHost->setEnabled(true);
-    ui->backup->setEnabled(true);
+    ui->hosts->setEnabled(true);
     ui->toggleMole->setEnabled(true);
     ui->linkSelect->setEnabled(true);
+    ui->tabWidget->setEnabled(true);
+
+    options->enable_options();
   }
   else
   {
-    ui->checksum->setDisabled(true);
-    ui->server->setDisabled(true);;
+
     ui->multiLinkSelect->setDisabled(true);
     ui->numRewind->setDisabled(true);
-    ui->remoteHost->setDisabled(true);
-    ui->backup->setDisabled(true);
+    ui->hosts->setDisabled(true);
     ui->toggleMole->setDisabled(true);
     ui->linkSelect->setDisabled(true);
+    ui->tabWidget->setDisabled(true);
+
+    options->disable_options();
   }
 }
 
@@ -662,13 +494,12 @@ void MainWindow::unfreeze()
  */
 void MainWindow::freeze()
 {
-  ui->checksum->setDisabled(true);
-  ui->server->setDisabled(true);
   ui->multiLinkSelect->setDisabled(true);
   ui->numRewind->setDisabled(true);
-  ui->remoteHost->setDisabled(true);
-  ui->backup->setDisabled(true);
+  ui->hosts->setDisabled(true);
+  ui->tabWidget->setDisabled(true);
   ui->toggleMole->setText("Stop MOLE");
+  options->disable_options();
 
   if (servermode)
   {
@@ -685,110 +516,95 @@ void MainWindow::start_a_mole(int index)
 {
   QString mole_cmd = "mole --live-name "+ui->linkSelect->itemText(index)+" "+
                           "--filename "+ui->linkSelect->itemText(index)+" "+
-                          "@"+ui->remoteHost->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
+                          "@"+ui->hosts->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0]+" "+
+                          "-p "+QString::number(options->client_port)+" -P "+QString::number(options->server_port)+" ";
 
-  if (!ui->numRewind->text().isEmpty()) mole_cmd += " --rewind " +ui->numRewind->text();
-  else
-  {
-    mole_cmd += " --rewind=0";
-    ui->numRewind->setText(QString::number(0));
+  QWidget * current_tab = ui->tabWidget->currentWidget();
+  if (current_tab == ui->rewindTab) {
+      if (ui->smartRewind->isChecked()) {
+          mole_cmd += " -W ";
+      } else {
+          mole_cmd += " -w ";
+      }
+      if (!ui->numRewind->text().isEmpty()) {
+        mole_cmd += ui->numRewind->text();
+      } else {
+        mole_cmd += "0";
+        ui->numRewind->setText(QString::number(0));
+      }
+  } else if (current_tab == ui->dataSelectionTab) {
+      if (!ui->startFrame->text().isEmpty()) {
+          mole_cmd += " -S " + ui->startFrame->text();
+      } else {
+          mole_cmd += "- S 0";
+          ui->startFrame->setText(QString::number(0));
+      }
+      if (!ui->endFrame->text().isEmpty()) {
+          mole_cmd += " -E " + ui->endFrame->text();
+      } else {
+          mole_cmd += "- E " + QString::number(INT32_MAX);
+          ui->endFrame->setText(QString::number(INT32_MAX));
+      }
   }
 
-  if (ui->checksum->checkState() == Qt::Checked) mole_cmd += " --no-check";
-  if (ui->backup->checkState() == Qt::Checked) mole_cmd += " --backup";
-  if (ui->server->checkState() == Qt::Checked) mole_cmd += " --server";
+  if (options->no_checksums) mole_cmd += " --no-check";
+  if (options->backup) mole_cmd += " --backup";
+  if (options->server) mole_cmd += " --server";
 
-
-  QString aname = ui->linkSelect->itemText(index);
-  QString linkname = QString(configdir)+"/"+aname+".log";
-
-  mole_cmd += " > "+linkname+" &";
-  getSettings();
-
-  // update configuration file
-  char fname[128];
-  sprintf(fname,"%s/%s",configdir,configfile);
-  FILE * cfgfile = fopen(fname,"wb");
-  fwrite(&cfg,sizeof(GUACACONFIG),1,cfgfile);
-  fflush(cfgfile);
-  fclose(cfgfile);
-
-  /*
-  QMessageBox::information(
-      this,
-      tr("Application Name"),
-      mole_cmd);
-  */
-
-  QByteArray ba = mole_cmd.toLatin1();
-  int ret = system(ba.data());
-  printf("%s\n",ba.data());
-  if (ret < 0)
-  {
-    QMessageBox::information(
-    this,
-    tr("Guacamole!"),
-    tr("Couldn't start mole."));
+  Logscroll * mole_log = new Logscroll(NULL, mole_cmd, false);
+  mole_log->setWindowTitle(mole_cmd);
+  mole_logs.push_back(mole_log);
+  if (options->mole_terminal) {
+      mole_log->show();
   }
-  //printf("Ran %s\n",ba.data());
-  QTest::qWait(50);
 
+}
+
+void MainWindow::stop_all_moles() {
+
+    printf("Stopping all moles...\n");
+    for (unsigned int i = 0; i < mole_logs.size(); i++) {
+        if (mole_logs[i]) delete mole_logs[i];
+        mole_logs[i] = NULL;
+    }
+    mole_logs.clear();
+    printf("All moles stopped\n");
 }
 
 /*
  * Toggles whether or not mole clients are active
  */
-void MainWindow::on_toggleMole_clicked()
-{
-  int ret = system("pkill mole");
+void MainWindow::on_toggleMole_clicked() {
+  saveConfig();
+  stop_all_moles();
 
-  if (ret < 0)
-  {
-    QMessageBox::information(
-      this,
-      tr("Guacamole!"),
-      tr("Couldn't kill mole."));
-  }
-
-  if (mole_active)
-  {
+  if (mole_active) {
+    // unfreeze the UI
     unfreeze();
-    data_incoming = 1;
-  }
-  else
-  {
+  } else {
+    // ensure there is a primary link selected before doing anything
+    if (ui->linkSelect->count() == 0) {
+        QMessageBox::warning(this,"No Link Selected","No primary link selected\nPlease make a linklist(s) selection and then select primary link.");
+        return;
+    }
+
+    // freeze the UI
     freeze();
+
+    // start moles
     for (int i=0;i<ui->linkSelect->count();i++) start_a_mole(i);
 
-    if (ui->linkSelect->count() == 0) QMessageBox::warning(this,"No Link Selected","No primary link selected\nPlease make a linklist(s) selection and then select primary link.");
-
+    // establish symlinks
     on_linkSelect_currentIndexChanged(ui->linkSelect->currentText());
-    //qDebug(ui->linkSelect->currentText().toLatin1());
 
+    // show helper functions, if necessary
     options->show_helpers();
-
-    data_incoming = 1;
-    logend = time(0);
   }
 
-  mole_active = 1-mole_active;
-  cfg.active = mole_active;
+  // toggle
+  mole_active = !mole_active;
 }
 
-/*
- * Populates the linklist selector based on the linklists chosen from
- * the main linklist list widget.
- */
-void MainWindow::on_multiLinkSelect_itemSelectionChanged()
-{
-  ui->linkSelect->clear();
-
-  QList<QListWidgetItem *> items = ui->multiLinkSelect->selectedItems();
-  foreach(QListWidgetItem * T, items)
-  {
-    ui->linkSelect->addItem(T->text());
-  }
-}
 
 /*
  * Forms symlinks for a given linklist when the option is changed
@@ -796,11 +612,10 @@ void MainWindow::on_multiLinkSelect_itemSelectionChanged()
  */
 void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
 {
-
   if (arg1.length() == 0) return;
 
   QString aname = arg1;
-  QString linkname = QString(configdir)+"/"+aname+".lnk";
+  QString linkname = QString(moledir)+"/"+aname+".lnk";
 
   QByteArray ba = linkname.toLatin1();
 
@@ -811,38 +626,14 @@ void MainWindow::on_linkSelect_currentIndexChanged(const QString &arg1)
   {
     printf("Symlink failed (%s->%s)\n",masterlink,ba.data());
   }
-
-  aname = arg1;
-  linkname = QString(configdir)+"/"+aname+".log";
-  ba = linkname.toLatin1();
-
-  printf("%s -> %s\n",masterloglink,ba.data());
-
-  unlink(masterloglink);
-  if (symlink(ba.data(),masterloglink) < 0)
-  {
-    printf("Symlink failed (%s->%s)\n",masterloglink,ba.data());
-  }
-}
-void MainWindow::on_remoteHost_activated(const int &arg1)
-{
-  QString hostname = ui->remoteHost->itemText(arg1).split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
-
-  if (arg1 == (ui->remoteHost->count()-1)) // last item is the custom item
-  {
-    QString thehost = hostname;
-    bool ok;
-    hostname = QInputDialog::getText(this, "Choose Remote Host", "What remote host should mole connect to?", QLineEdit::Normal, thehost, &ok);
-    hostname += SELECTION_APPEND_TEXT;
-    ui->remoteHost->setItemText(arg1,hostname);
-  }
-
-  change_remote_host(hostname);
+  // force dance check
+  logend = 0;
 }
 
-
-void MainWindow::change_remote_host(const QString &arg)
+bool MainWindow::change_remote_host(const QString &arg)
 {
+  bool connected = false;
+
   QString hostname = arg.split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0];
   struct TCPCONN tcpconn;
   strcpy(tcpconn.ip,hostname.toLatin1().data());
@@ -852,46 +643,48 @@ void MainWindow::change_remote_host(const QString &arg)
   int numlink = 0;
 
   num_linkfile = 0;
-  //for (int i=0;i<ui->multiLinkSelect->count();i++) ui->multiLinkSelect->takeItem(i);
-  ui->multiLinkSelect->clear();
+  QStringList storedLinkSelect = QStringList(linkSelect);
 
+  ui->multiLinkSelect->clear();
 
   printf("Attempting to connect to %s...\n", tcpconn.ip);
   if ((numlink = request_server_archive_list(&tcpconn,names)) > 0)// made a connection with the server
   {
     printf("Got server list\n");
-    int numactive = 0;
 
-    //ui->multiLinkSelect->clear();
-    for (int i=0;i<numlink;i++)
+    for (int i=0; i<numlink; i++)
     {
-      bool active = false;
-      unsigned int name_len = strlen(names[i]);
-      unsigned int live_len = strlen(LL_LIVE_SUFFIX);
-      if (name_len >= live_len) {
-          active = !strncmp(names[i]+name_len-live_len, LL_LIVE_SUFFIX, live_len);
-      }
-
-      ui->multiLinkSelect->addItem(names[i]);
-      if (active)
-      {
+      QString name = QString(names[i]);
+      ui->multiLinkSelect->addItem(name);
+      if ((options->auto_live && name.endsWith(options->live_name)) || storedLinkSelect.contains(name)) {
           ui->multiLinkSelect->item(i)->setSelected(true);
-          numactive++;
       }
       num_linkfile++;
     }
+    linkSelect = storedLinkSelect;
+
+    // auto select the active link
+    auto_select_link();
 
     ui->linkDir->setText("Available telemetry streams from "+QString(hostname.data()));
+    connected = true;
   }
   else
   {
-    ui->remoteHost->setCurrentIndex(ui->remoteHost->count()-1);
     QMessageBox::information(
         this,
         tr("Guaca-mole"),
         tr("No archive found.") );
   }
   close_connection(&tcpconn);
+
+  return connected;
+}
+
+void MainWindow::auto_select_link() {
+    int linkIndex = ui->linkSelect->findText(linkItem);
+    if (linkIndex < 0) linkIndex = 0;
+    ui->linkSelect->setCurrentIndex(linkIndex);
 }
 
 void MainWindow::on_actionClose_triggered()
@@ -901,30 +694,26 @@ void MainWindow::on_actionClose_triggered()
 
 void MainWindow::on_actionSlave_to_triggered()
 {
+  return;
+
   bool ok;
   QString thehost;
   QString host = QInputDialog::getText(this, "Choose Master", "What master server should guaca connect to?", QLineEdit::Normal, thehost, &ok);
 
-  if (!ok)
-  {
+  if (!ok) {
     return;
-  }
-  else
-  {
+  } else {
     QByteArray ba = host.toLatin1();
     const char *c_str2 = ba.data();
     strcpy(gnd_ip,c_str2);
-    servermode = 1;
+    servermode = true;
     while (syncstate == 0) QTest::qWait(200);
-    if (syncstate > 0)
-    {
+    if (syncstate > 0) {
       QMessageBox::information(this,"Guaca is slaved","Guaca slaved to \""+host+"\"...",QMessageBox::Cancel);
-      servermode = 0;
-    }
-    else
-    {
+      servermode = false;
+    } else {
       QMessageBox::warning(this,"Guaca is not slaved","Could not connect to \""+host+"\".",QMessageBox::Cancel);
-      servermode = 0;
+      servermode = false;
     }
   }
 }
@@ -962,4 +751,83 @@ void MainWindow::on_actionPurge_old_data_triggered()
           tr("Couldn't clear archived data."));
         }
     }
+}
+
+int MainWindow::add_a_host(const QString &thehost)
+{
+    int index = ui->hosts->count()-1;
+
+    int existing_index = ui->hosts->findText(thehost);
+    if (existing_index < 0) {
+        // add the new host
+        ui->hosts->insertItem(index, thehost);
+        return index;
+    } else {
+        return existing_index;
+    }
+}
+
+void MainWindow::on_hosts_activated(int index)
+{
+    bool reconnect = host_index != index;
+    bool newitem = false;
+
+    // the last item was selected, which is the add host option
+    if (index == (ui->hosts->count()-1)) {
+      bool ok;
+      QString thehost = QInputDialog::getText(this, "Add remote host", "What remote host should mole connect to?", QLineEdit::Normal, NULL, &ok);
+      if (ok) {
+          newitem = add_a_host(thehost) == index;
+          reconnect = true;
+      } else {
+          // return to previously selected
+          ui->hosts->setCurrentIndex(host_index);
+          reconnect = false;
+      }
+    }
+    // reconnect to the server if host has actually changed
+    if (reconnect) {
+        if (change_remote_host(ui->hosts->itemText(index))) {
+            host_index = index;
+            saveConfig();
+        } else if (newitem) {
+            ui->hosts->removeItem(index);
+            change_remote_host(ui->hosts->itemText(host_index));
+        }
+        ui->hosts->setCurrentIndex(host_index);
+    }
+}
+
+void MainWindow::on_actionClear_remote_hosts_triggered()
+{
+    while (ui->hosts->count() > 2) {
+        ui->hosts->removeItem(1);
+    }
+    host_index = 1;
+    on_hosts_activated(1);
+}
+
+void MainWindow::on_linkSelect_activated(const QString &arg1)
+{
+    linkItem = arg1;
+}
+
+/*
+ * Populates the linklist selector based on the linklists chosen from
+ * the main linklist list widget.
+ */
+
+void MainWindow::on_multiLinkSelect_itemSelectionChanged()
+{
+    ui->linkSelect->clear();
+    linkSelect.clear();
+
+    QList<QListWidgetItem *> items = ui->multiLinkSelect->selectedItems();
+    foreach(QListWidgetItem * T, items)
+    {
+      ui->linkSelect->addItem(T->text());
+      linkSelect << T->text();
+    }
+
+    auto_select_link();
 }

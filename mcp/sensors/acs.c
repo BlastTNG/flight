@@ -456,9 +456,9 @@ void store_200hz_acs(void)
     static channel_t* ifRollgy2Addr;
     static channel_t* ifYawgy2Addr;
 
-    float gy_ifel;
-    float gy_ifroll;
-    float gy_ifyaw;
+    static float gy_ifel, gy_ifel_calc;
+    static float gy_ifroll, gy_ifroll_calc;
+    static float gy_ifyaw, gy_ifyaw_calc;
     static channel_t* ifel_gy_addr;
     static channel_t* ifroll_gy_addr;
     static channel_t* ifyaw_gy_addr;
@@ -470,6 +470,7 @@ void store_200hz_acs(void)
     static channel_t* gyro_valid_addr[2][3];
     static uint32_t gyro_valid_count[2][3] = {{0}};
     static uint32_t gyro_valid_set[2][3] = {{0}};
+    static uint32_t gyro_zero_count[3] = {0};
 
     static int firsttime = 1;
     if (firsttime) {
@@ -511,12 +512,33 @@ void store_200hz_acs(void)
     SET_FLOAT(ifRollgy2Addr, ifroll_gy2);
     SET_FLOAT(ifYawgy2Addr, ifyaw_gy2);
 
-    gy_ifroll= gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1
-             + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
-    gy_ifyaw = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1
-             + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
-    gy_ifel  = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1
-             + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
+    gy_ifroll_calc = gy_inv[gymask][0][0]*ifroll_gy1 + gy_inv[gymask][0][1]*ifroll_gy2 + gy_inv[gymask][0][2]*ifyaw_gy1
+                   + gy_inv[gymask][0][3]*ifyaw_gy2 + gy_inv[gymask][0][4]*ifel_gy1 + gy_inv[gymask][0][5]*ifel_gy2;
+    gy_ifyaw_calc  = gy_inv[gymask][1][0]*ifroll_gy1 + gy_inv[gymask][1][1]*ifroll_gy2 + gy_inv[gymask][1][2]*ifyaw_gy1
+                   + gy_inv[gymask][1][3]*ifyaw_gy2 + gy_inv[gymask][1][4]*ifel_gy1 + gy_inv[gymask][1][5]*ifel_gy2;
+    gy_ifel_calc   = gy_inv[gymask][2][0]*ifroll_gy1 + gy_inv[gymask][2][1]*ifroll_gy2 + gy_inv[gymask][2][2]*ifyaw_gy1
+                   + gy_inv[gymask][2][3]*ifyaw_gy2 + gy_inv[gymask][2][4]*ifel_gy1 + gy_inv[gymask][2][5]*ifel_gy2;
+
+    // Handle zero readings
+    float * gy_if_calc[3] = {&gy_ifroll_calc, &gy_ifyaw_calc, &gy_ifel_calc};
+    float * gy_if[3] = {&gy_ifroll, &gy_ifyaw, &gy_ifel};
+    for (int i = 0; i < 3; i++) {
+        if (*gy_if_calc[i] == 0.0) {
+            if (gyro_zero_count[i] < 400) {
+                // tentative zero
+                gyro_zero_count[i]++;
+            } else {
+                // true zero (i.e. powered off), so report it
+                *gy_if[i] = *gy_if_calc[i];
+            }
+        } else {
+            // got a non-zero reading, so report as such
+            *gy_if[i] = *gy_if_calc[i];
+            gyro_zero_count[i] = 0;
+        }
+    }
+
+
     SET_FLOAT(ifel_gy_addr, gy_ifel);
     SET_FLOAT(ifroll_gy_addr, gy_ifroll);
     SET_FLOAT(ifyaw_gy_addr, gy_ifyaw);
@@ -1068,6 +1090,7 @@ void store_5hz_acs(void)
     static channel_t* latAddr;
     static channel_t* lonAddr;
     static channel_t* lstAddr;
+    static channel_t* elNullAddr;
     static channel_t* azNullAddr;
     static channel_t* azMagNAddr;
     static channel_t* azRawMagNAddr;
@@ -1155,6 +1178,7 @@ void store_5hz_acs(void)
     /* trim fields */
     static channel_t *trimClinAddr;
     static channel_t *trimEncMotorAddr;
+    static channel_t *trimElNullAddr;
     static channel_t *trimNullAddr;
     static channel_t *trimMagNAddr;
     static channel_t *trimMagSAddr;
@@ -1278,6 +1302,7 @@ void store_5hz_acs(void)
         calIMinPssAddr = channels_find_by_name("cal_imin_pss");
         sigmaMagNAddr = channels_find_by_name("sigma_mag1");
         sigmaMagSAddr = channels_find_by_name("sigma_mag2");
+        elNullAddr = channels_find_by_name("el_null");
         azNullAddr = channels_find_by_name("az_null");
         azSunAddr = channels_find_by_name("az_sun");
         elSunAddr = channels_find_by_name("el_sun");
@@ -1346,6 +1371,7 @@ void store_5hz_acs(void)
 
         trimClinAddr = channels_find_by_name("trim_clin");
         trimEncMotorAddr = channels_find_by_name("trim_motor_enc");  // This should be added as a channel
+        trimElNullAddr = channels_find_by_name("trim_el_null");
         trimNullAddr = channels_find_by_name("trim_null");
         trimMagNAddr = channels_find_by_name("trim_mag1");
         trimMagSAddr = channels_find_by_name("trim_mag2");
@@ -1502,6 +1528,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(azSunAddr, PointingData[i_point].sun_az);
     SET_SCALED_VALUE(elSunAddr, PointingData[i_point].sun_el);
 
+    SET_SCALED_VALUE(elNullAddr, PointingData[i_point].null_el);
     SET_SCALED_VALUE(azNullAddr, PointingData[i_point].null_az);
 
     SET_SCALED_VALUE(hwprCalAddr, CommandData.Cryo.calib_hwpr);
@@ -1513,6 +1540,7 @@ void store_5hz_acs(void)
     SET_SCALED_VALUE(sigmaClinAddr, PointingData[i_point].clin_sigma);
     SET_SCALED_VALUE(trimClinAddr, CommandData.clin_el_trim);
 
+    SET_SCALED_VALUE(trimElNullAddr, CommandData.null_el_trim);
     SET_SCALED_VALUE(trimNullAddr, CommandData.null_az_trim);
 
     SET_SCALED_VALUE(threshAtrimAddr, CommandData.autotrim_thresh);

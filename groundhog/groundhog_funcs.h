@@ -34,7 +34,7 @@ int groundhog_check_for_fileblocks(linklist_t * ll, char *);
 int groundhog_unpack_fileblocks(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
                                 uint8_t * local_allframe, char * filename_str, char * disp_str, 
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags);
-int groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
+int64_t groundhog_process_and_write(linklist_t * ll, unsigned int transmit_size, uint8_t * compbuffer,
                                 uint8_t * local_allframe, char * filename_str, char * disp_str,
                                 linklist_rawfile_t ** ll_rawfile, unsigned int flags);
 

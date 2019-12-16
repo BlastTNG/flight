@@ -21,7 +21,7 @@
  * 59 Temple Place, Suite 330, Boston,          MA  02111-1307  USA
  *
  * History:
- * Created on: May 5, 2016 by seth
+ * Created on: May 5, 2016 by ian
  */
 
 
@@ -616,6 +616,10 @@ static int initialized(void) {
     if (state[4].initialized) {
         // blast_info("a labjack was seen");
         return 1;
+    }
+    if (state[10].initialized) {
+        // blast_info("a labjack was seen");
+        return 1;
     } else {
         // blast_info("no labjack was seen");
         return 0;
@@ -625,23 +629,33 @@ static int initialized(void) {
 void labjack_choose_execute(void) {
     int init = initialized();
     static bool has_warned = false;
+    // blast_info("set_q = %d, init = %d", CommandData.Labjack_Queue.set_q, init);
     if (CommandData.Labjack_Queue.set_q == 1 && init) {
         // blast_info("setting cmd queue executor");
         if (state[0].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[0] = 1;
+            blast_info("Labjack 1 is executing the command queue");
         } else if (state[1].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[1] = 1;
+            blast_info("Labjack 2 is executing the command queue");
         } else if (state[2].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[2] = 1;
+            blast_info("Labjack 3 is executing the command queue");
         } else if (state[3].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[3] = 1;
+            blast_info("Labjack 4 is executing the command queue");
         } else if (state[4].connected == 1) {
             CommandData.Labjack_Queue.set_q = 0;
             CommandData.Labjack_Queue.which_q[4] = 1;
+            blast_info("Labjack 5 is executing the command queue");
+        } else if (state[9].connected == 1) {
+        CommandData.Labjack_Queue.set_q = 0;
+        CommandData.Labjack_Queue.which_q[9] = 1;
+        blast_info("Labjack 10 is executing the command queue");
         } else {
             if (!has_warned) blast_info("no queue selected, trying again every 1s");
             has_warned = true;
@@ -656,6 +670,12 @@ void set_execute(int which) {
     CommandData.Labjack_Queue.which_q[2] = 0;
     CommandData.Labjack_Queue.which_q[3] = 0;
     CommandData.Labjack_Queue.which_q[4] = 0;
+    CommandData.Labjack_Queue.which_q[5] = 0;
+    CommandData.Labjack_Queue.which_q[6] = 0;
+    CommandData.Labjack_Queue.which_q[7] = 0;
+    CommandData.Labjack_Queue.which_q[8] = 0;
+    CommandData.Labjack_Queue.which_q[9] = 0;
+    CommandData.Labjack_Queue.which_q[10] = 0;
     CommandData.Labjack_Queue.which_q[which] = 1;
 }
 
@@ -752,6 +772,7 @@ void *labjack_cmd_thread(void *m_lj) {
 		int qstate = CommandData.Labjack_Queue.which_q[m_state->which];
 		CommandData.Labjack_Queue.which_q[m_state->which] = 0;
 		if (qstate) CommandData.Labjack_Queue.set_q = 1;
+        if (qstate) CommandData.Labjack_Queue.lj_q_on = 0;
 
     // close the modbus
     m_state->comm_stream_state = 0;

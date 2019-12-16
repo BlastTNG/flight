@@ -33,6 +33,7 @@
 #include "mcp_sched.h"
 #include "roach.h"
 #include "pointing_struct.h"
+#include "microscroll.h"
 
 #define AXIS_VEL      0
 #define AXIS_POSITION 1
@@ -73,19 +74,6 @@
 #define HEAT_CALIBRATOR      0x0040
 #define HEAT_HWPR_POS        0x0080
 
-#define LS_CLOSED      0x0002
-#define LS_DRIVE_OFF   0x0004
-#define LS_POT_RAIL    0x0008  // now defunct
-#define LS_DRIVE_EXT   0x0010
-#define LS_DRIVE_RET   0x0020
-#define LS_DRIVE_STP   0x0040
-#define LS_DRIVE_JIG   0x0080  // now defunct
-#define LS_DRIVE_UNK   0x0100
-#define LS_EL_OK       0x0200
-#define LS_IGNORE_EL   0x0400
-#define LS_DRIVE_FORCE 0x0800
-#define LS_DRIVE_MASK  0x09F4
-
 /* latching relay pulse length in 200ms slow frames */
 #define LATCH_PULSE_LEN	 2
 /* time (slow frames) to keep power off when power cycling devices */
@@ -115,13 +103,13 @@ struct PivGainStruct {
     double F; // Current offset to overcome static friction.
 };
 
-#define LS_OPEN        0x0001
-#define LS_CLOSED      0x0002
-#define LS_DRIVE_OFF   0x0004
+#define LS_OPEN        0x0001  // Set => Lock is OPEN
+#define LS_CLOSED      0x0002  // Set => Lock is CLOSED
+#define LS_DRIVE_OFF   0x0004  // Set => Drive is OFF or NOT MOVING
 #define LS_POT_RAIL    0x0008  // now defunct
-#define LS_DRIVE_EXT   0x0010
-#define LS_DRIVE_RET   0x0020
-#define LS_DRIVE_STP   0x0040
+#define LS_DRIVE_EXT   0x0010  // Set => Drive is extending
+#define LS_DRIVE_RET   0x0020  // Set => Drive is retracting
+#define LS_DRIVE_STP   0x0040  // This is never set. No idea what this is.
 #define LS_DRIVE_JIG   0x0080  // now defunct
 #define LS_DRIVE_UNK   0x0100
 #define LS_EL_OK       0x0200
@@ -280,6 +268,8 @@ typedef struct {
   uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   uint16_t potvalve_min_tighten_move;
+  uint16_t aalborg_valve_goal[N_AALBORG_VALVES];
+  float aalborg_speed;
   valve_state_t valve_goals[2];
   int valve_stop[2];
   uint16_t valve_vel, valve_move_i, valve_hold_i, valve_acc;
@@ -297,9 +287,20 @@ typedef struct {
   int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed, pot_forced;
   float dac_value;
   float tcrit_fpa;
-  uint16_t counter, counter_max;
+  uint32_t counter, counter_max;
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
+
+typedef struct {
+    int go, just_received, no_pulse;
+    uint16_t length;
+} ir_cmds_t;
+
+typedef struct {
+    float supply_24va, supply_24vb;
+    float relay_12v_on, relay_12v_off;
+    float supply_12v;
+} microscroll_control_t;
 
 typedef struct {
   float of_1_on, of_2_on, of_3_on, of_4_on, of_5_on, of_6_on, of_7_on, of_8_on;
@@ -325,7 +326,7 @@ typedef struct {
 
 typedef struct {
     uint16_t lj_q_on;
-    uint16_t which_q[5];
+    uint16_t which_q[11];
     uint16_t set_q;
 } labjack_queue_t;
 
@@ -440,6 +441,8 @@ typedef struct {
     bool fix_el;
     bool fix_piv;
     bool fix_hwpr;
+    bool have_commutated_rw;
+    bool rw_commutate_next_ec_reset;
 } ec_devices_struct_t;
 
 typedef struct {
@@ -569,6 +572,7 @@ struct CommandDataStruct {
   double clin_el_trim;
   double enc_motor_el_trim;
   double null_az_trim;
+  double null_el_trim;
   double mag_az_trim[2];
   double pss_az_trim;
   double dgps_az_trim;
@@ -603,6 +607,8 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+  ir_cmds_t IRsource;
+  microscroll_control_t Microscroll;
 
   labjack_queue_t Labjack_Queue;
 

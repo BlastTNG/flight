@@ -218,20 +218,12 @@ void udp_store_to_structure(roach_handle_data_t* m_roach_udp, data_udp_packet_t*
 {
     static uint64_t packet_count = 0;
     static uint64_t blksize = 0;
-    data_udp_packet_t* local_packet;
     if (m_roach_udp->first_packet) {
         // blast_info("checksum = %i, pps_count = %i, clock_count = % i, packet_count = %i",
         //  m_packet->checksum, m_packet->pps_count, m_packet->clock_count, m_packet->packet_count);
-        // TODO(laura): Check to make sure that this syntax is OK.  It seems to work but would
-        // local packet not be deleted at the end of the call?
-    	for (int i = 0; i < 3; i++) {
-            local_packet = &m_roach_udp->last_pkts[i];
-    	    local_packet = balloc(fatal, sizeof(*m_packet) + ROACH_UDP_LEN);
-        }
-        blast_info("roach%i: Allocated packet structures of size %lu", m_roach_udp->which, sizeof(*m_packet));
-        m_roach_udp->first_packet = FALSE;
         blksize = ((uint64_t) (&(m_packet->status_reg)))+sizeof(m_packet->status_reg)
                    -((uint64_t) m_packet);
+        m_roach_udp->first_packet = FALSE;
     }
     /* if (packet_count < 100) {
         blast_info("roach%i: Write index = %i", m_roach_udp->which, m_roach_udp->index);
@@ -268,7 +260,7 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
     if (udperr > 0) return;
     udp_store_to_structure(m_roach_udp, m_packet);
     m_roach_udp->have_warned = 0;
-        if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
+    if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) {
         debug_count++;
     }
 }
@@ -280,6 +272,8 @@ void roach_process_stream(roach_handle_data_t *m_roach_udp, data_udp_packet_t *m
 void poll_socket(void)
 {
     init_roach_socket();
+    static data_udp_packet_t m_packet;
+
     int debug_count = 0;
     // blast_info("Roach socket file descriptor is %i", roach_sock_fd);
     if (!roach_sock_fd) {
@@ -297,17 +291,18 @@ void poll_socket(void)
     uint8_t buf[ROACH_UDP_BUF_LEN];
 
     while (1) {
-        usleep(10);
-        data_udp_packet_t m_packet;
-        rv = poll(ufds, 1, 0.002); // Wait for event, 2 ns timeout
+        rv = poll(ufds, 1, -1);     // Wait for event, block forever (timeout == -1).
+                                    // timeout == 0 means don't block at all.
+                                    // timeout == n means block for n milliseconds.
         if (rv == -1) {
             blast_err("Roach socket poll error");
         } else {
             if (ufds[0].revents & POLLIN) { // check for events on socket
                 if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("roach_udp poll event!");
-                uint32_t bytes_read = recv(roach_sock_fd, buf,
-                ROACH_UDP_BUF_LEN, 0);
+                uint32_t bytes_read = recv(roach_sock_fd, buf, ROACH_UDP_BUF_LEN, 0);
+
                 if (debug_count < ROACH_UDP_DEBUG_PRINT_COUNT) blast_info("bytes read = %u!", bytes_read);
+
                 // Don't even try to read the header if we read less than the size of a udp header struct.
                 if (bytes_read < (sizeof(struct udphdr) + sizeof(struct iphdr) + sizeof(struct ethhdr))) {
                     blast_err("We read only %ud", bytes_read);

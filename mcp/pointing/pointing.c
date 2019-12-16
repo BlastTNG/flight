@@ -1200,6 +1200,13 @@ void Pointing(void)
         .offset_gy = OFFSET_GY_IFEL, // gy offset
         .FC = 0.0001, // filter constant
     };
+    static struct ElSolutionStruct NullEl = {
+        .variance = 360.0 * 360.0,
+        .samp_weight = 1.0 / M2DV(6),
+        .sys_var = M2DV(6000), // systematic variance
+        .offset_gy = OFFSET_GY_IFEL, // gy offset
+        .FC = 0.0001, // filter constant
+    };
     static struct AzSolutionStruct NullAz = {
         .angle = 91.0,
         .variance = 360.0 * 360.0,
@@ -1295,6 +1302,7 @@ void Pointing(void)
         ClinEl.trim = CommandData.clin_el_trim;
         EncMotEl.trim = CommandData.enc_motor_el_trim;
         NullAz.trim = CommandData.null_az_trim;
+        NullEl.trim = CommandData.null_el_trim;
         MagAzN.trim = CommandData.mag_az_trim[0];
         MagAzS.trim = CommandData.mag_az_trim[1];
         PSSAz.trim = CommandData.pss_az_trim;
@@ -1304,6 +1312,8 @@ void Pointing(void)
         init_fir(ClinEl.fs, FIR_LENGTH, 0, 0);
         EncMotEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(EncMotEl.fs, FIR_LENGTH, 0, 0);
+        NullEl.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
+        init_fir(NullEl.fs, FIR_LENGTH, 0, 0);
         MagElN.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
         init_fir(MagElN.fs, FIR_LENGTH, 0, 0);
         MagElS.fs = (struct FirStruct *) balloc(fatal, sizeof(struct FirStruct));
@@ -1349,10 +1359,6 @@ void Pointing(void)
 
     i_point_read = GETREADINDEX(point_index);
 
-//  Only add the encoder solution if we are getting data from the El drive.  Or if we
-//  are not InCharge and getting shared El data from the other FCC.
-    enc_motor_ok = enc_motor_ready;
-
     // If we are not in charge then we need to read some pointing data from the ICC
 //     if (j % 500 == 0) {
 //         blast_info("Before sharing: ISCAz.angle %f, ISCEl.angle %f, ISCEl.variance %f"
@@ -1367,6 +1373,10 @@ void Pointing(void)
     if ((!InCharge) && PointingData[i_point_read].recv_shared_data) {
          ReadICCPointing(read_shared_pdata);
     }
+
+//  Only add the encoder solution if we are getting data from the El drive.  Or if we
+//  are not InCharge and getting shared El data from the other FCC.
+    enc_motor_ok = enc_motor_ready;
 
     // Make aristotle correct
     R = 15.0 / 3600.0;
@@ -1481,10 +1491,14 @@ void Pointing(void)
     EvolveElSolution(&MagElS, RG.ifel_gy,
             PointingData[i_point_read].offset_ifel_gy,
             mag_el_s, mag_ok_s);
+    EvolveElSolution(&NullEl, RG.ifel_gy,
+            PointingData[i_point_read].offset_ifel_gy,
+            0, 0);
     if (CommandData.use_elmotenc) {
         AddElSolution(&ElAtt, &EncMotEl, 1);
     }
 
+    AddElSolution(&ElAtt, &NullEl, 1);
     if (CommandData.use_elclin) {
         AddElSolution(&ElAtt, &ClinEl, 1);
     }
@@ -1495,7 +1509,6 @@ void Pointing(void)
     if (CommandData.use_xsc1) {
         AddElSolution(&ElAtt, &OSCEl, 0);
     }
-
     if (CommandData.el_autogyro)
         PointingData[point_index].offset_ifel_gy = ElAtt.offset_gy;
     else
@@ -1621,7 +1634,7 @@ void Pointing(void)
     PointingData[point_index].mag_sigma[1] = sqrt(MagAzS.variance + MagAzS.sys_var);
     PointingData[point_index].dgps_az = DGPSAz.angle;
     PointingData[point_index].dgps_sigma = sqrt(DGPSAz.variance + DGPSAz.sys_var);
-
+    PointingData[point_index].null_el = NullEl.angle;
     PointingData[point_index].null_az = NullAz.angle;
 
     // Added 22 June 2010 GT
@@ -1690,6 +1703,7 @@ void Pointing(void)
     if (NewAzEl.fresh == -1) {
         ClinEl.trim = 0.0;
         EncMotEl.trim = 0.0;
+        NullEl.trim = 0.0;
         NullAz.trim = 0.0;
         MagAzN.trim = 0.0;
         MagAzS.trim = 0.0;
@@ -1719,6 +1733,13 @@ void Pointing(void)
         else if (trim_change < -NewAzEl.rate)
             trim_change = -NewAzEl.rate;
         NullAz.trim += trim_change;
+
+        trim_change = (NewAzEl.el - NullEl.angle) - NullEl.trim;
+        if (trim_change > NewAzEl.rate)
+            trim_change = NewAzEl.rate;
+        else if (trim_change < -NewAzEl.rate)
+            trim_change = -NewAzEl.rate;
+        NullEl.trim += trim_change;
 
         trim_change = (NewAzEl.az - MagAzN.angle) - MagAzN.trim;
         if (trim_change > NewAzEl.rate)
@@ -1754,6 +1775,7 @@ void Pointing(void)
     } else {
         ClinEl.trim = CommandData.clin_el_trim;
         EncMotEl.trim = CommandData.enc_motor_el_trim;
+        NullEl.trim = CommandData.null_el_trim;
         NullAz.trim = CommandData.null_az_trim;
         MagAzN.trim = CommandData.mag_az_trim[0];
         MagAzS.trim = CommandData.mag_az_trim[1];
@@ -1765,6 +1787,7 @@ void Pointing(void)
 
     CommandData.clin_el_trim = ClinEl.trim;
     CommandData.enc_motor_el_trim = EncMotEl.trim;
+    CommandData.null_el_trim = NullEl.trim;
     CommandData.null_az_trim = NullAz.trim;
     CommandData.mag_az_trim[0] = MagAzN.trim;
     CommandData.mag_az_trim[1] = MagAzS.trim;

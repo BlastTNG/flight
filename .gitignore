@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-build
-*.swp
-mole
-*.o
-=======
 **~
 **.project
 **.cproject
@@ -26,6 +20,11 @@ qrc_*
 ui_*
 cow/cow
 cow/Makefile
+cow/.qmake.stash
+cow/cow-icon.png
+cow/cow.ico
+cow/data/cbn_bit.herd
+cow/data/spider.herd
 owl/other_makefile/
 owl/owl
 owl/Makefile
@@ -72,4 +71,5 @@ scripts_gse/sonos.log
 sched_upload/sanity
 sched_upload/sched_upload
 sched_upload/test.cs
->>>>>>> 35929c76dc5c7e3424043557c37a740b858eeb11
+
+push_to_github.sh

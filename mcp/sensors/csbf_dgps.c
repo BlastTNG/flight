@@ -45,6 +45,7 @@
 
 #define CSBFGPSCOM "/dev/ttyCSBFGPS"
 
+void nameThread(const char*);
 ph_serial_t *csbf_gps_comm = NULL;
 struct DGPSAttStruct CSBFGPSAz = {.az = 0.0, .att_ok = 0};
 
@@ -167,6 +168,55 @@ static void process_gngga(const char *m_data) {
     }
 }
 
+static void process_gpgga(const char *m_data) {
+    char lat_ns;
+    char lon_ew;
+    int lat, lon;
+    double lat_mm;
+    double lon_mm;
+    float age_gps;
+    static int first_time = 1;
+    static int have_warned = 0;
+//    blast_info("Starting process_gpgga");
+    if (sscanf(m_data,
+            "$GPGGA,"
+                    "%*f,"      // UTC hhmmss.ss
+                    "%2d%lf,%c,"  // Latitude ddmm.mmmmm N/S
+                    "%3d%lf,%c,"  // Longitude dddmm.mmmmm E/W
+                    "%d,"      // GPS quality: 0 -> no fix, 1 -> gps fix, 2 differential fix
+                    "%d,"      // Number of satellites
+                    "%*f,"      // Horizontal Dilution of precision
+                    "%lf,M,"       // Altitude
+                    "%*f,M,"      // Geoidal separation
+                    "%f,",       // Age in seconds of GPS data
+            &lat, &lat_mm, &lat_ns,
+            &lon, &lon_mm, &lon_ew,
+            &(CSBFGPSData.quality), &(CSBFGPSData.num_sat),
+            &(CSBFGPSData.altitude), &age_gps) >= 9) {
+            CSBFGPSData.latitude = (double)lat + lat_mm*GPS_MINS_TO_DEG;
+            CSBFGPSData.longitude = (double)lon + lon_mm*GPS_MINS_TO_DEG;
+            if (lat_ns == 'S') CSBFGPSData.latitude *= -1.0;
+            if (lon_ew == 'W') CSBFGPSData.longitude *= -1.0;
+        CSBFGPSData.isnew = 1;
+        have_warned = 0;
+         if (first_time) {
+             blast_info("Recieved first GPGGA packet:");
+             blast_info("Read GPGGA: lat = %lf, lon = %lf, qual = %d, num_sat = %d, alt = %lf, age =%f",
+                   CSBFGPSData.latitude, CSBFGPSData.longitude, CSBFGPSData.quality,
+                   CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+                   first_time = 0;
+        }
+    } else {
+        if (!have_warned) {
+            blast_info("Read error: %s", m_data);
+            blast_info("Read GPGGA: lat = %d%lf%c, lon = %d%lf%c, qual = %d, num_sat = %d, alt = %lf, age =%f",
+                      lat, lat_mm, lat_ns, lon, lon_mm, lon_ew, CSBFGPSData.quality,
+                      CSBFGPSData.num_sat, CSBFGPSData.altitude, age_gps);
+            have_warned = 1;
+        }
+    }
+}
+
 static void process_gnhdt(const char *m_data)
 {
     // Sometimes we don't get heading information.  mcp needs to be able to handle both cases.
@@ -253,7 +303,7 @@ void * DGPSMonitor(void * arg)
         char str[16];
     } nmea_handler_t;
 
-    nmea_handler_t handlers[] = { { process_gngga, "$GNGGA," }, // fix info
+    nmea_handler_t handlers[] = { { process_gpgga, "$GPGGA," }, // fix info
                                   { process_gnhdt, "$GNHDT," }, // date and time
                                   { process_gnzda, "$GNZDA," }, // heading
                                   { NULL, "" } };

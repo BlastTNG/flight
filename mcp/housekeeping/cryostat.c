@@ -714,6 +714,7 @@ static void heating_cycle(void) {
                 CommandData.Cryo.charcoal_hs = 0;
                 cycle_state.heat_delay++;
 		// open pumped pot valve
+				CommandData.Cryo.potvalve_on = 1;
                 CommandData.Cryo.potvalve_goal = opened;
                 blast_info("turning off charcoal hs");
             }
@@ -757,6 +758,7 @@ static void burnoff_cycle(void) {
         }
         // reheats the charcoal if it cools too fast, this has never happened.
         if (cycle_state.tcharcoal > cycle_state.tmin_charcoal) {
+			CommandData.Cryo.potvalve_on = 1;
             CommandData.Cryo.potvalve_goal = closed;
             cycle_state.burning_off = 0;
             cycle_state.cooling = 1;
@@ -771,6 +773,7 @@ static void burnoff_cycle(void) {
         }
         // when the charcoal has had enough time to burn off the he3, close the heat switch and the pumped pot
         if (cycle_state.burning_counter == cycle_state.burning_length) {
+			CommandData.Cryo.potvalve_on = 1;
             CommandData.Cryo.potvalve_goal = closed;
             cycle_state.burning_off = 0;
             // close the pumped pot after the burning off cycle
@@ -809,6 +812,7 @@ static void cooling_cycle(void) {
         if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
+			CommandData.Cryo.potvalve_on = 0;
             // moves the standby mode once we reach the minimum temperature.
             blast_info("Arrays are cool, standby operating mode");
         }
@@ -947,6 +951,7 @@ static void pot_watchdog() {
                 // blast_info("%f", t_he4);
                 if (t_he4 < t_he4_max && open_required == 0) {
                     open_required = 1; // open the pumped pot to fill
+					CommandData.Cryo.potvalve_on = 1;
                     CommandData.Cryo.potvalve_goal = opened;
                     blast_info("watchdog refilling pumped pot");
                 }
@@ -957,6 +962,7 @@ static void pot_watchdog() {
                     open_counter = 0; // reset the counter
                     open_required = 0; // declare no need for open
                     watchdog = 0; // remove from watchdog to prevent reopening
+					CommandData.Cryo.potvalve_on = 1;
                     CommandData.Cryo.potvalve_goal = closed; // close the pot
                     counter = 0; // put back in startup mode
                     t_he4 = 0;

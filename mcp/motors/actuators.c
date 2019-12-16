@@ -50,9 +50,8 @@ double LockPosition(double elevation);	/* commands.c */
 extern int16_t InCharge;		/* tx.c */
 
 /* actuator bus setup paramters */
-#define ACTBUS_CHATTER	EZ_CHAT_ACT    // EZ_CHAT_ACT (normal) | EZ_CHAT_BUS (debugging)
 #define ACT_BUS "/dev/ttyACT"
-#define NACT 10
+#define NACT 9
 
 /* Index for each stepper for structures, name, id */
 #define LOCKNUM 4
@@ -60,11 +59,10 @@ extern int16_t InCharge;		/* tx.c */
 #define SHUTTERNUM 6
 static const char *name[NACT] = {"Actuator #0", "Actuator #1", "Actuator #2",
 				 "Balance Motor", "Lock Motor", HWPR_NAME, "Shutter", "Pot Valve",
-				 "Pump Valve", "Fill Valve"};
+				 "Fill Valve"};
 static const int id[NACT] = {EZ_WHO_S1, EZ_WHO_S2, EZ_WHO_S3,
 			     EZ_WHO_S4, EZ_WHO_S5, EZ_WHO_S6,
-			     EZ_WHO_S7, EZ_WHO_S8, EZ_WHO_S9,
-			     EZ_WHO_S10};
+			     EZ_WHO_S7, EZ_WHO_S8, EZ_WHO_S9};
 
 
 static struct ezbus bus;
@@ -1006,14 +1004,19 @@ static void DoLock(void)
              * cUe -+-(stp)- cFe -(ext)- cXe -(---)- OXe -+-(stp)- OFe ->
              * cRe -'                                OUe -'
              */
+            // Lock is OPEN and Drive is OFF, so done
             if ((lock_data.state & (LS_OPEN | LS_DRIVE_OFF)) == (LS_OPEN | LS_DRIVE_OFF))
                 action = LA_EXIT;
+            // Lock is OPEN and Drive is NOT OFF, so stop it
             else if (lock_data.state & LS_OPEN)
                 action = LA_STOP;
+            // Lock is not OPEN, but is retracting (drive not OFF), so wait.
             else if (lock_data.state & (LS_DRIVE_RET))
                 action = LA_WAIT;
+            // Lock is NOT OPEN and Drive is OFF, so retract
             else if (lock_data.state & LS_DRIVE_OFF)
                 action = LA_RETRACT;
+            // Lock is NOT OPEN and Drive is NOT OFF, so assume stop (not retracting)
             else
                 action = LA_STOP;
         } else if ((CommandData.actbus.lock_goal & 0x7) == (LS_CLOSED | LS_DRIVE_OFF)) {
@@ -1022,24 +1025,34 @@ static void DoLock(void)
              * oU -'         oXE -(stp)-'              CUe -(stp)-+
              *                                         CXe -(stp)-'
              */
+            // Lock is CLOSED and Drive is OFF, so done
             if ((lock_data.state & (LS_CLOSED | LS_DRIVE_OFF)) == (LS_CLOSED | LS_DRIVE_OFF))
                 action = LA_EXIT;
+            // Lock is CLOSED and Drive is NOT OFF, so stop it
             else if (lock_data.state & LS_CLOSED)
                 action = LA_STOP;
+            // Elevation is in a lock position or we are ignoring elevation
             else if ((lock_data.state & LS_EL_OK) || (CommandData.actbus.lock_goal & LS_IGNORE_EL)) { /* el in range */
+                // Doesn't happen since LS_DRIVE_STP is never set
                 if ((lock_data.state & (LS_OPEN | LS_DRIVE_STP)) == (LS_OPEN | LS_DRIVE_STP))
                     action = LA_WAIT;
+                // Lock is not CLOSED, but is extending (drive not OFF), so wait.
                 else if (lock_data.state & LS_DRIVE_EXT)
                     action = LA_WAIT;
+                // Doesn't happen since LS_DRIVE_STP is never set
                 else if (lock_data.state & LS_DRIVE_STP)
                     action = LA_STOP;
+                // Lock is not CLOSED, and Drive is OFF, so extend
                 else if (lock_data.state & LS_DRIVE_OFF)
                     action = LA_EXTEND;
+                // Lock is not CLOSED, and Drive is NOT OFF, so assume stop (not extending)
                 else
                     action = LA_STOP;
+            // Elevation is not in range while we are not ignoring elevation
             } else { /* el out of range */
                 action = (lock_data.state & LS_DRIVE_OFF) ? LA_WAIT : LA_STOP;
             }
+        // Just stop the drive.
         } else if ((CommandData.actbus.lock_goal & 0x7) == LS_DRIVE_OFF) {
             /* ocXe -.
              * ocRe -+-(stp)- ocFe ->
@@ -1524,7 +1537,7 @@ void *ActuatorBus(void *param)
     int is_init = 0;
     int first_time = 1;
     int sf_ok;
-    int valve_arr[3] = {POTVALVE_NUM, PUMPVALVE_NUM, FILLVALVE_NUM};
+    int valve_arr[2] = {POTVALVE_NUM, FILLVALVE_NUM};
 
     // int hwp_pos; // DEBUG PCA
 
@@ -1577,7 +1590,7 @@ void *ActuatorBus(void *param)
             EZBus_SetPreamble(&bus, id[i], HWPR_PREAMBLE);
         } else if (i == POTVALVE_NUM) {
 	    EZBus_SetPreamble(&bus, id[i], POTVALVE_PREAMBLE);
-		} else if ((i == PUMPVALVE_NUM) || (i == FILLVALVE_NUM)) {
+		} else if ((i == FILLVALVE_NUM)) {
 	    EZBus_SetPreamble(&bus, id[i], VALVE_PREAMBLE);
 		} else {
             EZBus_SetPreamble(&bus, id[i], actPreamble(CommandData.actbus.act_tol));
@@ -1683,7 +1696,7 @@ void *ActuatorBus(void *param)
             actuators_init &= ~(0x1 << BALANCENUM);
         }
 
-		for (i = 0; i < 3; i++) {
+		for (i = 0; i < 2; i++) {
 	        if (EZBus_IsUsable(&bus, id[valve_arr[i]])) {
 		    actuators_init |= 0x1 << valve_arr[i];
 	        } else {

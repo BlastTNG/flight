@@ -58,7 +58,15 @@ const char *linklist_names[] = {0};
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[xyzzy + 1] = {
+  {COMMAND(aalborg_enable), "enabling vent aalborg", GR_CRYO},
+  {COMMAND(aalborg_disable), "disabling vent aalborg", GR_CRYO},
+  {COMMAND(pumps_enable), "enabling microscroll pumps", GR_CRYO},
+  {COMMAND(pumps_disable), "disabling microscroll pumps", GR_CRYO},
+  {COMMAND(blue_valve_enable), "enabling blue cycling valve", GR_CRYO},
+  {COMMAND(blue_valve_disable), "disabling blue cycling valve", GR_CRYO},
   {COMMAND(load_curve), "starting load curve", GR_CRYO},
+  {COMMAND(static_ir), "starting hawkeye IR source", GR_CRYO},
+  {COMMAND(stop_ir), "stopping hawkeye IR source", GR_CRYO},
   {COMMAND(reboot_ljcryo1), "rebooting labjack cryo 1", GR_POWER},
   {COMMAND(vtx_xsc0), "Setting video transmitter to XSC0", GR_XSC_MODE | GR_TELEM},
   {COMMAND(vtx_xsc1), "Setting video transmitter to XSC1", GR_XSC_MODE | GR_TELEM},
@@ -270,6 +278,12 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(fill_valve_close), "close fill valve", GR_CRYO | CONFIRM},
   {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
   {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve2_open), "open aalborg valve 2 (connected to pump 2)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve3_open), "open aalborg valve 3 (open to atmposphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve1_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve2_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve3_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -353,6 +367,7 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(read_lo_all), "(All Roaches) Reads current LO frequencies", GR_ROACH},
   {COMMAND(read_pi_temp_all), "(All Roaches) Reads current Pi temp", GR_ROACH},
   {COMMAND(reset_log), "Read the most recent log (clear cache)", GR_MISC},
+  {COMMAND(rw_wake_and_wiggle), "Trigger a wake-and wiggle re-commutation of the reaction wheel motor.", GR_MOTOR},
   {COMMAND(xyzzy), "nothing happens here", GR_MISC}
 };
 
@@ -649,7 +664,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Proportional Gain", 0, CMD_L_MAX, 'd', "G_P_EL"},
       {"Integral Time",     0, 200, 'd', "G_I_EL"},
       {"Derivative Time",   0, 200, 'd', "G_D_EL"},
-      {"Pointing Gain",     0, CMD_L_MAX, 'f', "G_PT_EL"},
+      {"Pointing Gain",     0, CMD_L_MAX, 'd', "G_PT_EL"},
       {"Integral Term Deadband  (mA)",     0, 500, 'f', "G_DB_EL"},
       {"Static Friction offset",   0, 100, 'f', "FRICT_OFF_EL"},
     }
@@ -878,44 +893,44 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(xy_goto), "move the X-Y translation stage to absolute position",
     GR_MISC, 4,
     {
-      {"X destination", 0, 80000, 'l', "X_STAGE"},
-      {"Y destination", 0, 80000, 'l', "Y_STAGE"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
+      {"X destination", 0, 8000000, 'l', "X_STAGE"},
+      {"Y destination", 0, 8000000, 'l', "Y_STAGE"},
+      {"X speed", 0, 100000, 'l', "X_VEL_STAGE"},
+      {"Y speed", 0, 100000, 'l', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_jump), "move the X-Y translation stage to relative position",
     GR_MISC, 4,
     {
-      {"X delta", -80000, 80000, 'l', "0"},
-      {"Y delta", -80000, 80000, 'l', "0"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"}
+      {"X delta", -1000000, 1000000, 'l', "0"},
+      {"Y delta", -1000000, 1000000, 'l', "0"},
+      {"X speed", 0, 100000, 'l', "X_VEL_STAGE"},
+      {"Y speed", 0, 100000, 'l', "Y_VEL_STAGE"}
     }
   },
   {COMMAND(xy_xscan), "scan the X-Y translation stage in X", GR_MISC, 3,
     {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
-      {"delta X", 0, 80000, 'l', "NONE"},
-      {"X speed", 0, 16000, 'i', "X_VEL_STAGE"},
+      {"X center", 0, 8000000, 'l', "X_STAGE"},
+      {"delta X", 0, 4000000, 'l', "NONE"},
+      {"X speed", 0, 1000000, 'l', "X_VEL_STAGE"},
     }
   },
   {COMMAND(xy_yscan), "scan the X-Y translation stage in Y", GR_MISC, 3,
     {
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
-      {"delta Y", 0, 80000, 'l', "NONE"},
-      {"Y speed", 0, 16000, 'i', "Y_VEL_STAGE"},
+      {"Y center", 0, 8000000, 'l', "Y_STAGE"},
+      {"delta Y", 0, 4000000, 'l', "NONE"},
+      {"Y speed", 0, 1000000, 'l', "Y_VEL_STAGE"},
     }
   },
   {COMMAND(xy_raster), "raster the X-Y translation stage", GR_MISC, 7,
     {
-      {"X center", 0, 80000, 'l', "X_STAGE"},
-      {"X Width", 0, 40000, 'i', "NONE"},
-      {"Y center", 0, 80000, 'l', "Y_STAGE"},
-      {"Y Width", 0, 40000, 'i', "NONE"},
-      {"X Velocity", 0, 16000, 'i', "X_VEL_STAGE"},
-      {"Y Velocity", 0, 16000, 'i', "Y_VEL_STAGE"},
-      {"Step Size", 0, 40000, 'i', "NONE"},
+      {"X center", 0, 10000000, 'l', "X_STAGE"},
+      {"X Width", 0, 8000000, 'l', "NONE"},
+      {"Y center", 0, 10000000, 'l', "Y_STAGE"},
+      {"Y Width", 0, 8000000, 'l', "NONE"},
+      {"X Velocity", 0, 5000000, 'l', "X_VEL_STAGE"},
+      {"Y Velocity", 0, 5000000, 'l', "Y_VEL_STAGE"},
+      {"Step Size", 0, 4000000, 'l', "NONE"},
     }
   },
 
@@ -1110,14 +1125,14 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_attens), "Set attenuators", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_conserve), "Set attenuators, conserving total", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"rf_out_level", 0.0, 24.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(set_attens_calc), "Set attenuators with tone power calculation", GR_ROACH, 2,
@@ -1138,14 +1153,14 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(set_attens_all), "Set all attenuators to same values (input/output)", GR_ROACH, 2,
     {
-      {"rf_out_level", 0.0, 31.0, 'd', "NONE"},
-      {"rf_in_level", 0.0, 31.0, 'd', "NONE"},
+      {"rf_out_level", 0.0, 30.0, 'd', "NONE"},
+      {"rf_in_level", 0.0, 30.0, 'd', "NONE"},
     }
   },
   {COMMAND(new_output_atten), "Set only output atten", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"new_out_atten", 0.0, 31.0, 'd', "NONE"}
+      {"new_out_atten", 0.0, 30.0, 'd', "NONE"}
     }
   },
   {COMMAND(show_adc_rms), "Print the ADC rms voltages to the log", GR_ROACH, 1,
@@ -1648,6 +1663,16 @@ struct mcom mcommands[plugh + 2] = {
           {"Labjack to reconnect", 1, 7, 'i', "NONE"},
       }
   },
+  {COMMAND(ir_source_pulse), "Pulsing IR source", GR_CRYO, 1,
+      {
+          {"Length of Pulse (in 5ms steps)", 1, 30000, 'i', "LENGTH_PULSE"},
+      }
+  },
+  {COMMAND(set_cal_timeout), "Setting timeout to cal pulse and resetting counter", GR_CRYO, 1,
+      {
+          {"Length of timeout in seconds", 600, 216000, 'i', "TIMEOUT_LENGTH"},
+      }
+  },
   /***************************************/
   /********* Cryo heat   *****************/
   {COMMAND(send_dac), "turning on dac0 to specified voltage on specified labjack",
@@ -1697,7 +1722,7 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening minimum move size (in encoder units)", GR_CRYO, 1,
     {
-      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_TIGHT_MOVE"}
+      {"Minimum size of a tightening move", 0, 5000, 'i', "TIGHT_MOVE_POTVALVE"}
     }
   },
 
@@ -1722,6 +1747,12 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(valves_set_acc), "Set cryostat valves acceleration", GR_CRYO, 1,
     {
       {"Cryostat valves acceleration", 0, 6000, 'i', "ACC_VALVES"}
+    }
+  },
+
+  {COMMAND(aalborg_set_speed), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 1,
+    {
+      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "ACC_VALVES"}
     }
   },
 
