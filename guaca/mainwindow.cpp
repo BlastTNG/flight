@@ -153,6 +153,10 @@ int generate_linklist_listfiles()
       if (j == num_types) {
         sprintf(listfilename, "%s/%s.lst", archivedir, linklistname);
         type_fds[j] = fopen(listfilename, "w");
+        if (!type_fds[j]) {
+					printf("Unable to open list file %s: %s (errno %d)\n", listfilename, strerror(errno), errno);
+					exit(2);
+				}
         strcpy(type_names[j], linklistname);
         num_types++;
       }
