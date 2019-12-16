@@ -204,8 +204,8 @@ void * lj_connection_handler(void *arg) {
     initialize_labjack_commands(7);
     // initializes an array of voltages for load curves
     init_array();
-    // labjack_networking_init(8, 14, 1);
-    // initialize_labjack_commands(8);
+    labjack_networking_init(9, 14, 1);
+    initialize_labjack_commands(9);
     // switch to this thread for flight
     mult_initialize_labjack_commands(5);
     // labjack_networking_init(10, 14, 1);
@@ -347,6 +347,7 @@ static void mcp_1hz_routines(void)
     share_superframe(master_superframe_buffer);
     labjack_choose_execute();
     auto_cycle_mk2();
+    execute_microscroll_functions();
     // all 1hz cryo monitoring 1 on 0 off
     cryo_1hz(1);
     // out frame monitoring (current loops and thermistors) 1 on 0 off

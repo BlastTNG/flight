@@ -33,7 +33,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    unsigned int mole_active;
+    bool mole_active;
 
 private slots:
     void on_toggleMole_clicked();
@@ -98,12 +98,10 @@ private:
 
     QTimer * _ut, * _ut_listfiles;
     int image_i, inc;
-    FILE * logfile;
-    FILE * statfile;
     char buf[MAXLINELENGTH+5];
     uint64_t prev_size;
-    int logend;
-    int data_incoming;
+    uint64_t logend;
+    bool data_incoming;
     char gnd_ip[128];
     QFuture<void> f1;
 
@@ -111,6 +109,7 @@ private:
     QString linkItem;
     QStringList linkSelect;
     bool has_warned;
+    QString last_msg;
 };
 
 #endif // MAINWINDOW_H

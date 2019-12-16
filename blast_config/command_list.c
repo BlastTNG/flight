@@ -58,6 +58,12 @@ const char *linklist_names[] = {0};
 #define COMMAND(x) (int)x, #x
 
 struct scom scommands[xyzzy + 1] = {
+  {COMMAND(aalborg_enable), "enabling vent aalborg", GR_CRYO},
+  {COMMAND(aalborg_disable), "disabling vent aalborg", GR_CRYO},
+  {COMMAND(pumps_enable), "enabling microscroll pumps", GR_CRYO},
+  {COMMAND(pumps_disable), "disabling microscroll pumps", GR_CRYO},
+  {COMMAND(blue_valve_enable), "enabling blue cycling valve", GR_CRYO},
+  {COMMAND(blue_valve_disable), "disabling blue cycling valve", GR_CRYO},
   {COMMAND(load_curve), "starting load curve", GR_CRYO},
   {COMMAND(static_ir), "starting hawkeye IR source", GR_CRYO},
   {COMMAND(stop_ir), "stopping hawkeye IR source", GR_CRYO},

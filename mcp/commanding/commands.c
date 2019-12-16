@@ -190,6 +190,24 @@ void SingleCommand(enum singleCommand command, int scheduled)
 
     switch (command) {
 #ifndef BOLOTEST
+        case blue_valve_disable:
+            CommandData.Microscroll.supply_12v = 1;
+            break;
+        case blue_valve_enable:
+            CommandData.Microscroll.supply_12v = 0;
+            break;
+        case pumps_enable:
+            CommandData.Microscroll.supply_24va = 0;
+            break;
+        case pumps_disable:
+            CommandData.Microscroll.supply_24va = 1;
+            break;
+        case aalborg_enable:
+            CommandData.Microscroll.supply_24vb = 0;
+            break;
+        case aalborg_disable:
+            CommandData.Microscroll.supply_24vb = 1;
+            break;
         case vtx_xsc1:
             CommandData.vtx_sel[0] = VTX_XSC1;
             CommandData.Relays.video_trans = 1;
@@ -3700,6 +3718,9 @@ void InitCommandData()
     CommandData.Labjack_Queue.which_q[8] = 0;
     CommandData.Labjack_Queue.which_q[9] = 0;
     CommandData.Labjack_Queue.which_q[10] = 0;
+    CommandData.Microscroll.supply_24va = 0;
+    CommandData.Microscroll.supply_24vb = 1;
+    CommandData.Microscroll.supply_12v = 0;
     CommandData.Cryo.load_curve = 0;
     CommandData.Cryo.dac_value = 0;
     CommandData.Cryo.labjack = 0;

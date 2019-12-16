@@ -239,14 +239,14 @@ int load_tone_powers()
         blast_strerror("Could not open %s for reading", rf_tone_power_path);
          for (size_t i = 0; i < 1000; i++) {
             rf_pow_out[i] = -35.0;
-            blast_info("%f", rf_pow_out[i]);
+            // blast_info("%f", rf_pow_out[i]);
         }
         return retval;
     } else {
         blast_info("Loading RF tone powers");
         for (size_t i = 0; i < 1000; i++) {
             if (fscanf(fd, "%lg\n", &rf_pow_out[i]) != EOF) {
-                blast_info("%f", rf_pow_out[i]);
+                // blast_info("%f", rf_pow_out[i]);
             } else {
                 retval = 0;
                 break;
@@ -3963,8 +3963,8 @@ int roach_refit_freqs(roach_state_t *m_roach, int m_on_res)
         return retval;
     }
     blast_info("ROACH%d, Fit sweep complete, calculating new freqs", m_roach->which);
-    blast_tmp_sprintf(py_command, "python %s %s %d", refit_freqs_script,
-      m_roach->last_targ_path, m_on_res);
+    blast_tmp_sprintf(py_command, "python %s %s %d %d", refit_freqs_script,
+      m_roach->last_targ_path, m_roach->which, m_on_res);
     blast_info("Command: %s", py_command);
     pyblast_system(py_command);
     // system(py_command);
@@ -6576,10 +6576,10 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
-        SET_SCALED_VALUE(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
-        SET_SCALED_VALUE(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
-        SET_SCALED_VALUE(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
-        SET_SCALED_VALUE(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
+        SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
+        SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
+        SET_FLOAT(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
+        SET_FLOAT(CmdRoachParReadOutAttenAddr[i], CommandData.roach_params[i].read_out_atten);
         SET_FLOAT(RoachAdcIRmsAddr[i], roach_state_table[i].adc_rms[0]);
         SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);

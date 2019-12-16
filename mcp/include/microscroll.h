@@ -46,5 +46,6 @@
 #define valve3_dir      30008
 
 void ControlAalborg(int index);
+void execute_microscroll_functions();
 void WriteAalborgs();
 #endif
