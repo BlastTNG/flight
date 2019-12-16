@@ -34,7 +34,7 @@
 #include "actuators.h"
 #include "cryovalves.h"
 
-#define NVALVES 2 // valves on microscroll pumps, don't count pot valve here
+#define N_PUMP_VALVES 2 // valves on microscroll pumps, don't count pot valve here
 
 /* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
  * it is working so we will leave it for now. If this were changed, the thresholds
@@ -72,20 +72,20 @@ static struct valve_struct {
 	int stop;
 	valve_state_t goal;
 	int move_size;
-} valve_data[NVALVES];
+} valve_data[N_PUMP_VALVES];
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
 	// blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
-	int valve_addr[NVALVES] = {FILLVALVE_NUM};
+	int valve_addr[N_PUMP_VALVES] = {PUMP1_VALVE_NUM, PUMP2_VALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
 		// blast_info("calling DoPotValve"); // DEBUG PAW
 		DoPotValve(bus);
 	}
 
-	for (i = 0; i < NVALVES; i++) {
+	for (i = 0; i < N_PUMP_VALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
 		// blast_info("calling DoValves"); // DEBUG PAW
 			DoValves(bus, i, valve_addr[i]);
@@ -109,7 +109,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
 		EZBus_Stop(bus, valve_data[index].addr);
-		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
+		EZBus_MoveComm(bus, valve_data[index].addr, PUMP_VALVES_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
 		// set the default move size for valve A
@@ -125,7 +125,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
 		EZBus_Stop(bus, valve_data[index].addr);
-		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
+		EZBus_MoveComm(bus, valve_data[index].addr, PUMP_VALVES_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
 		// set the default move size for valve B
@@ -483,7 +483,7 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		SET_UINT8(enablePotValveAddr, CommandData.Cryo.potvalve_on);
 	}
 
-	for (i = 0; i < NVALVES; i++) {
+	for (i = 0; i < N_PUMP_VALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
 			if (i == 0) {
 				SET_UINT8(limsPump1ValveAddr, valve_data[0].limit);

@@ -29,14 +29,18 @@
 #include "ezstep.h"
 
 /* Index of the cyrostat valve motors in the Actbus structures */
+/* 1 less than the ez-stepper addresses */
 #define POTVALVE_NUM 7
-#define FILLVALVE_NUM 8
+#define PUMP1_VALVE_NUM 8
+#define PUMP2_VALVE_NUM 9
+#define N_PUMP_VALVES 2 // just the pump valves
+#define NVALVES (N_PUMP_VALVES + 1) // all of the valves (pump valves + potvalve)
 
 #define POTVALVE_ENC_MAX 15000
 #define POTVALVE_ENC_MIN 2000
 
 #define POTVALVE_PREAMBLE "j256"
-#define VALVE_PREAMBLE "n2j256"
+#define PUMP_VALVES_PREAMBLE "n2j256"
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init);
 void DoPotValve(struct ezbus* bus);
