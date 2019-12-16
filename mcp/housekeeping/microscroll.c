@@ -81,7 +81,7 @@ void ControlAalborg(int index)
 		firsttime = 0;
 		// find the addresses for the channels we need to read the first time
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
-			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i);
+			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
 			labjackAinAddr[i] = channels_find_by_name(channel_name);
 			aalborg_data.valve_state[i] = 0;
 		}
