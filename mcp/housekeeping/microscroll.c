@@ -91,6 +91,9 @@ void ControlAalborg(int index)
 		aalborg_data.valve_dir_addr[2] = VALVE3_DIR;
 	}
 
+	if (!state[LABJACK_MICROSCROLL].connected) {
+		return;
+	}
 	// get labjack AIN values from the frame, store locally
 	GET_SCALED_VALUE(labjackAinAddr[index], labjack_ain[index]);
 	// get the current goal from the command struct
