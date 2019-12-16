@@ -23,7 +23,7 @@
 
 // we wait 7 seconds after commanding aalborg to open to declare it is open
 // this is because the signal we read is closed/not closed, but we know how it takes about 6 to open
-#define AALBORG_WAIT_OPENING 35 // 7s at 5 Hz
+#define AALBORG_WAIT_OPENING 12 // 12s at 1 Hz
 
 #define thermistor_1    6
 #define thermistor_2    7
@@ -37,13 +37,13 @@
 #define relay_12V_off   2001
 #define supply_24Va     2006
 #define supply_24Vb     2007
-#define speed_reg       1000
-#define valve_1_status  0
-#define valve_2_status  1
-#define valve_3_status  2
-#define valve1_dir      30004
-#define valve2_dir      30006
-#define valve3_dir      30008
+#define SPEED_REG       1000
+#define VALVE_1_STATUS  0
+#define VALVE_2_STATUS  1
+#define VALVE_3_STATUS  2
+#define VALVE1_DIR      30004
+#define VALVE2_DIR      30006
+#define VALVE3_DIR      30008
 
 void ControlAalborg(int index);
 void execute_microscroll_functions();

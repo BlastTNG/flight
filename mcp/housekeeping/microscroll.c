@@ -86,9 +86,9 @@ void ControlAalborg(int index)
 			aalborg_data.valve_state[i] = 0;
 		}
 		// store the valve direction modbus addresses in the struct
-		aalborg_data.valve_dir_addr[0] = valve1_dir;
-		aalborg_data.valve_dir_addr[1] = valve2_dir;
-		aalborg_data.valve_dir_addr[2] = valve3_dir;
+		aalborg_data.valve_dir_addr[0] = VALVE1_DIR;
+		aalborg_data.valve_dir_addr[1] = VALVE2_DIR;
+		aalborg_data.valve_dir_addr[2] = VALVE3_DIR;
 	}
 
 	// get labjack AIN values from the frame, store locally
@@ -102,7 +102,7 @@ void ControlAalborg(int index)
 	// if the aalborg speed has been changed in commanding, we need to change it
 	if (aalborg_data.valve_speed != prev_speed) {
 		// set the new speed on the labjack DAC
-        labjack_queue_command(LABJACK_MICROSCROLL, speed_reg, aalborg_data.valve_speed);
+        labjack_queue_command(LABJACK_MICROSCROLL, SPEED_REG, aalborg_data.valve_speed);
 	}
 
 	// if the value on the AIN is high, the valve is closed
@@ -162,6 +162,9 @@ void WriteAalborgs()
 	static channel_t* aalborg1GoalAddr;
 	static channel_t* aalborg2GoalAddr;
 	static channel_t* aalborg3GoalAddr;
+	static channel_t* ainAalborg1Addr;
+	static channel_t* ainAalborg2Addr;
+	static channel_t* ainAalborg3Addr;
 
 	if (first_time) {
 		first_time = 0;
@@ -184,7 +187,6 @@ void WriteAalborgs()
     SET_FLOAT(ainAalborg1Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_1_STATUS));
     SET_FLOAT(ainAalborg2Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_2_STATUS));
     SET_FLOAT(ainAalborg3Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_3_STATUS));
-
 }
 
 static void clear_fio() {
