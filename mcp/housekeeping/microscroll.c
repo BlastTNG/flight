@@ -81,7 +81,7 @@ void ControlAalborg(int index)
 		firsttime = 0;
 		// find the addresses for the channels we need to read the first time
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
-			snprintf(channel_name, sizeof(channel_name), "ain_aalborg_valve_%d", i);
+			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i);
 			labjackAinAddr[i] = channels_find_by_name(channel_name);
 			aalborg_data.valve_state[i] = 0;
 		}
@@ -175,6 +175,9 @@ void WriteAalborgs()
 		aalborg1GoalAddr = channels_find_by_name("goal_1_aalborg");
 		aalborg2GoalAddr = channels_find_by_name("goal_2_aalborg");
 		aalborg3GoalAddr = channels_find_by_name("goal_3_aalborg");
+		ainAalborg1Addr = channels_find_by_name("ain_1_aalborg");
+		ainAalborg2Addr = channels_find_by_name("ain_2_aalborg");
+		ainAalborg3Addr = channels_find_by_name("ain_3_aalborg");
 	}
 
 	SET_UINT16(aalborg1StateAddr, aalborg_data.valve_state[0]);
