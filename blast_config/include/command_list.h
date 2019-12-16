@@ -363,7 +363,7 @@ enum multiCommand {
   enable_roach_cal_pulse,
   read_pi_temp,
   plugh,                // plugh should be at the end of the list
-  sched_packet = 0xff   // not really a command, more of a placeholder
+  sched_packet = 0xffe   // not really a command, more of a placeholder
 };
 
 #define N_SCOMMANDS (xyzzy + 1)

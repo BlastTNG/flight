@@ -600,7 +600,7 @@ void ProcessUplinkSched(unsigned char *extdat)
         fclose(fp);
     }
 
-    blast_warn("finished extended command\n" "  slot %d chunk %d n chunk %d nsched %d route %x chunks_received: %lx\n",
+    blast_warn("finished extended command\n" "  slot %d chunk %d n chunk %d nsched %d route %x chunks_received: %x\n",
                extdat[EXT_SLOT], extdat[EXT_ICHUNK], extdat[EXT_NCHUNK], extdat[EXT_NSCHED], extdat[EXT_ROUTE],
                chunks_received);
 }
@@ -640,6 +640,8 @@ void WatchPort(void* parameter)
     // blast_startup("WatchPort startup\n");
     int get_serial_fd = 1;
     int has_warned = 0;
+
+    uint16_t mcmd;
 
     for (;;) {
         // wait for a valid file descriptor
@@ -871,7 +873,8 @@ void WatchPort(void* parameter)
                     bytecount++;
                 } else {
                     if (buf == 0x03) {
-                        if (extdat[0] == sched_packet) {
+                        mcmd = (uint16_t)extdat[0] | ((uint16_t)(extdat[1] & 0x0f) << 8);
+                        if (mcmd == sched_packet) {
                             if (extdat[EXT_ROUTE] == route[port]) {
                                 blast_info("Schedule file uplink packet detected\n");
                                 ProcessUplinkSched(extdat);
@@ -880,12 +883,12 @@ void WatchPort(void* parameter)
                                            route[port]);
                             }
                         } else {
-                            if (MIndex(extdat[0]) < 0) {
-                                blast_warn("ignoring unknown extended command (%d)", extdat[0]);
+                            if (MIndex(mcmd) < 0) {
+                                blast_warn("ignoring unknown extended command (%d)", mcmd);
                             } else {
-                                blast_info("extended command %s (%d)", MName(extdat[0]), extdat[0]);
-                                SetParameters(extdat[0], (uint16_t*) (extdat + 2), rvalues, ivalues, svalues);
-                                MultiCommand(extdat[0], rvalues, ivalues, svalues, 0);
+                                blast_info("extended command %s (%d)", MName(mcmd), mcmd);
+                                SetParameters(mcmd, (uint16_t*) (extdat + 2), rvalues, ivalues, svalues);
+                                MultiCommand(mcmd, rvalues, ivalues, svalues, 0);
                             }
                         }
                     } else {
