@@ -515,9 +515,9 @@ void DoSched(void)
 	// Do we need to call these commands any more? We should have both pumps running starting on the ground
 	// turning on and opening pump 1 valve so that mcp compiles, but we need to talk about this!
 	// TODO(paul, laura, ian): talk about this
-    event.command = pump_1_valve_on;
+    event.command = pump_A_valve_on;
     ScheduledCommand(&event);
-    event.command = pump_1_valve_open;
+    event.command = pump_A_valve_open;
     ScheduledCommand(&event);
     /* turn off lock motor hold current */
     event.command = lock_i;
