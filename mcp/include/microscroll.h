@@ -8,7 +8,7 @@
 #ifndef INCLUDE_MICROSCROLL_H
 #define INCLUDE_MICROSCROLL_H
 
-#define N_AALBORG_VALVES 3
+#define N_AALBORG_VALVES    3
 #define AALBORG_HIGH_LEVEL  8.5
 #define AALBORG_LOW_LEVEL   3.5
 #define AALBORG_CLOSE_CMD   0.0 // 0 V output on TDAC
@@ -21,8 +21,8 @@
 #define AALBORG_NOT_CLOSED 0x10
 #define AALBORG_UNK        0x20
 
-// we wait 7 seconds after commanding aalborg to open to declare it is open
-// this is because the signal we read is closed/not closed, but we know how it takes about 6 to open
+// we wait 12 seconds after commanding aalborg to open to declare it is open
+// this is because the signal we read is closed/not closed, but we know how it takes about 11 to open
 #define AALBORG_WAIT_OPENING 12 // 12s at 1 Hz
 
 #define thermistor_1    6
