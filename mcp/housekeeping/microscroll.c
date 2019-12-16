@@ -181,6 +181,10 @@ void WriteAalborgs()
 	SET_UINT16(aalborg1GoalAddr, aalborg_data.valve_goal[0]);
 	SET_UINT16(aalborg2GoalAddr, aalborg_data.valve_goal[1]);
 	SET_UINT16(aalborg3GoalAddr, aalborg_data.valve_goal[2]);
+    SET_FLOAT(ainAalborg1Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_1_STATUS));
+    SET_FLOAT(ainAalborg2Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_2_STATUS));
+    SET_FLOAT(ainAalborg3Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_3_STATUS));
+
 }
 
 static void clear_fio() {
