@@ -1527,6 +1527,7 @@ void Pointing(void)
         pss_since_ok++;
     }
     dgps_ok = CSBFGPSAz.att_ok;
+    dgps_az = CSBFGPSAz.az;
     PointingData[point_index].pss_ok = pss_ok;
     PointingData[point_index].dgps_ok = dgps_ok;
 
