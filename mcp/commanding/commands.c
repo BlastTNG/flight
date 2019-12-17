@@ -3861,7 +3861,7 @@ void InitCommandData()
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
-    CommandData.dgps_az_trim = 0;
+    CommandData.dgps_az_trim = -90.0;
 
     CommandData.autotrim_enable = 0;
     CommandData.autotrim_thresh = 0.05;
