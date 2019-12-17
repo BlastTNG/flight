@@ -14,6 +14,7 @@ stars/windows/stars/*
 **.ko
 **.swp
 **.swn
+**.DS_Store
 
 moc_*
 qrc_*
