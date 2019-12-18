@@ -164,6 +164,16 @@ void ControlAalborg(int index)
 	}
 }
 
+void TestLjWrites()
+{
+	if (state[LABJACK_MICROSCROLL].connected) {
+		if (CommandData.Aalborg.new_cmd) {
+			CommandData.Aalborg.new_cmd = 0;
+			labjack_queue_command(LABJACK_MICROSCROLL, CommandData.Aalborg.reg, CommandData.Aalborg.value);
+		}
+	}
+}
+
 void WriteAalborgs()
 {
 	static int first_time = 1;

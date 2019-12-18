@@ -1996,6 +1996,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 	case aalborg_set_speed:
 	  CommandData.Cryo.aalborg_speed = rvalues[0];
 	  break;
+	case labjack9_write_reg:
+	  CommandData.Aalborg.new_cmd = 1;
+	  CommandData.Aalborg.reg = ivalues[0];
+	  CommandData.Aalborg.value = rvalues[0];
+	  break;
 
 // .
     // XY STAGE

@@ -1755,6 +1755,12 @@ struct mcom mcommands[plugh + 2] = {
       {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_AALBORG"}
     }
   },
+  {COMMAND(labjack9_write_reg), "Write an arbitrary value to a modbus register on microscroll labjack (#9)", GR_MISC, 1,
+    {
+      {"Register to write to", 1000, 30050, 'i', "NONE"},
+      {"Value to write", -10.0, 10.0, 'f', "NONE"}
+    }
+  },
 
   //  <!-- XSC general -->
 

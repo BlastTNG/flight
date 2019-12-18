@@ -48,4 +48,5 @@
 void ControlAalborg(int index);
 void execute_microscroll_functions();
 void WriteAalborgs();
+void TestLjWrites();
 #endif

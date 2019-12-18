@@ -292,6 +292,12 @@ typedef struct {
 } cryo_cmds_t;
 
 typedef struct {
+	int new_cmd;
+	int reg;
+	float value;
+} aalborg_test_t;
+
+typedef struct {
     int go, just_received, no_pulse;
     uint16_t length;
 } ir_cmds_t;
@@ -599,6 +605,7 @@ struct CommandDataStruct {
 
 
   double cal_imin_pss;
+
   struct {
     int biasRamp;
     uint16_t bias[5];
@@ -607,6 +614,7 @@ struct CommandDataStruct {
   } Bias;
 
   cryo_cmds_t Cryo;
+  aalborg_test_t Aalborg;
   ir_cmds_t IRsource;
   microscroll_control_t Microscroll;
 
