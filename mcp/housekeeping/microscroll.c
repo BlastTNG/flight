@@ -261,7 +261,7 @@ static void control_24vb_supply() {
 }
 
 static void control_12v_supply() {
-    static float prev_status = 0;
+    static float prev_status = 1;
     if (state[9].connected && prev_status != microscroll.supply_12v) {
         prev_status = microscroll.supply_12v;
         labjack_queue_command(LABJACK_MICROSCROLL, relay_12V_on, microscroll.supply_12v);
