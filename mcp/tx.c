@@ -221,10 +221,10 @@ void WriteAux(void)
     SET_VALUE(statusEthAddr, // first two bits used to be sun sensor
     ((EthernetIsc & 0x3) << 2) + ((EthernetOsc & 0x3) << 4) + ((EthernetSBSC & 0x3) << 6));
 
-    mccstatus = (SouthIAm ? 0x1 : 0x0) +                 // 0x01
-            (CommandData.at_float ? 0x2 : 0x0) +     // 0x02
-            (CommandData.uplink_sched ? 0x08 : 0x00) + // 0x08
-            (CommandData.sucks ? 0x10 : 0x00) +      // 0x10
+    mccstatus = (SouthIAm ? 0x1 : 0x00) +                 // 0x01
+            (CommandData.at_float ? 0x02 : 0x0) +     // 0x02
+            (CommandData.uplink_sched ? 0x04 : 0x00) + // 0x04
+            (CommandData.sucks ? 0x08 : 0x00) +      // 0x08
             (InCharge ? 0x80 : 0x00) +               // 0x80
 //            ((CommandData.lat_range & 0x3) << 5) +   // 0x60
             ((CommandData.slot_sched & 0xFF) << 8);  // 0xFF00

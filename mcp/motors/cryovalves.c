@@ -34,11 +34,7 @@
 #include "actuators.h"
 #include "cryovalves.h"
 
-// removing these defines because now the commanded values are used
-// #define POTVALVE_OPEN 10000
-// #define POTVALVE_CLOSED 4200
-// #define POTVALVE_LOOSE_CLOSED 6500
-#define NVALVES 1 // fill valve only, don't count pot valve here
+#define N_PUMP_VALVES 2 // valves on microscroll pumps, don't count pot valve here
 
 /* this ratio is wrong! Plotting encoder counts vs micro-steps gives 230-250, but
  * it is working so we will leave it for now. If this were changed, the thresholds
@@ -75,20 +71,21 @@ static struct valve_struct {
 	int ready;
 	int stop;
 	valve_state_t goal;
-} valve_data[NVALVES];
+	int move_size;
+} valve_data[N_PUMP_VALVES];
 
 void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 {
 	// blast_info("starting DoCryovalves"); // DEBUG PAW
 	int i;
-	int valve_addr[NVALVES] = {FILLVALVE_NUM};
+	int valve_addr[N_PUMP_VALVES] = {PUMP1_VALVE_NUM, PUMP2_VALVE_NUM};
 
 	if (actuators_init & (0x1 << POTVALVE_NUM)) {
 		// blast_info("calling DoPotValve"); // DEBUG PAW
 		DoPotValve(bus);
 	}
 
-	for (i = 0; i < NVALVES; i++) {
+	for (i = 0; i < N_PUMP_VALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
 		// blast_info("calling DoValves"); // DEBUG PAW
 			DoValves(bus, i, valve_addr[i]);
@@ -101,10 +98,10 @@ void DoCryovalves(struct ezbus* bus, unsigned int actuators_init)
 
 void DoValves(struct ezbus* bus, int index, char addr)
 {
-	static int firsttime_pump_valve = 1;
-	static int firsttime_fill_valve = 1;
+	static int firsttime_pump_A_valve = 1;
+	static int firsttime_pump_B_valve = 1;
 
-	if (firsttime_pump_valve && (index == 0)) {
+	if (firsttime_pump_A_valve && (index == 0)) {
 		valve_data[index].addr = (char) GetActAddr(addr);
 		// Debug PAW 04/24/2018
 		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
@@ -112,13 +109,15 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
 		EZBus_Stop(bus, valve_data[index].addr);
-		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
+		EZBus_MoveComm(bus, valve_data[index].addr, PUMP_VALVES_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
-		firsttime_pump_valve = 0;
+		// set the default move size for valve A
+		valve_data[index].move_size = 800000;
+		firsttime_pump_A_valve = 0;
 	}
 
-	if (firsttime_fill_valve && (index == 1)) {
+	if (firsttime_pump_B_valve && (index == 1)) {
 		valve_data[index].addr = (char) GetActAddr(addr);
 		// Debug PAW 04/24/2018
 		// blast_info("Valve %d address is %c (firsttime loop)", index, valve_data[index].addr);
@@ -126,10 +125,12 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Take(bus, valve_data[index].addr);
 		blast_info("Making sure Valve %d is not running on startup", index);
 		EZBus_Stop(bus, valve_data[index].addr);
-		EZBus_MoveComm(bus, valve_data[index].addr, VALVE_PREAMBLE);
+		EZBus_MoveComm(bus, valve_data[index].addr, PUMP_VALVES_PREAMBLE);
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
-		firsttime_fill_valve = 0;
+		// set the default move size for valve B
+		valve_data[index].move_size = 900000;
+		firsttime_pump_B_valve = 0;
 	}
 	// blast_info("Valve %d address is %c", index, valve_data[index].addr);
 
@@ -161,7 +162,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_Stop(bus, valve_data[index].addr);
 			// EZBus_RelMove(bus, valve_data[index].addr, INT_MAX);
-			EZBus_RelMove(bus, valve_data[index].addr, 800000);
+			EZBus_RelMove(bus, valve_data[index].addr, valve_data[index].move_size);
 			EZBus_Release(bus, valve_data[index].addr);
 			blast_info("Starting to open Valve %d", index); // debug PAW
 		} else {
@@ -172,7 +173,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			EZBus_Take(bus, valve_data[index].addr);
 			EZBus_Stop(bus, valve_data[index].addr);
 			// EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
-			EZBus_RelMove(bus, valve_data[index].addr, -800000);
+			EZBus_RelMove(bus, valve_data[index].addr, (-1)*valve_data[index].move_size);
 			EZBus_Release(bus, valve_data[index].addr);
                         blast_info("Starting to close Valve %d", index); // debug PAW
 		} else {
@@ -429,16 +430,16 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* lclosedThresholdPotValveAddr;
 	static channel_t* openThresholdPotValveAddr;
 	static channel_t* potvalveMinTightenMoveAddr;
+	static channel_t* enablePotValveAddr;
 
-	static channel_t* limsPumpValveAddr;
-	static channel_t* limsFillValveAddr;
-	static channel_t* posPumpValveAddr;
-	static channel_t* posFillValveAddr;
+	static channel_t* limsPumpAValveAddr;
+	static channel_t* limsPumpBValveAddr;
+	static channel_t* posPumpAValveAddr;
+	static channel_t* posPumpBValveAddr;
 	static channel_t* velValveAddr;
 	static channel_t* imoveValveAddr;
 	static channel_t* iholdValveAddr;
 	static channel_t* accValveAddr;
-	static channel_t* enablePotValveAddr;
 
 	static int firsttime = 1;
 
@@ -455,10 +456,10 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	    openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
 		potvalveMinTightenMoveAddr = channels_find_by_name("tight_move_potvalve");
 
-		limsPumpValveAddr = channels_find_by_name("lims_pumpvalve");
-		limsFillValveAddr = channels_find_by_name("lims_fillvalve");
-		posPumpValveAddr = channels_find_by_name("pos_pumpvalve");
-		posFillValveAddr = channels_find_by_name("pos_fillvalve");
+		limsPumpAValveAddr = channels_find_by_name("lims_pump_A_valve");
+		limsPumpBValveAddr = channels_find_by_name("lims_pump_B_valve");
+		posPumpAValveAddr = channels_find_by_name("pos_pump_A_valve");
+		posPumpBValveAddr = channels_find_by_name("pos_pump_B_valve");
 		velValveAddr = channels_find_by_name("vel_valves");
 		imoveValveAddr = channels_find_by_name("i_move_valves");
 		iholdValveAddr = channels_find_by_name("i_hold_valves");
@@ -482,14 +483,14 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 		SET_UINT8(enablePotValveAddr, CommandData.Cryo.potvalve_on);
 	}
 
-	for (i = 0; i < NVALVES; i++) {
+	for (i = 0; i < N_PUMP_VALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
 			if (i == 0) {
-				SET_UINT8(limsPumpValveAddr, valve_data[0].limit);
-				SET_INT32(posPumpValveAddr, valve_data[0].pos);
+				SET_UINT8(limsPumpAValveAddr, valve_data[0].limit);
+				SET_INT32(posPumpAValveAddr, valve_data[0].pos);
 			} else if (i == 1) {
-				SET_UINT8(limsFillValveAddr, valve_data[1].limit);
-				SET_INT32(posFillValveAddr, valve_data[1].pos);
+				SET_UINT8(limsPumpBValveAddr, valve_data[1].limit);
+				SET_INT32(posPumpBValveAddr, valve_data[1].pos);
 			}
 			valve_flag = 1;
 		}

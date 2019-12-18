@@ -64,6 +64,7 @@ void nameThread(const char*);	/* mcp.c */
 static const int id_stage[NSTAGE_ACTS] = {EZ_WHO_S6, EZ_WHO_S7};
 
 static struct stage_struct {
+// probably need to increase size of xpos, ypos so we don't get an overflow and stop the stage early
   int xpos, ypos;
   int xlim, ylim;
   int xstp, ystp;

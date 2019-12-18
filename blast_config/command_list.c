@@ -270,15 +270,15 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO | CONFIRM},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO | CONFIRM},
-  {COMMAND(pump_valve_open), "open pump valve", GR_CRYO | CONFIRM},
-  {COMMAND(pump_valve_close), "close pump valve", GR_CRYO | CONFIRM},
-  {COMMAND(pump_valve_off), "stop pump valve, reset goal to 0", GR_CRYO},
-  {COMMAND(pump_valve_on), "re-enable pump valve", GR_CRYO | CONFIRM},
-  {COMMAND(fill_valve_open), "open fill valve", GR_CRYO | CONFIRM},
-  {COMMAND(fill_valve_close), "close fill valve", GR_CRYO | CONFIRM},
-  {COMMAND(fill_valve_off), "stop fill valve, reset goal to 0", GR_CRYO},
-  {COMMAND(fill_valve_on), "re-enable pump valve", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(pump_A_valve_open), "open valve to pump A", GR_CRYO | CONFIRM},
+  {COMMAND(pump_A_valve_close), "close valve to pump A", GR_CRYO | CONFIRM},
+  {COMMAND(pump_A_valve_off), "stop valve to pump A, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_A_valve_on), "re-enable valve to pump A", GR_CRYO | CONFIRM},
+  {COMMAND(pump_B_valve_open), "open valve to pump B", GR_CRYO | CONFIRM},
+  {COMMAND(pump_B_valve_close), "close valve to pump B", GR_CRYO | CONFIRM},
+  {COMMAND(pump_B_valve_off), "stop valve to pump B, reset goal to 0", GR_CRYO},
+  {COMMAND(pump_B_valve_on), "re-enable valve to pump B", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (vent main He tank to atmosphere)", GR_CRYO | CONFIRM},
   {COMMAND(aalborg_valve2_open), "open aalborg valve 2 (connected to pump 2)", GR_CRYO | CONFIRM},
   {COMMAND(aalborg_valve3_open), "open aalborg valve 3 (open to atmposphere)", GR_CRYO | CONFIRM},
   {COMMAND(aalborg_valve1_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
@@ -1722,7 +1722,7 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(potvalve_set_tighten_move), "Set pumped pot tightening minimum move size (in encoder units)", GR_CRYO, 1,
     {
-      {"Minimum size of a tightening move", 0, 5000, 'i', "POTVALVE_TIGHT_MOVE"}
+      {"Minimum size of a tightening move", 0, 5000, 'i', "TIGHT_MOVE_POTVALVE"}
     }
   },
 
@@ -1752,7 +1752,7 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(aalborg_set_speed), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 1,
     {
-      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "ACC_VALVES"}
+      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_AALBORG"}
     }
   },
 

@@ -98,6 +98,7 @@
 #include "sip.h"
 #include "scheduler_tng.h"
 #include "hawkeyeir.h"
+#include "microscroll.h"
 
 /* Define global variables */
 char* flc_ip[2] = {"192.168.1.3", "192.168.1.4"};
@@ -304,6 +305,7 @@ static void mcp_5hz_routines(void)
     write_roach_channels_5hz();
     store_axes_mode_data();
     WriteAux();
+	WriteAalborgs();
     ControlBalance();
     StoreActBus();
     level_control();
@@ -370,6 +372,7 @@ static void mcp_1hz_routines(void)
     share_data(RATE_1HZ);
     framing_publish_1hz();
     store_data_hk(master_superframe_buffer);
+	ControlAalborg(0);
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,
                             &superframe_counter[RATE_1HZ]);

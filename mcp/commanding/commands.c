@@ -1022,30 +1022,30 @@ void SingleCommand(enum singleCommand command, int scheduled)
         	CommandData.Cryo.potvalve_on = 0;
 	    	CommandData.Cryo.potvalve_goal = 0;
         	break;
-    	case pump_valve_open:
+    	case pump_A_valve_open:
 	    	CommandData.Cryo.valve_goals[0] = opened;
 	    	break;
-		case pump_valve_close:
+		case pump_A_valve_close:
 	    	CommandData.Cryo.valve_goals[0] = closed;
 	    	break;
-		case pump_valve_off:
+		case pump_A_valve_off:
 	    	CommandData.Cryo.valve_goals[0] = 0;
 	    	CommandData.Cryo.valve_stop[0] = 1;
 	    	break;
-		case pump_valve_on:
+		case pump_A_valve_on:
 	    	CommandData.Cryo.valve_goals[0] = 0;
 	    	CommandData.Cryo.valve_stop[0] = 0;
-		case fill_valve_open:
+		case pump_B_valve_open:
 	    	CommandData.Cryo.valve_goals[1] = opened;
 	    	break;
-		case fill_valve_close:
+		case pump_B_valve_close:
 	    	CommandData.Cryo.valve_goals[1] = closed;
 	    	break;
-		case fill_valve_off:
+		case pump_B_valve_off:
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 1;
 	    	break;
-		case fill_valve_on:
+		case pump_B_valve_on:
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 0;
 	    	break;
@@ -3568,6 +3568,9 @@ void InitCommandData()
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
+	CommandData.Cryo.aalborg_valve_goal[0] = 0;
+	CommandData.Cryo.aalborg_valve_goal[1] = 0;
+	CommandData.Cryo.aalborg_valve_goal[2] = 0;
 
     // BLAST-Pol stuff
     // CommandData.Cryo.lhevalve_on = 0;
@@ -3858,7 +3861,7 @@ void InitCommandData()
     CommandData.mag_az_trim[0] = 0;
     CommandData.mag_az_trim[1] = 0;
     CommandData.pss_az_trim = 0;
-    CommandData.dgps_az_trim = 0;
+    CommandData.dgps_az_trim = -90.0;
 
     CommandData.autotrim_enable = 0;
     CommandData.autotrim_thresh = 0.05;
