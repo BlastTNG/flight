@@ -139,25 +139,29 @@ void ControlAalborg(int index)
 	}
 
 	// if the state of the current valve does not match the goal, we need to do something
-	if (!(aalborg_data.valve_state[index] && aalborg_data.valve_goal[index])) {
+	if (~(aalborg_data.valve_state[index] & aalborg_data.valve_goal[index])) {
 		// if the goal is open and we got here, we know we aren't open
 		// if we aren't already opening the valve, do it
-		if ((aalborg_data.valve_goal[index] && AALBORG_OPENED) && !(aalborg_data.valve_state[index] && AALBORG_OPENING)) {
+		if ((aalborg_data.valve_goal[index] & AALBORG_OPENED) & ~(aalborg_data.valve_state[index] & AALBORG_OPENING)) {
 			// set labjack output to open this valve
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_OPEN_CMD);
 			// set state to opening
 			aalborg_data.valve_state[index] |= AALBORG_OPENING;
+			// clear the closed bit
+			aalborg_data.valve_state[index] &= ~AALBORG_CLOSED;
 			// start a timer because the signal immediately tells us the valve is NOT closed
 			// and we know it should take about 11 seconds to open, so set a 12 second timer
 			aalborg_data.timer = AALBORG_WAIT_OPENING;
 		}
 		// if the goal is closed and we got here, we know we aren't closed
 		// if we aren't already closing the valve, do it
-		if ((aalborg_data.valve_goal[index] && AALBORG_CLOSED) && !(aalborg_data.valve_state[index] && AALBORG_CLOSING)) {
+		if ((aalborg_data.valve_goal[index] & AALBORG_CLOSED) & ~(aalborg_data.valve_state[index] & AALBORG_CLOSING)) {
 			// set labjack output to close this valve
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_CLOSE_CMD);
 			// set state to closing
 			aalborg_data.valve_state[index] |= AALBORG_CLOSING;
+			// clear the opened bit
+			aalborg_data.valve_state[index] &= ~AALBORG_OPENED;
 			// set valve timer less than 0 so it doesn't become 0
 			aalborg_data.timer = -1;
 		}
@@ -168,6 +172,8 @@ void TestLjWrites()
 {
 	if (state[LABJACK_MICROSCROLL].connected) {
 		if (CommandData.Aalborg.new_cmd) {
+			// blast_info("new_cmd on labjack10, queueing command now");
+			// blast_info("register=%d, value=%f", CommandData.Aalborg.reg, CommandData.Aalborg.value);
 			CommandData.Aalborg.new_cmd = 0;
 			labjack_queue_command(LABJACK_MICROSCROLL, CommandData.Aalborg.reg, CommandData.Aalborg.value);
 		}

@@ -2000,7 +2000,8 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 	case labjack9_write_reg:
 	  CommandData.Aalborg.new_cmd = 1;
 	  CommandData.Aalborg.reg = ivalues[0];
-	  CommandData.Aalborg.value = rvalues[0];
+	  CommandData.Aalborg.value = rvalues[1];
+	  // blast_info("ivalues[0]=%d, rvalues[1]=%f", ivalues[0], rvalues[1]);
 	  break;
 
 // .
@@ -2086,7 +2087,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case send_dac:
       CommandData.Cryo.dac_value = (rvalues[0]);
-      CommandData.Cryo.labjack = ivalues[0];
+      CommandData.Cryo.labjack = ivalues[1];
       CommandData.Cryo.send_dac = 1;
       break;
 
