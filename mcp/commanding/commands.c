@@ -1702,6 +1702,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 
     case pss_set_imin:
       CommandData.cal_imin_pss = rvalues[0];
+	  blast_info("Changed PSS min current to: %f", CommandData.cal_imin_pss);
       break;
 
 	case pss_cal_n:
