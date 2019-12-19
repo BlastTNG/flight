@@ -3811,20 +3811,20 @@ void InitCommandData()
 
     CommandData.az_accel = 0.4;
 
-    CommandData.ele_gain.I = 1.2;
-    CommandData.ele_gain.P = 1000;
+    CommandData.ele_gain.I = 2.0;
+    CommandData.ele_gain.P = 1500;
     CommandData.ele_gain.D = 0;
     CommandData.ele_gain.PT = 40;
     CommandData.ele_gain.DB = 0;
     CommandData.ele_gain.F = 0;
 
-    CommandData.azi_gain.P = 5000;
+    CommandData.azi_gain.P = 4000;
     CommandData.azi_gain.I = 1.0;
     CommandData.azi_gain.PT = 75;
     CommandData.azi_gain.D = 0;
 
     CommandData.pivot_gain.SP = 30; // dps
-    CommandData.pivot_gain.PV = 6;
+    CommandData.pivot_gain.PV = 2;
     CommandData.pivot_gain.IV = 100;
     CommandData.pivot_gain.PE = 0;
     CommandData.pivot_gain.IE = 100;
@@ -4019,8 +4019,8 @@ void InitCommandData()
     CommandData.balance.move_i = 20;
     CommandData.balance.hold_i = 0;
 
-    CommandData.balance.i_el_on_bal = 2.5;
-    CommandData.balance.i_el_off_bal = 1.0;
+    CommandData.balance.i_el_on_bal = 3.5;
+    CommandData.balance.i_el_off_bal = 1.5;
     CommandData.balance.mode = bal_rest;
 
     CommandData.actbus.shutter_step = 4224;

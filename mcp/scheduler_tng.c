@@ -36,7 +36,7 @@ struct ScheduleType _S[2][3];
 struct ScheduleType *Uplink_S = 0;
 
 int doing_schedule = 0;
-unsigned int sched_lst = 0;
+unsigned int sched_lst = 0; // written to frame in acs.c
 
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 	     double pi, double rvel, double *ra, double *dec);
