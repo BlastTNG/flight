@@ -145,7 +145,7 @@ void ControlAalborg(int index)
 	} else {
 		// the output from the valve is digital, should never be neither high nor low
 		// this shouldn't happen...
-		aalborg_data[index].valve_state = AALBORG_UNK;
+		aalborg_data[index].valve_state |= AALBORG_UNK;
 	}
 
 	// if the state of the current valve does not match the goal, we need to do something
