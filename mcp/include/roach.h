@@ -58,7 +58,9 @@
 #define NC1_PORT 12345
 #define NC2_PORT 12346
 
-#define ROACH_TRIGGER_EL_TARG_MASK ((1 << NUM_ROACHES) - 1)
+#define ROACH_TRIGGER_EL_TARG_MASK    ((1 << NUM_ROACHES) - 1)
+#define ROACH_TRIGGER_LO_OFFSET_MASK  ((1 << NUM_ROACHES) - 1)
+
 static const char roach_name[5][32] = {"roach1", "roach2", "roach3", "roach4", "roach5"};
 // Destination IP for fc2
 static const char udp_dest[32] = "239.1.1.234";

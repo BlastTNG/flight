@@ -5804,7 +5804,7 @@ void *roach_cmd_loop(void* ind)
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
-            if (CommandData.trigger_lo_offset_check) {
+            if (CommandData.trigger_lo_offset_check & (1 << i)) {
                 if (CommandData.roach[i].enable_chop_lo) {
                     if (CommandData.roach[i].auto_el_retune_top) {
                         enable_el_retune_top_was_on = 1;
@@ -5828,7 +5828,7 @@ void *roach_cmd_loop(void* ind)
                         enable_el_retune_bottom_was_on = 0;
                     }
                 }
-                CommandData.trigger_lo_offset_check = 0;
+                CommandData.trigger_lo_offset_check &= 0xff-(1 << i);
             }
             uint8_t trigger_top = CommandData.trigger_roach_tuning_check_top & (1 << i);
             uint8_t trigger_bottom = CommandData.trigger_roach_tuning_check_bottom & (1 << i);

@@ -1064,7 +1064,7 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1248,7 +1248,7 @@ static void do_mode_el_box(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_az = (targ_az - (az - caz)) / t;
         // set targ_az for the next step
@@ -1424,7 +1424,7 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1;
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK;
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
@@ -1642,7 +1642,7 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
