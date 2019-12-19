@@ -402,7 +402,7 @@ channel_t channel_list[] =
     { "dec",                  LI2DEG,           0.0, TYPE_INT32, RATE_100HZ, U_NONE, 0 },
     { "start_cycle",          SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
 
-    { "lst_sched",            SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
+    { "lst_sched",            LI2DEG,           0.0, TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
 
     { "start_set_cycle",      SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_100HZ, U_NONE, 0 },
 
