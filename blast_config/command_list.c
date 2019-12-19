@@ -1374,14 +1374,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
-  {COMMAND(roach_allow_scan_check), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH, 1,
+  {COMMAND(roach_set_allow_scan_check), "Toggle target sweeps at the end of each scan", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-    }
-  },
-  {COMMAND(roach_disallow_scan_check), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH, 1,
-    {
-      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Top scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
+      {"Bottom scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
     }
   },
   {COMMAND(set_retune_type_all), "(All Roaches) Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 1,

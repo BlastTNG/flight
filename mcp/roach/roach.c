@@ -2679,9 +2679,9 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     }
     if (sweep_type == TARG) {
         m_span = TARG_SWEEP_SPAN;
-        if (m_roach->array == 500) {
-            m_span = 250.0e3;
-        }
+//         if (m_roach->array == 500) {
+//             m_span = 250.0e3;
+//         }
         if (create_data_dir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
                            m_roach->which, m_roach->last_targ_path);
@@ -5619,7 +5619,8 @@ void *roach_cmd_loop(void* ind)
     int current_packet_count = 0;
     int last_packet_count = 0;
     int enable_lo_chop_was_on = 0;
-    int enable_el_retune_was_on = 0;
+    int enable_el_retune_top_was_on = 0;
+    int enable_el_retune_bottom_was_on = 0;
     // int n_full_loop_tries = 0;
     while (!shutdown_mcp) {
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
@@ -5778,16 +5779,24 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].is_chopping_lo) {
             if (CommandData.roach[i].enable_chop_lo) {
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (roach_chop_lo(&roach_state_table[i]) < 0) {
                     blast_err("ROACH%d: Failed to Chop LO", i + 1);
                 }
-                if (enable_el_retune_was_on) {
-                    CommandData.roach[i].auto_el_retune = 1;
-                    enable_el_retune_was_on = 0;
+                if (enable_el_retune_top_was_on) {
+                    CommandData.roach[i].auto_el_retune_top = 1;
+                    enable_el_retune_top_was_on = 0;
+                }
+                if (enable_el_retune_bottom_was_on) {
+                    CommandData.roach[i].auto_el_retune_bottom = 1;
+                    enable_el_retune_bottom_was_on = 0;
                 }
             }
             CommandData.roach[i].is_chopping_lo = 0;
@@ -5797,42 +5806,56 @@ void *roach_cmd_loop(void* ind)
             // FLIGHT MODE LOOPS
             if (CommandData.trigger_lo_offset_check) {
                 if (CommandData.roach[i].enable_chop_lo) {
-                    if (CommandData.roach[i].auto_el_retune) {
-                        enable_el_retune_was_on = 1;
-                        CommandData.roach[i].auto_el_retune = 0;
+                    if (CommandData.roach[i].auto_el_retune_top) {
+                        enable_el_retune_top_was_on = 1;
+                        CommandData.roach[i].auto_el_retune_top = 0;
+                    }
+                    if (CommandData.roach[i].auto_el_retune_bottom) {
+                        enable_el_retune_bottom_was_on = 1;
+                        CommandData.roach[i].auto_el_retune_bottom = 0;
                     }
                     CommandData.roach[i].is_chopping_lo = 1;
                     if (roach_chop_lo(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: Failed to Chop LO", i + 1);
                     }
                     CommandData.roach[i].is_chopping_lo = 0;
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 }
                 CommandData.trigger_lo_offset_check = 0;
             }
-            if (CommandData.roach[i].auto_el_retune) {
-                if (CommandData.trigger_roach_tuning_check) {
+            uint8_t trigger_top = CommandData.trigger_roach_tuning_check_top & (1 << i);
+            uint8_t trigger_bottom = CommandData.trigger_roach_tuning_check_bottom & (1 << i);
+            if ((CommandData.roach[i].auto_el_retune_top && trigger_top) ||
+                (CommandData.roach[i].auto_el_retune_bottom && trigger_bottom)) {
                     if (CommandData.roach[i].enable_chop_lo) {
                         enable_lo_chop_was_on = 1;
                         CommandData.roach[i].enable_chop_lo = 0;
                     }
                     if (roach_turnaround_loop(&roach_state_table[i]) < 0) {
-                        blast_err("ROACH%d: FAILED TO EXECUTE TURNAROUND LOOP", i + 1);
+                        blast_err("ROACH%d: FAILED TO EXECUTE EL TURNAROUND TARGSWEEP", i + 1);
                         roach_state_table[i].trnaround_loop_fail = 1;
                     } else {
                         roach_state_table[i].trnaround_loop_fail = 0;
                     }
                     CommandData.roach[i].refit_res_freqs = 0;
                     CommandData.roach[i].do_sweeps = 0;
-                    CommandData.trigger_roach_tuning_check = 0;
+                    CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                    CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
                     if (enable_lo_chop_was_on) {
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                }
+            } else if ((!CommandData.roach[i].auto_el_retune_top && trigger_top) ||
+                      (!CommandData.roach[i].auto_el_retune_bottom && trigger_bottom)) {
+                CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
             }
             if (CommandData.roach[i].do_turnaround_loop) {
                 if (CommandData.roach[i].enable_chop_lo) {
@@ -5849,7 +5872,8 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                CommandData.trigger_roach_tuning_check = 0;
+                CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
                 CommandData.roach[i].do_turnaround_loop = 0;
                 CommandData.roach[i].refit_res_freqs = 0;
                 CommandData.roach[i].do_sweeps = 0;
@@ -5857,9 +5881,13 @@ void *roach_cmd_loop(void* ind)
             // FULL LOOP
             if (CommandData.roach[i].do_full_loop == 1) {
                 // disable lo chop and auto turnaround enables
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
@@ -5876,9 +5904,13 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 // SUCCEED
                 } else {
@@ -5889,9 +5921,13 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 }
                 CommandData.roach[i].do_full_loop = 0;
@@ -5902,9 +5938,13 @@ void *roach_cmd_loop(void* ind)
             }
             // DO FIND KIDS LOOP
             if (CommandData.roach[i].do_fk_loop == 1) {
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
@@ -5919,9 +5959,13 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                if (enable_el_retune_was_on) {
-                    CommandData.roach[i].auto_el_retune = 1;
-                    enable_el_retune_was_on = 0;
+                if (enable_el_retune_top_was_on) {
+                    CommandData.roach[i].auto_el_retune_top = 1;
+                    enable_el_retune_top_was_on = 0;
+                }
+                if (enable_el_retune_bottom_was_on) {
+                    CommandData.roach[i].auto_el_retune_bottom = 1;
+                    enable_el_retune_bottom_was_on = 0;
                 }
                 CommandData.roach[i].find_kids = 0;
                 CommandData.roach[i].do_fk_loop = 0;
@@ -6008,7 +6052,8 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].recenter_df = 0;
             }
             if (CommandData.roach[i].refit_res_freqs) {
-                CommandData.roach[i].auto_el_retune = 0;
+                CommandData.roach[i].auto_el_retune_top = 0;
+                CommandData.roach[i].auto_el_retune_bottom = 0;
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
                     CommandData.roach[i].enable_chop_lo = 0;
@@ -6022,7 +6067,8 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                CommandData.roach[i].auto_el_retune = 1;
+                CommandData.roach[i].auto_el_retune_top = 1;
+                CommandData.roach[i].auto_el_retune_bottom = 1;
                 CommandData.roach[i].refit_res_freqs = 0;
             }
             if (CommandData.roach[i].do_df_targ) {
@@ -6276,7 +6322,8 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].avg_df_diff = 0;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
-    CommandData.roach[ind].auto_el_retune = 1;
+    CommandData.roach[ind].auto_el_retune_top = 1;
+    CommandData.roach[ind].auto_el_retune_bottom = 1;
     CommandData.roach[ind].enable_chop_lo = 1;
     // Don't create thread for Roach 4
     uint64_t roach_idx = ind;
@@ -6614,7 +6661,8 @@ void write_roach_channels_1hz(void)
         roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
         roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
         roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].auto_el_retune) << 25);
+        roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
+                                           CommandData.roach[i].auto_el_retune_bottom)) << 25);
         roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
         roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
         roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
@@ -6634,5 +6682,6 @@ void write_roach_channels_1hz(void)
     SET_UINT8(RoachFridgeCycleWarning, is_cycling);
     SET_UINT8(RoachAutoCheckCycle, CommandData.roach_run_cycle_checker);
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
-    SET_UINT8(RoachScanTrigger, CommandData.trigger_roach_tuning_check);
+    SET_UINT8(RoachScanTrigger, (CommandData.trigger_roach_tuning_check_top |
+                                 CommandData.trigger_roach_tuning_check_bottom));
 }
