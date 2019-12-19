@@ -1049,6 +1049,8 @@ derived_tng_t derived_list[] = {
     BITWORD("Labjack6_conn_status", "labjack_conn_status", 6, 1),
     BITWORD("Labjack7_conn_status", "labjack_conn_status", 7, 1),
     BITWORD("Labjack8_conn_status", "labjack_conn_status", 8, 1),
+    BITWORD("Labjack9_conn_status", "labjack_conn_status", 9, 1),
+    BITWORD("Labjack10_conn_status", "labjack_conn_status", 10, 1),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),

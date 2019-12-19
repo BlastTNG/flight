@@ -499,13 +499,14 @@ channel_t channel_list[] =
     {"state_1_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"state_2_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"state_3_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"goal_1_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"goal_2_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
-    {"goal_3_aalborg",       SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"goal_1_aalborg",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"goal_2_aalborg",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
+    {"goal_3_aalborg",        SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
     {"speed_aalborg",         SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0},
     {"ain_1_aalborg",         SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0},
     {"ain_2_aalborg",         SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0},
     {"ain_3_aalborg",         SCALE(CONVERT_UNITY), TYPE_FLOAT, RATE_5HZ, U_NONE, 0},
+    {"timer_aalborg",         SCALE(CONVERT_UNITY), TYPE_UINT16, RATE_5HZ, U_NONE, 0},
 
 
     { "vel_bal",             SCALE(CONVERT_UNITY), TYPE_UINT32, RATE_5HZ, U_NONE, 0 },

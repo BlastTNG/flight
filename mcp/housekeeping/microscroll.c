@@ -26,7 +26,7 @@
 /*************************************************************************
  
  microscroll.c code to control the power relays and thermistors for the micro
- scroll pump
+ scroll pump, and control aalborg valves from the labjack
  
  *************************************************************************/
 
@@ -55,19 +55,19 @@ typedef struct {
 microscroll_t microscroll;
 
 typedef struct {
-	uint16_t valve_state[N_AALBORG_VALVES];
-	uint16_t valve_goal[N_AALBORG_VALVES];
+	uint16_t valve_state;
+	uint16_t valve_goal;
 	// valve_dir_addr is the modbus address used to set the direction for each valve
-	uint16_t valve_dir_addr[N_AALBORG_VALVES];
+	uint16_t valve_dir_addr;
 	// the speed the valve should move at, 0-2.5
 	float valve_speed;
 	// place to store the labjack AIN values
-	float labjack_ain[N_AALBORG_VALVES];
+	float labjack_ain;
 	// timer for the one aalborg we are actually using
-	int timer;
+	uint16_t timer;
 } aalborg_control_t;
 
-aalborg_control_t aalborg_data;
+aalborg_control_t aalborg_data[N_AALBORG_VALVES];
 
 void ControlAalborg(int index)
 {
@@ -77,93 +77,103 @@ void ControlAalborg(int index)
 	float prev_speed;
 	int i;
 
-	// probably need some initialization things in whatever function inializes this labjack
-	// and then we should check that it is initialized before calling this function
+	// if we aren't connected, return before doing anything
+	if (!state[LABJACK_MICROSCROLL].connected) {
+		// want to re-run firsttime stuff if we loose connection
+		firsttime = 1;
+		return;
+	}
+
+	// do this stuff the first time we are connected
 	if (firsttime) {
 		firsttime = 0;
 		// find the addresses for the channels we need to read the first time
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
 			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
 			labjackAinAddr[i] = channels_find_by_name(channel_name);
-			aalborg_data.valve_state[i] = 0;
+			// clear all the state bits, figure out the state later from the AIN
+			aalborg_data[i].valve_state = 0x0;
+			// clear the command struct goals
+			CommandData.Cryo.aalborg_valve_goal[i] = 0x0;
+			// set the timers so they don't change
+			aalborg_data[i].timer = -1;
 		}
 		// store the valve direction modbus addresses in the struct
-		aalborg_data.valve_dir_addr[0] = VALVE1_DIR;
-		aalborg_data.valve_dir_addr[1] = VALVE2_DIR;
-		aalborg_data.valve_dir_addr[2] = VALVE3_DIR;
-		aalborg_data.timer = -1;
+		aalborg_data[0].valve_dir_addr = VALVE1_DIR;
+		aalborg_data[1].valve_dir_addr = VALVE2_DIR;
+		aalborg_data[2].valve_dir_addr = VALVE3_DIR;
+		// set speed the first time through
+		aalborg_data[0].valve_speed = CommandData.Cryo.aalborg_speed;
+        labjack_queue_command(LABJACK_MICROSCROLL, SPEED_REG, aalborg_data[0].valve_speed);
 	}
 
-	// if we aren't connected, return before doing anything
-	if (!state[LABJACK_MICROSCROLL].connected) {
-		return;
-	}
+
 	// get labjack AIN values from the frame, store in struct
-	aalborg_data.labjack_ain[index] = GET_FLOAT(labjackAinAddr[index]);
+	aalborg_data[index].labjack_ain = GET_FLOAT(labjackAinAddr[index]);
 	// get the current goal from the command struct
-	aalborg_data.valve_goal[index] = CommandData.Cryo.aalborg_valve_goal[index];
+	aalborg_data[index].valve_goal = CommandData.Cryo.aalborg_valve_goal[index];
 	// set prev_speed so we can compare previous with current value in command struct
-	prev_speed = aalborg_data.valve_speed;
-	aalborg_data.valve_speed = CommandData.Cryo.aalborg_speed;
+	prev_speed = aalborg_data[0].valve_speed; // all valves have the same speed, so I just use 0
+	aalborg_data[0].valve_speed = CommandData.Cryo.aalborg_speed;
 
 	// if the aalborg speed has been changed in commanding, we need to change it
-	if (aalborg_data.valve_speed != prev_speed) {
+	if (aalborg_data[0].valve_speed != prev_speed) {
 		// set the new speed on the labjack DAC
-        labjack_queue_command(LABJACK_MICROSCROLL, SPEED_REG, aalborg_data.valve_speed);
+        labjack_queue_command(LABJACK_MICROSCROLL, SPEED_REG, aalborg_data[0].valve_speed);
 	}
 
 	// if the valve timer is active, decrement it
-	if (aalborg_data.timer > 0) {
-		aalborg_data.timer--;
+	if (aalborg_data[index].timer > 0) {
+		aalborg_data[index].timer--;
 	}
 
 	// if the value on the AIN is high, the valve is closed
-	if (aalborg_data.labjack_ain[index] > AALBORG_HIGH_LEVEL) {
+	if (aalborg_data[index].labjack_ain > AALBORG_HIGH_LEVEL) {
 		// set CLOSED bit, and clear all others (shouldn't be moving now)
-		aalborg_data.valve_state[index] = AALBORG_CLOSED;
+		aalborg_data[index].valve_state = AALBORG_CLOSED;
 	// if it is low, we are NOT closed (either open or moving in either direction)
-	} else if (aalborg_data.labjack_ain[index] < AALBORG_LOW_LEVEL) {
+	} else if (aalborg_data[index].labjack_ain < AALBORG_LOW_LEVEL) {
 		// low level means we are NOT closed
-		aalborg_data.valve_state[index] |= AALBORG_NOT_CLOSED;
+		aalborg_data[index].valve_state |= AALBORG_NOT_CLOSED;
 		// but if it has reached zero, we should be open
-		if (aalborg_data.timer == 0) {
+		if (aalborg_data[index].timer == 0 && (aalborg_data[index].valve_state & AALBORG_OPENING)) {
 			// clear opening bit, we should be done moving now
-			aalborg_data.valve_state[index] &= ~AALBORG_OPENING;
+			aalborg_data[index].valve_state &= ~AALBORG_OPENING;
 			// set OPENED bit, leaving others (like NOT closed)
-			aalborg_data.valve_state[index] |= AALBORG_OPENED;
+			aalborg_data[index].valve_state |= AALBORG_OPENED;
 		}
 	} else {
 		// the output from the valve is digital, should never be neither high nor low
 		// this shouldn't happen...
-		aalborg_data.valve_state[index] = AALBORG_UNK;
+		aalborg_data[index].valve_state = AALBORG_UNK;
 	}
 
 	// if the state of the current valve does not match the goal, we need to do something
-	if (~(aalborg_data.valve_state[index] & aalborg_data.valve_goal[index])) {
+	if (~(aalborg_data[index].valve_state & aalborg_data[index].valve_goal)) {
 		// if the goal is open and we got here, we know we aren't open
 		// if we aren't already opening the valve, do it
-		if ((aalborg_data.valve_goal[index] & AALBORG_OPENED) & ~(aalborg_data.valve_state[index] & AALBORG_OPENING)) {
+		if ((aalborg_data[index].valve_goal & AALBORG_OPENED) & ~(aalborg_data[index].valve_state & AALBORG_OPENING)) {
 			// set labjack output to open this valve
-        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_OPEN_CMD);
+        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[index].valve_dir_addr, AALBORG_OPEN_CMD);
 			// set state to opening
-			aalborg_data.valve_state[index] |= AALBORG_OPENING;
+			aalborg_data[index].valve_state |= AALBORG_OPENING;
 			// clear the closed bit
-			aalborg_data.valve_state[index] &= ~AALBORG_CLOSED;
+			aalborg_data[index].valve_state &= ~AALBORG_CLOSED;
 			// start a timer because the signal immediately tells us the valve is NOT closed
 			// and we know it should take about 11 seconds to open, so set a 12 second timer
-			aalborg_data.timer = AALBORG_WAIT_OPENING;
+			aalborg_data[index].timer = AALBORG_WAIT_OPENING;
 		}
 		// if the goal is closed and we got here, we know we aren't closed
 		// if we aren't already closing the valve, do it
-		if ((aalborg_data.valve_goal[index] & AALBORG_CLOSED) & ~(aalborg_data.valve_state[index] & AALBORG_CLOSING)) {
+		if ((aalborg_data[index].valve_goal & AALBORG_CLOSED) & ~(aalborg_data[index].valve_state & AALBORG_CLOSING)) {
 			// set labjack output to close this valve
-        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data.valve_dir_addr[index], AALBORG_CLOSE_CMD);
+        	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[index].valve_dir_addr, AALBORG_CLOSE_CMD);
 			// set state to closing
-			aalborg_data.valve_state[index] |= AALBORG_CLOSING;
+			aalborg_data[index].valve_state |= AALBORG_CLOSING;
 			// clear the opened bit
-			aalborg_data.valve_state[index] &= ~AALBORG_OPENED;
+			aalborg_data[index].valve_state &= ~AALBORG_OPENED;
 			// set valve timer less than 0 so it doesn't become 0
-			aalborg_data.timer = -1;
+			aalborg_data[index].timer = -1;
 		}
 	}
 }
@@ -194,6 +204,9 @@ void WriteAalborgs()
 	static channel_t* ainAalborg1Addr;
 	static channel_t* ainAalborg2Addr;
 	static channel_t* ainAalborg3Addr;
+	static channel_t* timerAalborg1Addr;
+	static channel_t* timerAalborg2Addr;
+	static channel_t* timerAalborg3Addr;
 
 	if (first_time) {
 		first_time = 0;
@@ -207,20 +220,26 @@ void WriteAalborgs()
 		ainAalborg1Addr = channels_find_by_name("ain_1_aalborg");
 		ainAalborg2Addr = channels_find_by_name("ain_2_aalborg");
 		ainAalborg3Addr = channels_find_by_name("ain_3_aalborg");
+		timerAalborg1Addr = channels_find_by_name("timer_1_aalborg");
+		timerAalborg2Addr = channels_find_by_name("timer_2_aalborg");
+		timerAalborg3Addr = channels_find_by_name("timer_3_aalborg");
 	}
 
 	// only write any of these channels if we are connected to the labjack
 	if (state[LABJACK_MICROSCROLL].connected) {
-		SET_UINT16(aalborg1StateAddr, aalborg_data.valve_state[0]);
-		SET_UINT16(aalborg2StateAddr, aalborg_data.valve_state[1]);
-		SET_UINT16(aalborg3StateAddr, aalborg_data.valve_state[2]);
-		SET_FLOAT(aalborgSpeedAddr, aalborg_data.valve_speed);
-		SET_UINT16(aalborg1GoalAddr, aalborg_data.valve_goal[0]);
-		SET_UINT16(aalborg2GoalAddr, aalborg_data.valve_goal[1]);
-		SET_UINT16(aalborg3GoalAddr, aalborg_data.valve_goal[2]);
+		SET_UINT16(aalborg1StateAddr, aalborg_data[0].valve_state);
+		SET_UINT16(aalborg2StateAddr, aalborg_data[1].valve_state);
+		SET_UINT16(aalborg3StateAddr, aalborg_data[2].valve_state);
+		SET_FLOAT(aalborgSpeedAddr, aalborg_data[0].valve_speed);
+		SET_UINT16(aalborg1GoalAddr, aalborg_data[0].valve_goal);
+		SET_UINT16(aalborg2GoalAddr, aalborg_data[1].valve_goal);
+		SET_UINT16(aalborg3GoalAddr, aalborg_data[2].valve_goal);
     	SET_FLOAT(ainAalborg1Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_1_STATUS));
     	SET_FLOAT(ainAalborg2Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_2_STATUS));
     	SET_FLOAT(ainAalborg3Addr, labjack_get_value(LABJACK_MICROSCROLL, VALVE_3_STATUS));
+		SET_UINT16(timerAalborg1Addr, aalborg_data[0].timer);
+		SET_UINT16(timerAalborg2Addr, aalborg_data[1].timer);
+		SET_UINT16(timerAalborg3Addr, aalborg_data[2].timer);
 	}
 }
 

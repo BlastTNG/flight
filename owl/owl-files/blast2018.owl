@@ -2637,7 +2637,7 @@
                             "_id": "1906115293"
                         },
                         "_map": {
-                            "15": "Bottom[style=No style (P1854549118)]",
+                            "11": "Bottom[style=No style (P1553349797)]",
                             "3": "Middle[style=No style (P1854549118)]",
                             "7": "Top[style=No style (P1854549118)]"
                         }
@@ -2946,7 +2946,7 @@
                             "_id": "1365135962"
                         },
                         "_map": {
-                            "0": "Not connected[style=Important (P564751211)]",
+                            "0": "Not connected[style=No style (P1553349797)]",
                             "1": "Connected[style=Important Green (P1055304642)]"
                         }
                     },
@@ -2965,7 +2965,7 @@
                             "_id": "868182397"
                         },
                         "_map": {
-                            "0": "Not connected[style=Important (P564751211)]",
+                            "0": "Not connected[style=No style (P1553349797)]",
                             "1": "Connected[style=Important Green (P1055304642)]"
                         }
                     },
@@ -2976,6 +2976,44 @@
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack8_conn_status",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1213329508"
+                        },
+                        "_map": {
+                            "0": "Not connected[style=Important (P564751211)]",
+                            "1": "Connected[style=Important Green (P1055304642)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "2075713180"
+                    },
+                    "_caption": "Microscroll LJ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "Labjack9_conn_status",
+                    "type": "PMDI"
+                },
+                {
+                    "PMDI": {
+                        "PObject": {
+                            "_id": "1849293694"
+                        },
+                        "_map": {
+                            "0": "Not connec[style=No style (P1553349797)]",
+                            "1": "Connected[style=No style (P1553349797)]"
+                        }
+                    },
+                    "PObject": {
+                        "_id": "577238643"
+                    },
+                    "_caption": "Hawkeye LJ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_source": "Labjack10_conn_status",
                     "type": "PMDI"
                 }
             ],
