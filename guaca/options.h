@@ -81,6 +81,4 @@ private slots:
     void on_auto_live_toggled(bool checked);
 };
 
-
-
 #endif // OPTIONS_H
