@@ -1339,12 +1339,14 @@ void SingleCommand(enum singleCommand command, int scheduled)
           break;
         case roach_allow_scan_check_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].auto_el_retune = 1;
+              CommandData.roach[i].auto_el_retune_top = 1;
+              CommandData.roach[i].auto_el_retune_bottom = 1;
           }
           break;
         case roach_disallow_scan_check_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
-              CommandData.roach[i].auto_el_retune = 0;
+              CommandData.roach[i].auto_el_retune_top = 0;
+              CommandData.roach[i].auto_el_retune_bottom = 0;
           }
           break;
         case chop_lo_all:
@@ -2638,14 +2640,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
-    case roach_allow_scan_check:
+    case roach_set_allow_scan_check:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_el_retune = 1;
-      }
-      break;
-    case roach_disallow_scan_check:
-      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-          CommandData.roach[ivalues[0]-1].auto_el_retune = 0;
+          CommandData.roach[ivalues[0]-1].auto_el_retune_top = ivalues[1];
+          CommandData.roach[ivalues[0]-1].auto_el_retune_bottom = ivalues[2];
       }
       break;
     case set_retune_type:
@@ -3506,7 +3504,8 @@ void InitCommandData()
         CommandData.roach[i].do_full_loop = 0;
         CommandData.roach[i].do_check_retune = 0;
         CommandData.roach[i].auto_correct_freqs = 0;
-        CommandData.roach[i].auto_el_retune = 1;
+        CommandData.roach[i].auto_el_retune_top = 1;
+        CommandData.roach[i].auto_el_retune_bottom = 1;
         CommandData.roach[i].do_noise_comp = 0;
         CommandData.roach[i].do_fk_loop = 0;
         CommandData.roach[i].kill = 0;
@@ -3524,7 +3523,8 @@ void InitCommandData()
         CommandData.roach[i].has_lamp_control = 0;
     }
     CommandData.roach[4].has_lamp_control = 1;
-    CommandData.trigger_roach_tuning_check = 0;
+    CommandData.trigger_roach_tuning_check_top = 0;
+    CommandData.trigger_roach_tuning_check_bottom = 0;
     CommandData.trigger_lo_offset_check = 0;
     CommandData.roach_params[0].set_out_atten = 7;
     CommandData.roach_params[1].set_out_atten = 7;
