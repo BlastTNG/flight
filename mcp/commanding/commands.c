@@ -2801,9 +2801,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case enable_chop_lo:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
-        for (int i = 0; i < NUM_ROACHES; i++) {
-            CommandData.roach[i].enable_chop_lo = ivalues[1];
-        }
+          CommandData.roach[ivalues[0]-1].enable_chop_lo = ivalues[1];
       }
       break;
     case chop_lo:

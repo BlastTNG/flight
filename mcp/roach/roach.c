@@ -1398,17 +1398,18 @@ int roach_chop_lo(roach_state_t *m_roach)
     set_freq[1] = m_roach->lo_centerfreq + step_hz;
     set_freq[2] = m_roach->lo_centerfreq;
 
-    struct timeval start, end;
+    struct timespec ts;
+    const struct timespec interval_ts = { .tv_sec = 0, .tv_nsec = 2e8}; // 200 ms interval
+    clock_gettime(CLOCK_REALTIME, &ts);
+
     for (int i = 0; i < 3; i++) {
         if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
             return status;
         }
-        gettimeofday(&start, NULL);
         unsigned int dt = 0;
-        while (dt < 200000) {
-            gettimeofday(&end, NULL);
-            dt = (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec);
-            usleep(1000);
+        while (dt < 2e8) {
+            ts = timespec_add(ts, interval_ts);
+            clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
         }
     }
     return 0;
