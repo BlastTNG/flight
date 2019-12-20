@@ -39,7 +39,7 @@ src/widgets.h
 SOURCES += \ 
 src/cow.cpp 
 
-LIBS += -lpthread -lgetdata++ -lnetcmd
+LIBS += -lpthread -lgetdata++
 
 RESOURCES += \ 
 icons/icons.qrc 
