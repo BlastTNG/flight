@@ -1337,13 +1337,13 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].set_attens = 2;
           }
           break;
-        case roach_allow_scan_check_all:
+        case roach_allow_trnd_sweeps_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].auto_el_retune_top = 1;
               CommandData.roach[i].auto_el_retune_bottom = 1;
           }
           break;
-        case roach_disallow_scan_check_all:
+        case roach_disallow_trnd_sweeps_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].auto_el_retune_top = 0;
               CommandData.roach[i].auto_el_retune_bottom = 0;
@@ -2660,7 +2660,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[i].dBm_per_tone = rvalues[1];
       }
       break;
-    case roach_set_allow_scan_check:
+    case roach_set_allow_trnd_sweeps:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].auto_el_retune_top = ivalues[1];
           CommandData.roach[ivalues[0]-1].auto_el_retune_bottom = ivalues[2];

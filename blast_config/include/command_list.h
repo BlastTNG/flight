@@ -165,8 +165,8 @@ enum singleCommand {
   reload_vna_all, end_sweeps_all, new_ref_params_all,
   auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
   check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
-  trigger_retune_check, full_loop_default_all, set_attens_default_all, roach_allow_scan_check_all,
-  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log,
+  trigger_retune_check, full_loop_default_all, set_attens_default_all, roach_allow_trnd_sweeps_all,
+  roach_disallow_trnd_sweeps_all, chop_lo_all, read_attens_all, read_lo_all, reset_log,
   read_pi_temp_all, stop_ir, static_ir, blue_valve_enable, blue_valve_disable, pumps_enable,
     pumps_disable, aalborg_enable, aalborg_disable, xyzzy
 };
@@ -324,7 +324,7 @@ enum multiCommand {
   read_lo,
   roach_df_all,
   df_targ,
-  roach_set_allow_scan_check,
+  roach_set_allow_trnd_sweeps,
   full_loop,
   full_loop_all,
   full_loop_default,
