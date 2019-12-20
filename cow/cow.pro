@@ -37,7 +37,8 @@ HEADERS += \
 src/cow.h \ 
 src/widgets.h 
 SOURCES += \ 
-src/cow.cpp 
+src/cow.cpp \
+../common/netcmd.c
 
 LIBS += -lpthread -lgetdata++
 
