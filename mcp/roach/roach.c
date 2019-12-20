@@ -1403,11 +1403,11 @@ int roach_chop_lo(roach_state_t *m_roach)
         if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
             return status;
         }
-        gettimeofday(&start);
+        gettimeofday(&start, NULL);
         unsigned int dt = 0;
         while (dt < 200000) {
-            gettimeofday(&end);
-            dt = (end.tv_sec * 10^6 + end.tv_usec) - (start.tv_sec * 10^6 + start_tv_usec);
+            gettimeofday(&end, NULL);
+            dt = (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec);
             usleep(1000);
         }
     }
