@@ -88,10 +88,11 @@ compress_roach_data
 request_stream_file
 
 [Allow/disallow]
+
 enable_chop_lo
 enable_chop_lo_all
-roach_allow_trnd_sweeps
-roach_disallow_trnd_sweeps
+roach_allow_trnd_sweeps_all
+roach_disallow_trnd_sweeps_all
 enable_roach_cal_pulse
 
 [Careful with these Roach commands]
