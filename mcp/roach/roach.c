@@ -1397,11 +1397,19 @@ int roach_chop_lo(roach_state_t *m_roach)
     set_freq[0] = m_roach->lo_centerfreq - step_hz;
     set_freq[1] = m_roach->lo_centerfreq + step_hz;
     set_freq[2] = m_roach->lo_centerfreq;
+
+    struct timeval start, end;
     for (int i = 0; i < 3; i++) {
         if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
             return status;
         }
-        usleep(200000);
+        gettimeofday(&start);
+        unsigned int dt = 0;
+        while (dt < 200000) {
+            gettimeofday(&end);
+            dt = (end.tv_sec * 10^6 + end.tv_usec) - (start.tv_sec * 10^6 + start_tv_usec);
+            usleep(1000);
+        }
     }
     return 0;
 }
@@ -6366,14 +6374,16 @@ void write_roach_channels_5hz(void)
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
+    static channel_t *roachStatusFieldAddr[NUM_ROACHES];
     // static channel_t *RoachIsAveragingAddr[NUM_ROACHES];
     static channel_t *RoachLampNow;
-    char channel_name_pkt_ct[128] = { 0 };
-    char channel_name_valid_pkt_ct[128] = { 0 };
-    char channel_name_invalid_pkt_ct[128] = { 0 };
-    char channel_name_is_chopping_lo[128] = { 0 };
-    // char channel_name_roach_is_averaging[128] = { 0 };
-    char channel_name_roach_lamp_now[128] = { 0 };
+    static char channel_name_pkt_ct[128] = { 0 };
+    static char channel_name_valid_pkt_ct[128] = { 0 };
+    static char channel_name_invalid_pkt_ct[128] = { 0 };
+    static char channel_name_is_chopping_lo[128] = { 0 };
+    // static char channel_name_roach_is_averaging[128] = { 0 };
+    static char channel_name_roach_lamp_now[128] = { 0 };
+    static char channel_name_roach_status[128] = { 0 };
 
     if (firsttime) {
         firsttime = 0;
@@ -6390,6 +6400,8 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
                     "packet_count_invalid_mcp_roach%d", i + 1);
+            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status),
+                        "status_roach%d", i + 1);
             // snprintf(channel_name_roach_is_averaging,
             // sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d", i + 1);
             IsChoppingLoAddr[i] = channels_find_by_name(channel_name_is_chopping_lo);
@@ -6399,6 +6411,7 @@ void write_roach_channels_5hz(void)
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
             // RoachIsAveragingAddr[i] = channels_find_by_name(channel_name_roach_is_averaging);
+            roachStatusFieldAddr[i] = channels_find_by_name(channel_name_roach_status);
         }
         RoachLampNow = channels_find_by_name(channel_name_roach_lamp_now);
     }
@@ -6411,6 +6424,46 @@ void write_roach_channels_5hz(void)
         roach_udp[i].roach_invalid_packet_count);
         // SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
     }
+    // Make Roach status field
+    int roach_status_field = 0;
+    if (roach_state_table[i].is_sweeping) {
+        CommandData.roach[i].is_sweeping = 1;
+    } else {
+        CommandData.roach[i].is_sweeping = 0;
+    }
+    roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
+    roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
+    roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
+    // is_sweeping is 2 bits
+    roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
+    roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
+    roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
+    roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
+    roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
+    roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
+    roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
+    roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
+    roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
+    roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
+    roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
+    roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
+    roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
+    roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
+    roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
+    roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
+                                       CommandData.roach[i].auto_el_retune_bottom)) << 25);
+    roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
+    roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
+    roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
+    roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
+    roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
+    roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
+    SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
     SET_UINT8(RoachLampNow, roach_lamp_now);
 }
 
@@ -6447,7 +6500,6 @@ void write_roach_channels_1hz(void)
     static channel_t *PrevNkidsFoundAddr[NUM_ROACHES];
     static channel_t *nKidsGoodAddr[NUM_ROACHES];
     static channel_t *nKidsBadAddr[NUM_ROACHES];
-    static channel_t *roachStatusFieldAddr[NUM_ROACHES];
     static channel_t *CurrentNTonesAddr[NUM_ROACHES];
     static channel_t *LoCenterFreqAddr[NUM_ROACHES];
     static channel_t *NFlagThreshFieldAddr[NUM_ROACHES];
@@ -6462,7 +6514,6 @@ void write_roach_channels_1hz(void)
     static channel_t *TargSweepSpanAddr[NUM_ROACHES];
     static channel_t *TrndSweepSpanAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
-    uint32_t roach_status_field = 0;
     static char channel_name_pi_temp[128] = { 0 };
     static char channel_name_enable_roach_lamp[128] = { 0 };
     static char channel_name_roach_fridge_cycle_warning[128] = { 0 };
@@ -6475,7 +6526,6 @@ void write_roach_channels_1hz(void)
     static char channel_name_prev_kids_found[128] = { 0 };
     static char channel_name_kids_good[128] = { 0 };
     static char channel_name_kids_bad[128] = { 0 };
-    static char channel_name_roach_status[128] = { 0 };
     static char channel_name_current_ntones[128] = { 0 };
     static char channel_name_lo_center_freq[128] = { 0 };
     static char channel_name_nflag_thresh[128] = { 0 };
@@ -6537,8 +6587,6 @@ void write_roach_channels_1hz(void)
                         "nkids_good_roach%d", i + 1);
             snprintf(channel_name_kids_bad, sizeof(channel_name_kids_bad),
                         "nkids_bad_roach%d", i + 1);
-            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status),
-                        "status_roach%d", i + 1);
             snprintf(channel_name_current_ntones, sizeof(channel_name_current_ntones),
                         "current_ntones_roach%d", i + 1);
             snprintf(channel_name_lo_center_freq, sizeof(channel_name_lo_center_freq),
@@ -6609,7 +6657,6 @@ void write_roach_channels_1hz(void)
             PrevNkidsFoundAddr[i] = channels_find_by_name(channel_name_prev_kids_found);
             nKidsGoodAddr[i] = channels_find_by_name(channel_name_kids_good);
             nKidsBadAddr[i] = channels_find_by_name(channel_name_kids_bad);
-            roachStatusFieldAddr[i] = channels_find_by_name(channel_name_roach_status);
             CurrentNTonesAddr[i] = channels_find_by_name(channel_name_current_ntones);
             LoCenterFreqAddr[i] = channels_find_by_name(channel_name_lo_center_freq);
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
@@ -6626,7 +6673,6 @@ void write_roach_channels_1hz(void)
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         n_good_kids = 0;
-        roach_status_field = 0;
         for (j = 0; j < NUM_FLAG_CHANNELS_PER_ROACH; j++) {
             flag = 0;
             for (k = 0; k < 16; k++) {
@@ -6664,45 +6710,6 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
         SET_FLOAT(FpgaClockFreqAddr[i], roach_state_table[i].fpga_clock_freq);
-    // Make Roach status field
-        if (roach_state_table[i].is_sweeping) {
-            CommandData.roach[i].is_sweeping = 1;
-        } else {
-            CommandData.roach[i].is_sweeping = 0;
-        }
-        roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
-        roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
-        // is_sweeping is 2 bits
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
-        roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
-        roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
-        roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
-        roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
-        roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
-        roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
-        roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
-        roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
-                                           CommandData.roach[i].auto_el_retune_bottom)) << 25);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
-        roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
-        roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
-        roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
-        SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
         SET_UINT16(NFlagThreshFieldAddr[i], CommandData.roach[i].n_outofrange_thresh);
