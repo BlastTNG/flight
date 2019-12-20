@@ -3530,7 +3530,7 @@ void InitCommandData()
         CommandData.roach_params[i].read_in_atten = 0;
         CommandData.roach_params[i].read_out_atten = 0;
         CommandData.roach_params[i].lo_freq_MHz = 750.0;
-        CommandData.roach_params[i].targ_sweep_span = 150.0e3;
+        CommandData.roach_params[i].targ_sweep_span = 175.0e3;
         CommandData.roach[i].has_lamp_control = 0;
     }
     CommandData.roach[4].has_lamp_control = 1;

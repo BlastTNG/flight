@@ -6333,6 +6333,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].num_kids = 0;
     roach_state_table[ind].prev_num_kids = 0;
     roach_state_table[ind].avg_df_diff = 0;
+    roach_state_table[ind].targ_sweep_span = CommandData.roach_params[ind].targ_sweep_span;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
     CommandData.roach[ind].auto_el_retune_top = 1;
