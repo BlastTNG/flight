@@ -103,7 +103,65 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="0" rowspan="3" colspan="2">
+    <item row="14" column="0" colspan="2">
+     <widget class="QLabel" name="linkDir_3">
+      <property name="text">
+       <string>Remote hostname or address:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="QListWidget" name="multiLinkSelect">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QLabel" name="linkDir">
+      <property name="font">
+       <font>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Linklist Dir</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="0" rowspan="2" colspan="2">
+     <widget class="QComboBox" name="hosts">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+      <item>
+       <property name="text">
+        <string>zaphod.bit</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Add new...</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="5" column="0" rowspan="5" colspan="2">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -191,64 +249,6 @@
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-    <item row="14" column="0" colspan="2">
-     <widget class="QLabel" name="linkDir_3">
-      <property name="text">
-       <string>Remote hostname or address:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QListWidget" name="multiLinkSelect">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>150</height>
-       </size>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::ExtendedSelection</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="2">
-     <widget class="QLabel" name="linkDir">
-      <property name="font">
-       <font>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Linklist Dir</string>
-      </property>
-     </widget>
-    </item>
-    <item row="15" column="0" rowspan="2" colspan="2">
-     <widget class="QComboBox" name="hosts">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>30</height>
-       </size>
-      </property>
-      <item>
-       <property name="text">
-        <string>zaphod.bit</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Add new...</string>
-       </property>
-      </item>
      </widget>
     </item>
    </layout>
