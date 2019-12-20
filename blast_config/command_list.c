@@ -51,6 +51,8 @@ const char *GroupNames[N_GROUPS] = {
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
+const char *disable_enable[] = {"Disable", "Enable", 0};
+const char *internal_external[] = {"Internal", "External", 0};
 const char *linklist_names[] = {0};
 
 
@@ -359,8 +361,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
-  {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
   {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
@@ -1051,6 +1051,28 @@ struct mcom mcommands[plugh + 2] = {
       {"APPLY TRF FILE[1 = default (all 1), 2 = apply trf]", 1, 2, 'i', "NONE"},
     }
   },
+  {COMMAND(set_targ_sweep_span), "set the target sweep span", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_targ_sweep_span_all), "set all the target sweep spans", GR_ROACH, 1,
+    {
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_trnd_sweep_span), "set the target sweep span for turnarounds", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_trnd_sweep_span_all), "set all the target sweep spans for turnarounds", GR_ROACH, 1,
+    {
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
   {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1374,11 +1396,16 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
-  {COMMAND(roach_set_allow_scan_check), "Toggle target sweeps at the end of each scan", GR_ROACH, 3,
+  {COMMAND(roach_set_allow_trnd_sweeps), "Toggle target sweeps at the end of each scan", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Top scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
-      {"Bottom scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
+      {"Top scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
+      {"Bottom scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
+    }
+  },
+  {COMMAND(roach_set_allow_trnd_sweeps_all), "Toggle target sweeps at the end of each scan", GR_ROACH, 1,
+    {
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(set_retune_type_all), "(All Roaches) Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 1,
@@ -1523,7 +1550,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
-      {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
@@ -1533,7 +1560,13 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
+    }
+  },
+  {COMMAND(enable_chop_lo), "Enables or disables LO chop", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
@@ -1544,19 +1577,19 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
                      CONFIRM | GR_ROACH, 1,
     {
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(enable_roach_cal_pulse),
        "(All Roaches) Enables or disables cal lamp during turnaround loop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   /***************************************/

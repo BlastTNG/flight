@@ -1,0 +1,110 @@
+[Sweep commands]
+
+full_loop
+full_loop_all
+full_loop_default
+full_loop_default_all
+end_sweep
+end_sweeps_all
+refit_freqs
+refit_freqs_all
+set_targ_sweep_span
+set_targ_sweep_span_all
+set_trnd_sweep_span
+set_trnd_sweep_span_all
+vna_sweep
+vna_sweep_all
+turnaround_loop
+turnaround_loop_all
+
+[Probe tone commands]
+
+load_freqs
+load_freqs_all
+reload_vna_all
+load_new_vna_amps
+load_new_targ_amps
+set_default_tone_power
+set_default_tone_power_all
+
+[Find kids commands]
+
+set_find_kids_params
+set_max_nkids
+set_min_nkids
+set_max_nkids_all
+set_min_nkids_all
+set_n_outofrange_thresh
+set_n_outofrange_thresh_all
+find_kids
+find_kids_default
+find_kids_default_all
+find_kids_loop
+find_kids_loop_all
+
+[LO commands]
+
+enable_chop_lo
+enable_chop_lo_all
+chop_lo
+chop_lo_all
+center_lo
+center_lo_all
+offset_lo
+offset_lo_all
+read_lo
+read_lo_all
+set_lo_MHz
+
+[Attenuator commands]
+
+read_attens
+read_attens_all
+set_attens_default
+set_attens_default_all
+set_attens
+set_attens_all
+set_attens_calc
+set_attens_last
+set_attens_last_all
+
+[Pi commands]
+
+reboot_pi
+read_pi_temp
+read_pi_temp_all
+
+[Timestream commands]
+
+roach_ts
+roach_ts_all
+zero_df_all
+roach_df_all
+set_roach_chan
+
+[Downlink data]
+
+compress_roach_data
+request_stream_file
+
+[Allow/disallow]
+
+enable_chop_lo
+enable_chop_lo_all
+roach_set_allow_trnd_sweeps_all
+roach_set_allow_trnd_sweeps
+enable_roach_cal_pulse
+
+[Careful with these Roach commands]
+
+kill_roach
+roach_reset
+roach_reset_all
+roach_set_ext_ref
+roach_set_ext_ref_all
+set_attens_min_output
+roach_has_lamp_control
+test_tone
+
+[Cal lamp]
+periodic_cal
