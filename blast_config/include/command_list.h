@@ -360,6 +360,7 @@ enum multiCommand {
   set_n_outofrange_thresh_all,
   set_n_outofrange_thresh,
   enable_chop_lo_all,
+  enable_chop_lo,
   chop_lo,
   roach_has_lamp_control,
   roach_set_extref,

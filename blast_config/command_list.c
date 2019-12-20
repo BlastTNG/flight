@@ -51,6 +51,8 @@ const char *GroupNames[N_GROUPS] = {
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
+const char *disable_enable[] = {"Disable", "Enable", 0};
+const char *internal_external[] = {"Internal", "External", 0};
 const char *linklist_names[] = {0};
 
 
@@ -1545,7 +1547,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
-      {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
@@ -1555,7 +1557,13 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
+    }
+  },
+  {COMMAND(enable_chop_lo), "Enables or disables LO chop", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
@@ -1566,19 +1574,19 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
                      CONFIRM | GR_ROACH, 1,
     {
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(enable_roach_cal_pulse),
        "(All Roaches) Enables or disables cal lamp during turnaround loop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   /***************************************/
