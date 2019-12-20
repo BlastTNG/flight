@@ -279,6 +279,8 @@ enum multiCommand {
   load_new_targ_amps,
   set_targ_sweep_span_all,
   set_targ_sweep_span,
+  set_trnd_sweep_span_all,
+  set_trnd_sweep_span,
   change_state,
   get_state,
   set_attens,

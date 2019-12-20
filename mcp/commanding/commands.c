@@ -2293,6 +2293,16 @@ void MultiCommand(enum multiCommand command, double *rvalues,
           CommandData.roach_params[ivalues[0]-1].targ_sweep_span = ivalues[1]*1000;
       }
       break;
+    case set_trnd_sweep_span_all:
+      for (int i = 0; i < NUM_ROACHES; i++) {
+          CommandData.roach_params[i].trnd_sweep_span = ivalues[0]*1000;
+      }
+      break;
+    case set_trnd_sweep_span:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+          CommandData.roach_params[ivalues[0]-1].trnd_sweep_span = ivalues[1]*1000;
+      }
+      break;
     case load_new_targ_amps:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
           CommandData.roach[ivalues[0]-1].load_targ_amps = ivalues[1];

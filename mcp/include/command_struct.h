@@ -440,6 +440,7 @@ typedef struct roach_params
     double df_retune_threshold;
     double df_diff_retune_threshold;
     uint32_t targ_sweep_span;
+    uint32_t trnd_sweep_span;
 } roach_params_t;
 
 // Ethercat controller/device commands

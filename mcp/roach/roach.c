@@ -2686,15 +2686,19 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
     }
     if (sweep_type == TARG) {
         // If the command turnaround targ sweep span is sane, then use it.
-        // If we are not sane, or not doing a turnaound, then use the default.
-        if ((CommandData.roach_params[m_roach->which-1].targ_sweep_span >= 75.0e3) &&
-            (CommandData.roach_params[m_roach->which-1].targ_sweep_span <= 250.0e3) &&
+        // If we are not sane, or not doing a turnaound, then use the commanded targ sweep.
+        // If we are not sane at all, then use the default default.
+        if ((CommandData.roach_params[m_roach->which-1].trnd_sweep_span >= 75.0e3) &&
+            (CommandData.roach_params[m_roach->which-1].trnd_sweep_span <= 250.0e3) &&
             (m_roach->doing_turnaround_loop)) {
+            m_span = CommandData.roach_params[m_roach->which-1].trnd_sweep_span;
+        } else if ((CommandData.roach_params[m_roach->which-1].targ_sweep_span >= 75.0e3) &&
+            (CommandData.roach_params[m_roach->which-1].targ_sweep_span <= 250.0e3)) {
             m_span = CommandData.roach_params[m_roach->which-1].targ_sweep_span;
         } else {
             m_span = DEFAULT_TARG_SWEEP_SPAN;
         }
-        m_roach->targ_sweep_span = m_span;
+        m_roach->targ_sweep_span_used = m_span;
         if (create_data_dir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
                            m_roach->which, m_roach->last_targ_path);
@@ -6333,7 +6337,7 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].num_kids = 0;
     roach_state_table[ind].prev_num_kids = 0;
     roach_state_table[ind].avg_df_diff = 0;
-    roach_state_table[ind].targ_sweep_span = CommandData.roach_params[ind].targ_sweep_span;
+    roach_state_table[ind].targ_sweep_span_used = CommandData.roach_params[ind].targ_sweep_span;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
     CommandData.roach[ind].auto_el_retune_top = 1;
@@ -6649,8 +6653,8 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
-        SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span);
-        SET_SCALED_VALUE(TrndSweepSpanAddr[i], CommandData.roach_params[i].targ_sweep_span);
+        SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span_used);
+        SET_SCALED_VALUE(TrndSweepSpanAddr[i], CommandData.roach_params[i].trnd_sweep_span);
 
         SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
         SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
