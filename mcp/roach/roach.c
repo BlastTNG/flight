@@ -6456,42 +6456,44 @@ void write_roach_channels_1hz(void)
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
     static channel_t *TargSweepSpanAddr[NUM_ROACHES];
+    static channel_t *TrndSweepSpanAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
-    char channel_name_pi_temp[128] = { 0 };
-    char channel_name_enable_roach_lamp[128] = { 0 };
-    char channel_name_roach_fridge_cycle_warning[128] = { 0 };
-    char channel_name_roach_auto_check_cycle[128] = { 0 };
-    char channel_name_df_retune_thresh[128] = { 0 };
-    char channel_name_df_diff_retune_thresh[128] = { 0 };
-    char channel_name_avg_df_diff[128] = { 0 };
-    char channel_name_flags_kids[128] = { 0 };
-    char channel_name_kids_found[128] = { 0 };
-    char channel_name_prev_kids_found[128] = { 0 };
-    char channel_name_kids_good[128] = { 0 };
-    char channel_name_kids_bad[128] = { 0 };
-    char channel_name_roach_status[128] = { 0 };
-    char channel_name_current_ntones[128] = { 0 };
-    char channel_name_lo_center_freq[128] = { 0 };
-    char channel_name_nflag_thresh[128] = { 0 };
-    char channel_name_nkids_tlm[128] = { 0 };
-    char channel_name_skids_tlm[128] = { 0 };
-    char channel_name_roach_state[128] = { 0 };
-    char channel_name_pi_error_count[128] = { 0 };
-    char channel_name_cmd_roach_par_smooth[128] = { 0 };
-    char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_set_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_set_out_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_read_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
-    char channel_name_roach_adcI_rms[128] = { 0 };
-    char channel_name_roach_adcQ_rms[128] = { 0 };
-    char channel_name_roach_pow_per_tone[128] = { 0 };
-    char channel_name_lo_freq_req[128] = { 0 };
-    char channel_name_lo_freq_read[128] = { 0 };
-    char channel_name_fpga_clock_freq[128] = { 0 };
-    char channel_name_targ_sweep_span[128] = { 0 };
+    static char channel_name_pi_temp[128] = { 0 };
+    static char channel_name_enable_roach_lamp[128] = { 0 };
+    static char channel_name_roach_fridge_cycle_warning[128] = { 0 };
+    static char channel_name_roach_auto_check_cycle[128] = { 0 };
+    static char channel_name_df_retune_thresh[128] = { 0 };
+    static char channel_name_df_diff_retune_thresh[128] = { 0 };
+    static char channel_name_avg_df_diff[128] = { 0 };
+    static char channel_name_flags_kids[128] = { 0 };
+    static char channel_name_kids_found[128] = { 0 };
+    static char channel_name_prev_kids_found[128] = { 0 };
+    static char channel_name_kids_good[128] = { 0 };
+    static char channel_name_kids_bad[128] = { 0 };
+    static char channel_name_roach_status[128] = { 0 };
+    static char channel_name_current_ntones[128] = { 0 };
+    static char channel_name_lo_center_freq[128] = { 0 };
+    static char channel_name_nflag_thresh[128] = { 0 };
+    static char channel_name_nkids_tlm[128] = { 0 };
+    static char channel_name_skids_tlm[128] = { 0 };
+    static char channel_name_roach_state[128] = { 0 };
+    static char channel_name_pi_error_count[128] = { 0 };
+    static char channel_name_cmd_roach_par_smooth[128] = { 0 };
+    static char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
+    static char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
+    static char channel_name_cmd_roach_par_set_in_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_set_out_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_read_in_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
+    static char channel_name_roach_adcI_rms[128] = { 0 };
+    static char channel_name_roach_adcQ_rms[128] = { 0 };
+    static char channel_name_roach_pow_per_tone[128] = { 0 };
+    static char channel_name_lo_freq_req[128] = { 0 };
+    static char channel_name_lo_freq_read[128] = { 0 };
+    static char channel_name_fpga_clock_freq[128] = { 0 };
+    static char channel_name_targ_sweep_span[128] = { 0 };
+    static char channel_name_trnd_sweep_span[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -6577,6 +6579,9 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_targ_sweep_span,
                     sizeof(channel_name_targ_sweep_span), "targ_sweep_span_roach%d",
                     i + 1);
+            snprintf(channel_name_trnd_sweep_span,
+                    sizeof(channel_name_trnd_sweep_span), "trnd_sweep_span_roach%d",
+                    i + 1);
             PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
@@ -6607,6 +6612,7 @@ void write_roach_channels_1hz(void)
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
             TargSweepSpanAddr[i] = channels_find_by_name(channel_name_targ_sweep_span);
+            TrndSweepSpanAddr[i] = channels_find_by_name(channel_name_trnd_sweep_span);
         }
         EnableRoachLamp = channels_find_by_name("roach_enable_cal_pulse");
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
@@ -6644,6 +6650,7 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
         SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span);
+        SET_SCALED_VALUE(TrndSweepSpanAddr[i], CommandData.roach_params[i].targ_sweep_span);
 
         SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
         SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
