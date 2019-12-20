@@ -6423,47 +6423,47 @@ void write_roach_channels_5hz(void)
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
         // SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
+        // Make Roach status field
+        int roach_status_field = 0;
+        if (roach_state_table[i].is_sweeping) {
+            CommandData.roach[i].is_sweeping = 1;
+        } else {
+            CommandData.roach[i].is_sweeping = 0;
+        }
+        roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
+        roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
+        // is_sweeping is 2 bits
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
+        roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
+        roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
+        roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
+        roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
+        roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
+        roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
+        roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
+        roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
+                                           CommandData.roach[i].auto_el_retune_bottom)) << 25);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
+        roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
+        roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
+        roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
+        SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
     }
-    // Make Roach status field
-    int roach_status_field = 0;
-    if (roach_state_table[i].is_sweeping) {
-        CommandData.roach[i].is_sweeping = 1;
-    } else {
-        CommandData.roach[i].is_sweeping = 0;
-    }
-    roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
-    roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
-    roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
-    // is_sweeping is 2 bits
-    roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
-    roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
-    roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
-    roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
-    roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
-    roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
-    roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
-    roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
-    roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-    roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
-    roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
-    roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
-    roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
-    roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
-    roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
-    roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
-                                       CommandData.roach[i].auto_el_retune_bottom)) << 25);
-    roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
-    roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
-    roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
-    roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
-    roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
-    roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
-    SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
     SET_UINT8(RoachLampNow, roach_lamp_now);
 }
 
