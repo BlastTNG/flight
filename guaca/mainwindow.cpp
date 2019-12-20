@@ -3,10 +3,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <arpa/inet.h> // socket stuff
-#include <netinet/in.h> // socket stuff
-#include <sys/types.h> // socket types
-#include <sys/socket.h> // socket stuff
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -19,10 +15,12 @@
 #define VERBOSE 0
 #define SELECTION_APPEND_TEXT " - Custom selection... -"
 #define GUACA_MIN_TIME_CHECK_DATA 2
+#define LINKLIST_DATEFORMAT_LENGTH 20
 
 char archivedir[128] = "/data/mole";
 char moledir[128] = "/data/mole";
 char masterlink[128] = "/data/etc/mole.lnk";
+char masterlist[128] = "/data/etc/mole.lst";
 
 char *remote_hosts[] = {
   "zaphod.bit",
@@ -39,193 +37,60 @@ void USAGE(void) {
     exit(0);
 }
 
-/*
- * This thread waits for slave guacas to connect and then serves
- * up the configuration file to the slave
- */
+int MainWindow::make_listfiles() {
+    QStringList linklist_names;
+    QList<QFile*> linklist_files;
 
-// TODO: switch to QProcess
-void server_thread(void * )
-{
-  int sock;
-  int client_sock , c;
-  struct sockaddr_in server , client;
+    QDir archdir(archivedir);
+    archdir.setFilter(QDir::AllDirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+    archdir.setSorting(QDir::Name);
 
-  unsigned int theport = GUACAPORT;
+    QStringList filelist = archdir.entryList();
 
-  //Create socket
-  int socket_desc = socket(AF_INET , SOCK_STREAM | SOCK_NONBLOCK, 0);
-  if (socket_desc == -1)
-  {
-    perror("socket could not create server socket");
-    return;
-  }
+    for (int i=0; i<filelist.size(); i++) {
+        int len = filelist[i].length();
+        // has the correct format (i.e. ****_yyyy-mm-dd-hh-mm-ss)
+        if (len > LINKLIST_DATEFORMAT_LENGTH && filelist[i][len-LINKLIST_DATEFORMAT_LENGTH] == '_') {
+            // build the linklist name and find it in the list of linklist_names
+            filelist[i] = archdir.absolutePath() + "/" + filelist[i];
+            QString name = QString(filelist[i]);
+            name.chop(LINKLIST_DATEFORMAT_LENGTH);
+            name += ".lst";
+            int index = linklist_names.indexOf(name);
 
-  //Prepare the sockaddr_in structure
-  server.sin_family = AF_INET;
-  server.sin_addr.s_addr = INADDR_ANY;
-  server.sin_port = htons(theport);
-
-  int tru = 1;
-  setsockopt(socket_desc,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
-
-  //Bind
-  if (bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-  {
-    //print the error message
-    perror("bind failed. Unable to start guacamole server: ");
-    return;
-  }
-
-  //Listen
-  listen(socket_desc , 3);
-
-
-  //Accept and incoming connection
-  if (VERBOSE) printf("Waiting for incoming connections...\n");
-  c = sizeof(struct sockaddr_in);
-
-  while (1) {
-    if ((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) > 0) {
-      sock = client_sock;
-
-      // TODO: load ini file and send it
-      // send config data
-      //if (send(sock, configbuf, loc, 0) <= 0) {
-      //  printf("Unable to send client data\n");
-      //}
-
-      close(sock);
-    } else {
-      usleep(200000);
+            // get the file handle for the given linklist name
+            QFile * file;
+            if (index < 0) {
+                // generate a new file and append to the list
+                file = new QFile();
+                file->setFileName(name);
+                if (!file->open(QIODevice::Truncate | QIODevice::WriteOnly)) {
+                    qDebug() << "Cannot open file" << name;
+                    continue;
+                }
+                // qDebug() << "Opened file" << name;
+                linklist_files.append(file);
+                linklist_names.append(name);
+            } else {
+                // grab the file from the array
+                file = linklist_files[index];
+            }
+            file->write(filelist[i].toUtf8().data());
+            file->write("\n");
+        }
     }
-  }
-
-  return;
-}
-
-static int one (const struct dirent *unused)
-{
-  if (unused) return 1;
-
-  return 1;
-}
-
-char * get_linklist_name(char * filename)
-{
-  int length = strlen(filename);
-
-  // the name needs to be long enough and of the right format
-  if ((length < 20) || (filename[length-20] != '_')) return NULL;
-
-  for (int i=length-1; i>=0; i--) {
-     if (filename[i] == '.') { // has a file extension, so not what we're looking for
-         return NULL;
-     }
-  }
-
-  filename[length-20] = '\0'; // remove the date from the linklist name
-
-  return filename;
-}
-
-int generate_linklist_listfiles()
-{
-  struct dirent **dir;
-  int n = scandir(archivedir, &dir, one, alphasort);
-
-  int num_types = 0;
-  char type_names[MAX_NUM_LINKLIST_FILES][LINKLIST_SHORT_FILENAME_SIZE] = {""};
-  FILE * type_fds[MAX_NUM_LINKLIST_FILES] = {0};
-  char listfilename[LINKLIST_MAX_FILENAME_SIZE] = "";
-
-  if (n < 0) {
-      return 0;
-  }
-
-  for (int i=0; i<n; i++) {
-    char * linklistname;
-    if ((linklistname = get_linklist_name(dir[i]->d_name))) {
-      int j = 0;
-      for (j=0; j<num_types; j++) {
-        if (!strcmp(linklistname, type_names[j])) break;
-      }
-      if (j == num_types) {
-        sprintf(listfilename, "%s/%s.lst", archivedir, linklistname);
-        type_fds[j] = fopen(listfilename, "w");
-        if (!type_fds[j]) {
-					printf("Unable to open list file %s: %s (errno %d)\n", listfilename, strerror(errno), errno);
-					exit(2);
-				}
-        strcpy(type_names[j], linklistname);
-        num_types++;
-      }
-      linklistname[strlen(linklistname)] = '_';
-      fprintf(type_fds[j], "%s/%s\n", archivedir, linklistname);
+    // cleanup files
+    for (int i=0; i<linklist_files.size(); i++) {
+        linklist_files[i]->flush();
+        linklist_files[i]->close();
+        delete linklist_files[i];
     }
-  }
-  for (int i=0; i<num_types; i++) {
-    fflush(type_fds[i]);
-    fclose(type_fds[i]);
-  }
+    linklist_files.clear();
+    linklist_names.clear();
 
-  return num_types;
+    return linklist_files.size();
 }
 
-void MainWindow::make_listfiles() {
-  generate_linklist_listfiles();
-}
-
-
-/*
- * Connects to a server guaca and slaves to it by retrieving
- * the configuration file and applying those settings.
- * Configuration includes current state of mole options
- * as well as whether or not mole clients have been
- * initialized.
- */
-
-int MainWindow::get_server_data()
-{
-  struct sockaddr_in server_info;
-  struct hostent *he;
-  int socket_fd;
-
-  //uint8_t buf[2048] = {0};
-
-  if ((he = gethostbyname(gnd_ip))==NULL)
-  {
-    printf("Cannot get host name \"%s\"\n",gnd_ip);
-    return -1;
-  }
-  if (VERBOSE) printf("Connecting to %s...\n",gnd_ip);
-  if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0))== -1)
-  {
-    fprintf(stderr, "Socket Failure!!\n");
-    return -1;
-  }
-
-  int tru = 1;
-  setsockopt(socket_fd,SOL_SOCKET,SO_REUSEADDR,&tru,sizeof(int));
-
-  memset(&server_info, 0, sizeof(server_info));
-  server_info.sin_family = AF_INET;
-  server_info.sin_port = htons(GUACAPORT);
-  server_info.sin_addr = *((struct in_addr *)he->h_addr);
-
-  if (::connect(socket_fd, (struct sockaddr *)&server_info, sizeof(struct sockaddr))<0)
-  {
-    printf("Client connection refused.\n");
-    ::close(socket_fd);
-    return -1;
-  }
-
-  // TODO receive ini file, save to disk, and reload settings
-  // int rsize = recv(socket_fd,buf,2048,0);
-  ::close(socket_fd);
-
-  return 1;
-}
 
 /*
  * A very important function that animates guaca when
@@ -287,14 +152,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     settings("guacamole", "guaca")
-{
+{   
   ui->setupUi(this);
 
   ui->numRewind->setValidator(new QIntValidator(0, 1e8, this) );
   ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
   ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
-
-  generate_linklist_listfiles();
 
   options = new Options(this);
 
@@ -342,8 +205,7 @@ MainWindow::MainWindow(QWidget *parent) :
   QString base = ":/images/guaca-";
   QString ext = ".svg";
 
-  for (int i=0; i<IMAGE_TOTAL; i++)
-  {
+  for (int i=0; i<IMAGE_TOTAL; i++) {
     qi[i] = QIcon(base+QString::number(i)+ext);
   }
   qs = QSize(300,300);
@@ -356,20 +218,18 @@ MainWindow::MainWindow(QWidget *parent) :
   srand(time(0));
 
   mole_active = false;
+  servermode = false;
   logend = time(0);
 
-  /*
-  server_active = 1;
-  f1 = QtConcurrent::run(server_thread, &cfg);
-  */
-
-  servermode = false;
+  // Start the config server
+  server = new Server(this);
 
   _ut = new QTimer(this);
   _ut->setInterval(90);
   connect(_ut,SIGNAL(timeout()),this,SLOT(dancing()));
   _ut->start();
 
+  make_listfiles();
   _ut_listfiles = new QTimer(this);
   _ut_listfiles->setInterval(5000);
   connect(_ut_listfiles,SIGNAL(timeout()),this,SLOT(make_listfiles()));
@@ -383,12 +243,10 @@ MainWindow::~MainWindow()
   printf("Destructing main window\n");
   saveConfig();
 
-  if (!servermode) {
-    f1.cancel();
-  }
-
   if (options) delete options;
   options = NULL;
+  if (server) delete server;
+  server = NULL;
   if (ui) delete ui;
   ui = NULL;
   qDebug() << "Closing";
@@ -398,6 +256,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     savePosition();
     event->accept();
     _ut->stop();
+    _ut_listfiles->stop();
     while(still_dancing) QTest::qWait(90);
     if (options) delete options;
     options = NULL;
@@ -651,7 +510,10 @@ bool MainWindow::change_remote_host(const QString &arg)
 
   ui->multiLinkSelect->clear();
 
-  printf("Attempting to connect to %s...\n", tcpconn.ip);
+  // set the port
+  set_linklist_client_port(options->client_port);
+
+  printf("Attempting to connect to %s:%d...\n", tcpconn.ip, options->client_port);
   if ((numlink = request_server_archive_list(&tcpconn,names)) > 0)// made a connection with the server
   {
     printf("Got server list\n");
@@ -678,7 +540,7 @@ bool MainWindow::change_remote_host(const QString &arg)
     QMessageBox::information(
         this,
         tr("Guaca-mole"),
-        tr("No archive found.") );
+        "No archive found at " + QString(hostname.data()) + ":" + QString::number(options->client_port) + ".");
   }
   close_connection(&tcpconn);
 
@@ -701,30 +563,25 @@ void MainWindow::on_actionSlave_to_triggered()
   return;
 
   bool ok;
-  QString thehost;
-  QString host = QInputDialog::getText(this, "Choose Master", "What master server should guaca connect to?", QLineEdit::Normal, thehost, &ok);
+  QString dummy;
+  QString host = QInputDialog::getText(this, "Choose Master", "What server should guaca connect to?", QLineEdit::Normal, dummy, &ok);
 
   if (!ok) {
     return;
   } else {
-    QByteArray ba = host.toLatin1();
-    const char *c_str2 = ba.data();
-    strcpy(gnd_ip,c_str2);
     servermode = true;
-    while (syncstate == 0) QTest::qWait(200);
-    if (syncstate > 0) {
+    if (1) {
       QMessageBox::information(this,"Guaca is slaved","Guaca slaved to \""+host+"\"...",QMessageBox::Cancel);
-      servermode = false;
     } else {
       QMessageBox::warning(this,"Guaca is not slaved","Could not connect to \""+host+"\".",QMessageBox::Cancel);
-      servermode = false;
     }
+    servermode = false;
   }
 }
 
 void MainWindow::on_actionAbout_triggered()
 {
-  QMessageBox::about(this,"About Guaca","Guaca v1.0\n\nGuaca is a front end for the data acquisition client mole. \n"""
+  QMessageBox::about(this,"About Guaca","Guaca v1.2\n\nGuaca is a front end for the data acquisition client mole. \n"""
                                         "To learn more about mole functionality, see \"mole --help\"\n\n"
                                         "Copyright J. Romualdez 2017-2019");
 }
@@ -773,7 +630,7 @@ int MainWindow::add_a_host(const QString &thehost)
 
 void MainWindow::on_hosts_activated(int index)
 {
-    bool reconnect = host_index != index;
+    bool reconnect = true;
     bool newitem = false;
 
     // the last item was selected, which is the add host option

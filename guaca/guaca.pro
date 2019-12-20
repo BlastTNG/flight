@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui concurrent
+QT       += core gui concurrent network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -40,7 +40,8 @@ SOURCES += main.cpp\
     ../liblinklist/linklist_writer.c \
     ../liblinklist/linklist_connect.c \
     options.cpp \
-    logscroll.cpp
+    logscroll.cpp \
+    server.cpp
 
 HEADERS  += mainwindow.h \
     ../liblinklist/linklist.h \
@@ -48,7 +49,8 @@ HEADERS  += mainwindow.h \
     ../liblinklist/linklist_writer.h \
     ../liblinklist/linklist_connect.h \
     options.h \
-    logscroll.h
+    logscroll.h \
+    server.h
 
 LIBS += -lssl -lcrypto
 
