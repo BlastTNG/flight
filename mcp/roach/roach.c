@@ -1406,11 +1406,8 @@ int roach_chop_lo(roach_state_t *m_roach)
         if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
             return status;
         }
-        unsigned int dt = 0;
-        while (dt < 2e8) {
-            ts = timespec_add(ts, interval_ts);
-            clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
-        }
+        ts = timespec_add(ts, interval_ts);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
     }
     return 0;
 }
