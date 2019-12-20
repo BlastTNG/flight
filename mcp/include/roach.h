@@ -256,6 +256,7 @@ typedef struct roach_state {
     char *freqlist_path;
     fftw_plan comb_plan;
     int n_watchdog_fails;
+    unsigned int targ_sweep_span;
 
     // PPC link
     struct katcl_line *rpc_conn;

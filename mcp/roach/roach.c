@@ -101,7 +101,7 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 175.0e3 /* Target sweep span */
+#define DEFAULT_TARG_SWEEP_SPAN 175.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 30 /* Number of packets to average for each sweep point */
 #define N_AVG_DF 50 /* Number of packets to average for DF calculation */
@@ -1340,7 +1340,14 @@ int valon_client(pi_state_t *m_pi, char *command)
     }
     // printf("STATUS = %d\n", status);
     // blast_info("%s", buff);
-    roach_state_table[m_pi->which - 1].lo_freq_read = atof(buff);
+    float lo_freq_read = atof(buff);
+    if (lo_freq_read > 0) {
+        roach_state_table[m_pi->which - 1].lo_freq_read = atof(buff);
+    } else {
+        blast_err("ROACH%d: received bad freq read = %f", m_pi->which, lo_freq_read);
+        close(s);
+        return status;
+    }
     // blast_info("%g", roach_state_table[m_pi->which - 1].lo_freq_read);
     close(s);
     return 0;
@@ -2678,10 +2685,16 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
             }
     }
     if (sweep_type == TARG) {
-        m_span = TARG_SWEEP_SPAN;
-//         if (m_roach->array == 500) {
-//             m_span = 250.0e3;
-//         }
+        // If the command turnaround targ sweep span is sane, then use it.
+        // If we are not sane, or not doing a turnaound, then use the default.
+        if ((CommandData.roach_params[m_roach->which-1].targ_sweep_span >= 75.0e3) &&
+            (CommandData.roach_params[m_roach->which-1].targ_sweep_span <= 250.0e3) &&
+            (m_roach->doing_turnaround_loop)) {
+            m_span = CommandData.roach_params[m_roach->which-1].targ_sweep_span;
+        } else {
+            m_span = DEFAULT_TARG_SWEEP_SPAN;
+        }
+        m_roach->targ_sweep_span = m_span;
         if (create_data_dir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
                            m_roach->which, m_roach->last_targ_path);
@@ -6441,6 +6454,7 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachScanTrigger;
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
+    static channel_t *TargSweepSpanAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     uint32_t roach_status_field = 0;
     char channel_name_pi_temp[128] = { 0 };
@@ -6476,6 +6490,7 @@ void write_roach_channels_1hz(void)
     char channel_name_lo_freq_req[128] = { 0 };
     char channel_name_lo_freq_read[128] = { 0 };
     char channel_name_fpga_clock_freq[128] = { 0 };
+    char channel_name_targ_sweep_span[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -6558,6 +6573,9 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            snprintf(channel_name_targ_sweep_span,
+                    sizeof(channel_name_targ_sweep_span), "targ_sweep_span_roach%d",
+                    i + 1);
             PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
@@ -6587,6 +6605,7 @@ void write_roach_channels_1hz(void)
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
+            TargSweepSpanAddr[i] = channels_find_by_name(channel_name_targ_sweep_span);
         }
         EnableRoachLamp = channels_find_by_name("roach_enable_cal_pulse");
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
@@ -6623,6 +6642,8 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
+        SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span);
+
         SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
         SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
         SET_FLOAT(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);

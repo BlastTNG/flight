@@ -1051,6 +1051,17 @@ struct mcom mcommands[plugh + 2] = {
       {"APPLY TRF FILE[1 = default (all 1), 2 = apply trf]", 1, 2, 'i', "NONE"},
     }
   },
+  {COMMAND(set_targ_sweep_span), "set the target sweep span for turnarounds", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_targ_sweep_span_all), "set all the target sweep spans for turnarounds", GR_ROACH, 1,
+    {
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
   {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
