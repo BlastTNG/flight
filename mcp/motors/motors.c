@@ -46,6 +46,8 @@
 #include "ec_motors.h"
 #include "roach.h"
 
+extern int16_t InCharge;
+
 motor_data_t RWMotorData[3] = {{0}};
 motor_data_t ElevMotorData[3] = {{0}};
 motor_data_t PivotMotorData[3] = {{0}};
@@ -1864,7 +1866,7 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
      * is a result of accumulating excessively large I terms.
      */
-     // LMF the NICC should not calculate an integral term because its pointing solution is 
+     // LMF the NICC should not calculate an integral term because its pointing solution is
      // shared from the ICC and laggy.
     if (InCharge) {
         I_term += I_step;
