@@ -1653,7 +1653,7 @@ void do_mode_quad(void) // aka radbox
             el_next_dir = -1;
             blast_info(
                     "Approaching the top: next targ_el = %f, top-bottom = %f, "
-                    "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
+                    "el_next_dir = %i,axes_mo8de.el_dir=%i,  v_el = %f",
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
             CommandData.trigger_roach_tuning_check_top = ROACH_TRIGGER_EL_TARG_MASK;
@@ -1864,11 +1864,16 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
      * is a result of accumulating excessively large I terms.
      */
-    I_term += I_step;
-    if (fabsf(I_term) > MAX_I_EL) {
-        I_term = copysignf(MAX_I_EL, I_term);
+     // LMF the NICC should not calculate an integral term because its pointing solution is 
+     // shared from the ICC and laggy.
+    if (InCharge) {
+        I_term += I_step;
+        if (fabsf(I_term) > MAX_I_EL) {
+            I_term = copysignf(MAX_I_EL, I_term);
+        }
+    } else {
+        I_term = 0.0;
     }
-
     /**
      * The derivative term is calculated based on the change in the process value (our measured speed).
      * This can be excessively noisy, so we implement an IIR lowpass with a corner frequency at 10Hz
@@ -2020,15 +2025,18 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
      * is a result of accumulating excessively large I terms.
      */
-    I_term += I_step;
-    if (fabsf(I_term) > MAX_I) {
-        I_term = copysignf(MAX_I, I_term);
-    }
-    if (K_p < 0.1) {
-        // reset the integral
+    if (InCharge) {
+        I_term += I_step;
+        if (fabsf(I_term) > MAX_I) {
+            I_term = copysignf(MAX_I, I_term);
+        }
+        if (K_p < 0.1) {
+            // reset the integral
+            I_term = 0;
+        }
+    } else {
         I_term = 0;
     }
-
     /**
      * The derivative term is calculated based on the change in the process value (our measured speed).
      * This can be excessively noisy, so we implement an IIR lowpass with a corner frequency at 10Hz
@@ -2183,6 +2191,12 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (CommandData.pivot_gain.PE < 0.1) {
         // reset the integral
         I_term_err = 0;
+    }
+    // LMF: If we are not in charge don't calc the I term because our pointing solution comes
+    // from the ICC, and is laggy.
+    if (!InCharge) {
+        I_term_err = 0;
+        I_term = 0;
     }
     milliamp_return = P_rw_term + P_vel_term + I_term + I_term_err;
 
