@@ -361,8 +361,6 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(roach_allow_trnd_sweeps_all), "Allows roach tuning checks at the end of each scan", GR_ROACH},
-  {COMMAND(roach_disallow_trnd_sweeps_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
   {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
@@ -1401,8 +1399,13 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(roach_set_allow_trnd_sweeps), "Toggle target sweeps at the end of each scan", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"Top scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
-      {"Bottom scan tuning check (Y=1, N=0)", 0, 1, 'i', "NONE"},
+      {"Top scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
+      {"Bottom scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
+    }
+  },
+  {COMMAND(roach_set_allow_trnd_sweeps_all), "Toggle target sweeps at the end of each scan", GR_ROACH, 1,
+    {
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(set_retune_type_all), "(All Roaches) Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 1,
