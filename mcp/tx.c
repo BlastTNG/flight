@@ -90,8 +90,6 @@ int mcp_initial_controls = 0;
 /************************************************************************/
 void WriteAux(void)
 {
-    static channel_t* timeAddr;
-    static channel_t* timeUSecAddr;
     static channel_t* rateHighrateAddr;
     static channel_t* rateBiphaseAddr;
     static channel_t* ratePilotAddr;
@@ -112,7 +110,6 @@ void WriteAux(void)
     static channel_t* vbatt_flc_addr[2];
     static channel_t* icurr_flc_addr[2];
 
-    static channel_t* time_flc_addr[2];
     static channel_t* df_flc_addr[2];
     static channel_t* timeout_addr[2];
     static channel_t* last_cmd_addr[2];
@@ -120,6 +117,10 @@ void WriteAux(void)
 
     static channel_t* hddDiskSpaceAddr[2];
     static channel_t* hddDiskIndexAddr[2];
+
+    static channel_t* time_flc_addr[2];
+    struct timeval tv;
+    struct timezone tz;
 
     const char which_flc[2] = {'n', 's'};
 
@@ -134,8 +135,6 @@ void WriteAux(void)
 
     time_t t;
     int i_point;
-    struct timeval tv;
-    struct timezone tz;
 
     uint16_t  mccstatus;
 
@@ -149,8 +148,6 @@ void WriteAux(void)
         he4LevOldAddr = channels_find_by_name("he4_lev_old");
         he4LevReadAddr = channels_find_by_name("he4_lev");
 
-        timeAddr = channels_find_by_name("time");
-        timeUSecAddr = channels_find_by_name("time_usec");
         rateHighrateAddr = channels_find_by_name("rate_highrate");
         rateBiphaseAddr = channels_find_by_name("rate_biphase");
         ratePilotAddr = channels_find_by_name("rate_pilot");
@@ -174,18 +171,14 @@ void WriteAux(void)
         ASSIGN_BOTH_FLC(last_cmd_addr, "last_cmd");
         ASSIGN_BOTH_FLC(count_cmd_addr, "count_cmd");
         ASSIGN_BOTH_FLC(df_flc_addr, "df_flc");
-        ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
         ASSIGN_BOTH_FLC(timeout_addr, "timeout");
+        ASSIGN_BOTH_FLC(time_flc_addr, "time_flc");
 
         ASSIGN_BOTH_FLC(hddDiskSpaceAddr, "hdd_disk_space");
         ASSIGN_BOTH_FLC(hddDiskIndexAddr, "hdd_disk_index");
     }
-
     gettimeofday(&tv, &tz);
 
-    SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
-    SET_VALUE(timeUSecAddr, tv.tv_usec);
-    SET_VALUE(time_flc_addr[0], tv.tv_sec + TEMPORAL_OFFSET);
     SET_VALUE(tcpu0_flc_addr[0], computer_sensors.core0_temp);
     SET_VALUE(tcpu1_flc_addr[0], computer_sensors.core1_temp);
     SET_VALUE(icurr_flc_addr[0], computer_sensors.curr_input);
@@ -197,6 +190,7 @@ void WriteAux(void)
     SET_VALUE(upslotSchedAddr, CommandData.upslot_sched);
     SET_VALUE(hddDiskSpaceAddr[0], get_current_disk_free_space());
     SET_VALUE(hddDiskIndexAddr[0], get_current_disk_index());
+    SET_VALUE(time_flc_addr[0], tv.tv_sec + TEMPORAL_OFFSET);
     i_point = GETREADINDEX(point_index);
 
 #ifdef BOLOTEST

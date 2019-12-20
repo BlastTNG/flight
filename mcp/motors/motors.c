@@ -279,6 +279,12 @@ void write_motor_channels_100hz(void)
     static channel_t *ctl_word_write_rw_addr;
     static channel_t *latched_fault_rw_addr;
 
+    // Timing data is here to get higher resolution
+    static channel_t* timeAddr;
+    static channel_t* timeUSecAddr;
+    struct timeval tv;
+    struct timezone tz;
+
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
 
@@ -291,6 +297,9 @@ void write_motor_channels_100hz(void)
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
         ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
+
+        timeAddr = channels_find_by_name("time");
+        timeUSecAddr = channels_find_by_name("time_usec");
     }
     i_motors = GETREADINDEX(motor_index);
     SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
@@ -300,6 +309,10 @@ void write_motor_channels_100hz(void)
     SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
     SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
+
+    gettimeofday(&tv, &tz);
+    SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
+    SET_VALUE(timeUSecAddr, tv.tv_usec);
 }
 
 /************************************************************************/
