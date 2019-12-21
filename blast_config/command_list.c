@@ -53,7 +53,7 @@ const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
 const char *disable_enable[] = {"Disable", "Enable", 0};
 const char *internal_external[] = {"Internal", "External", 0};
-const char *stream_types[] = {"$ALL_VNA_SWEEPS", "$ALL_TARG_SWEEPS", "$ALL_IQ_DATA", 
+const char *stream_types[] = {"$ALL_VNA_SWEEPS", "$ALL_TARG_SWEEPS", "$ALL_IQ_DATA",
                               "$ALL_DF_DATA", "$ALL_LAMP_DATA", "$ALL_NOISE_COMP",
                               "$ALL_BB_FREQS", 0};
 const char *linklist_names[] = {0};
