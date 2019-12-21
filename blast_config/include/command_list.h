@@ -77,6 +77,7 @@ extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
 extern const char *pilot_target_names[];
+extern const char *stream_types[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
