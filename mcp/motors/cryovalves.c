@@ -432,10 +432,10 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	static channel_t* potvalveMinTightenMoveAddr;
 	static channel_t* enablePotValveAddr;
 
-	static channel_t* limsPumpAValveAddr;
-	static channel_t* limsPumpBValveAddr;
-	static channel_t* posPumpAValveAddr;
-	static channel_t* posPumpBValveAddr;
+	static channel_t* limsVentValveAAddr;
+	static channel_t* limsVentValveBAddr;
+	static channel_t* posVentValveAAddr;
+	static channel_t* posVentValveBAddr;
 	static channel_t* velValveAddr;
 	static channel_t* imoveValveAddr;
 	static channel_t* iholdValveAddr;
@@ -456,10 +456,10 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	    openThresholdPotValveAddr = channels_find_by_name("thresh_open_potvalve");
 		potvalveMinTightenMoveAddr = channels_find_by_name("tight_move_potvalve");
 
-		limsPumpAValveAddr = channels_find_by_name("lims_pump_A_valve");
-		limsPumpBValveAddr = channels_find_by_name("lims_pump_B_valve");
-		posPumpAValveAddr = channels_find_by_name("pos_pump_A_valve");
-		posPumpBValveAddr = channels_find_by_name("pos_pump_B_valve");
+		limsVentValveAAddr = channels_find_by_name("lims_vent_A_valve");
+		limsVentValveBAddr = channels_find_by_name("lims_vent_B_valve");
+		posVentValveAAddr = channels_find_by_name("pos_vent_A_valve");
+		posVentValveBAddr = channels_find_by_name("pos_vent_B_valve");
 		velValveAddr = channels_find_by_name("vel_valves");
 		imoveValveAddr = channels_find_by_name("i_move_valves");
 		iholdValveAddr = channels_find_by_name("i_hold_valves");
@@ -486,11 +486,11 @@ void WriteValves(unsigned int actuators_init, int* valve_addr)
 	for (i = 0; i < N_PUMP_VALVES; i++) {
 		if (actuators_init & (0x1 << valve_addr[i])) {
 			if (i == 0) {
-				SET_UINT8(limsPumpAValveAddr, valve_data[0].limit);
-				SET_INT32(posPumpAValveAddr, valve_data[0].pos);
+				SET_UINT8(limsVentValveAAddr, valve_data[0].limit);
+				SET_INT32(posVentValveAAddr, valve_data[0].pos);
 			} else if (i == 1) {
-				SET_UINT8(limsPumpBValveAddr, valve_data[1].limit);
-				SET_INT32(posPumpBValveAddr, valve_data[1].pos);
+				SET_UINT8(limsVentValveBAddr, valve_data[1].limit);
+				SET_INT32(posVentValveBAddr, valve_data[1].pos);
 			}
 			valve_flag = 1;
 		}

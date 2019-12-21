@@ -64,7 +64,7 @@ typedef struct {
 	// place to store the labjack AIN values
 	float labjack_ain;
 	// timer for the one aalborg we are actually using
-	uint16_t timer;
+	int16_t timer;
 	// modbus register on labjack for speed control
 	uint16_t speed_addr;
 } aalborg_control_t;
@@ -241,9 +241,9 @@ void WriteAalborgs()
 		SET_UINT16(aalborg1GoalAddr, aalborg_data[0].valve_goal);
 		SET_UINT16(aalborg2GoalAddr, aalborg_data[1].valve_goal);
 		SET_UINT16(aalborg3GoalAddr, aalborg_data[2].valve_goal);
-		SET_UINT16(timerAalborg1Addr, aalborg_data[0].timer);
-		SET_UINT16(timerAalborg2Addr, aalborg_data[1].timer);
-		SET_UINT16(timerAalborg3Addr, aalborg_data[2].timer);
+		SET_INT16(timerAalborg1Addr, aalborg_data[0].timer);
+		SET_INT16(timerAalborg2Addr, aalborg_data[1].timer);
+		SET_INT16(timerAalborg3Addr, aalborg_data[2].timer);
 		SET_FLOAT(aalborg1SpeedAddr, aalborg_data[0].valve_speed);
 		SET_FLOAT(aalborg2SpeedAddr, aalborg_data[1].valve_speed);
 		SET_FLOAT(aalborg3SpeedAddr, aalborg_data[2].valve_speed);
