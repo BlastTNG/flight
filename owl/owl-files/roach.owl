@@ -597,6 +597,17 @@
       "_format" : "",
       "_source" : "TARG_SWEEP_SPAN_ROACH1",
       "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "73857527" 
+      },
+      "_caption" : "MEDIAN SWEEP DF [Hz]",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.",
+      "_source" : "",
+      "type" : "PNDI" 
     } ],
     "geometryHeight" : 1040,
     "geometryWidth" : 320,
@@ -1196,6 +1207,17 @@
       "_format" : "",
       "_source" : "TARG_SWEEP_SPAN_ROACH2",
       "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "710018221" 
+      },
+      "_caption" : "MEDIAN SWEEP DF [Hz]",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.2f",
+      "_source" : "",
+      "type" : "PNDI" 
     } ],
     "geometryHeight" : 1040,
     "geometryWidth" : 340,
@@ -1794,6 +1816,17 @@
       "_extrema" : false,
       "_format" : "",
       "_source" : "TARG_SWEEP_SPAN_ROACH3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1617939471" 
+      },
+      "_caption" : "MEDIAN SWEEP DF [Hz]",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.2f",
+      "_source" : "",
       "type" : "PNDI" 
     } ],
     "geometryHeight" : 1040,
@@ -2395,6 +2428,17 @@
       "_format" : "",
       "_source" : "TARG_SWEEP_SPAN_ROACH4",
       "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "730405871" 
+      },
+      "_caption" : "MEDIAN SWEEP DF [Hz]",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.2f",
+      "_source" : "",
+      "type" : "PNDI" 
     } ],
     "geometryHeight" : 1040,
     "geometryWidth" : 340,
@@ -2994,6 +3038,17 @@
       "_extrema" : false,
       "_format" : "",
       "_source" : "TARG_SWEEP_SPAN_ROACH5",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1682577526" 
+      },
+      "_caption" : "MEDIAN SWEEP DF [Hz]",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.2f",
+      "_source" : "",
       "type" : "PNDI" 
     } ],
     "geometryHeight" : 1040,
