@@ -1332,6 +1332,11 @@ void SingleCommand(enum singleCommand command, int scheduled)
               CommandData.roach[i].do_check_retune = 1;
           }
           break;
+        case median_sweep_df_all:
+          for (int i = 0; i < NUM_ROACHES; i++) {
+              CommandData.roach[i].do_check_retune = 4;
+          }
+          break;
         case set_attens_default_all:
           for (int i = 0; i < NUM_ROACHES; i++) {
               CommandData.roach[i].set_attens = 2;
@@ -2611,6 +2616,11 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case check_df_retune:
       if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
             CommandData.roach[ivalues[0]-1].do_check_retune = 1;
+      }
+      break;
+    case median_sweep_df:
+      if ((ivalues[0] > 0) && (ivalues[0] <= NUM_ROACHES)) {
+            CommandData.roach[ivalues[0]-1].do_check_retune = 4;
       }
       break;
     case check_dfsweep_retune:

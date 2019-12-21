@@ -214,6 +214,7 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 char df_from_sweeps_script[] = "/data/etc/blast/roachPython/dfSweeps.py";
+char median_df_script[] = "/data/etc/blast/roachPython/median_df.py";
 char noise_comp_script[] = "/data/etc/blast/roachPython/noise_comp.py";
 char df_comp_script[] = "/data/etc/blast/roachPython/df_comp.py";
 
@@ -3874,6 +3875,42 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     return 0;
 }
 
+int roach_median_sweep_df(roach_state_t *m_roach)
+{
+    int retval = -1;
+    char *pycommand;
+    char *ref_sweep;
+    char *new_sweep;
+    char *path_to_median_df;
+    // original sweep
+    if (!m_roach->last_targ_path) {
+        if ((load_last_sweep_path(m_roach, TARG) < 0)) {
+            return retval;
+        }
+    } else {
+        ref_sweep = m_roach->last_targ_path;
+    }
+    // new_sweep = m_roach->last_targ_path;
+    // do new sweep
+    CommandData.roach[m_roach->which - 1].do_sweeps = 2;
+    if (roach_targ_sweep(m_roach) < 0) {
+        m_roach->sweep_fail = 1;
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        return retval;
+    }
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    new_sweep = m_roach->last_targ_path;
+    blast_tmp_sprintf(pycommand, "python %s %s %s %s", median_df_script,
+          ref_sweep, new_sweep, m_roach->sweep_root_path);
+    blast_info("%s", pycommand);
+    pyblast_system(pycommand);
+    blast_tmp_sprintf(path_to_median_df, "%s/median_df.dat", m_roach->sweep_root_path);
+    if ((roach_read_1D_file(m_roach, path_to_median_df, &m_roach->median_df, 1) < 0)) {
+        return retval;
+    }
+    return 0;
+}
+
 int roach_noise_comp(roach_state_t *m_roach)
 {
     int status = -1;
@@ -4806,6 +4843,10 @@ int roach_exec_retune(roach_state_t *m_roach)
         }
     } else if (CommandData.roach[m_roach->which - 1].do_check_retune == 1) {
         if ((status = roach_check_df_retune(m_roach)) < 0) {
+            return status;
+        }
+    } else if (CommandData.roach[m_roach->which - 1].do_check_retune == 4) {
+        if ((status = roach_median_sweep_df(m_roach)) < 0) {
             return status;
         }
     }
@@ -5995,6 +6036,7 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].do_sweeps = 0;
                 roach_state_table[i].doing_find_kids_loop = 0;
             }
+            // df retune
             if ((CommandData.roach[i].do_check_retune == 1)) {
                 if (roach_check_df_retune(&roach_state_table[i]) < 0) {
                     CommandData.roach[i].do_check_retune = 0;
@@ -6002,6 +6044,7 @@ void *roach_cmd_loop(void* ind)
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
+            // cal lamp retune
             if ((CommandData.roach[i].do_check_retune == 2)) {
                 if (roach_check_lamp_retune(&roach_state_table[i]) < 0) {
                     CommandData.roach[i].do_check_retune = 0;
@@ -6009,9 +6052,17 @@ void *roach_cmd_loop(void* ind)
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
+            // sweep and retune
             if ((CommandData.roach[i].do_check_retune == 3)) {
                 if (roach_check_df_sweep_retune(&roach_state_table[i]) < 0) {
-                    blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
+                    blast_err("ROACH%d: CHECK DF SWEEP RETUNE FAILED", i + 1);
+                }
+                CommandData.roach[i].do_check_retune = 0;
+            }
+            // median sweep
+            if ((CommandData.roach[i].do_check_retune == 4)) {
+                if (roach_median_sweep_df(&roach_state_table[i]) < 0) {
+                    blast_err("ROACH%d: MEDIAN SWEEP RETUNE FAILED", i + 1);
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
@@ -6511,6 +6562,7 @@ void write_roach_channels_1hz(void)
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
     static channel_t *TargSweepSpanAddr[NUM_ROACHES];
     static channel_t *TrndSweepSpanAddr[NUM_ROACHES];
+    static channel_t *MedianDfAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
     static char channel_name_pi_temp[128] = { 0 };
     static char channel_name_enable_roach_lamp[128] = { 0 };
@@ -6546,6 +6598,7 @@ void write_roach_channels_1hz(void)
     static char channel_name_fpga_clock_freq[128] = { 0 };
     static char channel_name_targ_sweep_span[128] = { 0 };
     static char channel_name_trnd_sweep_span[128] = { 0 };
+    static char channel_name_median_df[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -6632,6 +6685,9 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_trnd_sweep_span,
                     sizeof(channel_name_trnd_sweep_span), "trnd_sweep_span_roach%d",
                     i + 1);
+            snprintf(channel_name_median_df,
+                    sizeof(channel_name_median_df), "median_df_roach%d",
+                    i + 1);
             PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
@@ -6662,6 +6718,7 @@ void write_roach_channels_1hz(void)
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
             TargSweepSpanAddr[i] = channels_find_by_name(channel_name_targ_sweep_span);
             TrndSweepSpanAddr[i] = channels_find_by_name(channel_name_trnd_sweep_span);
+            MedianDfAddr[i] = channels_find_by_name(channel_name_median_df);
         }
         EnableRoachLamp = channels_find_by_name("roach_enable_cal_pulse");
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
@@ -6699,6 +6756,7 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
         SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span_used);
         SET_SCALED_VALUE(TrndSweepSpanAddr[i], CommandData.roach_params[i].trnd_sweep_span);
+        SET_FLOAT(MedianDfAddr[i], roach_state_table[i].median_df);
 
         SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
         SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
