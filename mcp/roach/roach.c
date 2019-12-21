@@ -5673,6 +5673,8 @@ void *roach_cmd_loop(void* ind)
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
+    reset_flags(&roach_state_table[i]);
+
     /* if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
