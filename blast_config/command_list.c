@@ -272,20 +272,21 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO | CONFIRM},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_open), "open valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_close), "close valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_off), "stop valve to pump A, reset goal to 0", GR_CRYO},
-  {COMMAND(pump_A_valve_on), "re-enable valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_open), "open valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_close), "close valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_off), "stop valve to pump B, reset goal to 0", GR_CRYO},
-  {COMMAND(pump_B_valve_on), "re-enable valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (vent main He tank to atmosphere)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve2_open), "open aalborg valve 2 (connected to pump 2)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve3_open), "open aalborg valve 3 (open to atmposphere)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve1_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve2_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve3_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_open), "open atmospheric vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_close), "close vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_off), "stop atmospheric vent valve A, reset goal to 0", GR_CRYO},
+  {COMMAND(vent_valve_A_on), "re-enable atmospheric vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_open), "open atmospheric vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_close), "close vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_off), "stop atmospheric vent valve B, reset goal to 0", GR_CRYO},
+  {COMMAND(vent_valve_B_on), "re-enable atmospheric vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_vent_valve_open), "open aalborg vent valve (vent main He tank to atmosphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_A_valve_open), "open aalborg pump A valve (connected to pump A)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_B_valve_open), "open aalborg pump B valve (connected to pump B)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_vent_valve_close),
+	  "close aalborg vent valve (between main He tank and atmosphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_A_valve_close), "close aalborg pump A valve (connected to pump A)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_B_valve_close), "close aalborg valve 1 (connected to pump B)", GR_CRYO | CONFIRM},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -1764,13 +1765,13 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(valves_set_move_i), "Set cryostat valves move current", GR_CRYO, 1,
     {
-      {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "I_MOVE_VALVES"}
     }
   },
 
   {COMMAND(valves_set_hold_i), "Set cryostat valves hold current", GR_CRYO, 1,
     {
-      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "CURRENT_VALVES"}
+      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "I_HOLD_VALVES"}
     }
   },
 
@@ -1780,9 +1781,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(aalborg_set_speed), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 1,
+  {COMMAND(aalborg_set_speeds), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 3,
     {
-      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_AALBORG"}
+      {"Aalborg 1 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_1_AALBORG"},
+      {"Aalborg 2 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_2_AALBORG"},
+      {"Aalborg 3 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_3_AALBORG"}
     }
   },
   {COMMAND(labjack9_write_reg), "Write an arbitrary value to a modbus register on microscroll labjack (#9)", GR_MISC, 2,

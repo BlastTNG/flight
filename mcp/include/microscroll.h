@@ -37,7 +37,9 @@
 #define relay_12V_off   2001
 #define supply_24Va     2006
 #define supply_24Vb     2007
-#define SPEED_REG       1000
+#define SPEED_1_REG     1000
+#define SPEED_2_REG     1002
+#define SPEED_3_REG     30010
 #define VALVE_1_STATUS  0
 #define VALVE_2_STATUS  1
 #define VALVE_3_STATUS  2

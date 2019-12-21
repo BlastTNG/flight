@@ -372,7 +372,9 @@ static void mcp_1hz_routines(void)
     share_data(RATE_1HZ);
     framing_publish_1hz();
     store_data_hk(master_superframe_buffer);
-	ControlAalborg(0);
+	for (int i = 0; i < N_AALBORG_VALVES; i++) {
+		ControlAalborg(i);
+	}
 	TestLjWrites();
 
     add_frame_to_superframe(channel_data[RATE_1HZ], RATE_1HZ, master_superframe_buffer,

@@ -1022,49 +1022,49 @@ void SingleCommand(enum singleCommand command, int scheduled)
         	CommandData.Cryo.potvalve_on = 0;
 	    	CommandData.Cryo.potvalve_goal = 0;
         	break;
-    	case pump_A_valve_open:
+    	case vent_valve_A_open:
 	    	CommandData.Cryo.valve_goals[0] = opened;
 	    	break;
-		case pump_A_valve_close:
+		case vent_valve_A_close:
 	    	CommandData.Cryo.valve_goals[0] = closed;
 	    	break;
-		case pump_A_valve_off:
+		case vent_valve_A_off:
 	    	CommandData.Cryo.valve_goals[0] = 0;
 	    	CommandData.Cryo.valve_stop[0] = 1;
 	    	break;
-		case pump_A_valve_on:
+		case vent_valve_A_on:
 	    	CommandData.Cryo.valve_goals[0] = 0;
 	    	CommandData.Cryo.valve_stop[0] = 0;
-		case pump_B_valve_open:
+		case vent_valve_B_open:
 	    	CommandData.Cryo.valve_goals[1] = opened;
 	    	break;
-		case pump_B_valve_close:
+		case vent_valve_B_close:
 	    	CommandData.Cryo.valve_goals[1] = closed;
 	    	break;
-		case pump_B_valve_off:
+		case vent_valve_B_off:
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 1;
 	    	break;
-		case pump_B_valve_on:
+		case vent_valve_B_on:
 	    	CommandData.Cryo.valve_goals[1] = 0;
 	    	CommandData.Cryo.valve_stop[1] = 0;
 	    	break;
-		case aalborg_valve1_open:
+		case aalborg_vent_valve_open:
 			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_OPENED;
 			break;
-		case aalborg_valve2_open:
+		case aalborg_pump_A_valve_open:
 			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_OPENED;
 			break;
-		case aalborg_valve3_open:
+		case aalborg_pump_B_valve_open:
 			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_OPENED;
 			break;
-		case aalborg_valve1_close:
+		case aalborg_vent_valve_close:
 			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_CLOSED;
 			break;
-		case aalborg_valve2_close:
+		case aalborg_pump_A_valve_close:
 			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_CLOSED;
 			break;
-		case aalborg_valve3_close:
+		case aalborg_pump_B_valve_close:
 			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_CLOSED;
 			break;
 		case l_valve_open:
@@ -1984,8 +1984,10 @@ void MultiCommand(enum multiCommand command, double *rvalues,
     case valves_set_acc:
       CommandData.Cryo.valve_acc = ivalues[0];
       break;
-	case aalborg_set_speed:
-	  CommandData.Cryo.aalborg_speed = rvalues[0];
+	case aalborg_set_speeds:
+	  CommandData.Cryo.aalborg_speed[0] = rvalues[0];
+	  CommandData.Cryo.aalborg_speed[1] = rvalues[1];
+	  CommandData.Cryo.aalborg_speed[2] = rvalues[2];
 	  break;
 	case labjack9_write_reg:
 	  CommandData.Aalborg.new_cmd = 1;
