@@ -485,50 +485,6 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "646282127" 
-      },
-      "_caption" : "LAST_DF_RESPONSE [Hz]",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "%.2f",
-      "_source" : "AVG_DF_DIFF_ROACH1",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "705821707" 
-      },
-      "_caption" : "DF_RETUNE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "DF_DIFF_RETUNE_THRESH_ROACH1",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1599365418" 
-      },
-      "_caption" : "N_OUT_OF_RANGE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "NFLAG_THRESH_ROACH1",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1107726582" 
-      },
-      "_caption" : "N_OUTOFRANGE",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "nkids_bad_roach1",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
         "_id" : "1328998091" 
       },
       "_caption" : "IS_CHOPPING_LO",
@@ -642,10 +598,10 @@
       "_source" : "TARG_SWEEP_SPAN_ROACH1",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 885,
-    "geometryWidth" : 273,
-    "geometryX" : 17,
-    "geometryY" : 17 
+    "geometryHeight" : 1040,
+    "geometryWidth" : 320,
+    "geometryX" : 20,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "284824448" 
@@ -1127,50 +1083,6 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "1953728871" 
-      },
-      "_caption" : "LAST_DF_RESPONSE [Hz]",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "%.2f",
-      "_source" : "AVG_DF_DIFF_ROACH2",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "78865280" 
-      },
-      "_caption" : "DF_RETUNE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "DF_DIFF_RETUNE_THRESH_ROACH2",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "19659047" 
-      },
-      "_caption" : "N_OUT_OF_RANGE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "NFLAG_THRESH_ROACH2",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1385211942" 
-      },
-      "_caption" : "N_OUTOFRANGE",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "nkids_bad_roach2",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
         "_id" : "873674392" 
       },
       "_caption" : "IS_CHOPPING_LO",
@@ -1285,10 +1197,10 @@
       "_source" : "TARG_SWEEP_SPAN_ROACH2",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 885,
-    "geometryWidth" : 290,
-    "geometryX" : 306,
-    "geometryY" : 17 
+    "geometryHeight" : 1040,
+    "geometryWidth" : 340,
+    "geometryX" : 360,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "297042802" 
@@ -1771,50 +1683,6 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "1051911154" 
-      },
-      "_caption" : "LAST_DF_RESPONSE [Hz]",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "%.2f",
-      "_source" : "AVG_DF_DIFF_ROACH3",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "594152183" 
-      },
-      "_caption" : "DF_RETUNE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "DF_DIFF_RETUNE_THRESH_ROACH3",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "166955813" 
-      },
-      "_caption" : "N_OUT_OF_RANGE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "NFLAG_THRESH_ROACH3",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "184733596" 
-      },
-      "_caption" : "N_OUTOFRANGE",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "nkids_bad_roach3",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
         "_id" : "1305725969" 
       },
       "_caption" : "IS_CHOPPING_LO",
@@ -1928,10 +1796,10 @@
       "_source" : "TARG_SWEEP_SPAN_ROACH3",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 885,
-    "geometryWidth" : 290,
-    "geometryX" : 612,
-    "geometryY" : 17 
+    "geometryHeight" : 1040,
+    "geometryWidth" : 340,
+    "geometryX" : 720,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "-300026089" 
@@ -2414,50 +2282,6 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "-644829987" 
-      },
-      "_caption" : "LAST_DF_RESPONSE [Hz]",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "%.2f",
-      "_source" : "AVG_DF_DIFF_ROACH4",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1703234979" 
-      },
-      "_caption" : "DF_RETUNE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "DF_DIFF_RETUNE_THRESH_ROACH4",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "-848105975" 
-      },
-      "_caption" : "N_OUT_OF_RANGE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "NFLAG_THRESH_ROACH4",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "342420481" 
-      },
-      "_caption" : "N_OUTOFRANGE",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "nkids_bad_roach4",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
         "_id" : "1322395713" 
       },
       "_caption" : "IS_CHOPPING_LO",
@@ -2572,10 +2396,10 @@
       "_source" : "TARG_SWEEP_SPAN_ROACH4",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 885,
-    "geometryWidth" : 290,
-    "geometryX" : 918,
-    "geometryY" : 17 
+    "geometryHeight" : 1040,
+    "geometryWidth" : 340,
+    "geometryX" : 1080,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "2117481039" 
@@ -3058,50 +2882,6 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "1224007190" 
-      },
-      "_caption" : "LAST_DF_RESPONSE [Hz]",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "%.2f",
-      "_source" : "AVG_DF_DIFF_ROACH5",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1029316957" 
-      },
-      "_caption" : "DF_RETUNE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "DF_DIFF_RETUNE_THRESH_ROACH5",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "344686132" 
-      },
-      "_caption" : "N_OUT_OF_RANGE_THRESH",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "NFLAG_THRESH_ROACH5",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "34242048" 
-      },
-      "_caption" : "N_OUTOFRANGE",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : false,
-      "_format" : "",
-      "_source" : "nkids_bad_roach5",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
         "_id" : "1420729760" 
       },
       "_caption" : "IS_CHOPPING_LO",
@@ -3216,10 +2996,10 @@
       "_source" : "TARG_SWEEP_SPAN_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 885,
-    "geometryWidth" : 289,
-    "geometryX" : 1224,
-    "geometryY" : 17 
+    "geometryHeight" : 1040,
+    "geometryWidth" : 340,
+    "geometryX" : 1440,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "55060952" 
@@ -3351,10 +3131,10 @@
       "_source" : "thermistor_72",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 187,
-    "geometryWidth" : 136,
-    "geometryX" : 1530,
-    "geometryY" : 17 
+    "geometryHeight" : 220,
+    "geometryWidth" : 160,
+    "geometryX" : 1800,
+    "geometryY" : 20 
   }, {
     "PObject" : {
       "_id" : "873898590" 
@@ -3519,10 +3299,10 @@
       "_source" : "ROACH_ENABLE_CAL_PULSE",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 238,
-    "geometryWidth" : 323,
-    "geometryX" : 1530,
-    "geometryY" : 221 
+    "geometryHeight" : 280,
+    "geometryWidth" : 380,
+    "geometryX" : 1800,
+    "geometryY" : 260 
   }, {
     "PObject" : {
       "_id" : "1986218169" 
@@ -3666,10 +3446,10 @@
       "_source" : "CTIME_PACKET_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 272,
-    "geometryWidth" : 289,
-    "geometryX" : 1530,
-    "geometryY" : 595 
+    "geometryHeight" : 320,
+    "geometryWidth" : 340,
+    "geometryX" : 1800,
+    "geometryY" : 700 
   }, {
     "PObject" : {
       "_id" : "1127546801" 
@@ -3744,10 +3524,10 @@
       "_source" : "DEC",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 102,
-    "geometryWidth" : 289,
-    "geometryX" : 1530,
-    "geometryY" : 476 
+    "geometryHeight" : 120,
+    "geometryWidth" : 340,
+    "geometryX" : 1800,
+    "geometryY" : 560 
   }, {
     "PObject" : {
       "_id" : "187275042" 
@@ -3799,10 +3579,10 @@
       "_source" : "SOUTH_I_AM",
       "type" : "PMDI" 
     } ],
-    "geometryHeight" : 85,
-    "geometryWidth" : 204,
-    "geometryX" : 1683,
-    "geometryY" : 119 
+    "geometryHeight" : 100,
+    "geometryWidth" : 240,
+    "geometryX" : 1980,
+    "geometryY" : 140 
   } ],
   "extremas" : [ {
     "PObject" : {
@@ -4014,9 +3794,9 @@
     "cellWidth" : 5,
     "cellX" : 99,
     "cellY" : 0,
-    "geometryHeight" : 119,
-    "geometryWidth" : 85,
-    "geometryX" : 1683,
+    "geometryHeight" : 140,
+    "geometryWidth" : 100,
+    "geometryX" : 1980,
     "geometryY" : 0 
   } ],
   "styles" : [ {
@@ -4261,8 +4041,8 @@
     "_name" : "SWEEPS" 
   } ],
   "webPort" : "0",
-  "windowCellHeight" : 60,
-  "windowCellWidth" : 109,
-  "windowHeight" : 1020,
-  "windowWidth" : 1855 
+  "windowCellHeight" : 50,
+  "windowCellWidth" : 96,
+  "windowHeight" : 1019,
+  "windowWidth" : 1920 
 }
