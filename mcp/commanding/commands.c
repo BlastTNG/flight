@@ -2166,7 +2166,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       break;
     case request_stream_file:
       filename = (char *) stream_types[ivalues[3]];
-      if (svalues[3][0] == '$') filename = getenv(svalues[3]+1); // hook for environment variable
+      if (filename[0] == '$') filename = getenv(filename+1); // hook for environment variable
 
       if (filename && linklist_send_file_by_block_ind(
                                             linklist_find_by_name(FILE_LINKLIST, linklist_array),
