@@ -605,14 +605,14 @@
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
-      "_format" : "%.",
-      "_source" : "",
+      "_format" : "%.2f",
+      "_source" : "MEDIAN_DF_ROACH1",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1040,
-    "geometryWidth" : 320,
-    "geometryX" : 20,
-    "geometryY" : 20 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 336,
+    "geometryX" : 21,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "284824448" 
@@ -1216,13 +1216,13 @@
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
       "_format" : "%.2f",
-      "_source" : "",
+      "_source" : "MEDIAN_DF_ROACH2",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1040,
-    "geometryWidth" : 340,
-    "geometryX" : 360,
-    "geometryY" : 20 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 378,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "297042802" 
@@ -1826,13 +1826,13 @@
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
       "_format" : "%.2f",
-      "_source" : "",
+      "_source" : "MEDIAN_DF_ROACH3",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1040,
-    "geometryWidth" : 340,
-    "geometryX" : 720,
-    "geometryY" : 20 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 756,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "-300026089" 
@@ -2437,13 +2437,13 @@
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
       "_format" : "%.2f",
-      "_source" : "",
+      "_source" : "MEDIAN_DF_ROACH4",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1040,
-    "geometryWidth" : 340,
-    "geometryX" : 1080,
-    "geometryY" : 20 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 1134,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "2117481039" 
@@ -3048,13 +3048,13 @@
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
       "_format" : "%.2f",
-      "_source" : "",
+      "_source" : "MEDIAN_DF_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1040,
-    "geometryWidth" : 340,
-    "geometryX" : 1440,
-    "geometryY" : 20 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 1512,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "55060952" 
@@ -3186,10 +3186,10 @@
       "_source" : "thermistor_72",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 220,
-    "geometryWidth" : 160,
-    "geometryX" : 1800,
-    "geometryY" : 20 
+    "geometryHeight" : 231,
+    "geometryWidth" : 168,
+    "geometryX" : 1890,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "873898590" 
@@ -3354,10 +3354,10 @@
       "_source" : "ROACH_ENABLE_CAL_PULSE",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 280,
-    "geometryWidth" : 380,
-    "geometryX" : 1800,
-    "geometryY" : 260 
+    "geometryHeight" : 294,
+    "geometryWidth" : 399,
+    "geometryX" : 1890,
+    "geometryY" : 273 
   }, {
     "PObject" : {
       "_id" : "1986218169" 
@@ -3501,10 +3501,10 @@
       "_source" : "CTIME_PACKET_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 320,
-    "geometryWidth" : 340,
-    "geometryX" : 1800,
-    "geometryY" : 700 
+    "geometryHeight" : 336,
+    "geometryWidth" : 357,
+    "geometryX" : 1890,
+    "geometryY" : 735 
   }, {
     "PObject" : {
       "_id" : "1127546801" 
@@ -3579,10 +3579,10 @@
       "_source" : "DEC",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 120,
-    "geometryWidth" : 340,
-    "geometryX" : 1800,
-    "geometryY" : 560 
+    "geometryHeight" : 126,
+    "geometryWidth" : 357,
+    "geometryX" : 1890,
+    "geometryY" : 588 
   }, {
     "PObject" : {
       "_id" : "187275042" 
@@ -3634,10 +3634,10 @@
       "_source" : "SOUTH_I_AM",
       "type" : "PMDI" 
     } ],
-    "geometryHeight" : 100,
-    "geometryWidth" : 240,
-    "geometryX" : 1980,
-    "geometryY" : 140 
+    "geometryHeight" : 105,
+    "geometryWidth" : 252,
+    "geometryX" : 2079,
+    "geometryY" : 147 
   } ],
   "extremas" : [ {
     "PObject" : {
@@ -3849,9 +3849,9 @@
     "cellWidth" : 5,
     "cellX" : 99,
     "cellY" : 0,
-    "geometryHeight" : 140,
-    "geometryWidth" : 100,
-    "geometryX" : 1980,
+    "geometryHeight" : 147,
+    "geometryWidth" : 105,
+    "geometryX" : 2079,
     "geometryY" : 0 
   } ],
   "styles" : [ {
@@ -4097,7 +4097,7 @@
   } ],
   "webPort" : "0",
   "windowCellHeight" : 50,
-  "windowCellWidth" : 96,
-  "windowHeight" : 1019,
+  "windowCellWidth" : 91,
+  "windowHeight" : 1052,
   "windowWidth" : 1920 
 }
