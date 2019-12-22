@@ -1,0 +1,49 @@
+[Valves]
+	potvalve_on
+	potvalve_off
+	potvalve_close
+	potvalve_open
+	vent_valve_A_on
+	vent_valve_A_off
+	vent_valve_A_close
+	vent_valve_A_open
+	vent_valve_B_on
+	vent_valve_B_off
+	vent_valve_B_close
+	vent_valve_B_open
+	valves_set_acc
+	valves_set_hold_i
+	valves_set_move_i
+	valves_set_vel
+	general
+[Aalborgs]
+	aalborg_enable
+	aalborg_disable
+	aalborg_set_speeds
+	aalborg_pump_A_valve_close
+	aalborg_pump_A_valve_open
+	aalborg_pump_B_valve_close
+	aalborg_pump_B_valve_open
+	aalborg_vent_valve_close
+	aalborg_vent_valve_open
+[Shutter]
+	shutter_keepclosed
+	shutter_open
+	shutter_close
+	shutter_keepopen
+	shutter_off
+	shutter_vel
+	shutter_i
+	shutter_init
+	general
+[XY Stage]
+	xy_goto
+	xy_jump
+	xy_panic
+	xy_raster
+	xy_xscan
+	xy_yscan
+	general
+[Placeholder]
+    xyzzy
+    plugh
