@@ -311,7 +311,7 @@ void * DGPSMonitor(void * arg)
     nameThread(tname);
     blast_startup("Starting DGPSMonitor thread.");
     for (;;) {
-        usleep(10000); /* sleep for 10ms */
+        // usleep(10000); /* sleep for 10ms */
         // wait for a valid file descriptor
         while (get_serial_fd) {
             if ((tty_fd = csbf_setserial(CSBFGPSCOM, !has_warned)) >= 0) {
