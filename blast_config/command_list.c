@@ -53,6 +53,9 @@ const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
 const char *disable_enable[] = {"Disable", "Enable", 0};
 const char *internal_external[] = {"Internal", "External", 0};
+const char *stream_types[] = {"$ALL_VNA_SWEEPS", "$ALL_TARG_SWEEPS", "$ALL_IQ_DATA",
+                              "$ALL_DF_DATA", "$ALL_LAMP_DATA", "$ALL_NOISE_COMP",
+                              "$ALL_BB_FREQS", 0};
 const char *linklist_names[] = {0};
 
 
@@ -360,6 +363,7 @@ struct scom scommands[xyzzy + 1] = {
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
   {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
+  {COMMAND(median_sweep_df_all), "(All Roaches) Performs a sweep and reports the median df difference", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
@@ -955,10 +959,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Downlink", 0, 3, 'i', "NONE", {pilot_target_names}},
     }
   },
-
-  {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
+  {COMMAND(request_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
     {
-      {LINKLIST_SELECT},
+      {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"File block number", 0, 255, 'i', ""},
+      {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
@@ -967,7 +972,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {"File block number", 0, 255, 'i', ""},
       {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
-      {"Absolute file path", 0, 64, 's', ""}
+      {"Type", 0, 64, 'l', "NONE", {stream_types}}
     }
   },
   {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
@@ -1380,6 +1385,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
+  {COMMAND(median_sweep_df), "Performs a sweep and reports the median df difference", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
   {COMMAND(check_dfsweep_retune), "Checks df status with sweep method and makes retune recommendation", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1464,23 +1474,23 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold), "Set DF retune threshold for one Roach (Hz)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
-    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF diff retune threshold (Hz)", GR_ROACH, 1,
   {
-    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_min_nkids), "Set min N KIDS found for tone finding error to go high", GR_ROACH, 2,

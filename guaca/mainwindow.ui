@@ -151,7 +151,7 @@
       </property>
       <item>
        <property name="text">
-        <string>zaphod.bit</string>
+        <string>localhost</string>
        </property>
       </item>
       <item>

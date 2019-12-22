@@ -77,6 +77,7 @@ extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
 extern const char *pilot_target_names[];
+extern const char *stream_types[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
@@ -166,7 +167,7 @@ enum singleCommand {
   reload_vna_all, end_sweeps_all, new_ref_params_all,
   auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
   check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
-  trigger_retune_check, full_loop_default_all, set_attens_default_all, chop_lo_all,
+  trigger_retune_check, full_loop_default_all, set_attens_default_all, chop_lo_all, median_sweep_df_all,
   read_attens_all, read_lo_all, reset_log,
   read_pi_temp_all, stop_ir, static_ir, blue_valve_enable, blue_valve_disable, pumps_enable,
     pumps_disable, aalborg_enable, aalborg_disable, xyzzy
@@ -334,6 +335,7 @@ enum multiCommand {
   check_lamp_retune_all,
   check_df_retune,
   check_dfsweep_retune,
+  median_sweep_df,
   auto_correct,
   auto_correct_all,
   set_retune_type,

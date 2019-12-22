@@ -22,11 +22,6 @@ char moledir[128] = "/data/mole";
 char masterlink[128] = "/data/etc/mole.lnk";
 char masterlist[128] = "/data/etc/mole.lst";
 
-char *remote_hosts[] = {
-  "zaphod.bit",
-  NULL
-};
-
 void USAGE(void) {
 
   printf("\n\nGUI front-end for mole to conveniently grab telemetry data from server.\n\n"
