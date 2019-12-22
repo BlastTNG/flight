@@ -42,9 +42,9 @@
                             "_id": "423137424"
                         },
                         "_map": {
-                            "11": "OPEN[style=No style (P1988869472)]",
+                            "11": "OPEN[style=Important (P564751211)]",
                             "3": "Intermediate",
-                            "7": "CLOSED[style=No style (P1988869472)]"
+                            "7": "CLOSED[style=Important Green (P1055304642)]"
                         }
                     },
                     "PObject": {
@@ -62,9 +62,9 @@
                             "_id": "1652782798"
                         },
                         "_map": {
-                            "11": "OPEN[style=No style (P1988869472)]",
+                            "11": "OPEN[style=Important (P564751211)]",
                             "3": "Intermediate[style=No style (P1988869472)]",
-                            "7": "CLOSED[style=No style (P1988869472)]"
+                            "7": "CLOSED[style=Important Green (P1055304642)]"
                         }
                     },
                     "PObject": {
