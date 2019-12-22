@@ -3598,6 +3598,7 @@ void InitCommandData()
     CommandData.Cryo.valve_goals[0] = intermed;
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
+    CommandData.Cryo.potvalve_min_tighten_move = 500;
 	CommandData.Cryo.aalborg_valve_goal[0] = 0;
 	CommandData.Cryo.aalborg_valve_goal[1] = 0;
 	CommandData.Cryo.aalborg_valve_goal[2] = 0;
