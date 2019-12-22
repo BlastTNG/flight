@@ -16,6 +16,8 @@ vna_sweep
 vna_sweep_all
 turnaround_loop
 turnaround_loop_all
+median_sweep_df
+median_sweep_df_all
 
 [Probe tone commands]
 
