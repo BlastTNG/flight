@@ -50,7 +50,7 @@
                     "PObject": {
                         "_id": "2030093021"
                     },
-                    "_caption": "Pump A Valve             ",
+                    "_caption": "Vent Valve A         ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "LIMS_VENT_A_VALVE",
@@ -70,7 +70,7 @@
                     "PObject": {
                         "_id": "1441352504"
                     },
-                    "_caption": "Pump B Valve",
+                    "_caption": "Vent Valve B",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "LIMS_VENT_B_VALVE",
