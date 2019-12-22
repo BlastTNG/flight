@@ -262,8 +262,8 @@ int main(int argc, char *argv[]) {
     header.route = sipcom;
     header.size =  datasize;
     /* our header - part of datasize */
-    header.command = 0xff;
-    header.slot = slot;
+    header.command = 0xfe;
+    header.slot = ((slot & 0x0f)) << 4 | 0x0f; // the command is 0xffe, so the bottom nibble of slot must be set to 0xf
     header.i_chunk = i;
     header.n_chunk = n_chunk;
     header.n_sched = n_sched_in_chunk;
