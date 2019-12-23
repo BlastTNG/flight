@@ -2678,7 +2678,7 @@
             },
             "_boxTitle": "Balance System",
             "_style": "(P150990864)",
-            "cellHeight": 6,
+            "cellHeight": 5,
             "cellWidth": 15,
             "cellX": 68,
             "cellY": 11,
@@ -2763,7 +2763,7 @@
                     "type": "PMDI"
                 }
             ],
-            "geometryHeight": 204,
+            "geometryHeight": 170,
             "geometryWidth": 510,
             "geometryX": 2312,
             "geometryY": 374
@@ -2774,10 +2774,10 @@
             },
             "_boxTitle": "Charge Controllers",
             "_style": "(P2072147126)",
-            "cellHeight": 4,
+            "cellHeight": 5,
             "cellWidth": 15,
             "cellX": 68,
-            "cellY": 17,
+            "cellY": 16,
             "dataItems": [
                 {
                     "PMDI": {
@@ -2820,12 +2820,36 @@
                     "_defaultStyle": "noStyle",
                     "_source": "STATE_CC2",
                     "type": "PMDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "961528475"
+                    },
+                    "_caption": "V Batt 1",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "V_BATT_CC1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1577112367"
+                    },
+                    "_caption": "V Batt 2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "",
+                    "_source": "V_BATT_CC2",
+                    "type": "PNDI"
                 }
             ],
-            "geometryHeight": 136,
+            "geometryHeight": 170,
             "geometryWidth": 510,
             "geometryX": 2312,
-            "geometryY": 578
+            "geometryY": 544
         },
         {
             "PObject": {
@@ -2892,7 +2916,7 @@
                     "PObject": {
                         "_id": "1573408792"
                     },
-                    "_caption": "Labjack 1               ",
+                    "_caption": "Diode LJ                ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack0_conn_status",
@@ -2911,7 +2935,7 @@
                     "PObject": {
                         "_id": "896573252"
                     },
-                    "_caption": "Labjack 2",
+                    "_caption": "ROX LJ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack1_conn_status",
@@ -2930,7 +2954,7 @@
                     "PObject": {
                         "_id": "1411943464"
                     },
-                    "_caption": "Labjack 3",
+                    "_caption": "Relays/Therm LJ1        ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack2_conn_status",
@@ -2949,7 +2973,7 @@
                     "PObject": {
                         "_id": "1617344237"
                     },
-                    "_caption": "Labjack 4",
+                    "_caption": "Relays/Therm LJ2",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack3_conn_status",
@@ -2968,7 +2992,7 @@
                     "PObject": {
                         "_id": "1919037146"
                     },
-                    "_caption": "Labjack 5",
+                    "_caption": "Relays/Therm LJ3",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack4_conn_status",
@@ -3006,48 +3030,10 @@
                     "PObject": {
                         "_id": "1068025900"
                     },
-                    "_caption": "Labjack 7",
+                    "_caption": "Thermistors LJ",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_source": "Labjack6_conn_status",
-                    "type": "PMDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "1365135962"
-                        },
-                        "_map": {
-                            "0": "Not connected[style=No style (P1623018404)]",
-                            "1": "Connected[style=Important Green (P1055304642)]"
-                        }
-                    },
-                    "PObject": {
-                        "_id": "1560097803"
-                    },
-                    "_caption": "Labjack 8",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "Labjack7_conn_status",
-                    "type": "PMDI"
-                },
-                {
-                    "PMDI": {
-                        "PObject": {
-                            "_id": "868182397"
-                        },
-                        "_map": {
-                            "0": "Not connected[style=No style (P1623018404)]",
-                            "1": "Connected[style=Important Green (P1055304642)]"
-                        }
-                    },
-                    "PObject": {
-                        "_id": "1515770933"
-                    },
-                    "_caption": "Labjack 9",
-                    "_captionStyle": "noStyle",
-                    "_defaultStyle": "noStyle",
-                    "_source": "Labjack8_conn_status",
                     "type": "PMDI"
                 },
                 {
@@ -3074,6 +3060,119 @@
             "geometryWidth": 510,
             "geometryX": 2312,
             "geometryY": 714
+        },
+        {
+            "PObject": {
+                "_id": "1895320707"
+            },
+            "_boxTitle": "Bonus Thermistors!",
+            "_style": "(P2072147126)",
+            "cellHeight": 13,
+            "cellWidth": 11,
+            "cellX": 73,
+            "cellY": 37,
+            "dataItems": [
+                {
+                    "PObject": {
+                        "_id": "382350488"
+                    },
+                    "_caption": "IF Aalborg ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_1",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2063696225"
+                    },
+                    "_caption": "Bonus 2",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_2",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1443801779"
+                    },
+                    "_caption": "Bonus 3",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_3",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1543684841"
+                    },
+                    "_caption": "Bonus 4",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_4",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "2110607992"
+                    },
+                    "_caption": "Pump A",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_6",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "221390688"
+                    },
+                    "_caption": "Pump B",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_5",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "1697117387"
+                    },
+                    "_caption": "Paul Valve A",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_8",
+                    "type": "PNDI"
+                },
+                {
+                    "PObject": {
+                        "_id": "355892953"
+                    },
+                    "_caption": "Paul Valve B           ",
+                    "_captionStyle": "noStyle",
+                    "_defaultStyle": "noStyle",
+                    "_extrema": false,
+                    "_format": "%0.3f C",
+                    "_source": "Tt_bonus_7",
+                    "type": "PNDI"
+                }
+            ],
+            "geometryHeight": 443,
+            "geometryWidth": 375,
+            "geometryX": 2482,
+            "geometryY": 1258
         }
     ],
     "extremas": [
