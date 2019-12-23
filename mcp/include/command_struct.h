@@ -287,6 +287,7 @@ typedef struct {
   int labjack, send_dac, load_curve, cycle_allowed, watchdog_allowed, pot_forced;
   float dac_value;
   float tcrit_fpa;
+  int cycle_val;
   uint32_t counter, counter_max;
   uint16_t num_pulse, separation, length, periodic_pulse;
 } cryo_cmds_t;
