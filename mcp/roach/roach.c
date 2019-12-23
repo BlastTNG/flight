@@ -5119,6 +5119,7 @@ void shutdown_roaches(void)
     for (int i = 0; i < NUM_ROACHES; i++) {
         blast_info("Closing KATCP on ROACH%d", i + 1);
         destroy_rpc_katcl(roach_state_table[i].rpc_conn);
+        roach_state_table[i].rpc_conn = NULL;
         if (pi_state_table[i].pi_comm) {
             remote_serial_shutdown(pi_state_table[i].pi_comm);
             pi_state_table[i].pi_comm = NULL;
@@ -5218,6 +5219,7 @@ int roach_boot_sequence(roach_state_t *m_roach)
     int flags = 0;
     if (m_roach->rpc_conn) {
          destroy_rpc_katcl(m_roach->rpc_conn);
+         m_roach->rpc_conn = NULL;
          blast_info("ROACH%d: Destroying KATCP connection", m_roach->which);
     }
     if (!m_roach->has_warned) {
