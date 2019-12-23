@@ -67,9 +67,11 @@ typedef struct {
 	int16_t timer;
 	// modbus register on labjack for speed control
 	uint16_t speed_addr;
+        // timeout for setting speed back to zero
+        int speed_timeout;
 } aalborg_control_t;
 
-aalborg_control_t aalborg_data[N_AALBORG_VALVES];
+aalborg_control_t aalborg_data[N_AALBORG_VALVES] = {{0}};
 
 void ControlAalborg(int index)
 {
@@ -97,6 +99,7 @@ void ControlAalborg(int index)
 		aalborg_data[0].speed_addr = SPEED_1_REG;
 		aalborg_data[1].speed_addr = SPEED_2_REG;
 		aalborg_data[2].speed_addr = SPEED_3_REG;
+
 		// find the addresses for the channels we need to read the first time
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
 			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
@@ -108,6 +111,7 @@ void ControlAalborg(int index)
 			// set the timers so they don't change
 			aalborg_data[i].timer = -1;
 			// set speed to zero the first time
+                        aalborg_data[i].speed_timeout = -1;
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[i].speed_addr, 0.0);
 		}
 	}
@@ -118,7 +122,18 @@ void ControlAalborg(int index)
 	aalborg_data[index].valve_goal = CommandData.Cryo.aalborg_valve_goal[index];
 	// set prev_speed so we can compare previous with current value in command struct
 	prev_speed[index] = aalborg_data[index].valve_speed;
-	aalborg_data[index].valve_speed = CommandData.Cryo.aalborg_speed[index];
+
+        // count timeout (in seconds) before setting the speed to zero
+        // if timeout < 0, then there the speed never times out
+        if (aalborg_data[index].speed_timeout == 0) {
+	    aalborg_data[index].valve_speed = 0;
+        } else {
+	    aalborg_data[index].valve_speed = CommandData.Cryo.aalborg_speed[index];
+        }
+        // decrement counter
+        if (aalborg_data[index].speed_timeout >= 0) {
+            aalborg_data[index].speed_timeout--;
+        }
 
 	// if the aalborg speed has been changed in commanding, we need to change it
 	if (aalborg_data[index].valve_speed != prev_speed[index]) {
