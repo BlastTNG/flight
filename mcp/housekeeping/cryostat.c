@@ -909,31 +909,31 @@ void auto_cycle_mk2(void) {
                 init_cycle_values();
                 first_time = 0;
                 blast_info("first time done");
-                if (cycle_val == 0) {
+                if (CommandData.Cryo.cycle_val == 0) {
                     cycle_state.standby = 0;
                     cycle_state.heating = 0;
                     cycle_state.burning_off = 0;
                     cycle_state.cooling = 0;
                 } else {
-                    if (cycle_val == 1) {
+                    if (CommandData.Cryo.cycle_val == 1) {
                     cycle_state.standby = 1;
                     cycle_state.heating = 0;
                     cycle_state.burning_off = 0;
                     cycle_state.cooling = 0;
                     } else {
-                        if (cycle_val == 2) {
+                        if (CommandData.Cryo.cycle_val == 2) {
                         cycle_state.standby = 0;
                         cycle_state.heating = 1;
                         cycle_state.burning_off = 0;
                         cycle_state.cooling = 0;
                         } else {
-                            if (cycle_val == 3) {
+                            if (CommandData.Cryo.cycle_val == 3) {
                             cycle_state.standby = 0;
                             cycle_state.heating = 0;
                             cycle_state.burning_off = 1;
                             cycle_state.cooling = 0;
                             } else {
-                                if (cycle_val == 4) {
+                                if (CommandData.Cryo.cycle_val == 4) {
                                 cycle_state.standby = 0;
                                 cycle_state.heating = 0;
                                 cycle_state.burning_off = 0;
