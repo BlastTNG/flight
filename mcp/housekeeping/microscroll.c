@@ -55,20 +55,19 @@ typedef struct {
 microscroll_t microscroll;
 
 typedef struct {
-	uint16_t valve_state;
-	uint16_t valve_goal;
+	float dir;
+	float prev_dir;
 	// valve_dir_addr is the modbus address used to set the direction for each valve
 	uint16_t valve_dir_addr;
 	// the speed the valve should move at, 0-2.5
 	float valve_speed;
-	// place to store the labjack AIN values
-	float labjack_ain;
-	// timer for the one aalborg we are actually using
+	float prev_speed;
+	// opening timer for the one aalborg we are actually using
 	int16_t timer;
 	// modbus register on labjack for speed control
 	uint16_t speed_addr;
-        // timeout for setting speed back to zero
-        int speed_timeout;
+    // timeout for setting speed back to zero
+    int speed_timeout;
 } aalborg_control_t;
 
 aalborg_control_t aalborg_data[N_AALBORG_VALVES] = {{0}};
@@ -78,7 +77,6 @@ void ControlAalborg(int index)
 	static int firsttime = 1;
 	static channel_t* labjackAinAddr[N_AALBORG_VALVES];
 	char channel_name[128] = {0};
-	float prev_speed[N_AALBORG_VALVES];
 	int i;
 
 	// if we aren't connected, return before doing anything
@@ -104,44 +102,52 @@ void ControlAalborg(int index)
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
 			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
 			labjackAinAddr[i] = channels_find_by_name(channel_name);
-			// clear all the state bits, figure out the state later from the AIN
-			aalborg_data[i].valve_state = 0x0;
 			// clear the command struct goals
-			CommandData.Cryo.aalborg_valve_goal[i] = 0x0;
+			// CommandData.Aalborg.goal[i] = 0;
 			// set the timers so they don't change
 			aalborg_data[i].timer = -1;
+            aalborg_data[i].speed_timeout = -1;
 			// set speed to zero the first time
-                        aalborg_data[i].speed_timeout = -1;
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[i].speed_addr, 0.0);
 		}
 	}
 
 	// get labjack AIN values from the frame, store in struct
-	aalborg_data[index].labjack_ain = GET_FLOAT(labjackAinAddr[index]);
-	// get the current goal from the command struct
-	aalborg_data[index].valve_goal = CommandData.Cryo.aalborg_valve_goal[index];
+	// aalborg_data[index].labjack_ain = GET_FLOAT(labjackAinAddr[index]);
 	// set prev_speed so we can compare previous with current value in command struct
-	prev_speed[index] = aalborg_data[index].valve_speed;
+	aalborg_data[index].prev_speed = aalborg_data[index].valve_speed;
 
-        // count timeout (in seconds) before setting the speed to zero
-        // if timeout < 0, then there the speed never times out
-        if (aalborg_data[index].speed_timeout == 0) {
-	    aalborg_data[index].valve_speed = 0;
-        } else {
-	    aalborg_data[index].valve_speed = CommandData.Cryo.aalborg_speed[index];
-        }
-        // decrement counter
-        if (aalborg_data[index].speed_timeout >= 0) {
-            aalborg_data[index].speed_timeout--;
-        }
+    // count timeout (in seconds) before setting the speed to zero
+    // if timeout < 0, then there the speed never times out
+	aalborg_data[index].speed_timeout = CommandData.Aalborg.timeout[index];
+    if (aalborg_data[index].speed_timeout == 0) {
+	   aalborg_data[index].valve_speed = 0;
+    } else {
+	    aalborg_data[index].valve_speed = CommandData.Aalborg.speed[index];
+    }
+    // decrement counter
+    if (aalborg_data[index].speed_timeout > 0) {
+        aalborg_data[index].speed_timeout--;
+    }
 
 	// if the aalborg speed has been changed in commanding, we need to change it
-	if (aalborg_data[index].valve_speed != prev_speed[index]) {
+	if (aalborg_data[index].valve_speed != aalborg_data[index].prev_speed) {
 		// set the new speed on the labjack DAC
         labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[index].speed_addr, aalborg_data[index].valve_speed);
 	}
 
-	// if the valve timer is active, decrement it
+	// set prev_dir so we can compare previous with current
+	aalborg_data[index].prev_dir = aalborg_data[index].dir;
+	// get the current dir from the command struct
+	aalborg_data[index].dir = CommandData.Aalborg.dir[index];
+
+	// if the aalborg direction has changed in commanding, we need to set the labjack output
+	if (aalborg_data[index].dir != aalborg_data[index].prev_dir) {
+		// set the direction on the labjack TDAC
+        labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[index].valve_dir_addr, aalborg_data[index].dir);
+	}
+
+	/* // if the valve timer is active, decrement it
 	if (aalborg_data[index].timer > 0) {
 		aalborg_data[index].timer--;
 	}
@@ -149,7 +155,9 @@ void ControlAalborg(int index)
 	// if the value on the AIN is high, the valve is closed
 	if (aalborg_data[index].labjack_ain > AALBORG_HIGH_LEVEL) {
 		// set CLOSED bit, and clear all others (shouldn't be moving now)
-		aalborg_data[index].valve_state = AALBORG_CLOSED;
+		aalborg_data[index].valve_state |= AALBORG_CLOSED;
+		// clear opened bit
+		aalborg_data[index].valve_state &= ~AALBORG_OPENED;
 	// if it is low, we are NOT closed (either open or moving in either direction)
 	} else if (aalborg_data[index].labjack_ain < AALBORG_LOW_LEVEL) {
 		// low level means we are NOT closed
@@ -194,7 +202,7 @@ void ControlAalborg(int index)
 			// set valve timer less than 0 so it doesn't become 0
 			aalborg_data[index].timer = -1;
 		}
-	}
+	} */
 }
 
 void TestLjWrites()
@@ -213,9 +221,6 @@ void WriteAalborgs()
 {
 	static int first_time = 1;
 
-	static channel_t* aalborg1StateAddr;
-	static channel_t* aalborg2StateAddr;
-	static channel_t* aalborg3StateAddr;
 	static channel_t* aalborg1SpeedAddr;
 	static channel_t* aalborg2SpeedAddr;
 	static channel_t* aalborg3SpeedAddr;
@@ -231,9 +236,6 @@ void WriteAalborgs()
 
 	if (first_time) {
 		first_time = 0;
-		aalborg1StateAddr = channels_find_by_name("state_1_aalborg");
-		aalborg2StateAddr = channels_find_by_name("state_2_aalborg");
-		aalborg3StateAddr = channels_find_by_name("state_3_aalborg");
 		aalborg1SpeedAddr = channels_find_by_name("speed_1_aalborg");
 		aalborg2SpeedAddr = channels_find_by_name("speed_2_aalborg");
 		aalborg3SpeedAddr = channels_find_by_name("speed_3_aalborg");
@@ -250,15 +252,12 @@ void WriteAalborgs()
 
 	// only write any of these channels if we are connected to the labjack
 	if (state[LABJACK_MICROSCROLL].connected) {
-		SET_UINT16(aalborg1StateAddr, aalborg_data[0].valve_state);
-		SET_UINT16(aalborg2StateAddr, aalborg_data[1].valve_state);
-		SET_UINT16(aalborg3StateAddr, aalborg_data[2].valve_state);
-		SET_UINT16(aalborg1GoalAddr, aalborg_data[0].valve_goal);
-		SET_UINT16(aalborg2GoalAddr, aalborg_data[1].valve_goal);
-		SET_UINT16(aalborg3GoalAddr, aalborg_data[2].valve_goal);
-		SET_INT16(timerAalborg1Addr, aalborg_data[0].timer);
-		SET_INT16(timerAalborg2Addr, aalborg_data[1].timer);
-		SET_INT16(timerAalborg3Addr, aalborg_data[2].timer);
+		SET_UINT16(aalborg1GoalAddr, aalborg_data[0].dir);
+		SET_UINT16(aalborg2GoalAddr, aalborg_data[1].dir);
+		SET_UINT16(aalborg3GoalAddr, aalborg_data[2].dir);
+		SET_INT16(timerAalborg1Addr, aalborg_data[0].speed_timeout);
+		SET_INT16(timerAalborg2Addr, aalborg_data[1].speed_timeout);
+		SET_INT16(timerAalborg3Addr, aalborg_data[2].speed_timeout);
 		SET_FLOAT(aalborg1SpeedAddr, aalborg_data[0].valve_speed);
 		SET_FLOAT(aalborg2SpeedAddr, aalborg_data[1].valve_speed);
 		SET_FLOAT(aalborg3SpeedAddr, aalborg_data[2].valve_speed);

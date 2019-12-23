@@ -1052,22 +1052,28 @@ void SingleCommand(enum singleCommand command, int scheduled)
 	    	CommandData.Cryo.valve_stop[1] = 0;
 	    	break;
 		case aalborg_vent_valve_open:
-			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_OPENED;
+			CommandData.Aalborg.dir[0] = AALBORG_OPEN_CMD;
+			CommandData.Aalborg.timeout[0] = -1;
 			break;
 		case aalborg_pump_A_valve_open:
-			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_OPENED;
+			CommandData.Aalborg.dir[1] = AALBORG_OPEN_CMD;
+			CommandData.Aalborg.timeout[1] = -1;
 			break;
 		case aalborg_pump_B_valve_open:
-			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_OPENED;
+			CommandData.Aalborg.dir[2] = AALBORG_OPEN_CMD;
+			CommandData.Aalborg.timeout[2] = -1;
 			break;
 		case aalborg_vent_valve_close:
-			CommandData.Cryo.aalborg_valve_goal[0] = AALBORG_CLOSED;
+			CommandData.Aalborg.dir[0] = AALBORG_CLOSE_CMD;
+			CommandData.Aalborg.timeout[0] = -1;
 			break;
 		case aalborg_pump_A_valve_close:
-			CommandData.Cryo.aalborg_valve_goal[1] = AALBORG_CLOSED;
+			CommandData.Aalborg.dir[1] = AALBORG_CLOSE_CMD;
+			CommandData.Aalborg.timeout[1] = -1;
 			break;
 		case aalborg_pump_B_valve_close:
-			CommandData.Cryo.aalborg_valve_goal[2] = AALBORG_CLOSED;
+			CommandData.Aalborg.dir[2] = AALBORG_CLOSE_CMD;
+			CommandData.Aalborg.timeout[2] = -1;
 			break;
 		case l_valve_open:
             CommandData.Cryo.lvalve_open = 100;
@@ -1992,10 +1998,20 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       CommandData.Cryo.valve_acc = ivalues[0];
       break;
 	case aalborg_set_speeds:
-	  CommandData.Cryo.aalborg_speed[0] = rvalues[0];
-	  CommandData.Cryo.aalborg_speed[1] = rvalues[1];
-	  CommandData.Cryo.aalborg_speed[2] = rvalues[2];
+	  CommandData.Aalborg.speed[0] = rvalues[0];
+	  CommandData.Aalborg.speed[1] = rvalues[1];
+	  CommandData.Aalborg.speed[2] = rvalues[2];
 	  break;
+	case aalborg_finite_move:
+	  	if (ivalues[1] == 1) {
+			CommandData.Aalborg.dir[ivalues[0]] = AALBORG_OPEN_CMD;
+		} else if (ivalues[1] == -1) {
+			CommandData.Aalborg.dir[ivalues[0]] = AALBORG_CLOSE_CMD;
+		} else if (ivalues[1] == 0) {
+			CommandData.Aalborg.speed[ivalues[0]] = 0.0;
+		}
+		CommandData.Aalborg.timeout[ivalues[0]] = rvalues[2];
+		break;
 	case labjack9_write_reg:
 	  CommandData.Aalborg.new_cmd = 1;
 	  CommandData.Aalborg.reg = ivalues[0];
@@ -3628,9 +3644,9 @@ void InitCommandData()
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
     CommandData.Cryo.potvalve_min_tighten_move = 500;
-	CommandData.Cryo.aalborg_valve_goal[0] = 0;
-	CommandData.Cryo.aalborg_valve_goal[1] = 0;
-	CommandData.Cryo.aalborg_valve_goal[2] = 0;
+	CommandData.Aalborg.dir[0] = 0;
+	CommandData.Aalborg.dir[1] = 0;
+	CommandData.Aalborg.dir[2] = 0;
 
     // BLAST-Pol stuff
     // CommandData.Cryo.lhevalve_on = 0;

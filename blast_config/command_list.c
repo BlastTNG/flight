@@ -1798,6 +1798,13 @@ struct mcom mcommands[plugh + 2] = {
       {"Aalborg 3 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_3_AALBORG"}
     }
   },
+  {COMMAND(aalborg_finite_move), "Move one of the Aalborgs for a finite amount of time", GR_CRYO, 3,
+    {
+      {"Which Aalborg to move (0=science sphere bypass, 1=Pump A, 2=Pump B)", 0, 2, 'i', "NONE"},
+      {"Direction to move (-1=close, 1=open, 0=stop)", -1, 1, 'i', "NONE"},
+      {"How long valve should move, in seconds", 0.0, 15.0, 'f', "NONE"}
+    }
+  },
   {COMMAND(labjack9_write_reg), "Write an arbitrary value to a modbus register on microscroll labjack (#9)", GR_MISC, 2,
     {
       {"Register to write to", 1000, 30050, 'i', "NONE"},

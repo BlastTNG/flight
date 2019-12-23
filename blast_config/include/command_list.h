@@ -222,7 +222,7 @@ enum multiCommand {
   potvalve_set_thresholds, potvalve_set_tighten_move,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
-  aalborg_set_speeds,
+  aalborg_set_speeds, aalborg_finite_move,
   labjack9_write_reg,
 
   xsc_is_new_window_period,

@@ -268,8 +268,6 @@ typedef struct {
   uint16_t potvalve_opencurrent, potvalve_closecurrent, potvalve_hold_i;
   uint16_t potvalve_open_threshold, potvalve_lclosed_threshold, potvalve_closed_threshold;
   uint16_t potvalve_min_tighten_move;
-  uint16_t aalborg_valve_goal[N_AALBORG_VALVES];
-  float aalborg_speed[N_AALBORG_VALVES];
   valve_state_t valve_goals[2];
   int valve_stop[2];
   uint16_t valve_vel, valve_move_i, valve_hold_i, valve_acc;
@@ -296,6 +294,10 @@ typedef struct {
 	int new_cmd;
 	int reg;
 	float value;
+	uint16_t goal[N_AALBORG_VALVES];
+  	float dir[N_AALBORG_VALVES];
+  	float speed[N_AALBORG_VALVES];
+	int timeout[N_AALBORG_VALVES];
 } aalborg_test_t;
 
 typedef struct {
