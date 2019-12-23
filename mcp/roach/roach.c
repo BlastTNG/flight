@@ -2586,7 +2586,7 @@ int valon_set_ref(pi_state_t *m_pi)
         struct sockaddr_in sin;
         struct hostent *hp;
         char *write_this;
-        blast_tmp_sprintf(write_this, "sudo echo %d > EXTREF", ext_ref);
+        blast_tmp_sprintf(write_this, "sudo echo %d > /EXTREF", ext_ref);
         if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             blast_err("Pi%d: Socket failed", m_pi->which);
             return status;
