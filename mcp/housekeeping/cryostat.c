@@ -624,7 +624,7 @@ static void init_cycle_values(void) {
     cycle_state.t350_old = 0;
     cycle_state.t500_old = 0;
     cycle_state.start_up_counter = 0;
-    cycle_state.burning_length = 800;
+    cycle_state.burning_length = 600;
     cycle_state.burning_counter = 0;
     cycle_state.reheating = 0;
     blast_info("values written");
@@ -778,8 +778,11 @@ static void burnoff_cycle(void) {
             cycle_state.burning_off = 0;
             // close the pumped pot after the burning off cycle
             cycle_state.cooling = 1;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal_hs = 1;
+
+            // Moving the charcoal HS closure to 10min after starting cooling
+            // CommandData.Cryo.heater_update = 1;
+            // CommandData.Cryo.charcoal_hs = 1;
+
             GET_VALUE(cycle_state.the3_Addr, cycle_state.the3);
             GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
             GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
@@ -793,7 +796,13 @@ static void burnoff_cycle(void) {
 // FPAs to drop below their maximum allowed operating temperature,
 // at which point we transition back into standby mode
 static void cooling_cycle(void) {
+    static int charcoal_hs_hold_off = 900;
     if ( cycle_state.cooling == 1 ) {
+        charcoal_hs_hold_off--;
+        if (charcoal_hs_hold_off == 0) {
+            CommandData.Cryo.heater_update = 1;
+            CommandData.Cryo.charcoal_hs = 1;
+        }
         // starts monitoring the temperatures until the temperature of the evap
         // drops below the required max operating temperature.
         cycle_state.the3_old = cycle_state.the3;
@@ -812,6 +821,7 @@ static void cooling_cycle(void) {
         if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
+            charcoal_hs_hold_off = 900;
 			CommandData.Cryo.potvalve_on = 0;
             // moves the standby mode once we reach the minimum temperature.
             blast_info("Arrays are cool, standby operating mode");
