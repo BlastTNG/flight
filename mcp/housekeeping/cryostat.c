@@ -807,6 +807,7 @@ static void cooling_cycle(void) {
     if ( cycle_state.cooling == 1 ) {
         cycle_state.charcoal_hs_hold_off--;
         if (cycle_state.charcoal_hs_hold_off <= 0) {
+            blast_info("Turning on Charcoal HS");
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal_hs = 1;
         }
@@ -876,6 +877,26 @@ static void output_cycle(void) {
     SET_SCALED_VALUE(cycle_state.cycle_state_Addr, state_value);
 }
 
+static void write_to_cmd_data() {
+    int state_value;
+    if (cycle_state.standby == 1) {
+        state_value = 1;
+    } else {
+        if (cycle_state.heating == 1) {
+            state_value = 2;
+        } else {
+            if (cycle_state.burning_off == 1) {
+                state_value = 3;
+            } else {
+                if (cycle_state.cooling == 1) {
+                    state_value = 4;
+                }
+            }
+        }
+    }
+    CommandData.Cryo.cycle_val = state_value;
+}
+
 // structure based cycle code
 void auto_cycle_mk2(void) {
     static int first_time = 1;
@@ -888,12 +909,47 @@ void auto_cycle_mk2(void) {
                 init_cycle_values();
                 first_time = 0;
                 blast_info("first time done");
+                if (CommandData.Cryo.cycle_val == 0) {
+                    cycle_state.standby = 0;
+                    cycle_state.heating = 0;
+                    cycle_state.burning_off = 0;
+                    cycle_state.cooling = 0;
+                } else {
+                    if (CommandData.Cryo.cycle_val == 1) {
+                    cycle_state.standby = 1;
+                    cycle_state.heating = 0;
+                    cycle_state.burning_off = 0;
+                    cycle_state.cooling = 0;
+                    } else {
+                        if (CommandData.Cryo.cycle_val == 2) {
+                        cycle_state.standby = 0;
+                        cycle_state.heating = 1;
+                        cycle_state.burning_off = 0;
+                        cycle_state.cooling = 0;
+                        } else {
+                            if (CommandData.Cryo.cycle_val == 3) {
+                            cycle_state.standby = 0;
+                            cycle_state.heating = 0;
+                            cycle_state.burning_off = 1;
+                            cycle_state.cooling = 0;
+                            } else {
+                                if (CommandData.Cryo.cycle_val == 4) {
+                                cycle_state.standby = 0;
+                                cycle_state.heating = 0;
+                                cycle_state.burning_off = 0;
+                                cycle_state.cooling = 1;
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (CommandData.Cryo.forced == 1) {// checks to see if we forced a cycle
                 forced();
                 CommandData.Cryo.forced = 0;
                 blast_info("STARTING FRIDGE CYCLE NOW");
             }
+            write_to_cmd_data();
             update_tcrit_fpa();
             start_cycle();
             standby_cycle();
