@@ -18,10 +18,10 @@ i_move_shutter
 enc_potvalve
 state_potvalve
 pos_potvalve
-lims_pumpvalve
-pos_pumpvalve
-lims_fillvalve
-pos_fillvalve
+lims_vent_A_valve
+lims_vent_B_valve
+pos_vent_A_valve
+pos_vent_B_valve
 vel_shutter
 i_close_potvalve
 i_open_potvalve

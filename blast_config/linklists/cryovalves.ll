@@ -1,8 +1,8 @@
 enc_potvalve 255 1
-lims_pumpvalve 255 1
-lims_fillvalve 255 1
-pos_pumpvalve 255 1
-pos_fillvalve 255 1
+lims_vent_A_valve 255 1
+lims_vent_B_valve 255 1
+pos_vent_A_valve 255 1
+pos_vent_B_valve 255 1
 pos_potvalve 255 1
 state_potvalve 255 1
 tr_he4_pot 255 1
