@@ -3112,7 +3112,7 @@
                     "PObject": {
                         "_id": "1543684841"
                     },
-                    "_caption": "Bonus 4",
+                    "_caption": "Science Sphere",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
@@ -3169,8 +3169,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 443,
-            "geometryWidth": 375,
+            "geometryHeight": 442,
+            "geometryWidth": 374,
             "geometryX": 2482,
             "geometryY": 1258
         }
