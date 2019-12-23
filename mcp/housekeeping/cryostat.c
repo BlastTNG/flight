@@ -807,6 +807,7 @@ static void cooling_cycle(void) {
     if ( cycle_state.cooling == 1 ) {
         cycle_state.charcoal_hs_hold_off--;
         if (cycle_state.charcoal_hs_hold_off <= 0) {
+            blast_info("Turning on Charcoal HS");
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal_hs = 1;
         }
@@ -937,6 +938,7 @@ void auto_cycle_mk2(void) {
                                 cycle_state.heating = 0;
                                 cycle_state.burning_off = 0;
                                 cycle_state.cooling = 1;
+                                }
                             }
                         }
                     }
@@ -947,6 +949,7 @@ void auto_cycle_mk2(void) {
                 CommandData.Cryo.forced = 0;
                 blast_info("STARTING FRIDGE CYCLE NOW");
             }
+            write_to_cmd_data();
             update_tcrit_fpa();
             start_cycle();
             standby_cycle();
