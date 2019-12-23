@@ -99,6 +99,7 @@ typedef struct { // structure that contains all of the fridge cycling informatio
     int reset_cycle;
     int burning_counter;
     int reheating;
+    int charcoal_hs_hold_off;
     // change these to the 16bit values. (uint16_t)
     uint16_t tcrit_fpa; // this will likely get changed in the future (around 300mK)
     // 30170 or so
@@ -623,6 +624,7 @@ static void init_cycle_values(void) {
     cycle_state.the3_old = 0;
     cycle_state.t350_old = 0;
     cycle_state.t500_old = 0;
+    cycle_state.charcoal_hs_hold_off = 900;
     cycle_state.start_up_counter = 0;
     cycle_state.burning_length = 900;
     cycle_state.burning_counter = 0;
@@ -722,6 +724,10 @@ static void heating_cycle(void) {
                 // we could add the open the pumped pot valve here.
                 cycle_state.heat_delay++;
             }
+            if (cycle_state.heat_delay == 30) {
+                CommandData.Cryo.valve_stop[0] = 0;
+                CommandData.Cryo.valve_goals[0] = opened;
+            }
             if (cycle_state.heat_delay == 180) {
                 // queues the charcoal heater command to be sent
                 CommandData.Cryo.heater_update = 1;
@@ -778,7 +784,7 @@ static void burnoff_cycle(void) {
             cycle_state.burning_off = 0;
             // close the pumped pot after the burning off cycle
             cycle_state.cooling = 1;
-
+            cycle_state.charcoal_hs_hold_off = 900;
             // Moving the charcoal HS closure to 10min after starting cooling
             // CommandData.Cryo.heater_update = 1;
             // CommandData.Cryo.charcoal_hs = 1;
@@ -796,10 +802,9 @@ static void burnoff_cycle(void) {
 // FPAs to drop below their maximum allowed operating temperature,
 // at which point we transition back into standby mode
 static void cooling_cycle(void) {
-    static int charcoal_hs_hold_off = 900;
     if ( cycle_state.cooling == 1 ) {
-        charcoal_hs_hold_off--;
-        if (charcoal_hs_hold_off == 0) {
+        cycle_state.charcoal_hs_hold_off--;
+        if (cycle_state.charcoal_hs_hold_off <= 0) {
             CommandData.Cryo.heater_update = 1;
             CommandData.Cryo.charcoal_hs = 1;
         }
@@ -821,7 +826,8 @@ static void cooling_cycle(void) {
         if (cycle_state.the3 < cycle_state.tcrit_fpa) {
             cycle_state.standby = 1;
             cycle_state.cooling = 0;
-            charcoal_hs_hold_off = 900;
+            CommandData.Cryo.valve_stop[0] = 0;
+            CommandData.Cryo.valve_goals[0] = closed;
 			CommandData.Cryo.potvalve_on = 0;
             // moves the standby mode once we reach the minimum temperature.
             blast_info("Arrays are cool, standby operating mode");

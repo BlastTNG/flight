@@ -237,6 +237,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
             break;
         case disallow_cycle:
             CommandData.Cryo.cycle_allowed = 0;
+            CommandData.Cryo.valve_stop[0] = 0;
+            CommandData.Cryo.valve_goals[0] = closed;
             break;
         case allow_watchdog:
             CommandData.Cryo.watchdog_allowed = 1;
