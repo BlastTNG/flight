@@ -14,3 +14,4 @@ quality_dgps 255 1
 az_raw_dgps 255 1
 az_dgps 255 1
 sigma_dgps 255 1
+chatter

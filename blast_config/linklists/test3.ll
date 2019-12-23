@@ -5,3 +5,4 @@ mcp_200hz_framecount 255 200
 mcp_244hz_framecount 255 244
 ifyaw_1_gy 255 200
 ifyaw_2_gy 255 200
+chatter

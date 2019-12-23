@@ -26,3 +26,4 @@ cal_xmin_mag2
 cal_ymax_mag2
 cal_ymin_mag2
 cal_align_mag2
+chatter

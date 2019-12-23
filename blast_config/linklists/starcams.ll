@@ -59,3 +59,4 @@ x1_heater
 ifel_gy    NONE  10
 ifyaw_gy   NONE  10
 ifroll_gy  NONE  10
+chatter

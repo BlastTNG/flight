@@ -9,3 +9,4 @@ lims_shutter 255 1
 enc_potvalve 255 1
 lims_vent_A_valve 255 1
 lims_vent_B_valve 255 1
+chatter

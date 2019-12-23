@@ -16,4 +16,4 @@ network_status_piv 255 1
 network_problem_el 255 1
 network_problem_rw 255 1
 network_problem_piv 255 1
-veto_sensor 255 1
+veto_sensor 255 1chatter

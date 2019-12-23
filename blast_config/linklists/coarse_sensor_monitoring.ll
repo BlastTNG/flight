@@ -105,3 +105,4 @@ ok_mag1 255 1
 ok_dgps 255 1
 ok_mag2 255 1
 ok_elclin 255 1
+chatter
