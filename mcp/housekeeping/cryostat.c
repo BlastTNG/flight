@@ -724,8 +724,10 @@ static void heating_cycle(void) {
                 // we could add the open the pumped pot valve here.
                 cycle_state.heat_delay++;
             }
-            if (cycle_state.heat_delay == 30) {
+            if (cycle_state.heat_delay == 20) {
                 CommandData.Cryo.valve_stop[0] = 0;
+            }
+            if (cycle_state.heat_delay == 30) {
                 CommandData.Cryo.valve_goals[0] = opened;
             }
             if (cycle_state.heat_delay == 180) {
