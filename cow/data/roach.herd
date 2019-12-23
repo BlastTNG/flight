@@ -102,11 +102,12 @@ enable_roach_cal_pulse
 kill_roach
 roach_reset
 roach_reset_all
-roach_set_ext_ref
-roach_set_ext_ref_all
+roach_set_extref
+roach_set_extref_all
 set_attens_min_output
 roach_has_lamp_control
 test_tone
+roach_cycle
 
 [Cal lamp]
 periodic_cal
