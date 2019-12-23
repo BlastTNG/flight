@@ -12,10 +12,9 @@
 #include <QListWidgetItem>
 
 #include "options.h"
+#include "server.h"
 
 #define MAX_NUM_LINKFILE 256
-//#define GUACAPORT 31413
-#define GUACAPORT 40204
 #define MAXLINELENGTH 256
 #define IMAGE_IND_OFF 0
 #define IMAGE_LOOP_LOW 19
@@ -40,7 +39,7 @@ private slots:
 
     void dancing();
 
-    void make_listfiles();
+    int make_listfiles();
 
     void on_linkSelect_currentIndexChanged(const QString &arg1);
 
@@ -70,11 +69,12 @@ private slots:
 
 private:
     int num_linkfile;
-    int syncstate;
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
     Options *options;
     std::vector<Logscroll *> mole_logs;
+
+    Server *server;
     bool still_dancing;
     QSettings settings;
     bool servermode;
@@ -102,8 +102,6 @@ private:
     uint64_t prev_size;
     uint64_t logend;
     bool data_incoming;
-    char gnd_ip[128];
-    QFuture<void> f1;
 
     int host_index;
     QString linkItem;

@@ -101,7 +101,7 @@
 #define DAC_FREQ_RES (2*DAC_SAMP_FREQ / LUT_BUFFER_LEN)
 #define LO_STEP 1000 /* Freq step size for sweeps = 1 kHz */
 #define VNA_SWEEP_SPAN 10.0e3 /* VNA sweep span, for testing = 10 kHz */
-#define TARG_SWEEP_SPAN 175.0e3 /* Target sweep span */
+#define DEFAULT_TARG_SWEEP_SPAN 175.0e3 /* Target sweep span */
 #define NTAPS 47 /* 1 + Number of FW FIR coefficients */
 #define N_AVG 30 /* Number of packets to average for each sweep point */
 #define N_AVG_DF 50 /* Number of packets to average for DF calculation */
@@ -214,6 +214,7 @@ char cal_amps_script[] = "/data/etc/blast/roachPython/nonlinearParamMcp.py";
 char ref_grads_script[] = "/data/etc/blast/roachPython/saveRefparams.py";
 char gen_output_trf_script[] = "/data/etc/blast/roachPython/gen_output_trf_mcp.py";
 char df_from_sweeps_script[] = "/data/etc/blast/roachPython/dfSweeps.py";
+char median_df_script[] = "/data/etc/blast/roachPython/median_df.py";
 char noise_comp_script[] = "/data/etc/blast/roachPython/noise_comp.py";
 char df_comp_script[] = "/data/etc/blast/roachPython/df_comp.py";
 
@@ -1340,7 +1341,14 @@ int valon_client(pi_state_t *m_pi, char *command)
     }
     // printf("STATUS = %d\n", status);
     // blast_info("%s", buff);
-    roach_state_table[m_pi->which - 1].lo_freq_read = atof(buff);
+    float lo_freq_read = atof(buff);
+    if (lo_freq_read > 0) {
+        roach_state_table[m_pi->which - 1].lo_freq_read = atof(buff);
+    } else {
+        blast_err("ROACH%d: received bad freq read = %f", m_pi->which, lo_freq_read);
+        close(s);
+        return status;
+    }
     // blast_info("%g", roach_state_table[m_pi->which - 1].lo_freq_read);
     close(s);
     return 0;
@@ -1390,11 +1398,17 @@ int roach_chop_lo(roach_state_t *m_roach)
     set_freq[0] = m_roach->lo_centerfreq - step_hz;
     set_freq[1] = m_roach->lo_centerfreq + step_hz;
     set_freq[2] = m_roach->lo_centerfreq;
+
+    struct timespec ts;
+    const struct timespec interval_ts = { .tv_sec = 0, .tv_nsec = 2e8}; // 200 ms interval
+    clock_gettime(CLOCK_REALTIME, &ts);
+
     for (int i = 0; i < 3; i++) {
         if ((status = set_LO(&pi_state_table[m_roach->which - 1], set_freq[i]/1.0e6)) < 0) {
             return status;
         }
-        usleep(200000);
+        ts = timespec_add(ts, interval_ts);
+        clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
     }
     return 0;
 }
@@ -2678,10 +2692,20 @@ int roach_do_sweep(roach_state_t *m_roach, int sweep_type)
             }
     }
     if (sweep_type == TARG) {
-        m_span = TARG_SWEEP_SPAN;
-        if (m_roach->array == 500) {
-            m_span = 250.0e3;
+        // If the command turnaround targ sweep span is sane, then use it.
+        // If we are not sane, or not doing a turnaound, then use the commanded targ sweep.
+        // If we are not sane at all, then use the default default.
+        if ((CommandData.roach_params[m_roach->which-1].trnd_sweep_span >= 75.0e3) &&
+            (CommandData.roach_params[m_roach->which-1].trnd_sweep_span <= 250.0e3) &&
+            (m_roach->doing_turnaround_loop)) {
+            m_span = CommandData.roach_params[m_roach->which-1].trnd_sweep_span;
+        } else if ((CommandData.roach_params[m_roach->which-1].targ_sweep_span >= 75.0e3) &&
+            (CommandData.roach_params[m_roach->which-1].targ_sweep_span <= 250.0e3)) {
+            m_span = CommandData.roach_params[m_roach->which-1].targ_sweep_span;
+        } else {
+            m_span = DEFAULT_TARG_SWEEP_SPAN;
         }
+        m_roach->targ_sweep_span_used = m_span;
         if (create_data_dir(m_roach, TARG)) {
             blast_info("ROACH%d, TARGET sweep will be saved in %s",
                            m_roach->which, m_roach->last_targ_path);
@@ -3851,6 +3875,42 @@ int roach_df_targ_sweeps(roach_state_t *m_roach)
     return 0;
 }
 
+int roach_median_sweep_df(roach_state_t *m_roach)
+{
+    int retval = -1;
+    char *pycommand;
+    char *ref_sweep;
+    char *new_sweep;
+    char *path_to_median_df;
+    // original sweep
+    if (!m_roach->last_targ_path) {
+        if ((load_last_sweep_path(m_roach, TARG) < 0)) {
+            return retval;
+        }
+    } else {
+        ref_sweep = m_roach->last_targ_path;
+    }
+    // new_sweep = m_roach->last_targ_path;
+    // do new sweep
+    CommandData.roach[m_roach->which - 1].do_sweeps = 2;
+    if (roach_targ_sweep(m_roach) < 0) {
+        m_roach->sweep_fail = 1;
+        CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+        return retval;
+    }
+    CommandData.roach[m_roach->which - 1].do_sweeps = 0;
+    new_sweep = m_roach->last_targ_path;
+    blast_tmp_sprintf(pycommand, "python %s %s %s %s", median_df_script,
+          ref_sweep, new_sweep, m_roach->sweep_root_path);
+    blast_info("%s", pycommand);
+    pyblast_system(pycommand);
+    blast_tmp_sprintf(path_to_median_df, "%s/median_df.dat", m_roach->sweep_root_path);
+    if ((roach_read_1D_file(m_roach, path_to_median_df, &m_roach->median_df, 1) < 0)) {
+        return retval;
+    }
+    return 0;
+}
+
 int roach_noise_comp(roach_state_t *m_roach)
 {
     int status = -1;
@@ -4785,6 +4845,10 @@ int roach_exec_retune(roach_state_t *m_roach)
         if ((status = roach_check_df_retune(m_roach)) < 0) {
             return status;
         }
+    } else if (CommandData.roach[m_roach->which - 1].do_check_retune == 4) {
+        if ((status = roach_median_sweep_df(m_roach)) < 0) {
+            return status;
+        }
     }
     return 0;
 }
@@ -5609,6 +5673,8 @@ void *roach_cmd_loop(void* ind)
     // pi_state_table[i].desired_state = PI_STATE_INIT;
     roach_state_table[i].state = ROACH_STATE_BOOT;
     roach_state_table[i].desired_state = ROACH_STATE_STREAMING;
+    reset_flags(&roach_state_table[i]);
+
     /* if (recenter_lo(&roach_state_table[i])) {
         pi_state_table[i].state = PI_STATE_CONNECTED;
     }
@@ -5619,7 +5685,8 @@ void *roach_cmd_loop(void* ind)
     int current_packet_count = 0;
     int last_packet_count = 0;
     int enable_lo_chop_was_on = 0;
-    int enable_el_retune_was_on = 0;
+    int enable_el_retune_top_was_on = 0;
+    int enable_el_retune_bottom_was_on = 0;
     // int n_full_loop_tries = 0;
     while (!shutdown_mcp) {
         if (roach_state_table[i].state == ROACH_STATE_BOOT &&
@@ -5778,16 +5845,24 @@ void *roach_cmd_loop(void* ind)
         }
         if (CommandData.roach[i].is_chopping_lo) {
             if (CommandData.roach[i].enable_chop_lo) {
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (roach_chop_lo(&roach_state_table[i]) < 0) {
                     blast_err("ROACH%d: Failed to Chop LO", i + 1);
                 }
-                if (enable_el_retune_was_on) {
-                    CommandData.roach[i].auto_el_retune = 1;
-                    enable_el_retune_was_on = 0;
+                if (enable_el_retune_top_was_on) {
+                    CommandData.roach[i].auto_el_retune_top = 1;
+                    enable_el_retune_top_was_on = 0;
+                }
+                if (enable_el_retune_bottom_was_on) {
+                    CommandData.roach[i].auto_el_retune_bottom = 1;
+                    enable_el_retune_bottom_was_on = 0;
                 }
             }
             CommandData.roach[i].is_chopping_lo = 0;
@@ -5795,44 +5870,58 @@ void *roach_cmd_loop(void* ind)
         // These commmands require roach state to be streaming
         if (roach_state_table[i].state == ROACH_STATE_STREAMING) {
             // FLIGHT MODE LOOPS
-            if (CommandData.trigger_lo_offset_check) {
+            if (CommandData.trigger_lo_offset_check & (1 << i)) {
                 if (CommandData.roach[i].enable_chop_lo) {
-                    if (CommandData.roach[i].auto_el_retune) {
-                        enable_el_retune_was_on = 1;
-                        CommandData.roach[i].auto_el_retune = 0;
+                    if (CommandData.roach[i].auto_el_retune_top) {
+                        enable_el_retune_top_was_on = 1;
+                        CommandData.roach[i].auto_el_retune_top = 0;
+                    }
+                    if (CommandData.roach[i].auto_el_retune_bottom) {
+                        enable_el_retune_bottom_was_on = 1;
+                        CommandData.roach[i].auto_el_retune_bottom = 0;
                     }
                     CommandData.roach[i].is_chopping_lo = 1;
                     if (roach_chop_lo(&roach_state_table[i]) < 0) {
                         blast_err("ROACH%d: Failed to Chop LO", i + 1);
                     }
                     CommandData.roach[i].is_chopping_lo = 0;
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 }
-                CommandData.trigger_lo_offset_check = 0;
+                CommandData.trigger_lo_offset_check &= 0xff-(1 << i);
             }
-            if (CommandData.roach[i].auto_el_retune) {
-                if (CommandData.trigger_roach_tuning_check) {
+            uint8_t trigger_top = CommandData.trigger_roach_tuning_check_top & (1 << i);
+            uint8_t trigger_bottom = CommandData.trigger_roach_tuning_check_bottom & (1 << i);
+            if ((CommandData.roach[i].auto_el_retune_top && trigger_top) ||
+                (CommandData.roach[i].auto_el_retune_bottom && trigger_bottom)) {
                     if (CommandData.roach[i].enable_chop_lo) {
                         enable_lo_chop_was_on = 1;
                         CommandData.roach[i].enable_chop_lo = 0;
                     }
                     if (roach_turnaround_loop(&roach_state_table[i]) < 0) {
-                        blast_err("ROACH%d: FAILED TO EXECUTE TURNAROUND LOOP", i + 1);
+                        blast_err("ROACH%d: FAILED TO EXECUTE EL TURNAROUND TARGSWEEP", i + 1);
                         roach_state_table[i].trnaround_loop_fail = 1;
                     } else {
                         roach_state_table[i].trnaround_loop_fail = 0;
                     }
                     CommandData.roach[i].refit_res_freqs = 0;
                     CommandData.roach[i].do_sweeps = 0;
-                    CommandData.trigger_roach_tuning_check = 0;
+                    CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                    CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
                     if (enable_lo_chop_was_on) {
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                }
+            } else if ((!CommandData.roach[i].auto_el_retune_top && trigger_top) ||
+                      (!CommandData.roach[i].auto_el_retune_bottom && trigger_bottom)) {
+                CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
             }
             if (CommandData.roach[i].do_turnaround_loop) {
                 if (CommandData.roach[i].enable_chop_lo) {
@@ -5849,7 +5938,8 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                CommandData.trigger_roach_tuning_check = 0;
+                CommandData.trigger_roach_tuning_check_top &= 0xff-(1 << i);
+                CommandData.trigger_roach_tuning_check_bottom &= 0xff-(1 << i);
                 CommandData.roach[i].do_turnaround_loop = 0;
                 CommandData.roach[i].refit_res_freqs = 0;
                 CommandData.roach[i].do_sweeps = 0;
@@ -5857,9 +5947,13 @@ void *roach_cmd_loop(void* ind)
             // FULL LOOP
             if (CommandData.roach[i].do_full_loop == 1) {
                 // disable lo chop and auto turnaround enables
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
@@ -5876,9 +5970,13 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 // SUCCEED
                 } else {
@@ -5889,9 +5987,13 @@ void *roach_cmd_loop(void* ind)
                         CommandData.roach[i].enable_chop_lo = 1;
                         enable_lo_chop_was_on = 0;
                     }
-                    if (enable_el_retune_was_on) {
-                        CommandData.roach[i].auto_el_retune = 1;
-                        enable_el_retune_was_on = 0;
+                    if (enable_el_retune_top_was_on) {
+                        CommandData.roach[i].auto_el_retune_top = 1;
+                        enable_el_retune_top_was_on = 0;
+                    }
+                    if (enable_el_retune_bottom_was_on) {
+                        CommandData.roach[i].auto_el_retune_bottom = 1;
+                        enable_el_retune_bottom_was_on = 0;
                     }
                 }
                 CommandData.roach[i].do_full_loop = 0;
@@ -5902,9 +6004,13 @@ void *roach_cmd_loop(void* ind)
             }
             // DO FIND KIDS LOOP
             if (CommandData.roach[i].do_fk_loop == 1) {
-                if (CommandData.roach[i].auto_el_retune) {
-                    enable_el_retune_was_on = 1;
-                    CommandData.roach[i].auto_el_retune = 0;
+                if (CommandData.roach[i].auto_el_retune_top) {
+                    enable_el_retune_top_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_top = 0;
+                }
+                if (CommandData.roach[i].auto_el_retune_bottom) {
+                    enable_el_retune_bottom_was_on = 1;
+                    CommandData.roach[i].auto_el_retune_bottom = 0;
                 }
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
@@ -5919,15 +6025,20 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                if (enable_el_retune_was_on) {
-                    CommandData.roach[i].auto_el_retune = 1;
-                    enable_el_retune_was_on = 0;
+                if (enable_el_retune_top_was_on) {
+                    CommandData.roach[i].auto_el_retune_top = 1;
+                    enable_el_retune_top_was_on = 0;
+                }
+                if (enable_el_retune_bottom_was_on) {
+                    CommandData.roach[i].auto_el_retune_bottom = 1;
+                    enable_el_retune_bottom_was_on = 0;
                 }
                 CommandData.roach[i].find_kids = 0;
                 CommandData.roach[i].do_fk_loop = 0;
                 CommandData.roach[i].do_sweeps = 0;
                 roach_state_table[i].doing_find_kids_loop = 0;
             }
+            // df retune
             if ((CommandData.roach[i].do_check_retune == 1)) {
                 if (roach_check_df_retune(&roach_state_table[i]) < 0) {
                     CommandData.roach[i].do_check_retune = 0;
@@ -5935,6 +6046,7 @@ void *roach_cmd_loop(void* ind)
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
+            // cal lamp retune
             if ((CommandData.roach[i].do_check_retune == 2)) {
                 if (roach_check_lamp_retune(&roach_state_table[i]) < 0) {
                     CommandData.roach[i].do_check_retune = 0;
@@ -5942,9 +6054,17 @@ void *roach_cmd_loop(void* ind)
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
+            // sweep and retune
             if ((CommandData.roach[i].do_check_retune == 3)) {
                 if (roach_check_df_sweep_retune(&roach_state_table[i]) < 0) {
-                    blast_err("ROACH%d: CHECK LAMP RETUNE FAILED", i + 1);
+                    blast_err("ROACH%d: CHECK DF SWEEP RETUNE FAILED", i + 1);
+                }
+                CommandData.roach[i].do_check_retune = 0;
+            }
+            // median sweep
+            if ((CommandData.roach[i].do_check_retune == 4)) {
+                if (roach_median_sweep_df(&roach_state_table[i]) < 0) {
+                    blast_err("ROACH%d: MEDIAN SWEEP RETUNE FAILED", i + 1);
                 }
                 CommandData.roach[i].do_check_retune = 0;
             }
@@ -6008,7 +6128,8 @@ void *roach_cmd_loop(void* ind)
                 CommandData.roach[i].recenter_df = 0;
             }
             if (CommandData.roach[i].refit_res_freqs) {
-                CommandData.roach[i].auto_el_retune = 0;
+                CommandData.roach[i].auto_el_retune_top = 0;
+                CommandData.roach[i].auto_el_retune_bottom = 0;
                 if (CommandData.roach[i].enable_chop_lo) {
                     enable_lo_chop_was_on = 1;
                     CommandData.roach[i].enable_chop_lo = 0;
@@ -6022,7 +6143,8 @@ void *roach_cmd_loop(void* ind)
                     CommandData.roach[i].enable_chop_lo = 1;
                     enable_lo_chop_was_on = 0;
                 }
-                CommandData.roach[i].auto_el_retune = 1;
+                CommandData.roach[i].auto_el_retune_top = 1;
+                CommandData.roach[i].auto_el_retune_bottom = 1;
                 CommandData.roach[i].refit_res_freqs = 0;
             }
             if (CommandData.roach[i].do_df_targ) {
@@ -6274,9 +6396,11 @@ int init_roach(uint16_t ind)
     roach_state_table[ind].num_kids = 0;
     roach_state_table[ind].prev_num_kids = 0;
     roach_state_table[ind].avg_df_diff = 0;
+    roach_state_table[ind].targ_sweep_span_used = CommandData.roach_params[ind].targ_sweep_span;
     CommandData.roach[ind].do_check_retune = 0;
     CommandData.roach[ind].auto_correct_freqs = 0;
-    CommandData.roach[ind].auto_el_retune = 1;
+    CommandData.roach[ind].auto_el_retune_top = 1;
+    CommandData.roach[ind].auto_el_retune_bottom = 1;
     CommandData.roach[ind].enable_chop_lo = 1;
     // Don't create thread for Roach 4
     uint64_t roach_idx = ind;
@@ -6301,14 +6425,16 @@ void write_roach_channels_5hz(void)
     static channel_t *RoachPktCtAddr[NUM_ROACHES];
     static channel_t *RoachValidPktCtAddr[NUM_ROACHES];
     static channel_t *RoachInvalidPktCtAddr[NUM_ROACHES];
+    static channel_t *roachStatusFieldAddr[NUM_ROACHES];
     // static channel_t *RoachIsAveragingAddr[NUM_ROACHES];
     static channel_t *RoachLampNow;
-    char channel_name_pkt_ct[128] = { 0 };
-    char channel_name_valid_pkt_ct[128] = { 0 };
-    char channel_name_invalid_pkt_ct[128] = { 0 };
-    char channel_name_is_chopping_lo[128] = { 0 };
-    // char channel_name_roach_is_averaging[128] = { 0 };
-    char channel_name_roach_lamp_now[128] = { 0 };
+    static char channel_name_pkt_ct[128] = { 0 };
+    static char channel_name_valid_pkt_ct[128] = { 0 };
+    static char channel_name_invalid_pkt_ct[128] = { 0 };
+    static char channel_name_is_chopping_lo[128] = { 0 };
+    // static char channel_name_roach_is_averaging[128] = { 0 };
+    static char channel_name_roach_lamp_now[128] = { 0 };
+    static char channel_name_roach_status[128] = { 0 };
 
     if (firsttime) {
         firsttime = 0;
@@ -6325,6 +6451,8 @@ void write_roach_channels_5hz(void)
             snprintf(channel_name_invalid_pkt_ct,
                     sizeof(channel_name_invalid_pkt_ct),
                     "packet_count_invalid_mcp_roach%d", i + 1);
+            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status),
+                        "status_roach%d", i + 1);
             // snprintf(channel_name_roach_is_averaging,
             // sizeof(channel_name_roach_is_averaging), "is_averaging_roach%d", i + 1);
             IsChoppingLoAddr[i] = channels_find_by_name(channel_name_is_chopping_lo);
@@ -6334,6 +6462,7 @@ void write_roach_channels_5hz(void)
             RoachInvalidPktCtAddr[i] = channels_find_by_name(
                     channel_name_invalid_pkt_ct);
             // RoachIsAveragingAddr[i] = channels_find_by_name(channel_name_roach_is_averaging);
+            roachStatusFieldAddr[i] = channels_find_by_name(channel_name_roach_status);
         }
         RoachLampNow = channels_find_by_name(channel_name_roach_lamp_now);
     }
@@ -6345,6 +6474,46 @@ void write_roach_channels_5hz(void)
         SET_UINT32(RoachInvalidPktCtAddr[i],
         roach_udp[i].roach_invalid_packet_count);
         // SET_UINT8(RoachIsAveragingAddr[i], roach_state_table[i].is_averaging);
+        // Make Roach status field
+        int roach_status_field = 0;
+        if (roach_state_table[i].is_sweeping) {
+            CommandData.roach[i].is_sweeping = 1;
+        } else {
+            CommandData.roach[i].is_sweeping = 0;
+        }
+        roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
+        roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
+        // is_sweeping is 2 bits
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
+        roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
+        roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
+        roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
+        roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
+        roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
+        roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
+        roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
+        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
+        roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
+        roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
+        roach_status_field |= (((uint32_t)(CommandData.roach[i].auto_el_retune_top ||
+                                           CommandData.roach[i].auto_el_retune_bottom)) << 25);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
+        roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
+        roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
+        roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
+        SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
     }
     SET_UINT8(RoachLampNow, roach_lamp_now);
 }
@@ -6382,7 +6551,6 @@ void write_roach_channels_1hz(void)
     static channel_t *PrevNkidsFoundAddr[NUM_ROACHES];
     static channel_t *nKidsGoodAddr[NUM_ROACHES];
     static channel_t *nKidsBadAddr[NUM_ROACHES];
-    static channel_t *roachStatusFieldAddr[NUM_ROACHES];
     static channel_t *CurrentNTonesAddr[NUM_ROACHES];
     static channel_t *LoCenterFreqAddr[NUM_ROACHES];
     static channel_t *NFlagThreshFieldAddr[NUM_ROACHES];
@@ -6394,41 +6562,45 @@ void write_roach_channels_1hz(void)
     static channel_t *RoachScanTrigger;
     static channel_t *PowPerToneAddr[NUM_ROACHES];
     static channel_t *FpgaClockFreqAddr[NUM_ROACHES];
+    static channel_t *TargSweepSpanAddr[NUM_ROACHES];
+    static channel_t *TrndSweepSpanAddr[NUM_ROACHES];
+    static channel_t *MedianDfAddr[NUM_ROACHES];
     uint16_t n_good_kids = 0;
-    uint32_t roach_status_field = 0;
-    char channel_name_pi_temp[128] = { 0 };
-    char channel_name_enable_roach_lamp[128] = { 0 };
-    char channel_name_roach_fridge_cycle_warning[128] = { 0 };
-    char channel_name_roach_auto_check_cycle[128] = { 0 };
-    char channel_name_df_retune_thresh[128] = { 0 };
-    char channel_name_df_diff_retune_thresh[128] = { 0 };
-    char channel_name_avg_df_diff[128] = { 0 };
-    char channel_name_flags_kids[128] = { 0 };
-    char channel_name_kids_found[128] = { 0 };
-    char channel_name_prev_kids_found[128] = { 0 };
-    char channel_name_kids_good[128] = { 0 };
-    char channel_name_kids_bad[128] = { 0 };
-    char channel_name_roach_status[128] = { 0 };
-    char channel_name_current_ntones[128] = { 0 };
-    char channel_name_lo_center_freq[128] = { 0 };
-    char channel_name_nflag_thresh[128] = { 0 };
-    char channel_name_nkids_tlm[128] = { 0 };
-    char channel_name_skids_tlm[128] = { 0 };
-    char channel_name_roach_state[128] = { 0 };
-    char channel_name_pi_error_count[128] = { 0 };
-    char channel_name_cmd_roach_par_smooth[128] = { 0 };
-    char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
-    char channel_name_cmd_roach_par_set_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_set_out_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_read_in_atten[128] = { 0 };
-    char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
-    char channel_name_roach_adcI_rms[128] = { 0 };
-    char channel_name_roach_adcQ_rms[128] = { 0 };
-    char channel_name_roach_pow_per_tone[128] = { 0 };
-    char channel_name_lo_freq_req[128] = { 0 };
-    char channel_name_lo_freq_read[128] = { 0 };
-    char channel_name_fpga_clock_freq[128] = { 0 };
+    static char channel_name_pi_temp[128] = { 0 };
+    static char channel_name_enable_roach_lamp[128] = { 0 };
+    static char channel_name_roach_fridge_cycle_warning[128] = { 0 };
+    static char channel_name_roach_auto_check_cycle[128] = { 0 };
+    static char channel_name_df_retune_thresh[128] = { 0 };
+    static char channel_name_df_diff_retune_thresh[128] = { 0 };
+    static char channel_name_avg_df_diff[128] = { 0 };
+    static char channel_name_flags_kids[128] = { 0 };
+    static char channel_name_kids_found[128] = { 0 };
+    static char channel_name_prev_kids_found[128] = { 0 };
+    static char channel_name_kids_good[128] = { 0 };
+    static char channel_name_kids_bad[128] = { 0 };
+    static char channel_name_current_ntones[128] = { 0 };
+    static char channel_name_lo_center_freq[128] = { 0 };
+    static char channel_name_nflag_thresh[128] = { 0 };
+    static char channel_name_nkids_tlm[128] = { 0 };
+    static char channel_name_skids_tlm[128] = { 0 };
+    static char channel_name_roach_state[128] = { 0 };
+    static char channel_name_pi_error_count[128] = { 0 };
+    static char channel_name_cmd_roach_par_smooth[128] = { 0 };
+    static char channel_name_cmd_roach_par_peak_thresh[128] = { 0 };
+    static char channel_name_cmd_roach_par_space_thresh[128] = { 0 };
+    static char channel_name_cmd_roach_par_set_in_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_set_out_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_read_in_atten[128] = { 0 };
+    static char channel_name_cmd_roach_par_read_out_atten[128] = { 0 };
+    static char channel_name_roach_adcI_rms[128] = { 0 };
+    static char channel_name_roach_adcQ_rms[128] = { 0 };
+    static char channel_name_roach_pow_per_tone[128] = { 0 };
+    static char channel_name_lo_freq_req[128] = { 0 };
+    static char channel_name_lo_freq_read[128] = { 0 };
+    static char channel_name_fpga_clock_freq[128] = { 0 };
+    static char channel_name_targ_sweep_span[128] = { 0 };
+    static char channel_name_trnd_sweep_span[128] = { 0 };
+    static char channel_name_median_df[128] = { 0 };
     uint16_t flag = 0;
     if (firsttime) {
         firsttime = 0;
@@ -6468,8 +6640,6 @@ void write_roach_channels_1hz(void)
                         "nkids_good_roach%d", i + 1);
             snprintf(channel_name_kids_bad, sizeof(channel_name_kids_bad),
                         "nkids_bad_roach%d", i + 1);
-            snprintf(channel_name_roach_status, sizeof(channel_name_roach_status),
-                        "status_roach%d", i + 1);
             snprintf(channel_name_current_ntones, sizeof(channel_name_current_ntones),
                         "current_ntones_roach%d", i + 1);
             snprintf(channel_name_lo_center_freq, sizeof(channel_name_lo_center_freq),
@@ -6511,6 +6681,15 @@ void write_roach_channels_1hz(void)
             snprintf(channel_name_roach_adcQ_rms,
                     sizeof(channel_name_roach_adcQ_rms), "adcQ_rms_roach%d",
                     i + 1);
+            snprintf(channel_name_targ_sweep_span,
+                    sizeof(channel_name_targ_sweep_span), "targ_sweep_span_roach%d",
+                    i + 1);
+            snprintf(channel_name_trnd_sweep_span,
+                    sizeof(channel_name_trnd_sweep_span), "trnd_sweep_span_roach%d",
+                    i + 1);
+            snprintf(channel_name_median_df,
+                    sizeof(channel_name_median_df), "median_df_roach%d",
+                    i + 1);
             PiTempAddr[i] = channels_find_by_name(channel_name_pi_temp);
             AvgDfDiffAddr[i] = channels_find_by_name(channel_name_avg_df_diff);
             FpgaClockFreqAddr[i] = channels_find_by_name(channel_name_fpga_clock_freq);
@@ -6534,12 +6713,14 @@ void write_roach_channels_1hz(void)
             PrevNkidsFoundAddr[i] = channels_find_by_name(channel_name_prev_kids_found);
             nKidsGoodAddr[i] = channels_find_by_name(channel_name_kids_good);
             nKidsBadAddr[i] = channels_find_by_name(channel_name_kids_bad);
-            roachStatusFieldAddr[i] = channels_find_by_name(channel_name_roach_status);
             CurrentNTonesAddr[i] = channels_find_by_name(channel_name_current_ntones);
             LoCenterFreqAddr[i] = channels_find_by_name(channel_name_lo_center_freq);
             NFlagThreshFieldAddr[i] = channels_find_by_name(channel_name_nflag_thresh);
             NKidsTlmRoach[i] = channels_find_by_name(channel_name_nkids_tlm);
             SKidsTlmRoach[i] = channels_find_by_name(channel_name_skids_tlm);
+            TargSweepSpanAddr[i] = channels_find_by_name(channel_name_targ_sweep_span);
+            TrndSweepSpanAddr[i] = channels_find_by_name(channel_name_trnd_sweep_span);
+            MedianDfAddr[i] = channels_find_by_name(channel_name_median_df);
         }
         EnableRoachLamp = channels_find_by_name("roach_enable_cal_pulse");
         RoachScanTrigger = channels_find_by_name("scan_retune_trigger_roach");
@@ -6549,7 +6730,6 @@ void write_roach_channels_1hz(void)
     }
     for (i = 0; i < NUM_ROACHES; i++) {
         n_good_kids = 0;
-        roach_status_field = 0;
         for (j = 0; j < NUM_FLAG_CHANNELS_PER_ROACH; j++) {
             flag = 0;
             for (k = 0; k < 16; k++) {
@@ -6576,6 +6756,10 @@ void write_roach_channels_1hz(void)
         SET_SCALED_VALUE(CmdRoachParSmoothAddr[i], CommandData.roach_params[i].smoothing_scale);
         SET_SCALED_VALUE(CmdRoachParPeakThreshAddr[i], CommandData.roach_params[i].peak_threshold);
         SET_SCALED_VALUE(CmdRoachParSpaceThreshAddr[i], CommandData.roach_params[i].spacing_threshold);
+        SET_SCALED_VALUE(TargSweepSpanAddr[i], roach_state_table[i].targ_sweep_span_used);
+        SET_SCALED_VALUE(TrndSweepSpanAddr[i], CommandData.roach_params[i].trnd_sweep_span);
+        SET_FLOAT(MedianDfAddr[i], roach_state_table[i].median_df);
+
         SET_FLOAT(CmdRoachParSetInAttenAddr[i], CommandData.roach_params[i].set_in_atten);
         SET_FLOAT(CmdRoachParSetOutAttenAddr[i], CommandData.roach_params[i].set_out_atten);
         SET_FLOAT(CmdRoachParReadInAttenAddr[i], CommandData.roach_params[i].read_in_atten);
@@ -6584,44 +6768,6 @@ void write_roach_channels_1hz(void)
         SET_FLOAT(RoachAdcQRmsAddr[i], roach_state_table[i].adc_rms[1]);
         SET_FLOAT(PowPerToneAddr[i], CommandData.roach_params[i].dBm_per_tone);
         SET_FLOAT(FpgaClockFreqAddr[i], roach_state_table[i].fpga_clock_freq);
-    // Make Roach status field
-        if (roach_state_table[i].is_sweeping) {
-            CommandData.roach[i].is_sweeping = 1;
-        } else {
-            CommandData.roach[i].is_sweeping = 0;
-        }
-        roach_status_field |= (roach_state_table[i].has_qdr_cal & 0x0001);
-        roach_status_field |= (((uint32_t)roach_state_table[i].full_loop_fail) << 1);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_tones) << 2);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_streaming) << 3);
-        // is_sweeping is 2 bits
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_sweeping) << 4);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_sweep) << 6);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_targ_sweep) << 7);
-        roach_status_field |= (((uint32_t)roach_state_table[i].write_flag) << 8);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_ref_params) << 9);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].ext_ref) << 10);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_vna_tones) << 11);
-        roach_status_field |= (((uint32_t)roach_state_table[i].sweep_fail) << 12);
-        roach_status_field |= (((uint32_t)roach_state_table[i].qdr_fail) << 13);
-        roach_status_field |= (((uint32_t)roach_state_table[i].firmware_upload_fail) << 14);
-        roach_status_field |= (((uint32_t)roach_state_table[i].has_firmware) << 15);
-        roach_status_field |= (((uint32_t)roach_state_table[i].tone_finding_error) << 16);
-        roach_status_field |= (((uint32_t)roach_state_table[i].katcp_connect_error) << 18);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_compressing_data) << 19);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_full_loop) << 20);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_find_kids_loop) << 21);
-        roach_status_field |= (((uint32_t)roach_state_table[i].is_finding_kids) << 22);
-        roach_status_field |= (((uint32_t)roach_state_table[i].trnaround_loop_fail) << 23);
-        roach_status_field |= (((uint32_t)roach_state_table[i].doing_turnaround_loop) << 24);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].auto_el_retune) << 25);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].enable_chop_lo) << 26);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
-        roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
-        roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
-        roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
-        roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
-        SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
         SET_UINT16(CurrentNTonesAddr[i], roach_state_table[i].current_ntones);
         SET_FLOAT(LoCenterFreqAddr[i], roach_state_table[i].lo_centerfreq/1.0e6);
         SET_UINT16(NFlagThreshFieldAddr[i], CommandData.roach[i].n_outofrange_thresh);
@@ -6634,5 +6780,6 @@ void write_roach_channels_1hz(void)
     SET_UINT8(RoachFridgeCycleWarning, is_cycling);
     SET_UINT8(RoachAutoCheckCycle, CommandData.roach_run_cycle_checker);
     SET_UINT16(RoachTlmMode, CommandData.roach_tlm_mode);
-    SET_UINT8(RoachScanTrigger, CommandData.trigger_roach_tuning_check);
+    SET_UINT8(RoachScanTrigger, (CommandData.trigger_roach_tuning_check_top |
+                                 CommandData.trigger_roach_tuning_check_bottom));
 }

@@ -51,6 +51,11 @@ const char *GroupNames[N_GROUPS] = {
 
 const char *downlink_names[] = {"Pilot", "Bi0", "Highrate", "SBD", 0};
 const char *pilot_target_names[] = {"highbay", "gollum", "smeagol", "galadriel", 0};
+const char *disable_enable[] = {"Disable", "Enable", 0};
+const char *internal_external[] = {"Internal", "External", 0};
+const char *stream_types[] = {"$ALL_VNA_SWEEPS", "$ALL_TARG_SWEEPS", "$ALL_IQ_DATA",
+                              "$ALL_DF_DATA", "$ALL_LAMP_DATA", "$ALL_NOISE_COMP",
+                              "$ALL_BB_FREQS", 0};
 const char *linklist_names[] = {0};
 
 
@@ -270,20 +275,21 @@ struct scom scommands[xyzzy + 1] = {
   {COMMAND(potvalve_off), "Turn He4 pot valve off (stops the motor, will not accept move commands", GR_CRYO},
   {COMMAND(potvalve_open), "set He4 pot valve direction open", GR_CRYO | CONFIRM},
   {COMMAND(potvalve_close), "set He4 pot valve direction close", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_open), "open valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_close), "close valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_A_valve_off), "stop valve to pump A, reset goal to 0", GR_CRYO},
-  {COMMAND(pump_A_valve_on), "re-enable valve to pump A", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_open), "open valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_close), "close valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(pump_B_valve_off), "stop valve to pump B, reset goal to 0", GR_CRYO},
-  {COMMAND(pump_B_valve_on), "re-enable valve to pump B", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve1_open), "open aalborg valve 1 (vent main He tank to atmosphere)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve2_open), "open aalborg valve 2 (connected to pump 2)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve3_open), "open aalborg valve 3 (open to atmposphere)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve1_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve2_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
-  {COMMAND(aalborg_valve3_close), "close aalborg valve 1 (connected to pump 1)", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_open), "open atmospheric vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_close), "close vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_A_off), "stop atmospheric vent valve A, reset goal to 0", GR_CRYO},
+  {COMMAND(vent_valve_A_on), "re-enable atmospheric vent valve A", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_open), "open atmospheric vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_close), "close vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(vent_valve_B_off), "stop atmospheric vent valve B, reset goal to 0", GR_CRYO},
+  {COMMAND(vent_valve_B_on), "re-enable atmospheric vent valve B", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_vent_valve_open), "open aalborg vent valve (vent main He tank to atmosphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_A_valve_open), "open aalborg pump A valve (connected to pump A)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_B_valve_open), "open aalborg pump B valve (connected to pump B)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_vent_valve_close),
+	  "close aalborg vent valve (between main He tank and atmosphere)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_A_valve_close), "close aalborg pump A valve (connected to pump A)", GR_CRYO | CONFIRM},
+  {COMMAND(aalborg_pump_B_valve_close), "close aalborg valve 1 (connected to pump B)", GR_CRYO | CONFIRM},
 
   {COMMAND(blast_rocks), "the receiver rocks, use the happy schedule file",
     GR_TELEM},
@@ -357,10 +363,9 @@ struct scom scommands[xyzzy + 1] = {
      "(All Roaches) Set all attens to previous settings (e.g., after hard reset)", GR_ROACH},
   {COMMAND(df_targ_all), "(All Roaches) Calculate delta f from reference and new targ sweeps", GR_ROACH},
   {COMMAND(check_df_retune_all), "(All Roaches) Checks df and makes retune recommendation", GR_ROACH},
+  {COMMAND(median_sweep_df_all), "(All Roaches) Performs a sweep and reports the median df difference", GR_ROACH},
   {COMMAND(check_dfsweep_retune_all),
       "(All Roaches) Checks df with sweep method and makes retune recommendation", GR_ROACH},
-  {COMMAND(roach_allow_scan_check_all), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH},
-  {COMMAND(roach_disallow_scan_check_all), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH},
   {COMMAND(chop_lo_all), "Do a 3 point LO step for all Roaches", GR_ROACH},
   {COMMAND(full_loop_default_all), "(All Roaches) Performs full loop, default params", GR_ROACH},
   {COMMAND(read_attens_all), "(All Roaches) Reads current attenuator values", GR_ROACH},
@@ -954,10 +959,11 @@ struct mcom mcommands[plugh + 2] = {
       {"Downlink", 0, 3, 'i', "NONE", {pilot_target_names}},
     }
   },
-
-  {COMMAND(request_file), "send a specified file to a linklist", GR_TELEM, 2,
+  {COMMAND(request_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
     {
-      {LINKLIST_SELECT},
+      {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
+      {"File block number", 0, 255, 'i', ""},
+      {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
@@ -966,7 +972,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {"File block number", 0, 255, 'i', ""},
       {"Fragment # (1-indexed; 0=>full file)", 0, CMD_L_MAX, 'l', ""},
-      {"Absolute file path", 0, 64, 's', ""}
+      {"Type", 0, 64, 'l', "NONE", {stream_types}}
     }
   },
   {COMMAND(biphase_clk_speed), "mpsse clock speed", GR_TELEM, 1,
@@ -1049,6 +1055,28 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
       {"APPLY TRF FILE[1 = default (all 1), 2 = apply trf]", 1, 2, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_targ_sweep_span), "set the target sweep span", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_targ_sweep_span_all), "set all the target sweep spans", GR_ROACH, 1,
+    {
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_trnd_sweep_span), "set the target sweep span for turnarounds", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
+    }
+  },
+  {COMMAND(set_trnd_sweep_span_all), "set all the target sweep spans for turnarounds", GR_ROACH, 1,
+    {
+      {"Sweep span [kHz]", 75, 250, 'i', "NONE"},
     }
   },
   {COMMAND(load_new_targ_amps), "loads new TARG amplitudes from file", GR_ROACH, 2,
@@ -1357,6 +1385,11 @@ struct mcom mcommands[plugh + 2] = {
       {"ROACH no", 1, 5, 'i', "NONE"},
     }
   },
+  {COMMAND(median_sweep_df), "Performs a sweep and reports the median df difference", GR_ROACH, 1,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+    }
+  },
   {COMMAND(check_dfsweep_retune), "Checks df status with sweep method and makes retune recommendation", GR_ROACH, 1,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
@@ -1374,14 +1407,16 @@ struct mcom mcommands[plugh + 2] = {
       {"Number of sec to stream", 0, 300, 'd', "NONE"},
     }
   },
-  {COMMAND(roach_allow_scan_check), "Allows roach tuning checks to be scheduled at the end of each scan", GR_ROACH, 1,
+  {COMMAND(roach_set_allow_trnd_sweeps), "Toggle target sweeps at the end of each scan", GR_ROACH, 3,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
+      {"Top scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
+      {"Bottom scan tuning check", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
-  {COMMAND(roach_disallow_scan_check), "Turns off auto-roach tuning checks at the end of each scan", GR_ROACH, 1,
+  {COMMAND(roach_set_allow_trnd_sweeps_all), "Toggle target sweeps at the end of each scan", GR_ROACH, 1,
     {
-      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(set_retune_type_all), "(All Roaches) Sets retune type (df sweep, df ts, lamp df shift)", GR_ROACH, 1,
@@ -1439,23 +1474,23 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(set_df_retune_threshold), "Set DF retune threshold for one Roach (Hz)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_retune_threshold_all), "(All Roaches) Set DF retune threshold (Hz)", GR_ROACH, 1,
   {
-    {"DF threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_diff_retune_threshold), "Set DF diff retune threshold for one Roach (Hz)", GR_ROACH, 2,
   {
     {"ROACH no", 1, 5, 'i', "NONE"},
-    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_df_diff_retune_threshold_all), "(All Roaches) Set DF diff retune threshold (Hz)", GR_ROACH, 1,
   {
-    {"DF diff threshold (Hz)", 2000, 20000, 'd', "NONE"},
+    {"DF diff threshold (Hz)", 2000, 120000, 'd', "NONE"},
   }
   },
   {COMMAND(set_min_nkids), "Set min N KIDS found for tone finding error to go high", GR_ROACH, 2,
@@ -1526,7 +1561,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,
     {
-      {"Enable (1), disable (0)", 0, 1, 'i', "NONE"}
+      {"State", 0, 1, 'i', "NONE", {disable_enable}}
     }
   },
   {COMMAND(chop_lo), "Do 3 point LO sweep", GR_ROACH, 1,
@@ -1536,7 +1571,13 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(enable_chop_lo_all), "(All Roaches) Enables or disables LO chop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
+    }
+  },
+  {COMMAND(enable_chop_lo), "Enables or disables LO chop", GR_ROACH, 2,
+    {
+      {"ROACH no", 1, 5, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   {COMMAND(roach_has_lamp_control), "Gives exclusive control of cal lamp to specified Roach", GR_ROACH, 1,
@@ -1547,19 +1588,19 @@ struct mcom mcommands[plugh + 2] = {
   {COMMAND(roach_set_extref), "Sets external reference for FPGA CLOCK and LO", CONFIRM | GR_ROACH, 2,
     {
       {"ROACH no", 1, 5, 'i', "NONE"},
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(roach_set_extref_all), "(All Roaches) Sets external reference for FPGA CLOCK and LO",
                      CONFIRM | GR_ROACH, 1,
     {
-      {"External (1), Internal (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {internal_external}},
     }
   },
   {COMMAND(enable_roach_cal_pulse),
        "(All Roaches) Enables or disables cal lamp during turnaround loop", GR_ROACH, 1,
     {
-      {"Enable (1) Disable (0)", 0, 1, 'i', "NONE"},
+      {"State", 0, 1, 'i', "NONE", {disable_enable}},
     }
   },
   /***************************************/
@@ -1734,13 +1775,13 @@ struct mcom mcommands[plugh + 2] = {
 
   {COMMAND(valves_set_move_i), "Set cryostat valves move current", GR_CRYO, 1,
     {
-      {"Cryostat valves move current (% max)", 0, 100, 'i', "CURRENT_VALVES"}
+      {"Cryostat valves move current (% max)", 0, 100, 'i', "I_MOVE_VALVES"}
     }
   },
 
   {COMMAND(valves_set_hold_i), "Set cryostat valves hold current", GR_CRYO, 1,
     {
-      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "CURRENT_VALVES"}
+      {"Cryostat valves hold current (up to 50%)", 0, 50, 'i', "I_HOLD_VALVES"}
     }
   },
 
@@ -1750,9 +1791,11 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
-  {COMMAND(aalborg_set_speed), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 1,
+  {COMMAND(aalborg_set_speeds), "Set the speed for aalborg moves, 0.0 will stop the motion", GR_CRYO, 3,
     {
-      {"Aalborg speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_AALBORG"}
+      {"Aalborg 1 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_1_AALBORG"},
+      {"Aalborg 2 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_2_AALBORG"},
+      {"Aalborg 3 speed (0.0-2.5 V)", 0.0, 2.5, 'f', "SPEED_3_AALBORG"}
     }
   },
   {COMMAND(labjack9_write_reg), "Write an arbitrary value to a modbus register on microscroll labjack (#9)", GR_MISC, 2,

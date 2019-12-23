@@ -624,7 +624,7 @@ static void init_cycle_values(void) {
     cycle_state.t350_old = 0;
     cycle_state.t500_old = 0;
     cycle_state.start_up_counter = 0;
-    cycle_state.burning_length = 600;
+    cycle_state.burning_length = 900;
     cycle_state.burning_counter = 0;
     cycle_state.reheating = 0;
     blast_info("values written");

@@ -77,6 +77,7 @@ extern const char *GroupNames[N_GROUPS];
 extern const char *linklist_names[];
 extern const char *downlink_names[];
 extern const char *pilot_target_names[];
+extern const char *stream_types[];
 
 /* singleCommand enumeration.  The command list here does NOT have to be in
  * order relative to the command definitions in command_list.c */
@@ -132,10 +133,11 @@ enum singleCommand {
   charcoal_on,      charcoal_off,
   heater_1k_on, heater_1k_off, power_box_on, power_box_off, amp_supply_on,
   amp_supply_off, therm_readout_on, therm_readout_off, heater_supply_on,
-  pump_A_valve_open, pump_A_valve_close, pump_A_valve_off, pump_A_valve_on,
-  pump_B_valve_open, pump_B_valve_close, pump_B_valve_off, pump_B_valve_on,
-  aalborg_valve1_open, aalborg_valve2_open, aalborg_valve3_open,
-  aalborg_valve1_close, aalborg_valve2_close, aalborg_valve3_close,
+  vent_valve_A_open, vent_valve_A_close, vent_valve_A_off,  vent_valve_A_on,
+  vent_valve_B_open, vent_valve_B_close, vent_valve_B_off,  vent_valve_B_on,
+  aalborg_vent_valve_open, aalborg_vent_valve_close,
+  aalborg_pump_A_valve_open, aalborg_pump_A_valve_close,
+  aalborg_pump_B_valve_open, aalborg_pump_B_valve_close,
   ln_valve_on, ln_valve_off,
   potvalve_on, potvalve_off, potvalve_open, potvalve_close,
   heater_supply_off, reboot_ljcryo1, bias_reset_rox,
@@ -165,8 +167,8 @@ enum singleCommand {
   reload_vna_all, end_sweeps_all, new_ref_params_all,
   auto_find_kids_all, zero_df_all, roach_reset_all, change_freqs_all, df_targ_all, check_df_retune_all,
   check_dfsweep_retune_all, allow_watchdog, disallow_watchdog, set_attens_last_all, set_attens_min_output,
-  trigger_retune_check, full_loop_default_all, set_attens_default_all, roach_allow_scan_check_all,
-  roach_disallow_scan_check_all, chop_lo_all, read_attens_all, read_lo_all, reset_log,
+  trigger_retune_check, full_loop_default_all, set_attens_default_all, chop_lo_all, median_sweep_df_all,
+  read_attens_all, read_lo_all, reset_log,
   read_pi_temp_all, stop_ir, static_ir, blue_valve_enable, blue_valve_disable, pumps_enable,
     pumps_disable, aalborg_enable, aalborg_disable, xyzzy
 };
@@ -220,7 +222,7 @@ enum multiCommand {
   potvalve_set_thresholds, potvalve_set_tighten_move,
   potvalve_set_vel, potvalve_set_current, potvalve_set_hold_current,
   valves_set_vel, valves_set_move_i, valves_set_hold_i, valves_set_acc,
-  aalborg_set_speed,
+  aalborg_set_speeds,
   labjack9_write_reg,
 
   xsc_is_new_window_period,
@@ -277,6 +279,10 @@ enum multiCommand {
   show_adc_rms,
   load_new_vna_amps,
   load_new_targ_amps,
+  set_targ_sweep_span_all,
+  set_targ_sweep_span,
+  set_trnd_sweep_span_all,
+  set_trnd_sweep_span,
   change_state,
   get_state,
   set_attens,
@@ -320,8 +326,8 @@ enum multiCommand {
   read_lo,
   roach_df_all,
   df_targ,
-  roach_allow_scan_check,
-  roach_disallow_scan_check,
+  roach_set_allow_trnd_sweeps,
+  roach_set_allow_trnd_sweeps_all,
   full_loop,
   full_loop_all,
   full_loop_default,
@@ -329,6 +335,7 @@ enum multiCommand {
   check_lamp_retune_all,
   check_df_retune,
   check_dfsweep_retune,
+  median_sweep_df,
   auto_correct,
   auto_correct_all,
   set_retune_type,
@@ -357,6 +364,7 @@ enum multiCommand {
   set_n_outofrange_thresh_all,
   set_n_outofrange_thresh,
   enable_chop_lo_all,
+  enable_chop_lo,
   chop_lo,
   roach_has_lamp_control,
   roach_set_extref,

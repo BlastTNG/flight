@@ -545,7 +545,7 @@ void ProcessUplinkSched(unsigned char *extdat)
 
     int i, i_samp;
 
-    slot_in = extdat[EXT_SLOT];
+    slot_in = (extdat[EXT_SLOT] & 0xf0) >> 4; // only the top nibble is the slot
     i_chunk = extdat[EXT_ICHUNK];
     nchunk_in = extdat[EXT_NCHUNK];
 

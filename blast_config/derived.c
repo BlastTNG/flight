@@ -108,7 +108,6 @@ derived_tng_t derived_list[] = {
     BITWORD("FORCE_EL", "veto_sensor", 12, 1),
     BITWORD("VETO_PSS", "veto_sensor", 13, 1),
     BITWORD("VETO_DGPS", "veto_sensor", 14, 1),
-
     COMMENT("ACS Digital Signals"),
 
     /* charge controller (CC) faults and alarms */
@@ -695,6 +694,8 @@ derived_tng_t derived_list[] = {
     LINTERP("Helium_volume_liters", "Helium_level_inches", LUT_DIR "LevelSensor_Volume.LUT"),
     LINCOM("Alarm_gauge_pressure", "ALARM_GAUGE", 12.367, -24.83),
     // Roach Channels
+    BITWORD("SCAN_RETUNE_TOP_TRIGGER_ROACH", "scan_retune_trigger_roach", 0, 1),
+    BITWORD("SCAN_RETUNE_BOTTOM_TRIGGER_ROACH", "scan_retune_trigger_roach", 1, 1),
     BITWORD("HAS_QDR_CAL_ROACH1", "status_roach1", 0, 1),
     BITWORD("FULL_LOOP_FAIL_ROACH1", "status_roach1", 1, 1),
     BITWORD("HAS_TARG_TONES_ROACH1", "status_roach1", 2, 1),
@@ -1048,6 +1049,8 @@ derived_tng_t derived_list[] = {
     BITWORD("Labjack6_conn_status", "labjack_conn_status", 6, 1),
     BITWORD("Labjack7_conn_status", "labjack_conn_status", 7, 1),
     BITWORD("Labjack8_conn_status", "labjack_conn_status", 8, 1),
+    BITWORD("Labjack9_conn_status", "labjack_conn_status", 9, 1),
+    BITWORD("Labjack10_conn_status", "labjack_conn_status", 10, 1),
 
     BITWORD("TRIGGER_XSC0", "trigger_xsc", 0, 1),
     BITWORD("TRIGGER_XSC1", "trigger_xsc", 1, 1),

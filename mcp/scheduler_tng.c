@@ -36,7 +36,7 @@ struct ScheduleType _S[2][3];
 struct ScheduleType *Uplink_S = 0;
 
 int doing_schedule = 0;
-unsigned int sched_lst = 0;
+unsigned int sched_lst = 0; // written to frame in acs.c
 
 void StarPos(double t, double ra0, double dec0, double mra, double mdec,
 	     double pi, double rvel, double *ra, double *dec);
@@ -515,9 +515,9 @@ void DoSched(void)
 	// Do we need to call these commands any more? We should have both pumps running starting on the ground
 	// turning on and opening pump 1 valve so that mcp compiles, but we need to talk about this!
 	// TODO(paul, laura, ian): talk about this
-    event.command = pump_A_valve_on;
+    event.command = aalborg_enable;
     ScheduledCommand(&event);
-    event.command = pump_A_valve_open;
+    event.command = aalborg_pump_A_valve_open;
     ScheduledCommand(&event);
     /* turn off lock motor hold current */
     event.command = lock_i;

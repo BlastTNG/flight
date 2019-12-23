@@ -504,7 +504,8 @@ void heater_write(int m_labjack, int address, float command) {
     uint16_t data[2];
     labjack_set_float(command, data);
     if (m_labjack != 1) {
-        if (address != 1000 && address != 30004 && address != 30006 && address != 30008) {
+        if (address != 1000 && address != 1002 &&
+			   	address != 30004 && address != 30006 && address != 30008 && address != 30010) {
             ret = modbus_write_register(state[m_labjack].cmd_mb, address, command);
             if (ret < 0) {
                 int tries = 1;
@@ -519,6 +520,8 @@ void heater_write(int m_labjack, int address, float command) {
             }
         } else {
             // blast_info("writing to a DAC");
+			// blast_info("Writing to labjack %d address %d command %f", m_labjack, address, command);
+			// blast_info("data[0]=%u, data[1]=%u", data[0], data[1]);
             ret = modbus_write_registers(state[m_labjack].cmd_mb, address, 2, data);
             if (ret < 0) {
                 int tries = 1;

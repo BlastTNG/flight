@@ -366,7 +366,7 @@ static const float gy_inv[64][3][6] =
           { 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.49891126, -0.50203309 } },
         };
 // TODO(seth): Extern sched_lst after enabling sched.c
-unsigned int sched_lst; /* sched_lst */
+extern unsigned int sched_lst; /* sched_lst */
 
 struct ACSDataStruct ACSData;
 
@@ -1463,7 +1463,7 @@ void store_5hz_acs(void)
 //    SET_SCALED_VALUE(mcpFrameAddr, PointingData[i_point].mcp_frame);
     SET_SCALED_VALUE(lstAddr, PointingData[i_point].lst/3600.0);
     // TODO(seth): Update LST Schedule channel
-    SET_SCALED_VALUE(lstSchedAddr, 0);
+    SET_SCALED_VALUE(lstSchedAddr, ((double)sched_lst)/3600.0);
 
     SET_SCALED_VALUE(azMagNAddr, (PointingData[i_point].mag_az[0] + CommandData.mag_az_trim[0]));
     SET_SCALED_VALUE(azRawMagNAddr, (PointingData[i_point].mag_az_raw[0]));

@@ -44,6 +44,9 @@
 #include "pointing.h"
 #include "radbox.h"
 #include "ec_motors.h"
+#include "roach.h"
+
+extern int16_t InCharge;
 
 motor_data_t RWMotorData[3] = {{0}};
 motor_data_t ElevMotorData[3] = {{0}};
@@ -278,6 +281,12 @@ void write_motor_channels_100hz(void)
     static channel_t *ctl_word_write_rw_addr;
     static channel_t *latched_fault_rw_addr;
 
+    // Timing data is here to get higher resolution
+    static channel_t* timeAddr;
+    static channel_t* timeUSecAddr;
+    struct timeval tv;
+    struct timezone tz;
+
     /******** Obtain correct indexes the first time here ***********/
     static int firsttime = 1;
 
@@ -290,6 +299,9 @@ void write_motor_channels_100hz(void)
         ctl_word_read_rw_addr = channels_find_by_name("control_word_read_rw");
         ctl_word_write_rw_addr = channels_find_by_name("control_word_write_rw");
         latched_fault_rw_addr = channels_find_by_name("latched_fault_rw");
+
+        timeAddr = channels_find_by_name("time");
+        timeUSecAddr = channels_find_by_name("time_usec");
     }
     i_motors = GETREADINDEX(motor_index);
     SET_UINT32(statusRWAddr, RWMotorData[i_motors].status);
@@ -299,6 +311,10 @@ void write_motor_channels_100hz(void)
     SET_UINT16(ctl_word_read_rw_addr, RWMotorData[i_motors].control_word_read);
     SET_UINT16(ctl_word_write_rw_addr, RWMotorData[i_motors].control_word_write);
     SET_UINT32(latched_fault_rw_addr, RWMotorData[i_motors].fault_reg);
+
+    gettimeofday(&tv, &tz);
+    SET_VALUE(timeAddr, tv.tv_sec + TEMPORAL_OFFSET);
+    SET_VALUE(timeUSecAddr, tv.tv_usec);
 }
 
 /************************************************************************/
@@ -1063,7 +1079,7 @@ static void do_mode_new_cap(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
         // set targ_el for the next step
@@ -1077,7 +1093,7 @@ static void do_mode_new_cap(void)
                         "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                        targ_el, r, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_top = ROACH_TRIGGER_EL_TARG_MASK;
         } else if (targ_el <= -r) {
             targ_el = -r;
             el_next_dir = 1;
@@ -1085,7 +1101,7 @@ static void do_mode_new_cap(void)
                         "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                     targ_el, (-1.0) * r, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_bottom = ROACH_TRIGGER_EL_TARG_MASK;
             n_scan += 1;
             if (n_scan != 0) {
                 calculate_el_dither(DITH_INC);
@@ -1247,7 +1263,7 @@ static void do_mode_el_box(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_az = (targ_az - (az - caz)) / t;
         // set targ_az for the next step
@@ -1260,6 +1276,8 @@ static void do_mode_el_box(void)
                     "Approaching the top %i: next targ_az = %f, h*0.5 = %f,"
                     "az_next_dir = %i,axes_mode.az_dir=%i,  v_az = %f",
                     j, targ_az, h * 0.5, az_next_dir, axes_mode.az_dir, v_az);
+            blast_info("Setting trigger_roach_tuning_check");
+            CommandData.trigger_roach_tuning_check_top= ROACH_TRIGGER_EL_TARG_MASK;
         } else if (targ_az < -w * 0.5) {
             targ_az = -w * 0.5;
             az_next_dir = 1;
@@ -1268,7 +1286,7 @@ static void do_mode_el_box(void)
                     "az_next_dir = %i,axes_mode.az_dir=%i, v_az = %f",
                     j, targ_az, h * 0.5, az_next_dir, axes_mode.az_dir, v_az);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_bottom= ROACH_TRIGGER_EL_TARG_MASK;
         }
     }
     /* check for out of range in az */
@@ -1421,7 +1439,7 @@ static void do_mode_new_box(void)
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1;
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK;
 //        blast_dbg("Scan Entered snap mode!");
         // set v for this step
         v_el = (targ_el - (el - cel)) / t;
@@ -1440,7 +1458,7 @@ static void do_mode_new_box(void)
                     "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
                     targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_top = ROACH_TRIGGER_EL_TARG_MASK;
         } else if (targ_el < -h * 0.5) {
             targ_el = -h * 0.5;
             el_next_dir = 1;
@@ -1449,7 +1467,7 @@ static void do_mode_new_box(void)
                     "el_next_dir = %i,axes_mode.el_dir=%i, v_el = %f",
                     targ_el, h * 0.5, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_bottom = ROACH_TRIGGER_EL_TARG_MASK;
             n_scan += 1;
             if (n_scan != 0) {
                 calculate_el_dither(DITH_INC);
@@ -1639,7 +1657,7 @@ void do_mode_quad(void) // aka radbox
     }
 
     if (new_step) {
-        CommandData.trigger_lo_offset_check = 1; // Flag to offset the LO
+        CommandData.trigger_lo_offset_check = ROACH_TRIGGER_LO_OFFSET_MASK; // Flag to offset the LO
         // set v for this step
         v_el = (targ_el + bottom - el) / t;
         // set targ_el for the next step
@@ -1650,10 +1668,10 @@ void do_mode_quad(void) // aka radbox
             el_next_dir = -1;
             blast_info(
                     "Approaching the top: next targ_el = %f, top-bottom = %f, "
-                    "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
+                    "el_next_dir = %i,axes_mo8de.el_dir=%i,  v_el = %f",
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_top = ROACH_TRIGGER_EL_TARG_MASK;
         } else if (targ_el < 0) {
             targ_el = 0;
             el_next_dir = 1;
@@ -1662,7 +1680,7 @@ void do_mode_quad(void) // aka radbox
                     "el_next_dir = %i,axes_mode.el_dir=%i,  v_el = %f",
                     targ_el, top - bottom, el_next_dir, axes_mode.el_dir, v_el);
             blast_info("Setting trigger_roach_tuning_check");
-            CommandData.trigger_roach_tuning_check = 1;
+            CommandData.trigger_roach_tuning_check_bottom = ROACH_TRIGGER_EL_TARG_MASK;
             // Calc El Dither for the next raster scan
             n_scan += 1;
             if (n_scan != 0) {
@@ -1861,11 +1879,16 @@ static int16_t calculate_el_current(float m_vreq_el, int m_disabled)
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
      * is a result of accumulating excessively large I terms.
      */
-    I_term += I_step;
-    if (fabsf(I_term) > MAX_I_EL) {
-        I_term = copysignf(MAX_I_EL, I_term);
+     // LMF the NICC should not calculate an integral term because its pointing solution is
+     // shared from the ICC and laggy.
+    if (InCharge) {
+        I_term += I_step;
+        if (fabsf(I_term) > MAX_I_EL) {
+            I_term = copysignf(MAX_I_EL, I_term);
+        }
+    } else {
+        I_term = 0.0;
     }
-
     /**
      * The derivative term is calculated based on the change in the process value (our measured speed).
      * This can be excessively noisy, so we implement an IIR lowpass with a corner frequency at 10Hz
@@ -2017,15 +2040,18 @@ static int16_t calculate_rw_current(float v_req_az, int m_disabled)
      * thus we want to exclude the "integral wind-up" phenomenon where the overshoot in current
      * is a result of accumulating excessively large I terms.
      */
-    I_term += I_step;
-    if (fabsf(I_term) > MAX_I) {
-        I_term = copysignf(MAX_I, I_term);
-    }
-    if (K_p < 0.1) {
-        // reset the integral
+    if (InCharge) {
+        I_term += I_step;
+        if (fabsf(I_term) > MAX_I) {
+            I_term = copysignf(MAX_I, I_term);
+        }
+        if (K_p < 0.1) {
+            // reset the integral
+            I_term = 0;
+        }
+    } else {
         I_term = 0;
     }
-
     /**
      * The derivative term is calculated based on the change in the process value (our measured speed).
      * This can be excessively noisy, so we implement an IIR lowpass with a corner frequency at 10Hz
@@ -2180,6 +2206,12 @@ static double calculate_piv_current(float m_az_req_vel, unsigned int m_disabled)
     if (CommandData.pivot_gain.PE < 0.1) {
         // reset the integral
         I_term_err = 0;
+    }
+    // LMF: If we are not in charge don't calc the I term because our pointing solution comes
+    // from the ICC, and is laggy.
+    if (!InCharge) {
+        I_term_err = 0;
+        I_term = 0;
     }
     milliamp_return = P_rw_term + P_vel_term + I_term + I_term_err;
 

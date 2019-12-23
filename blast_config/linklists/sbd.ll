@@ -16,6 +16,8 @@ labjack_conn_status     NONE 1
 current_fc1             NONE 1
 current_fc2             NONE 1
 current_hd_pv           NONE 1
+lst_sched               NONE 1
+slew_veto               NONE 1
 
 
 # pointing
@@ -91,11 +93,6 @@ mc_rw_vel               NONE 1
 mc_el_motor_pos         NONE 1
 
 # roaches
-state_roach1            NONE 1
-state_roach2            NONE 1
-state_roach3            NONE 1
-state_roach4            NONE 1
-state_roach5            NONE 1
 status_roach1           NONE 1
 status_roach2           NONE 1
 status_roach3           NONE 1
