@@ -3512,7 +3512,6 @@ void InitCommandData()
 
     for (i = 0; i < NUM_ROACHES; i++) {
         CommandData.roach[i].read_temp = 0;
-        CommandData.roach[i].ext_ref = 1;
         CommandData.roach[i].change_extref = 0;
         CommandData.roach[i].set_attens = 0;
         CommandData.roach[i].read_attens = 0;
@@ -3993,6 +3992,7 @@ void InitCommandData()
     CommandData.roach_params[4].spacing_threshold = 80; // kHz
 
     for (i = 0; i < NUM_ROACHES; i++) {
+        CommandData.roach[i].ext_ref = 1;
         CommandData.udp_roach[i].store_udp = 1;
         CommandData.udp_roach[i].publish_udp = 1;
         // set_attens
