@@ -1,0 +1,12 @@
+goal_1_aalborg
+goal_2_aalborg
+goal_3_aalborg
+ain_1_aalborg
+ain_2_aalborg
+ain_3_aalborg
+speed_1_aalborg
+speed_2_aalborg
+speed_3_aalborg
+timer_1_aalborg
+timer_2_aalborg
+timer_3_aalborg
