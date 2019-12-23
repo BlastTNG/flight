@@ -63,7 +63,7 @@ typedef struct {
 	float valve_speed;
 	float prev_speed;
 	// opening timer for the one aalborg we are actually using
-	int16_t timer;
+	// int16_t timer;
 	// modbus register on labjack for speed control
 	uint16_t speed_addr;
     // timeout for setting speed back to zero
@@ -75,8 +75,8 @@ aalborg_control_t aalborg_data[N_AALBORG_VALVES] = {{0}};
 void ControlAalborg(int index)
 {
 	static int firsttime = 1;
-	static channel_t* labjackAinAddr[N_AALBORG_VALVES];
-	char channel_name[128] = {0};
+	// static channel_t* labjackAinAddr[N_AALBORG_VALVES];
+	// char channel_name[128] = {0};
 	int i;
 
 	// if we aren't connected, return before doing anything
@@ -100,12 +100,12 @@ void ControlAalborg(int index)
 
 		// find the addresses for the channels we need to read the first time
 		for (i = 0; i < N_AALBORG_VALVES; i++) {
-			snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
-			labjackAinAddr[i] = channels_find_by_name(channel_name);
+			// snprintf(channel_name, sizeof(channel_name), "ain_%d_aalborg", i+1);
+			// labjackAinAddr[i] = channels_find_by_name(channel_name);
 			// clear the command struct goals
 			// CommandData.Aalborg.goal[i] = 0;
 			// set the timers so they don't change
-			aalborg_data[i].timer = -1;
+			// aalborg_data[i].timer = -1;
             aalborg_data[i].speed_timeout = -1;
 			// set speed to zero the first time
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[i].speed_addr, 0.0);
@@ -120,6 +120,7 @@ void ControlAalborg(int index)
     // count timeout (in seconds) before setting the speed to zero
     // if timeout < 0, then there the speed never times out
 	aalborg_data[index].speed_timeout = CommandData.Aalborg.timeout[index];
+
     if (aalborg_data[index].speed_timeout == 0) {
 	   aalborg_data[index].valve_speed = 0;
     } else {
@@ -252,9 +253,9 @@ void WriteAalborgs()
 
 	// only write any of these channels if we are connected to the labjack
 	if (state[LABJACK_MICROSCROLL].connected) {
-		SET_UINT16(aalborg1GoalAddr, aalborg_data[0].dir);
-		SET_UINT16(aalborg2GoalAddr, aalborg_data[1].dir);
-		SET_UINT16(aalborg3GoalAddr, aalborg_data[2].dir);
+		SET_FLOAT(aalborg1GoalAddr, aalborg_data[0].dir);
+		SET_FLOAT(aalborg2GoalAddr, aalborg_data[1].dir);
+		SET_FLOAT(aalborg3GoalAddr, aalborg_data[2].dir);
 		SET_INT16(timerAalborg1Addr, aalborg_data[0].speed_timeout);
 		SET_INT16(timerAalborg2Addr, aalborg_data[1].speed_timeout);
 		SET_INT16(timerAalborg3Addr, aalborg_data[2].speed_timeout);

@@ -2010,7 +2010,7 @@ void MultiCommand(enum multiCommand command, double *rvalues,
 		} else if (ivalues[1] == 0) {
 			CommandData.Aalborg.speed[ivalues[0]] = 0.0;
 		}
-		CommandData.Aalborg.timeout[ivalues[0]] = rvalues[2];
+		CommandData.Aalborg.timeout[ivalues[0]] = ivalues[2];
 		break;
 	case labjack9_write_reg:
 	  CommandData.Aalborg.new_cmd = 1;
@@ -3643,9 +3643,9 @@ void InitCommandData()
     CommandData.Cryo.valve_goals[1] = intermed;
     CommandData.Cryo.potvalve_goal = intermed;
     CommandData.Cryo.potvalve_min_tighten_move = 500;
-	CommandData.Aalborg.dir[0] = 0;
-	CommandData.Aalborg.dir[1] = 0;
-	CommandData.Aalborg.dir[2] = 0;
+	CommandData.Aalborg.speed[0] = 0.0;
+	CommandData.Aalborg.speed[1] = 0.0;
+	CommandData.Aalborg.speed[2] = 0.0;
 
     // BLAST-Pol stuff
     // CommandData.Cryo.lhevalve_on = 0;
