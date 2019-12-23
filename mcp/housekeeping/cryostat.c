@@ -770,8 +770,9 @@ static void burnoff_cycle(void) {
             CommandData.Cryo.potvalve_goal = closed;
             cycle_state.burning_off = 0;
             cycle_state.cooling = 1;
-            CommandData.Cryo.heater_update = 1;
-            CommandData.Cryo.charcoal_hs = 1;
+            // CommandData.Cryo.heater_update = 1;
+            // CommandData.Cryo.charcoal_hs = 1;
+            cycle_state.charcoal_hs_hold_off = 900;
             GET_VALUE(cycle_state.the3_Addr, cycle_state.the3);
             GET_VALUE(cycle_state.tfpa250_Addr, cycle_state.t250);
             GET_VALUE(cycle_state.tfpa350_Addr, cycle_state.t350);
