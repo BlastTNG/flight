@@ -3088,24 +3088,24 @@
                     "PObject": {
                         "_id": "2063696225"
                     },
-                    "_caption": "Bonus 2",
+                    "_caption": "Aalborg A",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "%0.3f C",
-                    "_source": "Tt_bonus_2",
+                    "_source": "Tt_aalborg_a",
                     "type": "PNDI"
                 },
                 {
                     "PObject": {
                         "_id": "1443801779"
                     },
-                    "_caption": "Bonus 3",
+                    "_caption": "Aalborg B",
                     "_captionStyle": "noStyle",
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "%0.3f C",
-                    "_source": "Tt_bonus_3",
+                    "_source": "Tt_aalborg_b",
                     "type": "PNDI"
                 },
                 {
