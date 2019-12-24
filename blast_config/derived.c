@@ -1032,8 +1032,8 @@ derived_tng_t derived_list[] = {
     LINTERP("Tt_of_lj_2", "Rt_therm74", LUT_DIR "Thermistor_RtoT.lut"),
 
     LINTERP("Tt_if_aalborg", "Micro_rt_therm1", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_bonus_2", "Micro_rt_therm2", LUT_DIR "Thermistor_RtoT.lut"),
-    LINTERP("Tt_bonus_3", "Micro_rt_therm3", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_aalborg_a", "Micro_rt_therm2", LUT_DIR "Thermistor_RtoT.lut"),
+    LINTERP("Tt_aalborg_b", "Micro_rt_therm3", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_science_sphere", "Micro_rt_therm4", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_pump_b", "Micro_rt_therm5", LUT_DIR "Thermistor_RtoT.lut"),
     LINTERP("Tt_pump_a", "Micro_rt_therm6", LUT_DIR "Thermistor_RtoT.lut"),
