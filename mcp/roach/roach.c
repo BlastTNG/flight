@@ -2594,6 +2594,7 @@ int valon_set_ref(pi_state_t *m_pi)
         /* Gets, validates host; stores address in hostent structure. */
         if ((hp = gethostbyname(m_pi->address)) == NULL) {
             blast_err("Pi%d: Couldn't establish connection at given hostname", m_pi->which);
+            close(s);
             return status;
         }
         /* Assigns port number. */
@@ -2604,13 +2605,16 @@ int valon_set_ref(pi_state_t *m_pi)
         /* Requests link with server and verifies connection. */
         if (connect(s, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
             blast_err("Pi%d: Connection Error", m_pi->which);
+            close(s);
             return status;
         }
         if ((status = write(s, write_this, strlen(write_this))) < 0) {
             blast_err("Pi%d: Couldn't write to socket", m_pi->which);
+            close(s);
             return status;
         }
         roach_state_table[m_pi->which - 1].pi_error_count = 0;
+        close(s);
     }
     return 0;
 }

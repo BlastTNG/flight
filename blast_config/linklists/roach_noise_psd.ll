@@ -142,6 +142,21 @@ thermistor_69
 thermistor_70
 thermistor_71
 thermistor_72
+targ_sweep_span_roach1
+targ_sweep_span_roach2
+targ_sweep_span_roach3
+targ_sweep_span_roach4
+targ_sweep_span_roach5
+trnd_sweep_span_roach1
+trnd_sweep_span_roach2
+trnd_sweep_span_roach3
+trnd_sweep_span_roach4
+trnd_sweep_span_roach5
+median_df_roach1
+median_df_roach2
+median_df_roach3
+median_df_roach4
+median_df_roach5
 kidA_roachN_index NONE 488
 kidA_roachN NONE 488
 kidB_roachN_index NONE 488
