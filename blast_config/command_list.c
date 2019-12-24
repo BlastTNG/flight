@@ -1746,6 +1746,12 @@ struct mcom mcommands[plugh + 2] = {
     }
   },
 
+  {COMMAND(potvalve_set_hold_current), "Set pot valve motor velocity", GR_CRYO, 1,
+    {
+      {"Hold current (% max, up to 50)", 0, 50, 'i', "I_HOLD_POTVALVE"}
+    }
+  },
+
   {COMMAND(potvalve_set_current), "Set pot valve open and close currents", GR_CRYO, 2,
     {
       {"Pot valve open current (% max)", 0, 100, 'i', "POTVALVE_I_OPEN"},
