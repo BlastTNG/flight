@@ -1808,7 +1808,7 @@ struct mcom mcommands[plugh + 2] = {
     {
       {"Which Aalborg to move (0=science sphere bypass, 1=Pump A, 2=Pump B)", 0, 2, 'i', "NONE"},
       {"Direction to move (-1=close, 1=open, 0=stop)", -1, 1, 'i', "NONE"},
-      {"How long valve should move, in seconds", 0, 15, 'i', "NONE"}
+      {"How long valve should move, in seconds", 0, 60, 'i', "NONE"}
     }
   },
   {COMMAND(labjack9_write_reg), "Write an arbitrary value to a modbus register on microscroll labjack (#9)", GR_MISC, 2,
