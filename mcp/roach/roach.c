@@ -2066,6 +2066,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     char *var_name1;
     blast_tmp_sprintf(var_name1, "R%d_LAST_TARG_FREQS_MAGS", m_roach->which);
     setenv(var_name, path_to_mags_and_freqs, 1);
+    m_roach->num_kids = 0;
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
@@ -2282,6 +2283,10 @@ int roach_write_saved(roach_state_t *m_roach)
         blast_strerror("Could not open %s for reading", m_targ_freq_path);
         return retval;
     }
+    if (m_roach->num_kids > 0) {
+        m_roach->prev_num_kids = m_roach->num_kids;
+    }
+    m_roach->num_kids = 0;
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
