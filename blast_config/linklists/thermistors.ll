@@ -72,4 +72,12 @@ thermistor_71
 thermistor_72
 thermistor_73
 thermistor_74
+micro_thermistor_1
+micro_thermistor_2
+micro_thermistor_3
+micro_thermistor_4
+micro_thermistor_5
+micro_thermistor_6
+micro_thermistor_7
+micro_thermistor_8
 chatter
