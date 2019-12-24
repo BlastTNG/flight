@@ -67,7 +67,6 @@ typedef struct {
 	// modbus register on labjack for speed control
 	uint16_t speed_addr;
     // timeout for setting speed back to zero
-    int speed_timeout;
 } aalborg_control_t;
 
 aalborg_control_t aalborg_data[N_AALBORG_VALVES] = {{0}};
@@ -106,7 +105,7 @@ void ControlAalborg(int index)
 			// CommandData.Aalborg.goal[i] = 0;
 			// set the timers so they don't change
 			// aalborg_data[i].timer = -1;
-            aalborg_data[i].speed_timeout = -1;
+            CommandData.Aalborg.timeout[i] = 0;
 			// set speed to zero the first time
         	labjack_queue_command(LABJACK_MICROSCROLL, aalborg_data[i].speed_addr, 0.0);
 		}
@@ -119,16 +118,16 @@ void ControlAalborg(int index)
 
     // count timeout (in seconds) before setting the speed to zero
     // if timeout < 0, then there the speed never times out
-	aalborg_data[index].speed_timeout = CommandData.Aalborg.timeout[index];
+	// aalborg_data[index].speed_timeout = CommandData.Aalborg.timeout[index];
 
-    if (aalborg_data[index].speed_timeout == 0) {
+    if (CommandData.Aalborg.timeout[index] == 0) {
 	   aalborg_data[index].valve_speed = 0;
     } else {
 	    aalborg_data[index].valve_speed = CommandData.Aalborg.speed[index];
     }
     // decrement counter
-    if (aalborg_data[index].speed_timeout > 0) {
-        aalborg_data[index].speed_timeout--;
+    if (CommandData.Aalborg.timeout[index] > 0) {
+        CommandData.Aalborg.timeout[index]--;
     }
 
 	// if the aalborg speed has been changed in commanding, we need to change it
@@ -256,9 +255,9 @@ void WriteAalborgs()
 		SET_FLOAT(aalborg1GoalAddr, aalborg_data[0].dir);
 		SET_FLOAT(aalborg2GoalAddr, aalborg_data[1].dir);
 		SET_FLOAT(aalborg3GoalAddr, aalborg_data[2].dir);
-		SET_INT16(timerAalborg1Addr, aalborg_data[0].speed_timeout);
-		SET_INT16(timerAalborg2Addr, aalborg_data[1].speed_timeout);
-		SET_INT16(timerAalborg3Addr, aalborg_data[2].speed_timeout);
+		SET_INT16(timerAalborg1Addr, CommandData.Aalborg.timeout[0]);
+		SET_INT16(timerAalborg2Addr, CommandData.Aalborg.timeout[1]);
+		SET_INT16(timerAalborg3Addr, CommandData.Aalborg.timeout[2]);
 		SET_FLOAT(aalborg1SpeedAddr, aalborg_data[0].valve_speed);
 		SET_FLOAT(aalborg2SpeedAddr, aalborg_data[1].valve_speed);
 		SET_FLOAT(aalborg3SpeedAddr, aalborg_data[2].valve_speed);
