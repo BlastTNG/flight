@@ -475,7 +475,7 @@ void DoSched(void)
 /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/
   dt = (PointingData[i_point].t - S->t0) * 1.002737909; /*Ref Siderial Time */
-  d_lon = PointingData[i_point].lon;
+  d_lon = (-1.0)*PointingData[i_point].lon;
 
   while (d_lon < -170)
     d_lon += 360.0;
