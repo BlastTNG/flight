@@ -2614,6 +2614,7 @@ int valon_set_ref(pi_state_t *m_pi)
             return status;
         }
         roach_state_table[m_pi->which - 1].pi_error_count = 0;
+        blast_info("ROACH%d: Set REF = %d", m_pi->which, ext_ref);
         close(s);
     }
     return 0;
