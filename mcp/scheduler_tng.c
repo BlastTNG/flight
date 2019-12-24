@@ -153,7 +153,7 @@ static void LoadSchedFile(const char* file, struct ScheduleType* S, int lband)
   /*************************************************************/
   /** find local comoving siderial date (in siderial seconds) **/ // 166 east lon
   dt = (mcp_systime(NULL) - S->t0) * 1.002737909; /* Ref Siderial Time */
-  d_lon = CHECK_LON;
+  d_lon = (-1.0)*CHECK_LON;
   while (d_lon < 0)
     d_lon += 360.0;
   while (d_lon >= 360.0)
