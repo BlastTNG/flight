@@ -2283,6 +2283,7 @@ int roach_write_saved(roach_state_t *m_roach)
         blast_strerror("Could not open %s for reading", m_targ_freq_path);
         return retval;
     }
+    m_roach->num_kids = 0;
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &m_temp_freqs[(m_roach->num_kids)++]) != EOF) {
     }
