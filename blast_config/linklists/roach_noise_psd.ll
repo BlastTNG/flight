@@ -188,4 +188,24 @@ kidN_roachN NONE 488
 kidO_roachN_index NONE 488
 kidO_roachN NONE 488
 
+az
+el
+ra
+dec
+ifyaw_gy
+ifroll_gy
+ifel_gy
+x0_point_el
+x0_point_az
+x1_point_el
+x1_point_az
+mc_el_motor_pos
+lat
+lon
+lst
+time
+time_usec
+az_pss
+az_mag1
+az_mag2
 chatter
