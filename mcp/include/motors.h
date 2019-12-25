@@ -28,10 +28,9 @@
 
 #include <stdint.h>
 
-// TODO(laura): These elevation limits are only for testing.
-// They will need to changed back once we have sun shields and an IF baffle.
-#define MIN_EL 0.5
-#define MAX_EL 95
+// Keep mcp from attempting to point too high or too low.
+#define MIN_EL 19.0
+#define MAX_EL 55.0
 
 #define MAX_V_AZ 2.0 // was 2000 in gyro units
 #define MAX_V_EL 0.5 // was 0.5
