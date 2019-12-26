@@ -2115,7 +2115,7 @@ struct mcom mcommands[plugh + 2] = {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"}
       }
   },
-  {COMMAND(xsc_selective_mask), "Set the XSC selective mask", GR_XSC_PARAM, 6,
+  {COMMAND(xsc_selective_mask), "Set the XSC selective mask", GR_XSC_PARAM, 5,
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Enable selective masking", 0, 1, 'i', "NONE"},
