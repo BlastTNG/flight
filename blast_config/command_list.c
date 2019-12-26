@@ -2119,9 +2119,9 @@ struct mcom mcommands[plugh + 2] = {
       {
               {"Which camera (0, 1, 2=both)", 0, 2, 'i', "NONE"},
               {"Enable selective masking", 0, 1, 'i', "NONE"},
-              {"Mask field 1", 0, CMD_L_MAX, 'i', "NONE"},
-              {"Mask field 2", 0, CMD_L_MAX, 'i', "NONE"},
-              {"Mask field 3", 0, CMD_L_MAX, 'i', "NONE"},
+              {"Mask field 1", 0, CMD_L_MAX, 'l', "NONE"},
+              {"Mask field 2", 0, CMD_L_MAX, 'l', "NONE"},
+              {"Mask field 3", 0, CMD_L_MAX, 'l', "NONE"},
       }
   },
   {COMMAND(xsc_blob_finding), "XSC blob finder settings", GR_XSC_PARAM, 5,
