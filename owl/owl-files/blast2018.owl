@@ -1357,6 +1357,17 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
+        "_id" : "1333619329" 
+      },
+      "_caption" : "Pivot MC",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "T_MC_PIV",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
         "_id" : "2056199985" 
       },
       "_caption" : "RW Motor",
@@ -1783,10 +1794,10 @@
     },
     "_boxTitle" : "Power Temperatures",
     "_style" : "(P2072147126)",
-    "cellHeight" : 10,
+    "cellHeight" : 9,
     "cellWidth" : 16,
     "cellX" : 3,
-    "cellY" : 44,
+    "cellY" : 45,
     "dataItems" : [ {
       "PObject" : {
         "_id" : "1895319663" 
@@ -1810,18 +1821,6 @@
       "_extremaID" : "(P608120398)",
       "_format" : "",
       "_source" : "Tt_if_batt_starboard",
-      "type" : "PNDI" 
-    }, {
-      "PObject" : {
-        "_id" : "1454133933" 
-      },
-      "_caption" : "OF Power Box",
-      "_captionStyle" : "noStyle",
-      "_defaultStyle" : "noStyle",
-      "_extrema" : true,
-      "_extremaID" : "(P1062044342)",
-      "_format" : "",
-      "_source" : "Tt_of_power_box",
       "type" : "PNDI" 
     }, {
       "PObject" : {
@@ -1870,6 +1869,18 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
+        "_id" : "1454133933" 
+      },
+      "_caption" : "OF Power Box",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : true,
+      "_extremaID" : "(P1062044342)",
+      "_format" : "",
+      "_source" : "Tt_of_power_box",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
         "_id" : "1670849136" 
       },
       "_caption" : "Solar Panel 2 TR",
@@ -1880,10 +1891,10 @@
       "_source" : "Tt_solar_2_tr",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 160,
-    "geometryWidth" : 256,
+    "geometryHeight" : 145,
+    "geometryWidth" : 257,
     "geometryX" : 48,
-    "geometryY" : 704 
+    "geometryY" : 720 
   }, {
     "PObject" : {
       "_id" : "485456626" 
