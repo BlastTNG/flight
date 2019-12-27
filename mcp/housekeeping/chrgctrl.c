@@ -55,6 +55,10 @@ typedef enum {
     CC_STATE_SHUTDOWN
 } e_cc_state;
 
+/* Number of CC calls with an error until there is a ModBus reset */
+/* Since this is called in the 1 Hz loop, this is also the number of seconds before reset */
+#define CC_MAX_ERRORS_UNTIL_RESET 10
+
 /* charge controller data struct
    written to by serial thread in chrgctrl.c */
 
@@ -67,6 +71,7 @@ typedef struct {
     int state;
     int req_state;
     int has_error;
+    int count_error;
 
     double V_batt;               // battery voltage from sense terminals
     double V_arr;                // solar array input voltage
@@ -160,6 +165,7 @@ void startChrgCtrl(int m_controller)
 
 void* chrgctrlComm(void* cc) {
     static int have_warned_connect = 0;
+    static int have_warned_error = 0;
     charge_ctl_t *ctlr = (charge_ctl_t*)cc;
     char tname[10];
     float Vscale, Iscale;
@@ -246,7 +252,7 @@ void* chrgctrlComm(void* cc) {
         /* heatsink temperature in degrees C (addr 0x0023) */
 
         if (modbus_read_registers(ctlr->mb, 0x0023, 1, tmp_data) < 0) {
-            blast_err("Could not read heatsink temp for Modbus"
+            if (!have_warned_error) blast_err("Could not read heatsink temp for Modbus"
                     " charge controller at %s: %s", ctlr->addr, modbus_strerror(errno));
             ctlr->has_error = 1;
             ctlr->T_hs = 0;
@@ -257,7 +263,7 @@ void* chrgctrlComm(void* cc) {
         /* charge controller fault bitfield (addr 0x002c) */
 
         if (modbus_read_registers(ctlr->mb, 0x002C, 1, tmp_data) < 0) {
-            blast_err("Could not read fault bitfield for Modbus"
+            if (!have_warned_error) blast_err("Could not read fault bitfield for Modbus"
                     " charge controller at %s: %s", ctlr->addr, modbus_strerror(errno));
             ctlr->has_error = 1;
             ctlr->fault_field = 0;
@@ -268,7 +274,7 @@ void* chrgctrlComm(void* cc) {
         /* charge controller alarm bitfield (spans 2 regs with addrs 47,48) */
 
         if (modbus_read_registers(ctlr->mb, 0x002E, 2, tmp_data) < 0) {
-            blast_err("Could not read alarm bitfield for Modbus"
+            if (!have_warned_error) blast_err("Could not read alarm bitfield for Modbus"
                     " charge controller at %s: %s", ctlr->addr, modbus_strerror(errno));
             ctlr->has_error = 1;
             ctlr->alarm_field = 0;
@@ -279,7 +285,7 @@ void* chrgctrlComm(void* cc) {
         /* controller LED state, charge state and target charging voltage (addrs 50, 51, 52) */
 
         if (modbus_read_registers(ctlr->mb, 0x0031, 3, tmp_data) < 0) {
-            blast_err("Could not read state vars for Modbus"
+            if (!have_warned_error) blast_err("Could not read state vars for Modbus"
                     " charge controller at %s: %s", ctlr->addr, modbus_strerror(errno));
             ctlr->has_error = 1;
             ctlr->V_targ = 0.0;
@@ -289,6 +295,23 @@ void* chrgctrlComm(void* cc) {
             ctlr->led_state = tmp_data[0];
             ctlr->charge_state = tmp_data[1];
             ctlr->V_targ = ((int16_t)tmp_data[2]) * Vscale / 32768.0;
+        }
+
+        /* count errors until reset */
+        if (ctlr->has_error) {
+            have_warned_error = 1;
+            ctlr->count_error++;
+        } else {
+            have_warned_error = 0;
+            ctlr->count_error = 0;
+        }
+        /* trigger a reset the next time around if there are enough errors */
+        if (ctlr->count_error >= CC_MAX_ERRORS_UNTIL_RESET) {
+            blast_err("Have %d errors from the controller at %s. Resetting...",
+                    CC_MAX_ERRORS_UNTIL_RESET, ctlr->addr);
+            ctlr->state = CC_STATE_RESET;
+            ctlr->count_error = 0;
+            have_warned_error = 0;
         }
 
 

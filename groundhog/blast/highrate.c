@@ -264,6 +264,13 @@ void highrate_receive(void *arg) {
           if ((gse_packet_header.mode != TD_HK) && (gse_packet_header.mode != IRID_HK)) { // packet not from the hk stack (origin != 0)
               if (payload_packet_lock) { // locked onto payload header     
                   payload_copy = MIN(payload_size-payload_read, gse_packet_header.size-gse_read);
+                  
+                  if (payload_read+payload_copy > payload_packet_size) {
+                      blast_err("Received more data (%d) than expected (%d). Losing lock\n", payload_read+payload_copy, payload_packet_size);
+                      payload_packet_lock = 0;
+                      continue;
+                  }
+
                   memcpy(payload_packet+payload_read, gse_packet+gse_read, payload_copy);
 
                   gse_read += payload_copy; // update bytes read from gse
