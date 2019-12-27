@@ -110,6 +110,8 @@ int main(int argc, char *argv[]) {
   char sched[1024];
   char instr[1024];
   int do_fix = 0;
+  int do_sleep = 0;
+  unsigned int pause = 0;
   int fix_chunk;
   int sipcom = DEFAULT;
   int link = DEFAULT;
@@ -155,6 +157,15 @@ int main(int argc, char *argv[]) {
           }
 	  do_fix = 1;
           
+	  break;
+	case 'z':
+          if (i+1<argc) {
+            pause = atoi(argv[i+1]);
+            ++i;
+          } else {
+            usage("no argument for -z");
+          }
+	  do_sleep = 1;
 	  break;
 	case 'l':
 	  if (link == DEFAULT) {
@@ -319,6 +330,9 @@ int main(int argc, char *argv[]) {
     
     printf("packet %d sent: %d out of %d bytes\n", i, bytes_written, sizeof(header)+datasize-6+1);
     
+    if (do_sleep) {
+      sleep(pause);
+    }
     if (do_fix) {
       break;
     }
