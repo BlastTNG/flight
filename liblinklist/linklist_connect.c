@@ -659,9 +659,15 @@ void *connection_handler(void *arg)
           break;
         }
 
-        // reallocate the buffer if necessary
+        // buffer allocation 
         if (buffersize < archive_rawfile->framesize) {
-          if (!(buffer = realloc(buffer, archive_rawfile->framesize))) {
+          if (!buffersize) { // first allocation of the buffer
+            buffer = calloc(1, archive_rawfile->framesize);
+          } else { // reallocation of the buffer
+            buffer = realloc(buffer, archive_rawfile->framesize);
+          }
+          // handle buffer allocation errors
+          if (!buffer) {
             linklist_err("::CLIENT %d:: cannot allocate buffer\n", sock);
             client_on = 0; 
             break;
