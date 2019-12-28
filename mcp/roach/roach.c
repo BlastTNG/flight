@@ -2065,7 +2065,7 @@ int get_targ_freqs(roach_state_t *m_roach, bool m_use_default_params)
     // Set environmental variable linking to last freqs/mags array
     char *var_name1;
     blast_tmp_sprintf(var_name1, "R%d_LAST_TARG_FREQS_MAGS", m_roach->which);
-    setenv(var_name, path_to_mags_and_freqs, 1);
+    setenv(var_name1, path_to_mags_and_freqs, 1);
     m_roach->num_kids = 0;
     while (m_roach->num_kids < MAX_CHANNELS_PER_ROACH
             && fscanf(fd, "%lg\n", &temp_freqs[(m_roach->num_kids)++]) != EOF) {
