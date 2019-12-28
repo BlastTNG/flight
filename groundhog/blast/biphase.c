@@ -82,8 +82,8 @@ void biphase_receive(void *args)
   uint16_t raw_word_in;
   uint32_t transmit_size;
 
-  uint16_t receive_buffer[BI0_FRAME_SIZE];
-  uint16_t anti_receive_buffer[BI0_FRAME_SIZE];
+  uint16_t receive_buffer[2*BI0_FRAME_SIZE];
+  uint16_t anti_receive_buffer[2*BI0_FRAME_SIZE];
   uint8_t receive_buffer_stripped[BIPHASE_PACKET_SIZE];
   uint8_t *compbuffer = calloc(1, BI0_MAX_BUFFER_SIZE);
   uint32_t compbuffer_size = 0;
