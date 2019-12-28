@@ -1067,10 +1067,15 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
   if (*recv_serial == SERVER_LL_NAME_REQ) {
     // recv name: *recv_frame_num is number of characters
     memset(linklistname, 0, len);
+    if (*recv_frame_num > len)  {
+      linklist_err("Could not receive server linklist name of size %d for %d size buffer\n", *recv_frame_num, len);
+      return;
+    }
     int read_size = recv(tc->fd, linklistname, *recv_frame_num, 0);
 
     if (read_size <= 0) {
       linklist_err("Could not receive server linklist name\n");
+      return;
     }
   } else {
     linklist_err("Improper response to linklist name request (0x%x)\n", *recv_serial);
@@ -1141,11 +1146,16 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
         break;
       }
 
+      if (*recv_fn > LINKLIST_SHORT_FILENAME_SIZE) {
+        linklist_err("Cannot receive archive name of size %d for buffer size %d\n", *recv_fn, LINKLIST_SHORT_FILENAME_SIZE);
+        return -1;
+      }
+
       // receive name
       if (recv(tc->fd,name[*recv_i],*recv_fn,MSG_WAITALL) <= 0) {
         linklist_err("Failed to receive archive name\n");
         close_connection(tc);
-				if (tc->flag & TCPCONN_NOLOOP) return -1;
+	if (tc->flag & TCPCONN_NOLOOP) return -1;
         break; 
       }
 
@@ -1198,6 +1208,11 @@ int request_server_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_FILENAME
       return 0;
     }
     readTCPHeader(request_msg,&recv_ser,&recv_fn,&recv_i,&recv_n);
+
+    if (*recv_fn > LINKLIST_SHORT_FILENAME_SIZE) {
+      linklist_err("Cannot receive archive name of size %d for buffer size %d\n", *recv_fn, LINKLIST_SHORT_FILENAME_SIZE);
+      return 0;
+    }
 
     // receive name
     if (recv(tc->fd,name[*recv_i],*recv_fn,0) <= 0) {
