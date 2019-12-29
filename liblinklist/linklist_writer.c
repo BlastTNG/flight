@@ -521,6 +521,10 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   WRITE_EXTRA_FORMAT_ENTRY(data_integrity, SF_FLOAT32);
   WRITE_EXTRA_FORMAT_ENTRY(local_time, SF_UINT32);
 
+  // open the frame counting binary file
+  snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/%s", ll_dirfile->filename, LL_FRAMEBIN_NAME);
+  ll_dirfile->framebin = fpreopenb(binname);
+
   // tack on calspecs file
   if (ll->superframe->calspecs[0]) {
     fprintf(formatfile, "\n####### Begin calspecs ######\n\n");
@@ -561,7 +565,8 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i = 0; i < LL_DIRFILE_NUM_EXTRA; i++) {
     if (ll_dirfile->extrabin[i]) fclose(ll_dirfile->extrabin[i]);
   }
-  fclose(ll_dirfile->format);
+  if (ll_dirfile->framebin) fclose(ll_dirfile->framebin);
+  if (ll_dirfile->format) fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
   free(ll_dirfile->blockbin);
   free(ll_dirfile->streambin);
@@ -612,9 +617,13 @@ int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum
   }
   // ll_dirfile-specific field to be writing to the dirfile
   for (i=0; i<LL_DIRFILE_NUM_EXTRA; i++) {
-    if(ll_dirfile->extrabin[i]) {
+    if (ll_dirfile->extrabin[i]) {
       fseek(ll_dirfile->extrabin[i], framenum*sizeof(uint32_t), SEEK_SET);
     }
+  }
+  // frame tally is 8 frames per byte
+  if (ll_dirfile->framebin) {
+    fseek(ll_dirfile->framebin, framenum / 8, SEEK_SET);
   }
   ll_dirfile->framenum = framenum;
   return 0;
@@ -657,6 +666,10 @@ int flush_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
     if (ll_dirfile->extrabin[i]) {
       fflush(ll_dirfile->extrabin[i]);
     }
+  }
+  // frame tally
+  if (ll_dirfile->framebin) {
+    fflush(ll_dirfile->framebin);
   }
 
   return 0;
@@ -766,8 +779,19 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   WRITE_EXTRA_ENTRY_DATA(data_integrity, float);
   WRITE_EXTRA_ENTRY_DATA(local_time, uint32_t);
 
+  // tally up the frames
+  if (ll_dirfile->framebin) {
+    // read current word, bitwise append, seek, and write
+    uint8_t tally_word = 0;
+    fread(&tally_word, 1, 1, ll_dirfile->framebin);
+    tally_word |= 1 << (ll_dirfile->framenum % 8);
+    fseek(ll_dirfile->framebin, ll_dirfile->framenum / 8, SEEK_SET);
+    fwrite(&tally_word, 1, 1, ll_dirfile->framebin);
+  }
+
   // nothing needs to be done for calspecs since it is handled by getdata :)
 
+  // clear the buffer
   memset(superframe_buf, 0, ll->superframe->size);
   
   return retval;
