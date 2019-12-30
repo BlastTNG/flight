@@ -378,8 +378,7 @@ char *get_real_file_name(char * real_name, char * symlink_name)
 void *connection_handler(void *arg)
 {
   //Get the socket descriptor
-  int sock = *((int *) arg);
-  *(int *) arg = -1; // unlock server thread so new clients can be accepted
+  int sock = (uintptr_t) arg;
 
   struct TCPCONN tc = {0};
   tc.fd = sock;
@@ -513,12 +512,12 @@ void *connection_handler(void *arg)
         // respond with header for list transfer
         // format: SERVER_ARCHIVE_LIST_REQ, num chars, file index, total # of files
         writeTCPHeader(header, SERVER_ARCHIVE_LIST_REQ, strlen(dir[i]->d_name)+1, ifile, nfile);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
           client_on = 0;
         }
         // send name
-        if (send(sock, dir[i]->d_name, strlen(dir[i]->d_name)+1, 0) <= 0) {
+        if (send(sock, dir[i]->d_name, strlen(dir[i]->d_name)+1, MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send archive name %s\n", sock, dir[i]->d_name);
           client_on = 0;
         }
@@ -526,7 +525,7 @@ void *connection_handler(void *arg)
       }
       if (!ifile && !nfile) {
         writeTCPHeader(header, SERVER_ARCHIVE_LIST_REQ, 0, 0, 0);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send archive names\n", sock);
           client_on = 0;
         }
@@ -573,12 +572,12 @@ void *connection_handler(void *arg)
       // shorten the name for sending to client if necessary
       if (((*req_frame_num)-1) <= strlen(send_name)) send_name[(*req_frame_num)-1] = 0;
       writeTCPHeader(header, SERVER_LL_NAME_REQ, strlen(send_name)+1, 0, 0);
-      if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+      if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
         linklist_err("::CLIENT %d:: unable to send response to linklist name\n", sock);
         client_on = 0;
         break;
       }
-      if (send(sock, send_name, strlen(send_name)+1, 0) <= 0) {
+      if (send(sock, send_name, strlen(send_name)+1, MSG_NOSIGNAL) <= 0) {
         linklist_err("::CLIENT %d:: unable to send linklist name %s\n", sock, send_name);
         client_on = 0;
         break;
@@ -624,7 +623,7 @@ void *connection_handler(void *arg)
         // respond with header for live data
         // format: serial, initialization framenm, day, year*12+month
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, archive_framenum-frame_lag, theday, theyear*12+themonth);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send initialization message\n",sock);
           client_on = 0;
         }
@@ -635,7 +634,7 @@ void *connection_handler(void *arg)
         // respond with header for change in datafile
         linklist_info("::CLIENT %d:: data file symlink change\n", sock);
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, TCPCONN_FILE_RESET, 0);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE | MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
@@ -645,7 +644,7 @@ void *connection_handler(void *arg)
       } else if ((archive_lag_framenum < (int) (*req_frame_num) || (archive_lag_framenum <= 0))) { // no data to read
         // respond with header for no data
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, TCPCONN_NO_DATA, 0);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE | MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
@@ -653,7 +652,7 @@ void *connection_handler(void *arg)
       } else {
         // respond with header for live data
         writeTCPHeader(header, SERVER_ARCHIVE_REQ, *req_frame_num, 0, 0);
-        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE) <= 0) {
+        if (send(sock, header, TCP_PACKET_HEADER_SIZE, MSG_MORE | MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send header\n", sock);
           client_on = 0;
           break;
@@ -684,7 +683,7 @@ void *connection_handler(void *arg)
         read_linklist_rawfile(archive_rawfile, buffer);
 
         // send the data 
-        if (send(sock, buffer, archive_rawfile->framesize, 0) <= 0) {
+        if (send(sock, buffer, archive_rawfile->framesize, MSG_NOSIGNAL) <= 0) {
           linklist_err("::CLIENT %d:: unable to send data\n",sock);
           break;
         }
@@ -749,12 +748,10 @@ void linklist_server(void * arg)
       linklist_err("Accept client failed\n");
     }
   
-    if (pthread_create(&thread_id, NULL, connection_handler, (void*) &client_sock) < 0) {
+    uintptr_t the_sock = client_sock;
+    if (pthread_create(&thread_id, NULL, connection_handler, (void*) the_sock) < 0) {
       perror("Could not create client thread\n");
     }
-    
-    // prevent race condition with fast accept of multple clients
-    while (client_sock != -1) usleep(10000);
   }
 }
 
@@ -872,7 +869,7 @@ void send_client_error(struct TCPCONN * tc)
   uint8_t header[TCP_PACKET_HEADER_SIZE] = {0};
 
   writeTCPHeader(header,0x1badfeed, 0, 0, 1);
-  if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("::CLIENT %d:: could not send client error\n", tc->fd);
     return;
   }
@@ -900,7 +897,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
   // respond with header for file transfer
   // format: SERVER_LL_REQ, total file size [bytes], 4 byte linklist serial
   writeTCPHeader(header, SERVER_LL_REQ, req_filesize, (serial & 0xffff), (serial & 0xffff0000)>>16);
-  if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, header, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("::CLIENT %d:: unable to send file transfer initialization message\n", tc->fd);
     fclose(req_file);
     return -1;
@@ -917,7 +914,7 @@ int send_client_file(struct TCPCONN * tc, char * filename, uint32_t serial)
       linklist_err("::CLIENT %d:: file read error\n", tc->fd);
       return 0;
     } else {
-      if (send(tc->fd, buffer, col, 0) <= 0) {
+      if (send(tc->fd, buffer, col, MSG_NOSIGNAL) <= 0) {
         linklist_err("::CLIENT %d:: file transfer interrupted\n", tc->fd);
         fclose(req_file);
         return -1;
@@ -955,11 +952,11 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
 
   // send request for file by name
   writeTCPHeader(buffer, SERVER_LL_REQ, strlen(filename), flags, 0);
-  if (send(sock, buffer, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(sock, buffer, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("request_server_file: failed to send file request message\n");
     return 0;
   }
-  if (send(sock, filename, strlen(filename), 0) <= 0) {
+  if (send(sock, filename, strlen(filename), MSG_NOSIGNAL) <= 0) {
     linklist_err("request_server_file: failed to send filename\n");
     return 0;
   }
@@ -1001,7 +998,7 @@ uint32_t request_server_file(struct TCPCONN * tc, char * filename, unsigned int 
 }
 
 // initialize server connection with time and framenum info based on a linklist serial
-unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
+int64_t initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
 {
   // initialize connection if not done so already
   while (tc->fd <= 0) {
@@ -1016,7 +1013,7 @@ unsigned int initialize_client_connection(struct TCPCONN * tc, uint32_t serial)
 
   // initialization with serial
   writeTCPHeader(request_msg, serial, 0, TCPCONN_CLIENT_INIT, 0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("Failed to send initialization message\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
@@ -1056,7 +1053,7 @@ void request_server_linklist_name(struct TCPCONN * tc, char * linklistname, unsi
 
   // request file list from server
   writeTCPHeader(request_msg, SERVER_LL_NAME_REQ, len-1, flags, 0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("Failed to send link name request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
@@ -1101,12 +1098,12 @@ void set_server_linklist_name(struct TCPCONN * tc, char *linklistname)
 
   // request file list from server
   writeTCPHeader(request_msg,SERVER_SET_LL_NAME_REQ,strlen(linklistname)+1,0,0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("Failed to send link name select request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
   }
-  if (send(tc->fd, linklistname, strlen(linklistname)+1, 0) <= 0)
+  if (send(tc->fd, linklistname, strlen(linklistname)+1, MSG_NOSIGNAL) <= 0)
   {
     linklist_err("Failed to send link name\n");
     close_connection(tc);
@@ -1126,7 +1123,7 @@ int request_server_archive_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_
 
     // request file list from server
     writeTCPHeader(request_msg,SERVER_ARCHIVE_LIST_REQ,0,0,0);
-    if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+    if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
       linklist_err("Failed to send archive select request\n");
       close_connection(tc);
       if (tc->flag & TCPCONN_NOLOOP) return -1;
@@ -1195,7 +1192,7 @@ int request_server_list(struct TCPCONN * tc, char name[][LINKLIST_SHORT_FILENAME
 
   // request file list from server
   writeTCPHeader(request_msg,SERVER_LL_LIST_REQ,0,0,0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("Failed to send link select request\n");
     close_connection(tc);
     tc->fd = connect_tcp(tc);
@@ -1248,7 +1245,7 @@ int request_data(struct TCPCONN *tc, unsigned int fn, uint16_t * flags) {
 
   // request the next frame
   writeTCPHeader(request_msg, tc->serial, fn, 0, 0);
-  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, 0) <= 0) {
+  if (send(tc->fd, request_msg, TCP_PACKET_HEADER_SIZE, MSG_NOSIGNAL) <= 0) {
     linklist_err("Server connection lost on send.\n");
 		close_connection(tc);
 		tc->fd = connect_tcp(tc);

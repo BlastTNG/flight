@@ -7,6 +7,7 @@
 #define LL_RAWFILE_DUMMY 0x8
 #define LL_DIRFILE_NUM_EXTRA 3 // the number of extra ll_dirfile-specific fields are included
 #define LL_FRAMEBIN_NAME "ll_frame_tally"
+#define LL_FRAMEBIN_READ_BLOCK_SIZE 4096
 
 struct linklist_dirfile {
   char filename[LINKLIST_MAX_FILENAME_SIZE];
@@ -47,6 +48,7 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char *, linklist_t *, unsigned in
 void close_and_free_linklist_dirfile(linklist_dirfile_t *);
 double write_linklist_dirfile(linklist_dirfile_t *, uint8_t *);
 double write_linklist_dirfile_opt(linklist_dirfile_t *, uint8_t *, unsigned int);
+void map_frames_linklist_dirfile(linklist_dirfile_t *);
 
 int seek_linklist_rawfile(linklist_rawfile_t *, unsigned int);
 int seekend_linklist_rawfile(linklist_rawfile_t *);

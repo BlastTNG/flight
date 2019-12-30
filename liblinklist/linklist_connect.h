@@ -75,7 +75,7 @@ void readTCPHeader(uint8_t *, uint32_t **, uint32_t **, uint16_t **, uint16_t **
 
 int connect_tcp(struct TCPCONN * );
 int close_connection(struct TCPCONN *);
-unsigned int initialize_client_connection(struct TCPCONN * , uint32_t );
+int64_t initialize_client_connection(struct TCPCONN * , uint32_t );
 void set_linklist_server_port(unsigned int );
 void set_linklist_client_port(unsigned int );
 

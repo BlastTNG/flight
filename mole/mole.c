@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
   // initialization variables
   uint32_t req_serial = 0;
   unsigned int req_framenum = 0;
-  unsigned int req_init_framenum = 0;
+  int64_t req_init_framenum = 0;
 
   // received data variables
   uint8_t * recv_buffer = NULL;
@@ -380,9 +380,18 @@ int main(int argc, char *argv[]) {
       if (resync) {
         // sync with the server and get the initial framenum
         req_serial = sync_with_server(&tcpconn, filename_selection, linklistname, tcp_flags, &superframe, &linklist);
+        if (!req_serial) {
+          printf("Failed to sync with server. Retrying...\n");
+          resync = 1;
+          continue;
+        }
         req_init_framenum = initialize_client_connection(&tcpconn, req_serial);
-
-        printf("Client initialized with serial 0x%.4x and %d frames\n", req_serial, req_init_framenum);
+        if (req_init_framenum < 0) {
+          printf("Failed to initilize client connection. Retrying...\n");
+          resync = 1;
+          continue;
+        }
+        printf("Client initialized with serial 0x%.4x and %" PRIi64 " frames\n", req_serial, req_init_framenum);
 
         // override calspecs file with custom calspecs
         if (custom_calspecs[0]) {
