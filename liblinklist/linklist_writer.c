@@ -549,6 +549,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 }
 
 void parse_calspecs(char * filename, FILE * formatfile) {
+  (void) filename;
+  (void) formatfile;
 }
 
 void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
@@ -783,7 +785,9 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   if (ll_dirfile->framebin) {
     // read current word, bitwise append, seek, and write
     uint8_t tally_word = 0;
-    fread(&tally_word, 1, 1, ll_dirfile->framebin);
+    if (fread(&tally_word, 1, 1, ll_dirfile->framebin) <= 0) {
+      linklist_err("Unable to read frame tally word\n");
+    }
     tally_word |= 1 << (ll_dirfile->framenum % 8);
     fseek(ll_dirfile->framebin, ll_dirfile->framenum / 8, SEEK_SET);
     fwrite(&tally_word, 1, 1, ll_dirfile->framebin);
