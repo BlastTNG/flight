@@ -55,7 +55,7 @@ const char *disable_enable[] = {"Disable", "Enable", 0};
 const char *internal_external[] = {"Internal", "External", 0};
 const char *stream_types[] = {"$ALL_VNA_SWEEPS", "$ALL_TARG_SWEEPS", "$ALL_IQ_DATA",
                               "$ALL_DF_DATA", "$ALL_LAMP_DATA", "$ALL_NOISE_COMP",
-                              "$ALL_BB_FREQS", 0};
+                              "$ALL_BB_FREQS", "$ALL_DS_VNA_SWEEPS", 0};
 const char *linklist_names[] = {0};
 
 
@@ -959,7 +959,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Downlink", 0, 3, 'i', "NONE", {pilot_target_names}},
     }
   },
-  {COMMAND(request_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
+  {COMMAND(request_file), "Stream a file at full bw over given link", GR_TELEM, 4,
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {"File block number", 0, 255, 'i', ""},
@@ -967,7 +967,7 @@ struct mcom mcommands[plugh + 2] = {
       {"Absolute file path", 0, 64, 's', ""}
     }
   },
-  {COMMAND(request_stream_file), "Stream a file at full bandwidth over given link", GR_TELEM, 4,
+  {COMMAND(request_stream_file), "Stream a file at full bw over given link (compress first!)", GR_TELEM, 4,
     {
       {"Downlink", 0, 3, 'i', "NONE", {downlink_names}},
       {"File block number", 0, 255, 'i', ""},
@@ -1556,7 +1556,7 @@ struct mcom mcommands[plugh + 2] = {
   },
   {COMMAND(compress_roach_data), "Tarballs all files of specified type for downlink", GR_ROACH, 1,
     {
-      {"VNA=0, TARG=1, IQ=2, DF=3, LAMP=4, NOISECOMP=5, BB_FREQS=6", 0, 6, 'i', "NONE"}
+      {"Files to compress (before downlink)", 0, 64, 'i', "NONE", {stream_types}}
     }
   },
   {COMMAND(enable_cycle_checker), "Enables or disables cycle checker", GR_ROACH, 1,

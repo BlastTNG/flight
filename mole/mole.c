@@ -76,7 +76,7 @@
 
 #define MOLE_VERSION "2.0" 
 
-static linklist_tcpconn_t tcpconn = {"cacofonix"};
+static linklist_tcpconn_t tcpconn = {"localhost"};
 char mole_dir[LINKLIST_MAX_FILENAME_SIZE] = "/data/mole";
 char data_etc[LINKLIST_MAX_FILENAME_SIZE] = "/data/etc";
 char data_rawdir[LINKLIST_MAX_FILENAME_SIZE] = "/data/rawdir";
@@ -100,6 +100,7 @@ void USAGE(void) {
       "                        Default is 1 frame per flush for real time.\n"
       " -c  --client           Run a client (default).\n"
       " -nc --no-client        Don't run a client.\n"
+      " -d  --dry-run          Do a dry run of mole setup (i.e. get stats but don't transfer data\n"
       " -F  --filename regex   Select a file by standard regex entry\n"
       "                        If exactly one matching entry is found, that file will be loaded.\n"
       "                        Otherwise, the file selection dialog box will be prompted.\n"
@@ -110,6 +111,8 @@ void USAGE(void) {
       " -nk --no-check         Ignore checksum values when processing data.\n"  
       " -L  --loopback         Have mole extract its own binary files.\n"
       "                        Binary files at archive-dir will be extracted to mole-dir\n"
+      " -m  --map-frames       Give a report on the frames that have been converted on disk.\n"
+      "                        This is useful for determining what data is stored to a dirfile\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                        The default is /data/mole.\n"
       " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
@@ -196,6 +199,8 @@ int main(int argc, char *argv[]) {
   // mode selection
   int server_mode = 0;
   int client_mode = 1;
+  int map_frames = 0;
+  int dry_run = 0;
   unsigned int rewind = 20;
   int force_rewind = 1;
   uint64_t start_frame = UINT64_MAX;
@@ -296,6 +301,12 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--server-port") == 0) ||
                (strcmp(argv[i], "-P") == 0)) { // server port
       set_linklist_server_port(atoi(argv[++i]));
+    } else if ((strcmp(argv[i], "--dry-run") == 0) ||
+               (strcmp(argv[i], "-d") == 0)) { // dry run
+      dry_run = 1;
+    } else if ((strcmp(argv[i], "--map-frames") == 0) ||
+               (strcmp(argv[i], "-m") == 0)) { // map frames 
+      map_frames = 1;
     } else if (strcmp(argv[i], "--port") == 0) { // client and server port
       int port = atoi(argv[++i]);
       set_linklist_client_port(port);
@@ -391,20 +402,26 @@ int main(int argc, char *argv[]) {
           resync = 1;
           continue;
         }
-        printf("Client initialized with serial 0x%.4x and %" PRIi64 " frames\n", req_serial, req_init_framenum);
+        printf("Client initialized with %" PRIi64 " frames\n", req_init_framenum);
 
         // override calspecs file with custom calspecs
         if (custom_calspecs[0]) {
           strcpy(linklist->superframe->calspecs, custom_calspecs);
-          printf("Using custom calsecs file at \"%s\"\n", custom_calspecs);
+          printf("Using custom calpsecs file at \"%s\"\n", custom_calspecs);
         }
 
         // open linklist dirfile
         sprintf(filename, "%s/%s", mole_dir, linklistname);
         if (ll_dirfile) close_and_free_linklist_dirfile(ll_dirfile);
         ll_dirfile = open_linklist_dirfile_opt(filename, linklist, ll_dirfile_flags);
-        unlink(symdir_name);
-        symlink(filename, symdir_name);  
+        if (map_frames) {
+          seek_linklist_dirfile(ll_dirfile, req_init_framenum);
+          map_frames_linklist_dirfile(ll_dirfile);
+        }
+        if (!dry_run) {
+          unlink(symdir_name);
+          symlink(filename, symdir_name);  
+        }
 
         // open the linklist rawfile
         sprintf(filename, "%s/%s", archive_dir, linklistname);
@@ -427,6 +444,11 @@ int main(int argc, char *argv[]) {
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
           if (!force_rewind) req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+        }
+
+        if (dry_run) {
+          linklist_info("\nDry run complete.\n\n");
+          exit(0);
         }
 
         resync = 0;
