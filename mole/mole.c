@@ -112,7 +112,10 @@ void USAGE(void) {
       " -L  --loopback         Have mole extract its own binary files.\n"
       "                        Binary files at archive-dir will be extracted to mole-dir\n"
       " -m  --map-frames       Give a report on the frames that have been converted on disk.\n"
-      "                        This is useful for determining what data is stored to a dirfile\n"
+      "                        This is useful for determining what data is stored to a dirfile.\n"
+      " -M  --map-and-fill     Give a frame report and fill in data gaps.\n"
+      "                        After gaps are filled, data is read from end as normal.\n"
+      "                        This option ignores -S (start), -E (end), and -W (rewind).\n"
       " -md --mole-dir dir     Set the directory in which dirfiles will be stored.\n"
       "                        The default is /data/mole.\n"
       " -N  --live-name str    The name of the live data symlink (default /data/rawdir/LIVE).\n"
@@ -200,6 +203,8 @@ int main(int argc, char *argv[]) {
   int server_mode = 0;
   int client_mode = 1;
   int map_frames = 0;
+  int fill_in_gaps = 0;
+  unsigned int gap_count = 0;
   int dry_run = 0;
   unsigned int rewind = 20;
   int force_rewind = 1;
@@ -307,6 +312,10 @@ int main(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "--map-frames") == 0) ||
                (strcmp(argv[i], "-m") == 0)) { // map frames 
       map_frames = 1;
+    } else if ((strcmp(argv[i], "--map-and-fill") == 0) ||
+               (strcmp(argv[i], "-M") == 0)) { // map frames and fill in gaps
+      map_frames = 1;
+      fill_in_gaps = 1;
     } else if (strcmp(argv[i], "--port") == 0) { // client and server port
       int port = atoi(argv[++i]);
       set_linklist_client_port(port);
@@ -432,7 +441,13 @@ int main(int argc, char *argv[]) {
         }
 
         // set the first framenum request
-        if (start_frame != UINT64_MAX) { // user specified start
+        if (fill_in_gaps) { // filling in gaps trumps all other modes
+          linklist_info("Filling in data gaps for dirfile %s...\n", ll_dirfile->filename);
+          gap_count = 0;
+          if (ll_dirfile->n_missing_blks) {
+            req_framenum = ll_dirfile->missing_blks_start[gap_count];
+          }
+        } else if (start_frame != UINT64_MAX) { // user specified start
           req_framenum = start_frame;
           linklist_info("Reading from frame %" PRIu64, start_frame);
           if (end_frame != UINT64_MAX) { // user specified end
@@ -443,7 +458,10 @@ int main(int argc, char *argv[]) {
           }
         } else { // rewind mode
           req_framenum = (req_init_framenum > rewind) ? req_init_framenum-rewind : 0;
-          if (!force_rewind) req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+          if (!force_rewind) {
+              req_framenum = MAX(req_framenum, tell_linklist_rawfile(ll_rawfile)); 
+          }
+          linklist_info("Starting read from frame %" PRIu64 "\n", req_framenum); 
         }
 
         if (dry_run) {
@@ -455,13 +473,30 @@ int main(int argc, char *argv[]) {
         continue; 
       }
 
+      // gap filling mode: loop through all gaps in the dirfile 
+      if (fill_in_gaps) {
+          if (req_framenum >= ll_dirfile->missing_blks_end[gap_count]) {
+            linklist_info("Filled in gap [%d,%d]\n", ll_dirfile->missing_blks_start[gap_count],
+                    ll_dirfile->missing_blks_end[gap_count]);
+            gap_count++;
+
+            // handle gap filling termination condition
+            if (gap_count < ll_dirfile->n_missing_blks) { // still have more blocks to fill
+              req_framenum = ll_dirfile->missing_blks_start[gap_count];
+            } else { // all missing data blocks are filled
+              req_framenum = req_init_framenum;
+              fill_in_gaps = 0;
+            }
+          }
+      }
+
       // check size of the buffer and enlarge if necessary
       if (buffer_size < ll_rawfile->framesize) {
         buffer_size = ll_rawfile->framesize;
         recv_buffer = realloc(recv_buffer, buffer_size);
       }
   
-      // send data request a rawfile has been opened 
+      // send data request
       recv_flags = 0; 
       recv_framenum = request_data(&tcpconn, req_framenum, &recv_flags);
       if ((recv_flags & TCPCONN_FILE_RESET) || (recv_framenum < 0)) { 

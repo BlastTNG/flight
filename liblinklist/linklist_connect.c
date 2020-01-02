@@ -310,7 +310,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
     linklist_err("Superframe format parser error.\n");
     return 0;
   }
-  linklist_info("Parsed superframe format \"%s\"\n", pathname);
+  // linklist_info("Parsed superframe format \"%s\"\n", pathname);
   unlink(pathname);
 
   // parse the linklist format
@@ -319,7 +319,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
     linklist_err("Linklist format parser error.\n");
     return 0;
   }
-  linklist_info("Parsed linklist format \"%s\"\n", pathname);
+  // linklist_info("Parsed linklist format \"%s\"\n", pathname);
   unlink(pathname);
 
   // set the name assigned by the server
@@ -339,7 +339,7 @@ uint32_t sync_with_server(struct TCPCONN * tc, char * selectname, char * linklis
     if (copy_file(pathname, fname) < 0) {
       linklist_err("Cannot parse calspecs format \"%s\"\n", pathname);
     } else {
-      linklist_info("Parsed calspecs format \"%s\"\n", pathname);
+      // linklist_info("Parsed calspecs format \"%s\"\n", pathname);
     }
     strncpy((*sf)->calspecs, fname, LINKLIST_MAX_FILENAME_SIZE);
     if (strcmp(pathname, fname)) unlink(pathname);

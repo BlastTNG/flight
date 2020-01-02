@@ -545,6 +545,7 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 
 
   ll_dirfile->format = formatfile;
+  ll_dirfile->tally_word = 0;
   return ll_dirfile;
 }
 
@@ -569,6 +570,11 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   }
   if (ll_dirfile->framebin) fclose(ll_dirfile->framebin);
   if (ll_dirfile->format) fclose(ll_dirfile->format);
+  if (ll_dirfile->missing_blks_start) free(ll_dirfile->missing_blks_start);
+  if (ll_dirfile->missing_blks_end) free(ll_dirfile->missing_blks_end);
+  ll_dirfile->n_missing_blks = 0;
+  ll_dirfile->n_missing_blks_alloc = 0;
+
   free(ll_dirfile->bin);
   free(ll_dirfile->blockbin);
   free(ll_dirfile->streambin);
@@ -765,7 +771,6 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
     memset(ss->buffer, 0, ll->streams[i].le->blk_size);
   }
   // Report fields for decompressed data
-  ll_dirfile->framenum++;
   ll_dirfile->local_time = time(0);
   ll_dirfile->data_integrity = retval;
 
@@ -784,21 +789,34 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   // tally up the frames
   if (ll_dirfile->framebin) {
     // read current word, bitwise append, seek, and write
-    uint8_t tally_word = 0;
-    if (fread(&tally_word, 1, 1, ll_dirfile->framebin) <= 0) {
-      linklist_err("Unable to read frame tally word\n");
+    unsigned int bit_loc = ll_dirfile->framenum % 8;
+    ll_dirfile->tally_word |= 1 << bit_loc;
+
+    // write the word every byte boundary
+    if (bit_loc == 7) {
+      fwrite(&ll_dirfile->tally_word, 1, 1, ll_dirfile->framebin);
+      ll_dirfile->tally_word = 0;
     }
-    tally_word |= 1 << (ll_dirfile->framenum % 8);
-    fseek(ll_dirfile->framebin, ll_dirfile->framenum / 8, SEEK_SET);
-    fwrite(&tally_word, 1, 1, ll_dirfile->framebin);
   }
 
   // nothing needs to be done for calspecs since it is handled by getdata :)
 
   // clear the buffer
   memset(superframe_buf, 0, ll->superframe->size);
+  ll_dirfile->framenum++;
   
   return retval;
+}
+
+void realloc_missing_blks_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int n) {
+  if (ll_dirfile->n_missing_blks_alloc) {
+    ll_dirfile->missing_blks_start = realloc(ll_dirfile->missing_blks_start, n*sizeof(unsigned int));
+    ll_dirfile->missing_blks_end = realloc(ll_dirfile->missing_blks_end, n*sizeof(unsigned int));
+  } else {
+    ll_dirfile->missing_blks_start = calloc(n, sizeof(unsigned int));
+    ll_dirfile->missing_blks_end = calloc(n, sizeof(unsigned int));
+  }
+  ll_dirfile->n_missing_blks_alloc = n;
 }
 
 void map_frames_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
@@ -817,10 +835,10 @@ void map_frames_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   fflush(ll_dirfile->framebin);
   fseek(ll_dirfile->framebin, 0, SEEK_SET);
 
-  unsigned int start, end; // start and end of data gaps (between data blocks)
   unsigned int framenum;
   uint8_t have_data_block = 1;
-  int i;
+  int i = 0, n = 0;
+  printf("\nMissing data blocks: ");
   while (bytes_read < total_bytes) {
     bytes_to_read = MIN(LL_FRAMEBIN_READ_BLOCK_SIZE, total_bytes-bytes_read);
     bytes_to_read = fread(buffer, 1, bytes_to_read, ll_dirfile->framebin);
@@ -828,19 +846,31 @@ void map_frames_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
       framenum = (bytes_read + i)*8;
       if ((buffer[i] != 0xff) && have_data_block) { // bit is not set, so missing frame
         // had a block, but lost it, so new start
-        start = framenum;
-        printf("Missing data frames start %d\n", start);
+        if (n >= ll_dirfile->n_missing_blks_alloc) {
+          realloc_missing_blks_linklist_dirfile(ll_dirfile, n+10);
+        }
+        ll_dirfile->missing_blks_start[n] = framenum;
+        if (n != 0) printf(" ");
+        printf("[%d,", ll_dirfile->missing_blks_start[n]);
         have_data_block = 0;
       } else if ((buffer[i] == 0xff) && !have_data_block) { // bit is set, so have a frame there
         // didn't have a block, but just found one
-        end = framenum;
-        printf("Missing data frames end %d\n", end);
+        ll_dirfile->missing_blks_end[n] = framenum;
+        printf("%d]", ll_dirfile->missing_blks_end[n]);
         have_data_block = 1;
+        n++;
       }
     }
-    sleep(1);
     bytes_read += bytes_to_read;
   }
+  if (!have_data_block) {
+    ll_dirfile->missing_blks_end[n] = framenum;
+    printf("%d]", ll_dirfile->missing_blks_end[n]);
+    have_data_block = 1;
+    n++;
+  }
+  ll_dirfile->n_missing_blks = n;
+  printf("\n\n");
 }
 
 #ifdef __cplusplus

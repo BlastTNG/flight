@@ -23,6 +23,12 @@ struct linklist_dirfile {
 
   float data_integrity;
   uint32_t local_time;
+
+  uint8_t tally_word;
+  unsigned int * missing_blks_start;
+  unsigned int * missing_blks_end;
+  unsigned int n_missing_blks;
+  unsigned int n_missing_blks_alloc;
 };
 
 struct linklist_rawfile {
