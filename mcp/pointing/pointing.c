@@ -515,6 +515,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
 	gsl_matrix_set(rzpsi[i], 2, 1, 0.);
     gsl_matrix_set(rzpsi[i], 2, 2, 1.);
 
+	// rot = rxalpha * rzpsi
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans,
                  1.0, rxalpha[i], rzpsi[i],
                  0.0, rot[i]);
