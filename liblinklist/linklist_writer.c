@@ -521,6 +521,10 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
   WRITE_EXTRA_FORMAT_ENTRY(data_integrity, SF_FLOAT32);
   WRITE_EXTRA_FORMAT_ENTRY(local_time, SF_UINT32);
 
+  // open the frame counting binary file
+  snprintf(binname, LINKLIST_MAX_FILENAME_SIZE*2, "%s/%s", ll_dirfile->filename, LL_FRAMEBIN_NAME);
+  ll_dirfile->framebin = fpreopenb(binname);
+
   // tack on calspecs file
   if (ll->superframe->calspecs[0]) {
     fprintf(formatfile, "\n####### Begin calspecs ######\n\n");
@@ -545,6 +549,8 @@ linklist_dirfile_t * open_linklist_dirfile_opt(char * dirname, linklist_t * ll, 
 }
 
 void parse_calspecs(char * filename, FILE * formatfile) {
+  (void) filename;
+  (void) formatfile;
 }
 
 void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
@@ -561,7 +567,8 @@ void close_and_free_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
   for (i = 0; i < LL_DIRFILE_NUM_EXTRA; i++) {
     if (ll_dirfile->extrabin[i]) fclose(ll_dirfile->extrabin[i]);
   }
-  fclose(ll_dirfile->format);
+  if (ll_dirfile->framebin) fclose(ll_dirfile->framebin);
+  if (ll_dirfile->format) fclose(ll_dirfile->format);
   free(ll_dirfile->bin);
   free(ll_dirfile->blockbin);
   free(ll_dirfile->streambin);
@@ -612,9 +619,13 @@ int seek_linklist_dirfile(linklist_dirfile_t * ll_dirfile, unsigned int framenum
   }
   // ll_dirfile-specific field to be writing to the dirfile
   for (i=0; i<LL_DIRFILE_NUM_EXTRA; i++) {
-    if(ll_dirfile->extrabin[i]) {
+    if (ll_dirfile->extrabin[i]) {
       fseek(ll_dirfile->extrabin[i], framenum*sizeof(uint32_t), SEEK_SET);
     }
+  }
+  // frame tally is 8 frames per byte
+  if (ll_dirfile->framebin) {
+    fseek(ll_dirfile->framebin, framenum / 8, SEEK_SET);
   }
   ll_dirfile->framenum = framenum;
   return 0;
@@ -657,6 +668,10 @@ int flush_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
     if (ll_dirfile->extrabin[i]) {
       fflush(ll_dirfile->extrabin[i]);
     }
+  }
+  // frame tally
+  if (ll_dirfile->framebin) {
+    fflush(ll_dirfile->framebin);
   }
 
   return 0;
@@ -766,11 +781,66 @@ double write_linklist_dirfile_opt(linklist_dirfile_t * ll_dirfile, uint8_t * buf
   WRITE_EXTRA_ENTRY_DATA(data_integrity, float);
   WRITE_EXTRA_ENTRY_DATA(local_time, uint32_t);
 
+  // tally up the frames
+  if (ll_dirfile->framebin) {
+    // read current word, bitwise append, seek, and write
+    uint8_t tally_word = 0;
+    if (fread(&tally_word, 1, 1, ll_dirfile->framebin) <= 0) {
+      linklist_err("Unable to read frame tally word\n");
+    }
+    tally_word |= 1 << (ll_dirfile->framenum % 8);
+    fseek(ll_dirfile->framebin, ll_dirfile->framenum / 8, SEEK_SET);
+    fwrite(&tally_word, 1, 1, ll_dirfile->framebin);
+  }
+
   // nothing needs to be done for calspecs since it is handled by getdata :)
 
+  // clear the buffer
   memset(superframe_buf, 0, ll->superframe->size);
   
   return retval;
+}
+
+void map_frames_linklist_dirfile(linklist_dirfile_t * ll_dirfile) {
+  if (!ll_dirfile->framebin) {
+    linklist_err("Linklist frame tally file %s/%s is not open.\n", ll_dirfile->filename, LL_FRAMEBIN_NAME);
+    return;
+  }
+
+  uint8_t buffer[LL_FRAMEBIN_READ_BLOCK_SIZE] = {0};
+  unsigned int bytes_read = 0;
+  unsigned int total_bytes = (ll_dirfile->framenum) ? (ll_dirfile->framenum-1) / 8 + 1 : 0;
+  int64_t bytes_to_read = 0;
+
+  fseek(ll_dirfile->framebin, total_bytes, SEEK_SET);
+  fwrite(&bytes_read, 1, 1, ll_dirfile->framebin);
+  fflush(ll_dirfile->framebin);
+  fseek(ll_dirfile->framebin, 0, SEEK_SET);
+
+  unsigned int start, end; // start and end of data gaps (between data blocks)
+  unsigned int framenum;
+  uint8_t have_data_block = 1;
+  int i;
+  while (bytes_read < total_bytes) {
+    bytes_to_read = MIN(LL_FRAMEBIN_READ_BLOCK_SIZE, total_bytes-bytes_read);
+    bytes_to_read = fread(buffer, 1, bytes_to_read, ll_dirfile->framebin);
+    for (i = 0; i < bytes_to_read; i++) {
+      framenum = (bytes_read + i)*8;
+      if ((buffer[i] != 0xff) && have_data_block) { // bit is not set, so missing frame
+        // had a block, but lost it, so new start
+        start = framenum;
+        printf("Missing data frames start %d\n", start);
+        have_data_block = 0;
+      } else if ((buffer[i] == 0xff) && !have_data_block) { // bit is set, so have a frame there
+        // didn't have a block, but just found one
+        end = framenum;
+        printf("Missing data frames end %d\n", end);
+        have_data_block = 1;
+      }
+    }
+    sleep(1);
+    bytes_read += bytes_to_read;
+  }
 }
 
 #ifdef __cplusplus

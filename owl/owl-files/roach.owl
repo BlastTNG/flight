@@ -609,10 +609,10 @@
       "_source" : "MEDIAN_DF_ROACH1",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1092,
-    "geometryWidth" : 336,
-    "geometryX" : 21,
-    "geometryY" : 21 
+    "geometryHeight" : 884,
+    "geometryWidth" : 272,
+    "geometryX" : 17,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "284824448" 
@@ -1219,10 +1219,10 @@
       "_source" : "MEDIAN_DF_ROACH2",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1092,
-    "geometryWidth" : 357,
-    "geometryX" : 378,
-    "geometryY" : 21 
+    "geometryHeight" : 884,
+    "geometryWidth" : 289,
+    "geometryX" : 306,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "297042802" 
@@ -1829,10 +1829,10 @@
       "_source" : "MEDIAN_DF_ROACH3",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1092,
-    "geometryWidth" : 357,
-    "geometryX" : 756,
-    "geometryY" : 21 
+    "geometryHeight" : 884,
+    "geometryWidth" : 289,
+    "geometryX" : 612,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "-300026089" 
@@ -2440,10 +2440,10 @@
       "_source" : "MEDIAN_DF_ROACH4",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1092,
-    "geometryWidth" : 357,
-    "geometryX" : 1134,
-    "geometryY" : 21 
+    "geometryHeight" : 884,
+    "geometryWidth" : 289,
+    "geometryX" : 918,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "2117481039" 
@@ -3051,10 +3051,10 @@
       "_source" : "MEDIAN_DF_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 1092,
-    "geometryWidth" : 357,
-    "geometryX" : 1512,
-    "geometryY" : 21 
+    "geometryHeight" : 884,
+    "geometryWidth" : 289,
+    "geometryX" : 1224,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "55060952" 
@@ -3186,10 +3186,10 @@
       "_source" : "thermistor_72",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 231,
-    "geometryWidth" : 168,
-    "geometryX" : 1890,
-    "geometryY" : 21 
+    "geometryHeight" : 187,
+    "geometryWidth" : 136,
+    "geometryX" : 1530,
+    "geometryY" : 17 
   }, {
     "PObject" : {
       "_id" : "873898590" 
@@ -3295,11 +3295,11 @@
           "_id" : "995519347" 
         },
         "_map" : {
-          "0" : "0[style=Streaming (P1553648692)]",
-          "1" : "1[style=Streaming (P1553648692)]",
-          "2" : "2[style=xhigh (P1489452979)]",
-          "3" : "3[style=xhigh (P1489452979)]",
-          "4" : "4[style=xhigh (P1489452979)]" 
+          "0" : "Uninitialized[style=Streaming (P1553648692)]",
+          "1" : "standby[style=Streaming (P1553648692)]",
+          "2" : "heating[style=xhigh (P1489452979)]",
+          "3" : "burning off[style=xhigh (P1489452979)]",
+          "4" : "cooling[style=xhigh (P1489452979)]" 
         } 
       },
       "PObject" : {
@@ -3354,10 +3354,10 @@
       "_source" : "ROACH_ENABLE_CAL_PULSE",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 294,
-    "geometryWidth" : 399,
-    "geometryX" : 1890,
-    "geometryY" : 273 
+    "geometryHeight" : 238,
+    "geometryWidth" : 323,
+    "geometryX" : 1530,
+    "geometryY" : 221 
   }, {
     "PObject" : {
       "_id" : "1986218169" 
@@ -3400,6 +3400,17 @@
       "_extrema" : false,
       "_format" : "",
       "_source" : "PPS_COUNT_ROACH3",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "1439339995" 
+      },
+      "_caption" : "R4_PPS_COUNT",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "PPS_COUNT_ROACH4",
       "type" : "PNDI" 
     }, {
       "PObject" : {
@@ -3447,6 +3458,17 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
+        "_id" : "1204992205" 
+      },
+      "_caption" : "R4_PACKET_COUNT",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "",
+      "_source" : "PACKET_COUNT_ROACH4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
         "_id" : "1316492962" 
       },
       "_caption" : "R5_PACKET_COUNT",
@@ -3491,9 +3513,20 @@
       "type" : "PNDI" 
     }, {
       "PObject" : {
-        "_id" : "883242072" 
+        "_id" : "1337189893" 
       },
       "_caption" : "R4_UTC_TIME",
+      "_captionStyle" : "noStyle",
+      "_defaultStyle" : "noStyle",
+      "_extrema" : false,
+      "_format" : "%.f",
+      "_source" : "CTIME_PACKET_ROACH4",
+      "type" : "PNDI" 
+    }, {
+      "PObject" : {
+        "_id" : "883242072" 
+      },
+      "_caption" : "R5_UTC_TIME",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : false,
@@ -3501,10 +3534,10 @@
       "_source" : "CTIME_PACKET_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 336,
-    "geometryWidth" : 357,
-    "geometryX" : 1890,
-    "geometryY" : 735 
+    "geometryHeight" : 272,
+    "geometryWidth" : 289,
+    "geometryX" : 1530,
+    "geometryY" : 595 
   }, {
     "PObject" : {
       "_id" : "1127546801" 
@@ -3579,10 +3612,10 @@
       "_source" : "DEC",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 126,
-    "geometryWidth" : 357,
-    "geometryX" : 1890,
-    "geometryY" : 588 
+    "geometryHeight" : 102,
+    "geometryWidth" : 289,
+    "geometryX" : 1530,
+    "geometryY" : 476 
   }, {
     "PObject" : {
       "_id" : "187275042" 
@@ -3634,10 +3667,10 @@
       "_source" : "SOUTH_I_AM",
       "type" : "PMDI" 
     } ],
-    "geometryHeight" : 105,
-    "geometryWidth" : 252,
-    "geometryX" : 2079,
-    "geometryY" : 147 
+    "geometryHeight" : 85,
+    "geometryWidth" : 204,
+    "geometryX" : 1683,
+    "geometryY" : 119 
   } ],
   "extremas" : [ {
     "PObject" : {
@@ -3849,9 +3882,9 @@
     "cellWidth" : 5,
     "cellX" : 99,
     "cellY" : 0,
-    "geometryHeight" : 147,
-    "geometryWidth" : 105,
-    "geometryX" : 2079,
+    "geometryHeight" : 119,
+    "geometryWidth" : 85,
+    "geometryX" : 1683,
     "geometryY" : 0 
   } ],
   "styles" : [ {
@@ -4096,8 +4129,8 @@
     "_name" : "SWEEPS" 
   } ],
   "webPort" : "0",
-  "windowCellHeight" : 50,
-  "windowCellWidth" : 91,
-  "windowHeight" : 1052,
-  "windowWidth" : 1920 
+  "windowCellHeight" : 56,
+  "windowCellWidth" : 113,
+  "windowHeight" : 958,
+  "windowWidth" : 1913 
 }
