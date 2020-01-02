@@ -603,6 +603,8 @@ void SingleCommand(enum singleCommand command, int scheduled)
         case gps_stats:
             if (system("/usr/local/bin/gps_stats") != 0) {
                 blast_err("Commands: failed to check gps stats\n");
+            } else {
+                setenv("JLTGPS", "/data/etc/blast/gps/stats.txt", 1);
             }
             break;
         case auto_pump_cycle:
@@ -2820,11 +2822,9 @@ void MultiCommand(enum multiCommand command, double *rvalues,
       }
       break;
     case compress_roach_data:
-      if ((ivalues[0] >= 0) && (ivalues[0] <= 6)) {
-          CommandData.tar_all_data = 1;
-          compress_all_data(ivalues[0]);
-          CommandData.tar_all_data = 0;
-      }
+      CommandData.tar_all_data = 1;
+      compress_all_data(ivalues[0]);
+      CommandData.tar_all_data = 0;
       break;
     case enable_cycle_checker:
         if ((ivalues[0] >= 0) && (ivalues[0] <= 1)) {

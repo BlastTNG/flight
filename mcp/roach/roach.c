@@ -3024,11 +3024,11 @@ int compress_all_data(int type)
         blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
            roach_root_path,
            path_to_all_dsvna,
-           truncate_path(path_to_dsvna[0], 3),
-           truncate_path(path_to_dsvna[1], 3),
-           truncate_path(path_to_dsvna[2], 3),
-           truncate_path(path_to_dsvna[3], 3),
-           truncate_path(path_to_dsvna[4], 3));
+           truncate_path(path_to_dsvna[0], 4),
+           truncate_path(path_to_dsvna[1], 4),
+           truncate_path(path_to_dsvna[2], 4),
+           truncate_path(path_to_dsvna[3], 4),
+           truncate_path(path_to_dsvna[4], 4));
         blast_tmp_sprintf(var_name, "ALL_DS_VNA");
         setenv(var_name, path_to_all_dsvna, 1);
     }
