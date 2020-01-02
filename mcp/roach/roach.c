@@ -167,7 +167,7 @@ char path_to_targ_tarball[5][100];
 char path_to_iq_tarball[5][100];
 char path_to_df_tarball[5][100];
 char path_to_lamp_tarball[5][100];
-char path_to_dsvna_tarball[5][100];
+char path_to_dsvna[5][100];
 
 char path_to_all_vna[] = "/home/fc1user/roach_flight/all_vna_sweeps.tar.gz";
 char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
@@ -2921,6 +2921,7 @@ int compress_data(roach_state_t *m_roach, int type)
         path = truncate_path(m_roach->path_to_lamp_response, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_lamp_tarball[m_roach->which - 1];
+    }
     blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     blast_info("Creating sweep tarball: %s", tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
@@ -6330,8 +6331,6 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_lamp_response,
         "%s/lamp_response.dat", roach_state_table[ind].sweep_root_path);
-    asprintf(&roach_state_table[ind].path_to_dsvna,
-        "%s/dsvna/dsvna.npy", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_noise_comp,
         "%s/noise_comp.npy", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_df_comp,
@@ -6346,6 +6345,8 @@ int init_roach(uint16_t ind)
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_df_ts.tar.gz");
     snprintf(path_to_lamp_tarball[ind], sizeof(path_to_lamp_tarball[ind]),
                "%s/roach%d_%s", roach_root_path, ind + 1, "last_lamp_response.tar.gz");
+    snprintf(path_to_dsvna[ind], sizeof(path_to_dsvna[ind]),
+               "%s/dsvna.npy", roach_state_table[ind].sweep_root_path);
     if ((ind == 0)) {
         roach_state_table[ind].array = 500;
         roach_state_table[ind].lo_centerfreq = 540.0e6;
