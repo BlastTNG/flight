@@ -113,7 +113,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
 		// set the default move size for valve A
-		valve_data[index].move_size = 800000;
+		valve_data[index].move_size = 1100000;
 		firsttime_pump_A_valve = 0;
 	}
 
@@ -129,7 +129,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 		EZBus_Release(bus, valve_data[index].addr);
 		// CommandData.Cryo.valve_goals[index] = 0;
 		// set the default move size for valve B
-		valve_data[index].move_size = 900000;
+		valve_data[index].move_size = 1200000;
 		firsttime_pump_B_valve = 0;
 	}
 	// blast_info("Valve %d address is %c", index, valve_data[index].addr);
@@ -165,6 +165,7 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			EZBus_RelMove(bus, valve_data[index].addr, valve_data[index].move_size);
 			EZBus_Release(bus, valve_data[index].addr);
 			blast_info("Starting to open Valve %d", index); // debug PAW
+			CommandData.Cryo.valve_goals[index] = 0;
 		} else {
 			blast_info("Valve %d opening...", index);
 		}
@@ -175,7 +176,8 @@ void DoValves(struct ezbus* bus, int index, char addr)
 			// EZBus_RelMove(bus, valve_data[index].addr, INT_MIN);
 			EZBus_RelMove(bus, valve_data[index].addr, (-1)*valve_data[index].move_size);
 			EZBus_Release(bus, valve_data[index].addr);
-                        blast_info("Starting to close Valve %d", index); // debug PAW
+            blast_info("Starting to close Valve %d", index); // debug PAW
+			CommandData.Cryo.valve_goals[index] = 0;
 		} else {
 			blast_info("Valve %d closing...", index);
 		}
@@ -183,9 +185,6 @@ void DoValves(struct ezbus* bus, int index, char addr)
 	       EZBus_Stop(bus, valve_data[index].addr);
 	       // valve_data[index].stop = 0;
 	       // CommandData.Cryo.valve_stop[index] = 0;
-	} else if (valve_data[index].limit == 7 || valve_data[index].limit == 11) {
-		valve_data[index].goal = 0;
-		CommandData.Cryo.valve_goals[index] = 0;
 	}
 }
 
