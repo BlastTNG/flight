@@ -33,6 +33,36 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
+    <item row="15" column="0" rowspan="2" colspan="2">
+     <widget class="QComboBox" name="hosts">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+      <item>
+       <property name="text">
+        <string>localhost</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Add new...</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="2">
+     <widget class="QComboBox" name="linkSelect">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+     </widget>
+    </item>
     <item row="18" column="1" rowspan="2">
      <widget class="QPushButton" name="toggleMole">
       <property name="enabled">
@@ -58,6 +88,25 @@
       </property>
       <property name="text">
        <string>Start MOLE</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="QListWidget" name="multiLinkSelect">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
       </property>
      </widget>
     </item>
@@ -93,39 +142,10 @@
       </property>
      </widget>
     </item>
-    <item row="4" column="0" colspan="2">
-     <widget class="QComboBox" name="linkSelect">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>30</height>
-       </size>
-      </property>
-     </widget>
-    </item>
     <item row="14" column="0" colspan="2">
      <widget class="QLabel" name="linkDir_3">
       <property name="text">
        <string>Remote hostname or address:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QListWidget" name="multiLinkSelect">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>150</height>
-       </size>
-      </property>
-      <property name="selectionMode">
-       <enum>QAbstractItemView::ExtendedSelection</enum>
       </property>
      </widget>
     </item>
@@ -141,27 +161,7 @@
       </property>
      </widget>
     </item>
-    <item row="15" column="0" rowspan="2" colspan="2">
-     <widget class="QComboBox" name="hosts">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>30</height>
-       </size>
-      </property>
-      <item>
-       <property name="text">
-        <string>localhost</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Add new...</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="5" column="0" rowspan="5" colspan="2">
+    <item row="5" column="0" rowspan="5" colspan="2" alignment="Qt::AlignHCenter">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -246,6 +246,20 @@
         </item>
         <item>
          <widget class="QLineEdit" name="endFrame"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="dataFillTab">
+       <attribute name="title">
+        <string>Gap Fill</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QPushButton" name="computeFrameMap">
+          <property name="text">
+           <string>Compute and Show Frame Map</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

@@ -403,6 +403,8 @@ void MainWindow::start_a_mole(int index)
           mole_cmd += "- E " + QString::number(INT32_MAX);
           ui->endFrame->setText(QString::number(INT32_MAX));
       }
+  } else if (current_tab == ui->dataFillTab) {
+      mole_cmd += "-M ";
   }
 
   if (options->no_checksums) mole_cmd += " --no-check";
@@ -444,6 +446,16 @@ void MainWindow::on_toggleMole_clicked() {
     if (ui->linkSelect->count() == 0) {
         QMessageBox::warning(this,"No Link Selected","No primary link selected\nPlease make a linklist(s) selection and then select primary link.");
         return;
+    }
+    if (ui->tabWidget->currentWidget() == ui->dataFillTab) {
+        QMessageBox::StandardButton reply = QMessageBox::question(this,
+                                                                  "Fill all data gaps?",
+                                                                  "This will fill in all dirfile data gaps for link " + ui->linkSelect->currentText() +
+                                                                  ". Confirmed?",
+                                                                  QMessageBox::Ok  |QMessageBox::Cancel);
+        if (reply == QMessageBox::Cancel) {
+            return;
+        }
     }
 
     // freeze the UI
@@ -686,4 +698,10 @@ void MainWindow::on_multiLinkSelect_itemSelectionChanged()
     }
 
     auto_select_link();
+}
+
+
+void MainWindow::on_computeFrameMap_clicked()
+{
+
 }

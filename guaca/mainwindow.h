@@ -67,6 +67,8 @@ private slots:
 
     int add_a_host(const QString &thehost);
 
+    void on_computeFrameMap_clicked();
+
 private:
     int num_linkfile;
     QString linkfile[MAX_NUM_LINKFILE];
