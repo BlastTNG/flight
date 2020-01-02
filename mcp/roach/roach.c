@@ -90,6 +90,7 @@
 #define LAMP 4
 #define NOISECOMP 5
 #define BB_FREQS 6
+#define DS_VNA 7
 #define WRITE_INT_TIMEOUT 1000 /* KATCP write timeout */
 #define UPLOAD_TIMEOUT 20000 /* KATCP upload timeout */
 #define QDR_TIMEOUT 20000 /* Same as above */
@@ -166,6 +167,7 @@ char path_to_targ_tarball[5][100];
 char path_to_iq_tarball[5][100];
 char path_to_df_tarball[5][100];
 char path_to_lamp_tarball[5][100];
+char path_to_dsvna_tarball[5][100];
 
 char path_to_all_vna[] = "/home/fc1user/roach_flight/all_vna_sweeps.tar.gz";
 char path_to_all_targ[] = "/home/fc1user/roach_flight/all_targ_sweeps.tar.gz";
@@ -175,6 +177,7 @@ char path_to_all_lamp[] = "/home/fc1user/roach_flight/all_lamp_data.tar.gz";
 char path_to_all_noise_comp[] = "/home/fc1user/roach_flight/all_noise_comp.tar.gz";
 char path_to_all_df_comp[] = "/home/fc1user/roach_flight/all_df_comp.tar.gz";
 char path_to_all_bb_freqs[] = "/home/fc1user/roach_flight/all_bb_freqs.tar.gz";
+char path_to_all_dsvna[] = "/home/fc1user/roach_flight/all_dsvna.tar.gz";
 
 // Roach source MAC addresses
 const char src_macs[5][100] = {"024402020b03", "024402020d17", "024402020D16", "02440202110c", "024402020D21"};
@@ -2893,7 +2896,7 @@ char* truncate_path(char *old_path, int nparents)
 
 int compress_data(roach_state_t *m_roach, int type)
 {
-// type can be: VNA, TARG, IQ or DF
+// type can be: VNA, TARG, IQ or DF, LAMP
     // int status = -1;
     char *tar_cmd;
     char *tarball;
@@ -2918,7 +2921,6 @@ int compress_data(roach_state_t *m_roach, int type)
         path = truncate_path(m_roach->path_to_lamp_response, 3);
         blast_info("PATH: %s", path);
         tarball = path_to_lamp_tarball[m_roach->which - 1];
-    }
     blast_tmp_sprintf(tar_cmd, "tar -C %s -czf %s %s &", roach_root_path, tarball, path);
     blast_info("Creating sweep tarball: %s", tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
@@ -3017,6 +3019,17 @@ int compress_all_data(int type)
            truncate_path(path_to_lamp_tarball[4], 3));
         blast_tmp_sprintf(var_name, "ALL_LAMP_DATA");
         setenv(var_name, path_to_all_lamp, 1);
+    } else if (type == DS_VNA) {
+        blast_tmp_sprintf(tar_cmd, "tar -C %s -czvf %s %s %s %s %s %s",
+           roach_root_path,
+           path_to_all_dsvna,
+           truncate_path(path_to_dsvna[0], 3),
+           truncate_path(path_to_dsvna[1], 3),
+           truncate_path(path_to_dsvna[2], 3),
+           truncate_path(path_to_dsvna[3], 3),
+           truncate_path(path_to_dsvna[4], 3));
+        blast_tmp_sprintf(var_name, "ALL_DS_VNA");
+        setenv(var_name, path_to_all_dsvna, 1);
     }
     blast_info("Creating sweep tarball: %s", tar_cmd);
     for (int i = 0; i < NUM_ROACHES; i++) {
@@ -6317,6 +6330,8 @@ int init_roach(uint16_t ind)
     asprintf(&roach_state_table[ind].path_to_last_attens, "%s/last_attens.dat", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_lamp_response,
         "%s/lamp_response.dat", roach_state_table[ind].sweep_root_path);
+    asprintf(&roach_state_table[ind].path_to_dsvna,
+        "%s/dsvna/dsvna.npy", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_noise_comp,
         "%s/noise_comp.npy", roach_state_table[ind].sweep_root_path);
     asprintf(&roach_state_table[ind].path_to_df_comp,

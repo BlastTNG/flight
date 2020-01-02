@@ -201,6 +201,7 @@ typedef struct roach_state {
     char *path_to_lamp_response;
     char *path_to_noise_comp;
     char *path_to_df_comp;
+    char *path_to_dsvna;
     char *channels_path;
 
     // For detector retune decision
