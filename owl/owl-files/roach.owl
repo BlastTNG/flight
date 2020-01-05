@@ -510,7 +510,7 @@
       "PObject" : {
         "_id" : "1686558616" 
       },
-      "_caption" : "WAITING_FOR_LAMP",
+      "_caption" : "REFS/TONES ON RES",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : true,
@@ -609,10 +609,10 @@
       "_source" : "MEDIAN_DF_ROACH1",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 884,
-    "geometryWidth" : 272,
-    "geometryX" : 17,
-    "geometryY" : 17 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 336,
+    "geometryX" : 21,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "284824448" 
@@ -1119,7 +1119,7 @@
       "PObject" : {
         "_id" : "1645906491" 
       },
-      "_caption" : "WAITING_FOR_LAMP",
+      "_caption" : "REFS/TONES ON RES",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : true,
@@ -1219,10 +1219,10 @@
       "_source" : "MEDIAN_DF_ROACH2",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 884,
-    "geometryWidth" : 289,
-    "geometryX" : 306,
-    "geometryY" : 17 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 378,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "297042802" 
@@ -1730,7 +1730,7 @@
       "PObject" : {
         "_id" : "1634586789" 
       },
-      "_caption" : "WAITING_FOR_LAMP",
+      "_caption" : "REFS/TONES ON RES",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : true,
@@ -1829,10 +1829,10 @@
       "_source" : "MEDIAN_DF_ROACH3",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 884,
-    "geometryWidth" : 289,
-    "geometryX" : 612,
-    "geometryY" : 17 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 756,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "-300026089" 
@@ -2340,7 +2340,7 @@
       "PObject" : {
         "_id" : "-722790107" 
       },
-      "_caption" : "WAITING_FOR_LAMP",
+      "_caption" : "REFS/TONES ON RES",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : true,
@@ -2440,10 +2440,10 @@
       "_source" : "MEDIAN_DF_ROACH4",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 884,
-    "geometryWidth" : 289,
-    "geometryX" : 918,
-    "geometryY" : 17 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 1134,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "2117481039" 
@@ -2951,7 +2951,7 @@
       "PObject" : {
         "_id" : "1216211178" 
       },
-      "_caption" : "WAITING_FOR_LAMP",
+      "_caption" : "REFS/TONES ON RES",
       "_captionStyle" : "noStyle",
       "_defaultStyle" : "noStyle",
       "_extrema" : true,
@@ -3051,10 +3051,10 @@
       "_source" : "MEDIAN_DF_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 884,
-    "geometryWidth" : 289,
-    "geometryX" : 1224,
-    "geometryY" : 17 
+    "geometryHeight" : 1092,
+    "geometryWidth" : 357,
+    "geometryX" : 1512,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "55060952" 
@@ -3186,10 +3186,10 @@
       "_source" : "thermistor_72",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 187,
-    "geometryWidth" : 136,
-    "geometryX" : 1530,
-    "geometryY" : 17 
+    "geometryHeight" : 231,
+    "geometryWidth" : 168,
+    "geometryX" : 1890,
+    "geometryY" : 21 
   }, {
     "PObject" : {
       "_id" : "873898590" 
@@ -3354,10 +3354,10 @@
       "_source" : "ROACH_ENABLE_CAL_PULSE",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 238,
-    "geometryWidth" : 323,
-    "geometryX" : 1530,
-    "geometryY" : 221 
+    "geometryHeight" : 294,
+    "geometryWidth" : 399,
+    "geometryX" : 1890,
+    "geometryY" : 273 
   }, {
     "PObject" : {
       "_id" : "1986218169" 
@@ -3534,10 +3534,10 @@
       "_source" : "CTIME_PACKET_ROACH5",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 272,
-    "geometryWidth" : 289,
-    "geometryX" : 1530,
-    "geometryY" : 595 
+    "geometryHeight" : 336,
+    "geometryWidth" : 357,
+    "geometryX" : 1890,
+    "geometryY" : 735 
   }, {
     "PObject" : {
       "_id" : "1127546801" 
@@ -3612,10 +3612,10 @@
       "_source" : "DEC",
       "type" : "PNDI" 
     } ],
-    "geometryHeight" : 102,
-    "geometryWidth" : 289,
-    "geometryX" : 1530,
-    "geometryY" : 476 
+    "geometryHeight" : 126,
+    "geometryWidth" : 357,
+    "geometryX" : 1890,
+    "geometryY" : 588 
   }, {
     "PObject" : {
       "_id" : "187275042" 
@@ -3667,10 +3667,10 @@
       "_source" : "SOUTH_I_AM",
       "type" : "PMDI" 
     } ],
-    "geometryHeight" : 85,
-    "geometryWidth" : 204,
-    "geometryX" : 1683,
-    "geometryY" : 119 
+    "geometryHeight" : 105,
+    "geometryWidth" : 252,
+    "geometryX" : 2079,
+    "geometryY" : 147 
   } ],
   "extremas" : [ {
     "PObject" : {
@@ -3882,9 +3882,9 @@
     "cellWidth" : 5,
     "cellX" : 99,
     "cellY" : 0,
-    "geometryHeight" : 119,
-    "geometryWidth" : 85,
-    "geometryX" : 1683,
+    "geometryHeight" : 147,
+    "geometryWidth" : 105,
+    "geometryX" : 2079,
     "geometryY" : 0 
   } ],
   "styles" : [ {
@@ -4129,8 +4129,8 @@
     "_name" : "SWEEPS" 
   } ],
   "webPort" : "0",
-  "windowCellHeight" : 56,
-  "windowCellWidth" : 113,
-  "windowHeight" : 958,
-  "windowWidth" : 1913 
+  "windowCellHeight" : 50,
+  "windowCellWidth" : 91,
+  "windowHeight" : 1052,
+  "windowWidth" : 1920 
 }
