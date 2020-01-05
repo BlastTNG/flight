@@ -70,7 +70,7 @@
 #define MAXLIB 65536
 
 #define MAX_RTIME 65536.0
-#define MAX_DAYS 21.0
+#define MAX_DAYS 26.0
 
 void nameThread(const char*);  /* mcp.c */
 void fillDLData(unsigned char *b, int len); /* slowdl.c */

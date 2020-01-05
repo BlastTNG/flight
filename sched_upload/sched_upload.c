@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
             pause = atoi(argv[i+1]);
             ++i;
           } else {
-            usage("no argument for -z");
+            usage("set a delay time between sending chunks (s) -z");
           }
 	  do_sleep = 1;
 	  break;
