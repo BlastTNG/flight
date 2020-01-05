@@ -31,6 +31,8 @@ owl/owl
 owl/Makefile
 owl/.qmake.stash
 quick_diagnostics/QuickDiag
+owl/owl-cgi/Makefile
+owl/owl-cgi/owl-cgi
 
 guaca/guaca
 katie/katie
