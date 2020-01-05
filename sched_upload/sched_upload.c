@@ -17,7 +17,7 @@
 #define SIPCOM2 0xC
 
 #define MAX_RTIME 65536.0
-#define MAX_DAYS 21.0
+#define MAX_DAYS 26.0
 
 #define MAX_SCHED_PER_CHUNK 59
 //#define MAX_SCHED_PER_CHUNK 7

@@ -4887,7 +4887,7 @@ int roach_turnaround_loop(roach_state_t *m_roach)
     m_roach->doing_turnaround_loop = 1;
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
-    if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
+    if ((status = roach_refit_freqs(m_roach, CommandData.roach[i].on_res)) < 0) {
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
         CommandData.roach[i].refit_res_freqs = 0;
         m_roach->doing_turnaround_loop = 0;
@@ -5475,7 +5475,7 @@ int roach_full_loop(roach_state_t *m_roach)
     }
     // TARG/REFIT/TARG
     CommandData.roach[i].refit_res_freqs = 1;
-    if ((status = roach_refit_freqs(m_roach, 1)) < 0) {
+    if ((status = roach_refit_freqs(m_roach, CommandData.roach[i].on_res)) < 0) {
         blast_err("ROACH%d: ERROR REFITTING FREQS", i + 1);
         return status;
     }
@@ -6539,7 +6539,8 @@ void write_roach_channels_5hz(void)
         roach_status_field |= (((uint32_t)CommandData.roach[i].is_chopping_lo) << 27);
         roach_status_field |= (((uint32_t)roach_state_table[i].pi_reboot_warning) << 28);
         roach_status_field |= (((uint32_t)roach_state_table[i].data_stream_error) << 29);
-        roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
+        // roach_status_field |= (((uint32_t)roach_state_table[i].waiting_for_lamp) << 30);
+        roach_status_field |= (((uint32_t)CommandData.roach[i].on_res) << 30);
         roach_status_field |= (((uint32_t)CommandData.roach[i].has_lamp_control) << 31);
         SET_UINT32(roachStatusFieldAddr[i], roach_status_field);
     }
