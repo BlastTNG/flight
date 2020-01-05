@@ -29,6 +29,7 @@ cow/data/spider.herd
 owl/other_makefile/
 owl/owl
 owl/Makefile
+owl/.qmake.stash
 quick_diagnostics/QuickDiag
 
 guaca/guaca
