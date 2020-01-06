@@ -2225,8 +2225,8 @@ int save_ref_params(roach_state_t *m_roach)
     blast_tmp_sprintf(path_to_ref_vals, "%s/ref_vals.dat",
                      m_roach->sweep_root_path);
     blast_info("Roach%d, Saving ref grads", m_roach->which);
-    blast_tmp_sprintf(py_command, "python %s %s", ref_grads_script,
-            m_roach->last_targ_path);
+    blast_tmp_sprintf(py_command, "python %s %s %d", ref_grads_script,
+            m_roach->last_targ_path, CommandData.roach[m_roach->which-1].on_res);
     blast_info("%s", py_command);
     pyblast_system(py_command);
     // get reference gradients
