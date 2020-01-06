@@ -67,13 +67,6 @@ void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
   char filename[LINKLIST_MAX_FILENAME_SIZE*2] = {0};
   char symname[LINKLIST_MAX_FILENAME_SIZE*2] = {0};
 
-  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", newname);
-  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
-  unlink(symname);
-  if (symlink(filename, symname) < 0) {
-    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
-  }
-
   snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" SUPERFRAME_FORMAT_EXT, newname);
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" SUPERFRAME_FORMAT_EXT, ll_rawfile->basename);
   unlink(symname);
@@ -90,6 +83,13 @@ void create_rawfile_symlinks(linklist_rawfile_t * ll_rawfile, char * newname) {
 
   snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" CALSPECS_FORMAT_EXT, newname);
   snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" CALSPECS_FORMAT_EXT, ll_rawfile->basename);
+  unlink(symname);
+  if (symlink(filename, symname) < 0) {
+    linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
+  }
+
+  snprintf(symname, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", newname);
+  snprintf(filename, LINKLIST_MAX_FILENAME_SIZE*2, "%s" LINKLIST_EXT ".00", ll_rawfile->basename);
   unlink(symname);
   if (symlink(filename, symname) < 0) {
     linklist_err("Unable to form symlink %s -> %s\n", filename, symname);
