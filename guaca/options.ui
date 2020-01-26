@@ -57,20 +57,27 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
+   <item row="1" column="1">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="widget">
       <attribute name="title">
        <string>Helpers</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QPushButton" name="deleteHelper">
          <property name="text">
           <string>Delete helper</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="addHelper">
+         <property name="text">
+          <string>Add helper</string>
          </property>
         </widget>
        </item>
@@ -96,50 +103,50 @@
          </column>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="addHelper">
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="mole_terminal">
          <property name="text">
-          <string>Add helper</string>
+          <string>Display mole terminals</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_2">
+     <widget class="QWidget" name="tab_3">
       <attribute name="title">
        <string>Guaca-Mole</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QCheckBox" name="mole_terminal">
-         <property name="text">
-          <string>DIsplay mole output in terminal</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="server">
-         <property name="text">
-          <string>Start a local mole server</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="backup">
-         <property name="text">
-          <string>Backup binary data (to /data/rawdir)</string>
-         </property>
-        </widget>
-       </item>
-       <item>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0" colspan="2">
         <widget class="QCheckBox" name="checksum">
          <property name="text">
-          <string>Ignore checksums in data</string>
+          <string>Ignore data checksums</string>
          </property>
         </widget>
        </item>
-       <item>
-        <spacer name="verticalSpacer">
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="backup">
+         <property name="text">
+          <string>Backup binary data locally</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="live_name">
+         <property name="text">
+          <string>_live</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="auto_live">
+         <property name="text">
+          <string>Auto-select linklists (by suffix):</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <spacer name="verticalSpacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -158,35 +165,13 @@
        <string>Advanced</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Client Port:</string>
-         </property>
-        </widget>
+       <item row="1" column="0" colspan="2">
+        <widget class="QLineEdit" name="mole_dir"/>
        </item>
-       <item row="3" column="0">
-        <widget class="QLineEdit" name="live_name">
-         <property name="text">
-          <string>_live</string>
-         </property>
-        </widget>
+       <item row="5" column="0" colspan="2">
+        <widget class="QLineEdit" name="raw_dir"/>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Server Port:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLineEdit" name="client_port">
-         <property name="text">
-          <string>40204</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
+       <item row="17" column="0" colspan="2">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -199,24 +184,38 @@
          </property>
         </spacer>
        </item>
-       <item row="1" column="1">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="client">
+         <property name="text">
+          <string>Enable client on port</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="client_port">
+         <property name="text">
+          <string>40204</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
         <widget class="QLineEdit" name="server_port">
          <property name="text">
           <string>40204</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QCheckBox" name="auto_live">
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="server">
          <property name="text">
-          <string>Enabled</string>
+          <string>Enable server on port</string>
          </property>
         </widget>
        </item>
        <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Auto-select linklists (by suffix):</string>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>

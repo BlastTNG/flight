@@ -137,6 +137,95 @@ void MainWindow::dancing()
   still_dancing = false;
 }
 
+bool HostMenu::eventFilter(QObject *o, QEvent *e) {
+  (void) o;
+  if (e->type() == QEvent::MouseButtonRelease) {
+    if (static_cast<QMouseEvent*>(e)->button() == Qt::RightButton) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void HostMenu::list_context_menu(QPoint pos) {
+  QModelIndex index = view->indexAt(pos);
+  int item = index.row();
+  new_item->setData(item);
+  modify_item->setData(item);
+  delete_item->setData(item);
+  if (item == 0) {
+      delete_item->setDisabled(true);
+      modify_item->setDisabled(true);
+  } else {
+      delete_item->setEnabled(true);
+      modify_item->setEnabled(true);
+  }
+  if (!index.isValid()) { return; }
+  this->exec(view->mapToGlobal(pos));
+}
+
+HostMenu::HostMenu(QComboBox *parent) {
+    combo = parent;
+    view = combo->view();
+    view->viewport()->installEventFilter(this);
+    view->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // build the menu
+    new_item = this->addAction(QString("New..."));
+    modify_item = this->addAction(QString("Modify"));
+    delete_item = this->addAction(QString("Delete"));
+
+    connect(this, SIGNAL(triggered(QAction*)), this, SLOT(handle_host_menu(QAction*)));
+    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(list_context_menu(QPoint)));
+}
+
+HostMenu::~HostMenu() {
+
+}
+void HostMenu::handle_host_menu(QAction *action) {
+    int index = action->data().toInt();
+
+    if (action == new_item) {
+        bool ok = false;
+        QString thehost = QInputDialog::getText(this, "New remote host", "Enter the remote host name/IP:", QLineEdit::Normal, NULL, &ok);
+
+        if (ok) {
+            // only add new host if it is not already in the list
+            int existing_index = combo->findText(thehost);
+            if (existing_index < 0) {
+                index = index+1;
+                combo->insertItem(index, thehost);
+            } else {
+                index = existing_index;
+            }
+            combo->setCurrentIndex(index);
+            combo->activated(index);
+        }
+    } else if (action == modify_item) {
+        bool ok = false;
+        QString thehost = QInputDialog::getText(this, "Modify remote host", "Enter the remote host name/IP:", QLineEdit::Normal, combo->itemText(index), &ok);
+
+        if (ok) {
+            combo->removeItem(index);
+            combo->insertItem(index, thehost);
+            combo->setCurrentIndex(index);
+            combo->activated(index);
+        }
+
+    } else if (action == delete_item) {
+        if (index > 0) {
+            int existing_index = combo->currentIndex();
+            combo->removeItem(index);
+            // check to see if the current host was removed
+            if (existing_index == index) {
+                combo->setCurrentIndex(index-1);
+                combo->activated(index-1);
+            }
+        }
+    }
+
+}
+
 /*
  * Main constructor: looks in the linklist directory for all the available
  * linklists and makes them selectable in the main link widget. Also starts
@@ -154,6 +243,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->startFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
   ui->endFrame->setValidator(new QIntValidator(0, INT32_MAX, this) );
 
+  // setup hosts combobox contextmenu
+  host_menu = new HostMenu(ui->hosts);
   options = new Options(this);
 
   QSettings oldsettings("SuperBIT", "guaca");
@@ -187,7 +278,11 @@ MainWindow::MainWindow(QWidget *parent) :
               USAGE();
           }
       } else if (i == 1) { // first argument is host
-          host_index = add_a_host(args.at(1));
+          host_index = ui->hosts->findText(args.at(1));
+          if (host_index < 0) {
+              ui->hosts->addItem(args.at(1));
+              host_index = ui->hosts->count()-1;
+          }
           ui->hosts->setCurrentIndex(host_index);
       } else {
           USAGE();
@@ -195,7 +290,9 @@ MainWindow::MainWindow(QWidget *parent) :
   }
 
   // Query remote host
-  change_remote_host(ui->hosts->currentText());
+  if (change_remote_host(ui->hosts->currentText())) {
+      saveConfig();
+  }
 
   QString base = ":/images/guaca-";
   QString ext = ".svg";
@@ -270,7 +367,7 @@ void MainWindow::saveConfig() {
     settings.setValue("mainwindow/tabSelection", ui->tabWidget->currentIndex());
 
     QStringList hosts;
-    for (int i = 1; i < ui->hosts->count()-1; i++) {
+    for (int i = 1; i < ui->hosts->count(); i++) {
         hosts << ui->hosts->itemText(i);
     }
     settings.setValue("mainwindow/host_list", hosts);
@@ -375,7 +472,8 @@ void MainWindow::start_a_mole(int index)
   QString mole_cmd = "mole --live-name "+ui->linkSelect->itemText(index)+" "+
                           "--filename "+ui->linkSelect->itemText(index)+" "+
                           "@"+ui->hosts->currentText().split(QRegExp("\\s+-"), QString::SkipEmptyParts)[0]+" "+
-                          "-p "+QString::number(options->client_port)+" -P "+QString::number(options->server_port)+" ";
+                          "--client-port "+QString::number(options->client_port)+" --server-port "+QString::number(options->server_port)+" "+
+                          "--archive-dir "+options->raw_dir+" --mole-dir "+options->mole_dir;
 
   QWidget * current_tab = ui->tabWidget->currentWidget();
   if (current_tab == ui->rewindTab) {
@@ -410,6 +508,7 @@ void MainWindow::start_a_mole(int index)
   if (options->no_checksums) mole_cmd += " --no-check";
   if (options->backup) mole_cmd += " --backup";
   if (options->server) mole_cmd += " --server";
+  if (!options->client) mole_cmd += " --no-client";
 
   Logscroll * mole_log = new Logscroll(NULL, mole_cmd, false);
   mole_log->setWindowTitle(mole_cmd);
@@ -590,7 +689,7 @@ void MainWindow::on_actionAbout_triggered()
 {
   QMessageBox::about(this,"About Guaca","Guaca v1.2\n\nGuaca is a front end for the data acquisition client mole. \n"""
                                         "To learn more about mole functionality, see \"mole --help\"\n\n"
-                                        "Copyright J. Romualdez 2017-2019");
+                                        "Copyright J. Romualdez 2017-2020");
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()
@@ -621,49 +720,13 @@ void MainWindow::on_actionPurge_old_data_triggered()
     }
 }
 
-int MainWindow::add_a_host(const QString &thehost)
-{
-    int index = ui->hosts->count()-1;
-
-    int existing_index = ui->hosts->findText(thehost);
-    if (existing_index < 0) {
-        // add the new host
-        ui->hosts->insertItem(index, thehost);
-        return index;
-    } else {
-        return existing_index;
-    }
-}
-
 void MainWindow::on_hosts_activated(int index)
 {
-    bool reconnect = true;
-    bool newitem = false;
-
-    // the last item was selected, which is the add host option
-    if (index == (ui->hosts->count()-1)) {
-      bool ok;
-      QString thehost = QInputDialog::getText(this, "Add remote host", "What remote host should mole connect to?", QLineEdit::Normal, NULL, &ok);
-      if (ok) {
-          newitem = add_a_host(thehost) == index;
-          reconnect = true;
-      } else {
-          // return to previously selected
-          ui->hosts->setCurrentIndex(host_index);
-          reconnect = false;
-      }
+    if (change_remote_host(ui->hosts->itemText(index))) {
+        saveConfig();
     }
-    // reconnect to the server if host has actually changed
-    if (reconnect) {
-        if (change_remote_host(ui->hosts->itemText(index))) {
-            host_index = index;
-            saveConfig();
-        } else if (newitem) {
-            ui->hosts->removeItem(index);
-            change_remote_host(ui->hosts->itemText(host_index));
-        }
-        ui->hosts->setCurrentIndex(host_index);
-    }
+    host_index = index;
+    ui->hosts->setCurrentIndex(host_index);
 }
 
 void MainWindow::on_actionClear_remote_hosts_triggered()

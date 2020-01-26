@@ -551,6 +551,7 @@ int main(int argc, char *argv[]) {
 
       memset(recv_buffer, 0, buffer_size);
       memset(recv_header, 0, TCP_PACKET_HEADER_SIZE);
+      start_frame = req_framenum;
       req_framenum++;
       frame_i++;
     }

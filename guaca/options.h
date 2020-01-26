@@ -11,6 +11,8 @@
 #include <QTableWidget>
 #include <QSettings>
 #include <QFile>
+#include <QCompleter>
+#include <QFileSystemModel>
 
 #include "logscroll.h"
 
@@ -54,6 +56,7 @@ public:
 
 
     bool server;
+    bool client;
     bool backup;
     bool no_checksums;
     bool mole_terminal;
@@ -63,12 +66,16 @@ public:
 
     bool auto_live;
     QString live_name;
+    QString mole_dir;
+    QString raw_dir;
 
 private:
-    QWidget *main;
-    Ui::Options *ui;
+    QWidget * main;
+    Ui::Options * ui;
     std::vector<Helper *> helpers;
     QSettings settings;
+    QCompleter * completer;
+    QFileSystemModel * fsmodel;
 
 signals:
 

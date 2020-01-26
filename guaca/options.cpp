@@ -3,6 +3,8 @@
 
 #define LL_DEFAULT_LIVE_SUFFIX "_live"
 #define GUACA_DEFAULT_PORT 40204
+#define MOLE_DIR_DEFAULT "/data/mole"
+#define RAW_DIR_DEFAULT "/data/rawdir"
 
 extern char configdir[128];
 
@@ -32,12 +34,20 @@ Options::Options(QWidget *parent) :
         default_options();
     }
 
-    ui->client_port->setValidator(new QIntValidator(0, 1e8, this) );
-    ui->server_port->setValidator(new QIntValidator(0, 1e8, this) );
+    ui->client_port->setValidator(new QIntValidator(0, 65535, this) );
+    ui->server_port->setValidator(new QIntValidator(0, 65535, this) );
 
     on_buttonBox_clicked(ui->buttonBox->button(QDialogButtonBox::Save));
     if (auto_live) ui->live_name->setEnabled(true);
     else ui->live_name->setDisabled(true);
+
+    completer = new QCompleter(this);
+    fsmodel = new QFileSystemModel(completer);
+    fsmodel->setRootPath("");
+    completer->setModel(fsmodel);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+    ui->mole_dir->setCompleter(completer);
+    ui->raw_dir->setCompleter(completer);
 
     restoreGeometry(settings.value("options").toByteArray());
 }
@@ -53,6 +63,10 @@ Options::~Options() {
     qDebug() << "Destroying options";
     if (ui) delete ui;
     ui = NULL;
+    if (fsmodel) delete fsmodel;
+    fsmodel = NULL;
+    if (completer) delete completer;
+    completer = NULL;
 }
 
 unsigned int Options::add_helper(QString cmdname, QString args, bool terminal, unsigned int row) {
@@ -96,6 +110,7 @@ void Options::save_options()
 
     // save mole options
     settings.setValue("options/server", server);
+    settings.setValue("options/client", client);
     settings.setValue("options/backup", backup);
     settings.setValue("options/no_checksums", no_checksums);
     settings.setValue("options/mole_terminal", mole_terminal);
@@ -104,6 +119,8 @@ void Options::save_options()
     settings.setValue("options/client_port", client_port);
     settings.setValue("options/live_name", live_name);
     settings.setValue("options/auto_live", auto_live);
+    settings.setValue("options/mole_dir", mole_dir);
+    settings.setValue("options/raw_dir", raw_dir);
 
     settings.setValue(new_key, true);
 }
@@ -119,15 +136,18 @@ void Options::restore_options()
         add_helper(cmdname, args, terminal, ui->tableWidget->rowCount());
         prefix = "options/row" + QString::number(++i) + "/";
     }
-    ui->server->setChecked(QVariant(settings.value("options/server")).toBool());
-    ui->backup->setChecked(QVariant(settings.value("options/backup")).toBool());
-    ui->checksum->setChecked(QVariant(settings.value("options/no_checksums")).toBool());
-    ui->mole_terminal->setChecked(QVariant(settings.value("options/mole_terminal")).toBool());
+    ui->server->setChecked(QVariant(settings.value("options/server", QVariant(false))).toBool());
+    ui->client->setChecked(QVariant(settings.value("options/client", QVariant(true))).toBool());
+    ui->backup->setChecked(QVariant(settings.value("options/backup", QVariant(false))).toBool());
+    ui->checksum->setChecked(QVariant(settings.value("options/no_checksums", QVariant(false))).toBool());
+    ui->mole_terminal->setChecked(QVariant(settings.value("options/mole_terminal", QVariant(false))).toBool());
 
-    ui->server_port->setText(QString::number(QVariant(settings.value("options/server_port")).toInt()));
-    ui->client_port->setText(QString::number(QVariant(settings.value("options/client_port")).toInt()));
-    ui->live_name->setText(QVariant(settings.value("options/live_name")).toString());
-    ui->auto_live->setChecked(QVariant(settings.value("options/auto_live")).toBool());
+    ui->server_port->setText(QString::number(QVariant(settings.value("options/server_port", QVariant(GUACA_DEFAULT_PORT))).toInt()));
+    ui->client_port->setText(QString::number(QVariant(settings.value("options/client_port", QVariant(GUACA_DEFAULT_PORT))).toInt()));
+    ui->live_name->setText(QVariant(settings.value("options/live_name", QVariant(MOLE_DIR_DEFAULT))).toString());
+    ui->auto_live->setChecked(QVariant(settings.value("options/auto_live", QVariant(true))).toBool());
+    ui->mole_dir->setText(QVariant(settings.value("options/mole_dir", QVariant(MOLE_DIR_DEFAULT))).toString());
+    ui->raw_dir->setText(QVariant(settings.value("options/raw_dir", QVariant(RAW_DIR_DEFAULT))).toString());
 }
 
 void Options::default_options()
@@ -141,6 +161,7 @@ void Options::default_options()
 
     // default mole options
     ui->server->setChecked(false);
+    ui->client->setChecked(true);
     ui->backup->setChecked(false);
     ui->checksum->setChecked(false);
     ui->mole_terminal->setChecked(false);
@@ -149,6 +170,8 @@ void Options::default_options()
     ui->client_port->setText(QString::number(GUACA_DEFAULT_PORT));
     ui->live_name->setText(QString(LL_DEFAULT_LIVE_SUFFIX));
     ui->auto_live->setChecked(true);
+    ui->mole_dir->setText(MOLE_DIR_DEFAULT);
+    ui->raw_dir->setText(RAW_DIR_DEFAULT);
 }
 
 void Options::load_options()
@@ -163,6 +186,7 @@ void Options::load_options()
 
     // sets mole options
     ui->server->setChecked(server);
+    ui->client->setChecked(client);
     ui->backup->setChecked(backup);
     ui->checksum->setChecked(no_checksums);
     ui->mole_terminal->setChecked(mole_terminal);
@@ -171,6 +195,8 @@ void Options::load_options()
     ui->client_port->setText(QString::number(client_port));
     ui->live_name->setText(live_name);
     ui->auto_live->setChecked(auto_live);
+    ui->mole_dir->setText(mole_dir);
+    ui->raw_dir->setText(raw_dir);
 }
 
 void Options::apply_options() {
@@ -184,6 +210,7 @@ void Options::apply_options() {
 
     // apply new options
     server = ui->server->isChecked();
+    client = ui->client->isChecked();
     backup = ui->backup->isChecked();
     no_checksums = ui->checksum->isChecked();
     mole_terminal = ui->mole_terminal->isChecked();
@@ -196,11 +223,16 @@ void Options::apply_options() {
 
     live_name = ui->live_name->text();
     auto_live = ui->auto_live->isChecked();
+    mole_dir = ui->mole_dir->text();
+    mole_dir = (mole_dir.isEmpty()) ? MOLE_DIR_DEFAULT : mole_dir;
+    raw_dir = ui->raw_dir->text();
+    raw_dir = (raw_dir.isEmpty()) ? RAW_DIR_DEFAULT : raw_dir;
 }
 
 void Options::enable_options() {
     ui->checksum->setEnabled(true);
     ui->server->setEnabled(true);
+    ui->client->setEnabled(true);
     ui->backup->setEnabled(true);
     ui->mole_terminal->setEnabled(true);
 
@@ -209,11 +241,14 @@ void Options::enable_options() {
 
     ui->auto_live->setEnabled(true);
     if (auto_live) ui->live_name->setEnabled(true);
+    ui->mole_dir->setEnabled(true);
+    ui->raw_dir->setEnabled(true);
 }
 
 void Options::disable_options() {
     ui->checksum->setDisabled(true);
     ui->server->setDisabled(true);
+    ui->client->setDisabled(true);
     ui->backup->setDisabled(true);
     ui->mole_terminal->setDisabled(true);
 
@@ -222,6 +257,8 @@ void Options::disable_options() {
 
     ui->auto_live->setDisabled(true);
     ui->live_name->setDisabled(true);
+    ui->mole_dir->setDisabled(true);
+    ui->raw_dir->setDisabled(true);
 }
 
 void Options::start_helpers() {

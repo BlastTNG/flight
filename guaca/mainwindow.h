@@ -10,6 +10,9 @@
 #include <QTest>
 #include <QCloseEvent>
 #include <QListWidgetItem>
+#include <QAction>
+#include <QMenu>
+#include <QComboBox>
 
 #include "options.h"
 #include "server.h"
@@ -20,6 +23,28 @@
 #define IMAGE_LOOP_LOW 19
 #define IMAGE_LOOP_HIGH 23
 #define IMAGE_TOTAL 32
+
+class HostMenu : public QMenu
+{
+    Q_OBJECT
+
+public:
+    explicit HostMenu(QComboBox *parent);
+    ~HostMenu();
+
+private:
+    QAction *new_item;
+    QAction *modify_item;
+    QAction *delete_item;
+    QAbstractItemView* view;
+    QComboBox *combo;
+
+    bool eventFilter(QObject *o, QEvent *e);
+
+private slots:
+    void list_context_menu(QPoint pos);
+    void handle_host_menu(QAction *);
+};
 
 namespace Ui {
     class MainWindow;
@@ -65,8 +90,6 @@ private slots:
 
     void on_multiLinkSelect_itemSelectionChanged();
 
-    int add_a_host(const QString &thehost);
-
     void on_computeFrameMap_clicked();
 
 private:
@@ -74,6 +97,7 @@ private:
     QString linkfile[MAX_NUM_LINKFILE];
     Ui::MainWindow *ui;
     Options *options;
+    HostMenu *host_menu;
     std::vector<Logscroll *> mole_logs;
 
     Server *server;
