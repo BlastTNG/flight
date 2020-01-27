@@ -940,7 +940,7 @@
                     "_defaultStyle": "noStyle",
                     "_extrema": false,
                     "_format": "",
-                    "_source": "MC_PIV_I_READ",
+                    "_source": "MC_EL_I_READ",
                     "type": "PNDI"
                 },
                 {
@@ -1004,8 +1004,8 @@
                     "type": "PNDI"
                 }
             ],
-            "geometryHeight": 409,
-            "geometryWidth": 290,
+            "geometryHeight": 408,
+            "geometryWidth": 289,
             "geometryX": 578,
             "geometryY": 0
         },
@@ -2287,7 +2287,7 @@
                 }
             ],
             "geometryHeight": 221,
-            "geometryWidth": 290,
+            "geometryWidth": 289,
             "geometryX": 578,
             "geometryY": 408
         },
