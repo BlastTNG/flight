@@ -531,7 +531,7 @@ static int PSSConvert(double *azraw_pss, double *elraw_pss) {
         	 + gsl_matrix_get(rot[i], 2, 1)*usun[i][1]
         	 + gsl_matrix_get(rot[i], 2, 2)*usun[i][2];
 
-    // az is "az_rel_sun"
+    // az is "az_rel_sun" of PSS i
     az[i] = atan(u2[i][0]/u2[i][2]);                // az is in radians
   	azraw[i] = sun_az + (180./M_PI)*(az[i] - beta[i]);
   	elraw[i] = (180./M_PI)*atan(u2[i][1]/sqrt(u2[i][0]*u2[i][0]+u2[i][2]*u2[i][2]));
